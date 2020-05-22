@@ -23,17 +23,17 @@ cp ./consul /usr/local/sbin/
   
 ```shell
 consul agent -server -data-dir={consul_directory} -ui -http-port={consul_http_port} -datacenter=bkdevops -domain=bkdevops -bootstrap -client=0.0.0.0
-# 例子：consul server服务器IP=10.10.10.1
-consul agent -server -data-dir=/data/consul -ui -http-port=8080 -datacenter=bkci -domain=bkci -bootstrap -client=0.0.0.0
+# 例子：consul server服务器IP=CONSOL_SERVER_IP
+consul agent -server -data-dir=/data/consul -ui -http-port=8080 -datacenter=dc -domain=ci -bootstrap -client=0.0.0.0
 ```
 
 - consul 客户端启动
   
 ```shell
-consul agent -data-dir={consul_directory} -datacenter=bkdevops -domain=bkdevops -join={server_IP} -bind={local_IP}
+consul agent -data-dir={consul_directory} -datacenter=dc -domain=ci -join={server_IP} -bind={local_IP}
 
-# 例子：consul client服务器IP=10.10.10.2
-consul agent -data-dir=/data/consul -datacenter=bkdevops -domain=bkdevops -join=10.10.10.1 -bind=10.10.10.2
+# 例子：consul client服务器IP=CONSUL_CLIENT_IP
+consul agent -data-dir=/data/consul -datacenter=dc -domain=ci -join=CONSOL_SERVER_IP -bind=CONSUL_CLIENT_IP
 ```
 
 <b>如果你的服务是部署也是部署在consul服务端的话，那就不需要启动consul客户端，直接连接服务端即可</b>

@@ -38,7 +38,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
@@ -55,6 +54,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
@@ -74,7 +74,8 @@ import javax.ws.rs.NotFoundException
 @Service
 class PipelineVMBuildService @Autowired(required = false) constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val buildDetailService: PipelineBuildDetailService,
+    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val buildVariableService: BuildVariableService,
     @Autowired(required = false)
     private val measureService: MeasureService?,
     private val rabbitTemplate: RabbitTemplate,
@@ -116,9 +117,9 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         logger.info("[$buildId]|Start the build vmSeqId($vmSeqId) and vmName($vmName)")
         redisOperation.delete(ContainerUtils.getContainerStartupKey(buildInfo.pipelineId, buildId, vmSeqId))
 
-        val variables = pipelineRuntimeService.getAllVariable(buildId)
-        val variablesWithType = pipelineRuntimeService.getAllVariableWithType(buildId)
-        val model = (buildDetailService.getBuildModel(buildId)
+        val variables = buildVariableService.getAllVariable(buildId)
+        val variablesWithType = buildVariableService.getAllVariableWithType(buildId)
+        val model = (pipelineBuildDetailService.getBuildModel(buildId)
             ?: throw NotFoundException("Does not exist resource in the pipeline"))
         var vmId = 1
         model.stages.forEachIndexed { index, s ->
@@ -150,7 +151,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     } else {
                         emptyList()
                     }
-                    buildDetailService.containerStart(buildId, vmSeqId.toInt())
+                    pipelineBuildDetailService.containerStart(buildId, vmSeqId.toInt())
                     addHeartBeat(buildId, vmSeqId, System.currentTimeMillis())
                     setStartUpVMStatus(
                         projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId,
@@ -164,7 +165,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         pipelineId = buildInfo.pipelineId,
                         variables = variables,
                         buildEnvs = buildEnvs,
-                        containerId = it.containerId ?: "",
+                        containerId = it.id!!,
+                        containerHashId = it.containerId ?: "",
                         variablesWithType = variablesWithType
                     )
                 }
@@ -219,6 +221,11 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     actionType = actionType,
                     reason = message
                 )
+            )
+            pipelineBuildDetailService.updateStartVMStatus(
+                buildId = buildId,
+                containerId = startUpVMTask.containerId,
+                buildStatus = buildStatus
             )
             return true
         }
@@ -309,7 +316,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         var isContainerFailed = false
         var hasFailedTaskInInSuccessContainer = false
         var continueWhenPreTaskFailed = false
-        val allVariable = pipelineRuntimeService.getAllVariable(buildId)
+        val allVariable = buildVariableService.getAllVariable(buildId)
         allTasks.forEachIndexed { index, task ->
             val additionalOptions = task.additionalOptions
             when {
@@ -363,7 +370,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                             if (!checkCustomVariableSkip(buildId, additionalOptions, allVariable)) {
                                 queueTasks.add(task)
                             } else {
-                                buildDetailService.taskSkip(buildId, task.taskId)
+                                pipelineBuildDetailService.taskSkip(buildId, task.taskId)
                             }
                         }
                     }
@@ -464,7 +471,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         )
 
         logger.info("[$buildId]|Claim the task - ($buildTask)")
-        buildDetailService.taskStart(buildId, task.taskId)
+        pipelineBuildDetailService.taskStart(buildId, task.taskId)
 
         pipelineEventDispatcher.dispatch(
             PipelineBuildStatusBroadCastEvent(
@@ -500,7 +507,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         if (result.buildResult.isNotEmpty()) {
             logger.info("[$buildId]| Add the build result(${result.buildResult}) to var")
             try {
-                pipelineRuntimeService.batchSetVariable(
+                buildVariableService.batchSetVariable(
                     projectId = buildInfo.projectId,
                     pipelineId = buildInfo.pipelineId,
                     buildId = buildId,
@@ -511,7 +518,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 logger.warn("[$buildId]| save var fail: ${ignored.message}", ignored)
             }
         }
-        logger.info("[ERRORCODE] completeClaimBuildTask <$buildId>[${result.errorType}][${result.errorCode}][${result.message}] ")
+        logger.info("[$buildId]|ERRORCODE|completeClaimBuildTask|errorType=${result.errorType}|errorCode=${result.errorCode}|message=${result.message}] ")
         val errorType = if (!result.errorType.isNullOrBlank()) {
             ErrorType.valueOf(result.errorType!!)
         } else null
@@ -530,9 +537,9 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             }
         }
 
-        buildDetailService.pipelineTaskEnd(
+        pipelineBuildDetailService.pipelineTaskEnd(
             buildId = buildId,
-            elementId = result.elementId,
+            taskId = result.elementId,
             buildStatus = buildStatus,
             errorType = errorType,
             errorCode = result.errorCode,
@@ -560,17 +567,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             errorMsg = result.message
         )
         pipelineEventDispatcher.dispatch(
-            PipelineBuildTaskFinishBroadCastEvent(
-                source = "build-element-${result.taskId}",
-                projectId = buildInfo.projectId,
-                pipelineId = buildInfo.pipelineId,
-                userId = buildInfo.startUser,
-                buildId = buildInfo.buildId,
-                taskId = result.taskId,
-                errorType = errorType?.name,
-                errorCode = result.errorCode,
-                errorMsg = result.message
-            ),
             PipelineBuildStatusBroadCastEvent(
                 source = "task-end-${result.taskId}",
                 projectId = buildInfo.projectId,
@@ -646,7 +642,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 executeCount = task.executeCount,
                 errorType = errorType,
                 errorCode = errorCode,
-                errorMsg = errorMsg
+                errorMsg = errorMsg,
+                userId = task.starter
             )
         } catch (t: Throwable) {
             logger.warn("Fail to send the element data", t)

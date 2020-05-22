@@ -6,7 +6,7 @@
         }">
         <inner-header>
             <div class="instance-header" slot="left">
-                <span class="inner-header-title" slot="left"><i class="bk-icon icon-angle-left" @click="toInstanceManage()"></i>{{ $t('template.templateInstantiation') }}</span>
+                <span class="inner-header-title" slot="left"><i class="devops-icon icon-angle-left" @click="toInstanceManage()"></i>{{ $t('template.templateInstantiation') }}</span>
             </div>
         </inner-header>
         <div class="sub-view-port" v-if="showContent">
@@ -45,6 +45,7 @@
                                 </bk-popover>
                             </label>
                         </div>
+                        <div v-if="!instanceVersion" class="error-tips">{{ $t('template.templateVersionErrTips') }}</div>
                     </div>
                     <div class="cut-line"></div>
                     <div class="instance-pipeline">
@@ -63,7 +64,7 @@
                 </div>
             </div>
 
-            <div class="pipeline-instance-conf" v-if="pipelineNameList.length">
+            <div class="pipeline-instance-conf" v-if="pipelineNameList.length && instanceVersion ">
                 <section v-for="(param, index) in pipelineNameList" :key="index">
                     <template v-if="param.pipelineName === currentPipelineParams.pipelineName">
                         <section class="params-item" v-if="param.buildParams">
@@ -228,11 +229,6 @@
                     this.template.description = res.description
                     this.versionList = res.versions
                     this.handleParams(res.template.stages)
-
-                    const curVersion = this.versionList.filter(val => {
-                        return val.version === parseInt(versionId)
-                    })
-                    this.instanceVersion = curVersion[0].version
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -339,12 +335,17 @@
             },
             changeVersion (newVal) {
                 this.requestTemplateDatail(newVal)
-                if (this.hashVal) {
-                    this.requestPipelineParams(this.hashVal, newVal)
-                }
+                if (this.hashVal && newVal) this.requestPipelineParams(this.hashVal, newVal)
             },
             addPipelineName () {
-                this.showInstanceCreate = true
+                if (!this.instanceVersion) {
+                    this.$showTips({
+                        message: this.$t('template.templateVersionErrTips'),
+                        theme: 'error'
+                    })
+                } else {
+                    this.showInstanceCreate = true
+                }
             },
             handleParamChange (name, value) {
                 this.pipelineNameList.forEach(item => {
@@ -414,6 +415,11 @@
                 if (!this.pipelineNameList.length) {
                     this.$showTips({
                         message: this.$t('template.submitErrTips'),
+                        theme: 'error'
+                    })
+                } else if (!this.instanceVersion) {
+                    this.$showTips({
+                        message: this.$t('template.templateVersionErrTips'),
                         theme: 'error'
                     })
                 } else {

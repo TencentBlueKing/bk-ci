@@ -246,7 +246,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 dslContext = context,
                 userId = userId,
                 atomFeatureRequest = AtomFeatureRequest(
-                    atomCode = atomCode
+                    atomCode = atomCode,
+                    recommendFlag = true,
+                    yamlFlag = false
                 )
             )
         }
@@ -297,44 +299,17 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val atomRecord = atomRecords[0]
         // 校验前端传的版本号是否正确
         val releaseType = marketAtomUpdateRequest.releaseType
-        val dbVersion = atomRecord.version
-        // 最近的版本处于上架中止状态，重新升级版本号不变
-        val cancelFlag = atomRecord.atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
-        val requireVersion =
-            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) dbVersion else storeCommonService.getRequireVersion(
-                dbVersion,
-                releaseType
-            )
         val osList = marketAtomUpdateRequest.os
-        val dbOsList = if (!StringUtils.isEmpty(atomRecord.os)) JsonUtil.getObjectMapper().readValue(
-            atomRecord.os,
-            List::class.java
-        ) as List<String> else null
-        // 支持的操作系统减少必须采用大版本升级方案
-        val requireReleaseType =
-            if (null != dbOsList && !osList.containsAll(dbOsList)) ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE else marketAtomUpdateRequest.releaseType
-        if (releaseType != requireReleaseType || version != requireVersion) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_ATOM_VERSION_IS_INVALID,
-                arrayOf(version, requireVersion)
+        val validateAtomVersionResult =
+            marketAtomCommonService.validateAtomVersion(
+                atomRecord = atomRecord,
+                releaseType = releaseType,
+                osList = osList,
+                version = version
             )
-        }
-        // 判断最近一个插件版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
-        val atomFinalStatusList = mutableListOf(
-            AtomStatusEnum.AUDIT_REJECT.status.toByte(),
-            AtomStatusEnum.RELEASED.status.toByte(),
-            AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-            AtomStatusEnum.UNDERCARRIAGED.status.toByte()
-        )
-        if (atomRecords.size == 1) {
-            // 如果是首次发布，处于初始化的插件状态也允许添加新的版本
-            atomFinalStatusList.add(AtomStatusEnum.INIT.status.toByte())
-        }
-        if (!atomFinalStatusList.contains(atomRecord.atomStatus)) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
-                arrayOf(atomRecord.name, atomRecord.version)
-            )
+        logger.info("validateAtomVersionResult is :$validateAtomVersionResult")
+        if (validateAtomVersionResult.isNotOk()) {
+            return Result(status = validateAtomVersionResult.status, message = validateAtomVersionResult.message ?: "")
         }
         var atomId = UUIDUtil.generate()
         val getAtomConfResult = getAtomConfig(
@@ -396,6 +371,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         marketAtomUpdateRequest.os.sort() // 给操作系统排序
         val atomStatus =
             if (atomPackageSourceType == AtomPackageSourceTypeEnum.REPO) AtomStatusEnum.COMMITTING else AtomStatusEnum.TESTING
+        val cancelFlag = atomRecord.atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap)
@@ -555,9 +531,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
                 GetAtomQualityConfigResult("0", arrayOf(""))
             } else {
-                client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
-                client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
-                client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)
+                try {
+                    client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
+                    client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
+                    client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)
+                } catch (e: Exception) {
+                    logger.error("clear atom:$atomCode test quality data error", e)
+                }
 
                 GetAtomQualityConfigResult(
                     StoreMessageCode.USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL,
@@ -791,6 +771,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 } else {
                     val atomEnvRequest = getAtomConfResult.atomEnvRequest!!
                     atomEnvRequest.pkgPath = "$projectCode/$atomCode/$version/$packagePath"
+                    atomEnvRequest.shaContent = redisOperation.get("$projectCode:$atomCode:$version:packageShaContent")
                 }
             }
             getAtomConfResult

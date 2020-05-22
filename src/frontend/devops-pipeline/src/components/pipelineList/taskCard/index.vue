@@ -34,8 +34,8 @@
                 :class="config.status"
                 v-if="!config.isRunning && (config.status === 'known_error' || config.status === 'success')"
             >
-                <i class="bk-icon icon-exclamation" v-if="config.status === 'known_error'"></i>
-                <i class="bk-icon icon-check-1" v-else></i>
+                <i class="devops-icon icon-exclamation" v-if="config.status === 'known_error'"></i>
+                <i class="devops-icon icon-check-1" v-else></i>
             </div>
             <!-- </bk-popover> -->
             <!-- 角标 end -->
@@ -105,7 +105,7 @@
                         >
                             {{ btn.text }}
                             <i
-                                class="bk-icon"
+                                class="devops-icon"
                                 v-if="btn.icon"
                                 :class="`icon-${btn.icon}`"
                             ></i>
@@ -184,7 +184,6 @@
              *  参数为pipelineId的触发全局bus事件
              */
             emitEventHandler (eventName, pipelineId) {
-                console.log(eventName)
                 bus.$emit(eventName, pipelineId)
             },
             /**
@@ -386,7 +385,7 @@
         border-color: transparent transparent transparent transparent;
         border-style: solid;
         border-top-left-radius: 3px;
-        & > .bk-icon {
+        & > .devops-icon {
             position: absolute;
             top: -15px;
             left: -15px;

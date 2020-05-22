@@ -10,6 +10,7 @@
     >
         <main class="ask-permission-table">
             <bk-table
+                v-if="showDialog"
                 :max-height="300"
                 :data="noPermissionList"
                 :empty-text="$t('emptyData')"
@@ -36,7 +37,7 @@
     @Component
     export default class AskPermissionDialog extends Vue {
         @Prop({ default: 640 })
-        width: number | string
+    width: number | string
 
         @Prop()
         title: any = ''
@@ -81,8 +82,6 @@
 
 <style lang="scss">
     .ask-permission-table {
-        .devops-table {
-            width: 100%;
-        }
+        width: 100%;
     }
 </style>

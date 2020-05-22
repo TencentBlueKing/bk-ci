@@ -58,7 +58,7 @@ select:-webkit-autofill:focus {
     outline: none;
 }
 
-.sodaci-property-panel {
+.bkci-property-panel {
     .bk-sideslider-content {
         max-height: calc(100vh - 60px);
     }
@@ -80,11 +80,6 @@ table tr:hover {
             font-size: 12px;
         }
     }
-}
-
-.bk-dialog-mask,
-.bk-dialog-wrapper {
-    z-index: 1610 !important;
 }
 
 .biz-container {
@@ -235,7 +230,7 @@ table tr:hover {
 		top: 50%;
 		margin-top: -30px;
 	}
-	.bk-icon {
+	.devops-icon {
 		font-size: 26px;
 	}
 	p {
@@ -261,7 +256,7 @@ table tr:hover {
 		border-color: $primaryColor;
 		color: $primaryColor;
 	}
-	.bk-icon {
+	.devops-icon {
 		font-size: 12px;
 		transform: scale(0.7, 0.7);
 		display: inline-block;
@@ -583,13 +578,13 @@ table tr:hover {
 		margin-top: -2px;
 		width: 220px;
     }
-    .bk-icon {
+    .devops-icon {
     	font-size: 12px;
     	margin-left: 5px;
     	visibility: hidden;
     }
     &:hover {
-    	.bk-icon {
+    	.devops-icon {
 	    	visibility: visible;
 	    }
     }
@@ -612,13 +607,13 @@ table tr:hover {
 		margin-top: -2px;
 		width: 500px;
     }
-    .bk-icon {
+    .devops-icon {
     	font-size: 12px;
     	margin-left: 5px;
     	visibility: hidden;
     }
     &:hover {
-    	.bk-icon {
+    	.devops-icon {
 	    	visibility: visible;
 	    }
     }
@@ -679,12 +674,12 @@ table tr:hover {
         &:hover {
             color: $primaryColor;
             border-color: $primaryColor;
-            .bk-icon {
+            .devops-icon {
                 color: $primaryColor;
                 border-color: $primaryColor;
             }
         }
-        .bk-icon {
+        .devops-icon {
             width: 24px;
             height: 24px;
             line-height: 24px;
@@ -711,12 +706,12 @@ table tr:hover {
         margin-bottom: 10px;
 
         &:hover {
-            >.bk-icon {
+            >.devops-icon {
                 display: inline-block;
             }
         }
 
-        >.bk-icon {
+        >.devops-icon {
             cursor: pointer;
             background: #fff;
             position: absolute;
@@ -879,7 +874,7 @@ table tr:hover {
             position: absolute;
             top: -7px;
             right: -7px;
-            .bk-icon {
+            .devops-icon {
                 -webkit-transform: scale(0.6, 0.6);
                 transform: scale(0.6, 0.6);
                 position: absolute;

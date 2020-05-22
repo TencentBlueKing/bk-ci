@@ -10,12 +10,12 @@
         </header>
         <div v-if="pipeline" class="scroll-container">
             <div class="scroll-wraper">
-                <stages :stages="pipeline.stages" :editable="!pipeline.instanceFromTemplate && templateType !== 'CONSTRAINT'"></stages>
+                <stages :stages="pipeline.stages" :editable="!pipeline.instanceFromTemplate && templateType !== 'CONSTRAINT'" :is-running="isRunning"></stages>
             </div>
         </div>
 
         <bk-dialog v-model="isStageShow"
-            width="720"
+            :width="stageTypeDialogWidth"
             :title="$t('editPage.selectJob')"
             :show-footer="false"
             :esc-close="true"
@@ -24,7 +24,7 @@
             <section class="bk-form bk-form-vertical bk-form-wrapper">
                 <ul class="stage-type-list">
                     <li v-for="os in osList" :key="os.value" @click="insert(os.value)" :class="os.className">
-                        <i :class="`bk-icon icon-${os.value.toLowerCase()} stage-type-icon`" />
+                        <i :class="`devops-icon icon-${os.value.toLowerCase()} stage-type-icon`" />
                         <span class="stage-label">{{ os.label }}</span>
                     </li>
                 </ul>
@@ -53,6 +53,13 @@
                     :editable="!pipeline.instanceFromTemplate && templateType !== 'CONSTRAINT'"
                 />
             </template>
+            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined'">
+                <stage-property-panel
+                    :stage="stage"
+                    :stage-index="editingElementPos.stageIndex"
+                    :editable="!pipeline.instanceFromTemplate && templateType !== 'CONSTRAINT'"
+                />
+            </template>
         </template>
     </div>
 </template>
@@ -62,12 +69,14 @@
     import Stages from './Stages'
     import AtomPropertyPanel from './AtomPropertyPanel'
     import ContainerPropertyPanel from './ContainerPropertyPanel'
+    import StagePropertyPanel from './StagePropertyPanel'
     import AtomSelector from './AtomSelector'
     import { isObject } from '../utils/util'
 
     export default {
         components: {
             Stages,
+            StagePropertyPanel,
             AtomPropertyPanel,
             ContainerPropertyPanel,
             AtomSelector
@@ -118,6 +127,17 @@
                     })
                 }
             },
+            stageTypeDialogWidth () {
+                return Array.isArray(this.osList) ? this.osList.length * 130 + 208 : 480
+            },
+            stage () {
+                if (isObject(this.editingElementPos)) {
+                    const { stageIndex } = this.editingElementPos
+                    const stage = this.getStageByIndex(stageIndex)
+                    return stage
+                }
+                return null
+            },
             container () {
                 if (isObject(this.editingElementPos)) {
                     const { stageIndex, containerIndex } = this.editingElementPos
@@ -138,7 +158,6 @@
                 if (typeof elementIndex !== 'undefined') {
                     return ''
                 }
-
                 return typeof containerIndex !== 'undefined'
                     ? this.container.name + '： ' + (stageIndex + 1) + '-' + (containerIndex + 1)
                     : this.$t('propertyBar')
@@ -254,13 +273,13 @@
         overflow: auto;
         flex: 1;
         .scroll-wraper {
-            padding: 40px 0 40px 30px;
+            padding: 20px 0 40px 30px;
             min-height: 100%;
             overflow: auto;
         }
         &:before {
             position: absolute;
-            top: 61px;
+            top: 41px + $StagepaddingTop;
             content: '';
             height: 0;
             left: 30px;
