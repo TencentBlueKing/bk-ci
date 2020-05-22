@@ -30,5 +30,11 @@ import com.tencent.devops.common.api.pojo.Result
 
 interface TxStoreCodeccValidateService {
 
-    fun validateCodeccResult(buildId: String, language: String): Result<Boolean>
+    fun validateCodeccResult(
+        projectId: String,
+        userId: String,
+        buildId: String,
+        atomCode: String,
+        language: String
+    ): Result<Boolean>
 }

@@ -24,17 +24,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.dao.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-@ApiModel("代码扫描结果校验详情")
-data class StoreCodeccValidateDetail(
-    @ApiModelProperty("校验的key", required = true)
-    val validateKey: String,
-    @ApiModelProperty("实际值", required = true)
-    val actValue: String,
-    @ApiModelProperty("期望值", required = true)
-    val expectedValue: String
-)
+@Repository
+class TxStoreCodeccValidateDao {
+
+    /**
+     * 获取评分
+     */
+    fun getScore(dslContext: DSLContext, calSql: String, thousandCcnIndex: Double): Double {
+        return dslContext.fetchOne(calSql, thousandCcnIndex).get(0, Double::class.java)
+    }
+}
