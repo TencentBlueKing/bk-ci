@@ -26,59 +26,179 @@
 
 package com.tencent.devops.dispatch.service.dispatcher.docker
 
+import com.tencent.devops.common.api.pojo.Zone
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.dispatch.client.DockerHostClient
+import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
+import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
+import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
+import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
+import com.tencent.devops.dispatch.exception.DockerServiceException
+import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
+import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 class DockerDispatcher @Autowired constructor(
+    private val client: Client,
+    private val gray: Gray,
     private val rabbitTemplate: RabbitTemplate,
-    private val dockerHostBuildService: DockerHostBuildService
+    private val dockerHostBuildService: DockerHostBuildService,
+    private val dockerHostClient: DockerHostClient,
+    private val dockerHostUtils: DockerHostUtils,
+    private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
+    private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
+    private val pipelineDockerHostDao: PipelineDockerHostDao,
+    private val pipelineDockerBuildDao: PipelineDockerBuildDao,
+    private val dslContext: DSLContext
 ) : Dispatcher {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(DockerDispatcher::class.java)
+    }
+
     override fun canDispatch(pipelineAgentStartupEvent: PipelineAgentStartupEvent) =
         pipelineAgentStartupEvent.dispatchType is DockerDispatchType
 
     override fun startUp(pipelineAgentStartupEvent: PipelineAgentStartupEvent) {
         val dockerDispatch = pipelineAgentStartupEvent.dispatchType as DockerDispatchType
         LogUtils.addLine(
-            rabbitTemplate,
-            pipelineAgentStartupEvent.buildId,
-            "Start docker ${dockerDispatch.dockerBuildVersion} for the build",
-            "",
-            pipelineAgentStartupEvent.containerHashId,
-            pipelineAgentStartupEvent.executeCount ?: 1
+            rabbitTemplate = rabbitTemplate,
+            buildId = pipelineAgentStartupEvent.buildId,
+            message = "Start docker ${dockerDispatch.dockerBuildVersion} for the build",
+            tag = VMUtils.genStartVMTaskId(pipelineAgentStartupEvent.vmSeqId),
+            jobId = pipelineAgentStartupEvent.containerHashId,
+            executeCount = pipelineAgentStartupEvent.executeCount ?: 1
         )
-        dockerHostBuildService.dockerHostBuild(pipelineAgentStartupEvent)
+
+        var poolNo = 0
+        try {
+            // 先判断是否OP已配置专机，若配置了专机，看当前ip是否在专机列表中，若在 选择当前IP并检查负载，若不在从专机列表中选择一个容量最小的
+            val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, pipelineAgentStartupEvent.projectId).toSet()
+            logger.info("${pipelineAgentStartupEvent.projectId}| specialIpSet: $specialIpSet")
+
+            val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
+                dslContext = dslContext,
+                pipelineId = pipelineAgentStartupEvent.pipelineId,
+                vmSeq = pipelineAgentStartupEvent.vmSeqId
+            )
+
+            var driftIpInfo = ""
+            val dockerPair: Pair<String, Int>
+            poolNo = dockerHostUtils.getIdlePoolNo(pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
+            if (taskHistory != null) {
+                val dockerIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, taskHistory.dockerIp)
+                if (dockerIpInfo == null) {
+                    // 此前IP下架，重新选择，根据负载条件选择可用IP
+                    dockerPair = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
+                        projectId = pipelineAgentStartupEvent.projectId,
+                        pipelineId = pipelineAgentStartupEvent.pipelineId,
+                        vmSeqId = pipelineAgentStartupEvent.vmSeqId,
+                        specialIpSet = specialIpSet
+                    )
+                } else {
+                    driftIpInfo = JsonUtil.toJson(dockerIpInfo.intoMap())
+
+                    dockerPair = if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
+                        // 该项目工程配置了专机
+                        if (specialIpSet.contains(taskHistory.dockerIp) && dockerIpInfo.enable) {
+                            // 上一次构建IP在专机列表中，直接重用
+                            Pair(taskHistory.dockerIp, dockerIpInfo.dockerHostPort)
+                        } else {
+                            // 不在专机列表中，重新依据专机列表去选择负载最小的
+                            driftIpInfo = "专机漂移"
+
+                            dockerHostUtils.getAvailableDockerIpWithSpecialIps(
+                                pipelineAgentStartupEvent.projectId,
+                                pipelineAgentStartupEvent.pipelineId,
+                                pipelineAgentStartupEvent.vmSeqId,
+                                specialIpSet
+                            )
+                        }
+                    } else {
+                        // 没有配置专机，根据当前IP负载选择IP
+                        val triple = dockerHostUtils.checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, dockerIpInfo, poolNo)
+                        if (triple.third.isNotEmpty()) {
+                            driftIpInfo = triple.third
+                        }
+                        Pair(triple.first, triple.second)
+                    }
+                }
+            } else {
+                // 第一次构建，根据负载条件选择可用IP
+                dockerPair = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
+                    projectId = pipelineAgentStartupEvent.projectId,
+                    pipelineId = pipelineAgentStartupEvent.pipelineId,
+                    vmSeqId = pipelineAgentStartupEvent.vmSeqId,
+                    specialIpSet = specialIpSet
+                )
+            }
+
+            dockerHostClient.startBuild(
+                event = pipelineAgentStartupEvent,
+                dockerIp = dockerPair.first,
+                dockerHostPort = dockerPair.second,
+                poolNo = poolNo,
+                driftIpInfo = driftIpInfo
+            )
+        } catch (e: Exception) {
+            val errMsg = if (e is DockerServiceException) {
+                logger.warn("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed. ${e.message}")
+                e.message!!
+            } else {
+                logger.error(
+                    "[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed.",
+                    e
+                )
+                "Start build Docker VM failed."
+            }
+
+            // 更新构建记录状态
+            val result = pipelineDockerBuildDao.updateStatus(
+                dslContext,
+                pipelineAgentStartupEvent.buildId,
+                pipelineAgentStartupEvent.vmSeqId.toInt(),
+                PipelineTaskStatus.FAILURE
+            )
+
+            if (!result) {
+                pipelineDockerBuildDao.startBuild(
+                    dslContext = dslContext,
+                    projectId = pipelineAgentStartupEvent.projectId,
+                    pipelineId = pipelineAgentStartupEvent.pipelineId,
+                    buildId = pipelineAgentStartupEvent.buildId,
+                    vmSeqId = pipelineAgentStartupEvent.vmSeqId.toInt(),
+                    secretKey = "",
+                    status = PipelineTaskStatus.FAILURE,
+                    zone = if (null == pipelineAgentStartupEvent.zone) {
+                        Zone.SHENZHEN.name
+                    } else {
+                        pipelineAgentStartupEvent.zone!!.name
+                    },
+                    dockerIp = "",
+                    poolNo = poolNo
+                )
+            }
+
+            onFailBuild(client, rabbitTemplate, pipelineAgentStartupEvent, errMsg)
+        }
     }
 
     override fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
-        dockerHostBuildService.finishDockerBuild(
-            pipelineAgentShutdownEvent.buildId,
-            pipelineAgentShutdownEvent.vmSeqId,
-            pipelineAgentShutdownEvent.buildResult
-        )
+        logger.info("On shutdown - ($pipelineAgentShutdownEvent|$)")
+        dockerHostBuildService.finishDockerBuild(pipelineAgentShutdownEvent)
     }
-
-//    override fun canDispatch(buildMessage: PipelineBuildMessage) =
-//        buildMessage.dispatchType.buildType == BuildType.DOCKER
-//
-//    override fun build(buildMessage: PipelineBuildMessage) {
-//        val dockerDispatch = buildMessage.dispatchType as DockerDispatchType
-//        LogUtils.addLine(client, buildMessage.buildId, "Start docker ${dockerDispatch.dockerBuildVersion} for the build", "", buildMessage.executeCount ?: 1)
-//        dockerHostBuildService.dockerHostBuild(buildMessage)
-//    }
-//
-//    override fun finish(buildFinishMessage: PipelineFinishMessage) {
-//        dockerHostBuildService.finishDockerBuild(
-//            buildFinishMessage.buildId,
-//            buildFinishMessage.vmSeqId,
-//            buildFinishMessage.buildResult
-//        )
-//    }
 }

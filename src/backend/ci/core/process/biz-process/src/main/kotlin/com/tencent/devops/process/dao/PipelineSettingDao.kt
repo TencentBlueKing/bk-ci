@@ -26,7 +26,7 @@
 
 package com.tencent.devops.process.dao
 
-import com.tencent.devops.common.notify.enums.NotifyTypeEnum
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
@@ -52,8 +52,8 @@ class PipelineSettingDao {
         pipelineId: String,
         pipelineName: String,
         isTemplate: Boolean = false,
-        successNotifyTypes: String = "${NotifyTypeEnum.EMAIL.name},${NotifyTypeEnum.RTX.name}",
-        failNotifyTypes: String = "${NotifyTypeEnum.EMAIL.name},${NotifyTypeEnum.RTX.name}"
+        successNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}",
+        failNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}"
     ): Int {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             return dslContext.insertInto(
@@ -124,7 +124,8 @@ class PipelineSettingDao {
                 FAIL_CONTENT,
                 WAIT_QUEUE_TIME_SECOND,
                 MAX_QUEUE_SIZE,
-                IS_TEMPLATE
+                IS_TEMPLATE,
+                MAX_PIPELINE_RES_NUM
             )
                 .values(
                     setting.projectId,
@@ -150,7 +151,8 @@ class PipelineSettingDao {
                     setting.failSubscription.content,
                     DateTimeUtils.minuteToSecond(setting.waitQueueTimeMinute),
                     setting.maxQueueSize,
-                    isTemplate
+                    isTemplate,
+                    setting.maxPipelineResNum
                 ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -174,6 +176,7 @@ class PipelineSettingDao {
                 .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtils.minuteToSecond(setting.waitQueueTimeMinute))
                 .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
                 .set(IS_TEMPLATE, isTemplate)
+                .set(MAX_PIPELINE_RES_NUM, setting.maxPipelineResNum)
                 .execute()
         }
     }
