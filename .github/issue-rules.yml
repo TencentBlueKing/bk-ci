@@ -1,0 +1,16 @@
+# Primary rules
+rules:
+# Types
+- valueFor: '*Type*'
+  contains: Feature
+  addLabels: ['enhancement']
+- valueFor: '*Type*'
+  contains: Bug
+  addLabels: ['bug']
+- valueFor: '*Type*'
+  contains: Question
+  addLabels: ['question']
+
+tags:
+- noneIn: ['bug', 'enhancement', 'question']
+  addLabels: ['needs triage']

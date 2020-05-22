@@ -51,7 +51,6 @@ object RedisUtlis {
                 redisOperation.set(USER_SESSION_REDIS_KEY + userId, newSessionList, null, true)
             }
         }
-//        saveSessionTimeOutBySessionId(redisOperation, sessionId, userId)
     }
 
     // 获取userId对应的session集合。多个session以“,”隔开，用于做切割
