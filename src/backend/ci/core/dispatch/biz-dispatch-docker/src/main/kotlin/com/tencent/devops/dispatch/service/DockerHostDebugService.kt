@@ -26,7 +26,13 @@
 
 package com.tencent.devops.dispatch.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.docker.ImageType
@@ -34,18 +40,25 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
+import com.tencent.devops.dispatch.config.DefaultImageConfig
 import com.tencent.devops.dispatch.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.dao.PipelineDockerEnableDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
+import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.DockerHostDebugLock
-import com.tencent.devops.dispatch.utils.DockerUtils
+import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
+import com.tencent.devops.store.api.container.ServiceContainerAppResource
+import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.image.exception.UnknownImageType
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import okhttp3.MediaType
+import okhttp3.Request
+import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -60,27 +73,32 @@ class DockerHostDebugService @Autowired constructor(
     private val pipelineDockerDebugDao: PipelineDockerDebugDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val pipelineDockerEnableDao: PipelineDockerEnableDao,
+    private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
+    private val dockerHostUtils: DockerHostUtils,
     private val redisUtils: RedisUtils,
     private val redisOperation: RedisOperation,
     private val client: Client,
     private val storeImageService: StoreImageService,
-    private val gray: Gray
+    private val gray: Gray,
+    private val defaultImageConfig: DefaultImageConfig
 ) {
-
-    @Value("\${dispatch.dockerBuildImagePrefix:#{null}}")
-    val dockerBuildImagePrefix: String? = null
 
     private val grayFlag: Boolean = gray.isGray()
 
-    fun insertDebug(
+    @Value("\${devopsGateway.idcProxy}")
+    val idcProxy: String? = null
+
+    fun startDebug(
+        dockerIp: String,
         userId: String,
         projectId: String,
         pipelineId: String,
         vmSeqId: String,
+        poolNo: Int,
         imageCode: String?,
         imageVersion: String?,
         imageName: String?,
-        buildEnvStr: String,
+        buildEnv: Map<String, String>?,
         imageType: ImageType?,
         credentialId: String?
     ) {
@@ -96,7 +114,7 @@ class DockerHostDebugService @Autowired constructor(
                 buildId = null,
                 imageCode = imageCode,
                 imageVersion = imageVersion,
-                defaultPrefix = dockerBuildImagePrefix
+                defaultPrefix = defaultImageConfig.dockerBuildImagePrefix
             )
             if (imageRepoInfo.ticketId.isNotBlank()) {
                 finalCredentialId = imageRepoInfo.ticketId
@@ -119,9 +137,15 @@ class DockerHostDebugService @Autowired constructor(
                 }
             }
             else -> when (imageName) {
-                DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + TLINUX1_2_IMAGE
-                DockerVersion.TLINUX2_2.value -> dockerBuildImagePrefix + TLINUX2_2_IMAGE
-                else -> "$dockerBuildImagePrefix/bkdevops/$imageName"
+                DockerVersion.TLINUX1_2.value -> {
+                    defaultImageConfig.getTLinux1_2CompleteUri()
+                }
+                DockerVersion.TLINUX2_2.value -> {
+                    defaultImageConfig.getTLinux2_2CompleteUri()
+                }
+                else -> {
+                    defaultImageConfig.getCompleteUriByImageName(imageName)
+                }
             }
         }
         logger.info("insertDebug:Docker images is: $dockerImage")
@@ -139,59 +163,145 @@ class DockerHostDebugService @Autowired constructor(
             password = ticketsMap["v2"] as String
         }
 
-//        val dockerHost = pipelineDockerHostDao.getHost(dslContext, projectId)
-//        val lastHostIp = redisUtils.getDockerBuildLastHost(pipelineId, vmSeqId)
-//        val hostTag = when {
-//            null != dockerHost -> {
-//                logger.info("Fixed debug host machine, hostIp:${dockerHost.hostIp}, pipelineId:$pipelineId")
-//                dockerHost.hostIp
-//            }
-//            null != lastHostIp -> {
-//                logger.info("Use last build hostIp: $lastHostIp, pipelineId:$pipelineId")
-//                lastHostIp
-//            }
-//            else -> ""
-//        }
-        val dockerHosts = pipelineDockerHostDao.getHostIps(dslContext, projectId)
-        val lastHostIp = redisUtils.getDockerBuildLastHost(pipelineId, vmSeqId)
-        val hostTag =
-            DockerUtils.getDockerHostIp(dockerHosts = dockerHosts, lastHostIp = lastHostIp, buildId = "debug_")
+        val newImageType = when (imageType) {
+            null -> ImageType.BKDEVOPS.type
+            ImageType.THIRD -> imageType.type
+            ImageType.BKDEVOPS -> ImageType.BKDEVOPS.type
+            ImageType.BKSTORE -> imageRepoInfo!!.sourceType.type
+            else -> throw UnknownImageType("imageCode:$imageCode,imageVersion:$imageVersion,imageType:$imageType")
+        }
 
-        pipelineDockerDebugDao.insertDebug(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            vmSeqId = vmSeqId,
-            status = PipelineTaskStatus.QUEUE,
-            token = "",
-            imageName = dockerImage.trim(),
-            hostTag = hostTag,
-            buildEnv = buildEnvStr,
-            registryUser = userName,
-            registryPwd = password,
-            imageType = when (imageType) {
-                null -> ImageType.BKDEVOPS.type
-                ImageType.THIRD -> imageType.type
-                ImageType.BKDEVOPS -> ImageType.BKDEVOPS.type
-                ImageType.BKSTORE -> imageRepoInfo!!.sourceType.type
-                else -> throw UnknownImageType("imageCode:$imageCode,imageVersion:$imageVersion,imageType:$imageType")
-            },
-            imagePublicFlag = imageRepoInfo?.publicFlag,
-            imageRDType = imageRepoInfo?.rdType
-        )
+        val buildEnvStr = if (null != buildEnv && buildEnv.isNotEmpty()) {
+            try {
+                val buildEnvs = client.get(ServiceContainerAppResource::class).getApp("linux")
+                val buildEnvResult = mutableListOf<BuildEnv>()
+                if (!(!buildEnvs.isOk() && null != buildEnvs.data && buildEnvs.data!!.isNotEmpty())) {
+                    for (buildEnvParam in buildEnv) {
+                        for (buildEnv1 in buildEnvs.data!!) {
+                            if (buildEnv1.name == buildEnvParam.key && buildEnv1.version == buildEnvParam.value) {
+                                buildEnvResult.add(buildEnv1)
+                            }
+                        }
+                    }
+                }
+                ObjectMapper().writeValueAsString(buildEnvResult)
+            } catch (e: Exception) {
+                logger.error("$pipelineId|$vmSeqId| start debug. get build env failed msg: $e")
+                ""
+            }
+        } else {
+            ""
+        }
+        logger.info("$pipelineId|$vmSeqId| start debug. Container ready to start, buildEnvStr: $buildEnvStr")
+
+        // 根据dockerIp定向调用dockerhost
+        val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/debug/start", dockerIp)
+        val requestBody = ContainerInfo(projectId, pipelineId, vmSeqId, poolNo, PipelineTaskStatus.RUNNING.status, dockerImage,
+            "", "", "", buildEnvStr, userName, password, newImageType)
+        val request = Request.Builder().url(proxyUrl)
+            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
+            .addHeader("Accept", "application/json; charset=utf-8")
+            .addHeader("Content-Type", "application/json; charset=utf-8")
+            .build()
+
+        logger.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp url: $proxyUrl, requestBody: ${JsonUtil.toJson(requestBody)}")
+        OkhttpUtils.doLongHttp(request).use { resp ->
+            val responseBody = resp.body()!!.string()
+            logger.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp responseBody: $responseBody")
+            val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
+            when {
+                response["status"] == 0 -> {
+                    val containerId = response["data"].toString()
+                    pipelineDockerDebugDao.insertDebug(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        vmSeqId = vmSeqId,
+                        poolNo = poolNo,
+                        status = PipelineTaskStatus.RUNNING,
+                        token = "",
+                        imageName = dockerImage.trim(),
+                        hostTag = dockerIp,
+                        containerId = containerId,
+                        buildEnv = buildEnvStr,
+                        registryUser = userName,
+                        registryPwd = password,
+                        imageType = newImageType,
+                        imagePublicFlag = imageRepoInfo?.publicFlag,
+                        imageRDType = imageRepoInfo?.rdType
+                    )
+                }
+                response["status"] == 1 -> {
+                    // 母机负载过高
+                    logger.error("[$projectId|$pipelineId] Debug docker VM overload, please wait a moment and try again.")
+                    throw ErrorCodeException(
+                        errorCode = "2103505",
+                        defaultMessage = "Debug docker VM overload, please wait a moment and try again.",
+                        params = arrayOf(pipelineId)
+                    )
+                }
+                else -> {
+                    val msg = response["message"]
+                    logger.error("[$projectId|$pipelineId] Start debug Docker VM failed. $msg")
+                    throw ErrorCodeException(
+                        errorCode = "2103503",
+                        defaultMessage = "Start debug Docker VM failed.",
+                        params = arrayOf(pipelineId)
+                    )
+                }
+            }
+        }
     }
 
     fun deleteDebug(pipelineId: String, vmSeqId: String): Result<Boolean> {
-        logger.info("Delete docker debug  pipelineId:($pipelineId), vmSeqId:($vmSeqId)")
+        val pipelineDockerDebug = pipelineDockerDebugDao.getDebug(dslContext, pipelineId, vmSeqId)
+        if (pipelineDockerDebug != null) {
+            val projectId = pipelineDockerDebug.projectId
+            val dockerIp = pipelineDockerDebug.hostTag
 
-        // 状态标记为完成即可
-        pipelineDockerDebugDao.updateStatus(
-            dslContext = dslContext,
-            pipelineId = pipelineId,
-            vmSeqId = vmSeqId,
-            status = PipelineTaskStatus.DONE
-        )
-        return Result(status = 0, message = "success")
+            // 根据dockerIp定向调用dockerhost
+            val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/debug/end", dockerIp)
+            val requestBody = ContainerInfo(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                vmSeqId = vmSeqId,
+                poolNo = pipelineDockerDebug.poolNo,
+                status = pipelineDockerDebug.status,
+                imageName = pipelineDockerDebug.imageName,
+                containerId = pipelineDockerDebug.containerId,
+                address = pipelineDockerDebug.hostTag,
+                token = pipelineDockerDebug.token,
+                buildEnv = pipelineDockerDebug.buildEnv,
+                registryUser = pipelineDockerDebug.registryUser,
+                registryPwd = pipelineDockerDebug.registryPwd,
+                imageType = pipelineDockerDebug.imageType
+            )
+            val request = Request.Builder().url(proxyUrl)
+                .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
+                .addHeader("Accept", "application/json; charset=utf-8")
+                .addHeader("Content-Type", "application/json; charset=utf-8")
+                .build()
+
+            logger.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp url: $proxyUrl, requestBody: ${JsonUtil.toJson(requestBody)}")
+            OkhttpUtils.doLongHttp(request).use { resp ->
+                val responseBody = resp.body()!!.string()
+                logger.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp responseBody: $responseBody")
+                val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
+                when {
+                    response["status"] == 0 -> {
+                        pipelineDockerDebugDao.deleteDebug(dslContext, pipelineDockerDebug.id)
+                    }
+                    else -> {
+                        pipelineDockerDebugDao.updateStatus(dslContext, pipelineId, vmSeqId, PipelineTaskStatus.FAILURE)
+                        val msg = response["message"]
+                        logger.error("[$projectId|$pipelineId] Stop debug Docker VM failed. $msg")
+                        throw RuntimeException("Stop debug Docker VM failed. $msg")
+                    }
+                }
+            }
+        }
+
+        return Result(0, "success")
     }
 
     fun getDebugStatus(pipelineId: String, vmSeqId: String): Result<ContainerInfo> {
@@ -216,6 +326,7 @@ class DockerHostDebugService @Autowired constructor(
                 projectId = debugTask.projectId,
                 pipelineId = debugTask.pipelineId,
                 vmSeqId = debugTask.vmSeqId,
+                poolNo = debugTask.poolNo,
                 status = debugTask.status,
                 imageName = debugTask.imageName,
                 containerId = debugTask.containerId ?: "",
@@ -290,6 +401,7 @@ class DockerHostDebugService @Autowired constructor(
                     projectId = debug.projectId,
                     pipelineId = debug.pipelineId,
                     vmSeqId = debug.vmSeqId,
+                    poolNo = 0,
                     status = PipelineTaskStatus.RUNNING.status,
                     imageName = debug.imageName,
                     containerId = "",
@@ -429,6 +541,7 @@ class DockerHostDebugService @Autowired constructor(
                     projectId = debug.projectId,
                     pipelineId = debug.pipelineId,
                     vmSeqId = debug.vmSeqId,
+                    poolNo = 0,
                     status = debug.status,
                     imageName = debug.imageName,
                     containerId = debug.containerId,
@@ -464,9 +577,13 @@ class DockerHostDebugService @Autowired constructor(
                 logger.info("There is ${timeoutDebugTask.size} debug task have/has already time out, clear it.")
                 stopWatch.start("updateTimeOutDebugTask")
                 for (i in timeoutDebugTask.indices) {
-                    logger.info("clear pipelineId:(${timeoutDebugTask[i].pipelineId}), vmSeqId:(${timeoutDebugTask[i].vmSeqId}), containerId:(${timeoutDebugTask[i].containerId})")
+                    logger.info("Delete timeout debug task, pipelineId:(${timeoutDebugTask[i].pipelineId}), vmSeqId:(${timeoutDebugTask[i].vmSeqId}), containerId:(${timeoutDebugTask[i].containerId})")
+                    try {
+                        deleteDebug(timeoutDebugTask[i].pipelineId, timeoutDebugTask[i].vmSeqId)
+                    } catch (e: Exception) {
+                        logger.warn("Delete timeout debug task failed, ${e.message}")
+                    }
                 }
-                pipelineDockerDebugDao.updateTimeOutDebugTask(dslContext)
                 stopWatch.stop()
                 message = "timeoutDebugTask.size=${timeoutDebugTask.size}"
             }
@@ -564,8 +681,5 @@ class DockerHostDebugService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(DockerHostDebugService::class.java)
-
-        private const val TLINUX1_2_IMAGE = "/bkdevops/docker-builder1.2:v1"
-        private const val TLINUX2_2_IMAGE = "/bkdevops/docker-builder2.2:v1"
     }
 }
