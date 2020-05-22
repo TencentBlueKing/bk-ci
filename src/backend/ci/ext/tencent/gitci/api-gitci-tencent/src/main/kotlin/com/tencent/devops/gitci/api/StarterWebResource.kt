@@ -50,7 +50,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface StarterWebResource {
 
-    @ApiOperation("获取所有模板信息-配置")
+    @ApiOperation("获取所有模板信息-内容和配置")
     @GET
     @Path("/yaml/list")
     fun getYamlList(
@@ -59,7 +59,7 @@ interface StarterWebResource {
         userId: String
     ): Result<List<GitYamlContent>>
 
-    @ApiOperation("获取所有模板信息-内容和配置")
+    @ApiOperation("获取所有模板信息-配置")
     @GET
     @Path("/properties/list")
     fun getPropertyList(
@@ -80,9 +80,9 @@ interface StarterWebResource {
         userId: String
     ): Result<GitStarterWebList>
 
-    @ApiOperation("刷新模板信息")
+    @ApiOperation("更新模板信息-内容和配置")
     @POST
-    @Path("/properties/refresh")
+    @Path("/yaml/update")
     fun update(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
