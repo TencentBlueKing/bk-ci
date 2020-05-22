@@ -1,7 +1,7 @@
 <template>
-    <div class="build-history-tab-content" v-bkloading="{ isLoading }">
-        <filter-bar v-if="showFilterBar" @query="queryBuildHistory" :set-history-page-status="setHistoryPageStatus" :reset-query-condition="resetQueryCondition" v-bind="historyPageStatus.queryMap"></filter-bar>
-        <build-history-table :loading-more="isLoadingMore" :current-pipeline-version="currentPipelineVersion" @update-table="updateBuildHistoryList" :build-list="buildList" :columns="shownColumns" :empty-tips-config="emptyTipsConfig" :show-log="showLog"></build-history-table>
+    <infinite-scroll class="build-history-tab-content" ref="infiniteScroll" :data-fetcher="requestHistory" scroll-box-class-name="bkdevops-pipeline-history" v-slot="slotProps">
+        <filter-bar v-if="showFilterBar" @query="slotProps.queryList" :set-history-page-status="setHistoryPageStatus" :reset-query-condition="resetQueryCondition" v-bind="historyPageStatus.queryMap"></filter-bar>
+        <build-history-table :loading-more="slotProps.isLoadingMore" :current-pipeline-version="currentPipelineVersion" @update-table="updateBuildHistoryList" :build-list="slotProps.list" :columns="shownColumns" :empty-tips-config="emptyTipsConfig" :show-log="showLog"></build-history-table>
         <bk-dialog
             width="567"
             :title="$t('history.settingCols')"
@@ -11,7 +11,7 @@
             @cancel="resetColumns">
             <bk-transfer :source-list="sourceColumns" display-key="label" setting-key="prop" :sortable="true" :target-list="shownColumns" :title="[$t('history.canChooseList'), $t('history.choosedList')]" @change="handleColumnsChange"></bk-transfer>
         </bk-dialog>
-    </div>
+    </infinite-scroll>
 </template>
 
 <script>
@@ -20,18 +20,18 @@
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
     import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS } from '@/utils/pipelineConst'
     import { mapGetters, mapActions, mapState } from 'vuex'
-    import { throttle, coverStrTimer } from '@/utils/util'
+    import { coverStrTimer } from '@/utils/util'
     import { bus } from '@/utils/bus'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
+    import InfiniteScroll from '@/components/InfiniteScroll'
 
     const LS_COLUMNS_KEYS = 'shownColumns'
-    const SCROLL_BOX_CLASS_NAME = 'bkdevops-pipeline-history'
-    const SCROLL_THRESHOLD = 250
     export default {
         name: 'build-history-tab',
         components: {
             BuildHistoryTable,
+            InfiniteScroll,
             FilterBar
         },
 
@@ -49,14 +49,11 @@
             return {
                 shownColumns: initShownColumns,
                 tempColumns: initShownColumns,
-                isLoading: false,
-                isLoadingMore: false,
                 hasNoPermission: false,
                 currentPipelineVersion: '',
                 currentBuildNo: '',
                 currentBuildNum: '',
                 currentShowStatus: false,
-                buildList: [],
                 triggerList: [],
                 queryStrMap: ['status', 'materialAlias', 'materialBranch', 'startTimeStartTime', 'endTimeEndTime']
             }
@@ -106,7 +103,9 @@
                 return historyTableColumns.filter(x => !x.hiddenInHistory)
             },
             emptyTipsConfig () {
-                const { hasNoPermission, buildList, isLoading, historyPageStatus: { isQuerying } } = this
+                const list = this.$refs.infiniteScroll ? this.$refs.infiniteScroll.list : []
+                const isLoading = this.$refs.infiniteScroll ? this.$refs.infiniteScroll.isLoading : []
+                const { hasNoPermission, historyPageStatus: { isQuerying } } = this
                 const title = hasNoPermission ? this.$t('noPermission') : this.$t('history.noBuildRecords')
                 const desc = hasNoPermission ? this.$t('history.noPermissionTips') : this.$t('history.buildEmptyDesc')
                 const btns = hasNoPermission ? [{
@@ -129,8 +128,7 @@
                     },
                     text: this.$t('history.startBuildTips')
                 }]
-
-                return buildList.length === 0 && !isLoading && !isQuerying ? {
+                return list.length === 0 && !isLoading && !isQuerying ? {
                     title,
                     desc,
                     btns
@@ -140,25 +138,12 @@
 
         watch: {
             pipelineId () {
-                this.setHistoryPageStatus({
-                    scrollTop: 0
-                })
-                this.$nextTick(async () => {
-                    const scrollTable = document.querySelector(`.${SCROLL_BOX_CLASS_NAME}`)
-                    if (scrollTable) {
-                        scrollTable.scrollTo(0, 0)
-                    }
-                    this.isLoading = true
-                    await this.requestHistory(1)
-                    this.isLoading = false
-                    // this.initWebSocket()
-                })
-            },
-            buildList (list, oldList) {
-                if (list.length !== oldList.length) {
-                    this.$nextTick(() => {
-                        const { historyPageStatus: { scrollTop } } = this
-                        this.animateScroll(scrollTop)
+                if (this.$refs.infiniteScroll) {
+                    this.$refs.infiniteScroll.setScrollTop(0)
+                    this.$nextTick(async () => {
+                        this.$refs.infiniteScroll.animateScroll(0)
+                        await this.$refs.infiniteScroll.queryList(1)
+                        // this.initWebSocket()
                     })
                 }
             },
@@ -171,18 +156,10 @@
 
         async created () {
             await this.handlePathQuery()
-            const { currentPage, pageSize } = this
-            const len = currentPage * pageSize
-            this.queryBuildHistory(1, len)
         },
 
         async mounted () {
             await this.handleRemoteMethod()
-            const scrollTable = document.querySelector(`.${SCROLL_BOX_CLASS_NAME}`)
-            this.throttleScroll = throttle(this.handleScroll, 500)
-            if (scrollTable) {
-                scrollTable.addEventListener('scroll', this.throttleScroll)
-            }
             if (this.$route.hash) { // 带上buildId时，弹出日志弹窗
                 const isBuildId = /^#b-+/.test(this.$route.hash) // 检查是否是合法的buildId
                 isBuildId && this.showLog(this.$route.hash.slice(1), '', true)
@@ -199,10 +176,6 @@
         },
 
         beforeDestroy () {
-            const scrollTable = document.querySelector(`.${SCROLL_BOX_CLASS_NAME}`)
-            if (scrollTable) {
-                scrollTable.removeEventListener('scroll', this.throttleScroll)
-            }
             this.resetHistoryFilterCondition()
             webSocketMessage.unInstallWsMessage()
         },
@@ -217,12 +190,6 @@
             ...mapActions('atom', [
                 'togglePropertyPanel'
             ]),
-            animateScroll (scrollTop, speed = 0) {
-                const scrollTable = document.querySelector(`.${SCROLL_BOX_CLASS_NAME}`)
-                if (scrollTable && scrollTop !== scrollTable.scrollTop) {
-                    scrollTable.scrollTo(0, scrollTop)
-                }
-            },
             handleColumnsChange (source, target, tagetValueList) {
                 this.tempColumns = tagetValueList.sort((v1, v2) => this.BUILD_HISTORY_TABLE_COLUMNS_MAP[v1].index - this.BUILD_HISTORY_TABLE_COLUMNS_MAP[v2].index)
             },
@@ -237,19 +204,6 @@
                 this.tempColumns = [...this.shownColumns]
                 this.shownColumns = [...this.shownColumns]
                 this.$emit('hideColumnPopup')
-            },
-
-            handleScroll (e) {
-                const { target } = e
-                const { historyPageStatus, setHistoryPageStatus, scrollLoadMore, isLoadingMore } = this
-                setHistoryPageStatus({
-                    scrollTop: e.target.scrollTop
-                })
-
-                const offset = e.target.scrollHeight - (e.target.offsetHeight + e.target.scrollTop)
-                if (offset <= SCROLL_THRESHOLD && historyPageStatus.hasNext && !isLoadingMore) { // scroll to end
-                    scrollLoadMore(target.scrollTop)
-                }
             },
 
             changeProject () {
@@ -273,7 +227,7 @@
 
             resetQueryCondition () {
                 this.resetHistoryFilterCondition()
-                this.queryBuildHistory()
+                this.$refs.infiniteScroll.queryList()
             },
 
             showLog (buildId, buildNum, status) {
@@ -351,44 +305,9 @@
                 }
             },
 
-            async queryBuildHistory (page = 1, pageSize) {
-                try {
-                    this.isLoading = true
-                    await this.requestHistory(page, pageSize)
-                } catch (e) {
-                    console.error(e)
-                } finally {
-                    this.isLoading = false
-                }
-            },
-
-            async scrollLoadMore () {
-                try {
-                    this.isLoadingMore = true
-                    await this.requestHistory(this.historyPageStatus.currentPage + 1)
-                } catch (e) {
-                    console.log(e)
-                    this.$showTips({
-                        message: this.$t('history.loadingErr'),
-                        theme: 'error'
-                    })
-                } finally {
-                    this.isLoadingMore = false
-                }
-            },
-
             async updateBuildHistoryList () {
                 try {
-                    const { projectId, pipelineId, buildList, historyPageStatus: { pageSize } } = this
-                    const oldlen = buildList.length
-                    const res = await this.requestPipelinesHistory({
-                        projectId,
-                        pipelineId,
-                        page: 1,
-                        pageSize: oldlen > pageSize ? oldlen : pageSize
-                    })
-
-                    this.buildList = res.records
+                    const res = await this.$refs.infiniteScroll.updateList()
                     this.currentPipelineVersion = res.pipelineVersion || ''
                 } catch (err) {
                     if (err.code === 403) {
@@ -417,17 +336,8 @@
                         page,
                         pageSize: pageLen
                     })
-
-                    this.buildList = page === 1 ? res.records : [
-                        ...this.buildList,
-                        ...res.records
-                    ]
-                    const currentPage = Math.ceil(this.buildList.length / defaultPageSize)
-                    this.setHistoryPageStatus({
-                        currentPage,
-                        hasNext: currentPage < res.totalPages
-                    })
                     this.currentPipelineVersion = res.pipelineVersion || ''
+                    return res
                 } catch (err) {
                     if (err.code === 403) {
                         this.hasNoPermission = true

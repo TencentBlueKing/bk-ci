@@ -217,7 +217,7 @@ class DockerHostBuildLessService(
             // docker stop
             val containerInfo = dockerCli.inspectContainerCmd(containerId).exec()
             if ("exited" != containerInfo.state.status) {
-                dockerCli.stopContainerCmd(containerId).withTimeout(30).exec()
+                dockerCli.stopContainerCmd(containerId).withTimeout(15).exec()
             }
         } catch (ignored: Throwable) {
             logger.error("[$buildId]| Stop the container failed, containerId: $containerId, error msg: $ignored", ignored)

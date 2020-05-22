@@ -27,8 +27,10 @@ package com.tencent.devops.notify.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.notify.model.NotifyMessageCommonTemplate
-import com.tencent.devops.notify.model.NotifyTemplateMessageRequest
+import com.tencent.devops.notify.pojo.NotifyMessageCommonTemplate
+import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
+import com.tencent.devops.notify.pojo.NotifyContext
+import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
 
@@ -88,7 +90,13 @@ interface NotifyMessageTemplateService {
 
     /**
      * 使用模板发送消息通知
-     * @param sendNotifyMessageTemplateRequest 使用模板发送消息通知请求报文体
+     * @param request 使用模板发送消息通知请求报文体
      */
-    fun sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest: SendNotifyMessageTemplateRequest): Result<Boolean>
+    fun sendNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean>
+
+    /**
+     * 使用模板发送消息通知
+     * @param getNotifyMessageByTemplate 使用模板发送消息通知请求报文体
+     */
+    fun getNotifyMessageByTemplate(request: NotifyMessageContextRequest): Result<NotifyContext?>
 }
