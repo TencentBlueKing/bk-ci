@@ -54,15 +54,10 @@ import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
 import javax.ws.rs.ApplicationPath
 
-@Suppress("LeakingThis")
 @ApplicationPath("/api")
-open class JerseyConfig() : ResourceConfig(), ApplicationContextAware, InitializingBean {
+open class JerseyConfig : ResourceConfig(), ApplicationContextAware, InitializingBean {
     private lateinit var applicationContext: ApplicationContext
     private val logger = LoggerFactory.getLogger(JerseyConfig::class.java)
-
-    init {
-        register(ValidationConfigurationContextResolver::class.java)
-    }
 
     override fun setApplicationContext(applicationContext: ApplicationContext) {
         this.applicationContext = applicationContext
@@ -70,6 +65,7 @@ open class JerseyConfig() : ResourceConfig(), ApplicationContextAware, Initializ
 
     override fun afterPropertiesSet() {
         logger.info("JerseyConfig-register-start")
+        register(ValidationConfigurationContextResolver::class.java)
         register(DependNotFoundExceptionMapper::class.java)
         register(ParamBlankExceptionMapper::class.java)
         register(IllegalArgumentExceptionMapper::class.java)
