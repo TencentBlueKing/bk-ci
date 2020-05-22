@@ -12,13 +12,13 @@ class CacheSessionListener @Autowired constructor(
     private val websocketService: WebsocketService
 ) : Listener<ClearSessionEvent> {
     override fun execute(event: ClearSessionEvent) {
-        if(websocketService.isCacheSession(event.sessionId)) {
+        if (websocketService.isCacheSession(event.sessionId)) {
             logger.info("clear cache session by mq fanout, userId[${event.userId}] sessionId[${event.sessionId}]")
             websocketService.removeCacheSession(event.sessionId)
         }
     }
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
 }
