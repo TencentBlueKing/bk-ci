@@ -954,7 +954,7 @@ class PipelineBuildDetailService @Autowired constructor(
                         // 恢复detail表model内的对应element为默认值
                         newElements.add(objectMapper.readValue(defaultElement, Element::class.java))
                         // 重置插件状态开发
-                        pipelineTaskService.pauseTaskFinishExecute(buildId, element.id)
+                        pipelineTaskService.pauseTaskFinishExecute(buildId, element.id!!)
                         needUpdate = true
                     } else {
                         newElements.add(element)
