@@ -225,13 +225,13 @@ class AppPipelineService @Autowired constructor(
         private val userId: String
     ) : Callable<AppProject> {
         override fun call(): AppProject {
-            val count = pipelineService.listPermissionPipelineCount(userId, project.projectCode)
+//            val count = pipelineService.listPermissionPipelineCount(userId, project.projectCode)
             val logoAddr = if (project.logoAddr.startsWith("http://radosgw.open.oa.com")) {
                 "https://dev-download.bkdevops.qq.com/images" + project.logoAddr.removePrefix("http://radosgw.open.oa.com")
             } else {
                 project.logoAddr
             }
-            return AppProject(project.projectCode, count, project.projectName, logoAddr, project.approvalStatus)
+            return AppProject(project.projectCode, 0, project.projectName, logoAddr, project.approvalStatus)
         }
     }
 }
