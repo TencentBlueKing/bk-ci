@@ -30,7 +30,7 @@ import org.springframework.data.redis.core.Cursor
 import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.core.ScanOptions
-import java.util.*
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 class RedisOperation(private val redisTemplate: RedisTemplate<String, String>) {
