@@ -24,7 +24,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -37,6 +36,7 @@ import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.TxStoreCodeccValidateDao
 import com.tencent.devops.store.pojo.common.ATOM_CODECC_FAILED_TEMPLATE
 import com.tencent.devops.store.pojo.common.ATOM_CODECC_QUALIFIED_TEMPLATE
+import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreNotifyService
 import com.tencent.devops.store.service.common.TxStoreCodeccValidateService
@@ -55,11 +55,15 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
     private val storeCodeccValidateDao: TxStoreCodeccValidateDao,
     private val storeNotifyService: StoreNotifyService,
     private val dslContext: DSLContext
-)  : TxStoreCodeccValidateService {
+) : TxStoreCodeccValidateService {
 
     private val logger = LoggerFactory.getLogger(TxStoreCodeccValidateServiceImpl::class.java)
 
     private final val toolNameEn = "tool_name_en"
+
+    private final val totalNewSerious = "total_new_serious"
+
+    private final val totalNewNormal = "total_new_normal"
 
     private final val codeCalScoreStyle = "codeCalScoreStyle"
 
@@ -67,16 +71,12 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
     private lateinit var codeccDetailUrl: String
 
     override fun validateCodeccResult(
-        projectId: String,
-        userId: String,
-        buildId: String,
-        atomCode: String,
-        language: String
+        storeValidateCodeccResultRequest: StoreValidateCodeccResultRequest
     ): Result<Boolean> {
-        logger.info("validateCodeccResult projectId:$projectId,userId:$userId,buildId:$buildId,atomCode:$atomCode,language:$language")
+        logger.info("validateCodeccResult storeValidateCodeccResultRequest:$storeValidateCodeccResultRequest")
         // 获取codecc扫描结果数据
-        val toolSnapshotList = getToolSnapshotList(buildId)
-        val totalLine = 1000L //待dd补充，暂时写死
+        val toolSnapshotList = getToolSnapshotList(storeValidateCodeccResultRequest.buildId)
+        val totalLine = 1000L // 待dd补充，暂时写死
         var totalCoveritySeriousWaringCount = 0
         var totalCoverityNormalWaringCount = 0
         var totalCcnExceedNum = 0.0
@@ -89,17 +89,17 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
             val codeccToolNameEn = codeccItemMap[toolNameEn]
             when {
                 codeccToolNameEn == "COVERITY" -> {
-                    totalCoveritySeriousWaringCount = codeccItemMap["total_new_serious"] as Int
-                    totalCoverityNormalWaringCount = codeccItemMap["total_new_normal"] as Int
+                    totalCoveritySeriousWaringCount = codeccItemMap[totalNewSerious] as Int
+                    totalCoverityNormalWaringCount = codeccItemMap[totalNewNormal] as Int
                 }
                 codeccToolNameEn == "CCN" -> totalCcnExceedNum = codeccItemMap["total_ccn"] as Double
                 codeccToolNameEn == "WOODPECKER_SENSITIVE" -> {
-                    totalSeriousRiskCount = codeccItemMap["total_new_serious"] as Int
-                    totalNormalRiskCount = codeccItemMap["total_new_normal"] as Int
+                    totalSeriousRiskCount = codeccItemMap[totalNewSerious] as Int
+                    totalNormalRiskCount = codeccItemMap[totalNewNormal] as Int
                 }
                 codeStyleToolNameEnList.contains(codeccToolNameEn) -> {
-                    totalSeriousWaringCount = codeccItemMap["total_new_serious"] as Int
-                    totalNormalWaringCount = codeccItemMap["total_new_normal"] as Int
+                    totalSeriousWaringCount = codeccItemMap[totalNewSerious] as Int
+                    totalNormalWaringCount = codeccItemMap[totalNewNormal] as Int
                 }
             }
         }
@@ -108,7 +108,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
             totalSeriousWaringCount = totalSeriousWaringCount,
             totalNormalWaringCount = totalNormalWaringCount,
             totalLine = totalLine,
-            language = language
+            language = storeValidateCodeccResultRequest.language
         )
         // 计算代码安全评分
         val codeSecurityScore = calCodeSecurityScore(totalSeriousRiskCount, totalNormalRiskCount)
@@ -122,14 +122,14 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         // 获取合格分数配置
         val qualifiedScoreConfig = businessConfigDao.get(dslContext, StoreTypeEnum.ATOM.name, "codecc", "qualifiedScore")
         val qualifiedScore = (qualifiedScoreConfig?.configValue ?: "90").toDouble()
-        val notifyTemplateCode = if(codeStyleScore >= qualifiedScore && codeSecurityScore >= qualifiedScore && codeMeasureScore >= qualifiedScore) {
+        val notifyTemplateCode = if (codeStyleScore >= qualifiedScore && codeSecurityScore >= qualifiedScore && codeMeasureScore >= qualifiedScore) {
             ATOM_CODECC_QUALIFIED_TEMPLATE
         } else {
             ATOM_CODECC_FAILED_TEMPLATE
         }
         // 发送邮件通知插件成员
-        val receivers = mutableSetOf(userId)
-        val codeccDetailUrl = MessageFormat(codeccDetailUrl).format(arrayOf(projectId))
+        val receivers = mutableSetOf(storeValidateCodeccResultRequest.userId)
+        val codeccDetailUrl = MessageFormat(codeccDetailUrl).format(arrayOf(storeValidateCodeccResultRequest.projectCode, storeValidateCodeccResultRequest.taskId))
         val bodyParams = mapOf(
             "codeStyleScore" to codeStyleScore.toString(),
             "codeSecurityScore" to codeSecurityScore.toString(),
@@ -165,12 +165,12 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
      */
     private fun calCodeStyleScore(totalSeriousWaringCount: Int, totalNormalWaringCount: Int, totalLine: Long, language: String): Double {
         // 计算百行告警数，百行告警数=（严重告警数*1+一般告警数*0.5）/代码行数*100
-        val hundredWaringCount = ((totalSeriousWaringCount*1 + totalNormalWaringCount*0.5)/totalLine)*100
+        val hundredWaringCount = ((totalSeriousWaringCount * 1 + totalNormalWaringCount * 0.5) / totalLine) * 100
         // 从配置表中读取60分对应百行告警数配置
         val languageWaringConfig = businessConfigDao.get(dslContext, StoreTypeEnum.ATOM.name, "codeStyleHundredWaring", language)
         val languageWaringConfigCount = languageWaringConfig?.configValue ?: "6"
         // 计算代码规范评分
-        val score = 100*((0.6.pow(1.toDouble() / languageWaringConfigCount.toDouble())).pow(hundredWaringCount))
+        val score = 100 * ((0.6.pow(1.toDouble() / languageWaringConfigCount.toDouble())).pow(hundredWaringCount))
         return String.format("%.2f", score).toDouble()
     }
 
@@ -201,7 +201,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
      */
     private fun calCodeMeasureScore(totalCoveritySeriousWaringCount: Int, totalCoverityNormalWaringCount: Int, totalLine: Long, totalCcnExceedNum: Double): Double {
         // 计算圈复杂度千行平均超标数
-        val thousandCcnCount = 1000*totalCcnExceedNum/totalLine
+        val thousandCcnCount = 1000 * totalCcnExceedNum / totalLine
         // 从配置表中读取圈复杂度评分计算规则
         val ccnCodeCalScoreStyleConfig = businessConfigDao.get(dslContext, StoreTypeEnum.ATOM.name, codeCalScoreStyle, "ccn")
         val ccnCodeCalScoreStyle = ccnCodeCalScoreStyleConfig!!.configValue
@@ -210,13 +210,13 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         // 计算严重告警数得分
         val coveritySeriousWaringScore = if (totalCoveritySeriousWaringCount > 0) 0 else 100
         // 计算一般告警数千行均值
-        val thousandCoverityNormalWaringCount = (1000*totalCoverityNormalWaringCount/totalLine).toDouble()
-        // 从配置表中读取圈复杂度评分计算规则
+        val thousandCoverityNormalWaringCount = (1000 * totalCoverityNormalWaringCount / totalLine).toDouble()
+        // 从配置表中读取coverity一般告警数评分计算规则
         val coverityCalScoreStyleConfig = businessConfigDao.get(dslContext, StoreTypeEnum.ATOM.name, codeCalScoreStyle, "coverityNormalWaring")
         val coverityCalScoreStyle = coverityCalScoreStyleConfig!!.configValue
         // 计算一般告警数得分评分
         val coverityNormalWaringScore = storeCodeccValidateDao.getScore(dslContext, coverityCalScoreStyle, thousandCoverityNormalWaringCount)
-        val score = 0.9*ccnScore + 0.08*coveritySeriousWaringScore + 0.02*coverityNormalWaringScore
+        val score = 0.9 * ccnScore + 0.08 * coveritySeriousWaringScore + 0.02 * coverityNormalWaringScore
         return String.format("%.2f", score).toDouble()
     }
 }

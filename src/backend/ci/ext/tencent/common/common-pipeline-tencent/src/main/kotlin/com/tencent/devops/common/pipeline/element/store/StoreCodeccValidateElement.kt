@@ -41,7 +41,9 @@ data class StoreCodeccValidateElement(
     @ApiModelProperty("状态", required = false)
     override var status: String? = null,
     @ApiModelProperty("开发语言", required = true)
-    val language: String = "\${language}"
+    val language: String = "\${language}",
+    @ApiModelProperty("任务ID", required = true)
+    val taskId: String = "\${taskId}"
 ) : Element(name, id, status) {
 
     companion object {

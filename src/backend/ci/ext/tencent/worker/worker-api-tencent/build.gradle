@@ -30,6 +30,7 @@ dependencies {
     compile project(":core:artifactory:api-artifactory-store")
     compile project(":ext:tencent:common:common-archive-tencent")
     compile project(":ext:tencent:common:common-pipeline-tencent")
+    compile project(":ext:tencent:store:api-store-tencent")
     compile project(":ext:tencent:store:api-store-service")
     compile project(":ext:tencent:dispatch:api-dispatch-bcs")
     compile group: 'me.cassiano', name: 'ktlint-html-reporter', version: '0.1.2'

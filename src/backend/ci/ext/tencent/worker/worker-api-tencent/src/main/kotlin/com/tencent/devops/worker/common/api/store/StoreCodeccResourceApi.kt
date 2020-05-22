@@ -27,16 +27,22 @@ package com.tencent.devops.worker.common.api.store
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import okhttp3.MediaType
+import okhttp3.RequestBody
 
 class StoreCodeccResourceApi : AbstractBuildResourceApi() {
 
     fun validate(
-        buildId: String,
-        language: String
+        storeValidateCodeccResultRequest: StoreValidateCodeccResultRequest
     ): Result<Boolean> {
-        val path = "/ms/store/api/build/store/codecc/validate?buildId=$buildId&language=$language"
-        val request = buildGet(path)
+        val path = "/ms/store/api/build/store/codecc/validate"
+        val body = RequestBody.create(
+            MediaType.parse("application/json; charset=utf-8"),
+            objectMapper.writeValueAsString(storeValidateCodeccResultRequest)
+        )
+        val request = buildPost(path, body)
         val responseContent = request(request, "codecc validate fail")
         return objectMapper.readValue(responseContent)
     }

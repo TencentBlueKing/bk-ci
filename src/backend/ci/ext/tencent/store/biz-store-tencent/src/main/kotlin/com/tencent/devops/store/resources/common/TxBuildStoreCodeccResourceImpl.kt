@@ -29,6 +29,7 @@ package com.tencent.devops.store.resources.common
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.TxBuildStoreCodeccResource
+import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
 import com.tencent.devops.store.service.common.TxStoreCodeccValidateService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -37,7 +38,7 @@ class TxBuildStoreCodeccResourceImpl @Autowired constructor(
     private val txStoreCodeccValidateService: TxStoreCodeccValidateService
 ) : TxBuildStoreCodeccResource {
 
-    override fun validate(buildId: String, language: String): Result<Boolean> {
-        return txStoreCodeccValidateService.validateCodeccResult(buildId, language)
+    override fun validate(storeValidateCodeccResultRequest: StoreValidateCodeccResultRequest): Result<Boolean> {
+        return txStoreCodeccValidateService.validateCodeccResult(storeValidateCodeccResultRequest)
     }
 }

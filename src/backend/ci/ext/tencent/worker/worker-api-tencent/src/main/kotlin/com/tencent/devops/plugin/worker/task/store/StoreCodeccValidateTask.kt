@@ -33,8 +33,11 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.element.store.StoreCodeccValidateElement
+import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
 import com.tencent.devops.worker.common.api.store.StoreCodeccResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
@@ -50,21 +53,34 @@ class StoreCodeccValidateTask : ITask() {
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         logger.info("StoreCodeccValidateTask buildTask: $buildTask,buildVariables: $buildVariables")
         val buildId = buildTask.buildId
-        LoggerService.addNormalLine("buildId:$buildId begin archive extService package")
         val buildVariableMap = buildTask.buildVariable!!
         val language = buildVariableMap["language"] ?: throw TaskExecuteException(
             errorMsg = "param [language] is empty",
             errorType = ErrorType.SYSTEM,
             errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
-        // 根据校验标准模型去校验codecc代码扫描的指标是否满足需求
-        LoggerService.addNormalLine("codecc start")
-        val storeCodeccResourceApi = StoreCodeccResourceApi()
-        val codeccValidateResult = storeCodeccResourceApi.validate(
-            buildId = buildId,
-            language = language
+        val taskId = buildVariableMap["taskId"] ?: throw TaskExecuteException(
+            errorMsg = "param [taskId] is empty",
+            errorType = ErrorType.SYSTEM,
+            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
-        logger.info("StoreCodeccValidateTask codeccValidateResult: $codeccValidateResult")
+        // 根据校验标准模型去校验codecc代码扫描的指标是否满足需求
+        LoggerService.addNormalLine("codecc validate start")
+        val storeCodeccResourceApi = StoreCodeccResourceApi()
+        val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID) ?: throw TaskExecuteException(
+            errorMsg = "user basic info error, please check environment.",
+            errorType = ErrorType.SYSTEM,
+            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+        )
+        val storeValidateCodeccResultRequest = StoreValidateCodeccResultRequest(
+            projectCode = buildVariables.projectId,
+            userId = userId,
+            buildId = buildId,
+            language = language,
+            taskId = taskId
+        )
+        val codeccValidateResult = storeCodeccResourceApi.validate(storeValidateCodeccResultRequest)
+        LoggerService.addNormalLine("codeccValidateResult: $codeccValidateResult")
         if (codeccValidateResult.isNotOk()) {
             LoggerService.addRedLine(JsonUtil.toJson(codeccValidateResult))
             throw TaskExecuteException(

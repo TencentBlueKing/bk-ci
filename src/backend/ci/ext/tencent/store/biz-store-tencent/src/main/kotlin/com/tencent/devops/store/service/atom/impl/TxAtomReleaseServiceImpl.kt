@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.constant.NUM_TWO
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -51,6 +52,7 @@ import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.plugin.api.ServiceCodeccResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineInitResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
@@ -331,6 +333,19 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             val profile = SpringContextUtil.getBean(Profile::class.java)
             if (!profile.isDev()) {
                 // dev环境暂不支持codecc，无需安装规则集
+                val checkerSetConfig = businessConfigDao.get(context, StoreTypeEnum.ATOM.name, "${language}Codecc", "CHECKER_SET")
+                val checkerSetIds = checkerSetConfig?.configValue?.split(",")
+                checkerSetIds?.forEach { checkerSetId ->
+                    val installCheckerSetResult = client.get(ServiceCodeccResource::class).installCheckerSet(
+                        projectId = projectCode!!,
+                        userId = userId,
+                        type = "PROJECT",
+                        checkerSetId = checkerSetId
+                    )
+                    if (installCheckerSetResult.isNotOk() || installCheckerSetResult.data == false) {
+                        throw ErrorCodeException(errorCode = installCheckerSetResult.status.toString(), defaultMessage = installCheckerSetResult.message)
+                    }
+                }
             }
             val version = atomRecord.version
             val atomBaseInfo = AtomBaseInfo(
@@ -339,8 +354,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 version = atomRecord.version,
                 language = language
             )
-            val businessConfig = businessConfigDao.get(context, StoreTypeEnum.ATOM.name, "initBuildPipeline", "PIPELINE_MODEL")
-            var pipelineModel = businessConfig!!.configValue
+            val pipelineModelConfig = businessConfigDao.get(context, StoreTypeEnum.ATOM.name, "initBuildPipeline", "PIPELINE_MODEL")
+            var pipelineModel = pipelineModelConfig!!.configValue
             val pipelineName = "am-$projectCode-$atomCode-${System.currentTimeMillis()}"
             val paramMap = mapOf(
                 "pipelineName" to pipelineName,

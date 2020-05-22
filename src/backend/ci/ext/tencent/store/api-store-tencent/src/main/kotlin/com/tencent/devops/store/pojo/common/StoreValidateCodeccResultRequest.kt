@@ -24,30 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.common
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+package com.tencent.devops.store.pojo.common
 
-@Api(tags = ["BUILD_STORE_CODECC"], description = "store组件代码扫描")
-@Path("/build/store/codecc")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface TxBuildStoreCodeccResource {
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    @ApiOperation("codecc代码扫描结果校验")
-    @POST
-    @Path("/validate")
-    fun validate(
-        @ApiParam(value = "校验codecc扫描结果请求报文体", required = true)
-        storeValidateCodeccResultRequest: StoreValidateCodeccResultRequest
-    ): Result<Boolean>
-}
+@ApiModel("校验codecc扫描结果请求报文体")
+data class StoreValidateCodeccResultRequest(
+    @ApiModelProperty("项目代码", required = true)
+    val projectCode: String,
+    @ApiModelProperty("用户ID", required = true)
+    val userId: String,
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("开发语言", required = true)
+    val language: String,
+    @ApiModelProperty("代码扫描任务ID", required = true)
+    val taskId: String
+)
