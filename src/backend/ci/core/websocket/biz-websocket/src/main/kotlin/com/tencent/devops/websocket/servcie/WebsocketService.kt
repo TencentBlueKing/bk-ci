@@ -203,7 +203,7 @@ class WebsocketService @Autowired constructor(
             logger.info("$userId| $sessionId| ws loginOut fail, page[$page], refresh by interface")
             loginOut(userId, sessionId, page)
         }
-        if(!isCacheSession(sessionId)) {
+        if (!isCacheSession(sessionId)) {
             transferDispatch.dispatch(
                 ClearSessionEvent(
                     userId = userId,
