@@ -67,7 +67,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
 
     private final val codeCalScoreStyle = "codeCalScoreStyle"
 
-    @Value("\${codeccDetailUrl}")
+    @Value("\${codecc.detailUrl}")
     private lateinit var codeccDetailUrl: String
 
     override fun validateCodeccResult(
