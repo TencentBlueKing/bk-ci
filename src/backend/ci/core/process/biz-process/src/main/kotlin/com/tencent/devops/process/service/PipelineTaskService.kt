@@ -174,13 +174,13 @@ class PipelineTaskService @Autowired constructor(
 
     fun isPause(taskId: String, buildId: String): Boolean {
         val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
-        val pauseFlag = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId))
+        val pauseFlag = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId, taskId))
         val isPause = ControlUtils.pauseBeforeExec(taskRecord!!.additionalOptions, pauseFlag)
         if (isPause) {
             logger.info("pause atom, buildId[$buildId], taskId[$taskId] , additionalOptions[${taskRecord!!.additionalOptions}]")
             buildLogPrinter.addYellowLine(
                 buildId = buildId,
-                message = "当前插件${taskRecord.taskName}暂停中，等待手动点击继续",
+                message = "【${taskRecord.taskName}】暂停中，等待人工处理...",
                 tag = taskRecord.taskId,
                 jobId = taskRecord.containerId,
                 executeCount = 1
@@ -323,8 +323,8 @@ class PipelineTaskService @Autowired constructor(
     }
 
     // 重置暂停任务暂停状态位
-    fun pauseTaskFinishExecute(buildId: String, taskId: String?) {
-        redisOperation.delete(PauseRedisUtils.getPauseRedisKey(buildId))
+    fun pauseTaskFinishExecute(buildId: String, taskId: String) {
+        redisOperation.delete(PauseRedisUtils.getPauseRedisKey(buildId, taskId))
     }
 
     private fun getRedisKey(buildId: String, taskId: String): String {
@@ -352,7 +352,7 @@ class PipelineTaskService @Autowired constructor(
         )
         logger.info("pauseBuild $buildId update detail status success")
 
-        redisOperation.set(PauseRedisUtils.getPauseRedisKey(buildId), "true")
+        redisOperation.set(PauseRedisUtils.getPauseRedisKey(buildId, taskId), "true")
         logger.info("pauseTask set redis flag success")
     }
 
