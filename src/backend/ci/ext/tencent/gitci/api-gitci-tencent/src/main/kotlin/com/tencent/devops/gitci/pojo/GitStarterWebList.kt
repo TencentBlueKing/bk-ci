@@ -29,8 +29,8 @@ package com.tencent.devops.gitci.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("工蜂CI起始页内容")
-data class GitStarterContent(
+@ApiModel("工蜂CI起始页配置信息-分类")
+data class GitStarterWebList(
     @ApiModelProperty("TKEX分类")
     val tkex: List<GitYamlProperty>,
     @ApiModelProperty("其他分类")

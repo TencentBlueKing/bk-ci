@@ -29,7 +29,8 @@ package com.tencent.devops.gitci.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.gitci.pojo.GitStarterContent
+import com.tencent.devops.gitci.pojo.GitStarterWebList
+import com.tencent.devops.gitci.pojo.GitYamlContent
 import com.tencent.devops.gitci.pojo.GitYamlProperty
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -49,14 +50,23 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface StarterWebResource {
 
-    @ApiOperation("获取所有模板信息")
+    @ApiOperation("获取所有模板信息-配置")
+    @GET
+    @Path("/yaml/list")
+    fun getYamlList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<GitYamlContent>>
+
+    @ApiOperation("获取所有模板信息-内容和配置")
     @GET
     @Path("/properties/list")
-    fun getList(
+    fun getPropertyList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("", required = false, defaultValue = "")
+        @ApiParam("指定类别名", required = false, defaultValue = "")
         @QueryParam("类别名")
         category: String?
     ): Result<List<GitYamlProperty>>
@@ -68,16 +78,16 @@ interface StarterWebResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
-    ): Result<GitStarterContent>
+    ): Result<GitStarterWebList>
 
     @ApiOperation("刷新模板信息")
     @POST
     @Path("/properties/refresh")
-    fun refresh(
+    fun update(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "最新的所有模板属性", required = true)
-        properties: List<GitYamlProperty>
+        properties: List<GitYamlContent>
     ): Result<Int>
 }

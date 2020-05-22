@@ -30,7 +30,8 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.StarterWebResource
-import com.tencent.devops.gitci.pojo.GitStarterContent
+import com.tencent.devops.gitci.pojo.GitStarterWebList
+import com.tencent.devops.gitci.pojo.GitYamlContent
 import com.tencent.devops.gitci.pojo.GitYamlProperty
 import com.tencent.devops.gitci.service.StarterWebService
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,20 +40,24 @@ import org.springframework.beans.factory.annotation.Autowired
 class StarterWebResourceImpl @Autowired constructor(
     private val starterWebService: StarterWebService
 ) : StarterWebResource {
-
-    override fun getList(userId: String, category: String?): Result<List<GitYamlProperty>> {
+    override fun getYamlList(userId: String): Result<List<GitYamlContent>> {
         checkParam(userId)
-        return Result(starterWebService.getStarterYamlList(category))
+        return Result(starterWebService.getYamlList())
     }
 
-    override fun getWebList(userId: String): Result<GitStarterContent> {
+    override fun getPropertyList(userId: String, category: String?): Result<List<GitYamlProperty>> {
+        checkParam(userId)
+        return Result(starterWebService.getPropertyList(category))
+    }
+
+    override fun getWebList(userId: String): Result<GitStarterWebList> {
         checkParam(userId)
         return Result(starterWebService.getStarterWebList())
     }
 
-    override fun refresh(userId: String, properties: List<GitYamlProperty>): Result<Int> {
+    override fun update(userId: String, properties: List<GitYamlContent>): Result<Int> {
         checkParam(userId)
-        return Result(starterWebService.refreshStarterYamls(properties))
+        return Result(starterWebService.updateStarterYamls(properties))
     }
 
     private fun checkParam(userId: String) {

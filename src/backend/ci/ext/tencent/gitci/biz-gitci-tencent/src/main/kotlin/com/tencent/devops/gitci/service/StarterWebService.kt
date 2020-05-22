@@ -27,12 +27,12 @@
 package com.tencent.devops.gitci.service
 
 import com.tencent.devops.gitci.dao.GitStarterWebYamlDao
-import com.tencent.devops.gitci.pojo.GitStarterContent
+import com.tencent.devops.gitci.pojo.GitStarterWebList
+import com.tencent.devops.gitci.pojo.GitYamlContent
 import com.tencent.devops.gitci.pojo.GitYamlProperty
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 
@@ -43,37 +43,36 @@ class StarterWebService @Autowired constructor(
     private val gitStarterWebYamlDao: GitStarterWebYamlDao
 ) {
 
-    @Value("\${git.starter.yamlUrl:#{null}}")
-    private val yamlUrl: String? = ""
+    fun getYamlList(category: String? = null): List<GitYamlContent> {
+        logger.info("getYamlList with category: $category")
+        return gitStarterWebYamlDao.getYamlContents(dslContext)
+    }
 
-    @Value("\${git.starter.iconUrl:#{null}}")
-    private val iconUrl: String? = ""
-
-    fun getStarterYamlList(category: String? = null): List<GitYamlProperty> {
-        logger.info("getStarterYamlList with category: $category")
+    fun getPropertyList(category: String? = null): List<GitYamlProperty> {
+        logger.info("getPropertyList with category: $category")
         return if (category.isNullOrEmpty()) {
-            gitStarterWebYamlDao.getList(dslContext, yamlUrl, iconUrl)
+            gitStarterWebYamlDao.getProperties(dslContext)
         } else {
-            gitStarterWebYamlDao.getList(dslContext, yamlUrl, iconUrl).filter {
+            gitStarterWebYamlDao.getProperties(dslContext).filter {
                 it.categories?.contains(category) == true
             }
         }
     }
 
-    fun getStarterWebList(): GitStarterContent {
+    fun getStarterWebList(): GitStarterWebList {
         val tkexList = mutableListOf<GitYamlProperty>()
         val othersList = mutableListOf<GitYamlProperty>()
-        gitStarterWebYamlDao.getList(dslContext, yamlUrl, iconUrl).forEach {
+        gitStarterWebYamlDao.getProperties(dslContext).forEach {
 
             if (it.categories?.contains("TKEX") == true) tkexList.add(it)
             else othersList.add(it)
         }
-        return GitStarterContent(tkexList, othersList)
+        return GitStarterWebList(tkexList, othersList)
     }
 
-    fun refreshStarterYamls(properties: List<GitYamlProperty>): Int {
-        logger.info("refreshStarterYamls: $properties")
-        return gitStarterWebYamlDao.refreshProperties(dslContext, properties)
+    fun updateStarterYamls(properties: List<GitYamlContent>): Int {
+        logger.info("updateStarterYamls: $properties")
+        return gitStarterWebYamlDao.updateYamls(dslContext, properties)
     }
 
     companion object {

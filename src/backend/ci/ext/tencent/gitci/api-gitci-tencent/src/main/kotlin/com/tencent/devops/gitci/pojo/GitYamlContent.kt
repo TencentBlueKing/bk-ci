@@ -29,18 +29,10 @@ package com.tencent.devops.gitci.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("工蜂CI起始页内容-属性")
-data class GitYamlProperty(
-    @ApiModelProperty("Yaml的文件名")
-    val name: String,
-    @ApiModelProperty("Yaml的描述")
-    val description: String,
+@ApiModel("工蜂CI起始页配置信息-内容和属性")
+data class GitYamlContent(
+    @ApiModelProperty("YAML文件内容")
+    val yaml: String,
     @ApiModelProperty("显示的icon图标名")
-    val iconName: String,
-    @ApiModelProperty("分类标识")
-    val categories: List<String>?,
-    @ApiModelProperty("Yaml的文件名")
-    var yamlUrl: String? = "",
-    @ApiModelProperty("显示的icon路径")
-    var iconUrl: String? = ""
+    val property: GitYamlProperty
 )
