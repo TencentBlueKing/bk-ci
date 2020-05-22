@@ -1859,12 +1859,26 @@ class PipelineBuildService(
                 jobId = containerId,
                 executeCount = 1
             )
-            buildManualShutdown(
-                userId = userId,
-                pipelineId = pipelineId,
-                projectId = projectId,
-                buildId = buildId,
-                channelCode = ChannelCode.BS
+//            buildManualShutdown(
+//                userId = userId,
+//                pipelineId = pipelineId,
+//                projectId = projectId,
+//                buildId = buildId,
+//                channelCode = ChannelCode.BS
+//            )
+            // 触发引擎container事件，继续后续流程
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildContainerEvent(
+                    source = "pauseCanel",
+                    containerId = containerId,
+                    stageId = stageId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    userId = userId,
+                    projectId = projectId,
+                    actionType = ActionType.TERMINATE,
+                    containerType = ""
+                )
             )
             return true
         }
