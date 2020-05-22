@@ -1,10 +1,7 @@
 <template>
     <div class="bkdevops-pipeline-history pb20">
         <bk-tab :active.sync="currentTab" @tab-change="switchTab" :before-toggle="beforeSwitch" class="bkdevops-pipeline-tab-card" type="unborder-card">
-            <div class="bkdevops-pipeline-tab-card-setting" slot="setting" v-if="currentTab === 'trendData'">
-                <bk-date-picker :placeholder="$t('history.chooseDateRange')" :value="dateRange" :type="'daterange'" @change="changeDateRange" :shortcuts="shortcuts" :options="dateOptions"></bk-date-picker>
-            </div>
-            <div class="bkdevops-pipeline-tab-card-setting" slot="setting" v-else>
+            <div class="bkdevops-pipeline-tab-card-setting" slot="setting">
                 <i @click.stop="toggleFilterBar" class="devops-icon icon-filter-shape" :class="{ 'active': showFilterBar }"></i>
                 <i @click.stop="toggleColumnsSelectPopup(true)" class="setting-icon devops-icon icon-cog-shape" :class="{ 'active': isColumnsSelectPopupVisible }"></i>
             </div>
@@ -24,16 +21,12 @@
     import BuildHistoryTab from '@/components/BuildHistoryTab'
     import { mapGetters } from 'vuex'
     import showTooltip from '@/components/common/showTooltip'
-    import TrendData from '@/components/trendData'
-    import trendMixins from '@/components/trendData/trendMixins'
 
     export default {
         components: {
             BuildHistoryTab,
-            showTooltip,
-            TrendData
+            showTooltip
         },
-        mixins: [trendMixins],
 
         props: {
             execHandler: Function
@@ -61,23 +54,15 @@
             },
             panels () {
                 return [{
-                            name: 'history',
-                            label: this.$t('history.execHistory'),
-                            component: 'BuildHistoryTab',
-                            bindData: {
-                                isColumnsSelectPopupVisible: this.isColumnsSelectPopupVisible,
-                                showFilterBar: this.showFilterBar,
-                                toggleFilterBar: this.toggleFilterBar
-                            }
-                        },
-                        {
-                            name: 'trendData',
-                            label: this.$t('history.trendData'),
-                            component: 'TrendData',
-                            bindData: {
-                                dateRange: this.dateRange
-                            }
-                        }
+                    name: 'history',
+                    label: this.$t('history.execHistory'),
+                    component: 'BuildHistoryTab',
+                    bindData: {
+                        isColumnsSelectPopupVisible: this.isColumnsSelectPopupVisible,
+                        showFilterBar: this.showFilterBar,
+                        toggleFilterBar: this.toggleFilterBar
+                    }
+                }
                 ]
             },
             currentTab () {
