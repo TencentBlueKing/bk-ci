@@ -60,7 +60,14 @@ class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
                 val patternStyleMessage = MessageCodeUtil.getCodeLanMessage(patternStyle.name, defaultMessage)
                 // 获取接口参数在接口资源路径对应方法中path路径
                 val propertyPath = constraintViolation.propertyPath.toString()
-                val propertyShowPath = propertyPath.substring(propertyPath.split(".").first().length + 1)
+                val pathList = propertyPath.split(".")
+                val pathSize = pathList.size
+                // 展示给客户端的路径需去掉方法名和bean类型参数名称
+                val propertyShowPath = when {
+                    pathSize > 2 -> propertyPath.substring(pathList[0].length + pathList[1].length + 2)
+                    pathSize == 2 -> propertyPath.substring(pathList[0].length + 1)
+                    else -> propertyPath
+                }
                 // 获取path路径对应的描述信息，如果没有配置则给前端展示去掉方法名的path
                 val parameterName = MessageCodeUtil.getCodeLanMessage(propertyPath, propertyShowPath)
                 // 生成错误信息
