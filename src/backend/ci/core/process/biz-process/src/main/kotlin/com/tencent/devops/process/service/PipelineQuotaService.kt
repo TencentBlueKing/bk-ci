@@ -1,5 +1,6 @@
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,6 +17,7 @@ class PipelineQuotaService @Autowired constructor(
         private const val QUOTA_BAD_PROJECT_ALL_KEY = "project_quota_all_key" // 所有异常项目集合
         private const val SEVEN_DAY_MILL_SECONDS = 3600 * 24 * 7 * 1000L
         private const val DEFAULT_PROJECT_QUOTA = 1000L
+        private const val LOCK_KEY = "pipeline_quota_redis_lock"
     }
 
     private val logger = LoggerFactory.getLogger(PipelineQuotaService::class.java)
@@ -66,11 +68,28 @@ class PipelineQuotaService @Autowired constructor(
 
     @Scheduled(cron = "0 0 0 * * ?")
     fun clearZSet() {
+        logger.info("try to start to clear quota zset")
+        val redisLock = RedisLock(redisOperation, LOCK_KEY, 60L)
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                logger.info("<<< Clear Pipeline Quota Start >>>")
+                doClear()
+            } else {
+                logger.info("<<< Clear Pipeline Quota Job Has Running, Do Not Start>>>")
+            }
+        } catch (e: Throwable) {
+            logger.error("WeTestTaskJob exception:", e)
+        } finally {
+            redisLock.unlock()
+        }
+    }
+
+    private fun doClear() {
         val min = 0.0
         val max = (System.currentTimeMillis() - SEVEN_DAY_MILL_SECONDS).toDouble()
         val removeKey = mutableSetOf<String>()
 
-        logger.info("start to clear zset")
 
         // 清理之前没释放的配额
         redisOperation.sscan(QUOTA_BAD_PROJECT_ALL_KEY, "*")?.use { cursor ->
@@ -85,17 +104,19 @@ class PipelineQuotaService @Autowired constructor(
         }
 
         removeKey.forEach { redisOperation.sremove(QUOTA_BAD_PROJECT_ALL_KEY, it) }
+
+        logger.info("finish to clear zset")
     }
 
     private fun getProjectLimitKey(projectId: String): String {
-        return "$QUOTA_KEY_LIMIT_PREFIX$projectId"
+        return "$QUOTA_KEY_LIMIT_PREFIX${projectId}"
     }
 
     private fun getProjectKey(projectId: String): String {
-        return "$QUOTA_KEY_PREFIX$projectId"
+        return "$QUOTA_KEY_PREFIX${projectId}"
     }
 
     private fun getProjectJobKey(projectId: String, buildId: String, jobId: String): String {
-        return "${projectId}_${buildId}_$jobId"
+        return "${projectId}_${buildId}_${jobId}"
     }
 }
