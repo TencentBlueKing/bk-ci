@@ -43,7 +43,7 @@ class ExternalScmResourceImpl @Autowired constructor(
     override fun webHookCodeSvnCommit(event: String) =
             Result(CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate, SvnWebhookEvent(requestContent = event)))
 
-    override fun webHookCodeGitCommit(token: String, event: String) =
+    override fun webHookCodeGitCommit(event: String) =
         Result(CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate, GitWebhookEvent(requestContent = event)))
 
     override fun webHookGitlabCommit(event: String) =
