@@ -57,25 +57,35 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
         buildId: String,
         elementId: String?,
         dockerBuildParam: DockerBuildParam,
-        outer: Boolean = false
+        outer: Boolean = false,
+        syncFlag: Boolean? = false
     ): Boolean {
         logger.info("[$buildId]|projectId=$projectId|pipelineId=$pipelineId|vmSeqId=$vmSeqId|param=$dockerBuildParam")
-
-        val future = executor.submit(Callable<Pair<Boolean, String?>> {
-            dockerHostBuildService.dockerBuildAndPushImage(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                vmSeqId = vmSeqId,
-                dockerBuildParam = dockerBuildParam,
-                buildId = buildId,
-                elementId = elementId,
-                outer = outer
-            )
-        })
-
-        buildTask[getKey(vmSeqId, buildId)] = future
-
-        return true
+        if (null != syncFlag && syncFlag) {
+            return dockerHostBuildService.dockerBuildAndPushImage(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    vmSeqId = vmSeqId,
+                    dockerBuildParam = dockerBuildParam,
+                    buildId = buildId,
+                    elementId = elementId,
+                    outer = outer
+            ).first
+        } else {
+            val future = executor.submit(Callable<Pair<Boolean, String?>> {
+                dockerHostBuildService.dockerBuildAndPushImage(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        vmSeqId = vmSeqId,
+                        dockerBuildParam = dockerBuildParam,
+                        buildId = buildId,
+                        elementId = elementId,
+                        outer = outer
+                )
+            })
+            buildTask[getKey(vmSeqId, buildId)] = future
+            return true
+        }
     }
 
     fun getBuildResult(vmSeqId: String, buildId: String): Pair<Status, String> {

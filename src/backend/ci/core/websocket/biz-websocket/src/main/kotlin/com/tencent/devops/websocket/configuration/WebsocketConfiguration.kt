@@ -31,6 +31,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.websocket.handler.ConnectChannelInterceptor
+import com.tencent.devops.websocket.listener.CacheSessionListener
 import com.tencent.devops.websocket.listener.WebSocketListener
 import com.tencent.devops.websocket.utils.HostUtils
 import org.slf4j.LoggerFactory
@@ -58,6 +59,9 @@ class WebsocketConfiguration {
     @Value("\${activeTrigger.pipelineWebSocket:10}")
     private val webSocketActiveTrigger: Int? = null
 
+    @Value("\${maxConsumer.pipelineWebSocket:50}")
+    private val websocketMaxConsumerCount: Int? = null
+
     @Value("\${devopsGateway.idc:#{null}}")
     private val devopsGateway: String? = null
 
@@ -76,6 +80,14 @@ class WebsocketConfiguration {
         return FanoutExchange(MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, true, false)
     }
 
+    /**
+     * 构建广播交换机
+     */
+    @Bean
+    fun cacheClearFanoutExchange(): FanoutExchange {
+        return FanoutExchange(MQ.EXCHANGE_WEBSOCKET_SESSION_CLEAR_FANOUT, true, false)
+    }
+
     @Bean
     fun rabbitAdmin(
         @Autowired connectionFactory: ConnectionFactory
@@ -91,11 +103,26 @@ class WebsocketConfiguration {
     }
 
     @Bean
+    fun cacheClearWebSocketQueue(): Queue {
+        val hostIp = HostUtils.getHostIp(devopsGateway)
+        logger.info("WebSocket|Get the host ip: $hostIp")
+        return Queue(MQ.QUEUE_WEBSOCKET_SESSION_CLEAR_EVENT + "." + hostIp, true, false, true)
+    }
+
+    @Bean
     fun pipelineQueueBinding(
         @Autowired pipelineWebSocketQueue: Queue,
         @Autowired pipelineWebSocketFanoutExchange: FanoutExchange
     ): Binding {
         return BindingBuilder.bind(pipelineWebSocketQueue).to(pipelineWebSocketFanoutExchange)
+    }
+
+    @Bean
+    fun clearSessionQueueBinding(
+        @Autowired cacheClearWebSocketQueue: Queue,
+        @Autowired cacheClearFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(cacheClearWebSocketQueue).to(cacheClearFanoutExchange)
     }
 
     @Bean
@@ -108,6 +135,28 @@ class WebsocketConfiguration {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(pipelineWebSocketQueue.name)
+        container.setConcurrentConsumers(webSocketQueueConcurrency!!)
+        container.setMaxConcurrentConsumers(websocketMaxConsumerCount!!)
+        container.setRabbitAdmin(rabbitAdmin)
+        container.setStartConsumerMinInterval(5000)
+        container.setConsecutiveActiveTrigger(webSocketActiveTrigger!!)
+        container.setMismatchedQueuesFatal(true)
+        val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
+        adapter.setMessageConverter(messageConverter)
+        container.messageListener = adapter
+        return container
+    }
+
+    @Bean
+    fun clearSessionListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired messageConverter: Jackson2JsonMessageConverter,
+        @Autowired cacheClearWebSocketQueue: Queue,
+        @Autowired buildListener: CacheSessionListener
+    ): SimpleMessageListenerContainer {
+        val container = SimpleMessageListenerContainer(connectionFactory)
+        container.setQueueNames(cacheClearWebSocketQueue.name)
         container.setConcurrentConsumers(webSocketQueueConcurrency!!)
         container.setMaxConcurrentConsumers(10)
         container.setRabbitAdmin(rabbitAdmin)

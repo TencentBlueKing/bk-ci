@@ -30,8 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class ProjectProxyServiceImpl @Autowired constructor(
-) : ProjectProxyService {
+class ProjectProxyServiceImpl @Autowired constructor() : ProjectProxyService {
     override fun checkProject(projectId: String, userId: String): Boolean {
         return true
     }

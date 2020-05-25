@@ -20,7 +20,7 @@
                     :key="`taskTable${index}_re`">
                     <td class="table-list-name text-overflow"
                         :class="row.feConfig && row.feConfig.status">
-                        <a v-if="row.hasPermission" href="javascript:;" class="text-link" @click="emitEventHandler('title-click', row.pipelineId)">
+                        <a v-if="row.hasPermission" href="javascript:;" :title="row.pipelineName" class="text-link" @click="emitEventHandler('title-click', row.pipelineId)">
                             {{ row.pipelineName }}
                         </a>
                         <span v-else>{{ row.pipelineName }}</span>
