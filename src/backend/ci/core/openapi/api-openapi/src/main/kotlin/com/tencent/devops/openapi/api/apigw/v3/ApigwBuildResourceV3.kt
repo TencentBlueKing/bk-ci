@@ -199,7 +199,7 @@ interface ApigwBuildResourceV3 {
     ): Result<ModelDetail>
 
     @ApiOperation("手动审核启动阶段")
-    @GET
+    @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stages/{stageId}/manualStart")
     fun manualStartStage(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
