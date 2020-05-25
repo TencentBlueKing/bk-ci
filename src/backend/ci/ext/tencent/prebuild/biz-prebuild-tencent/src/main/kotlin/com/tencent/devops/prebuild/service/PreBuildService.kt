@@ -26,6 +26,7 @@
 
 package com.tencent.devops.prebuild.service
 
+import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
@@ -49,7 +50,9 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.log.model.pojo.LogLine
@@ -389,5 +392,23 @@ class PreBuildService @Autowired constructor(
             buildConf.devCloudToken,
             buildConf.devCloudUrl
         )
+    }
+
+    fun getAgentStatus(userId: String, os: OS, ip: String, hostName: String): AgentStatus {
+        val agent = getAgent(userId, os, ip, hostName)
+        if (null == agent) {
+            logger.info("Agent not exists. need to install.")
+            return AgentStatus.IMPORT_EXCEPTION
+        }
+        return try {
+            val agentStatus = client.get(ServiceNodeResource::class).listByHashIds(userId, getUserProjectId(userId), listOf(agent.agentId))
+            if (NodeStatus.NORMAL.name == agentStatus.data?.first()?.nodeStatus) {
+                AgentStatus.IMPORT_OK
+            } else {
+                AgentStatus.IMPORT_EXCEPTION
+            }
+        } catch (e: Exception) {
+            AgentStatus.IMPORT_EXCEPTION
+        }
     }
 }
