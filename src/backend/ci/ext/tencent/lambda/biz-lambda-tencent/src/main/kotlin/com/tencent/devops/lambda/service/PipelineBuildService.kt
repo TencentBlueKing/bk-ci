@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
@@ -159,7 +158,10 @@ class PipelineBuildService @Autowired constructor(
             }
 
             val taskParams = if (taskParamMap["@type"] != "marketBuild") {
-                JSONObject(taskParamMap)
+                val inputMap = mutableMapOf("key" to "value")
+                val dataMap = mutableMapOf("input" to inputMap)
+                val taskParamMap1 = mutableMapOf("data" to dataMap)
+                JSONObject(taskParamMap1)
             } else {
                 JSONObject(JsonUtil.toMap(task.taskParams))
             }
