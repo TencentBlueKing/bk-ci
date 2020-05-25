@@ -13,4 +13,9 @@ class OpPipelineQuotaResourceImpl @Autowired constructor(
         pipelineQuotaService.setQuotaByProject(projectId, quota)
         return Result(true)
     }
+
+    override fun doClearJob(): Result<Boolean> {
+        pipelineQuotaService.clearZSet()
+        return Result(true)
+    }
 }

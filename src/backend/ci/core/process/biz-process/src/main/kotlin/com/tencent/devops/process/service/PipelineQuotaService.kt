@@ -79,7 +79,7 @@ class PipelineQuotaService @Autowired constructor(
                 logger.info("<<< Clear Pipeline Quota Job Has Running, Do Not Start>>>")
             }
         } catch (e: Throwable) {
-            logger.error("WeTestTaskJob exception:", e)
+            logger.error("Clear pipeline quota exception:", e)
         } finally {
             redisLock.unlock()
         }
