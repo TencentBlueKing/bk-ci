@@ -25,6 +25,6 @@
  */
 
 dependencies {
-    compile "org.springframework.kafka:spring-kafka"
+    compile "org.springframework.kafka:spring-kafka:1.3.10.RELEASE"
     compile project(":core:common:common-web")
 }
