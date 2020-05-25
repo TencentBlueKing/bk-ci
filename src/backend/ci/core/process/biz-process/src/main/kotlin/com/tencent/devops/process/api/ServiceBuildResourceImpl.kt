@@ -369,6 +369,32 @@ class ServiceBuildResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun manualStartStage(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        cancel: Boolean?
+    ): Result<Boolean> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (stageId.isBlank()) {
+            throw ParamBlankException("Invalid stageId")
+        }
+
+        buildService.buildManualStartStage(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            isCancel = cancel ?: false
+        )
+        return Result(true)
+    }
+
     private fun checkParam(projectId: String, pipelineId: String) {
         if (pipelineId.isBlank()) {
             throw ParamBlankException("Invalid pipelineId")

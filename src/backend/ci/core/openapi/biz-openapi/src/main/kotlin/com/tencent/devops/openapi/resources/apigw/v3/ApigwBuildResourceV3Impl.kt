@@ -152,6 +152,27 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         )
     }
 
+    override fun manualStartStage(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        cancel: Boolean?
+    ): Result<Boolean> {
+        logger.info("get the pipeline($pipelineId) of project($projectId) manual startup info  by user($userId)")
+        return client.get(ServiceBuildResource::class).manualStartStage(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            cancel = cancel ?: false
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwBuildResourceV3Impl::class.java)
     }
