@@ -889,6 +889,29 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.RUNNING)
     }
 
+    fun taskCancel(buildId: String, stageId: String, containerId: String, taskId: String) {
+        logger.info("[$buildId]|taskCancel|$stageId|$containerId|$taskId")
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindElement(e: Element, c: Container): Traverse {
+                if(c.id.equals(containerId)) {
+                    if(e.id.equals(taskId)) {
+                        c.status = BuildStatus.CANCELED.name
+                        e.status = BuildStatus.CANCELED.name
+                        update = true
+                        return Traverse.BREAK
+                    }
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.RUNNING)
+    }
+
     fun updateStartVMStatus(
         buildId: String,
         containerId: String,

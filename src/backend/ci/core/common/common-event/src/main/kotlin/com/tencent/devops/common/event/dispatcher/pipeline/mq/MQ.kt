@@ -69,6 +69,9 @@ object MQ {
     const val ROUTE_PIPELINE_BUILD_FINISH = "r.engine.pipeline.build.finish"
     const val QUEUE_PIPELINE_BUILD_FINISH = "q.engine.pipeline.build.finish"
 
+    const val ROUTE_PIPELINE_PAUSE_TASK_EXECUTE = "r.engine.pipeline.pause.task.execute"
+    const val QUEUE_PIPELINE_PAUSE_TASK_EXECUTE = "q.engine.pipeline.pause.task.execute"
+
     // 构建启动广播exchange
     const val EXCHANGE_PIPELINE_BUILD_START_FANOUT = "e.engine.pipeline.build.start.fanout"
     const val QUEUE_PIPELINE_BUILD_START_DISPATCHER = "q.engine.pipeline.build.start.dispatcher"

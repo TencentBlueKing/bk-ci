@@ -37,6 +37,7 @@ import com.tencent.devops.process.engine.listener.run.PipelineAtomTaskBuildListe
 import com.tencent.devops.process.engine.listener.run.PipelineBuildStartListener
 import com.tencent.devops.process.engine.listener.run.PipelineContainerBuildListener
 import com.tencent.devops.process.engine.listener.run.PipelineStageBuildListener
+import com.tencent.devops.process.engine.listener.run.PipelineTaskPauseListener
 import com.tencent.devops.process.engine.listener.run.finish.PipelineBuildCancelListener
 import com.tencent.devops.process.engine.listener.run.finish.PipelineBuildFinishListener
 import org.springframework.amqp.core.Binding
@@ -479,5 +480,42 @@ class PipelineCoreConfiguration {
         val pipelineSettingChangeExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_SETTING_CHANGE_FANOUT, true, false)
         pipelineSettingChangeExchange.isDelayed = true
         return pipelineSettingChangeExchange
+    }
+
+
+    /**
+     * 流水线暂停操作队列
+     */
+    @Bean
+    fun pipelinePauseTaskExecuteQueue() = Queue(MQ.QUEUE_PIPELINE_PAUSE_TASK_EXECUTE)
+
+    @Bean
+    fun pipelinePauseTaskExecuteQueueBind(
+        @Autowired pipelinePauseTaskExecuteQueue: Queue,
+        @Autowired pipelineCoreExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(pipelinePauseTaskExecuteQueue).to(pipelineCoreExchange).with(MQ.ROUTE_PIPELINE_PAUSE_TASK_EXECUTE)
+    }
+
+    @Bean
+    fun pipelinePauseTaskExecuteListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired pipelinePauseTaskExecuteQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired pipelineTaskPauseListener: PipelineTaskPauseListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = pipelinePauseTaskExecuteQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = pipelineTaskPauseListener,
+            messageConverter = messageConverter,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = pipelineUpdateConcurrency!!,
+            maxConcurrency = 10
+        )
     }
 }

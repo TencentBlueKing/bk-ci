@@ -61,7 +61,6 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
@@ -69,8 +68,8 @@ import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
-import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -1847,143 +1846,26 @@ class PipelineBuildService(
             )
         }
 
-        // 不再继续则直接关闭流水线
-        if (!isContinue) {
-            buildLogPrinter.addYellowLine(
-                buildId = buildId,
-                message = "【${taskRecord.taskName}】已完成人工处理。处理人:$userId, 操作：停止",
-                tag = taskId,
-                jobId = containerId,
-                executeCount = 1
-            )
-            buildManualShutdown(
-                userId = userId,
+        var actionType = ActionType.REFRESH
+        if(!isContinue) {
+            actionType = ActionType.TERMINATE
+        }
+
+        pipelineEventDispatcher.dispatch(
+            PipelineTaskPauseEvent(
+                source = "PauseTaskExecute",
                 pipelineId = pipelineId,
+                buildId = buildId,
                 projectId = projectId,
-                buildId = buildId,
-                channelCode = ChannelCode.BS
-            )
-            // 触发引擎container事件，继续后续流程
-            return true
-        }
-
-        val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
-        try {
-            redisLock.lock()
-            continuePauseTask(
-                pipelineId = pipelineId,
-                buildId = buildId,
-                taskId = taskId,
                 stageId = stageId,
-                containerId = containerId
+                containerId = containerId,
+                element = element,
+                taskId = taskId,
+                actionType = actionType,
+                userId = userId
             )
-
-            webSocketDispatcher.dispatch(
-                websocketService.buildDetailMessage(
-                    buildId = buildId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId
-                )
-            )
-
-            val params = mutableMapOf<String, Any>()
-            buildVariableService.batchSetVariable(projectId, pipelineId, buildId, params)
-            // 修改插件运行设置
-            pipelineBuildTaskDao.updateTaskParam(dslContext, buildId, taskId, objectMapper.writeValueAsString(element))
-            logger.info("update task param success | $buildId| $taskId | $element")
-
-            // 修改详情model
-            buildDetailService.updateElementWhenPauseContinue(buildId, stageId, containerId, taskId, element)
-            logger.info("update detail element success | $buildId| $taskId | $element")
-
-            // 触发引擎container事件，继续后续流程
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildContainerEvent(
-                    source = "pauseContinue",
-                    containerId = containerId,
-                    stageId = stageId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    userId = userId,
-                    projectId = projectId,
-                    actionType = ActionType.REFRESH,
-                    containerType = ""
-                )
-            )
-            buildLogPrinter.addYellowLine(
-                buildId = buildId,
-                message = "【${taskRecord.taskName}】已完成人工处理。处理人:$userId, 操作：继续",
-                tag = taskId,
-                jobId = containerId,
-                executeCount = 1
-            )
-        } finally {
-            redisLock.unlock()
-        }
+        )
         return true
-    }
-
-    private fun continuePauseTask(
-        pipelineId: String,
-        buildId: String,
-        taskId: String,
-        stageId: String,
-        containerId: String
-    ) {
-        logger.info("executePauseBuild pipelineId[$pipelineId], buildId[$buildId] stageId[$stageId] containerId[$containerId] taskId[$taskId]")
-        // 修改任务状态位运行
-        pipelineRuntimeService.updateTaskStatus(
-            buildId = buildId,
-            taskId = taskId,
-            userId = "",
-            buildStatus = BuildStatus.QUEUE
-        )
-        logger.info("update|$buildId|$taskId| task status  to ${BuildStatus.QUEUE}")
-
-        // 将启动和结束任务置为排队。用于启动构建机
-        val taskRecords = pipelineRuntimeService.getAllBuildTask(buildId)
-        val startAndEndTask = mutableListOf<PipelineBuildTask>()
-        taskRecords.forEach { task ->
-            if (task.containerId == containerId && task.stageId == stageId) {
-                if (task.taskId == taskId) {
-                    startAndEndTask.add(task)
-                } else if (task.taskName.startsWith(VMUtils.getCleanVmLable()) && task.taskId.startsWith(VMUtils.getStopVmLabel())) {
-                    startAndEndTask.add(task)
-                } else if (task.taskName.startsWith(VMUtils.getPrepareVmLable()) && task.taskId.startsWith(VMUtils.getStartVmLabel())) {
-                    startAndEndTask.add(task)
-                }
-            }
-        }
-        startAndEndTask.forEach {
-            pipelineRuntimeService.updateTaskStatus(
-                buildId = buildId,
-                taskId = it.taskId,
-                userId = "",
-                buildStatus = BuildStatus.QUEUE
-            )
-            logger.info("update|$buildId|${it.taskId}| task status from ${it.status} to ${BuildStatus.QUEUE}")
-        }
-
-        // 修改容器状态位运行
-        pipelineRuntimeService.updateContainerStatus(
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
-            startTime = null,
-            endTime = null,
-            buildStatus = BuildStatus.QUEUE
-        )
-
-//        // detail状态置为排队
-//        buildDetailService.continuePauseTask(
-//            buildId = buildId,
-//            containerId = containerId,
-//            stageId = stageId,
-//            taskId = taskId,
-//            buildStatus = BuildStatus.QUEUE
-//        )
-//        logger.info("update|$buildId|$taskId| container status  to ${BuildStatus.QUEUE}")
     }
 
     fun getBuildDetailStatus(
