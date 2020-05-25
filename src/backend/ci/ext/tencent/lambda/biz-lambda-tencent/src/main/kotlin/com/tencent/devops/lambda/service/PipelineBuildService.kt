@@ -148,8 +148,8 @@ class PipelineBuildService @Autowired constructor(
     private fun pushTaskDetail(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord) {
         try {
             val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-            val startTime = task.startTime.timestamp()
-            val endTime = task.endTime.timestamp()
+            val startTime = task.startTime?.timestampmilli() ?: 0
+            val endTime = task.endTime?.timestampmilli() ?: 0
             val dataPlatTaskDetail = DataPlatTaskDetail(
                 pipelineId = task.pipelineId,
                 buildId = task.buildId,
@@ -161,13 +161,14 @@ class PipelineBuildService @Autowired constructor(
                 status = BuildStatus.values()[task.status].statusName,
                 errorCode = task.errorCode,
                 errorMsg = task.errorMsg,
-                startTime = task.startTime.format(dateTimeFormatter),
-                endTime = task.endTime.format(dateTimeFormatter),
+                startTime = task.startTime?.format(dateTimeFormatter),
+                endTime = task.endTime?.format(dateTimeFormatter),
                 costTime = endTime - startTime,
                 starter = task.starter,
                 washTime = LocalDateTime.now().format(dateTimeFormatter)
             )
 
+            logger.info("pushTaskDetail: ${JsonUtil.toJson(dataPlatTaskDetail)}")
             kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
         } catch (e: Exception) {
             logger.error("Push task detail to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)

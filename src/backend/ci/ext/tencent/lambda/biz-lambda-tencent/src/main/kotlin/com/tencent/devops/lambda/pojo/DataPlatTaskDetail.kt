@@ -32,13 +32,13 @@ data class DataPlatTaskDetail(
     val projectEnglishName: String,
     val itemId: String,
     val atomCode: String,
-    val taskParams: String,
+    val taskParams: String?,
     val status: String,
     val errorCode: Int?,
     val errorMsg: String?,
-    val startTime: String,
-    val endTime: String,
+    val startTime: String?,
+    val endTime: String?,
     val costTime: Long,
-    val starter: String,
+    val starter: String?,
     val washTime: String
 )
