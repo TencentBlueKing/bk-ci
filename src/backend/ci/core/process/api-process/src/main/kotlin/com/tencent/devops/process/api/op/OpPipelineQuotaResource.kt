@@ -29,50 +29,36 @@ package com.tencent.devops.process.api.op
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.process.pojo.PipelineContainerMonitor
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PIPELINE_CONTAINER_MONITOR"], description = "OP-流水线-构建机监控")
-@Path("/op/pipelineContainer")
+@Api(tags = ["OP_PIPELINE_QUOTA"], description = "OP-流水线-配额")
+@Path("/op/pipeline/quota")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OpPipelineContainerMonitorResource {
+interface OpPipelineQuotaResource {
 
     @ApiOperation("更新")
     @PUT
-    @Path("/")
-    fun update(
+    @Path("/projects/{projectId}/update")
+    fun updateQuota(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("更新内容")
-        monitor: PipelineContainerMonitor
-    ): Result<Boolean>
-
-    @ApiOperation("删除")
-    @DELETE
-    @Path("/")
-    fun delete(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("os")
-        @QueryParam("osType")
-        osType: VMBaseOS,
-        @ApiParam("buildType")
-        @QueryParam("buildType")
-        buildType: BuildType
+        @ApiParam("projectId")
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("配额")
+        @QueryParam("quota")
+        quota: Long
     ): Result<Boolean>
 }
