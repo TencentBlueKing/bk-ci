@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
@@ -39,18 +40,21 @@ import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.image.pojo.enums.TaskStatus
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
 import com.tencent.devops.lambda.dao.BuildTaskDao
 import com.tencent.devops.lambda.dao.LambdaPipelineBuildDao
 import com.tencent.devops.lambda.dao.PipelineResDao
 import com.tencent.devops.lambda.dao.PipelineTemplateDao
 import com.tencent.devops.lambda.pojo.BuildData
+import com.tencent.devops.lambda.pojo.DataPlatTaskDetail
 import com.tencent.devops.lambda.pojo.ElementData
 import com.tencent.devops.lambda.pojo.ProjectOrganize
 import com.tencent.devops.lambda.storage.ESService
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
@@ -133,6 +137,38 @@ class PipelineBuildService @Autowired constructor(
         esService.buildElement(data)
 
         pushGitTaskInfo(event, task)
+        pushTaskDetail(event, task)
+    }
+
+    private fun pushTaskDetail(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord?) {
+        try {
+            if (task != null) {
+                val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                val startTime = task.startTime.timestamp()
+                val endTime = task.endTime.timestamp()
+                val dataPlatTaskDetail = DataPlatTaskDetail(
+                    pipelineId = task.pipelineId,
+                    buildId = task.buildId,
+                    projectEnglishName = task.projectId,
+                    type = "task",
+                    itemId = task.taskId,
+                    atomCode = task.taskAtom,
+                    taskParams = task.taskParams,
+                    status = BuildStatus.values()[task.status].statusName,
+                    errorCode = task.errorCode,
+                    errorMsg = task.errorMsg,
+                    startTime = task.startTime.format(dateTimeFormatter),
+                    endTime = task.endTime.format(dateTimeFormatter),
+                    costTime = endTime - startTime,
+                    starter = task.starter,
+                    washTime = LocalDateTime.now().format(dateTimeFormatter)
+                )
+
+                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
+            }
+        } catch (e: Exception) {
+            logger.error("Push task detail to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
+        }
     }
 
     private fun pushGitTaskInfo(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord?) {

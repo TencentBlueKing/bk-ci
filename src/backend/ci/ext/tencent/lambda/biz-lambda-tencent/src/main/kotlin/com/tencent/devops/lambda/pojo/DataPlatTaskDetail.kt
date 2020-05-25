@@ -23,24 +23,22 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.lambda.pojo
 
-package com.tencent.devops.common.kafka
-
-object KafkaTopic {
-    const val LANGUAGE_CODE_TOPIC = "tendata-bkdevops-296-topic-language-code"
-    const val TASK_DETAIL_TOPIC = "tendata-bkdevops-296-topic-taskdetail"
-    const val STATISTIC_TOPIC = "tendata-bkdevops-296-topic-statistic"
-    const val GONGFENG_PROJECT_TOPIC = "tendata-bkdevops-296-topic-gongfeng-project"
-    const val LINT_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-lint-statistic"
-    const val CNN_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-cnn-statistic"
-    const val DUPC_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-dupc-statistic"
-
-    const val ACTIVE_GONGFENG_PROJECT_TOPIC = "tendata-bkdevops-296-topic-active-gongfeng-project"
-    const val SINGLE_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-statistic"
-    const val SINGLE_LINT_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-lint-statistic"
-    const val SINGLE_CCN_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-ccn-statistic"
-    const val SINGLE_DUPC_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-dupc-statistic"
-
-    const val LANDUN_GIT_TASK_TOPIC = "tendata-bkdevops-296-topic-landun-git-task"
-    const val LANDUN_TASK_DETAIL_TOPIC = "tendata-bkdevops-296-topic-landun-task-detail"
-}
+data class DataPlatTaskDetail(
+    val pipelineId: String,
+    val buildId: String,
+    val type: String,
+    val projectEnglishName: String,
+    val itemId: String,
+    val atomCode: String,
+    val taskParams: String,
+    val status: String,
+    val errorCode: Int?,
+    val errorMsg: String?,
+    val startTime: String,
+    val endTime: String,
+    val costTime: Long,
+    val starter: String,
+    val washTime: String
+)
