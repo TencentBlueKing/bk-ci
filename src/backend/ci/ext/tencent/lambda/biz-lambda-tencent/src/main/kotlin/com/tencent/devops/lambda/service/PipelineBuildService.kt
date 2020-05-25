@@ -151,14 +151,26 @@ class PipelineBuildService @Autowired constructor(
             val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             val startTime = task.startTime?.timestampmilli() ?: 0
             val endTime = task.endTime?.timestampmilli() ?: 0
+            val taskParamMap = JsonUtil.toMap(task.taskParams)
+            val atomCode = if (taskParamMap["@type"] != "marketBuild") {
+                taskParamMap["atomCode"].toString()
+            } else {
+                task.taskAtom
+            }
+
+            val taskParams = if (taskParamMap["@type"] != "marketBuild") {
+                JSONObject(taskParamMap)
+            } else {
+                JSONObject(JsonUtil.toMap(task.taskParams))
+            }
             val dataPlatTaskDetail = DataPlatTaskDetail(
                 pipelineId = task.pipelineId,
                 buildId = task.buildId,
                 projectEnglishName = task.projectId,
                 type = "task",
                 itemId = task.taskId,
-                atomCode = task.taskAtom,
-                taskParams = JSONObject(JsonUtil.toMap(task.taskParams)),
+                atomCode = atomCode,
+                taskParams = taskParams,
                 status = BuildStatus.values()[task.status].statusName,
                 errorCode = task.errorCode,
                 errorMsg = task.errorMsg,
