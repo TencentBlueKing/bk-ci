@@ -324,11 +324,16 @@ class PipelineBuildService(
             val params = mutableMapOf<String, Any>()
             val originVars = buildVariableService.getAllVariable(buildId)
             if (!taskId.isNullOrBlank()) {
-                // job/task级重试，获取buildVariable构建参数，恢复环境变量
+                // stage/job/task级重试，获取buildVariable构建参数，恢复环境变量
                 params.putAll(originVars)
-                // job/task级重试
+                // stage/job/task级重试
                 run {
                     model.stages.forEach { s ->
+                        // stage 级重试
+                        if (s.id == taskId) {
+                            params[PIPELINE_RETRY_START_TASK_ID] = s.id!!
+                            return@run
+                        }
                         s.containers.forEach { c ->
                             val pos = if (c.id == taskId) 0 else -1 // 容器job级别的重试，则找job的第一个原子
                             c.elements.forEachIndexed { index, element ->
@@ -366,6 +371,7 @@ class PipelineBuildService(
 
             params[PIPELINE_START_USER_ID] = userId
             params[PIPELINE_RETRY_BUILD_ID] = buildId
+            params[PIPELINE_START_TYPE] = originVars[PIPELINE_START_TYPE] ?: ""
 
             val readyToBuildPipelineInfo =
                 pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)

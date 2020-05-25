@@ -37,7 +37,7 @@
     @Component
     export default class AskPermissionDialog extends Vue {
         @Prop({ default: 640 })
-        width: number | string
+    width: number | string
 
         @Prop()
         title: any = ''

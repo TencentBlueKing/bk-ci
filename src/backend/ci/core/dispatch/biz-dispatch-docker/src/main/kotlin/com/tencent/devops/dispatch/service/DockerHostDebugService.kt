@@ -40,6 +40,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
+import com.tencent.devops.dispatch.config.DefaultImageConfig
 import com.tencent.devops.dispatch.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.dao.PipelineDockerEnableDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
@@ -78,11 +79,9 @@ class DockerHostDebugService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val client: Client,
     private val storeImageService: StoreImageService,
-    private val gray: Gray
+    private val gray: Gray,
+    private val defaultImageConfig: DefaultImageConfig
 ) {
-
-    @Value("\${dispatch.dockerBuildImagePrefix:#{null}}")
-    val dockerBuildImagePrefix: String? = null
 
     private val grayFlag: Boolean = gray.isGray()
 
@@ -115,7 +114,7 @@ class DockerHostDebugService @Autowired constructor(
                 buildId = null,
                 imageCode = imageCode,
                 imageVersion = imageVersion,
-                defaultPrefix = dockerBuildImagePrefix
+                defaultPrefix = defaultImageConfig.dockerBuildImagePrefix
             )
             if (imageRepoInfo.ticketId.isNotBlank()) {
                 finalCredentialId = imageRepoInfo.ticketId
@@ -138,9 +137,15 @@ class DockerHostDebugService @Autowired constructor(
                 }
             }
             else -> when (imageName) {
-                DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + TLINUX1_2_IMAGE
-                DockerVersion.TLINUX2_2.value -> dockerBuildImagePrefix + TLINUX2_2_IMAGE
-                else -> "$dockerBuildImagePrefix/bkdevops/$imageName"
+                DockerVersion.TLINUX1_2.value -> {
+                    defaultImageConfig.getTLinux1_2CompleteUri()
+                }
+                DockerVersion.TLINUX2_2.value -> {
+                    defaultImageConfig.getTLinux2_2CompleteUri()
+                }
+                else -> {
+                    defaultImageConfig.getCompleteUriByImageName(imageName)
+                }
             }
         }
         logger.info("insertDebug:Docker images is: $dockerImage")
@@ -270,7 +275,7 @@ class DockerHostDebugService @Autowired constructor(
                 registryUser = pipelineDockerDebug.registryUser,
                 registryPwd = pipelineDockerDebug.registryPwd,
                 imageType = pipelineDockerDebug.imageType
-                )
+            )
             val request = Request.Builder().url(proxyUrl)
                 .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
                 .addHeader("Accept", "application/json; charset=utf-8")
@@ -576,7 +581,7 @@ class DockerHostDebugService @Autowired constructor(
                     try {
                         deleteDebug(timeoutDebugTask[i].pipelineId, timeoutDebugTask[i].vmSeqId)
                     } catch (e: Exception) {
-                        logger.error("Delete timeout debug task failed, ${e.message}")
+                        logger.warn("Delete timeout debug task failed, ${e.message}")
                     }
                 }
                 stopWatch.stop()
@@ -676,8 +681,5 @@ class DockerHostDebugService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(DockerHostDebugService::class.java)
-
-        private const val TLINUX1_2_IMAGE = "/bkdevops/docker-builder1.2:v1"
-        private const val TLINUX2_2_IMAGE = "/bkdevops/docker-builder2.2:v1"
     }
 }
