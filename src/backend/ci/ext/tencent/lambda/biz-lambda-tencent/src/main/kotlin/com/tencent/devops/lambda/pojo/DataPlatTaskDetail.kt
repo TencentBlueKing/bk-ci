@@ -25,6 +25,8 @@
  */
 package com.tencent.devops.lambda.pojo
 
+import org.json.simple.JSONObject
+
 data class DataPlatTaskDetail(
     val pipelineId: String,
     val buildId: String,
@@ -32,7 +34,7 @@ data class DataPlatTaskDetail(
     val projectEnglishName: String,
     val itemId: String,
     val atomCode: String,
-    val taskParams: String?,
+    val taskParams: JSONObject?,
     val status: String,
     val errorCode: Int?,
     val errorMsg: String?,

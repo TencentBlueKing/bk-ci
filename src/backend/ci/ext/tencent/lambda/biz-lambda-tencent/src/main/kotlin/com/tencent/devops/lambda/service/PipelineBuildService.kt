@@ -56,6 +56,7 @@ import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
+import org.json.simple.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -157,7 +158,7 @@ class PipelineBuildService @Autowired constructor(
                 type = "task",
                 itemId = task.taskId,
                 atomCode = task.taskAtom,
-                taskParams = task.taskParams,
+                taskParams = JSONObject(JsonUtil.toMap(task.taskParams)),
                 status = BuildStatus.values()[task.status].statusName,
                 errorCode = task.errorCode,
                 errorMsg = task.errorMsg,
