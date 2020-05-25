@@ -530,8 +530,8 @@ class PipelineBuildSummaryDao {
     fun finishLatestRunningBuild(dslContext: DSLContext, latestRunningBuild: LatestRunningBuild, isStageFinish: Boolean) {
         val count = with(latestRunningBuild) {
             with(T_PIPELINE_BUILD_SUMMARY) {
-                val update
-                    = dslContext.update(this)
+                val update =
+                    dslContext.update(this)
                     .set(LATEST_STATUS, status.ordinal) // 不一定是FINISH，也有可能其它失败的status
                     .set(LATEST_END_TIME, LocalDateTime.now()) // 结束时间
                     .set(LATEST_TASK_ID, "") // 结束时清空
@@ -548,8 +548,8 @@ class PipelineBuildSummaryDao {
         if (count == 0) {
             with(latestRunningBuild) {
                 with(T_PIPELINE_BUILD_SUMMARY) {
-                    val update
-                        = dslContext.update(this)
+                    val update =
+                        dslContext.update(this)
                         .set(FINISH_COUNT, FINISH_COUNT + 1)
                     if (!isStageFinish) update.set(RUNNING_COUNT, RUNNING_COUNT - 1)
                     update.where(PIPELINE_ID.eq(pipelineId))
