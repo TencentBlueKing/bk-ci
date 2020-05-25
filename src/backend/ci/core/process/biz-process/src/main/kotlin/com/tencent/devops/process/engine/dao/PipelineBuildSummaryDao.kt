@@ -527,28 +527,33 @@ class PipelineBuildSummaryDao {
     /**
      * 3：结束运行记录
      */
-    fun finishLatestRunningBuild(dslContext: DSLContext, latestRunningBuild: LatestRunningBuild) {
+    fun finishLatestRunningBuild(dslContext: DSLContext, latestRunningBuild: LatestRunningBuild, isStageFinish: Boolean) {
         val count = with(latestRunningBuild) {
             with(T_PIPELINE_BUILD_SUMMARY) {
-                dslContext.update(this)
+                val update
+                    = dslContext.update(this)
                     .set(LATEST_STATUS, status.ordinal) // 不一定是FINISH，也有可能其它失败的status
                     .set(LATEST_END_TIME, LocalDateTime.now()) // 结束时间
                     .set(LATEST_TASK_ID, "") // 结束时清空
                     .set(LATEST_TASK_NAME, "") // 结束时清空
-                    .set(RUNNING_COUNT, RUNNING_COUNT - 1)
                     .set(FINISH_COUNT, FINISH_COUNT + 1)
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .and(LATEST_BUILD_ID.eq(buildId)).execute()
+
+                if (!isStageFinish) update.set(RUNNING_COUNT, RUNNING_COUNT - 1)
+                update.where(PIPELINE_ID.eq(pipelineId))
+                    .and(LATEST_BUILD_ID.eq(buildId))
+                    .execute()
             }
         }
         // 没更新到，可能是因为他不是当前最新一次构建，那么要做的一件事是对finishCount值做加1，同时runningCount值减1
         if (count == 0) {
             with(latestRunningBuild) {
                 with(T_PIPELINE_BUILD_SUMMARY) {
-                    dslContext.update(this)
+                    val update
+                        = dslContext.update(this)
                         .set(FINISH_COUNT, FINISH_COUNT + 1)
-                        .set(RUNNING_COUNT, RUNNING_COUNT - 1)
-                        .where(PIPELINE_ID.eq(pipelineId)).execute()
+                    if (!isStageFinish) update.set(RUNNING_COUNT, RUNNING_COUNT - 1)
+                    update.where(PIPELINE_ID.eq(pipelineId))
+                        .execute()
                 }
             }
         }
