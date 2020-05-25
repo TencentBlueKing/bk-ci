@@ -14,7 +14,7 @@
                         <div class="atom-select-entry">
                             <template v-if="atom">
                                 <span :title="atom.recommendFlag === false ? $t('editPage.notRecomendPlugin') : atom.name" :class="[{ 'not-recommend': atom.recommendFlag === false }, 'atom-selected-name']">{{ atom.name }}</span>
-                                <bk-button theme="primary" class="atom-select-btn reselect-btn" :disabled="!editable" @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.reSelect') }}</bk-button>
+                                <bk-button theme="primary" class="atom-select-btn reselect-btn" :disabled="!editable || showPanelType === 'PAUSE'" @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.reSelect') }}</bk-button>
                             </template>
                             <template v-else-if="!atomCode">
                                 <bk-button theme="primary" class="atom-select-btn" @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.selectAtomTips') }}</bk-button>
@@ -30,7 +30,7 @@
                         :placeholder="$t('editPage.selectAtomVersion')"
                         name="version"
                         @selected="handleUpdateVersion"
-                        :disabled="!editable"
+                        :disabled="!editable || showPanelType === 'PAUSE'"
                     >
                         <bk-option v-for="v in atomVersionList" :key="v.versionName" :id="v.versionValue" :name="v.versionName"></bk-option>
                     </bk-select>
@@ -400,7 +400,8 @@
                 'fetchAtomModal',
                 'fetchAtomVersionList',
                 'togglePropertyPanel',
-                'pausePlugin'
+                'pausePlugin',
+                'requestPipelineExecDetail'
             ]),
 
             ...mapActions('soda', [
@@ -419,7 +420,9 @@
                     element: this.element
                 }
                 this[loadingKey] = true
-                this.pausePlugin(postData).catch((err) => {
+                this.pausePlugin(postData).then(() => {
+                    return this.requestPipelineExecDetail(this.$route.params)
+                }).catch((err) => {
                     this.$showTips({
                         message: err.message || err,
                         theme: 'error'
