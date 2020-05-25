@@ -35,10 +35,6 @@ import com.tencent.devops.process.pojo.PipelineContainerMonitor
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * deng
- * 2019-01-11
- */
 @RestResource
 class OpPipelineContainerMonitorResourceImpl @Autowired constructor(private val monitorService: PipelineContainerMonitorService) :
     OpPipelineContainerMonitorResource {

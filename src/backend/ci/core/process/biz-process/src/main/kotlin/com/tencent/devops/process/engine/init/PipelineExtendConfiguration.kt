@@ -28,10 +28,10 @@ package com.tencent.devops.process.engine.init
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.listener.run.callback.PipelineBuildCallBackListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
+import org.springframework.amqp.core.DirectExchange
 import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
@@ -41,7 +41,6 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.util.UUID
 
 /**
  * 流水线构建扩展配置
@@ -50,7 +49,44 @@ import java.util.UUID
 class PipelineExtendConfiguration {
 
     /**
-     * 构建广播交换机
+     * 流水线扩展行为订阅广播
+     */
+    @Bean
+    fun pipelineExtendsFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_EXTENDS_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    /**
+     * 构建启动广播交换机
+     */
+    @Bean
+    fun pipelineBuildStartFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_START_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    /**
+     * 插件构建完成广播交换机
+     */
+    @Bean
+    fun pipelineBuildElementFinishFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_ELEMENT_FINISH_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun measureExchange(): DirectExchange {
+        val directExchange = DirectExchange(MQ.EXCHANGE_MEASURE_REQUEST_EVENT, true, false)
+        directExchange.isDelayed = true
+        return directExchange
+    }
+
+    /**
+     * 构建结束广播交换机
      */
     @Bean
     fun pipelineBuildFanoutExchange(): FanoutExchange {
@@ -71,12 +107,7 @@ class PipelineExtendConfiguration {
 
     @Bean
     fun pipelineBuildStatusChangeQueue(): Queue {
-        return Queue(
-            MQ.QUEUE_PIPELINE_BUILD_STATUS_CHANGE + ".${CommonUtils.getInnerIP()}.${UUID.randomUUID()}",
-            false,
-            true,
-            true
-        )
+        return Queue(MQ.QUEUE_PIPELINE_BUILD_STATUS_CHANGE)
     }
 
     @Bean
