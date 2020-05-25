@@ -63,6 +63,15 @@ interface OpPipelineQuotaResource {
         quota: Long
     ): Result<Boolean>
 
+    @ApiOperation("获取项目的配额")
+    @GET
+    @Path("/projects/{projectId}/get")
+    fun getQuota(
+        @ApiParam("projectId")
+        @PathParam("projectId")
+        projectId: String
+    ): Result<Map<String, Long>>
+
     @ApiOperation("手动启动清理任务")
     @GET
     @Path("/doClearJob")
