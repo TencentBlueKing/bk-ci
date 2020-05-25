@@ -35,6 +35,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
+import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
@@ -122,7 +123,7 @@ class PipelineStageService @Autowired constructor(
             .stageCancel(buildId, stageId)
         pipelineEventDispatcher.dispatch(
             PipelineBuildFinishEvent(
-                source = "FINALLY_STAGE_SUCCESS",
+                source = BS_STAGE_CANCELED_END_SOURCE,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,

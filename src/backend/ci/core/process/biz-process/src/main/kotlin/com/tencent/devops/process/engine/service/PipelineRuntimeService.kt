@@ -1616,7 +1616,11 @@ class PipelineRuntimeService @Autowired constructor(
             // 减1,当作没执行过
             pipelineBuildSummaryDao.updateQueueCount(dslContext, latestRunningBuild.pipelineId, -1)
         } else {
-            pipelineBuildSummaryDao.finishLatestRunningBuild(dslContext, latestRunningBuild)
+            pipelineBuildSummaryDao.finishLatestRunningBuild(
+                dslContext = dslContext,
+                latestRunningBuild = latestRunningBuild,
+                isStageFinish = currentBuildStatus == BuildStatus.STAGE_SUCCESS
+            )
         }
         with(latestRunningBuild) {
             val executeTime = try {
