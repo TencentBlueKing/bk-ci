@@ -78,7 +78,7 @@ function startup() {
     JAVA_OPTS="$JAVA_OPTS -server -Dcertificate.file=${CERT_PATH}/bkci_platform.cert -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
     JAVA_OPTS="$JAVA_OPTS -Dspring.config.location=file:${CONF_HOME}/common.yml,file:${CONF_HOME}/application-${SERVICE_NAME}.yml"
     JAVA_OPTS="$JAVA_OPTS -Dservice.log.dir=${LOGS_HOME}"
-    JAVA_OPTS="$JAVA_OPTS -Ddevops_gateway=http://__BKCI_HOST__"
+    JAVA_OPTS="$JAVA_OPTS -Ddevops_gateway=__HTTP_SCHEMA__://__BKCI_FQDN__"
 
     export JAVA_OPTS
 
