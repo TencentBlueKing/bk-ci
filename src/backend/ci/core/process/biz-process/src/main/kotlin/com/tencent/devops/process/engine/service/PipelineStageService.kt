@@ -137,6 +137,11 @@ class PipelineStageService @Autowired constructor(
     }
 
     fun updatePipelineRunningCount(pipelineId: String, buildId: String, runningIncrement: Int) {
-        pipelineBuildSummaryDao.updateRunningCount(dslContext, pipelineId, buildId, runningIncrement)
+        pipelineBuildSummaryDao.updateRunningCount(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            runningIncrement = runningIncrement
+        )
     }
 }
