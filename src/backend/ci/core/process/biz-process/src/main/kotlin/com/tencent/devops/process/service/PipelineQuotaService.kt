@@ -90,7 +90,6 @@ class PipelineQuotaService @Autowired constructor(
         val max = (System.currentTimeMillis() - SEVEN_DAY_MILL_SECONDS).toDouble()
         val removeKey = mutableSetOf<String>()
 
-
         // 清理之前没释放的配额
         redisOperation.sscan(QUOTA_BAD_PROJECT_ALL_KEY, "*")?.use { cursor ->
             while (cursor.hasNext()) {
@@ -109,14 +108,14 @@ class PipelineQuotaService @Autowired constructor(
     }
 
     private fun getProjectLimitKey(projectId: String): String {
-        return "$QUOTA_KEY_LIMIT_PREFIX${projectId}"
+        return "$QUOTA_KEY_LIMIT_PREFIX$projectId"
     }
 
     private fun getProjectKey(projectId: String): String {
-        return "$QUOTA_KEY_PREFIX${projectId}"
+        return "$QUOTA_KEY_PREFIX$projectId"
     }
 
     private fun getProjectJobKey(projectId: String, buildId: String, jobId: String): String {
-        return "${projectId}_${buildId}_${jobId}"
+        return "${projectId}_${buildId}_$jobId"
     }
 }
