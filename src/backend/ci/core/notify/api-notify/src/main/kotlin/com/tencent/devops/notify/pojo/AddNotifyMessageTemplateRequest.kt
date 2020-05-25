@@ -29,7 +29,6 @@ import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
-import com.tencent.devops.common.notify.enums.NotifyTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -40,7 +39,7 @@ data class AddNotifyMessageTemplateRequest(
     @ApiModelProperty("模板名称", required = true)
     val templateName: String,
     @ApiModelProperty("适用的通知类型（EMAIL:邮件 RTX:企业微信 WECHAT:微信 SMS:短信）", required = true)
-    val notifyTypeScope: ArrayList<NotifyTypeEnum>,
+    val notifyTypeScope: ArrayList<String>,
     @ApiModelProperty("标题（邮件和RTX方式必填）", required = false)
     val title: String? = "",
     @ApiModelProperty("消息内容", required = true)

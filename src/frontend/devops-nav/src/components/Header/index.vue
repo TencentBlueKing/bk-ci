@@ -55,7 +55,7 @@
             </h3>
         </div>
         <div class="header-right-bar">
-            <locale-switcher></locale-switcher>
+            <locale-switcher v-if="!isInIframe"></locale-switcher>
             <span class="seperate-line">|</span>
             <!-- <feed-back class='feed-back-icon'></feed-back> -->
             <i
@@ -136,6 +136,10 @@
                 id: project.projectCode,
                 name: project.projectName
             }))
+        }
+
+        get isInIframe () {
+            return top !== window
         }
 
         $refs: {

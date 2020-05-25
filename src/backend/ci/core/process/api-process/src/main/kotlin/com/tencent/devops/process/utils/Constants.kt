@@ -79,6 +79,9 @@ const val PIPELINE_RETRY_COUNT = "BK_CI_RETRY_COUNT" // "pipeline.retry.count"
 const val PIPELINE_RETRY_BUILD_ID = "BK_CI_RETRY_BUILD_ID" // "pipeline.retry.build.id"
 const val PIPELINE_RETRY_START_TASK_ID = "BK_CI_RETRY_TASK_ID" // "pipeline.retry.start.task.id"
 
+const val BK_CI_BUILD_FAIL_TASKS = "BK_CI_BUILD_FAIL_TASKS"
+const val BK_CI_BUILD_FAIL_TASKNAMES = "BK_CI_BUILD_FAIL_TASKNAMES"
+
 const val PIPELINE_VIEW_MY_PIPELINES = "myPipeline"
 const val PIPELINE_VIEW_FAVORITE_PIPELINES = "collect"
 const val PIPELINE_VIEW_ALL_PIPELINES = "allPipeline"
@@ -130,18 +133,62 @@ const val PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX = 20
  * 流水线设置-最大排队时间-默认值 单位:分钟
  */
 const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT = 1
+
 /**
  * 流水线设置-最大排队时间-最小值 单位:分钟
  */
 const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN = 1
+
 /**
  * 流水线设置-最大排队时间-默认值 单位:分钟
  */
 const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX = 1440
+
 /**
  * 流水线设置-错误信息入库长度最大值 单位:分钟
  */
 const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 4000
+
+/**
+ * 流水线设置-启动的通知模板代码
+ */
+const val PIPELINE_STARTUP_NOTIFY_TEMPLATE = "PIPELINE_STARTUP_NOTIFY_TEMPLATE"
+
+/**
+ * 流水线设置-启动的详情通知模板代码
+ */
+const val PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL = "PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL"
+
+/**
+ * 流水线设置-执行成功的通知模板代码
+ */
+const val PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE = "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE"
+
+/**
+ * 流水线设置-执行成功的详情通知模板代码
+ */
+const val PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL = "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL"
+
+/**
+ * 流水线设置-执行失败的通知模板代码
+ */
+const val PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE = "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE"
+
+/**
+ * 流水线设置-执行失败的详情通知模板代码
+ */
+const val PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL = "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL"
+
+/**
+ * 流水线设置-执行取消的通知模板代码
+ */
+const val PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE = "PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE"
+
+/**
+ * 流水线设置-执行取消的详情通知模板代码
+ */
+const val PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL = "PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL"
+
 /**
  * 流水线设置-人工审核插件的通知模板代码
  */
@@ -275,7 +322,8 @@ object PipelineVarUtil {
 
     private fun turning(mapping: Map<String, String>, vars: MutableMap<String, String>, replace: Boolean = false) {
         mapping.forEach {
-            if (vars[it.key] != null) {
+            // 如果新旧key同时存在，则保留原value
+            if (vars[it.key] != null && vars[it.value] == null) {
                 vars[it.value] = vars[it.key]!!
                 if (replace) {
                     vars.remove(it.key)
