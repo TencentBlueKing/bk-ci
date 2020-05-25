@@ -1893,7 +1893,7 @@ class PipelineBuildService(
             pipelineBuildTaskDao.updateTaskParam(dslContext, buildId, taskId, objectMapper.writeValueAsString(element))
             logger.info("update task param success | $buildId| $taskId | $element")
 
-            //修改详情model
+            // 修改详情model
             buildDetailService.updateElementWhenPauseContinue(buildId, stageId, containerId, taskId, element)
             logger.info("update detail element success | $buildId| $taskId | $element")
 
@@ -1945,12 +1945,12 @@ class PipelineBuildService(
         val taskRecords = pipelineRuntimeService.getAllBuildTask(buildId)
         val startAndEndTask = mutableListOf<PipelineBuildTask>()
         taskRecords.forEach { task ->
-            if(task.containerId == containerId && task.stageId == stageId) {
-                if(task.taskId == taskId) {
+            if (task.containerId == containerId && task.stageId == stageId) {
+                if (task.taskId == taskId) {
                     startAndEndTask.add(task)
-                } else if(task.taskName.startsWith(VMUtils.getCleanVmLable()) && task.taskId.startsWith(VMUtils.getStopVmLabel())) {
+                } else if (task.taskName.startsWith(VMUtils.getCleanVmLable()) && task.taskId.startsWith(VMUtils.getStopVmLabel())) {
                     startAndEndTask.add(task)
-                } else if(task.taskName.startsWith(VMUtils.getPrepareVmLable()) && task.taskId.startsWith(VMUtils.getStartVmLabel())) {
+                } else if (task.taskName.startsWith(VMUtils.getPrepareVmLable()) && task.taskId.startsWith(VMUtils.getStartVmLabel())) {
                     startAndEndTask.add(task)
                 }
             }
@@ -1975,15 +1975,15 @@ class PipelineBuildService(
             buildStatus = BuildStatus.QUEUE
         )
 
-        // detail状态置为排队
-        buildDetailService.continuePauseTask(
-            buildId = buildId,
-            containerId = containerId,
-            stageId = stageId,
-            taskId = taskId,
-            buildStatus = BuildStatus.QUEUE
-        )
-        logger.info("update|$buildId|$taskId| container status  to ${BuildStatus.QUEUE}")
+//        // detail状态置为排队
+//        buildDetailService.continuePauseTask(
+//            buildId = buildId,
+//            containerId = containerId,
+//            stageId = stageId,
+//            taskId = taskId,
+//            buildStatus = BuildStatus.QUEUE
+//        )
+//        logger.info("update|$buildId|$taskId| container status  to ${BuildStatus.QUEUE}")
     }
 
     fun getBuildDetailStatus(

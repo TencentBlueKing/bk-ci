@@ -101,7 +101,7 @@ class TaskControl @Autowired constructor(
 
         logger.info("[$buildId]|[${buildInfo.status}]|ATOM_$actionType|taskId=$taskId|status=${buildTask.status}")
 
-        if(pipelineTaskService.isPause(taskId, buildId)) {
+        if (pipelineTaskService.isPause(taskId, buildId)) {
             return pipelineEventDispatcher.dispatch(
                 PipelineBuildContainerEvent(
                     source = "pauseTask",

@@ -372,7 +372,7 @@ class PipelineTaskService @Autowired constructor(
         val pipelineName = (pipelineRecord?.pipelineName ?: "")
         val buildNum = buildRecord?.buildNum.toString()
         val projectName = client.get(ServiceProjectResource::class).get(pipelineRecord!!.projectId).data!!.projectName
-        val url =  DetailPageBuild().buildPage(
+        val url = DetailPageBuild().buildPage(
             buildPageInfo = BuildPageInfo(
                 buildId = buildId,
                 pipelineId = pipelineId,

@@ -613,14 +613,14 @@ class PipelineBuildDetailService @Autowired constructor(
 
     fun pauseTask(buildId: String, stageId: String, containerId: String, taskId: String, buildStatus: BuildStatus) {
         logger.info("[$buildId]|pauseTask|stageId=$stageId|containerId=$containerId|taskId=$taskId|status=$buildStatus")
-        update(buildId, object : ModelInterface{
+        update(buildId, object : ModelInterface {
             var update = false
 
             override fun onFindElement(e: Element, c: Container): Traverse {
-                logger.info("[$buildId]pauseTask onFindElement e[${e}] taskId[$taskId] c[${c}] containerId[$containerId]")
-                if(c.id.equals(containerId)) {
+                logger.info("[$buildId]pauseTask onFindElement e[$e] taskId[$taskId] c[$c] containerId[$containerId]")
+                if (c.id.equals(containerId)) {
                     logger.info("[$buildId]|update container[$containerId] status ${buildStatus.name}")
-                    if(e.id.equals(taskId)) {
+                    if (e.id.equals(taskId)) {
                         logger.info("[$buildId]|update task[$taskId] status ${buildStatus.name}")
                         update = true
                         e.status = buildStatus.name
@@ -636,19 +636,26 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.RUNNING)
     }
 
-    fun continuePauseTask(buildId: String, stageId: String, containerId: String, taskId: String, buildStatus: BuildStatus) {
+    fun continuePauseTask(
+        buildId: String,
+        stageId: String,
+        containerId: String,
+        taskId: String,
+        buildStatus: BuildStatus
+    ) {
         logger.info("[$buildId]|continuePauseTask|stageId=$stageId|containerId=$containerId|taskId=$taskId|status=$buildStatus")
-        update(buildId, object : ModelInterface{
+        update(buildId, object : ModelInterface {
             var update = false
 
             override fun onFindElement(e: Element, c: Container): Traverse {
-                logger.info("[$buildId]continuePauseTask onFindElement e[${e}] taskId[$taskId] c[${c}] containerId[$containerId]")
-                if(c.id.equals(containerId)) {
+                logger.info("[$buildId]continuePauseTask onFindElement e[$e] taskId[$taskId] c[$c] containerId[$containerId]")
+                if (c.id.equals(containerId)) {
                     logger.info("[$buildId]|update container[$containerId] status ${buildStatus.name}")
-                    if(e.id.equals(taskId)) {
+                    if (e.id.equals(taskId)) {
                         logger.info("[$buildId]|update task[$taskId] status ${buildStatus.name}")
                         update = true
                         e.status = buildStatus.name
+                        c.status = buildStatus.name
                         return Traverse.BREAK
                     }
                 }
@@ -663,14 +670,15 @@ class PipelineBuildDetailService @Autowired constructor(
 
     fun pauseContainer(buildId: String, stageId: String, containerId: String, buildStatus: BuildStatus) {
         logger.info("[$buildId]|pauseTask|stageId=$stageId|containerId=$containerId|status=$buildStatus")
-        update(buildId, object : ModelInterface{
+        update(buildId, object : ModelInterface {
             var update = false
 
             override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
-                logger.info("[$buildId]pauseTask onFindElement  container[${container}] containerId[$containerId]")
-                if(container.id.equals(containerId)) {
+                logger.info("[$buildId]pauseTask onFindElement  container[$container] containerId[$containerId]")
+                if (container.id.equals(containerId)) {
                     logger.info("[$buildId]|update container[$containerId] status ${buildStatus.name}")
                     container.status = buildStatus.name
+                    update = true
                 }
                 return Traverse.CONTINUE
             }
@@ -911,24 +919,36 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.RUNNING)
     }
 
-    fun updateElementWhenPauseContinue(buildId: String, stageId: String, containerId: String, taskId: String, element: Element) {
+    fun updateElementWhenPauseContinue(
+        buildId: String,
+        stageId: String,
+        containerId: String,
+        taskId: String,
+        element: Element
+    ) {
         logger.info("[$buildId|$containerId] update detail element $element")
         val detailRecord = buildDetailDao.get(dslContext, buildId)
-        if(detailRecord == null) {
+        if (detailRecord == null) {
             logger.warn("update detail element record is empty,buildId[$buildId]")
             return
         }
         val model = JsonUtil.to(detailRecord.model, Model::class.java)
-        model.stages.forEach { s->
-            if(s.id.equals(stageId)) {
-                s.containers.forEach { c->
-                    if(c.id.equals(containerId)) {
+        model.stages.forEach { s ->
+            if (s.id.equals(stageId)) {
+                s.containers.forEach { c ->
+                    if (c.id.equals(containerId)) {
                         val newElement = mutableListOf<Element>()
-                        c.elements.forEach { e->
-                            if(e.id.equals(element.id)) {
+                        c.elements.forEach { e ->
+                            if (e.id.equals(element.id)) {
+                                // 设置插件状态为排队状态
+                                c.status = BuildStatus.QUEUE.name
+                                element.status = BuildStatus.QUEUE.name
                                 newElement.add(element)
                                 // 存储原element参数到redis，用于rebuild时快速恢复model
-                                redisOperation.set(PauseRedisUtils.getPauseElementRedisKey(buildId, e.id!!), objectMapper.writeValueAsString(e))
+                                redisOperation.set(
+                                    PauseRedisUtils.getPauseElementRedisKey(buildId, e.id!!),
+                                    objectMapper.writeValueAsString(e)
+                                )
                             } else {
                                 newElement.add(e)
                             }
@@ -944,12 +964,13 @@ class PipelineBuildDetailService @Autowired constructor(
     fun updateElementWhenPauseRetry(buildId: String, model: Model) {
         logger.info("[$buildId| updateElementWhenPauseRetry")
         var needUpdate = false
-        model.stages.forEach { stage->
-            stage.containers.forEach {container->
+        model.stages.forEach { stage ->
+            stage.containers.forEach { container ->
                 val newElements = mutableListOf<Element>()
-                container.elements.forEach { element->
-                    val defaultElement = redisOperation.get(PauseRedisUtils.getPauseElementRedisKey(buildId, element.id!!))
-                    if(defaultElement != null) {
+                container.elements.forEach { element ->
+                    val defaultElement =
+                        redisOperation.get(PauseRedisUtils.getPauseElementRedisKey(buildId, element.id!!))
+                    if (defaultElement != null) {
                         logger.info("Refresh element| $buildId|${element.id}| $model")
                         // 恢复detail表model内的对应element为默认值
                         newElements.add(objectMapper.readValue(defaultElement, Element::class.java))
@@ -963,7 +984,7 @@ class PipelineBuildDetailService @Autowired constructor(
             }
         }
 
-        if(needUpdate) {
+        if (needUpdate) {
             buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
             logger.info("[$buildId| updateElementWhenPauseRetry success")
         }
