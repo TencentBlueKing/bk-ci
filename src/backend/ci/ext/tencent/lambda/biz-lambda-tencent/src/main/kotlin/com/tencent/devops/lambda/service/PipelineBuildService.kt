@@ -34,13 +34,12 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.image.pojo.enums.TaskStatus
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
 import com.tencent.devops.lambda.dao.BuildTaskDao
 import com.tencent.devops.lambda.dao.LambdaPipelineBuildDao
@@ -54,7 +53,6 @@ import com.tencent.devops.lambda.storage.ESService
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
-import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
@@ -119,6 +117,12 @@ class PipelineBuildService @Autowired constructor(
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.taskId}] Fail to get the build task")
             return
         }
+        pushElementData2Es(event, task)
+        pushGitTaskInfo(event, task)
+        pushTaskDetail(event, task)
+    }
+
+    private fun pushElementData2Es(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord) {
         val data = ElementData(
             projectId = event.projectId,
             pipelineId = event.pipelineId,
@@ -134,79 +138,74 @@ class PipelineBuildService @Autowired constructor(
             errorCode = event.errorCode,
             errorMsg = event.errorMsg
         )
-        esService.buildElement(data)
-
-        pushGitTaskInfo(event, task)
-        pushTaskDetail(event, task)
+        try {
+            esService.buildElement(data)
+        } catch (e: Exception) {
+            logger.error("Push elementData to es error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
+        }
     }
 
-    private fun pushTaskDetail(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord?) {
+    private fun pushTaskDetail(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord) {
         try {
-            if (task != null) {
-                val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                val startTime = task.startTime.timestamp()
-                val endTime = task.endTime.timestamp()
-                val dataPlatTaskDetail = DataPlatTaskDetail(
-                    pipelineId = task.pipelineId,
-                    buildId = task.buildId,
-                    projectEnglishName = task.projectId,
-                    type = "task",
-                    itemId = task.taskId,
-                    atomCode = task.taskAtom,
-                    taskParams = task.taskParams,
-                    status = BuildStatus.values()[task.status].statusName,
-                    errorCode = task.errorCode,
-                    errorMsg = task.errorMsg,
-                    startTime = task.startTime.format(dateTimeFormatter),
-                    endTime = task.endTime.format(dateTimeFormatter),
-                    costTime = endTime - startTime,
-                    starter = task.starter,
-                    washTime = LocalDateTime.now().format(dateTimeFormatter)
-                )
+            val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            val startTime = task.startTime.timestamp()
+            val endTime = task.endTime.timestamp()
+            val dataPlatTaskDetail = DataPlatTaskDetail(
+                pipelineId = task.pipelineId,
+                buildId = task.buildId,
+                projectEnglishName = task.projectId,
+                type = "task",
+                itemId = task.taskId,
+                atomCode = task.taskAtom,
+                taskParams = task.taskParams,
+                status = BuildStatus.values()[task.status].statusName,
+                errorCode = task.errorCode,
+                errorMsg = task.errorMsg,
+                startTime = task.startTime.format(dateTimeFormatter),
+                endTime = task.endTime.format(dateTimeFormatter),
+                costTime = endTime - startTime,
+                starter = task.starter,
+                washTime = LocalDateTime.now().format(dateTimeFormatter)
+            )
 
-                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
-            }
+            kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
         } catch (e: Exception) {
             logger.error("Push task detail to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
         }
     }
 
-    private fun pushGitTaskInfo(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord?) {
+    private fun pushGitTaskInfo(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord) {
         try {
-            if (task != null) {
-                val gitUrl: String
-                val taskParamsMap = JsonUtil.toMap(task.taskParams)
-                val atomCode = taskParamsMap["atomCode"]
-                when (atomCode) {
-                    "CODE_GIT" -> {
-                        val repositoryHashId = taskParamsMap["repositoryHashId"]
-                        val gitRepository = client.get(ServiceRepositoryResource::class)
-                            .get(event.projectId, repositoryHashId.toString(), RepositoryType.ID)
-                        gitUrl = gitRepository.data!!.url
-                        sendKafka(task, gitUrl)
-                    }
-                    "gitCodeRepoCommon" -> {
-                        val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
-                        val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
-                        gitUrl = inputMap["repositoryUrl"].toString()
-                        sendKafka(task, gitUrl)
-                    }
-                    "gitCodeRepo", "PullFromGithub", "GitLab" -> {
-                        val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
-                        val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
-                        val repositoryHashId = if (atomCode == "Gitlab") {
-                            inputMap["repository"].toString()
-                        } else {
-                            inputMap["repositoryHashId"].toString()
-                        }
-                        val gitRepository = client.get(ServiceRepositoryResource::class)
-                            .get(event.projectId, repositoryHashId, RepositoryType.ID)
-                        gitUrl = gitRepository.data!!.url
-                        sendKafka(task, gitUrl)
-                    }
+            val gitUrl: String
+            val taskParamsMap = JsonUtil.toMap(task.taskParams)
+            val atomCode = taskParamsMap["atomCode"]
+            when (atomCode) {
+                "CODE_GIT" -> {
+                    val repositoryHashId = taskParamsMap["repositoryHashId"]
+                    val gitRepository = client.get(ServiceRepositoryResource::class)
+                        .get(event.projectId, repositoryHashId.toString(), RepositoryType.ID)
+                    gitUrl = gitRepository.data!!.url
+                    sendKafka(task, gitUrl)
                 }
-            } else {
-                logger.error("push git taskInfo error. buildId: ${event.buildId}, taskId: ${event.taskId}, task is null.")
+                "gitCodeRepoCommon" -> {
+                    val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
+                    val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
+                    gitUrl = inputMap["repositoryUrl"].toString()
+                    sendKafka(task, gitUrl)
+                }
+                "gitCodeRepo", "PullFromGithub", "GitLab" -> {
+                    val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
+                    val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
+                    val repositoryHashId = if (atomCode == "Gitlab") {
+                        inputMap["repository"].toString()
+                    } else {
+                        inputMap["repositoryHashId"].toString()
+                    }
+                    val gitRepository = client.get(ServiceRepositoryResource::class)
+                        .get(event.projectId, repositoryHashId, RepositoryType.ID)
+                    gitUrl = gitRepository.data!!.url
+                    sendKafka(task, gitUrl)
+                }
             }
         } catch (e: Exception) {
             logger.error("Push git task to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
