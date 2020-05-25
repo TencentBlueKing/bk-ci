@@ -102,7 +102,7 @@ class BuildEndControl @Autowired constructor(
     private fun PipelineBuildFinishEvent.finish() {
 
         // 将状态设置正确
-        val buildStatus = if (BuildStatus.isFinish(status) || status == BuildStatus.STAGE_SUCCESS) {
+        val buildStatus = if (BuildStatus.isFinish(status) || status.name == BuildStatus.STAGE_SUCCESS.name) {
             status
         } else {
             BuildStatus.SUCCEED
