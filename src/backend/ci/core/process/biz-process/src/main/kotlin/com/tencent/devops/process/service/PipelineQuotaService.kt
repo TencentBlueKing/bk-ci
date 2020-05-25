@@ -23,15 +23,15 @@ class PipelineQuotaService @Autowired constructor(
     private val logger = LoggerFactory.getLogger(PipelineQuotaService::class.java)
 
     // 配额就是带projectId集合元素个数的汇总
-    fun getQuotaByProject(projectId: String): Long {
+    fun getProjectRemainQuota(projectId: String): Pair<Long, Long> {
         try {
-            val quota = redisOperation.get(getProjectLimitKey(projectId))?.toLong() ?: DEFAULT_PROJECT_QUOTA
+            val quota = getQuotaByProject(projectId)
             val usedQuota = getUsedQuota(projectId)
-            return quota - usedQuota
+            return Pair(quota - usedQuota, quota)
         } catch (e: Exception) {
             logger.error("fail to get quota by project: $projectId", e)
         }
-        return Long.MAX_VALUE
+        return Pair(DEFAULT_PROJECT_QUOTA, DEFAULT_PROJECT_QUOTA)
     }
 
     private fun getUsedQuota(projectId: String): Long {
@@ -62,6 +62,10 @@ class PipelineQuotaService @Autowired constructor(
         }
     }
 
+    fun getQuotaByProject(projectId: String): Long {
+        return redisOperation.get(getProjectLimitKey(projectId))?.toLong() ?: DEFAULT_PROJECT_QUOTA
+    }
+
     fun setQuotaByProject(projectId: String, quota: Long) {
         redisOperation.set(getProjectLimitKey(projectId), quota.toString())
     }
@@ -79,7 +83,7 @@ class PipelineQuotaService @Autowired constructor(
                 logger.info("<<< Clear Pipeline Quota Job Has Running, Do Not Start>>>")
             }
         } catch (e: Throwable) {
-            logger.error("WeTestTaskJob exception:", e)
+            logger.error("Clear pipeline quota exception:", e)
         } finally {
             redisLock.unlock()
         }

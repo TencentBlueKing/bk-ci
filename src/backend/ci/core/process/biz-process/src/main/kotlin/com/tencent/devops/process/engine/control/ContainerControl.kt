@@ -130,11 +130,13 @@ class ContainerControl @Autowired constructor(
 
             // 检查配额
             // job配额为0
-            if (pipelineQuotaService.getQuotaByProject(projectId) <= 0) {
+            val quotaPair = pipelineQuotaService.getProjectRemainQuota(projectId)
+            val remainQuota = quotaPair.first
+            if (remainQuota <= 0) {
                 LogUtils.addRedLine(
                     rabbitTemplate = rabbitTemplate,
                     buildId = buildId,
-                    message = "Project has no quota to run the job...",
+                    message = "Project has no quota to run the job...(max quota: ${quotaPair.second})",
                     tag = "",
                     jobId = containerId,
                     executeCount = 1
