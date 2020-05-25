@@ -1619,7 +1619,7 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineBuildSummaryDao.finishLatestRunningBuild(
                 dslContext = dslContext,
                 latestRunningBuild = latestRunningBuild,
-                isStageFinish = currentBuildStatus == BuildStatus.STAGE_SUCCESS
+                isStageFinish = currentBuildStatus.name == BuildStatus.STAGE_SUCCESS.name
             )
         }
         with(latestRunningBuild) {
@@ -1647,7 +1647,7 @@ class PipelineRuntimeService @Autowired constructor(
             }
             logger.info("[$pipelineId]|getRecommendVersion-$buildId recommendVersion: $recommendVersion")
             val remark = buildVariableService.getVariable(buildId, PIPELINE_BUILD_REMARK)
-            val finalStatus = if (BuildStatus.isFinish(status) || status == BuildStatus.STAGE_SUCCESS) {
+            val finalStatus = if (BuildStatus.isFinish(status) || status.name == BuildStatus.STAGE_SUCCESS.name) {
                 status
             } else {
                 BuildStatus.FAILED
