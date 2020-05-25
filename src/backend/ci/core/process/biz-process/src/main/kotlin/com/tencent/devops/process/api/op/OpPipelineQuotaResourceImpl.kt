@@ -14,6 +14,11 @@ class OpPipelineQuotaResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun getQuota(projectId: String): Result<Map<String, Long>> {
+        val quota = pipelineQuotaService.getQuotaByProject(projectId)
+        return Result(mapOf(projectId to quota))
+    }
+
     override fun doClearJob(): Result<Boolean> {
         pipelineQuotaService.clearZSet()
         return Result(true)
