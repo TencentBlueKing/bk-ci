@@ -33,6 +33,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -61,4 +62,18 @@ interface OpPipelineQuotaResource {
         @QueryParam("quota")
         quota: Long
     ): Result<Boolean>
+
+    @ApiOperation("获取项目的配额")
+    @GET
+    @Path("/projects/{projectId}/get")
+    fun getQuota(
+        @ApiParam("projectId")
+        @PathParam("projectId")
+        projectId: String
+    ): Result<Map<String, Long>>
+
+    @ApiOperation("手动启动清理任务")
+    @GET
+    @Path("/doClearJob")
+    fun doClearJob(): Result<Boolean>
 }
