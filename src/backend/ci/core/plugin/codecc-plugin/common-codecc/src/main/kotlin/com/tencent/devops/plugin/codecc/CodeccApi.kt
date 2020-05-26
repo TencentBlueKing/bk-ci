@@ -309,7 +309,7 @@ open class CodeccApi constructor(
         )
         val result = taskExecution(
             body = body,
-            path = "/ms/defect/api/build/checkerSet/$checkerSetId/relationships",
+            path = "/ms/defect/api/service/checkerSet/$checkerSetId/relationships",
             headers = headers,
             method = "POST"
         )
