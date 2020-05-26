@@ -60,7 +60,7 @@ class UserPreBuildResourceImpl @Autowired constructor(
     }
 
     override fun getAgentStatus(userId: String, os: OS, ip: String, hostName: String): Result<AgentStatus> {
-        return Result(preBuildService.getAgentStatus(userId,  os, ip, hostName))
+        return Result(preBuildService.getAgentStatus(userId, os, ip, hostName))
     }
 
     override fun listPreProject(userId: String): Result<List<PreProject>> {
