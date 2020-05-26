@@ -254,7 +254,6 @@ class GitCIBuildService @Autowired constructor(
                 }
             }
 
-
         val vmContainer = VMBuildContainer(
             id = null,
             name = "Job_${jobIndex + 1} " + (job.job.name ?: ""),

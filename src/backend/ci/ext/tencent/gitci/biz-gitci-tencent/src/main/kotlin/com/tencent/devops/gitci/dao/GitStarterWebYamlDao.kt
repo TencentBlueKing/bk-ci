@@ -33,7 +33,6 @@ import com.tencent.devops.model.gitci.tables.TGitWebStarterYaml.T_GIT_WEB_STARTE
 import com.tencent.devops.model.gitci.tables.records.TGitWebStarterYamlRecord
 import org.jooq.DSLContext
 import org.jooq.InsertOnDuplicateSetMoreStep
-import org.jooq.InsertSetMoreStep
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
