@@ -26,16 +26,51 @@
 
 package com.tencent.devops.store.dao.common
 
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.model.store.tables.TStoreCodecc
+import com.tencent.devops.store.pojo.common.StoreCodeccInfo
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
 @Repository
-class TxStoreCodeccValidateDao {
+class TxStoreCodeccDao {
 
     /**
-     * 获取评分
+     * 计算评分
      */
-    fun getScore(dslContext: DSLContext, calSql: String, thousandCcnIndex: Double): Double {
+    fun calScore(dslContext: DSLContext, calSql: String, thousandCcnIndex: Double): Double {
         return dslContext.fetchOne(calSql, thousandCcnIndex).get(0, Double::class.java)
+    }
+
+    fun addStoreCodeccScore(dslContext: DSLContext, userId: String, storeCodeccInfo: StoreCodeccInfo) {
+        with(TStoreCodecc.T_STORE_CODECC) {
+            dslContext.insertInto(
+                this,
+                ID,
+                STORE_ID,
+                STORE_CODE,
+                STORE_TYPE,
+                BUILD_ID,
+                TASK_ID,
+                CODE_STYLE_SCORE,
+                CODE_SECURITY_SCORE,
+                CODE_MEASURE_SCORE,
+                MODIFIER,
+                CREATOR
+            )
+                .values(
+                    UUIDUtil.generate(),
+                    storeCodeccInfo.storeId,
+                    storeCodeccInfo.storeCode,
+                    storeCodeccInfo.storeType.type.toByte(),
+                    storeCodeccInfo.buildId,
+                    storeCodeccInfo.taskId,
+                    storeCodeccInfo.codeStyleScore,
+                    storeCodeccInfo.codeSecurityScore,
+                    storeCodeccInfo.codeMeasureScore,
+                    userId,
+                    userId
+                ).execute()
+        }
     }
 }

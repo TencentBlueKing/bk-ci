@@ -26,31 +26,29 @@
  *
  */
 
-package com.tencent.devops.common.pipeline.element.store
 
-import com.tencent.devops.common.pipeline.pojo.element.Element
+package com.tencent.devops.store.pojo.common
+
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("研发商店组件codecc代码扫描结果校验", description = StoreCodeccValidateElement.classType)
-data class StoreCodeccValidateElement(
-    @ApiModelProperty("任务名称", required = true)
-    override val name: String = "研发商店组件codecc代码扫描结果校验",
-    @ApiModelProperty("id", required = false)
-    override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
-    override var status: String? = null,
-    @ApiModelProperty("组件代码", required = true)
+@ApiModel("store代码扫描信息")
+data class StoreCodeccInfo(
+    @ApiModelProperty("store组件ID", required = true)
+    val storeId: String,
+    @ApiModelProperty("store组件编码", required = true)
     val storeCode: String,
     @ApiModelProperty("组件类型", required = true)
-    val storeType: String,
-    @ApiModelProperty("开发语言", required = true)
-    val language: String = "\${language}"
-) : Element(name, id, status) {
-
-    companion object {
-        const val classType = "storeCodeccValidate"
-    }
-
-    override fun getClassType() = classType
-}
+    val storeType: StoreTypeEnum,
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("代码扫描任务ID", required = true)
+    val taskId: String,
+    @ApiModelProperty("代码规范评分", required = true)
+    val codeStyleScore: Double,
+    @ApiModelProperty("代码安全评分", required = true)
+    val codeSecurityScore: Double,
+    @ApiModelProperty("代码度量和检查评分", required = true)
+    val codeMeasureScore: Double
+)

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -38,8 +39,10 @@ data class StoreValidateCodeccResultRequest(
     val userId: String,
     @ApiModelProperty("构建ID", required = true)
     val buildId: String,
+    @ApiModelProperty("组件代码", required = true)
+    val storeCode: String,
+    @ApiModelProperty("组件类型", required = true)
+    val storeType: StoreTypeEnum,
     @ApiModelProperty("开发语言", required = true)
-    val language: String,
-    @ApiModelProperty("代码扫描任务ID", required = true)
-    val taskId: String
+    val language: String
 )

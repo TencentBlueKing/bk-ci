@@ -38,6 +38,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.worker.common.api.store.StoreCodeccResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
@@ -54,13 +55,18 @@ class StoreCodeccValidateTask : ITask() {
         logger.info("StoreCodeccValidateTask buildTask: $buildTask,buildVariables: $buildVariables")
         val buildId = buildTask.buildId
         val buildVariableMap = buildTask.buildVariable!!
-        val language = buildVariableMap["language"] ?: throw TaskExecuteException(
-            errorMsg = "param [language] is empty",
+        val storeCode = buildVariableMap["storeCode"] ?: throw TaskExecuteException(
+            errorMsg = "param [storeCode] is empty",
             errorType = ErrorType.SYSTEM,
             errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
-        val taskId = buildVariableMap["taskId"] ?: throw TaskExecuteException(
-            errorMsg = "param [taskId] is empty",
+        val storeType = buildVariableMap["storeType"] ?: throw TaskExecuteException(
+            errorMsg = "param [storeType] is empty",
+            errorType = ErrorType.SYSTEM,
+            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+        )
+        val language = buildVariableMap["language"] ?: throw TaskExecuteException(
+            errorMsg = "param [language] is empty",
             errorType = ErrorType.SYSTEM,
             errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
@@ -76,8 +82,9 @@ class StoreCodeccValidateTask : ITask() {
             projectCode = buildVariables.projectId,
             userId = userId,
             buildId = buildId,
-            language = language,
-            taskId = taskId
+            storeCode = storeCode,
+            storeType = StoreTypeEnum.valueOf(storeType),
+            language = language
         )
         val codeccValidateResult = storeCodeccResourceApi.validate(storeValidateCodeccResultRequest)
         LoggerService.addNormalLine("codeccValidateResult: $codeccValidateResult")

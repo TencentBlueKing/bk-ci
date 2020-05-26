@@ -28,5 +28,5 @@
 
 package com.tencent.devops.store.pojo.common
 
-const val ATOM_CODECC_QUALIFIED_TEMPLATE = "ATOM_CODECC_QUALIFIED_TEMPLATE" // 插件代码扫描合格模板
-const val ATOM_CODECC_FAILED_TEMPLATE = "ATOM_CODECC_FAILED_TEMPLATE" // 插件代码扫描不合格模板
+const val STORE_CODECC_QUALIFIED_TEMPLATE_SUFFIX = "_CODECC_QUALIFIED_TEMPLATE" // 研发商店组件代码扫描合格通知模板代码后缀
+const val STORE_CODECC_FAILED_TEMPLATE_SUFFIX = "_CODECC_FAILED_TEMPLATE" // 研发商店组件代码扫描不合格通知模板代码后缀
