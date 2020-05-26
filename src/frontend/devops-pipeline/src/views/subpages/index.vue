@@ -237,7 +237,7 @@
                     },
                     handleSelected: this.handleSelected
                 }, {
-                    selectedValue: this.$route.params.type && this.tabMap[this.$route.params.type] ? this.tabMap[this.$route.params.type] : this.$t('history.execHistory')
+                    selectedValue: this.$route.params.type && this.tabMap[this.$route.params.type] ? this.tabMap[this.$route.params.type] : this.$t(this.$route.name)
                 }]
             }
         },
