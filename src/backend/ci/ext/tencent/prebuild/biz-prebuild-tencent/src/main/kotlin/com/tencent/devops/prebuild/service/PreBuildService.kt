@@ -406,7 +406,7 @@ class PreBuildService @Autowired constructor(
             logger.info("AgentId: ${agent.agentId}")
             val agentStatus = client.get(ServiceNodeResource::class).listByHashIds(userId, getUserProjectId(userId), listOf(agent.agentId))
             logger.info("nodeStatus: ${agentStatus.data?.first()?.nodeStatus}")
-            if (NodeStatus.NORMAL.name == agentStatus.data?.first()?.nodeStatus) {
+            if (NodeStatus.NORMAL.statusName == agentStatus.data?.first()?.nodeStatus) {
                 AgentStatus.IMPORT_OK
             } else {
                 AgentStatus.IMPORT_EXCEPTION
