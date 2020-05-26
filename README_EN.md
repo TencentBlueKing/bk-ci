@@ -7,18 +7,18 @@
 a free & open source CI server, bk-ci(BlueKing Continuous Integration) helps you automate your build-test-release workflows, continuous delivery of your product faster, easier, with fewer bugs.
 
 TODO
-使用bkci屏蔽掉所有研发流程中的繁琐环节，让你聚焦于编码。bkci通常被用于：
+使用bk-ci屏蔽掉所有研发流程中的繁琐环节，让你聚焦于编码。bk-ci通常被用于：
 - 工程编译
 - 静态代码检查
 - 运行测试用例，及时发现BUG
 - 部署与发布
 
 TODO
-bkci提供了流水线、代码库、凭证管理、环境管理、研发商店5大核心服务，多重组合，满足企业不同场景的需求：
+bk-ci提供了流水线、代码库、凭证管理、环境管理、研发商店5大核心服务，多重组合，满足企业不同场景的需求：
 - **Pipeline**：将团队现有的研发流程以可视化方式呈现出来，编译、测试、部署，一条流水线搞定
-- **Code**：将企业内已有的代码托管服务关联至bkci
+- **Code**：将企业内已有的代码托管服务关联至bk-ci
 - **凭证管理**：为代码库、流水线等服务提供不同类型的凭据、证书管理功能
-- **环境管理**：可以将企业内部的开发编译机托管至bkci
+- **环境管理**：可以将企业内部的开发编译机托管至bk-ci
 - **研发商店**：由流水线插件和流水线模板组成，插件用于对接企业内部的各种第三方服务，模板助力企业内部的研发流程规范化
 
 ## Overview
@@ -27,11 +27,11 @@ bkci提供了流水线、代码库、凭证管理、环境管理、研发商店5
 - [Design Philosophy](docs/overview/design.md)
 
 ## Features
-- CI/CD: 由于框架的可扩展性，bkci既可以用作简单的CI场景，也可以成为企业内所有项目的持续交付中心
-- Visualize:  bkci提供了灵活的可视化编排流水线，动动指尖，将研发流程描述与此
+- CI/CD: 由于框架的可扩展性，bk-ci既可以用作简单的CI场景，也可以成为企业内所有项目的持续交付中心
+- Visualize:  bk-ci提供了灵活的可视化编排流水线，动动指尖，将研发流程描述与此
 - Scalable: 灵活的架构设计可以随意横向扩容，满足企业大规模使用
-- Distributed: bkci可以便捷的管控多台构建机，助你更快的跨多平台构建、测试和部署
-- Pipeline Plugins: bkci拥有完善的插件开发体系，其具备了低门槛、灵活可扩展等特性
+- Distributed: bk-ci可以便捷的管控多台构建机，助你更快的跨多平台构建、测试和部署
+- Pipeline Plugins: bk-ci拥有完善的插件开发体系，其具备了低门槛、灵活可扩展等特性
 - Pipeline Templated: 流水线模板将是企业内部推行研发规范的一大助力
 
 ## Experience
