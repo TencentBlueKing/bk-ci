@@ -1478,7 +1478,8 @@ class PipelineBuildService(
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
                     defaultMessage = "流水线已经被${alreadyCancelUser}取消构建",
-                    params = arrayOf(userId))
+                    params = arrayOf(userId)
+                )
             }
 
             val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
@@ -1498,26 +1499,27 @@ class PipelineBuildService(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                     defaultMessage = "构建任务${buildId}不存在",
-                    params = arrayOf(buildId))
+                    params = arrayOf(buildId)
+                )
             }
 
             val tasks = getRunningTask(projectId, buildId)
 
-                        tasks.forEach { task ->
-                            val taskId = task["taskId"] ?: ""
-                            val containerId = task["containerId"] ?: ""
-                            val status = task["status"] ?: ""
-                            val executeCount = task["executeCount"] ?: 1
-                                logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: $status")
-                                LogUtils.addYellowLine(
-                                    rabbitTemplate = rabbitTemplate,
-                                    buildId = buildId,
-                                    message = "流水线被用户终止，操作人:$userId",
-                                    tag = taskId.toString(),
-                                    jobId = containerId.toString(),
-                                    executeCount = executeCount as Int
-                                )
-                        }
+            tasks.forEach { task ->
+                val taskId = task["taskId"] ?: ""
+                val containerId = task["containerId"] ?: ""
+                val status = task["status"] ?: ""
+                val executeCount = task["executeCount"] ?: 1
+                logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: $status")
+                LogUtils.addYellowLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "流水线被用户终止，操作人:$userId",
+                    tag = taskId.toString(),
+                    jobId = containerId.toString(),
+                    executeCount = executeCount as Int
+                )
+            }
 
             if (tasks.isNotEmpty()) {
                 LogUtils.addYellowLine(rabbitTemplate, buildId, "流水线被用户终止，操作人:$userId", "", "", 1)
