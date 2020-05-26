@@ -307,6 +307,10 @@
 
             async updateBuildHistoryList () {
                 try {
+                    if (!this.pipelineId || !this.projectId) {
+                        webSocketMessage.unInstallWsMessage()
+                        return
+                    }
                     const res = await this.$refs.infiniteScroll.updateList()
                     this.currentPipelineVersion = res.pipelineVersion || ''
                 } catch (err) {
