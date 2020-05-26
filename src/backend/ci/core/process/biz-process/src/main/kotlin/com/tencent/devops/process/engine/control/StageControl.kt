@@ -123,7 +123,8 @@ class StageControl @Autowired constructor(
             val needPause = stage.controlOption?.stageControlOption?.manualTrigger == true &&
                 source != BS_MANUAL_START_STAGE && stage.controlOption?.stageControlOption?.triggered == false
 
-            val fastKill = stage.controlOption?.fastKill == true && source == "$BS_CONTAINER_END_SOURCE_PREIX${BuildStatus.FAILED}"
+            val fastKill =
+                stage.controlOption?.fastKill == true && source == "$BS_CONTAINER_END_SOURCE_PREIX${BuildStatus.FAILED}"
 
             logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$this|stage=$stage|action=$actionType|needPause=$needPause|fastKill=$fastKill")
             // 若stage状态为暂停，且事件类型不是BS_MANUAL_START_STAGE,碰到状态为暂停就停止运行
@@ -282,12 +283,16 @@ class StageControl @Autowired constructor(
 
         var finishContainers = 0
         var failureContainers = 0
+        var cancelContainers = 0
         val containers = mutableListOf<PipelineBuildContainer>()
         allContainers.forEach { c ->
             if (c.stageId == stageId) {
                 containers.add(c)
                 if (BuildStatus.isFinish(c.status)) {
                     finishContainers++
+                }
+                if (BuildStatus.isCancel(c.status)) {
+                    cancelContainers++
                 }
                 if (BuildStatus.isFailure(c.status)) {
                     failureContainers++
@@ -300,6 +305,8 @@ class StageControl @Autowired constructor(
         } else if (finishContainers == containers.size && !BuildStatus.isFinish(status)) { // 全部执行完且Stage状态不是已完成
             buildStatus = if (failureContainers == 0) {
                 BuildStatus.SUCCEED
+            } else if (cancelContainers > 0) {
+                BuildStatus.CANCELED
             } else {
                 BuildStatus.FAILED
             }
