@@ -103,7 +103,7 @@ object StoreMessageCode {
     const val USER_SERVICE_PROJECT_NOT_PERMISSION = "2120408" // 研发商店：选中调试项目无创建流水线权限
     const val USER_SERVICE_NOT_EXIST = "2120409" // 研发商店：扩展服务不存在{0}
     const val USER_ITEM_SERVICE_USED_IS_NOT_ALLOW_DELETE = "2120410" // 研发商店：扩展点下还有可用的扩展服务，不能删除
-    const val USER_EXTSION_JSON_GET_FAIL = "2120411" // 研发商店：扩展点extsion.json获取失败,请查看工蜂代码库是否创建成功
+    const val USER_EXTENSION_JSON_GET_FAIL = "2120411" // 研发商店：扩展点extension.json获取失败,请查看工蜂代码库是否创建成功
 
 
     // store公共业务相关的错误提示
