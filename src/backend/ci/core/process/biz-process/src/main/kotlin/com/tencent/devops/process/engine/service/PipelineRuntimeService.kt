@@ -1616,7 +1616,11 @@ class PipelineRuntimeService @Autowired constructor(
             // 减1,当作没执行过
             pipelineBuildSummaryDao.updateQueueCount(dslContext, latestRunningBuild.pipelineId, -1)
         } else {
-            pipelineBuildSummaryDao.finishLatestRunningBuild(dslContext, latestRunningBuild)
+            pipelineBuildSummaryDao.finishLatestRunningBuild(
+                dslContext = dslContext,
+                latestRunningBuild = latestRunningBuild,
+                isStageFinish = currentBuildStatus.name == BuildStatus.STAGE_SUCCESS.name
+            )
         }
         with(latestRunningBuild) {
             val executeTime = try {
@@ -1643,7 +1647,7 @@ class PipelineRuntimeService @Autowired constructor(
             }
             logger.info("[$pipelineId]|getRecommendVersion-$buildId recommendVersion: $recommendVersion")
             val remark = buildVariableService.getVariable(buildId, PIPELINE_BUILD_REMARK)
-            val finalStatus = if (BuildStatus.isFinish(status) || status == BuildStatus.STAGE_SUCCESS) {
+            val finalStatus = if (BuildStatus.isFinish(status) || status.name == BuildStatus.STAGE_SUCCESS.name) {
                 status
             } else {
                 BuildStatus.FAILED
