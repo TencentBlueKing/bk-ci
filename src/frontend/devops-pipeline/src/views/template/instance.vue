@@ -12,13 +12,13 @@
         <div class="sub-view-port" v-if="showContent && showInstanceList">
             <section class="info-header">
                 <div class="instance-handle-row">
-                    <bk-button size="normal" class="batch-update" @click="handleBitch()"><span>{{ $t('template.batchUpdate') }}</span></bk-button>
+                    <bk-button size="normal" class="batch-update" @click="handleBatch()"><span>{{ $t('template.batchUpdate') }}</span></bk-button>
                     <bk-button theme="primary" size="normal" @click="createInstance()"><span>{{ $t('template.addInstance') }}</span></bk-button>
                 </div>
                 <bk-input
                     :placeholder="$t('search')"
                     :clearable="true"
-                    :right-icon="'bk-icon icon-search'"
+                    right-icon="icon-search"
                     v-model="searchKey"
                     @enter="query"
                     @clear="query">
@@ -242,13 +242,13 @@
                     this.createInstance(pipeline, 'single')
                 }
             },
-            handleBitch () {
+            handleBatch () {
                 const targetList = []
                 if (this.selectItemList && this.selectItemList.length) {
                     this.selectItemList.forEach(val => {
                         targetList.push(val.pipelineId)
                     })
-                    this.createInstance(targetList, 'bitch')
+                    this.createInstance(targetList, 'batch')
                 } else {
                     this.$showTips({
                         message: this.$t('template.batchErrTips'),

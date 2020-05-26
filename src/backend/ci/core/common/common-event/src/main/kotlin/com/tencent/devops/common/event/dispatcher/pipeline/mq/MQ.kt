@@ -188,6 +188,9 @@ object MQ {
     const val EXCHANGE_WEBSOCKET_TRANSFER_FANOUT = "e.websocket.transfer.fanout"
     const val ROUTE_WEBSOCKET_TRANSFER_EVENT = "r.websocket.transfer.file"
     const val QUEUE_WEBSOCKET_TRANSFER_EVENT = "q.websocket.transfer.file"
+    const val EXCHANGE_WEBSOCKET_SESSION_CLEAR_FANOUT = "e.websocket.session.clear.fanout"
+    const val ROUTE_WEBSOCKET_SESSION_CLEAR_EVENT = "r.websocket.session.clear.file"
+    const val QUEUE_WEBSOCKET_SESSION_CLEAR_EVENT = "q.websocket.session.clear.file"
 
     // 工蜂CI请求
     const val EXCHANGE_GITCI_REQUEST_TRIGGER_EVENT = "e.gitci.request.trigger.event"

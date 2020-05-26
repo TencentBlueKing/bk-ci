@@ -45,6 +45,7 @@ module.exports = {
         'DOCS_URL_PREFIX': true,
         'LOGIN_SERVICE_URL': true,
         'AJAX_URL_PIRFIX': true,
+        'WEBSITE_URL': false,
         'WEB_URL_PIRFIX': true,
         'BUILD_ENV': true,
         'PERM_URL_PIRFIX': true,
@@ -52,6 +53,7 @@ module.exports = {
         'GW_URL_PREFIX': true,
         'WS_URL_PREFIX': true,
         'BADGE_URL_PREFIX': true,
+        'PERM_URL_PREFIX': false,
         "X_DEVOPS_PROJECT_ID": false
     },
     // add your custom rules hered

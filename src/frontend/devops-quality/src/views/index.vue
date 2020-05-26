@@ -22,8 +22,7 @@
             return {
                 sideMenuNav: {
                     icon: 'quality',
-                    title: '质量红线',
-                    url: ''
+                    title: '质量红线'
                 },
                 sideMenuList: [
                     {

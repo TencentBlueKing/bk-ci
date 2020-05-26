@@ -29,7 +29,7 @@ package com.tencent.devops.store.resources.atom
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
-import com.tencent.devops.store.pojo.atom.AtomEnvRequest
+import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
@@ -66,7 +66,7 @@ class ServiceMarketAtomArchiveResourceImpl @Autowired constructor(private val ma
         return marketAtomArchiveService.verifyAtomTaskJson(userId, projectCode, atomCode, version)
     }
 
-    override fun updateAtomEnv(userId: String, atomId: String, atomEnvRequest: AtomEnvRequest): Result<Boolean> {
-        return marketAtomArchiveService.updateAtomEnv(userId, atomId, atomEnvRequest)
+    override fun updateAtomPkgInfo(userId: String, atomId: String, atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest): Result<Boolean> {
+        return marketAtomArchiveService.updateAtomPkgInfo(userId, atomId, atomPkgInfoUpdateRequest)
     }
 }
