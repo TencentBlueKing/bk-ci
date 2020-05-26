@@ -304,7 +304,9 @@ class PipelineBuildService(
                 )
             }
 
-            val model = getModel(projectId = projectId, pipelineId = pipelineId, version = buildInfo.version)
+            val model = buildDetailService.getBuildModel(buildId) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+            )
 
             val container = model.stages[0].containers[0] as TriggerContainer
 
@@ -1476,7 +1478,8 @@ class PipelineBuildService(
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
                     defaultMessage = "流水线已经被${alreadyCancelUser}取消构建",
-                    params = arrayOf(userId))
+                    params = arrayOf(userId)
+                )
             }
 
             val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
@@ -1496,40 +1499,29 @@ class PipelineBuildService(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                     defaultMessage = "构建任务${buildId}不存在",
-                    params = arrayOf(buildId))
+                    params = arrayOf(buildId)
+                )
             }
 
-            val model = getModel(projectId = projectId, pipelineId = pipelineId, version = buildInfo.version)
             val tasks = getRunningTask(projectId, buildId)
-            var isPrepareEnv = true
-            model.stages.forEachIndexed { index, stage ->
-                if (index == 0) {
-                    return@forEachIndexed
-                }
-                stage.containers.forEach { container ->
-                    container.elements.forEach { e ->
-                        tasks.forEach { task ->
-                            val taskId = task["taskId"] ?: ""
-                            val containerId = task["containerId"] ?: ""
-                            val status = task["status"] ?: ""
-                            if (taskId == e.id) {
-                                isPrepareEnv = false
-                                logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: $status")
-                                LogUtils.addYellowLine(
-                                    rabbitTemplate = rabbitTemplate,
-                                    buildId = buildId,
-                                    message = "流水线被用户终止，操作人:$userId",
-                                    tag = taskId,
-                                    jobId = containerId,
-                                    executeCount = 1
-                                )
-                            }
-                        }
-                    }
-                }
+
+            tasks.forEach { task ->
+                val taskId = task["taskId"] ?: ""
+                val containerId = task["containerId"] ?: ""
+                val status = task["status"] ?: ""
+                val executeCount = task["executeCount"] ?: 1
+                logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: $status")
+                LogUtils.addYellowLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "流水线被用户终止，操作人:$userId",
+                    tag = taskId.toString(),
+                    jobId = containerId.toString(),
+                    executeCount = executeCount as Int
+                )
             }
 
-            if (isPrepareEnv) {
+            if (tasks.isNotEmpty()) {
                 LogUtils.addYellowLine(rabbitTemplate, buildId, "流水线被用户终止，操作人:$userId", "", "", 1)
             }
 
@@ -1551,7 +1543,7 @@ class PipelineBuildService(
         }
     }
 
-    private fun getRunningTask(projectId: String, buildId: String): List<Map<String, String>> {
+    private fun getRunningTask(projectId: String, buildId: String): List<Map<String, Any>> {
         return pipelineRuntimeService.getRunningTask(projectId, buildId)
     }
 
