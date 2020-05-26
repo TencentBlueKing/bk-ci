@@ -410,6 +410,7 @@ class PreBuildService @Autowired constructor(
                 AgentStatus.IMPORT_EXCEPTION
             }
         } catch (e: Exception) {
+            logger.error("listByHashIds exception: $e")
             AgentStatus.IMPORT_EXCEPTION
         }
     }
