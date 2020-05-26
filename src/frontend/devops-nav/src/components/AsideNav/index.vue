@@ -12,11 +12,6 @@
                 class="title-icon"
             />
             <span class="title-desc">{{ nav.title }}</span>
-            <i
-                v-if="nav.url"
-                class="bk-icon icon-question-circle"
-                @click="goToDoc(nav.url)"
-            />
         </template>
         <div
             slot="header-set"
@@ -72,10 +67,6 @@
                 itemDefaultColor: '#7b7d8a'
             }
         }
-
-        goToDoc (url) {
-            window.open(url, '_blank')
-        }
     }
 </script>
 
@@ -90,7 +81,7 @@
                 .title-desc {
                     color: $fontWeightColor;
                 }
-                .bk-icon {
+                .devops-icon {
                     margin-left: 10px;
                 }
             }

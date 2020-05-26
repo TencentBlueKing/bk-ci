@@ -42,6 +42,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -55,6 +56,7 @@ import java.time.LocalDateTime
 class StageControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val buildVariableService: BuildVariableService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineStageService: PipelineStageService
 ) {
@@ -88,7 +90,7 @@ class StageControl @Autowired constructor(
                 return
             }
 
-            val variables = pipelineRuntimeService.getAllVariable(buildId)
+            val variables = buildVariableService.getAllVariable(buildId)
 
             val allContainers = pipelineRuntimeService.listContainers(buildId)
 
@@ -419,7 +421,7 @@ class StageControl @Autowired constructor(
                 source = source,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                userId = "",
+                userId = userId,
                 buildId = buildId,
                 stageId = stageId,
                 actionType = ActionType.START

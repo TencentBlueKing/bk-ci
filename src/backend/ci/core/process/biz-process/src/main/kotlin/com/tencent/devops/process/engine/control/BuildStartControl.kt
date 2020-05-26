@@ -57,6 +57,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.ProjectOauthTokenService
 import com.tencent.devops.process.service.scm.ScmProxyService
@@ -88,6 +89,7 @@ class BuildStartControl @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val projectOauthTokenService: ProjectOauthTokenService,
     private val buildDetailService: PipelineBuildDetailService,
+    private val buildVariableService: BuildVariableService,
     private val pipelineUserService: PipelineUserService,
     private val scmProxyService: ScmProxyService,
     private val rabbitTemplate: RabbitTemplate
@@ -171,7 +173,7 @@ class BuildStartControl @Autowired constructor(
                 PIPELINE_UPDATE_USER to pipelineUserInfo.modifier
             )
 
-            pipelineRuntimeService.batchSetVariable(projectId, pipelineId, buildId, map)
+            buildVariableService.batchSetVariable(projectId, pipelineId, buildId, map)
         }
         // 空节点
         if (model.stages.size == 1) {
@@ -307,6 +309,8 @@ class BuildStartControl @Autowired constructor(
         if (!find) {
             logger.warn("[$buildId]|[$pipelineId]| Fail to find the startTask $taskId")
         } else {
+            stage.status = BuildStatus.SUCCEED.name
+            stage.elapsed = 0
             container.status = BuildStatus.SUCCEED.name
             container.systemElapsed = 0
             container.elementElapsed = 0
@@ -441,7 +445,7 @@ class BuildStartControl @Autowired constructor(
             return
         }
         if (event.actionType == ActionType.START) {
-            val startParams = pipelineRuntimeService.getAllVariable(event.buildId)
+            val startParams = buildVariableService.getAllVariable(event.buildId)
             if (startParams.isNotEmpty()) {
                 supplementModel(event.projectId, event.pipelineId, sModel, startParams as MutableMap<String, String>)
             } else {

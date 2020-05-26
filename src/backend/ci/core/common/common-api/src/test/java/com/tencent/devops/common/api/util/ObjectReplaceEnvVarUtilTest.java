@@ -33,6 +33,11 @@ public class ObjectReplaceEnvVarUtilTest {
         originDataObj = "变量替换测试_${jsonStrEnvVar}";
         convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap);
         assertEquals("变量替换测试_{\"abc\":\"123\"}", JsonUtil.INSTANCE.toJson(convertDataObj));
+        // number类型变量替换
+        originDataObj = "[1,2,3]";
+        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap);
+        System.out.println(JsonUtil.INSTANCE.toJson(convertDataObj));
+        assertEquals("[ 1, 2, 3 ]", JsonUtil.INSTANCE.toJson(convertDataObj));
         // 对map对象进行变量替换
         Map<String, Object> originDataMapObj = new HashMap<>();
         originDataMapObj.put("normalStrEnvVarKey", "变量替换测试_${normalStrEnvVar}");
@@ -108,7 +113,7 @@ public class ObjectReplaceEnvVarUtilTest {
         dataList.add("[\"变量替换测试_${jsonStrEnvVar}\"]");
         testComplexBean.setDataList(dataList);
         Map<String, Object> dataMap = new HashMap<>();
-        dataMap.put("normalStrEnvVarKey", "变量替换测试_${normalStrEnvVar}");
+        dataMap.put("normalStrEnvVarKey", " 变量替换测试_${normalStrEnvVar} ");
         dataMap.put("specStrEnvVarKey", "变量替换测试_${specStrEnvVar}");
         dataMap.put("jsonStrEnvVarKey1", "变量替换测试_${jsonStrEnvVar}");
         dataMap.put("jsonStrEnvVarKey2", "{\"abc\":\"变量替换测试_${jsonStrEnvVar}\"}");
@@ -131,6 +136,9 @@ public class ObjectReplaceEnvVarUtilTest {
         testComplexBean.setDataSet(dataSet);
         convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(testComplexBean, envMap);
         assertTrue(JsonUtil.INSTANCE.toJson(convertDataObj) instanceof String);
+        // 魔法数字符创测试
+        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar("12E2", envMap);
+        assertEquals("12E2", JsonUtil.INSTANCE.toJson(convertDataObj));
     }
 
     static class TestBean {

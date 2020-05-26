@@ -9,7 +9,7 @@
             </div>
         </inner-header>
         <div v-if="folderLoading" class="folder-loading">
-            <i class="bk-icon title-icon icon-circle-2-1 spin-icon" />
+            <i class="devops-icon title-icon icon-circle-2-1 spin-icon" />
         </div>
         <template v-else>
             <section class="artifactory-main sub-view-port"
@@ -42,7 +42,7 @@
                                 @click.stop="selectRowHandler($event, index, col)">
                                 <div class="table-sim-item sim-item-name" :title="`${col.name}`">
                                     <img :src="folder" alt="folder" v-if="col.folder">
-                                    <i :class="['bk-icon', `icon-${extForFile(col.name)}`]"
+                                    <i :class="['devops-icon', `icon-${extForFile(col.name)}`]"
                                         v-else></i>
                                     <span class="repo-name">{{ col.name }}</span>
                                 </div>
@@ -63,35 +63,35 @@
                                 <template
                                     v-if="!pipelineMap && lastClickItem.fullPath">
                                     <li @click.stop="renameRes()">
-                                        <i class="bk-icon icon-edit"></i>重命名
+                                        <i class="devops-icon icon-edit"></i>重命名
                                     </li>
                                     <li @click.stop="moveRes()">
-                                        <i class="bk-icon icon-move"></i>移动
+                                        <i class="devops-icon icon-move"></i>移动
                                     </li>
                                     <li @click.stop="copyRes()">
-                                        <i class="bk-icon icon-save"></i>复制
+                                        <i class="devops-icon icon-save"></i>复制
                                     </li>
                                     <li @click.stop="deleteRes()">
-                                        <i class="bk-icon icon-delete"></i>删除
+                                        <i class="devops-icon icon-delete"></i>删除
                                     </li>
                                 </template>
                                 <li v-if="lastClickItem.folder === false" @click.stop="handlerShare()">
-                                    <i class="bk-icon icon-none"></i>共享
+                                    <i class="devops-icon icon-none"></i>共享
                                 </li>
                                 <li
                                     @click.stop="handlerDownload()"
                                     v-if="lastClickItem.fullPath && lastClickItem.folder === false">
-                                    <i class="bk-icon icon-download"></i>下载
+                                    <i class="devops-icon icon-download"></i>下载
                                 </li>
                             </template>
                             <template
                                 v-else>
                                 <li v-if="!pipelineMap"
                                     @click.stop="addFolder()">
-                                    <i class="bk-icon icon-folder-plus"></i>新建文件夹
+                                    <i class="devops-icon icon-folder-plus"></i>新建文件夹
                                 </li>
                                 <li @click.stop="refreshFolder()">
-                                    <i class="bk-icon icon-refresh"></i>刷新
+                                    <i class="devops-icon icon-refresh"></i>刷新
                                 </li>
                             </template>
                         </ul>
@@ -177,7 +177,7 @@
             <section class="preview-dialog">
                 <div class="preview-header">
                     <div class="preview-header-left">
-                        <i @click.stop="previewCancel()" class="bk-icon icon-arrows-left"></i>
+                        <i @click.stop="previewCancel()" class="devops-icon icon-arrows-left"></i>
                         {{previewConfig.title}}
                     </div>
                 </div>
@@ -235,7 +235,7 @@
             @cancel="treeCancelHandler">
             <section class="tree-view">
                 <div v-if="treeDialogConfig.isLoading" class="folder-loading" style="padding-top:20px">
-                    <i class="bk-icon title-icon icon-circle-2-1 spin-icon" />
+                    <i class="devops-icon title-icon icon-circle-2-1 spin-icon" />
                 </div>
                 <div v-if="treeDialogConfig.title">
                     <bk-trees

@@ -32,11 +32,13 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -68,6 +70,7 @@ import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 import org.springframework.util.StringUtils
 import java.io.File
+import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.file.Files
 import java.time.LocalDateTime
@@ -93,6 +96,8 @@ class GitService @Autowired constructor(
 
     @Value("\${scm.git.public.secret}")
     private lateinit var gitPublicSecret: String
+
+    private val redirectUrl: String = gitConfig.redirectUrl
 
     private val executorService = Executors.newFixedThreadPool(2)
 
@@ -296,11 +301,21 @@ class GitService @Autowired constructor(
         }
     }
 
-    override fun getRedirectUrl(redirectUrlType: String?): String {
-        return if ("atomMarket" == redirectUrlType) {
-            gitConfig.redirectAtomMarketUrl
-        } else {
-            gitConfig.redirectUrl
+    override fun getRedirectUrl(authParamJsonStr: String): String {
+        logger.info("getRedirectUrl authParamJsonStr is: $authParamJsonStr")
+        val authParamDecodeJsonStr = URLDecoder.decode(authParamJsonStr, "UTF-8")
+        val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
+        val type = authParams["redirectUrlType"] as? String
+        val specRedirectUrl = authParams["redirectUrl"] as? String
+        return when (RedirectUrlTypeEnum.getRedirectUrlType(type ?: "")) {
+            RedirectUrlTypeEnum.SPEC -> specRedirectUrl!!
+            RedirectUrlTypeEnum.DEFAULT -> redirectUrl
+            else -> {
+                val projectId = authParams["projectId"] as String
+                val repoId = authParams["repoId"] as String
+                val repoHashId = "-" + HashUtil.encodeOtherLongId(repoId.toLong())
+                "$redirectUrl/$projectId#popupGit$repoHashId"
+            }
         }
     }
 

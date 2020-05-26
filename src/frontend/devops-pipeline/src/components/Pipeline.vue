@@ -15,7 +15,7 @@
         </div>
 
         <bk-dialog v-model="isStageShow"
-            width="720"
+            :width="stageTypeDialogWidth"
             :title="$t('editPage.selectJob')"
             :show-footer="false"
             :esc-close="true"
@@ -24,7 +24,7 @@
             <section class="bk-form bk-form-vertical bk-form-wrapper">
                 <ul class="stage-type-list">
                     <li v-for="os in osList" :key="os.value" @click="insert(os.value)" :class="os.className">
-                        <i :class="`bk-icon icon-${os.value.toLowerCase()} stage-type-icon`" />
+                        <i :class="`devops-icon icon-${os.value.toLowerCase()} stage-type-icon`" />
                         <span class="stage-label">{{ os.label }}</span>
                     </li>
                 </ul>
@@ -126,6 +126,9 @@
                         isStagePopupShow: value
                     })
                 }
+            },
+            stageTypeDialogWidth () {
+                return Array.isArray(this.osList) ? this.osList.length * 130 + 208 : 480
             },
             stage () {
                 if (isObject(this.editingElementPos)) {

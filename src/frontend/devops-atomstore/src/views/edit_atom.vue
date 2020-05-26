@@ -30,7 +30,7 @@
                             <p :class="errors.has('atomName') ? 'error-tips' : 'normal-tips'">{{ errors.first("atomName") }}</p>
                         </div>
                         <bk-popover placement="right">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
                                 <p> {{ $t('store.插件名称不超过20个字符') }} </p>
                             </template>
@@ -64,7 +64,7 @@
                     <div class="bk-form-content atom-item-content">
                         <bk-checkbox-group v-model="atomForm.os">
                             <bk-checkbox :value="entry.value" v-for="(entry, key) in envList" :key="key" @click.native="changeOs(entry.value)">
-                                <i :class="{ &quot;bk-icon&quot;: true, [`icon-${entry.icon}`]: true }"></i>
+                                <i :class="{ &quot;devops-icon&quot;: true, [`icon-${entry.icon}`]: true }"></i>
                                 <span class="bk-checkbox-text">{{ entry.label }}</span>
                             </bk-checkbox>
                         </bk-checkbox-group>
@@ -102,7 +102,7 @@
                             }"
                             :class="{ 'is-danger': errors.has('introduction') }">
                         <bk-popover placement="left">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
                                 <p> {{ $t('store.插件一句话简介，不超过70个字符。') }} </p>
                                 <p> {{ $t('store.展示在插件市场以及流水线选择插件页面。') }} </p>
@@ -126,7 +126,7 @@
                             @change="changeData"
                         />
                         <bk-popover placement="left">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
                                 <p> {{ $t('store["插件详细介绍，请说明插件功能、使用场景、使用限制和受限解决方案[可选]、常见的失败原因和解决方案、以及接口人联系方式。"]') }} </p>
                                 <p> {{ $t('store.展示在插件市场查看插件详情界面，帮助用户快速了解插件和解决遇到的问题。') }} </p>
@@ -184,7 +184,7 @@
                             <span class="version-modify" @click="atomForm.releaseType = 'COMPATIBILITY_FIX'" v-if="atomForm.releaseType === 'CANCEL_RE_RELEASE'"> {{ $t('store.修改') }} </span>
                         </p>
                         <bk-popover placement="left">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
                                 <p> {{ $t('store.根据发布类型自动生成') }} </p>
                             </template>
@@ -380,7 +380,7 @@
         methods: {
             toAtomList () {
                 this.$router.push({
-                    name: 'atomList',
+                    name: 'workList',
                     params: {
                         type: 'atom'
                     }
@@ -849,7 +849,7 @@
                 color: #333C48;
             }
             .env-checkbox {
-                .bk-icon {
+                .devops-icon {
                     position: relative;
                     top: 3px;
                     font-size: 16px;

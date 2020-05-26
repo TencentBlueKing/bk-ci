@@ -7,14 +7,14 @@
             v-if="showExplorerTips === 'true' && isShowPreviewTips && !chromeExplorer"
             class="user-prompt"
         >
-            <p><i class="bk-icon icon-info-circle-shape" />{{ $t("recommendationLabel") }}</p>
+            <p><i class="devops-icon icon-info-circle-shape" />{{ $t("recommendationLabel") }}</p>
             <div class="close-btn">
                 <span
                     class="close-remind"
                     @click="closeExplorerTips"
                 >{{ $t("dismiss") }}</span>
                 <i
-                    class="bk-icon icon-close"
+                    class="devops-icon icon-close"
                     @click="closePreviewTips"
                 />
             </div>
@@ -122,7 +122,7 @@
             return this.headerConfig.showProjectList
         }
 
-        get chromeExplorer () :boolean {
+        get chromeExplorer (): boolean {
             const explorer = window.navigator.userAgent
             return explorer.indexOf('Chrome') >= 0 && explorer.indexOf('QQ') === -1
         }
