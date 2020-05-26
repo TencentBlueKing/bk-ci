@@ -52,7 +52,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.atom.IAtomTask
-import com.tencent.devops.process.engine.atom.vm.parser.DispatchTypeParser
+import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
