@@ -48,7 +48,7 @@ config = {
       "__BKCI_CONSUL_GRAY_IP__"
     },
     port = __BKCI_CONSUL_DNS_PORT__,
-    http_port = __BKCI_CONSUL_PORT__,
+    http_port = __BKCI_CONSUL_GRAY_PORT__,
     domain = "__BKCI_CONSUL_DOMAIN__",
     tag = "__BKCI_CONSUL_TAG__",
     suffix = "-__BKCI_CONSUL_TAG__",
@@ -70,7 +70,7 @@ config = {
       "__BKCI_CONSUL_DEVNET_GRAY_IP__"
     },
     port = __BKCI_CONSUL_DNS_PORT__,
-    http_port = __BKCI_CONSUL_PORT__,
+    http_port = __BKCI_CONSUL_GRAY_PORT__,
     domain = "__BKCI_CONSUL_DOMAIN__",
     tag = "__BKCI_CONSUL_TAG__",
     suffix = "-__BKCI_CONSUL_TAG__",
