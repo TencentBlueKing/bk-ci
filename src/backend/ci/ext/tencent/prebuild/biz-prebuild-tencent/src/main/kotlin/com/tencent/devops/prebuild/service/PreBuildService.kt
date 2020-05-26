@@ -356,6 +356,7 @@ class PreBuildService @Autowired constructor(
             if (it.hostName == hostName) {
                 logger.info("Get user personal vm, hostName: $hostName")
                 if (it.ip != ip) { // IP 有变更
+                    logger.info("Update ip, ip: $ip")
                     prebuildPersonalMachineDao.updateIp(dslContext, userId, hostName, ip)
                 }
 
@@ -366,6 +367,7 @@ class PreBuildService @Autowired constructor(
             if (it.ip == ip) {
                 logger.info("Get user personal vm, ip: $ip")
                 if (it.hostName != hostName) { // hostname 有变更
+                    logger.info("Update hostName, hostName: $hostName")
                     prebuildPersonalMachineDao.updateHostname(dslContext, userId, hostName, ip)
                 }
                 return it
