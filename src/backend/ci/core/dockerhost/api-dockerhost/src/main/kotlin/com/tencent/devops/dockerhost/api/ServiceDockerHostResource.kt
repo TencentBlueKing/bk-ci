@@ -27,9 +27,11 @@
 package com.tencent.devops.dockerhost.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
+import com.tencent.devops.dockerhost.pojo.DockerHostLoad
 import com.tencent.devops.dockerhost.pojo.DockerLogsResponse
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.pojo.DockerRunResponse
@@ -101,6 +103,9 @@ interface ServiceDockerHostResource {
         buildId: String,
         @ApiParam("验证镜像合法性请求报文体", required = true)
         checkImageRequest: CheckImageRequest,
+        @ApiParam("containerId", required = false)
+        @QueryParam("containerId")
+        containerId: String?,
         @ApiParam("containerHashId", required = false)
         @QueryParam("containerHashId")
         containerHashId: String?
@@ -173,4 +178,25 @@ interface ServiceDockerHostResource {
         containerId: String,
         @Context request: HttpServletRequest
     ): Result<Boolean>
+
+    @ApiOperation("启动流水线构建")
+    @POST
+    @Path("/build/start")
+    fun startBuild(
+        @ApiParam("构建任务", required = true)
+        dockerHostBuildInfo: DockerHostBuildInfo
+    ): Result<String>
+
+    @ApiOperation("终止流水线构建")
+    @DELETE
+    @Path("/build/end")
+    fun endBuild(
+        @ApiParam("构建任务", required = true)
+        dockerHostBuildInfo: DockerHostBuildInfo
+    ): Result<Boolean>
+
+    @ApiOperation("获取docker母机负载")
+    @GET
+    @Path("/host/load")
+    fun getDockerHostLoad(): Result<DockerHostLoad>
 }

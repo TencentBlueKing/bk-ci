@@ -144,7 +144,7 @@ class CertServiceImpl @Autowired constructor(
         certDao.create(
             dslContext = dslContext,
             projectId = projectId,
-            credentialId = certId,
+            certId = certId,
             certUserId = userId,
             certType = certType,
             certRemark = remark,
@@ -160,7 +160,7 @@ class CertServiceImpl @Autowired constructor(
             certTeamName = teamName,
             certUUID = uuid,
             certExpireDate = expireDate,
-            certId = credentialId
+            credentialId = credentialId
         )
     }
 

@@ -39,6 +39,7 @@ import com.tencent.devops.process.engine.extend.DefaultModelCheckPlugin
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.interceptor.QueueInterceptor
 import com.tencent.devops.process.engine.interceptor.RunLockInterceptor
+import com.tencent.devops.process.engine.interceptor.TimerTriggerScmChangeInterceptor
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -82,11 +83,13 @@ class PipelineEngineConfiguration {
     @Bean
     fun pipelineInterceptorChain(
         runLockInterceptor: RunLockInterceptor,
-        queueInterceptor: QueueInterceptor
+        queueInterceptor: QueueInterceptor,
+        timerTriggerScmChangeInterceptor: TimerTriggerScmChangeInterceptor
     ): PipelineInterceptorChain {
         val list = listOf(
             runLockInterceptor,
-            queueInterceptor
+            queueInterceptor,
+            timerTriggerScmChangeInterceptor
         )
         return PipelineInterceptorChain(list)
     }

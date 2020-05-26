@@ -95,18 +95,33 @@ public class ObjectReplaceEnvVarUtil {
 
     @NotNull
     private static Object handleNormalEnvVar(Object obj, Map<String, String> envMap) {
+        // 只有字符串参数才需要进行变量替换，其它基本类型参数无需进行变量替换
         if (obj instanceof String) {
-            try {
-                Object dataObj = JsonUtil.INSTANCE.to((String) obj);
-                // string能正常转成map或者list，说明是json串，把dataObj进行递归替换变量后再转成json串
-                dataObj = replaceEnvVar(dataObj, envMap);
-                obj = JsonUtil.INSTANCE.toJson(dataObj);
-            } catch (Throwable e) {
+            String objStr = ((String) obj).trim();
+            if (objStr.startsWith("{") && objStr.endsWith("}")) {
+                try {
+                    Object dataObj = JsonUtil.INSTANCE.to((String) obj, Map.class);
+                    // string能正常转成map，说明是json串，把dataObj进行递归替换变量后再转成json串
+                    dataObj = replaceEnvVar(dataObj, envMap);
+                    obj = JsonUtil.INSTANCE.toJson(dataObj);
+                } catch (Throwable e) {
+                    // 转换不了map的字符串对象则直接替换
+                    obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj), envMap, false, false);
+                }
+            } else if (objStr.startsWith("[") && objStr.endsWith("]")) {
+                try {
+                    Object dataObj = JsonUtil.INSTANCE.to((String) obj, List.class);
+                    // string能正常转成list，说明是json串，把dataObj进行递归替换变量后再转成json串
+                    dataObj = replaceEnvVar(dataObj, envMap);
+                    obj = JsonUtil.INSTANCE.toJson(dataObj);
+                } catch (Throwable e1) {
+                    // 转换不了list的字符串对象则直接替换
+                    obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj), envMap, false, false);
+                }
+            } else {
                 // 转换不了map或者list的字符串对象则直接替换
                 obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj), envMap, false, false);
             }
-        } else {
-            obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj), envMap, false, false);
         }
         return obj;
     }

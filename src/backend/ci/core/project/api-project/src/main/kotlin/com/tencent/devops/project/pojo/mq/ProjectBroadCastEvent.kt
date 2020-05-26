@@ -26,10 +26,6 @@
 
 package com.tencent.devops.project.pojo.mq
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-
-@Event(exchange = MQ.EXCHANGE_PROJECT_CREATE_FANOUT)
 abstract class ProjectBroadCastEvent(
     open val userId: String,
     open val projectId: String,

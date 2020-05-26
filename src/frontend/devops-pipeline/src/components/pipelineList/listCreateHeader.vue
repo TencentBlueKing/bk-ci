@@ -3,14 +3,14 @@
         <create-header
             :create-text="$t('newlist.addPipeline')"
             @createPipeline="toggleTemplatePopup(true)">
-            <div slot="addon" class="create-header-right">
+            <div slot="addon">
                 <span class="pipeline-num">（{{ $t('newlist.sumPipelinesTips', [num]) }}）</span>
-                <i @click.stop="showSlide" class="layout-icon bk-icon icon-filter-shape" :class="{ 'active-icon': hasFilter }" :title="$t('newlist.filter')"></i>
+                <i @click.stop="showSlide" class="layout-icon devops-icon icon-filter-shape" :class="{ 'active-icon': hasFilter }" :title="$t('newlist.filter')"></i>
                 <span class="seperate-line">|</span>
-                <i @click.stop="changeLayoutType('table')" class="layout-icon bk-icon icon-grid-view" v-if="layout === 'card'" :title="$t('newlist.cardLayout')"></i>
-                <i @click.stop="changeLayoutType('card')" class="layout-icon bk-icon icon-list-view" v-if="layout === 'table'" :title="$t('newlist.tableLayout')"></i>
+                <i @click.stop="changeLayoutType('table')" class="layout-icon devops-icon icon-grid-view" v-if="layout === 'card'" :title="$t('newlist.cardLayout')"></i>
+                <i @click.stop="changeLayoutType('card')" class="layout-icon devops-icon icon-list-view" v-if="layout === 'table'" :title="$t('newlist.tableLayout')"></i>
                 <div v-bk-clickoutside="hideFeedBackMenu" class="list-method" style="display:inline">
-                    <i class="order-icon bk-icon icon-new-order" @click.stop="toggleFeedBackMenu" :class="{ 'active-icon': showOrderType }" :title="$t('newlist.order')"></i>
+                    <i class="order-icon devops-icon icon-new-order" @click.stop="toggleFeedBackMenu" :class="{ 'active-icon': showOrderType }" :title="$t('newlist.order')"></i>
                     <ul class="feedback-menu" v-show="showOrderType">
                         <li v-for="(order, index) in orderList" :key="`order${index}`">
                             <a @click.stop="changeOrderType(order.id)">{{ order.name }}</a>
@@ -114,12 +114,12 @@
     }
     .feedback-menu {
         z-index: 3;
-        position: absolute;
+        position: fixed;
         background-color: white;
         border: 1px solid $borderWeightColor;
         border-radius: 2px;
-        top: 40px;
-        right: -15px;
+        top: 120px;
+        right: 40px;
         box-shadow: 0 3px 6px rgba(51, 60, 72, 0.12);
         &:before {
             position: absolute;

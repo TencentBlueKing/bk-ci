@@ -12,14 +12,11 @@
         </div>
         <div class="biz-content-wrapper" style="padding: 0;">
             <div class="biz-panel-header biz-project-image-query">
-                <div class="left">
-                    <bk-button :theme="uploading ? '' : 'primary'" title="手动上传镜像" :icon="uploading ? 'loading' : 'plus'" @click="showImageDialog">{{ uploading ? "正在上传镜像" : "手动上传镜像" }}</bk-button>
-                </div>
                 <div class="right">
                     <div class="biz-search-input">
                         <input @keyup.enter="enterHandler" v-model="searchKey" type="text" class="bk-form-input" placeholder="搜索">
                         <a href="javascript:void(0)" class="biz-search-btn" @click="handleClick">
-                            <i class="bk-icon icon-search icon-search-li"></i>
+                            <i class="devops-icon icon-search icon-search-li"></i>
                         </a>
                     </div>
                 </div>
@@ -46,7 +43,7 @@
                                     </div>
                                 </div>
                                 <div class="detail" @click="toImageDetail(item)">
-                                    详情<i class="bk-icon icon-angle-right"></i>
+                                    详情<i class="devops-icon icon-angle-right"></i>
                                 </div>
                             </div>
                         </div>
@@ -73,51 +70,15 @@
                 </bk-pagination>
             </div>
         </div>
-
-        <bk-dialog
-            v-model="imageDialogConf.isShow"
-            :width="imageDialogConf.width"
-            :content="imageDialogConf.content"
-            :has-header="imageDialogConf.hasHeader"
-            :show-footer="false"
-            :close-icon="imageDialogConf.closeIcon"
-            :ext-cls="'biz-var-quote-dialog'">
-            <div>
-                <div style="margin: -20px;">
-                    <div class="bk-dialog-tool">
-                        <i class="bk-dialog-close bk-icon icon-close" @click="hideImageDialog"></i>
-                    </div>
-                    <div class="dialog-title">
-                        上传镜像
-                    </div>
-                    <div class="image-upload-wrapper">
-                        <p class="tip">提示：请在本地执行“docker save -o file.tar {imageName}:{imageTag}”保存镜像压缩包（必须指定imageName和imageTag），不能超过4G </p>
-                        <bk-file-upload
-                            :post-url="`${GW_URL_PREFIX}/image/api/user/image/${projectCode}/upload`"
-                            accept="application/x-tar"
-                            :max-size="4096"
-                            @uploadSuccess="fileUploadSuccess"
-                            @uploadFail="setUploading(false)"
-                            @uploadStart="setUploading(true)">
-                        </bk-file-upload>
-                    </div>
-                </div>
-            </div>
-        </bk-dialog>
     </div>
 </template>
 
 <script>
     import { mapGetters } from 'vuex'
-    import bkFileUpload from '@/components/common/file-upload'
 
     export default {
-        components: {
-            bkFileUpload
-        },
         data () {
             return {
-                GW_URL_PREFIX,
                 DOCS_URL_PREFIX,
                 imageDialogConf: {
                     isShow: false,
@@ -174,27 +135,7 @@
                 // })
                 this.$router.push(`image-detail#${item.repo}`)
             },
-            setUploading (uploading) {
-                this.uploading = uploading
-            },
-            fileUploadSuccess (res) {
-                const message = res.imageData.map(idata => `${idata.imageShortName}:${idata.imageTag}`).join(';')
-                this.$bkMessage({
-                    theme: 'success',
-                    message: `镜像${message}上传成功！`
-                })
-                this.imageDialogConf.isShow = false
-                this.setUploading(false)
-                setTimeout(() => {
-                    this.getFirstPage()
-                }, 1000)
-            },
-            showImageDialog () {
-                this.imageDialogConf.isShow = true
-            },
-            hideImageDialog () {
-                this.imageDialogConf.isShow = false
-            },
+
             /**
              * 搜索框 enter 事件处理
              *
@@ -471,7 +412,7 @@
         }
     }
     .mc-operate-audit-table {
-        i.bk-icon {
+        i.devops-icon {
             font-size: 16px;
             vertical-align: middle;
             position: relative;
