@@ -321,21 +321,22 @@ class PipelineRuntimeService @Autowired constructor(
         return ret
     }
 
-    fun getRunningTask(projectId: String, buildId: String): List<Map<String, String>> {
+    fun getRunningTask(projectId: String, buildId: String): List<Map<String, Any>> {
         val listByStatus = pipelineBuildTaskDao.listByStatus(
             dslContext = dslContext,
             buildId = buildId,
             containerId = null,
             statusSet = listOf(BuildStatus.RUNNING, BuildStatus.REVIEWING)
         )
-        val list = mutableListOf<Map<String, String>>()
+        val list = mutableListOf<Map<String, Any>>()
         val buildStatus = BuildStatus.values()
         listByStatus.forEach {
             list.add(
                 mapOf(
                     "taskId" to it.taskId,
                     "containerId" to it.containerId,
-                    "status" to buildStatus[it.status].name
+                    "status" to buildStatus[it.status].name,
+                    "executeCount" to it.executeCount
                 )
             )
         }
