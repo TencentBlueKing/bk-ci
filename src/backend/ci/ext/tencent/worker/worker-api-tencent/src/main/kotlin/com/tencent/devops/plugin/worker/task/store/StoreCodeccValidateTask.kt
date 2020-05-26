@@ -54,18 +54,18 @@ class StoreCodeccValidateTask : ITask() {
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         logger.info("StoreCodeccValidateTask buildTask: $buildTask,buildVariables: $buildVariables")
         val buildId = buildTask.buildId
-        val buildVariableMap = buildTask.buildVariable!!
-        val storeCode = buildVariableMap["storeCode"] ?: throw TaskExecuteException(
+        val params = buildTask.params ?: mapOf()
+        val storeCode = params["storeCode"] ?: throw TaskExecuteException(
             errorMsg = "param [storeCode] is empty",
             errorType = ErrorType.SYSTEM,
             errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
-        val storeType = buildVariableMap["storeType"] ?: throw TaskExecuteException(
+        val storeType = params["storeType"] ?: throw TaskExecuteException(
             errorMsg = "param [storeType] is empty",
             errorType = ErrorType.SYSTEM,
             errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
-        val language = buildVariableMap["language"] ?: throw TaskExecuteException(
+        val language = params["language"] ?: throw TaskExecuteException(
             errorMsg = "param [language] is empty",
             errorType = ErrorType.SYSTEM,
             errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
