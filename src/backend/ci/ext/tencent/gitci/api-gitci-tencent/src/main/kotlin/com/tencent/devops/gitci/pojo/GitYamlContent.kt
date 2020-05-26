@@ -24,30 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.resources
+package com.tencent.devops.gitci.pojo
 
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.BuildHistoryPage
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.gitci.api.MergeBuildResource
-import com.tencent.devops.gitci.pojo.GitCIBuildHistory
-import com.tencent.devops.gitci.service.MergeBuildService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class MergeBuildResourceImpl @Autowired constructor(
-    private val mergeBuildService: MergeBuildService
-) : MergeBuildResource {
-
-    override fun getMergeBuildList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): Result<BuildHistoryPage<GitCIBuildHistory>> {
-        checkParam(userId)
-        return Result(mergeBuildService.getMergeBuildList(userId, gitProjectId, page, pageSize))
-    }
-
-    private fun checkParam(userId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-    }
-}
+@ApiModel("工蜂CI起始页配置信息-内容和属性")
+data class GitYamlContent(
+    @ApiModelProperty("YAML文件内容")
+    val yaml: String,
+    @ApiModelProperty("显示的icon图标名")
+    val property: GitYamlProperty
+)

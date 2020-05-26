@@ -24,9 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.yaml
+package com.tencent.devops.gitci.pojo
 
-data class Pool(
-    val container: String?,
-    val credential: Credential?
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("工蜂CI起始页内容-属性")
+data class GitYamlProperty(
+    @ApiModelProperty("Yaml的文件名")
+    val name: String,
+    @ApiModelProperty("Yaml的描述")
+    val description: String,
+    @ApiModelProperty("显示的icon图标名")
+    val iconName: String,
+    @ApiModelProperty("分类标识")
+    val categories: List<String>?,
+    @ApiModelProperty("Yaml的文件名")
+    var yamlUrl: String? = "",
+    @ApiModelProperty("显示的icon路径")
+    var iconUrl: String? = ""
 )
