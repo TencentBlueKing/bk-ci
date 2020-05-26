@@ -26,6 +26,7 @@
 
 package com.tencent.devops.prebuild.resources
 
+import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
@@ -56,6 +57,10 @@ class UserPreBuildResourceImpl @Autowired constructor(
 
     override fun getOrCreateAgent(userId: String, os: OS, ip: String, hostName: String): Result<ThirdPartyAgentStaticInfo> {
         return Result(preBuildService.getOrCreatePreAgent(userId, os, ip, hostName))
+    }
+
+    override fun getAgentStatus(userId: String, os: OS, ip: String, hostName: String): Result<AgentStatus> {
+        return Result(preBuildService.getAgentStatus(userId, os, ip, hostName))
     }
 
     override fun listPreProject(userId: String): Result<List<PreProject>> {
