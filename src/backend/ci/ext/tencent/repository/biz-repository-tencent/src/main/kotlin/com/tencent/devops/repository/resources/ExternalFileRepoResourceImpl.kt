@@ -3,7 +3,6 @@ package com.tencent.devops.repository.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ExternalFileRepoResource
-import com.tencent.devops.repository.service.scm.GitService
 import com.tencent.devops.repository.service.scm.TencentGitCiService
 import org.springframework.beans.factory.annotation.Autowired
 
