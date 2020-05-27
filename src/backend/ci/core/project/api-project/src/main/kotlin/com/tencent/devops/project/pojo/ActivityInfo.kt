@@ -31,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class ActivityInfo(
     val name: String,
     val link: String,
+    val englishName: String? = "NEW",
     @JsonProperty("create_time")
     val createTime: String
 )
