@@ -76,6 +76,8 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
 
     private final val codeCalScoreStyle = "codeCalScoreStyle"
 
+    private final val scoreFormat = "%.2f"
+
     @Value("\${codecc.detailUrl}")
     private lateinit var codeccDetailUrl: String
 
@@ -87,7 +89,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         // 获取codecc扫描结果数据
         val buildId = storeValidateCodeccResultRequest.buildId
         val codeccCallback = getCodeccCallback(buildId)
-        var totalLine = 0L // 总行数
+        var totalLine = 0 // 总行数
         var totalCoveritySeriousWaringCount = 0
         var totalCoverityNormalWaringCount = 0
         var totalCcnExceedNum = 0.0
@@ -109,7 +111,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
                     totalSeriousRiskCount = codeccItemMap[totalNewSerious] as Int
                     totalNormalRiskCount = codeccItemMap[totalNewNormal] as Int
                 }
-                codeccToolNameEn == "CLOC" -> totalLine = codeccItemMap["total_lines"] as Long
+                codeccToolNameEn == "CLOC" -> totalLine = codeccItemMap["total_lines"] as Int
                 codeStyleToolNameEnList.contains(codeccToolNameEn) -> {
                     totalSeriousWaringCount = codeccItemMap[totalNewSerious] as Int
                     totalNormalWaringCount = codeccItemMap[totalNewNormal] as Int
@@ -211,7 +213,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         totalSeriousWaringCount: Int,
         totalNormalWaringCount: Int,
-        totalLine: Long,
+        totalLine: Int,
         language: String
     ): Double {
         // 计算百行告警数，百行告警数=（严重告警数*1+一般告警数*0.5）/代码行数*100
@@ -221,7 +223,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         val languageWaringConfigCount = languageWaringConfig?.configValue ?: "6"
         // 计算代码规范评分
         val score = 100 * ((0.6.pow(1.toDouble() / languageWaringConfigCount.toDouble())).pow(hundredWaringCount))
-        return String.format("%.2f", score).toDouble()
+        return String.format(scoreFormat, score).toDouble()
     }
 
     /**
@@ -239,7 +241,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         } else {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         }
-        return String.format("%.2f", score).toDouble()
+        return String.format(scoreFormat, score).toDouble()
     }
 
     /**
@@ -254,7 +256,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         totalCoveritySeriousWaringCount: Int,
         totalCoverityNormalWaringCount: Int,
-        totalLine: Long,
+        totalLine: Int,
         totalCcnExceedNum: Double
     ): Double {
         // 计算圈复杂度千行平均超标数
@@ -274,6 +276,6 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         // 计算一般告警数得分评分
         val coverityNormalWaringScore = storeCodeccDao.calScore(dslContext, coverityCalScoreStyle, thousandCoverityNormalWaringCount)
         val score = 0.9 * ccnScore + 0.08 * coveritySeriousWaringScore + 0.02 * coverityNormalWaringScore
-        return String.format("%.2f", score).toDouble()
+        return String.format(scoreFormat, score).toDouble()
     }
 }
