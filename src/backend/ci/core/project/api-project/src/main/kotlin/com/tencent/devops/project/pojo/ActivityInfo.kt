@@ -33,5 +33,5 @@ data class ActivityInfo(
     val englishName: String? = "NEW",
     val link: String,
     @JsonProperty("create_time")
-    val createTime: String
+    val createTime: String?
 )
