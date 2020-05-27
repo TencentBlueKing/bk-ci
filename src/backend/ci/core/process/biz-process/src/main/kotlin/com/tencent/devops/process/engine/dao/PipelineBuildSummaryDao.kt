@@ -407,16 +407,16 @@ class PipelineBuildSummaryDao {
         if (sortType != null) {
             val sortTypeField = when (sortType) {
                 PipelineSortType.NAME -> {
-                    t.field("PIPELINE_NAME")
+                    t.field("PIPELINE_NAME").asc()
                 }
                 PipelineSortType.CREATE_TIME -> {
-                    t.field("CREATE_TIME")
+                    t.field("CREATE_TIME").desc()
                 }
                 PipelineSortType.UPDATE_TIME -> {
-                    t.field("UPDATE_TIME")
+                    t.field("UPDATE_TIME").desc()
                 }
             }
-            baseStep.orderBy(sortTypeField.desc())
+            baseStep.orderBy(sortTypeField)
         }
         return if ((null != page && null != pageSize) && !(page == 1 && pageSize == -1)) {
             baseStep.limit((page - 1) * pageSize + (offsetNum ?: 0), pageSize).fetch()
