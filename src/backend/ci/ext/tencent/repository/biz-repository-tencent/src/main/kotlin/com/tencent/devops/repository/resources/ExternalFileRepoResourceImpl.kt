@@ -11,6 +11,10 @@ class ExternalFileRepoResourceImpl @Autowired constructor(
     private val gitciService: TencentGitCiService
 ) : ExternalFileRepoResource {
     override fun getFileContent(repoUrl: String, filePath: String, ref: String?, subModule: String?): Result<String> {
-        return Result(gitciService.getFileContent(repoUrl, filePath, ref, subModule))
+        return Result(gitciService.getFileContent(
+            repoUrl = repoUrl,
+            filePath = filePath,
+            ref = ref,
+            subModule = subModule))
     }
 }
