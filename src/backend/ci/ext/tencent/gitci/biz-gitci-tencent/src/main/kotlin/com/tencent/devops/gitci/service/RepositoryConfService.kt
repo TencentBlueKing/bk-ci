@@ -70,7 +70,9 @@ class RepositoryConfService @Autowired constructor(
                     limitConcurrentJobs = null
                 )
             )
-        } else return false
+        } else {
+            return true
+        }
     }
 
     fun enableGitCI(gitProjectId: Long): Boolean {
