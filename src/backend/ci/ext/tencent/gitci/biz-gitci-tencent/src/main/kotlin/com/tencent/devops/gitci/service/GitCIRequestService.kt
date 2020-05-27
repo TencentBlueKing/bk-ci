@@ -200,40 +200,82 @@ class GitCIRequestService @Autowired constructor(
     private fun checkGitProjectConf(gitRequestEvent: GitRequestEvent, event: GitEvent): Boolean {
         if (!repositoryConfService.initGitCISetting(gitRequestEvent.userId, gitRequestEvent.gitProjectId)) {
             logger.info("git project not in gray pool")
-            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, TriggerReason.GIT_CI_DISABLE.name, gitRequestEvent.gitProjectId)
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                originYaml = null,
+                normalizedYaml = null,
+                reason = TriggerReason.GIT_CI_DISABLE.name,
+                gitprojectId = gitRequestEvent.gitProjectId
+            )
             return false
         }
 
         val gitProjectSetting = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId)
         if (null == gitProjectSetting) {
             logger.info("git ci is not enabled, git project id: ${gitRequestEvent.gitProjectId}")
-            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, TriggerReason.GIT_CI_DISABLE.name, gitRequestEvent.gitProjectId)
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                originYaml = null,
+                normalizedYaml = null,
+                reason = TriggerReason.GIT_CI_DISABLE.name,
+                gitprojectId = gitRequestEvent.gitProjectId
+            )
             return false
         }
         if (!gitProjectSetting.enableCi) {
             logger.warn("git ci is disabled, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
-            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, "git ci config is not enabled", gitRequestEvent.gitProjectId)
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                originYaml = null,
+                normalizedYaml = null,
+                reason = "git ci config is not enabled",
+                gitprojectId = gitRequestEvent.gitProjectId
+            )
             return false
         }
         when (event) {
             is GitPushEvent -> {
                 if (!gitProjectSetting.buildPushedBranches) {
                     logger.warn("git ci conf buildPushedBranches is false, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
-                    gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.name, gitRequestEvent.gitProjectId)
+                    gitRequestEventNotBuildDao.save(
+                        dslContext = dslContext,
+                        eventId = gitRequestEvent.id!!,
+                        originYaml = null,
+                        normalizedYaml = null,
+                        reason = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.name,
+                        gitprojectId = gitRequestEvent.gitProjectId
+                    )
                     return false
                 }
             }
             is GitTagPushEvent -> {
                 if (!gitProjectSetting.buildPushedBranches) {
                     logger.warn("git ci conf buildPushedBranches is false, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
-                    gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.name, gitRequestEvent.gitProjectId)
+                    gitRequestEventNotBuildDao.save(
+                        dslContext = dslContext,
+                        eventId = gitRequestEvent.id!!,
+                        originYaml = null,
+                        normalizedYaml = null,
+                        reason = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.name,
+                        gitprojectId = gitRequestEvent.gitProjectId
+                    )
                     return false
                 }
             }
             is GitMergeRequestEvent -> {
                 if (!gitProjectSetting.buildPushedPullRequest) {
                     logger.warn("git ci conf buildPushedPullRequest is false, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
-                    gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, TriggerReason.BUILD_PUSHED_PULL_REQUEST_DISABLE.name, gitRequestEvent.gitProjectId)
+                    gitRequestEventNotBuildDao.save(
+                        dslContext = dslContext,
+                        eventId = gitRequestEvent.id!!,
+                        originYaml = null,
+                        normalizedYaml = null,
+                        reason = TriggerReason.BUILD_PUSHED_PULL_REQUEST_DISABLE.name,
+                        gitprojectId = gitRequestEvent.gitProjectId
+                    )
                     return false
                 }
             }
