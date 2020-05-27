@@ -41,6 +41,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -75,7 +76,7 @@ interface ServiceGitResource {
         userId: String
     ): Result<List<Project>>
 
-    @ApiOperation("获取用户所有git项目")
+    @ApiOperation("获取指定项目详细信息")
     @GET
     @Path("/getProjectInfo")
     fun getProjectInfo(
@@ -85,7 +86,7 @@ interface ServiceGitResource {
         @ApiParam("工蜂项目id", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: Long
-    ): Result<GitProjectInfo?>
+    ): Result<GitCIProjectInfo?>
 
     @ApiOperation("获取用户所有git项目，分页方式获取")
     @GET

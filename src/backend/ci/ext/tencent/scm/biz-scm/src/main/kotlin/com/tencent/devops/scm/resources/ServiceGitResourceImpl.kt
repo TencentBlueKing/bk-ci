@@ -43,6 +43,7 @@ import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.services.GitService
 import org.springframework.beans.factory.annotation.Autowired
@@ -101,8 +102,8 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getProject(accessToken, userId))
     }
 
-    override fun getProjectInfo(accessToken: String, gitProjectId: Long): Result<GitProjectInfo?> {
-        return gitService.getGitProjectInfo(gitProjectId.toString(), accessToken, TokenTypeEnum.OAUTH)
+    override fun getProjectInfo(accessToken: String, gitProjectId: Long): Result<GitCIProjectInfo?> {
+        return gitService.getGitCIProjectInfo(gitProjectId.toString(), accessToken)
     }
 
     override fun getProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?): Result<List<Project>> {
