@@ -76,6 +76,7 @@ class GitCIRequestService @Autowired constructor(
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitCISettingDao: GitCISettingDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
+    private val repositoryConfService: RepositoryConfService,
     private val rabbitTemplate: RabbitTemplate
 ) {
     companion object {
@@ -197,6 +198,11 @@ class GitCIRequestService @Autowired constructor(
     }
 
     private fun checkGitProjectConf(gitRequestEvent: GitRequestEvent, event: GitEvent): Boolean {
+        if (!repositoryConfService.initGitCISetting(userId, gitRequestEvent.gitProjectId)) {
+            logger.info("git project not in gray pool")
+            gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, TriggerReason.GIT_CI_DISABLE.name, gitRequestEvent.gitProjectId)
+            return false
+        }
 
         val gitProjectSetting = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId)
         if (null == gitProjectSetting) {

@@ -101,6 +101,10 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getProject(accessToken, userId))
     }
 
+    override fun getProjectInfo(accessToken: String, gitProjectId: Long): Result<GitProjectInfo?> {
+        return gitService.getGitProjectInfo(gitProjectId.toString(), accessToken, TokenTypeEnum.OAUTH)
+    }
+
     override fun getProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?): Result<List<Project>> {
         return Result(gitService.getProjectList(accessToken, userId, page, pageSize))
     }

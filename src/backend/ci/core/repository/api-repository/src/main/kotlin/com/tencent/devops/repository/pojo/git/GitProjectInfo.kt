@@ -46,5 +46,14 @@ data class GitProjectInfo(
     val visibilityLevel: Int?,
     @ApiModelProperty("仓库地址", required = true)
     @JsonProperty("http_url_to_repo")
-    val repositoryUrl: String
+    val repositoryUrl: String,
+    @ApiModelProperty("homepage")
+    @JsonProperty("web_url")
+    val homepage: String?,
+    @ApiModelProperty("HTTPS链接")
+    @JsonProperty("https_url_to_repo")
+    val gitHttpsUrl: String?,
+    @ApiModelProperty("gitSshUrl")
+    @JsonProperty("ssh_url_to_repo")
+    val gitSshUrl: String?
 )

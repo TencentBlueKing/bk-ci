@@ -75,6 +75,18 @@ interface ServiceGitResource {
         userId: String
     ): Result<List<Project>>
 
+    @ApiOperation("获取用户所有git项目")
+    @GET
+    @Path("/getProjectInfo")
+    fun getProjectInfo(
+        @ApiParam("accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @ApiParam("工蜂项目id", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: Long
+    ): Result<GitProjectInfo?>
+
     @ApiOperation("获取用户所有git项目，分页方式获取")
     @GET
     @Path("/getProjectList")
