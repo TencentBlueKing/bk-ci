@@ -241,7 +241,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         } else {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         }
-        return String.format(scoreFormat, score).toDouble()
+        return String.format(scoreFormat, score.toDouble()).toDouble()
     }
 
     /**
