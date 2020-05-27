@@ -38,5 +38,7 @@ data class OPActivityUpdate(
     @ApiModelProperty("状态")
     val status: String,
     @ApiModelProperty("链接")
-    val link: String
+    val link: String,
+    @ApiModelProperty("英文名")
+    val englishName: String
 )
