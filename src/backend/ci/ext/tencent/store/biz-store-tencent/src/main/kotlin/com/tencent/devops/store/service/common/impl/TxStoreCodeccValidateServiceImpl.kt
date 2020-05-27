@@ -106,7 +106,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
                     totalCoveritySeriousWaringCount = codeccItemMap[totalNewSerious] as Int
                     totalCoverityNormalWaringCount = codeccItemMap[totalNewNormal] as Int
                 }
-                codeccToolNameEn == "CCN" -> totalCcnExceedNum = codeccItemMap["ccn_beyond_threshold"] as Double
+                codeccToolNameEn == "CCN" -> totalCcnExceedNum = codeccItemMap["ccn_beyond_threshold"].toString().toDouble()
                 codeccToolNameEn == "WOODPECKER_SENSITIVE" -> {
                     totalSeriousRiskCount = codeccItemMap[totalNewSerious] as Int
                     totalNormalRiskCount = codeccItemMap[totalNewNormal] as Int
