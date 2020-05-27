@@ -45,5 +45,3 @@ dependencies {
     compile project(":ext:tencent:project:api-project-tencent")
     compile project(":ext:tencent:experience:model-experience-tencent")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

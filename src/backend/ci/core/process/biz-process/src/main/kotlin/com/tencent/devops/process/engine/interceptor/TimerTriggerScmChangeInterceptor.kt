@@ -107,7 +107,6 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                             val bothCodeChange = codeChange || codeChangeNew
                             hasScmElement = bothExistScmElement || hasScmElement // 只要有一个拉代码插件的，即标识为存在
                             hasCodeChange = (bothExistScmElement && bothCodeChange) || hasCodeChange // 当前库有更新
-
                             if (hasCodeChange) { // 只要有一个库有更新 就返回
                                 return@outer
                             }
@@ -136,7 +135,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
         var existScmElement = false
         var codeChange = false
 
-        if (ele !is MarketBuildAtomElement) return Pair(first = false, second = false)
+        if (ele !is MarketBuildAtomElement) return Pair(false, false)
 
         when {
             ele.getAtomCode() == "svnCodeRepo" -> {
@@ -146,10 +145,10 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             ele.getAtomCode() in setOf("gitCodeRepo", "PullFromGithub", "Gitlab", "atomtgit") -> {
                 existScmElement = true
                 codeChange = checkGitChangeNew(
-                    variables = variables,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    ele = ele
+                    variables,
+                    projectId,
+                    pipelineId,
+                    ele
                 )
             }
         }

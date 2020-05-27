@@ -37,12 +37,12 @@ class BuildTypeEnumModifier : EnumModifier {
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.ESXi.name,
-            additionalValues = arrayOf("蓝盾公共构建资源", listOf(OS.MACOS), true, true, false)
+            additionalValues = arrayOf("蓝盾公共构建资源", listOf(OS.MACOS), false, true, false)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.MACOS.name,
-            additionalValues = arrayOf("蓝盾公共构建资源(NEW)", listOf(OS.MACOS), true, true, true)
+            additionalValues = arrayOf("蓝盾公共构建资源(NEW)", listOf(OS.MACOS), false, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,

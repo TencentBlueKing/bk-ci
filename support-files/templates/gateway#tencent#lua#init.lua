@@ -38,9 +38,21 @@ config = {
     http_port = __BKCI_CONSUL_PORT__,
     domain = "__BKCI_CONSUL_DOMAIN__",
     tag = "__BKCI_CONSUL_TAG__",
+    suffix = "",
     nodes_url = "/v1/catalog/nodes"
   },
   ns_gray = {
+    ip = {
+      "__BKCI_CONSUL_GRAY_IP__"
+    },
+    port = __BKCI_CONSUL_DNS_PORT__,
+    http_port = __BKCI_CONSUL_PORT__,
+    domain = "__BKCI_CONSUL_DOMAIN__",
+    tag = "__BKCI_CONSUL_TAG__",
+    suffix = "",
+    nodes_url = "/v1/catalog/nodes"
+  },
+  ns_devnet = {
     ip = {
       "127.0.0.1"
     },
@@ -48,6 +60,18 @@ config = {
     http_port = __BKCI_CONSUL_PORT__,
     domain = "__BKCI_CONSUL_DOMAIN__",
     tag = "__BKCI_CONSUL_TAG__",
+    suffix = "",
+    nodes_url = "/v1/catalog/nodes"
+  },
+  ns_devnet_gray = {
+    ip = {
+      "__BKCI_CONSUL_DEVNET_GRAY_IP__"
+    },
+    port = __BKCI_CONSUL_DNS_PORT__,
+    http_port = __BKCI_CONSUL_PORT__,
+    domain = "__BKCI_CONSUL_DOMAIN__",
+    tag = "__BKCI_CONSUL_TAG__",
+    suffix = "",
     nodes_url = "/v1/catalog/nodes"
   },
   paasCIDomain = "__BKCI_PAASCI_FQDN__",

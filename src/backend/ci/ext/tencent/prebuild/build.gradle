@@ -24,4 +24,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+subprojects {
+    group "com.tencent.bk.devops.ci.prebuild"
+}

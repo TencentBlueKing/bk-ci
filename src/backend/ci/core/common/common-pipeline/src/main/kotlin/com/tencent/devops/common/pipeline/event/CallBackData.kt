@@ -109,7 +109,9 @@ class BuildEvent(
     val status: String,
     val startTime: Long = 0,
     val endTime: Long = 0,
-    val model: SimpleModel
+    val model: SimpleModel,
+    val projectId: String,
+    val trigger: String
 )
 
 class SimpleModel(

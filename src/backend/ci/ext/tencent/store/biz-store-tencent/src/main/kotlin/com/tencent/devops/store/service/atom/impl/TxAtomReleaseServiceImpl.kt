@@ -58,6 +58,7 @@ import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.MarketAtomBuildAppRelDao
 import com.tencent.devops.store.dao.atom.MarketAtomBuildInfoDao
+import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
@@ -86,6 +87,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
 
     @Autowired
     lateinit var marketAtomBuildAppRelDao: MarketAtomBuildAppRelDao
+
+    @Autowired
+    lateinit var storeBuildInfoDao: StoreBuildInfoDao
 
     @Autowired
     lateinit var storePipelineBuildRelDao: StorePipelineBuildRelDao
@@ -124,16 +128,17 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         // 远程调工蜂接口创建代码库
         try {
             val createGitRepositoryResult = client.get(ServiceGitRepositoryResource::class).createGitCodeRepository(
-                userId,
-                marketAtomCreateRequest.projectCode,
-                atomCode,
-                marketAtomBuildInfoDao.getAtomBuildInfoByLanguage(
-                    dslContext,
-                    marketAtomCreateRequest.language
-                ).sampleProjectPath,
-                pluginNameSpaceId.toInt(),
-                marketAtomCreateRequest.visibilityLevel,
-                TokenTypeEnum.PRIVATE_KEY
+                    userId,
+                    marketAtomCreateRequest.projectCode,
+                    atomCode,
+                    storeBuildInfoDao.getStoreBuildInfoByLanguage(
+                            dslContext,
+                            marketAtomCreateRequest.language,
+                            StoreTypeEnum.ATOM
+                    ).sampleProjectPath,
+                    pluginNameSpaceId.toInt(),
+                    marketAtomCreateRequest.visibilityLevel,
+                    TokenTypeEnum.PRIVATE_KEY
             )
             logger.info("the createGitRepositoryResult is :$createGitRepositoryResult")
             if (createGitRepositoryResult.isOk()) {

@@ -78,5 +78,3 @@ dependencies {
     compile "org.json:json"
     testCompile project(":core:common:common-test")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

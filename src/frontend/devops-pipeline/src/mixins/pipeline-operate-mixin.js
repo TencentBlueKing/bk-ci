@@ -155,6 +155,7 @@ export default {
             try {
                 await navConfirm({ type: 'warning', content })
 
+                this.isLoading = true
                 await this.removePipeline({
                     projectId,
                     pipelineId
@@ -163,7 +164,7 @@ export default {
                 this.$router.push({
                     name: 'pipelinesList'
                 })
-
+                
                 message = this.$t('deleteSuc')
                 theme = 'success'
             } catch (err) {
@@ -178,6 +179,7 @@ export default {
                     message,
                     theme
                 })
+                this.isLoading = false
             }
         },
         /**

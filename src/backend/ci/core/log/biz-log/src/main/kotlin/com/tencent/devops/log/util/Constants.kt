@@ -39,6 +39,8 @@ object Constants {
 
     const val MAX_LINES = 10000
 
+    const val SCROLL_MAX_TIMES = 4
+
     const val INDEX_LOG_STATUS = "index-log-status"
     const val TYPE_LOG_STATUS = "type-log-status"
 }

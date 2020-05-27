@@ -183,14 +183,15 @@ class DockerHostDebugService(
             }
             logger.info("envList is: $envList; PATH is $PATH")
 
-            val binds = mutableListOf(Bind("${dockerHostConfig.hostPathMavenRepo}/${containerInfo.pipelineId}/${containerInfo.vmSeqId}/", volumeMavenRepo),
-                    Bind("${dockerHostConfig.hostPathNpmPrefix}/${containerInfo.pipelineId}/${containerInfo.vmSeqId}/", volumeNpmPrefix),
-                    Bind("${dockerHostConfig.hostPathNpmCache}/${containerInfo.pipelineId}/${containerInfo.vmSeqId}/", volumeNpmCache),
-                    Bind("${dockerHostConfig.hostPathCcache}/${containerInfo.pipelineId}/${containerInfo.vmSeqId}/", volumeCcache),
+            val tailPath = getTailPath(containerInfo)
+            val binds = mutableListOf(Bind("${dockerHostConfig.hostPathMavenRepo}/${containerInfo.pipelineId}/$tailPath/", volumeMavenRepo),
+                    Bind("${dockerHostConfig.hostPathNpmPrefix}/${containerInfo.pipelineId}/$tailPath/", volumeNpmPrefix),
+                    Bind("${dockerHostConfig.hostPathNpmCache}/${containerInfo.pipelineId}/$tailPath/", volumeNpmCache),
+                    Bind("${dockerHostConfig.hostPathCcache}/${containerInfo.pipelineId}/$tailPath/", volumeCcache),
                     Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
                     Bind(dockerHostConfig.hostPathSleep, volumeSleep, AccessMode.ro),
-                    Bind("${dockerHostConfig.hostPathGradleCache}/${containerInfo.pipelineId}/${containerInfo.vmSeqId}/", volumeGradleCache),
-                    Bind(getWorkspace(containerInfo.pipelineId, containerInfo.vmSeqId), volumeWs))
+                    Bind("${dockerHostConfig.hostPathGradleCache}/${containerInfo.pipelineId}/$tailPath/", volumeGradleCache),
+                    Bind(getWorkspace(containerInfo.pipelineId, tailPath), volumeWs))
             if (enableProjectShare(containerInfo.projectId)) {
                 binds.add(Bind(getProjectShareDir(containerInfo.projectId), volumeProjectShare))
             }
@@ -200,6 +201,7 @@ class DockerHostDebugService(
                     .withEnv(envList.plus(listOf("$envKeyProjectId=${containerInfo.projectId}",
                             "$envKeyGateway=$gateway",
                             "TERM=xterm-256color",
+                            "pool_no=${containerInfo.poolNo}",
                             "landun_env=${dockerHostConfig.landunEnv ?: "prod"}",
                             "PATH=$PATH:$TURBO_PATH:$OS_PATH",
                             "$envDockerHostIP=${CommonUtils.getInnerIP()}",
@@ -269,5 +271,13 @@ class DockerHostDebugService(
         }
         val whiteList = dockerHostConfig.shareProjectCodeWhiteList!!.split(",").map { it.trim() }
         return whiteList.contains(projectCode)
+    }
+
+    private fun getTailPath(containerInfo: ContainerInfo): String {
+        return if (containerInfo.poolNo > 1) {
+            "${containerInfo.vmSeqId}_${containerInfo.poolNo}"
+        } else {
+            containerInfo.vmSeqId
+        }
     }
 }

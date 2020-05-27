@@ -51,6 +51,7 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.process.service.BuildVariableService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -66,6 +67,7 @@ class PipelineBuildDetailService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val buildVariableService: BuildVariableService,
     private val redisOperation: RedisOperation,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val pipelineWebsocketService: PipelineWebsocketService,
@@ -212,6 +214,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (id == containerId) {
                     container.startEpoch = System.currentTimeMillis()
                     container.status = BuildStatus.PREPARE_ENV.name
+                    container.startVMStatus = BuildStatus.RUNNING.name
                     update = true
                     return Traverse.BREAK
                 }
@@ -321,13 +324,13 @@ class PipelineBuildDetailService @Autowired constructor(
 
     fun pipelineTaskEnd(
         buildId: String,
-        elementId: String,
+        taskId: String,
         buildStatus: BuildStatus,
         errorType: ErrorType?,
         errorCode: Int?,
         errorMsg: String?
     ) {
-        taskEnd(buildId, elementId, buildStatus, BuildStatus.isFailure(buildStatus), errorType, errorCode, errorMsg)
+        taskEnd(buildId, taskId, buildStatus, BuildStatus.isFailure(buildStatus), errorType, errorCode, errorMsg)
     }
 
     fun normalContainerSkip(buildId: String, containerId: String) {
@@ -342,6 +345,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     if (container.id == containerId || container.containerId == containerId) {
                         update = true
                         container.status = BuildStatus.SKIP.name
+                        container.startVMStatus = BuildStatus.SKIP.name
                         container.elements.forEach {
                             it.status = BuildStatus.SKIP.name
                         }
@@ -744,7 +748,7 @@ class PipelineBuildDetailService @Autowired constructor(
 
     fun taskStart(buildId: String, taskId: String) {
         logger.info("The task($taskId) start of build $buildId")
-        val variables = pipelineRuntimeService.getAllVariable(buildId)
+        val variables = buildVariableService.getAllVariable(buildId)
         update(buildId, object : ModelInterface {
             var update = false
             override fun onFindElement(e: Element, c: Container): Traverse {
@@ -785,6 +789,32 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.RUNNING)
     }
 
+    fun updateStartVMStatus(
+        buildId: String,
+        containerId: String,
+        buildStatus: BuildStatus
+    ) {
+        logger.info("[$buildId|$containerId] update container startVMStatus to $buildStatus")
+        update(buildId, object : ModelInterface {
+            var update = false
+            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+                if (container !is TriggerContainer) {
+                    // 兼容id字段
+                    if (container.id == containerId || container.containerId == containerId) {
+                        update = true
+                        container.startVMStatus = buildStatus.name
+                        return Traverse.BREAK
+                    }
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.RUNNING)
+    }
+
     private fun updateHistoryStage(buildId: String, model: Model) {
         // 更新Stage状态至BuildHistory
         val allStageStatus = model.stages.map {
@@ -802,10 +832,10 @@ class PipelineBuildDetailService @Autowired constructor(
         val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: return
         webSocketDispatcher.dispatch(
             pipelineWebsocketService.buildHistoryMessage(
-                pipelineBuildInfo.buildId,
-                pipelineBuildInfo.projectId,
-                pipelineBuildInfo.pipelineId,
-                pipelineBuildInfo.startUser
+                buildId = pipelineBuildInfo.buildId,
+                projectId = pipelineBuildInfo.projectId,
+                pipelineId = pipelineBuildInfo.pipelineId,
+                userId = pipelineBuildInfo.startUser
             )
         )
     }

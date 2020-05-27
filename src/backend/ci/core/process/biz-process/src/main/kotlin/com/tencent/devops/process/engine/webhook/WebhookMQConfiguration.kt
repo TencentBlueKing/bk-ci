@@ -60,6 +60,16 @@ class WebhookMQConfiguration @Autowired constructor() {
         return RabbitAdmin(connectionFactory)
     }
 
+    /**
+     * Git事件交换机
+     */
+    @Bean
+    fun gitCommitCheckExchange(): DirectExchange {
+        val directExchange = DirectExchange(MQ.EXCHANGE_GIT_COMMIT_CHECK, true, false)
+        directExchange.isDelayed = true
+        return directExchange
+    }
+
     // SVN 消息队列配置
     @Bean
     fun svnEventExchange(): DirectExchange {
@@ -164,7 +174,7 @@ class WebhookMQConfiguration @Autowired constructor() {
             startConsumerMinInterval = 1,
             consecutiveActiveTrigger = 1,
             concurrency = 10,
-            maxConcurrency = 10
+            maxConcurrency = 20
         )
     }
 
@@ -232,8 +242,8 @@ class WebhookMQConfiguration @Autowired constructor() {
             adapter = adapter,
             startConsumerMinInterval = 1,
             consecutiveActiveTrigger = 1,
-            concurrency = 1,
-            maxConcurrency = 10
+            concurrency = 5,
+            maxConcurrency = 20
         )
     }
 

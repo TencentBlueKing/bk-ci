@@ -353,4 +353,15 @@ class NodeService @Autowired constructor(
             }
         }
     }
+
+    fun getByDisplayName(userId: String, projectId: String, displayName: String): List<NodeBaseInfo> {
+        val nodes = nodeDao.getByDisplayName(dslContext, projectId, displayName, null)
+        if (nodes.isEmpty()) {
+            return emptyList()
+        }
+
+        val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
+        val validRecordList = nodes.filter { canUseNodeIds.contains(it.nodeId) }
+        return validRecordList.map { NodeStringIdUtils.getNodeBaseInfo(it) }
+    }
 }

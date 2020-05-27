@@ -29,7 +29,6 @@ dependencies {
     compile project(":core:environment:biz-environment")
     compile project(":ext:tencent:common:common-bcs")
     compile project(":ext:tencent:common:common-devcloud")
+    compile project(":core:notify:api-notify")
     compile project(":ext:tencent:environment:api-environment-tencent")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
