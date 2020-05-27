@@ -198,7 +198,7 @@ class GitCIRequestService @Autowired constructor(
     }
 
     private fun checkGitProjectConf(gitRequestEvent: GitRequestEvent, event: GitEvent): Boolean {
-        if (!repositoryConfService.initGitCISetting(userId, gitRequestEvent.gitProjectId)) {
+        if (!repositoryConfService.initGitCISetting(gitRequestEvent.userId, gitRequestEvent.gitProjectId)) {
             logger.info("git project not in gray pool")
             gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, null, null, TriggerReason.GIT_CI_DISABLE.name, gitRequestEvent.gitProjectId)
             return false
