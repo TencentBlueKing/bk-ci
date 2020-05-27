@@ -60,7 +60,11 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
-import com.tencent.devops.scm.pojo.*
+import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.OwnerInfo
+import com.tencent.devops.scm.pojo.Project
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
