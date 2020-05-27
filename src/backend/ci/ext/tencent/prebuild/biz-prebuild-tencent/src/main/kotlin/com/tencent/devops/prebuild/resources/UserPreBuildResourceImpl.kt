@@ -81,7 +81,7 @@ class UserPreBuildResourceImpl @Autowired constructor(
             return Result(2, "Agent not install")
         }
 
-        return Result(preBuildService.startBuild(userId, preProjectId, startUpReq.workspace, startUpReq.yaml, yaml, agentInfo))
+        return Result(preBuildService.startBuild(userId, preProjectId, startUpReq, yaml, agentInfo))
     }
 
     override fun manualShutdown(userId: String, accessToken: String, preProjectId: String, buildId: String): Result<Boolean> {

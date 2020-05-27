@@ -33,6 +33,7 @@ import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.task.AbstractTask
 import com.tencent.devops.common.ci.task.CodeCCScanClientTask
+import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -60,6 +61,7 @@ import com.tencent.devops.prebuild.dao.PrebuildPersonalMachineDao
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
 import com.tencent.devops.prebuild.pojo.HistoryResponse
 import com.tencent.devops.prebuild.pojo.PreProject
+import com.tencent.devops.prebuild.pojo.StartUpReq
 import com.tencent.devops.prebuild.pojo.UserProject
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -97,21 +99,20 @@ class PreBuildService @Autowired constructor(
     fun startBuild(
         userId: String,
         preProjectId: String,
-        workspace: String,
-        yamlStr: String,
+        startUpReq: StartUpReq,
         yaml: CIBuildYaml,
         agentId: ThirdPartyAgentStaticInfo
     ): BuildId {
         val userProject = getUserProjectId(userId)
         val pipeline = getPipelineByName(userId, preProjectId)
-        val model = createPipelineModel(userId, preProjectId, workspace, yaml, agentId)
+        val model = createPipelineModel(userId, preProjectId, startUpReq, yaml, agentId)
         val pipelineId = if (null == pipeline) {
             client.get(ServicePipelineResource::class).create(userId, userProject, model, channelCode).data!!.id
         } else {
             client.get(ServicePipelineResource::class).edit(userId, userProject, pipeline.pipelineId, model, channelCode)
             pipeline.pipelineId
         }
-        prebuildProjectDao.createOrUpdate(dslContext, preProjectId, userProject, userId, yamlStr.trim(), pipelineId, workspace)
+        prebuildProjectDao.createOrUpdate(dslContext, preProjectId, userProject, userId, startUpReq.yaml.trim(), pipelineId, startUpReq.workspace)
 
         logger.info("pipelineId: $pipelineId")
 
@@ -149,7 +150,7 @@ class PreBuildService @Autowired constructor(
         return client.get(ServiceBuildResource::class).manualShutdown(userId, projectId, preProjectRecord.pipelineId, buildId, channelCode).data!!
     }
 
-    private fun createPipelineModel(userId: String, preProjectId: String, workspace: String, prebuild: CIBuildYaml, agentInfo: ThirdPartyAgentStaticInfo): Model {
+    private fun createPipelineModel(userId: String, preProjectId: String, startUpReq: StartUpReq, prebuild: CIBuildYaml, agentInfo: ThirdPartyAgentStaticInfo): Model {
         val stageList = mutableListOf<Stage>()
 
         // 第一个stage，触发类
@@ -164,6 +165,9 @@ class PreBuildService @Autowired constructor(
             stage.stage.forEachIndexed { jobIndex, job ->
                 val elementList = mutableListOf<Element>()
                 job.job.steps.forEach {
+                    if (it is CodeCCScanInContainerTask && startUpReq.extraParam != null && !(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
+                        it.inputs.path = listOf(startUpReq.extraParam!!.codeccScanPath!!)
+                    }
                     val element = it.covertToElement(getCiBuildConf(preBuildConfig))
                     elementList.add(element)
                     if (element is MarketBuildAtomElement) {
@@ -175,7 +179,7 @@ class PreBuildService @Autowired constructor(
                 }
                 val dispatchType = ThirdPartyAgentIDDispatchType(
                     displayName = agentInfo.agentId,
-                    workspace = workspace,
+                    workspace = startUpReq.workspace,
                     agentType = AgentType.ID
                 )
 

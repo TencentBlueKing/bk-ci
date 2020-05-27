@@ -41,5 +41,7 @@ data class StartUpReq(
     @ApiModelProperty("ip", required = true)
     val ip: String,
     @ApiModelProperty("hostname", required = true)
-    val hostname: String
+    val hostname: String,
+    @ApiModelProperty("extraParam", required = false)
+    val extraParam: ExtraParam?
 )
