@@ -85,6 +85,7 @@ import org.springframework.amqp.core.MessageProperties
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.util.StopWatch
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
@@ -108,6 +109,7 @@ class ProjectLocalService @Autowired constructor(
     private val projectDispatcher: ProjectDispatcher,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val projectPermissionService: ProjectPermissionService,
+    private val projectPaasCCService: ProjectPaasCCService,
     private val gray: Gray,
     private val jmxApi: ProjectJmxApi
 ) {
@@ -122,13 +124,19 @@ class ProjectLocalService @Autowired constructor(
         validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
         logger.info("createProject user:$userId, accessToken:$accessToken, projectCreateInfo:$projectCreateInfo")
         val startEpoch = System.currentTimeMillis()
+        val watch = StopWatch()
         var success = false
         try {
+            watch.start("drawImage")
             // 随机生成图片
             val logoFile = drawImage(projectCreateInfo.englishName.substring(0, 1).toUpperCase())
+            watch.stop()
             try {
                 // 发送服务器
+                watch.start("saveLogo")
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
+                watch.stop()
+                watch.start("create auth")
                 val projectId = projectPermissionService.createResources(
                     userId = userId,
                     accessToken = accessToken,
@@ -136,10 +144,13 @@ class ProjectLocalService @Autowired constructor(
                         projectCreateInfo.englishName,
                         projectCreateInfo.projectName
                     )
-
                 )
+                watch.stop()
+                watch.start("tof get")
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
+                watch.stop()
                 try {
+                    watch.start("create dao")
                     projectDao.create(
                         dslContext = dslContext,
                         userId = userId,
@@ -149,15 +160,24 @@ class ProjectLocalService @Autowired constructor(
                         projectId = projectId,
                         channelCode = ProjectChannelCode.BS
                     )
-                    projectDispatcher.dispatch(
-                        ProjectCreateBroadCastEvent(
+                    watch.stop()
+
+                    try {
+                        watch.start("create paasCC")
+                        projectPaasCCService.createPaasCCProject(
                             userId = userId,
                             projectId = projectId,
-                            projectInfo = projectCreateInfo
+                            accessToken = accessToken,
+                            projectCreateInfo = projectCreateInfo
                         )
-                    )
+                        watch.stop()
+                    } catch (e: Throwable) {
+                        logger.warn("Fail to create the paasCC $projectCreateInfo", e)
+                        throw e
+                    }
                 } catch (e: DuplicateKeyException1) {
                     logger.warn("Duplicate project $projectCreateInfo", e)
+                    deleteProjectFromAuth(projectId, accessToken)
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
                 } catch (t: Throwable) {
                     logger.warn("Fail to create the project ($projectCreateInfo)", t)
@@ -173,7 +193,7 @@ class ProjectLocalService @Autowired constructor(
                 }
             }
         } finally {
-//            jmxApi.execute(PROJECT_CREATE, System.currentTimeMillis() - startEpoch, success)
+            logger.info("createProject $projectCreateInfo| watch:$watch")
         }
     }
 
