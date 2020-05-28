@@ -32,6 +32,7 @@ import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.op.OPProjectResource
 import com.tencent.devops.project.pojo.OpProjectGraySetRequest
+import com.tencent.devops.scm.api.ServiceGitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,6 +46,33 @@ class RepositoryConfService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryConfService::class.java)
+    }
+
+    fun initGitCISetting(userId: String, gitProjectId: Long): Boolean {
+        if (gitCISettingDao.getSetting(dslContext, gitProjectId) == null) {
+            val serviceGitResource = client.getScm(ServiceGitResource::class)
+            val accessToken = serviceGitResource.getToken(gitProjectId).data?.accessToken ?: return false
+            val projectInfo = serviceGitResource.getProjectInfo(accessToken, gitProjectId).data ?: return false
+            return saveGitCIConf(
+                userId = userId,
+                repositoryConf = GitRepositoryConf(
+                    gitProjectId = gitProjectId,
+                    name = projectInfo.name,
+                    url = projectInfo.gitSshUrl ?: "",
+                    homepage = projectInfo.homepage ?: "",
+                    gitHttpUrl = projectInfo.gitHttpsUrl ?: "",
+                    gitSshUrl = projectInfo.gitSshUrl ?: "",
+                    enableCi = true,
+                    env = null,
+                    createTime = null,
+                    updateTime = null,
+                    projectCode = null,
+                    limitConcurrentJobs = null
+                )
+            )
+        } else {
+            return true
+        }
     }
 
     fun enableGitCI(gitProjectId: Long): Boolean {

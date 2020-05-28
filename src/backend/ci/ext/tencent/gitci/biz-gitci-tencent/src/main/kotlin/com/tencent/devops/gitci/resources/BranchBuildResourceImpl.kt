@@ -26,21 +26,32 @@
 
 package com.tencent.devops.gitci.resources
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.BranchBuildResource
 import com.tencent.devops.gitci.pojo.BranchBuildHistory
 import com.tencent.devops.gitci.service.BranchBuildService
+import com.tencent.devops.gitci.service.RepositoryConfService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
 class BranchBuildResourceImpl @Autowired constructor(
-    private val branchBuildService: BranchBuildService
+    private val branchBuildService: BranchBuildService,
+    private val repositoryConfService: RepositoryConfService
 ) : BranchBuildResource {
+
+    private val logger = LoggerFactory.getLogger(BranchBuildResourceImpl::class.java)
 
     override fun getBranchBuildList(userId: String, gitProjectId: Long, defaultBranch: String?): Result<List<BranchBuildHistory>> {
         checkParam(userId)
+        if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
+            logger.error("The git project: $gitProjectId is not enable.")
+            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
+        }
         return Result(branchBuildService.getBranchBuildList(userId, gitProjectId, defaultBranch))
     }
 

@@ -24,36 +24,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.resources
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.BuildHistoryPage
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.gitci.api.RequestResource
-import com.tencent.devops.gitci.pojo.GitCIBuildHistory
-import com.tencent.devops.gitci.service.RepositoryConfService
-import com.tencent.devops.gitci.service.RequestService
-import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class RequestResourceImpl @Autowired constructor(
-    private val requestService: RequestService,
-    private val repositoryConfService: RepositoryConfService
-) : RequestResource {
-    override fun getMergeBuildList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): Result<BuildHistoryPage<GitCIBuildHistory>> {
-        checkParam(userId)
-        if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
-        }
-        return Result(requestService.getRequestList(userId, gitProjectId, page, pageSize))
-    }
-
-    private fun checkParam(userId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-    }
-}
+@ApiModel("工蜂CI查询代码库项目信息")
+data class GitCIProjectInfo(
+    @ApiModelProperty("项目ID")
+    @JsonProperty("id")
+    val gitProjectId: Int,
+    @ApiModelProperty("项目名称")
+    @JsonProperty("name")
+    val name: String,
+    @ApiModelProperty("页面地址")
+    @JsonProperty("web_url")
+    val homepage: String?,
+    @ApiModelProperty("HTTP链接", required = true)
+    @JsonProperty("http_url_to_repo")
+    val gitHttpUrl: String,
+    @ApiModelProperty("HTTPS链接")
+    @JsonProperty("https_url_to_repo")
+    val gitHttpsUrl: String?,
+    @ApiModelProperty("gitSshUrl")
+    @JsonProperty("ssh_url_to_repo")
+    val gitSshUrl: String?
+)
