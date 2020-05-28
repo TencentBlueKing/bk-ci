@@ -306,6 +306,15 @@ class ProjectDao {
         }
     }
 
+    fun delete(
+        dslContext: DSLContext,
+        projectId: String
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.delete(this).where(PROJECT_ID.eq(projectId)).execute()
+        }
+    }
+
     fun create(
         dslContext: DSLContext,
         userId: String,
