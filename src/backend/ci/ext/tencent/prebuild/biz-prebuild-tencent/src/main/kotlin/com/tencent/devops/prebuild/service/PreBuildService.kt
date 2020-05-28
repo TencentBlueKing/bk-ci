@@ -26,6 +26,7 @@
 
 package com.tencent.devops.prebuild.service
 
+import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
@@ -50,7 +51,9 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.log.model.pojo.LogLine
@@ -357,6 +360,7 @@ class PreBuildService @Autowired constructor(
             if (it.hostName == hostName) {
                 logger.info("Get user personal vm, hostName: $hostName")
                 if (it.ip != ip) { // IP 有变更
+                    logger.info("Update ip, ip: $ip")
                     prebuildPersonalMachineDao.updateIp(dslContext, userId, hostName, ip)
                 }
 
@@ -367,6 +371,7 @@ class PreBuildService @Autowired constructor(
             if (it.ip == ip) {
                 logger.info("Get user personal vm, ip: $ip")
                 if (it.hostName != hostName) { // hostname 有变更
+                    logger.info("Update hostName, hostName: $hostName")
                     prebuildPersonalMachineDao.updateHostname(dslContext, userId, hostName, ip)
                 }
                 return it
@@ -393,5 +398,26 @@ class PreBuildService @Autowired constructor(
             buildConf.devCloudToken,
             buildConf.devCloudUrl
         )
+    }
+
+    fun getAgentStatus(userId: String, os: OS, ip: String, hostName: String): AgentStatus {
+        val agent = getAgent(userId, os, ip, hostName)
+        if (null == agent) {
+            logger.info("Agent not exists. need to install.")
+            return AgentStatus.IMPORT_EXCEPTION
+        }
+        return try {
+            logger.info("AgentId: ${agent.agentId}")
+            val agentStatus = client.get(ServiceNodeResource::class).listByHashIds(userId, getUserProjectId(userId), listOf(agent.agentId))
+            logger.info("nodeStatus: ${agentStatus.data?.first()?.nodeStatus}")
+            if (NodeStatus.NORMAL.statusName == agentStatus.data?.first()?.nodeStatus) {
+                AgentStatus.IMPORT_OK
+            } else {
+                AgentStatus.IMPORT_EXCEPTION
+            }
+        } catch (e: Exception) {
+            logger.error("listByHashIds exception: $e")
+            AgentStatus.IMPORT_EXCEPTION
+        }
     }
 }
