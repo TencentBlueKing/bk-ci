@@ -89,7 +89,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
 
         val dockerIp: String
         val poolNo: Int
-        if (dockerBuildHistoryList.size > 0) {
+        if (dockerBuildHistoryList.size > 0 && dockerBuildHistoryList[0].dockerIp.isNotEmpty()) {
             val dockerBuildHistory = dockerBuildHistoryList[0]
             // running状态且容器已创建，则复用
             if (dockerBuildHistory.status == PipelineTaskStatus.RUNNING.status &&
