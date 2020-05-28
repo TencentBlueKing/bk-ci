@@ -211,10 +211,12 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             }
             val repositoryTreeInfoList = repositoryTreeInfoResult.data
             var flag = false
-            repositoryTreeInfoList?.forEach {
-                if (it.name == BK_FRONTEND_DIR_NAME && it.type == "tree") {
-                    flag = true
-                    return@forEach
+            run outside@{
+                repositoryTreeInfoList?.forEach {
+                    if (it.name == BK_FRONTEND_DIR_NAME && it.type == "tree") {
+                        flag = true
+                        return@outside
+                    }
                 }
             }
             if (!flag) {
