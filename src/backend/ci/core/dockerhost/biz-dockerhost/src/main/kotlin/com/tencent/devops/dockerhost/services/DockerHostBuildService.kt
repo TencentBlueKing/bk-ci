@@ -708,7 +708,7 @@ class DockerHostBuildService(
                 tag = tag,
                 jobId = containerHashId
             )
-        } catch (e: Exception) {
+        } catch (t: Throwable) {
             logger.info("write log to dispatch failed")
         }
     }
