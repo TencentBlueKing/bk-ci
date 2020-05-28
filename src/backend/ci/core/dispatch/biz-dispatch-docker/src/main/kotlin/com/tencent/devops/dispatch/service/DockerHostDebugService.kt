@@ -144,7 +144,11 @@ class DockerHostDebugService @Autowired constructor(
                     defaultImageConfig.getTLinux2_2CompleteUri()
                 }
                 else -> {
-                    defaultImageConfig.getCompleteUriByImageName(imageName)
+                    if (defaultImageConfig.dockerBuildImagePrefix.isNullOrBlank()) {
+                        imageName?.trim()?.removePrefix("/")
+                    } else {
+                        "${defaultImageConfig.dockerBuildImagePrefix}/bkdevops/$imageName"
+                    }!!
                 }
             }
         }
