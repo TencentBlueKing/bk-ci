@@ -173,6 +173,7 @@ class ProjectLocalService @Autowired constructor(
                         watch.stop()
                     } catch (e: Throwable) {
                         logger.warn("Fail to create the paasCC $projectCreateInfo", e)
+                        projectDao.delete(dslContext, projectId)
                         throw e
                     }
                 } catch (e: DuplicateKeyException1) {
