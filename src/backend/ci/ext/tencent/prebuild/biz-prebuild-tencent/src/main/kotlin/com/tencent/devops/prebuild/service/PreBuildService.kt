@@ -93,7 +93,7 @@ class PreBuildService @Autowired constructor(
     }
 
     private fun getUserProjectId(userId: String): String {
-        return "pre_$userId"
+        return "_$userId"
     }
 
     fun projectNameExist(userId: String, prebuildProjId: String) =
