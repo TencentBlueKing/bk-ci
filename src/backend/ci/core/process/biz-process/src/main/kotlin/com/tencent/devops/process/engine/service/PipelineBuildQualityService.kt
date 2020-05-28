@@ -217,22 +217,18 @@ class PipelineBuildQualityService(
     }
 
     fun getAuditUserList(projectId: String, pipelineId: String, buildId: String, taskId: String): Set<String> {
-        try {
-            for (i in 1..5) {
-                val auditUsers = client.get(ServiceQualityRuleResource::class).getAuditUserList(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    taskId
-                ).data ?: setOf()
-                if (auditUsers.isNotEmpty()) return auditUsers
-                Thread.sleep(i * 2 * 1000L)
-            }
+        return try {
+            val auditUsers = client.get(ServiceQualityRuleResource::class).getAuditUserList(
+                projectId,
+                pipelineId,
+                buildId,
+                taskId
+            ).data ?: setOf()
+            auditUsers
         } catch (e: Exception) {
             logger.error("quality get audit user list fail: ${e.message}", e)
-            return setOf()
+            setOf()
         }
-        return emptySet()
     }
 
     fun check(buildCheckParams: BuildCheckParams, position: String): RuleCheckResult {
