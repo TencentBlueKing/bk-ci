@@ -76,6 +76,8 @@ class ManualReviewTaskAtom(
         val pipelineId = task.pipelineId
 
         val reviewUsers = parseVariable(param.reviewUsers.joinToString(","), runVariables)
+        val reviewDesc = parseVariable(param.desc, runVariables)
+
         if (reviewUsers.isBlank()) {
             logger.error("[$buildId]|taskId=$taskId|Review user is empty")
             return AtomResponse(BuildStatus.FAILED)
@@ -101,7 +103,7 @@ class ManualReviewTaskAtom(
         LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
             buildId = task.buildId,
-            message = "审核说明：${param.desc}",
+            message = "审核说明：reviewDesc",
             tag = taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
@@ -124,7 +126,7 @@ class ManualReviewTaskAtom(
 
         sendReviewNotify(
             receivers = reviewUsers.split(",").toMutableSet(),
-            reviewDesc = param.desc ?: "",
+            reviewDesc = reviewDesc,
             reviewUrl = reviewUrl,
             reviewAppUrl = reviewAppUrl,
             projectName = projectName,
