@@ -246,7 +246,7 @@ class ProjectLocalService @Autowired constructor(
     }
 
     fun getOrCreatePreProject(userId: String, accessToken: String): ProjectVO {
-        val projectCode = "_$userId"
+        val projectCode = "pre_$userId"
         var userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
         if (userProjectRecord != null) {
             return ProjectUtils.packagingBean(userProjectRecord, setOf())
