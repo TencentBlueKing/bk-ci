@@ -178,6 +178,7 @@ function splitByChar (message) {
     return [tempMes, message]
 }
 
+const wordLength = /Firefox/i.test(navigator.userAgent) ? 7 : 6.6
 let getTextWidth
 if (self.OffscreenCanvas) {
     getTextWidth = (text) => {
@@ -186,7 +187,7 @@ if (self.OffscreenCanvas) {
             if (/[\u4e00-\u9fa5]/.test(text[i])) {
                 res += 12
             } else {
-                res += 6.6
+                res += wordLength
             }
         }
         return res + 20
