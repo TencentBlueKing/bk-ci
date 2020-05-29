@@ -27,11 +27,15 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
 import com.tencent.devops.store.pojo.common.enums.ScopeTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.TxStorePipelineService
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -40,10 +44,19 @@ import org.springframework.stereotype.Service
 class TxStorePipelineServiceImpl : TxStorePipelineService {
 
     @Autowired
+    private lateinit var  storeProjectRelDao: StoreProjectRelDao
+
+    @Autowired
     private lateinit var  redisOperation: RedisOperation
 
     @Autowired
     private lateinit var  gray: Gray
+
+    @Autowired
+    private lateinit var dslContext: DSLContext
+
+    @Autowired
+    private lateinit var client: Client
 
     private val logger = LoggerFactory.getLogger(TxStorePipelineServiceImpl::class.java)
 
@@ -53,6 +66,7 @@ class TxStorePipelineServiceImpl : TxStorePipelineService {
     ): Result<Boolean> {
         logger.info("updatePipelineModel userId:$userId,updateStorePipelineModelRequest:$updateStorePipelineModelRequest")
         val scopeType = updateStorePipelineModelRequest.scopeType
+        val storeType = updateStorePipelineModelRequest.storeType
         when (scopeType) {
             ScopeTypeEnum.ALL.name -> {
 
@@ -65,7 +79,20 @@ class TxStorePipelineServiceImpl : TxStorePipelineService {
 
             }
             ScopeTypeEnum.SPEC.name -> {
-
+                val projectRelRecords = storeProjectRelDao.getStoreInitProjects(
+                    dslContext = dslContext,
+                    storeType = StoreTypeEnum.valueOf(storeType).type.toByte(),
+                    descFlag = false,
+                    specProjectCodeList = updateStorePipelineModelRequest.storeCodeList,
+                    grayFlag = null,
+                    grayProjectCodeList = null,
+                    page = null,
+                    pageSize = null
+                )
+/*                val sendNotifyResult = client.get(ServicePipelineSettingResource::class)
+                    .updatePipelineModel(
+                        userId = userId,
+                    )*/
             }
         }
         return Result(true)
