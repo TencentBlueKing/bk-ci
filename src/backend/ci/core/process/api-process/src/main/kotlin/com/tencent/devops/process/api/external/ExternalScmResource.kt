@@ -51,8 +51,6 @@ interface ExternalScmResource {
     @POST
     @Path("/codegit/commit")
     fun webHookCodeGitCommit(
-        @HeaderParam("X-Token")
-        token: String,
         event: String
     ): Result<Boolean>
 
