@@ -185,16 +185,20 @@ function splitByChar (message) {
     return [tempMes, message]
 }
 
-const wordLength = /Firefox/i.test(navigator.userAgent) ? 7 : 6.6
 let getTextWidth
 if (self.OffscreenCanvas) {
+    const canvas = new OffscreenCanvas(100, 1)
+    const context = canvas.getContext('2d')
+    context.font = 'normal 12px Consolas, "Courier New", monospace'
+    const englishLength = context.measureText('a').width
+    const wordLength = context.measureText('我').width
     getTextWidth = (text) => {
         let res = 0
         for (let i = 0, len = text.length; i < len; i++) {
             if (/[\u4e00-\u9fa5]/.test(text[i])) {
-                res += 12
-            } else {
                 res += wordLength
+            } else {
+                res += englishLength
             }
         }
         return res + 20
