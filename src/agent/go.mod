@@ -11,5 +11,4 @@ require (
 	github.com/speps/go-hashids v2.0.0+incompatible
 )
 
-// replace github.com/influxdata/telegraf => github.com/necrohuang/telegraf v1.99.1
-replace github.com/influxdata/telegraf => /Users/huangou/workspace/devops/github/telegraf
+replace github.com/influxdata/telegraf => github.com/ci-plugins/telegraf v1.99.0
