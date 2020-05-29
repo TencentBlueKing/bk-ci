@@ -115,28 +115,23 @@ function addListData ({ list, mainWidth }) {
 }
 
 function splitText (message) {
-    const totalWidth = getTextWidth(message)
     const mesRes = []
-    if (totalWidth < allMainWidth[curId]) {
-        mesRes.push(message)
-    } else {
-        const regex = /<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi
-        const aList = []
-        let tempA = null
-        const currentIndex = 0
+    const regex = /<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi
+    const aList = []
+    let tempA = null
+    const currentIndex = 0
 
-        while ((tempA = regex.exec(message)) != null) {
-            aList.push({
-                content: tempA[0],
-                href: tempA[1],
-                text: tempA[2],
-                startIndex: tempA.index
-            })
-        }
-        if (aList.length) message = message.replace(regex, '$2')
-
-        handleMessage(mesRes, message, currentIndex, aList)
+    while ((tempA = regex.exec(message)) != null) {
+        aList.push({
+            content: tempA[0],
+            href: tempA[1],
+            text: tempA[2],
+            startIndex: tempA.index
+        })
     }
+    if (aList.length) message = message.replace(regex, '$2')
+
+    handleMessage(mesRes, message, currentIndex, aList)
     return mesRes
 }
 
