@@ -39,11 +39,9 @@ class ServicePipelineSettingResourceImpl @Autowired constructor(
 
     override fun updatePipelineModel(
         userId: String,
-        projectId: String,
         updatePipelineModelRequest: UpdatePipelineModelRequest
     ): Result<Boolean> {
         val flag = pipelineSettingService.updatePipelineModel(
-            projectId = projectId,
             userId = userId,
             updatePipelineModelRequest = updatePipelineModelRequest,
             checkPermission = false
