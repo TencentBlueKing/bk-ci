@@ -103,7 +103,7 @@ class ManualReviewTaskAtom(
         LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
             buildId = task.buildId,
-            message = "审核说明：reviewDesc",
+            message = "审核说明：$reviewDesc",
             tag = taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
