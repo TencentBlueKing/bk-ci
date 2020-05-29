@@ -115,7 +115,6 @@ function addListData ({ list, mainWidth }) {
 }
 
 function splitText (message) {
-    let tempMes = ''
     const totalWidth = getTextWidth(message)
     const mesRes = []
     if (totalWidth < allMainWidth[curId]) {
@@ -124,7 +123,7 @@ function splitText (message) {
         const regex = /<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi
         const aList = []
         let tempA = null
-        let currentIndex = 0
+        const currentIndex = 0
 
         while ((tempA = regex.exec(message)) != null) {
             aList.push({
@@ -136,28 +135,36 @@ function splitText (message) {
         }
         if (aList.length) message = message.replace(regex, '$2')
 
-        while (message !== '') {
-            [tempMes, message] = splitByChar(message)
-            // a标签单独处理
-            aList.forEach((x) => {
-                if (x.startIndex <= currentIndex + tempMes.length && x.startIndex >= currentIndex) {
-                    const curStartIndex = x.startIndex - currentIndex
-                    const curLength = x.text.length
-                    const diffDis = curStartIndex + curLength - tempMes.length
-                    if (diffDis > 0) {
-                        message = tempMes.slice(curStartIndex) + message
-                        tempMes = tempMes.slice(0, curStartIndex)
-                    } else {
-                        tempMes = (tempMes.slice(0, curStartIndex) + x.content + tempMes.slice(curStartIndex + curLength))
-                    }
-                }
-            })
-
-            currentIndex += tempMes.length
-            mesRes.push(tempMes)
-        }
+        handleMessage(mesRes, message, currentIndex, aList)
     }
     return mesRes
+}
+
+function handleMessage (mesRes, message, currentIndex, aList) {
+    let tempMes = ''
+    let time = 0
+    while (time < 10000 && message.length > 0) {
+        [tempMes, message] = splitByChar(message)
+        // a标签单独处理
+        aList.forEach((x) => {
+            if (x.startIndex <= currentIndex + tempMes.length && x.startIndex >= currentIndex) {
+                const curStartIndex = x.startIndex - currentIndex
+                const curLength = x.text.length
+                const diffDis = curStartIndex + curLength - tempMes.length
+                if (diffDis > 0) {
+                    message = tempMes.slice(curStartIndex) + message
+                    tempMes = tempMes.slice(0, curStartIndex)
+                } else {
+                    tempMes = (tempMes.slice(0, curStartIndex) + x.content + tempMes.slice(curStartIndex + curLength))
+                }
+            }
+        })
+
+        currentIndex += tempMes.length
+        mesRes.push(tempMes)
+        time++
+    }
+    if (message.length > 0) handleMessage(mesRes, message, currentIndex, aList)
 }
 
 function splitByChar (message) {
