@@ -37,6 +37,7 @@ import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
@@ -196,19 +197,27 @@ class DockerHostDebugService(
                 binds.add(Bind(getProjectShareDir(containerInfo.projectId), volumeProjectShare))
             }
 
+            val containerName = "debug-${UUIDUtil.generate()}"
             val container = dockerCli.createContainerCmd(imageName)
-                    .withCmd("/bin/sh", entryPointCmd)
-                    .withEnv(envList.plus(listOf("$envKeyProjectId=${containerInfo.projectId}",
+                .withName(containerName)
+                .withCmd("/bin/sh", entryPointCmd)
+                .withEnv(
+                    envList.plus(
+                        listOf(
+                            "$envKeyProjectId=${containerInfo.projectId}",
                             "$envKeyGateway=$gateway",
                             "TERM=xterm-256color",
                             "pool_no=${containerInfo.poolNo}",
                             "landun_env=${dockerHostConfig.landunEnv ?: "prod"}",
                             "PATH=$PATH:$TURBO_PATH:$OS_PATH",
                             "$envDockerHostIP=${CommonUtils.getInnerIP()}",
-                            "$bkDistccLocalIp=${CommonUtils.getInnerIP()}")))
-                    .withVolumes(volumeWs).withVolumes(volumeApps).withVolumes(volumeSleep)
-                    .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge"))
-                    .exec()
+                            "$bkDistccLocalIp=${CommonUtils.getInnerIP()}"
+                        )
+                    )
+                )
+                .withVolumes(volumeWs).withVolumes(volumeApps).withVolumes(volumeSleep)
+                .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge"))
+                .exec()
 
             logger.info("Created container $container")
             dockerCli.startContainerCmd(container.id).exec()
@@ -233,7 +242,7 @@ class DockerHostDebugService(
             // docker stop
             val inspectInfo = dockerCli.inspectContainerCmd(containerInfo.containerId).exec()
             if ("exited" != inspectInfo.state.status) {
-                dockerCli.stopContainerCmd(containerInfo.containerId).withTimeout(30).exec()
+                dockerCli.stopContainerCmd(containerInfo.containerId).withTimeout(3).exec()
             }
         } catch (e: Throwable) {
             logger.error("Stop the container failed, containerId: ${containerInfo.containerId}, error msg: $e")
