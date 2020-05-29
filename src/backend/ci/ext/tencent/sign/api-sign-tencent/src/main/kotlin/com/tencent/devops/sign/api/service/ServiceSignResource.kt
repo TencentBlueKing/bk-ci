@@ -69,15 +69,4 @@ interface ServiceSignResource {
         @PathParam("appId")
         appId: String
     ): Result<List<IosProfile>>
-
-    @ApiOperation("下载ipa文件")
-    @GET
-    @Path("/file/download")
-    fun downloadIpa(
-        @ApiParam("文件路径", required = true)
-        @QueryParam("filePath")
-        filePath: String,
-        @Context
-        response: HttpServletResponse
-    )
 }

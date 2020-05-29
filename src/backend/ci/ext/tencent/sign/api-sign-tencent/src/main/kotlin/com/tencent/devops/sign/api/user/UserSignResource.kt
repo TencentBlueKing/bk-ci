@@ -77,18 +77,4 @@ interface UserSignResource {
         @PathParam("appId")
         appId: String
     ): Result<List<IosProfile>>
-
-    @ApiOperation("下载ipa文件")
-    @GET
-    @Path("/file/download")
-    fun downloadIpa(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("文件路径", required = true)
-        @QueryParam("filePath")
-        filePath: String,
-        @Context
-        response: HttpServletResponse
-    )
 }
