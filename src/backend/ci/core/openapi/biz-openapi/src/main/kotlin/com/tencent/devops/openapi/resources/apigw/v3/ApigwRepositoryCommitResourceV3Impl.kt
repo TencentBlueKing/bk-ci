@@ -23,21 +23,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw.v3
 
-package com.tencent.devops.process.engine.common
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.v3.ApigwRepositoryCommitResourceV3
+import com.tencent.devops.repository.api.UserRepositoryResource
+import com.tencent.devops.repository.pojo.commit.CommitResponse
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-const val BS_TASK_HOST = "_bsTaskHost_"
-const val BS_ATOM_STATUS_REFRESH_DELAY_MILLS = "_bsDelayMills_"
-const val BS_ATOM_START_TIME_MILLS = "_bsAtomStartTimeMills_"
-const val BS_ATOM_LOOP_TIMES = "_bsAtomLoopTimes_"
-const val BS_QUALITY_RESULT = "_bsQualityResult_"
+@RestResource
+class ApigwRepositoryCommitResourceV3Impl @Autowired constructor(private val client: Client) : ApigwRepositoryCommitResourceV3 {
 
-const val BS_MANUAL_ACTION = "_bsManualAction_"
-const val BS_MANUAL_ACTION_USERID = "_bsManualActionUserId_"
-const val BS_MANUAL_ACTION_SUGGEST = "_bsManualActionSuggest_"
-const val BS_MANUAL_ACTION_PARAMS = "_bsManualActionParams_"
-const val BS_MANUAL_ACTION_DESC = "_bsManualActionDesc_"
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwRepositoryCommitResourceV3Impl::class.java)
+    }
 
-const val BS_MANUAL_START_STAGE = "manual_start_stage"
-const val BS_CONTAINER_END_SOURCE_PREIX = "CONTAINER_END_"
-const val BS_STAGE_CANCELED_END_SOURCE = "STAGE_CANCELED_END"
+    override fun getRepositoryCommit(appCode: String?, apigwType: String?, userId: String, projectId: String, pipelineId: String, buildId: String): Result<List<CommitResponse>> {
+        logger.info("get repository commit projectId($projectId) pipelineId($pipelineId) buildId($buildId) by user $userId")
+        return client.get(UserRepositoryResource::class).getCommit(
+                buildId = buildId
+        )
+    }
+}

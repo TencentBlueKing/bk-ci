@@ -1,4 +1,4 @@
-package com.tencent.devops.process.engine.atom.vm.parser
+package com.tencent.devops.process.engine.atom.parser
 
 import com.tencent.devops.common.pipeline.type.DispatchType
 

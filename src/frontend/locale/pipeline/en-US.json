@@ -89,6 +89,10 @@
     "stageOptionLabel": "Run this Stage",
     "stageTriggerDesc": "Multiple people separated by commas",
     "skipStageDesc": "SKIPED",
+    "pipelinesHistory": "Builds",
+    "pipelinesEdit": "Edit",
+    "pipelinesPreview": "Preview",
+    "pipelinesDetail": "Details",
     "execDetail": {
         "log": "Log",
         "setting": "Configuration",
@@ -366,7 +370,6 @@
         "logClose": "Log is closed",
         "logErr": "Other exceptions",
         "stageStatus": "Stage",
-        "execHistory": "Builds",
         "trendData": "Artifacts size trending",
         "chooseDateRange": "Please select a date range",
         "noPackages": " No artifacts found in this period",
