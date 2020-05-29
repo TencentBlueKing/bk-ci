@@ -222,16 +222,16 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         // 对特殊的buildid进行处理。
         var buildIdReal = when (buildId) {
             "latest" -> {
-                pipelineRuntimeService.getLatestBuildId(pipelineId)
+                pipelineRuntimeService.getLatestBuildId(projectId, pipelineId)
             }
             "latestSucceeded" -> {
-                pipelineRuntimeService.getLatestSucceededBuildId(pipelineId)
+                pipelineRuntimeService.getLatestSucceededBuildId(projectId, pipelineId)
             }
             "latestFailed" -> {
-                pipelineRuntimeService.getLatestFailedBuildId(pipelineId)
+                pipelineRuntimeService.getLatestFailedBuildId(projectId, pipelineId)
             }
             "latestFinished" -> {
-                pipelineRuntimeService.getLatestFinishedBuildId(pipelineId)
+                pipelineRuntimeService.getLatestFinishedBuildId(projectId, pipelineId)
             }
             else -> {
                 buildId

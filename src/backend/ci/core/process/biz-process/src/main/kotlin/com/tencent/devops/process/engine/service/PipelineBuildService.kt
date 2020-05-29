@@ -185,7 +185,7 @@ class PipelineBuildService(
         // 当使用最近一次参数进行构建的时候，获取并替换container.params中的defaultValue值
         if (useLatestParameters) {
             // 获取最后一次的构建id
-            val lastTimeBuildInfo = pipelineRuntimeService.getLastTimeBuild(pipelineId)
+            val lastTimeBuildInfo = pipelineRuntimeService.getLastTimeBuild(projectId, pipelineId)
             if (lastTimeBuildInfo != null) {
                 val latestParamsStr = buildStartupParamService.getParam(lastTimeBuildInfo.buildId)
                 // 为空的时候不处理
@@ -1002,7 +1002,7 @@ class PipelineBuildService(
                 message = "用户（$userId) 无权限获取流水线($pipelineId)详情"
             )
         }
-        val buildId = pipelineRuntimeService.getLatestFinishedBuildId(pipelineId)
+        val buildId = pipelineRuntimeService.getLatestFinishedBuildId(projectId, pipelineId)
         val apiDomain = HomeHostUtil.innerServerHost()
         val redirectURL = when (buildId) {
             null -> "$apiDomain/console/pipeline/$projectId/$pipelineId/history"
