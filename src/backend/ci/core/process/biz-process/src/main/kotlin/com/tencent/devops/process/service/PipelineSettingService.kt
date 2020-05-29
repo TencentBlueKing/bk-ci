@@ -46,6 +46,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.util.DateTimeUtils
 import org.jooq.DSLContext
@@ -201,6 +202,32 @@ class PipelineSettingService @Autowired constructor(
     fun isQueueTimeout(pipelineId: String, startTime: Long): Boolean {
         val waitQueueTimeMills = (getSetting(pipelineId)?.waitQueueTimeSecond ?: 3600) * 1000
         return System.currentTimeMillis() - startTime > waitQueueTimeMills
+    }
+
+    fun updatePipelineModel(
+        projectId: String,
+        userId: String,
+        updatePipelineModelRequest: UpdatePipelineModelRequest,
+        checkPermission: Boolean = true
+    ): Boolean {
+        val pipelineModelVersionList = updatePipelineModelRequest.pipelineModelVersionList
+        if (checkPermission) {
+            pipelineModelVersionList.forEach {
+                checkEditPermission(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = it.pipelineId,
+                    message = "The user (\$ userId) does not have permission to edit the pipeline (\$ pipelineId) under the project (\$ projectId)"
+                )
+            }
+        }
+        pipelineResDao.updatePipelineModel(
+            dslContext = dslContext,
+            userId = userId,
+            model = updatePipelineModelRequest.model,
+            pipelineModelVersionList = pipelineModelVersionList
+        )
+        return true
     }
 
     fun maxQueue(pipelineId: String): Int {
