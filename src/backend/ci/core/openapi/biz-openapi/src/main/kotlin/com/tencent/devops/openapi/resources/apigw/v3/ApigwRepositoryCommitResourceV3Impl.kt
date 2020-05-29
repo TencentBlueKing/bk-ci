@@ -23,47 +23,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw.v3
 
-package com.tencent.devops.dockerhost.cron
-
-import com.tencent.devops.dockerhost.services.DockerHostBuildService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.v3.ApigwRepositoryCommitResourceV3
+import com.tencent.devops.repository.api.UserRepositoryResource
+import com.tencent.devops.repository.pojo.commit.CommitResponse
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-// @Component
-class Runner @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService) {
-    private val logger = LoggerFactory.getLogger(Runner::class.java)
+@RestResource
+class ApigwRepositoryCommitResourceV3Impl @Autowired constructor(private val client: Client) : ApigwRepositoryCommitResourceV3 {
 
-    //    @Scheduled(initialDelay = 300 * 1000, fixedDelay = 3600 * 1000)
-    fun clearExitedContainer() {
-        try {
-            dockerHostBuildService.clearContainers()
-        } catch (t: Throwable) {
-            logger.error("clear exited containers encounter unknown exception", t)
-        }
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwRepositoryCommitResourceV3Impl::class.java)
     }
 
-    fun clearDockerRunTimeoutContainers() {
-        try {
-            dockerHostBuildService.clearDockerRunTimeoutContainers()
-        } catch (t: Throwable) {
-            logger.error("clear dockerRun timeout containers unknown exception", t)
-        }
-    }
-
-    fun clearLocalImages() {
-        try {
-            dockerHostBuildService.clearLocalImages()
-        } catch (t: Throwable) {
-            logger.error("clear local images encounter unknown exception", t)
-        }
-    }
-
-    fun refreshDockerIpStatus() {
-        try {
-            dockerHostBuildService.refreshDockerIpStatus()
-        } catch (t: Throwable) {
-            logger.error("refresh docker status error.", t)
-        }
+    override fun getRepositoryCommit(appCode: String?, apigwType: String?, userId: String, projectId: String, pipelineId: String, buildId: String): Result<List<CommitResponse>> {
+        logger.info("get repository commit projectId($projectId) pipelineId($pipelineId) buildId($buildId) by user $userId")
+        return client.get(UserRepositoryResource::class).getCommit(
+                buildId = buildId
+        )
     }
 }

@@ -89,6 +89,10 @@
     "stageOptionLabel": "本Stage执行条件",
     "stageTriggerDesc": "多个人员用英文逗号分隔",
     "skipStageDesc": "已跳过",
+    "pipelinesHistory": "执行历史",
+    "pipelinesEdit": "编辑",
+    "pipelinesPreview": "预览",
+    "pipelinesDetail": "执行详情",
     "execDetail": {
         "log": "日志",
         "setting": "配置",
@@ -367,7 +371,6 @@
         "logClose": "日志被关闭",
         "logErr": "其他异常",
         "stageStatus": "Stage",
-        "execHistory": "执行历史",
         "trendData": "安装包趋势",
         "chooseDateRange": "请选择日期范围",
         "noPackages": "该时间区间内无安装包",
