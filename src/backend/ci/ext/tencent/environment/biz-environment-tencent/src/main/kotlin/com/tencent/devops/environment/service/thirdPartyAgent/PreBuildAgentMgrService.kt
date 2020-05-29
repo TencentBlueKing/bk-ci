@@ -134,7 +134,8 @@ class PreBuildAgentMgrService @Autowired constructor(
                 link = agentUrlService.genAgentInstallUrl(agentRecord),
                 script = agentUrlService.genAgentInstallScript(agentRecord),
                 ip = agentRecord.ip,
-                hostName = agentRecord.hostname
+                hostName = agentRecord.hostname,
+                status = agentRecord.status
             )
 
             thirdPartyAgentDao.updateStatus(context, agentId, nodeId, projectId, AgentStatus.IMPORT_EXCEPTION)
@@ -151,7 +152,7 @@ class PreBuildAgentMgrService @Autowired constructor(
     fun listPreBuildAgent(userId: String, projectId: String, os: OS?): List<ThirdPartyAgentStaticInfo> {
         return thirdPartyAgentDao.listPreBuildAgent(dslContext, userId, projectId, os ?: OS.LINUX).filter { it.nodeId != null }.map {
             ThirdPartyAgentStaticInfo(
-                agentId = HashUtil.encodeLongId(it.nodeId),
+                agentId = HashUtil.encodeLongId(it.id), // 必须用it.id，不能是it.nodeId
                 projectId = it.projectId,
                 os = it.os,
                 secretKey = SecurityUtil.decrypt(it.secretKey),
@@ -160,7 +161,8 @@ class PreBuildAgentMgrService @Autowired constructor(
                 link = agentUrlService.genAgentInstallUrl(it),
                 script = agentUrlService.genAgentInstallScript(it),
                 ip = it.ip,
-                hostName = it.hostname
+                hostName = it.hostname,
+                status = it.status
             )
         }
     }

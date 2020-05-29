@@ -50,5 +50,7 @@ data class ThirdPartyAgentStaticInfo(
     @ApiModelProperty("ip", required = true)
     val ip: String,
     @ApiModelProperty("hostName", required = false)
-    val hostName: String?
+    val hostName: String?,
+    @ApiModelProperty("状态")
+    val status: Int?
 )
