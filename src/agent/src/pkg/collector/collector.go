@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	"pkg/util/systemutil"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/influxdata/telegraf/cmd/bktelegraf"
 
-	"github.com/astaxie/beego/logs"
-	telegraf "github.com/influxdata/telegraf/cmd/bk-telegraf"
 	"io/ioutil"
-	"pkg/config"
 	"strings"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/astaxie/beego/logs"
 )
 
 const (
@@ -181,7 +182,7 @@ func DoAgentCollect() {
 
 	writeTelegrafConfig()
 
-	tAgent, err := telegraf.GetTelegrafAgent(
+	tAgent, err := bktelegraf.GetTelegrafAgent(
 		fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), telegrafConfigFile),
 		fmt.Sprintf("%s/logs/telegraf.log", systemutil.GetWorkDir()),
 	)
