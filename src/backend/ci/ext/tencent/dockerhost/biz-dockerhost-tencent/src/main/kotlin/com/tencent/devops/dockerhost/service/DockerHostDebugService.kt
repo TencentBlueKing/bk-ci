@@ -242,7 +242,7 @@ class DockerHostDebugService(
             // docker stop
             val inspectInfo = dockerCli.inspectContainerCmd(containerInfo.containerId).exec()
             if ("exited" != inspectInfo.state.status) {
-                dockerCli.stopContainerCmd(containerInfo.containerId).withTimeout(3).exec()
+                dockerCli.stopContainerCmd(containerInfo.containerId).withTimeout(1).exec()
             }
         } catch (e: Throwable) {
             logger.error("Stop the container failed, containerId: ${containerInfo.containerId}, error msg: $e")
