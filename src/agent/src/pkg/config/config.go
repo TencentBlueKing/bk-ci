@@ -30,14 +30,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	bconfig "github.com/astaxie/beego/config"
-	"github.com/astaxie/beego/logs"
 	"io/ioutil"
-	"pkg/util/command"
-	"pkg/util/fileutil"
-	"pkg/util/systemutil"
 	"strconv"
 	"strings"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	bconfig "github.com/astaxie/beego/config"
+	"github.com/astaxie/beego/logs"
 )
 
 const (

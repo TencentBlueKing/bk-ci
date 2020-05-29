@@ -28,13 +28,14 @@ package cron
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/logs"
 	"io/ioutil"
 	"os"
-	"pkg/util"
-	"pkg/util/systemutil"
 	"strings"
 	"time"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/astaxie/beego/logs"
 )
 
 func CleanDumpFileJob(intervalInHours int, cleanBeforeInHours int) {
