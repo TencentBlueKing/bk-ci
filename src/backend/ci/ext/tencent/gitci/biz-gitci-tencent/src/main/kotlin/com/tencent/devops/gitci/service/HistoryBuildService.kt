@@ -26,7 +26,6 @@
 
 package com.tencent.devops.gitci.service
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -40,7 +39,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class HistoryBuildService @Autowired constructor(
@@ -48,7 +46,8 @@ class HistoryBuildService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val gitCISettingDao: GitCISettingDao
+    private val gitCISettingDao: GitCISettingDao,
+    private val repositoryConfService: RepositoryConfService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(HistoryBuildService::class.java)
@@ -60,7 +59,18 @@ class HistoryBuildService @Autowired constructor(
         logger.info("get history build list, gitProjectId: $gitProjectId")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
-        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
+        val conf = gitCISettingDao.getSetting(dslContext, gitProjectId)
+        if (conf == null) {
+            repositoryConfService.initGitCISetting(userId, gitProjectId)
+            return BuildHistoryPage(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = 0,
+                records = emptyList(),
+                hasDownloadPermission = false,
+                pipelineVersion = 0
+            )
+        }
 
         val count = gitRequestEventBuildDao.getRequestEventBuildCount(dslContext, gitProjectId)
         val gitRequestBuildList = gitRequestEventBuildDao.getRequestEventBuildList(dslContext, gitProjectId, pageNotNull, pageSizeNotNull)
@@ -70,12 +80,12 @@ class HistoryBuildService @Autowired constructor(
         if (null == buildHistoryList) {
             logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
             return BuildHistoryPage(
-                    pageNotNull,
-                    pageSizeNotNull,
-                    0,
-                    emptyList(),
-                    false,
-                    0
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = 0,
+                records = emptyList(),
+                hasDownloadPermission = false,
+                pipelineVersion = 0
             )
         }
 
@@ -87,12 +97,12 @@ class HistoryBuildService @Autowired constructor(
         }
 
         return BuildHistoryPage(
-                pageNotNull,
-                pageSizeNotNull,
-                count,
-                records,
-                false,
-                0
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            count = count,
+            records = records,
+            hasDownloadPermission = false,
+            pipelineVersion = 0
         )
     }
 

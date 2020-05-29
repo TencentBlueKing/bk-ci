@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.RepositoryConfResource
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
-import com.tencent.devops.gitci.service.GitProjectConfService
 import com.tencent.devops.gitci.service.RepositoryConfService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
@@ -40,7 +39,7 @@ import javax.ws.rs.core.Response
 @RestResource
 class RepositoryConfResourceImpl @Autowired constructor(
     private val repositoryService: RepositoryConfService,
-    private val gitProjectConfService: GitProjectConfService
+    private val repositoryConfService: RepositoryConfService
 ) : RepositoryConfResource {
 
     override fun disableGitCI(userId: String, gitProjectId: Long): Result<Boolean> {
@@ -62,8 +61,8 @@ class RepositoryConfResourceImpl @Autowired constructor(
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
-        if (!gitProjectConfService.isEnable(gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，请联系蓝盾助手")
+        if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
+            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
         }
     }
 }

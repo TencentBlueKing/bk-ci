@@ -24,24 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.prebuild.pojo
+package com.tencent.devops.gitci.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import com.tencent.devops.common.api.pojo.OS
 
-@ApiModel("启动构建参数")
-data class StartUpReq(
-    @ApiModelProperty("workspace", required = true)
-    val workspace: String,
-    @ApiModelProperty("yaml", required = true)
+@ApiModel("工蜂CI起始页配置信息-内容和属性")
+data class GitYamlContent(
+    @ApiModelProperty("YAML文件内容")
     val yaml: String,
-    @ApiModelProperty("os", required = true)
-    val os: OS,
-    @ApiModelProperty("ip", required = true)
-    val ip: String,
-    @ApiModelProperty("hostname", required = true)
-    val hostname: String,
-    @ApiModelProperty("extraParam", required = false)
-    val extraParam: ExtraParam?
+    @ApiModelProperty("显示的icon图标名")
+    val property: GitYamlProperty
 )

@@ -24,90 +24,70 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2
+package com.tencent.devops.gitci.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.quality.api.v2.pojo.op.ElementNameData
-import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
+import com.tencent.devops.gitci.pojo.GitStarterWebList
+import com.tencent.devops.gitci.pojo.GitYamlContent
+import com.tencent.devops.gitci.pojo.GitYamlProperty
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
 import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_QUALITY_METADATA"], description = "质量红线-基础数据")
-@Path("/op/metadata")
+@Api(tags = ["SERVICE_GIT_CI_STARTER"], description = "起始页面模板信息")
+@Path("/service/starter")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OPQualityMetadataResource {
-    @ApiOperation("获取质量红线基础数据列表")
-    @Path("/list")
+interface StarterWebResource {
+
+    @ApiOperation("获取所有模板信息-内容和配置")
     @GET
-    fun list(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+    @Path("/yaml/list")
+    fun getYamlList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<GitYamlContent>>
+
+    @ApiOperation("获取所有模板信息-配置")
+    @GET
+    @Path("/properties/list")
+    fun getPropertyList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("产出原子", required = false)
-        @QueryParam("elementName")
-        elementName: String?,
-        @ApiParam("工具/原子子类", required = false)
-        @QueryParam("elementDetail")
-        elementDetail: String?,
-        @ApiParam("搜索条件", required = false)
-        @QueryParam("searchString")
-        searchString: String?,
-        @ApiParam("页号", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("页码", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<Page<QualityMetaData>>
+        @ApiParam("指定类别名", required = false, defaultValue = "")
+        @QueryParam("类别名")
+        category: String?
+    ): Result<List<GitYamlProperty>>
 
-    @ApiOperation("获取产出原子elementName与elementType下拉列表")
-    @Path("/listElementNames")
+    @ApiOperation("获取工蜂CI起始页分类模板信息")
     @GET
-    fun getElementNames(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+    @Path("/web/list")
+    fun getWebList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
-    ): Result<List<ElementNameData>>
+    ): Result<GitStarterWebList>
 
-    @ApiOperation("获取工具/原子子类下拉列表")
-    @Path("/listElementDetails")
-    @GET
-    fun getElementDetails(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<List<String>>
-
-    @ApiOperation("批量导入元数据")
-    @Path("/batchSaveMetadata")
+    @ApiOperation("更新模板信息-内容和配置")
     @POST
-    fun batchSaveMetadata(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+    @Path("/yaml/update")
+    fun update(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        metadataItemList: List<Map<String, String>>
-    ): Result<Boolean>
-
-    @ApiOperation("删除元数据")
-    @Path("/metadata/{metadataId}/delete")
-    @DELETE
-    fun deleteMetadata(
-        @PathParam("metadataId")
-        metadataId: Long
-    ): Result<Boolean>
+        @ApiParam(value = "最新的所有模板属性", required = true)
+        properties: List<GitYamlContent>
+    ): Result<Int>
 }
