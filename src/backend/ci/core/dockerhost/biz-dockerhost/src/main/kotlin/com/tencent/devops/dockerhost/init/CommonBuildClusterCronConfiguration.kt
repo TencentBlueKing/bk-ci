@@ -56,7 +56,7 @@ class CommonBuildClusterCronConfiguration @Autowired constructor(
     override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {
         scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(10))
 
-        if (dockerHostConfig.runMode != null && (dockerHostConfig.runMode.equals("docker_build") || dockerHostConfig.runMode.equals(
+        if (dockerHostConfig.dockerhostMode != null && (dockerHostConfig.dockerhostMode.equals("docker_build") || dockerHostConfig.dockerhostMode.equals(
                 "codecc_build"
             ))
         ) {
@@ -73,6 +73,12 @@ class CommonBuildClusterCronConfiguration @Autowired constructor(
             scheduledTaskRegistrar.addFixedRateTask(
                 IntervalTask(
                     Runnable { runner.refreshDockerIpStatus() }, 5 * 1000, 1000
+                )
+            )
+
+            scheduledTaskRegistrar.addFixedRateTask(
+                IntervalTask(
+                    Runnable { runner.clearDockerRunTimeoutContainers() }, 1800 * 1000, 1000
                 )
             )
         }
