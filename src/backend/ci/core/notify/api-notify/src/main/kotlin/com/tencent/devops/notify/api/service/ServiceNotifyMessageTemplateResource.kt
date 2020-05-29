@@ -26,6 +26,8 @@
 package com.tencent.devops.notify.api.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.notify.pojo.NotifyContext
+import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -47,6 +49,14 @@ interface ServiceNotifyMessageTemplateResource {
     @Path("/send")
     fun sendNotifyMessageByTemplate(
         @ApiParam("使用模板发送消息通知请求报文体", required = true)
-        sendNotifyMessageTemplateRequest: SendNotifyMessageTemplateRequest
+        request: SendNotifyMessageTemplateRequest
     ): Result<Boolean>
+
+    @ApiOperation("获取模板填充后消息内容")
+    @POST
+    @Path("/getContext")
+    fun getNotifyMessageByTemplate(
+        @ApiParam("使用模板获取消息内容请求", required = true)
+        request: NotifyMessageContextRequest
+    ): Result<NotifyContext?>
 }
