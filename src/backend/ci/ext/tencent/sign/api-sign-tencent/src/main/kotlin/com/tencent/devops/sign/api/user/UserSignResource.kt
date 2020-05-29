@@ -51,18 +51,36 @@ interface UserSignResource {
     @ApiOperation("ipa包签名-定制证书")
     @POST
     @Path("/ipa/customized")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun ipaCustomizedSign(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("IPA包签名信息", required = true)
-        ipaSignRequest: IpaCustomizedSignRequest,
+//        @ApiParam("keystore应用ID", required = true)
+//        ipaSignRequest: IpaCustomizedSignRequest,
+//        @ApiParam("ipa包文件", required = true)
+//        @FormDataParam("ipaFile")
         @ApiParam("ipa包文件", required = true)
-        @FormDataParam("ipaFile")
-        ipaInputStream: InputStream,
-        @FormDataParam("ipaFile")
-        ipaDisposition: FormDataContentDisposition
+        ipaInputStream: InputStream
+//        ipaDisposition: FormDataContentDisposition
+    ): Result<String?>
+
+
+    @ApiOperation("ipa包签名-定制证书")
+    @POST
+    @Path("/ipa/customized2")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    fun ipaCustomizedSign2(
+            @ApiParam("userId", required = true)
+            @HeaderParam(AUTH_HEADER_USER_ID)
+            userId: String,
+//        @ApiParam("keystore应用ID", required = true)
+//        ipaSignRequest: IpaCustomizedSignRequest,
+//        @ApiParam("ipa包文件", required = true)
+//        @FormDataParam("ipaFile")
+            @ApiParam("ipa包文件", required = true)
+            ipaInputStream: InputStream
+//        ipaDisposition: FormDataContentDisposition
     ): Result<String?>
 
     @ApiOperation("获取Keystore某应用下所有证书/描述文件信息")

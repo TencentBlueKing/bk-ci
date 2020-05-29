@@ -46,7 +46,7 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Context
 
 @Api(tags = ["SERVICE_SIGN"], description = "服务接口-应用签名")
-@Path("/user/sign")
+@Path("/service/sign")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceSignResource {

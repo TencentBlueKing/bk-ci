@@ -30,12 +30,16 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.sign.api.user.UserSignResource
 import com.tencent.devops.sign.pojo.IosProfile
-import com.tencent.devops.sign.pojo.IpaCustomizedSignRequest
 import com.tencent.devops.sign.service.impl.IpaSignServiceImpl
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.apache.commons.codec.binary.Hex
+import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.compress.utils.IOUtils
 import org.springframework.beans.factory.annotation.Autowired
+import java.io.File
+import java.io.FileOutputStream
 import java.io.InputStream
-import javax.servlet.http.HttpServletResponse
+import java.security.MessageDigest
+
 
 @RestResource
 class UserSignResourceImpl @Autowired constructor(
@@ -44,16 +48,41 @@ class UserSignResourceImpl @Autowired constructor(
 
     override fun ipaCustomizedSign(
         userId: String,
-        ipaSignRequest: IpaCustomizedSignRequest,
-        ipaInputStream: InputStream,
-        ipaDisposition: FormDataContentDisposition
+//        ipaSignRequest: IpaCustomizedSignRequest,
+        ipaInputStream: InputStream
+//        ipaDisposition: FormDataContentDisposition
     ): Result<String?> {
-        return ipaSignService.resignCustomizedIpaPackage(
-            userId = userId,
-            ipaCustomizedSignRequest = ipaSignRequest,
-            inputStream = ipaInputStream,
-            disposition = ipaDisposition
-        )
+//        return Result(data = null)
+        var outputFile = File("/data/frey/test.ipa")
+        var outputStream = outputFile.outputStream()
+        ipaInputStream.copyTo(outputStream)
+//        return ipaSignService.resignCustomizedIpaPackage(
+//            userId = userId,
+//            ipaCustomizedSignRequest = ipaSignRequest,
+//            inputStream = ipaInputStream,
+//            disposition = ipaDisposition
+//        )
+        return Result(data = null)
+    }
+
+    override fun ipaCustomizedSign2(
+            userId: String,
+//        ipaSignRequest: IpaCustomizedSignRequest,
+            ipaInputStream: InputStream
+//        ipaDisposition: FormDataContentDisposition
+    ): Result<String?> {
+//        return Result(data = null)
+        var outputFile = File("/data/frey/test.ipa")
+        val mad5 = copyInputStreamToFileAndGetMd5Hex(ipaInputStream, outputFile)
+//        var outputStream = outputFile.outputStream()
+//        ipaInputStream.copyTo(outputStream)
+//        return ipaSignService.resignCustomizedIpaPackage(
+//            userId = userId,
+//            ipaCustomizedSignRequest = ipaSignRequest,
+//            inputStream = ipaInputStream,
+//            disposition = ipaDisposition
+//        )
+        return Result(data = null)
     }
 
     override fun getKeystoreCerts(userId: String, appId: String): Result<List<IosProfile>> {
@@ -61,8 +90,23 @@ class UserSignResourceImpl @Autowired constructor(
     }
 
 
-    override fun downloadIpa(userId: String, filePath: String, response: HttpServletResponse) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    fun copyInputStreamToFileAndGetMd5Hex(inputStream: InputStream, file: File?): String? {
+        val digest: MessageDigest = DigestUtils.getMd5Digest()
+        var outputStream: FileOutputStream? = null
+        try {
+            outputStream = FileOutputStream(file)
+            val buffer = ByteArray(8 * 1024)
+            var read = inputStream.read(buffer)
+            while (read > -1) {
+                // 计算MD5,顺便写到文件
+                digest.update(buffer, 0, read)
+                outputStream.write(buffer, 0, read)
+                read = inputStream.read(buffer)
+            }
+        } finally {
+            IOUtils.closeQuietly(outputStream)
+        }
+//        return ""
+        return Hex.encodeHexString(digest.digest())
     }
-
 }
