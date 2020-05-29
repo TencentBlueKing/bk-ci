@@ -225,6 +225,10 @@ class QualityMetadataService @Autowired constructor(
         }
     }
 
+    fun deleteMetadata(metadataId: Long) {
+        metadataDao.delete(listOf(metadataId), dslContext)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(QualityMetadataService::class.java)
     }

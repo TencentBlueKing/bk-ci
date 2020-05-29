@@ -98,7 +98,7 @@ class QualityIndicatorService @Autowired constructor(
                     val propertyMap = codeccToolNameMap.entries.mapIndexed { index, entry ->
                         entry.key to index
                     }.toMap()
-                    detailIndicatorMap = detailIndicatorMap.toSortedMap(Comparator { o1, o2 ->
+                    detailIndicatorMap = detailIndicatorMap.filter { propertyMap.containsKey(it.key) }.toSortedMap(Comparator { o1, o2 ->
                         (propertyMap[o1] ?: Int.MAX_VALUE) - (propertyMap[o2] ?: Int.MAX_VALUE)
                     })
                 }
@@ -560,34 +560,37 @@ class QualityIndicatorService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(QualityIndicatorService::class.java)
 
         val codeccToolNameMap = mapOf(
-                "COVERITY" to "Coverity",
-                "KLOCWORK" to "Klocwork",
-                "CPPLINT" to "CppLint",
-                "ESLINT" to "ESLint",
-                "PYLINT" to "PyLint",
-                "GOML" to "Gometalinter",
-                "CHECKSTYLE" to "Checkstyle",
-                "STYLECOP" to "StyleCop",
-                "DETEKT" to "detekt",
-                "PHPCS" to "PHPCS",
-                "SENSITIVE" to "敏感信息",
-                "CCN" to "圈复杂度",
-                "DUPC" to "重复率")
+            "COVERITY" to "Coverity",
+            "KLOCWORK" to "Klocwork",
+            "CPPLINT" to "CppLint",
+            "ESLINT" to "ESLint",
+            "PYLINT" to "PyLint",
+            "GOML" to "Gometalinter",
+            "CHECKSTYLE" to "Checkstyle",
+            "STYLECOP" to "StyleCop",
+            "DETEKT" to "detekt",
+            "PHPCS" to "PHPCS",
+            "SENSITIVE" to "敏感信息",
+            "CCN" to "圈复杂度",
+            "DUPC" to "重复率",
+            "OCCHECK" to "OCCheck",
+            "RIPS" to "啄木鸟漏洞扫描-PHP",
+            "WOODPECKER_SENSITIVE" to "啄木鸟敏感信息")
 
         private val codeccToolDescMap = mapOf(
-                "COVERITY" to "斯坦福大学科学家研究成果，静态源代码分析领域的领导者",
-                "KLOCWORK" to "业界广泛使用的商用代码检查工具，与Coverity互补",
-                "CPPLINT" to "谷歌开源的C++代码风格检查工具",
-                "ESLINT" to "JavaScript代码检查工具",
-                "PYLINT" to "Python代码风格检查工具",
-                "GOML" to "Golang静态代码分析工具",
-                "CHECKSTYLE" to "Java代码风格检查工具",
-                "STYLECOP" to "微软开源的C#静态代码分析工具",
-                "DETEKT" to "Kotlin静态代码分析工具 ",
-                "PHPCS" to "PHP代码风格检查工具",
-                "SENSITIVE" to "可扫描代码中有安全风险的敏感信息",
-                "CCN" to "通过计算函数的节点个数来衡量代码复杂性",
-                "DUPC" to "可以检测项目中复制粘贴和重复开发相同功能等问题",
-                "OCCHECK" to "OC代码风格检查工具")
+            "COVERITY" to "斯坦福大学科学家研究成果，静态源代码分析领域的领导者",
+            "KLOCWORK" to "业界广泛使用的商用代码检查工具，与Coverity互补",
+            "CPPLINT" to "谷歌开源的C++代码风格检查工具",
+            "ESLINT" to "JavaScript代码检查工具",
+            "PYLINT" to "Python代码风格检查工具",
+            "GOML" to "Golang静态代码分析工具",
+            "CHECKSTYLE" to "Java代码风格检查工具",
+            "STYLECOP" to "微软开源的C#静态代码分析工具",
+            "DETEKT" to "Kotlin静态代码分析工具 ",
+            "PHPCS" to "PHP代码风格检查工具",
+            "SENSITIVE" to "可扫描代码中有安全风险的敏感信息",
+            "CCN" to "通过计算函数的节点个数来衡量代码复杂性",
+            "DUPC" to "可以检测项目中复制粘贴和重复开发相同功能等问题",
+            "OCCHECK" to "OC代码风格检查工具")
     }
 }
