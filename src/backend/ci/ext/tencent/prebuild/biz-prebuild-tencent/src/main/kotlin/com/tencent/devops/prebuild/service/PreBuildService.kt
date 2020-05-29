@@ -402,22 +402,10 @@ class PreBuildService @Autowired constructor(
 
     fun getAgentStatus(userId: String, os: OS, ip: String, hostName: String): AgentStatus {
         val agent = getAgent(userId, os, ip, hostName)
-        if (null == agent) {
+        if (agent?.status == null) {
             logger.info("Agent not exists. need to install.")
             return AgentStatus.IMPORT_EXCEPTION
         }
-        return try {
-            logger.info("AgentId: ${agent.agentId}")
-            val agentStatus = client.get(ServiceNodeResource::class).listByHashIds(userId, getUserProjectId(userId), listOf(agent.agentId))
-            logger.info("nodeStatus: ${agentStatus.data?.first()?.nodeStatus}")
-            if (NodeStatus.NORMAL.statusName == agentStatus.data?.first()?.nodeStatus) {
-                AgentStatus.IMPORT_OK
-            } else {
-                AgentStatus.IMPORT_EXCEPTION
-            }
-        } catch (e: Exception) {
-            logger.error("listByHashIds exception: $e")
-            AgentStatus.IMPORT_EXCEPTION
-        }
+        return AgentStatus.fromStatus(agent.status!!)
     }
 }
