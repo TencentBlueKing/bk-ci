@@ -7,6 +7,29 @@ let allListLength = {}
 let allMainWidth = {}
 let allMainWordNum = {}
 
+let getTextWidth
+let englishLength = 8
+if (self.OffscreenCanvas) {
+    const canvas = new OffscreenCanvas(100, 1)
+    const context = canvas.getContext('2d')
+    context.font = 'normal 12px Consolas, "Courier New", monospace'
+    englishLength = context.measureText('a').width
+    const wordLength = context.measureText('我').width
+    getTextWidth = (text) => {
+        const wordNum = text.match(/[\u4e00-\u9fa5]/g) ? text.match(/[\u4e00-\u9fa5]/g).length : 0
+        const res = wordNum * wordLength + (text.length - wordNum) * englishLength
+        return res + 20
+    }
+} else {
+    // 兼容safari
+    getTextWidth = (text) => {
+        const wordNum = text.match(/[\u4e00-\u9fa5]/g) ? text.match(/[\u4e00-\u9fa5]/g).length : 0
+        const eNum = text.length - wordNum
+        const res = wordNum * 12 + eNum * 8 - eNum + 1
+        return res + 20
+    }
+}
+
 const colorList = [
     { key: '##[command]', color: 'rgba(146,166,202,1)' },
     { key: '##[info]', color: 'rgba(127,202,84,1)' },
@@ -80,7 +103,7 @@ function resetData () {
 
 function addListData ({ list, mainWidth }) {
     allMainWidth[curId] = mainWidth - 90
-    allMainWordNum[curId] = Math.floor(allMainWidth[curId] / 6.8)
+    allMainWordNum[curId] = Math.floor(allMainWidth[curId] / englishLength)
     tempListData = []
     if (allListLength[curId] === undefined) {
         allListLength[curId] = 0
@@ -113,7 +136,8 @@ function handleMessage (message, tempListData, aList, currentMsgIndex, color, ti
     let tempMes = ''
     let time = 0
     do {
-        [tempMes, message] = splitByChar(message)
+        tempMes = splitByChar(message)
+        message = message.slice(tempMes.length)
         // a标签单独处理
         aList.forEach((x) => {
             if (x.startIndex <= currentMsgIndex + tempMes.length && x.startIndex >= currentMsgIndex) {
@@ -158,7 +182,7 @@ function splitByChar (message) {
     let tempWidth = getTextWidth(tempMes)
     while (tempWidth > allMainWidth[curId] || (allMainWidth[curId] - tempWidth > 15 && message !== '')) {
         if (tempWidth > allMainWidth[curId]) {
-            message = tempMes.slice(-1) + message
+            message = `${tempMes.slice(-1)}${message}`
             tempMes = tempMes.slice(0, -1)
             tempWidth = getTextWidth(tempMes)
         } else {
@@ -167,27 +191,5 @@ function splitByChar (message) {
             tempWidth = getTextWidth(tempMes)
         }
     }
-    return [tempMes, message]
-}
-
-let getTextWidth
-if (self.OffscreenCanvas) {
-    const canvas = new OffscreenCanvas(100, 1)
-    const context = canvas.getContext('2d')
-    context.font = 'normal 12px Consolas, "Courier New", monospace'
-    const englishLength = context.measureText('a').width
-    const wordLength = context.measureText('我').width
-    getTextWidth = (text) => {
-        const wordNum = text.match(/[\u4e00-\u9fa5]/g) ? text.match(/[\u4e00-\u9fa5]/g).length : 0
-        const res = wordNum * wordLength + (text.length - wordNum) * englishLength
-        return res + 20
-    }
-} else {
-    // 兼容safari
-    getTextWidth = (text) => {
-        const wordNum = text.match(/[\u4e00-\u9fa5]/g) ? text.match(/[\u4e00-\u9fa5]/g).length : 0
-        const eNum = text.length - wordNum
-        const res = wordNum * 12 + eNum * 8 - eNum + 1
-        return res + 20
-    }
+    return tempMes
 }
