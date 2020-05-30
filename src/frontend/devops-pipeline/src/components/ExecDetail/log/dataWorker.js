@@ -91,59 +91,33 @@ function addListData ({ list, mainWidth }) {
         const newItemArr = (item.message || '').split(/\r\n|\n/)
         newItemArr.forEach((val) => {
             const { message, color } = handleColor(val || '')
-            const splitTextArr = splitText(message)
-            splitTextArr.forEach((message, i) => {
-                const currentIndex = allListLength[curId]
-                const newItem = {
-                    message,
-                    color,
-                    isNewLine: i > 0 ? (allRepeatLineNum[curId]++, true) : false,
-                    showIndex: currentIndex - allRepeatLineNum[curId],
-                    realIndex: currentIndex,
-                    timestamp: item.timestamp
-                }
-
-                tempListData.push(newItem)
-                allListLength[curId]++
-                if (tempListData.length > 20000) {
-                    dataPort.postMessage({ type: 'complateHandleData', list: tempListData.splice(0, 20000), curId })
-                }
-            })
+            const regex = /<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi
+            const aList = []
+            let tempA = null
+            while ((tempA = regex.exec(message)) != null) {
+                aList.push({
+                    content: tempA[0],
+                    href: tempA[1],
+                    text: tempA[2],
+                    startIndex: tempA.index
+                })
+            }
+            const msg = aList.length ? message.replace(regex, '$2') : message
+            handleMessage(msg, tempListData, aList, 0, color, item.timestamp, 0)
         })
     })
-    dataPort.postMessage({ type: 'complateHandleData', list: tempListData, curId })
+    dataPort.postMessage({ type: 'complateHandleData', list: tempListData.splice(0, tempListData.length), curId })
 }
 
-function splitText (message) {
-    const mesRes = []
-    const regex = /<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi
-    const aList = []
-    let tempA = null
-    const currentIndex = 0
-
-    while ((tempA = regex.exec(message)) != null) {
-        aList.push({
-            content: tempA[0],
-            href: tempA[1],
-            text: tempA[2],
-            startIndex: tempA.index
-        })
-    }
-    if (aList.length) message = message.replace(regex, '$2')
-
-    handleMessage(mesRes, message, currentIndex, aList)
-    return mesRes
-}
-
-function handleMessage (mesRes, message, currentIndex, aList) {
+function handleMessage (message, tempListData, aList, currentMsgIndex, color, timestamp, msgIndex) {
     let tempMes = ''
     let time = 0
-    while (time < 10000 && message.length > 0) {
+    do {
         [tempMes, message] = splitByChar(message)
         // a标签单独处理
         aList.forEach((x) => {
-            if (x.startIndex <= currentIndex + tempMes.length && x.startIndex >= currentIndex) {
-                const curStartIndex = x.startIndex - currentIndex
+            if (x.startIndex <= currentMsgIndex + tempMes.length && x.startIndex >= currentMsgIndex) {
+                const curStartIndex = x.startIndex - currentMsgIndex
                 const curLength = x.text.length
                 const diffDis = curStartIndex + curLength - tempMes.length
                 if (diffDis > 0) {
@@ -155,11 +129,27 @@ function handleMessage (mesRes, message, currentIndex, aList) {
             }
         })
 
-        currentIndex += tempMes.length
-        mesRes.push(tempMes)
+        const currentIndex = allListLength[curId]
+        const newItem = {
+            message: tempMes,
+            color,
+            isNewLine: msgIndex > 0 ? (allRepeatLineNum[curId]++, true) : false,
+            showIndex: currentIndex - allRepeatLineNum[curId],
+            realIndex: currentIndex,
+            timestamp
+        }
+
+        tempListData.push(newItem)
+        allListLength[curId]++
+        if (tempListData.length > 20000) {
+            dataPort.postMessage({ type: 'complateHandleData', list: tempListData.splice(0, 20000), curId })
+        }
+
+        currentMsgIndex += tempMes.length
         time++
-    }
-    if (message.length > 0) handleMessage(mesRes, message, currentIndex, aList)
+        msgIndex++
+    } while (time < 10000 && message.length > 0)
+    if (message.length > 0) handleMessage(message, tempListData, aList, currentMsgIndex, color, timestamp, msgIndex)
 }
 
 function splitByChar (message) {
