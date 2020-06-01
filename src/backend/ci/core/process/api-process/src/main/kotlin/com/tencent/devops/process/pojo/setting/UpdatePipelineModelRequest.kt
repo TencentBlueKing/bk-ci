@@ -26,14 +26,11 @@
 
 package com.tencent.devops.process.pojo.setting
 
-import com.tencent.devops.common.pipeline.Model
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("更新流水线模型请求报文")
 data class UpdatePipelineModelRequest(
-    @ApiModelProperty("流水线模型", required = true)
-    val model: Model,
     @ApiModelProperty("流水线模型版本集合", required = true)
     val pipelineModelVersionList: List<PipelineModelVersion>
 )
