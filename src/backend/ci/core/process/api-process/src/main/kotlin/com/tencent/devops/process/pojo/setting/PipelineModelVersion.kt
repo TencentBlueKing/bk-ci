@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.pojo.setting
 
+import com.tencent.devops.common.pipeline.Model
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -35,6 +36,8 @@ data class PipelineModelVersion(
     val projectId: String,
     @ApiModelProperty("流水线ID", required = true)
     val pipelineId: String,
+    @ApiModelProperty("流水线模型", required = true)
+    val model: Model,
     @ApiModelProperty("流水线模型版本", required = false)
-    val version: Int?
+    val version: Int? = null
 )
