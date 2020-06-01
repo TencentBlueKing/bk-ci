@@ -260,6 +260,7 @@
             }
         }
         & > .task-card-name {
+            display: block;
             width: 70%;
             margin-left: 24px;
         }
