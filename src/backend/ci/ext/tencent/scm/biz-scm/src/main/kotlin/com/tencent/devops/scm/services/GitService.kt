@@ -736,7 +736,7 @@ class GitService @Autowired constructor(
     fun getGitCIProjectInfo(gitProjectId: String, token: String): Result<GitCIProjectInfo?> {
         logger.info("[gitProjectId=$gitProjectId]|getGitCIProjectInfo with token=$token")
         val encodeId = URLEncoder.encode(gitProjectId, "utf-8") // 如果id为NAMESPACE_PATH则需要encode
-        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeId?access_token=$token")
+        val url = StringBuilder("${gitConfig.gitApiUrl}/api/v3/projects/$encodeId?access_token=$token")
         val request = Request.Builder()
             .url(url.toString())
             .get()
