@@ -30,11 +30,15 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.process.api.service.ServicePipelineSettingResource
+import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
+import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
 import com.tencent.devops.store.pojo.common.enums.ScopeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.TxStorePipelineService
+import org.apache.commons.lang.StringEscapeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,6 +49,9 @@ class TxStorePipelineServiceImpl : TxStorePipelineService {
 
     @Autowired
     private lateinit var  storeProjectRelDao: StoreProjectRelDao
+
+    @Autowired
+    private lateinit var  businessConfigDao: BusinessConfigDao
 
     @Autowired
     private lateinit var  redisOperation: RedisOperation
@@ -67,6 +74,7 @@ class TxStorePipelineServiceImpl : TxStorePipelineService {
         logger.info("updatePipelineModel userId:$userId,updateStorePipelineModelRequest:$updateStorePipelineModelRequest")
         val scopeType = updateStorePipelineModelRequest.scopeType
         val storeType = updateStorePipelineModelRequest.storeType
+        val businessConfig = businessConfigDao.get(dslContext, StoreTypeEnum.ATOM.name, "initBuildPipeline", "PIPELINE_MODEL")
         when (scopeType) {
             ScopeTypeEnum.ALL.name -> {
 
@@ -89,9 +97,26 @@ class TxStorePipelineServiceImpl : TxStorePipelineService {
                     page = null,
                     pageSize = null
                 )
-/*                val sendNotifyResult = client.get(ServicePipelineSettingResource::class)
+                var pipelineModel = businessConfig!!.configValue
+/*                val pipelineName = "am-$projectCode-$atomCode-${System.currentTimeMillis()}"
+                val paramMap = mapOf(
+                    "pipelineName" to pipelineName,
+                    "atomCode" to atomCode,
+                    "version" to version,
+                    "script" to StringEscapeUtils.escapeJava(script),
+                    "repositoryHashId" to atomRecord.repositoryHashId,
+                    "repositoryPath" to (buildInfo.value2() ?: "")
+                )
+                // 将流水线模型中的变量替换成具体的值
+                paramMap.forEach { (key, value) ->
+                    pipelineModel = pipelineModel.replace("#{$key}", value)
+                }
+                val sendNotifyResult = client.get(ServicePipelineSettingResource::class)
                     .updatePipelineModel(
                         userId = userId,
+                        updatePipelineModelRequest = UpdatePipelineModelRequest(
+
+                        )
                     )*/
             }
         }

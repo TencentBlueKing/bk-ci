@@ -31,6 +31,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("流水线模型版本")
 data class PipelineModelVersion(
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
     @ApiModelProperty("流水线ID", required = true)
     val pipelineId: String,
     @ApiModelProperty("流水线模型版本", required = false)
