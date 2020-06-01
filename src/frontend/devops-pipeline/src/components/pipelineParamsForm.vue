@@ -92,8 +92,7 @@
                     return {
                         ...param,
                         component: ParamComponentMap[param.type],
-                        name: 'devops' + param.id,
-                        id: undefined,
+                        name: param.id,
                         required: param.type === SVN_TAG || param.type === GIT_REF,
                         value: this.paramValues[param.id],
                         ...restParam
