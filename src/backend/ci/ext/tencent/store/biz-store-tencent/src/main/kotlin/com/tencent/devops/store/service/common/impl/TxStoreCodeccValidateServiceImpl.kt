@@ -185,6 +185,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
             templateCode = notifyTemplateCode,
             sender = DEVOPS,
             receivers = receivers,
+            titleParams = mapOf("storeName" to storeName),
             bodyParams = bodyParams
         )
         return Result(true)
