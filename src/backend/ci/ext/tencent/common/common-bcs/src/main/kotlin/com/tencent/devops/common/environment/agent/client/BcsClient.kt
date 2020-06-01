@@ -54,12 +54,12 @@ class BcsClient constructor(
         private val kind = "vmsets"
         private val JSON = MediaType.parse("application/json;charset=utf-8")
 
-        private val APIGW_SERVER = "http://api.apigw-biz.o.oa.com"
+        private val APIGW_SERVER = "http://bcss_api.apigw.o.oa.com"
     }
 
     fun createVM(clusterId: String, namespace: String, instanceCount: Int, image: String, resCpu: String, resMemory: String): List<BcsVmNode> {
         val token = bkAuthTokenApi.getAccessToken(serviceCode)
-        val url = "$APIGW_SERVER/api/bcss_api/prod/v1/containerware/vmsets?access_token=$token"
+        val url = "$APIGW_SERVER/prod/v1/containerware/vmsets?access_token=$token"
 
         val requestData = mapOf("apiVersion" to apiVersion,
                 "kind" to kind,
