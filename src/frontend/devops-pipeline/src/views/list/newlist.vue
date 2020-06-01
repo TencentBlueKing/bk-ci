@@ -35,15 +35,16 @@
 
                         <div class="pipeline-list-table" v-if="layout === 'table'">
                             <task-table
+                                :pipeline-fe-conf-map="pipelineFeConfMap"
                                 :list="slotProps.list">
                             </task-table>
                         </div>
                     </section>
-                    
+
                 </section>
             </template>
         </infinite-scroll>
-            
+
         <pipeline-template-popup :toggle-popup="toggleTemplatePopup" :is-show="templatePopupShow"></pipeline-template-popup>
 
         <pipeline-filter v-if="slideShow" :is-show="slideShow" @showSlide="showSlide" :is-disabled="isDisabled" :selected-filter="currentFilter" @filter="filterCommit" class="pipeline-filter"></pipeline-filter>
@@ -66,7 +67,7 @@
                         <div class="bk-form-content">
                             <input type="text" class="bk-form-input" :placeholder="$t('pipelineNameInputTips')"
                                 name="newPipelineName"
-                                v-validate="&quot;required|max:40&quot;"
+                                v-validate="'required|max:40'"
                                 v-model="copyConfig.newPipelineName"
                                 :class="{
                                     'is-danger': errors.has('newPipelineName')
@@ -82,7 +83,7 @@
                             <input type="text" class="bk-form-input" :placeholder="$t('pipelineDescInputTips')"
                                 name="newPipelineDesc"
                                 v-model="copyConfig.newPipelineDesc"
-                                v-validate.initial="&quot;max:100&quot;"
+                                v-validate.initial="'max:100'"
                                 :class="{
                                     'is-danger': errors.has('newPipelineDesc')
                                 }"
@@ -114,7 +115,7 @@
                             v-model="saveAsTemp.templateName"
                             :class="{ 'is-danger': errors.has('saveTemplateName') }"
                             name="saveTemplateName"
-                            v-validate="&quot;required|max:30&quot;"
+                            v-validate="'required|max:30'"
                             maxlength="30"
                         >
                     </div>
@@ -448,6 +449,7 @@
                     const pipelineFeConfMap = response.records.reduce((pipelineFeConfMap, item, index) => {
                         pipelineFeConfMap[item.pipelineId] = {
                             name: item.pipelineName,
+                            pipelineName: item.pipelineName,
                             desc: typeof item.pipelineDesc === 'string' && item.pipelineDesc.trim(),
                             isRunning: false,
                             status: '',
@@ -560,7 +562,7 @@
                         isCollect
                     })
                     pipeline.hasCollect = isCollect
-                    
+
                     this.pipelineFeConfMap[pipelineId].extMenu[1].text = isCollect ? this.$t('uncollect') : this.$t('collect')
                     if (this.currentViewId === 'collect' && !isCollect) {
                         this.$store.commit('pipelines/removePipelineById', pipelineId)
@@ -606,7 +608,6 @@
                     statusMap
                 } = this
                 const knownErrorList = JSON.parse(localStorage.getItem('pipelineKnowError')) || {}
-                console.log(data)
                 Object.keys(data).map(pipelineId => {
                     const item = data[pipelineId]
                     if (item) {
@@ -686,7 +687,7 @@
                                 }
                             ],
                             runningInfo: {
-                                time: convertMStoStringByRule(status === 'error' ? (item.latestBuildEndTime - item.latestBuildStartTime) : (item.pipelinerentTimestamp - item.latestBuildStartTime)),
+                                time: convertMStoStringByRule(status === 'error' ? (item.latestBuildEndTime - item.latestBuildStartTime) : (item.currentTimestamp - item.latestBuildStartTime)),
                                 percentage: this.calcPercentage(item),
                                 log: item.latestBuildTaskName,
                                 buildCount: item.runningBuildCount || 0
@@ -754,7 +755,7 @@
                     curPipeline.latestBuildId = res.id
 
                     // 重置执行进度
-                    
+
                     this.pipelineFeConfMap[pipelineId] = {
                         ...this.pipelineFeConfMap[pipelineId],
                         runningInfo: {
@@ -835,7 +836,7 @@
                     }
                 } catch (err) {
                     if (err.code === 403) { // 没有权限终止
-                        this.setPermissionConfig(`${this.$t('pipeline')}：${feConfig.name}`, this.$t('exec'), pipelineId)
+                        this.setPermissionConfig(`${this.$t('pipeline')}：${feConfig.pipelineName}`, this.$t('exec'), pipelineId)
                     } else {
                         this.$showTips({
                             message: err.message || err,
@@ -893,7 +894,7 @@
              */
             copyAsTemplate (pipelineId) {
                 const feConfig = this.pipelineFeConfMap[pipelineId]
-                this.saveAsTemp.templateName = `${feConfig.name}_template`
+                this.saveAsTemp.templateName = `${feConfig.pipelineName}_template`
                 this.saveAsTemp.isShow = true
                 this.saveAsTemp.pipelineId = pipelineId
             },
@@ -935,7 +936,7 @@
                     copyDialogConfig
                 } = this
                 const curPipeline = this.pipelineFeConfMap[pipelineId]
-                this.copyConfig.newPipelineName = `${curPipeline.name}_copy`
+                this.copyConfig.newPipelineName = `${curPipeline.pipelineName}_copy`
                 copyDialogConfig.isShow = true
                 copyDialogConfig.pipelineId = pipelineId
             },
@@ -947,16 +948,11 @@
                     $store
                 } = this
                 const curPipeline = this.pipelineFeConfMap[pipelineId]
-                const content = `${this.$t('newlist.deletePipeline')}: ${curPipeline.name}?`
+                const content = `${this.$t('newlist.deletePipeline')}: ${curPipeline.pipelineName}?`
 
                 navConfirm({ type: 'warning', content })
                     .then(() => {
                         let message, theme
-                        const {
-                            loading
-                        } = this
-
-                        loading.title = this.$t('newlist.deleteTips')
                         this.togglePageLoading(true)
                         setTimeout(async () => {
                             try {
