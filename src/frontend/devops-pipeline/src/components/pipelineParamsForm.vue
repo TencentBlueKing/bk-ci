@@ -7,7 +7,7 @@
                 :error-msg="errors.first(param.id)"
                 :label="param.id">
                 <section class="component-row">
-                    <component :is="param.component" v-validate="{ required: param.required }" :handle-change="handleParamUpdate" v-bind="param" :disabled="disabled" style="width: 100%;"></component>
+                    <component :is="param.component" v-validate="{ required: param.required }" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;"></component>
                     <span class="meta-data" v-show="showMetadata(param.type, param.value)">{{ $t('metaData') }}
                         <aside class="metadata-box">
                             <metadata-list :is-left-render="(index % 2) === 1" :path="param.type === 'ARTIFACTORY' ? param.value : ''"></metadata-list>
@@ -131,7 +131,7 @@
             },
 
             getParamByName (name) {
-                return this.paramList.find(param => param.name === name)
+                return this.paramList.find(param => `devops${param.name}` === name)
             },
 
             handleParamUpdate (name, value) {
@@ -139,7 +139,7 @@
                 if (isMultipleParam(param.type)) { // 复选框，需要将数组转化为逗号隔开的字符串
                     value = Array.isArray(value) ? value.join(',') : ''
                 }
-                this.handleParamChange(name, value)
+                this.handleParamChange(param.name, value)
             },
             showMetadata (type, value) {
                 return type === 'ARTIFACTORY' && value && this.$route.path.indexOf('preview')
