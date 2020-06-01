@@ -34,6 +34,7 @@ import org.springframework.stereotype.Repository
 
 @Repository(value = "IMAGE_COMMON_DAO")
 class ImageCommonDao : AbstractStoreCommonDao() {
+
     override fun getNewestStoreNameByCode(dslContext: DSLContext, storeCode: String): String? {
         return with(TImage.T_IMAGE) {
             dslContext.select(IMAGE_NAME).from(this)
@@ -56,6 +57,21 @@ class ImageCommonDao : AbstractStoreCommonDao() {
     override fun getStoreNameById(dslContext: DSLContext, storeId: String): String? {
         return with(TImage.T_IMAGE) {
             dslContext.select(IMAGE_NAME).from(this).where(ID.eq(storeId)).fetchOne(0, String::class.java)
+        }
+    }
+
+    override fun getLatestStoreInfoListByCodes(
+        dslContext: DSLContext,
+        storeCodeList: List<String>
+    ): Result<out Record>? {
+        return with(TImage.T_IMAGE) {
+            dslContext.select(
+                IMAGE_CODE.`as`("storeCode"),
+                VERSION.`as`("version")
+            ).from(this)
+                .where(IMAGE_CODE.`in`(storeCodeList))
+                .and(LATEST_FLAG.eq(true))
+                .fetch()
         }
     }
 }

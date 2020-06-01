@@ -35,6 +35,7 @@ import org.springframework.stereotype.Repository
 
 @Repository(value = "SERVICE_COMMON_DAO")
 class ServiceCommonDao : AbstractStoreCommonDao() {
+
     override fun getNewestStoreNameByCode(dslContext: DSLContext, storeCode: String): String? {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.select(SERVICE_NAME).from(this)
@@ -58,5 +59,12 @@ class ServiceCommonDao : AbstractStoreCommonDao() {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.select(SERVICE_NAME).from(this).where(ID.eq(storeId)).fetchOne(0, String::class.java)
         }
+    }
+
+    override fun getLatestStoreInfoListByCodes(
+        dslContext: DSLContext,
+        storeCodeList: List<String>
+    ): Result<out Record>? {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

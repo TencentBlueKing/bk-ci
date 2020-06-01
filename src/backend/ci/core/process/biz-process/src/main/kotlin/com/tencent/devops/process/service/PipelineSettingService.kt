@@ -223,7 +223,6 @@ class PipelineSettingService @Autowired constructor(
         pipelineResDao.updatePipelineModel(
             dslContext = dslContext,
             userId = userId,
-            model = updatePipelineModelRequest.model,
             pipelineModelVersionList = pipelineModelVersionList
         )
         return true
