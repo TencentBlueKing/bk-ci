@@ -110,14 +110,6 @@ class RepositoryConfService @Autowired constructor(
         } else {
             gitRepoConf.projectCode
         }
-
-        // add to gray project
-        try {
-            client.get(OPProjectResource::class).setGrayProject(OpProjectGraySetRequest(1, listOf(projectCode!!)))
-        } catch (e: Throwable) {
-            logger.error("Set project to gray failed ", e)
-        }
-
         gitCISettingDao.saveSetting(dslContext, repositoryConf, projectCode!!)
         return true
     }
