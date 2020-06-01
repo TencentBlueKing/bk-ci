@@ -26,17 +26,46 @@
 
 package com.tencent.devops.repository.service.scm
 
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Primary
 @Service
-class TencentGitCiService @Autowired constructor(val client: Client) {
+class TencentGitCiService @Autowired constructor(
+    private val gitService: IGitService,
+    private val client: Client
+) {
+    private val projectTokenCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(30, TimeUnit.DAYS)
+        .build(object : CacheLoader<String, String>() {
+            override fun load(projectName: String): String {
+                return getToken(projectName)?.accessToken
+                    ?: throw RuntimeException("get auth token fail for repo: $projectName")
+            }
+        })
+
     fun getToken(gitProjectId: String): GitToken? {
         return client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data
+    }
+
+    fun getFileContent(repoUrl: String, filePath: String, ref: String?, subModule: String?): String {
+        val projectName = if (subModule.isNullOrBlank()) GitUtils.getProjectName(repoUrl) else subModule!!
+        val token = projectTokenCache.get(projectName)
+        return gitService.getGitFileContent(
+            repoName = projectName,
+            filePath = filePath.removePrefix("/"),
+            authType = RepoAuthType.OAUTH,
+            token = token,
+            ref = ref ?: "master")
     }
 }

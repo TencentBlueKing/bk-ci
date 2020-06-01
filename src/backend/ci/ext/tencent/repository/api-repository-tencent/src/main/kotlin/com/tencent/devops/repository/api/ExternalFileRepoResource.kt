@@ -24,33 +24,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.experience.pojo
+package com.tencent.devops.repository.api
 
-import com.tencent.devops.experience.pojo.enums.ArtifactoryType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@ApiModel("版本体验-创建发布信息")
-data class ExperienceServiceCreate(
-    @ApiModelProperty("文件路径", required = true)
-    val path: String,
-    @ApiModelProperty("版本仓库类型", required = true)
-    val artifactoryType: ArtifactoryType,
-    @ApiModelProperty("截止日期", required = true)
-    val expireDate: Long,
-    @ApiModelProperty("体验组", required = true)
-    val experienceGroups: Set<String>,
-    @ApiModelProperty("内部名单", required = true)
-    val innerUsers: Set<String>,
-    @ApiModelProperty("外部名单", required = true)
-    val outerUsers: String,
-    @ApiModelProperty("通知类型", required = true)
-    val notifyTypes: Set<NotifyType>,
-    @ApiModelProperty("是否开启企业微信群", required = true)
-    val enableWechatGroups: Boolean = true,
-    @ApiModelProperty("企业微信群", required = true)
-    val wechatGroups: String,
-    @ApiModelProperty("版本体验描述", required = false)
-    val description: String? = ""
+@Api(tags = ["EXTERNAL_FILE_REPO"], description = "外部-文件-仓库资源")
+@Path("/external/file/repo/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ExternalFileRepoResource {
 
-)
+    @ApiOperation("获取仓库单个文件内容")
+    @GET
+    @Path("/getFileContent")
+    fun getFileContent(
+        @ApiParam(value = "代码库url")
+        @QueryParam("repoUrl")
+        repoUrl: String,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String,
+        @ApiParam(value = "分支或者commit id（git）")
+        @QueryParam("branch")
+        ref: String?,
+        @ApiParam(value = "子模块项目名称")
+        @QueryParam("subModule")
+        subModule: String? = null
+    ): Result<String>
+}
