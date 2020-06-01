@@ -579,12 +579,12 @@ export function getQueryParamList (arr = [], key) {
     if (Array.isArray(arr) && arr.length > 0) {
         const arrLen = arr.length
         return arr.reduce((result, item, index) => {
-            result += `${key}=${item}`
+            result += `${key}=${encodeURIComponent(item)}`
             if (index < arrLen - 1) result += '&'
             return result
         }, '')
     } else if (arr && typeof arr === 'string') {
-        return `${key}=${arr}`
+        return `${key}=${encodeURIComponent(arr)}`
     }
 }
 
