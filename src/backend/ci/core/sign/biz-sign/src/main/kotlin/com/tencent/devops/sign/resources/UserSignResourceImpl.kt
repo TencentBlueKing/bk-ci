@@ -37,18 +37,18 @@ import javax.servlet.http.HttpServletResponse
 
 @RestResource
 class UserSignResourceImpl @Autowired constructor(
-    private val ipaSignService: IpaSignService
+        private val ipaSignService: IpaSignService
 ) : UserSignResource {
 
     override fun ipaSign(
-        userId: String,
-        ipaInputStream: InputStream,
-        ipaDisposition: FormDataContentDisposition
+            userId: String,
+            ipaSignInfo: String?,
+            ipaInputStream: InputStream
     ): Result<String?> {
         return ipaSignService.resignIpaPackage(
-            userId = userId,
-            inputStream = ipaInputStream,
-            disposition = ipaDisposition
+                userId = userId,
+                ipaSignInfo = ipaSignInfo,
+                inputStream = ipaInputStream
         )
     }
 

@@ -26,6 +26,7 @@
 
 package com.tencent.devops.sign.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.sign.pojo.IosProfile
 import com.tencent.devops.sign.pojo.IpaCustomizedSignRequest
@@ -52,12 +53,10 @@ interface ServiceSignResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun ipaCustomizedSign(
         @ApiParam("IPA包签名信息", required = true)
-        ipaSignRequest: IpaCustomizedSignRequest,
+        @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
+        ipaSignInfo: String,
         @ApiParam("ipa包文件", required = true)
-        @FormDataParam("ipaFile")
-        ipaInputStream: InputStream,
-        @FormDataParam("ipaFile")
-        ipaDisposition: FormDataContentDisposition
+        ipaInputStream: InputStream
     ): Result<String?>
 
     @ApiOperation("获取Keystore某应用下所有证书/描述文件信息")

@@ -26,6 +26,7 @@
 
 package com.tencent.devops.sign.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -56,23 +57,22 @@ interface ServiceSignResource {
     @Path("/ipa/wildcard")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun ipaSign(
-        userId: String,
-        @ApiParam("ipa包文件", required = true)
-        @FormDataParam("ipaFile")
-        ipaInputStream: InputStream,
-        @FormDataParam("ipaFile")
-        ipaDisposition: FormDataContentDisposition
+            @ApiParam("IPA包签名信息", required = false)
+            @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
+            ipaSignInfo: String?,
+            @ApiParam("ipa包文件", required = true)
+            ipaInputStream: InputStream
     ): Result<String?>
 
     @ApiOperation("下载文件")
     @GET
     @Path("/file/download")
     fun downloadIpa(
-        userId: String,
-        @ApiParam("文件路径", required = true)
-        @QueryParam("filePath")
-        filePath: String,
-        @Context
-        response: HttpServletResponse
+            userId: String,
+            @ApiParam("文件路径", required = true)
+            @QueryParam("filePath")
+            filePath: String,
+            @Context
+            response: HttpServletResponse
     )
 }

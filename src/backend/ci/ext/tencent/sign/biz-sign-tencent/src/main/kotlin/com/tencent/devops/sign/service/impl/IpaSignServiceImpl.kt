@@ -22,32 +22,32 @@ class IpaSignServiceImpl : IpaSignService {
 
     override fun resignIpaPackage(
         userId: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
+        ipaSignInfo: String?,
+        inputStream: InputStream
     ): Result<String?> {
-        logger.info("the upload file info is:$disposition")
-        val fileName = String(disposition.fileName.toByteArray(Charset.forName("ISO8859-1")), Charset.forName("UTF-8"))
-        val index = fileName.lastIndexOf(".")
-        val fileSuffix = fileName.substring(index + 1)
+        logger.info("the upload file info is:$ipaSignInfo")
+//        val fileName = String(disposition.fileName.toByteArray(Charset.forName("ISO8859-1")), Charset.forName("UTF-8"))
+//        val index = fileName.lastIndexOf(".")
+//        val fileSuffix = fileName.substring(index + 1)
+//
+//        if (!fileSuffix.contains("ipa") && !fileSuffix.contains("IPA")) {
+//            throw InvalidParamException(
+//                message = "该文件不是正确的IPA包",
+//                params = arrayOf(fileName)
+//            )
+//        }
+//
+//        val file = Files.createTempFile(UUIDUtil.generate(), ".$fileSuffix").toFile()
+//        file.outputStream().use {
+//            inputStream.copyTo(it)
+//        }
+//
+//        file.copyTo(
+//            target = File(workspace + File.separator + fileName),
+//            overwrite = true
+//        )
 
-        if (!fileSuffix.contains("ipa") && !fileSuffix.contains("IPA")) {
-            throw InvalidParamException(
-                message = "该文件不是正确的IPA包",
-                params = arrayOf(fileName)
-            )
-        }
-
-        val file = Files.createTempFile(UUIDUtil.generate(), ".$fileSuffix").toFile()
-        file.outputStream().use {
-            inputStream.copyTo(it)
-        }
-
-        file.copyTo(
-            target = File(workspace + File.separator + fileName),
-            overwrite = true
-        )
-
-        return Result(fileName)
+        return Result("")
     }
 
     fun resignCustomizedIpaPackage(

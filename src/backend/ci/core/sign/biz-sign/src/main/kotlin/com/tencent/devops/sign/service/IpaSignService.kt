@@ -7,7 +7,7 @@ import java.io.InputStream
 interface IpaSignService {
     fun resignIpaPackage(
         userId: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
+        ipaSignInfo: String?,
+        inputStream: InputStream
     ): Result<String?>
 }

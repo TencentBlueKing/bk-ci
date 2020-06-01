@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.sign.api.user.UserSignResource
 import com.tencent.devops.sign.pojo.IosProfile
+import com.tencent.devops.sign.pojo.IpaCustomizedSignRequest
 import com.tencent.devops.sign.service.impl.IpaSignServiceImpl
 import org.apache.commons.codec.binary.Hex
 import org.apache.commons.codec.digest.DigestUtils
@@ -43,13 +44,13 @@ import java.security.MessageDigest
 
 @RestResource
 class UserSignResourceImpl @Autowired constructor(
-    private val ipaSignService: IpaSignServiceImpl
+        private val ipaSignService: IpaSignServiceImpl
 ) : UserSignResource {
 
     override fun ipaCustomizedSign(
-        userId: String,
-//        ipaSignRequest: IpaCustomizedSignRequest,
-        ipaInputStream: InputStream
+            userId: String,
+            ipaSignRequest: String?,
+            ipaInputStream: InputStream
 //        ipaDisposition: FormDataContentDisposition
     ): Result<String?> {
 //        return Result(data = null)
@@ -67,7 +68,7 @@ class UserSignResourceImpl @Autowired constructor(
 
     override fun ipaCustomizedSign2(
             userId: String,
-//        ipaSignRequest: IpaCustomizedSignRequest,
+            ipaSignRequest: String,
             ipaInputStream: InputStream
 //        ipaDisposition: FormDataContentDisposition
     ): Result<String?> {

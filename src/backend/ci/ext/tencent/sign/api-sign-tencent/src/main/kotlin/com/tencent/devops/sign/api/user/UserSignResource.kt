@@ -26,6 +26,7 @@
 
 package com.tencent.devops.sign.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -53,16 +54,14 @@ interface UserSignResource {
     @Path("/ipa/customized")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun ipaCustomizedSign(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-//        @ApiParam("keystore应用ID", required = true)
-//        ipaSignRequest: IpaCustomizedSignRequest,
-//        @ApiParam("ipa包文件", required = true)
-//        @FormDataParam("ipaFile")
-        @ApiParam("ipa包文件", required = true)
-        ipaInputStream: InputStream
-//        ipaDisposition: FormDataContentDisposition
+            @ApiParam("userId", required = true)
+            @HeaderParam(AUTH_HEADER_USER_ID)
+            userId: String,
+            @ApiParam("IPA包签名信息", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
+            ipaSignRequest: String?,
+            @ApiParam("ipa包文件", required = true)
+            ipaInputStream: InputStream
     ): Result<String?>
 
 
@@ -74,10 +73,9 @@ interface UserSignResource {
             @ApiParam("userId", required = true)
             @HeaderParam(AUTH_HEADER_USER_ID)
             userId: String,
-//        @ApiParam("keystore应用ID", required = true)
-//        ipaSignRequest: IpaCustomizedSignRequest,
-//        @ApiParam("ipa包文件", required = true)
-//        @FormDataParam("ipaFile")
+            @ApiParam("IPA包签名信息", required = true)
+            @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
+            ipaSignRequest: String,
             @ApiParam("ipa包文件", required = true)
             ipaInputStream: InputStream
 //        ipaDisposition: FormDataContentDisposition
@@ -88,11 +86,11 @@ interface UserSignResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/parameters")
     @Path("/keystore/{appId}/certs")
     fun getKeystoreCerts(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("appId")
-        appId: String
+            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+            @HeaderParam(AUTH_HEADER_USER_ID)
+            userId: String,
+            @ApiParam("项目ID", required = true)
+            @PathParam("appId")
+            appId: String
     ): Result<List<IosProfile>>
 }
