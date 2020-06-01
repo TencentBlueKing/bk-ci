@@ -136,7 +136,6 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
     fun updatePipelineModel(
         dslContext: DSLContext,
         userId: String,
-        model: Model,
         pipelineModelVersionList: List<PipelineModelVersion>
     ) {
         with(T_PIPELINE_RESOURCE) {
@@ -148,7 +147,7 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
                     conditions.add(VERSION.eq(version))
                 }
                 dslContext.update(this)
-                    .set(MODEL, objectMapper.writeValueAsString(model))
+                    .set(MODEL, objectMapper.writeValueAsString(it.model))
                     .where(conditions)
             }
             dslContext.batch(updateStep).execute()
