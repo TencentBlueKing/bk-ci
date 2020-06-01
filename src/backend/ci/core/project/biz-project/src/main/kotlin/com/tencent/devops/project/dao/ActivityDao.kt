@@ -54,6 +54,7 @@ class ActivityDao {
                 TYPE,
                 NAME,
                 LINK,
+                ENGLISH_NAME,
                 CREATE_TIME,
                 STATUS,
                 CREATOR
@@ -62,6 +63,7 @@ class ActivityDao {
                     type.name,
                     activityInfo.name,
                     activityInfo.link,
+                    activityInfo.englishName,
                     LocalDateTime.now(),
                     ActivityStatus.ACTIVITY.name,
                     userId
@@ -119,6 +121,7 @@ class ActivityDao {
                 .set(NAME, opActivityUpdate.name)
                 .set(LINK, opActivityUpdate.link)
                 .set(TYPE, opActivityUpdate.type)
+                .set(ENGLISH_NAME, opActivityUpdate.englishName)
                 .set(STATUS, opActivityUpdate.status)
                 .where(ID.eq(activityId))
                 .execute()
