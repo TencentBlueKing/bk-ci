@@ -11,14 +11,15 @@
             {{ $t('newlist.applyPerm') }}
         </bk-button>
         <div class="task-card-header">
-            <p
+            <a
                 class="task-card-name text-overflow"
-                :title="config.name"
-                @click.stop="emitEventHandler('title-click', config.pipelineId)"
+                :title="config.pipelineName"
+                :href="getHistoryURL(config.pipelineId)"
+                @click.stop.prevent="e => goHistory(e, config.pipelineId)"
             >
                 <span class="template-tag" v-if="config.isInstanceTemplate">{{ $t('newlist.temp') }}</span>
-                {{ config.name }}
-            </p>
+                {{ config.pipelineName }}
+            </a>
             <!-- 状态切换按钮 start -->
             <triggers
                 :pipeline-id="config.pipelineId"
@@ -28,7 +29,7 @@
             ></triggers>
             <!-- 状态切换按钮 end -->
             <!-- 角标 start -->
-            <!-- <bk-popover :content="config.name" placement="right" class="corner-tips"> -->
+            <!-- <bk-popover :content="config.pipelineName" placement="right" class="corner-tips"> -->
             <div
                 class="corner-mark"
                 :class="config.status"
@@ -78,13 +79,14 @@
 
         <!-- 任务执行时，显示进度条 start -->
         <template v-else>
-            <div
+            <a
                 class="task-card-running-multi"
-                @click.stop="emitEventHandler('title-click', config.pipelineId)"
+                :href="getHistoryURL(config.pipelineId)"
+                @click.stop.prevent="e => goHistory(e, config.pipelineId)"
                 v-if="config.runningInfo.buildCount > 1"
             >
                 {{ $t('newlist.multipleBuilds') }}
-            </div>
+            </a>
             <div class="task-card-running" @click.stop="cardContentClick" v-else>
                 <div class="running-detail clearfix">
                     <div class="running-detail-text fl">{{ config.runningInfo.time }}</div>
@@ -119,17 +121,10 @@
 </template>
 
 <script>
-    import { bus } from '@/utils/bus'
-    import progress from '@/components/devops/progressBar'
-    import triggers from '@/components/pipeline/triggers'
-    import extMenu from '@/components/pipelineList/extMenu'
+    import mixins from '../pipeline-list-mixins'
 
     export default {
-        components: {
-            'progress-bar': progress,
-            triggers,
-            extMenu
-        },
+        mixins: [mixins],
         props: {
             canManualStartup: {
                 type: Boolean,
@@ -181,12 +176,6 @@
         },
         methods: {
             /**
-             *  参数为pipelineId的触发全局bus事件
-             */
-            emitEventHandler (eventName, pipelineId) {
-                bus.$emit(eventName, pipelineId)
-            },
-            /**
              * 点击content部分的回调
              */
             cardContentClick () {
@@ -210,20 +199,6 @@
                         }
                     })
                 }
-            },
-            triggersExec ({ pipelineId, ...params }) {
-                bus.$emit('triggers-exec', params, pipelineId)
-            },
-            titleClickHandler (pipelineId) {
-                bus.$emit('title-click', pipelineId)
-            },
-            applyPermission (config) {
-                bus.$emit(
-                    'set-permission',
-                    `${this.$t('pipeline')}：${config.name}`,
-                    this.$t('newlist.view'),
-                    config.pipelineId
-                )
             }
         }
     }
@@ -285,6 +260,7 @@
             }
         }
         & > .task-card-name {
+            display: block;
             width: 70%;
             margin-left: 24px;
         }
@@ -361,6 +337,7 @@
         position: relative;
     }
     &-running-multi {
+        display: block;
         cursor: pointer;
         font-size: 14px;
         line-height: 155px;
