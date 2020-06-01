@@ -60,4 +60,21 @@ class AtomCommonDao : AbstractStoreCommonDao() {
                 .fetch()
         }
     }
+
+    override fun getLatestStoreInfoListByCodes(
+        dslContext: DSLContext,
+        storeCodeList: List<String>
+    ): Result<out Record>? {
+        return with(TAtom.T_ATOM) {
+            dslContext.select(
+                ATOM_CODE.`as`("storeCode"),
+                VERSION.`as`("version"),
+                REPOSITORY_HASH_ID.`as`("repositoryHashId"),
+                CODE_SRC.`as`("codeSrc")
+            ).from(this)
+                .where(ATOM_CODE.`in`(storeCodeList))
+                .and(LATEST_FLAG.eq(true))
+                .fetch()
+        }
+    }
 }
