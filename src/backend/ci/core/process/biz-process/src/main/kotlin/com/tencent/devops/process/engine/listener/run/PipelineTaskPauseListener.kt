@@ -179,7 +179,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         LogUtils.addYellowLine(
             rabbitTemplate = rabbitTemplate,
             buildId = buildId,
-            message = "【$taskName】已完成人工处理。处理人:$userId, 操作：暂停",
+            message = "【$taskName】已完成人工处理。处理人:$userId, 操作：停止",
             tag = taskId,
             jobId = containerId,
             executeCount = 1
