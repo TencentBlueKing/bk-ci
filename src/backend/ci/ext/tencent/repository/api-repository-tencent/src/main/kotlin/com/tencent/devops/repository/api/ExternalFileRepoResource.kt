@@ -24,24 +24,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.prebuild.pojo
+package com.tencent.devops.repository.api
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@ApiModel("启动构建参数")
-data class StartUpReq(
-    @ApiModelProperty("workspace", required = true)
-    val workspace: String,
-    @ApiModelProperty("yaml", required = true)
-    val yaml: String,
-    @ApiModelProperty("os", required = true)
-    val os: OS,
-    @ApiModelProperty("ip", required = true)
-    val ip: String,
-    @ApiModelProperty("hostname", required = true)
-    val hostname: String,
-    @ApiModelProperty("extraParam", required = false)
-    val extraParam: ExtraParam?
-)
+@Api(tags = ["EXTERNAL_FILE_REPO"], description = "外部-文件-仓库资源")
+@Path("/external/file/repo/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ExternalFileRepoResource {
+
+    @ApiOperation("获取仓库单个文件内容")
+    @GET
+    @Path("/getFileContent")
+    fun getFileContent(
+        @ApiParam(value = "代码库url")
+        @QueryParam("repoUrl")
+        repoUrl: String,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String,
+        @ApiParam(value = "分支或者commit id（git）")
+        @QueryParam("branch")
+        ref: String?,
+        @ApiParam(value = "子模块项目名称")
+        @QueryParam("subModule")
+        subModule: String? = null
+    ): Result<String>
+}

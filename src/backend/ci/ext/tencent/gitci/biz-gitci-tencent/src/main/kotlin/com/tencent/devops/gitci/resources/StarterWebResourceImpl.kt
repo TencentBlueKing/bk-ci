@@ -26,30 +26,38 @@
 
 package com.tencent.devops.gitci.resources
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.gitci.api.MergeBuildResource
-import com.tencent.devops.gitci.pojo.GitCIBuildHistory
-import com.tencent.devops.gitci.service.RepositoryConfService
-import com.tencent.devops.gitci.service.MergeBuildService
+import com.tencent.devops.gitci.api.StarterWebResource
+import com.tencent.devops.gitci.pojo.GitStarterWebList
+import com.tencent.devops.gitci.pojo.GitYamlContent
+import com.tencent.devops.gitci.pojo.GitYamlProperty
+import com.tencent.devops.gitci.service.StarterWebService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @RestResource
-class MergeBuildResourceImpl @Autowired constructor(
-    private val mergeBuildService: MergeBuildService,
-    private val repositoryConfService: RepositoryConfService
-) : MergeBuildResource {
-
-    override fun getMergeBuildList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): Result<BuildHistoryPage<GitCIBuildHistory>> {
+class StarterWebResourceImpl @Autowired constructor(
+    private val starterWebService: StarterWebService
+) : StarterWebResource {
+    override fun getYamlList(userId: String): Result<List<GitYamlContent>> {
         checkParam(userId)
-        if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
-        }
-        return Result(mergeBuildService.getMergeBuildList(userId, gitProjectId, page, pageSize))
+        return Result(starterWebService.getYamlList())
+    }
+
+    override fun getPropertyList(userId: String, category: String?): Result<List<GitYamlProperty>> {
+        checkParam(userId)
+        return Result(starterWebService.getPropertyList(category))
+    }
+
+    override fun getWebList(userId: String): Result<GitStarterWebList> {
+        checkParam(userId)
+        return Result(starterWebService.getStarterWebList())
+    }
+
+    override fun update(userId: String, properties: List<GitYamlContent>): Result<Int> {
+        checkParam(userId)
+        return Result(starterWebService.updateStarterYamls(properties))
     }
 
     private fun checkParam(userId: String) {

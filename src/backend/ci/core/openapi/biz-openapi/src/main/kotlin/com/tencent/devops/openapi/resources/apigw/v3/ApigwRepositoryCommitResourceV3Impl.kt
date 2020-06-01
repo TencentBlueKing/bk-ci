@@ -23,25 +23,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw.v3
 
-package com.tencent.devops.prebuild.pojo
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.v3.ApigwRepositoryCommitResourceV3
+import com.tencent.devops.repository.api.UserRepositoryResource
+import com.tencent.devops.repository.pojo.commit.CommitResponse
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import com.tencent.devops.common.api.pojo.OS
+@RestResource
+class ApigwRepositoryCommitResourceV3Impl @Autowired constructor(private val client: Client) : ApigwRepositoryCommitResourceV3 {
 
-@ApiModel("启动构建参数")
-data class StartUpReq(
-    @ApiModelProperty("workspace", required = true)
-    val workspace: String,
-    @ApiModelProperty("yaml", required = true)
-    val yaml: String,
-    @ApiModelProperty("os", required = true)
-    val os: OS,
-    @ApiModelProperty("ip", required = true)
-    val ip: String,
-    @ApiModelProperty("hostname", required = true)
-    val hostname: String,
-    @ApiModelProperty("extraParam", required = false)
-    val extraParam: ExtraParam?
-)
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwRepositoryCommitResourceV3Impl::class.java)
+    }
+
+    override fun getRepositoryCommit(appCode: String?, apigwType: String?, userId: String, projectId: String, pipelineId: String, buildId: String): Result<List<CommitResponse>> {
+        logger.info("get repository commit projectId($projectId) pipelineId($pipelineId) buildId($buildId) by user $userId")
+        return client.get(UserRepositoryResource::class).getCommit(
+                buildId = buildId
+        )
+    }
+}

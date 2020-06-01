@@ -62,6 +62,7 @@ import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.OwnerInfo
 import com.tencent.devops.scm.pojo.Project
 import okhttp3.MediaType
@@ -729,6 +730,22 @@ class GitService @Autowired constructor(
             logger.info("GitProjectInfo token is:$token, response>> $data")
             if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             return Result(JsonUtil.to(data, GitProjectInfo::class.java))
+        }
+    }
+
+    fun getGitCIProjectInfo(gitProjectId: String, token: String): Result<GitCIProjectInfo?> {
+        logger.info("[gitProjectId=$gitProjectId]|getGitCIProjectInfo with token=$token")
+        val encodeId = URLEncoder.encode(gitProjectId, "utf-8") // 如果id为NAMESPACE_PATH则需要encode
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeId?access_token=$token")
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val response = it.body()!!.string()
+            logger.info("[gitProjectId=$gitProjectId]|getGitCIProjectInfo with response=$response")
+            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            return Result(JsonUtil.to(response, GitCIProjectInfo::class.java))
         }
     }
 
