@@ -49,6 +49,8 @@ data class ExperienceServiceCreate(
     @ApiModelProperty("是否开启企业微信群", required = true)
     val enableWechatGroups: Boolean = true,
     @ApiModelProperty("企业微信群", required = true)
-    val wechatGroups: String
+    val wechatGroups: String,
+    @ApiModelProperty("版本体验描述", required = false)
+    val description: String? = ""
 
 )

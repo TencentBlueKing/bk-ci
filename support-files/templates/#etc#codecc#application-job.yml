@@ -1,7 +1,7 @@
 # 服务配置文件模板
 spring:
   application:
-    name: job
+    name: job${service-suffix}
     desc: Job Service
   data:
     mongodb:

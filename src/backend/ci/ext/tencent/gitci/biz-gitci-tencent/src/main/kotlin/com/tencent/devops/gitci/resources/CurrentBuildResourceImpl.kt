@@ -37,7 +37,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.CurrentBuildResource
 import com.tencent.devops.gitci.pojo.GitCIModelDetail
 import com.tencent.devops.gitci.service.CurrentBuildService
-import com.tencent.devops.gitci.service.GitProjectConfService
+import com.tencent.devops.gitci.service.RepositoryConfService
 import com.tencent.devops.process.pojo.Report
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
@@ -45,7 +45,7 @@ import javax.ws.rs.core.Response
 @RestResource
 class CurrentBuildResourceImpl @Autowired constructor(
     private val currentBuildService: CurrentBuildService,
-    private val gitProjectConfService: GitProjectConfService
+    private val repositoryConfService: RepositoryConfService
 ) : CurrentBuildResource {
     override fun getLatestBuildDetail(userId: String, gitProjectId: Long, buildId: String?): Result<GitCIModelDetail?> {
         checkParam(userId, gitProjectId)
@@ -90,8 +90,8 @@ class CurrentBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid userId")
         }
 
-        if (!gitProjectConfService.isEnable(gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，请联系蓝盾助手")
+        if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
+            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
         }
     }
 }

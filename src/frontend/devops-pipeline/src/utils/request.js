@@ -29,9 +29,7 @@ const request = axios.create({
         }
         return status >= 200 && status <= 503
     },
-    withCredentials: true,
-    xsrfCookieName: 'backend_csrftoken', // 注入csrfToken
-    xsrfHeaderName: 'X-CSRFToken' // 注入csrfToken
+    withCredentials: true
 })
 
 function errorHandler (error) {
