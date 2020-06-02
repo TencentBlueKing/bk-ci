@@ -3,19 +3,6 @@
     export default {
         name: 'vuex-textarea',
         mixins: [atomFieldMixin],
-        data () {
-            return {
-                title: '',
-                inputDisabled: false
-            }
-        },
-        mounted () {
-            const ele = document.querySelector('.atom-form-box') || {}
-            if (ele.classList.contains('readonly') || this.disabled) {
-                this.title = this.value
-                this.inputDisabled = true
-            }
-        },
         methods: {
             handleInput (e, isBlur = false) {
                 const { value, name } = e.target
@@ -31,9 +18,9 @@
             }
         },
         render (h) {
-            const { value, inputDisabled, handleInput, name, handleBlur, title } = this
+            const { value, readOnly, handleInput, name, handleBlur, title } = this
             return (
-                <textarea title={title} onBlur={handleBlur} onInput={handleInput} class='bk-form-textarea pointer-events-auto' name={name} disabled={inputDisabled} value={value} />
+                <textarea title={title} onBlur={handleBlur} onInput={handleInput} class='bk-form-textarea pointer-events-auto' name={name} disabled={readOnly} value={value} />
             )
         }
     }
