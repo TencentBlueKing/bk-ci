@@ -991,17 +991,23 @@ class PipelineBuildDetailService @Autowired constructor(
             stage.containers.forEach { container ->
                 val newElements = mutableListOf<Element>()
                 container.elements.forEach { element ->
-                    val defaultElement =
-                        redisOperation.get(PauseRedisUtils.getPauseElementRedisKey(buildId, element.id!!))
-                    if (defaultElement != null) {
-                        logger.info("Refresh element| $buildId|${element.id}| $model")
-                        // 恢复detail表model内的对应element为默认值
-                        newElements.add(objectMapper.readValue(defaultElement, Element::class.java))
-                        // 重置插件状态开发
-                        pipelineTaskPauseService.pauseTaskFinishExecute(buildId, element.id!!)
-                        needUpdate = true
-                    } else {
-                        newElements.add(element)
+                    // 重置插件状态开发
+                    if(element.id != null) {
+                        val pauseFlag = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId, element.id!!))
+                        if(pauseFlag != null) {
+                            logger.info("Refresh pauseFlag| $buildId|${element.id}")
+                            pipelineTaskPauseService.pauseTaskFinishExecute(buildId, element.id!!)
+                        }
+                        val defaultElement =
+                            redisOperation.get(PauseRedisUtils.getPauseElementRedisKey(buildId, element.id!!))
+                        if (defaultElement != null) {
+                            logger.info("Refresh element| $buildId|${element.id}| $model")
+                            // 恢复detail表model内的对应element为默认值
+                            newElements.add(objectMapper.readValue(defaultElement, Element::class.java))
+                            needUpdate = true
+                        } else {
+                            newElements.add(element)
+                        }
                     }
                 }
             }

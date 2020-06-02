@@ -9,6 +9,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.process.engine.common.BS_MANUAL_STOP_PAUSE_ATOM
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
@@ -193,7 +194,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         // 刷新stage状态
         pipelineEventDispatcher.dispatch(
             PipelineBuildContainerEvent(
-                source = "taskCancel",
+                source = BS_MANUAL_STOP_PAUSE_ATOM,
                 actionType = ActionType.END,
                 pipelineId = pipelineId,
                 projectId = projectId,
