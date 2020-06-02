@@ -203,7 +203,8 @@
                 'addAtom',
                 'deleteAtom',
                 'setPipelineEditing',
-                'pausePlugin'
+                'pausePlugin',
+                'requestPipelineExecDetail'
             ]),
 
             continueExecute (elementIndex) {
