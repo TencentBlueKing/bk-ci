@@ -74,7 +74,7 @@ const atomFieldMixin = {
         }
     },
     mounted () {
-        const ele = document.querySelector('.atom-form-box') || {}
+        const ele = document.querySelector('.atom-form-box')
         if ((ele && ele.classList.contains('readonly')) || this.disabled) {
             this.title = this.value
             this.readOnly = true
