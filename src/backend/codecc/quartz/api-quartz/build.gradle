@@ -1,0 +1,4 @@
+dependencies {
+    compile project(":common:common-api")
+    compile "org.glassfish.jersey.media:jersey-media-multipart"
+}
