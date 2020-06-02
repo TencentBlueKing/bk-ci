@@ -1,7 +1,7 @@
 <template>
     <section>
         <div :class="['atom-item-main atom-item', { 'disabled': atom.disabled }, { 'active': atom.atomCode === activeAtomCode }]" ref="atomCard"
-            v-bk-tooltips="{ content: atomOsPrompt, delay: 300 }">
+            v-bk-tooltips="{ content: atomOsPrompt, delay: 300, disabled: !atomOsPrompt }">
             <div class="atom-logo">
                 <img v-if="atom.logoUrl" :src="atom.logoUrl" />
                 <logo v-else class="devops-icon" :name="getIconByCode(atom.atomCode)" size="50" />

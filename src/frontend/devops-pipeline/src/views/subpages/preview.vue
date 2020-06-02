@@ -161,30 +161,25 @@
                     })
                 })
             },
-            'pipeline.stages' (val) {
+            'pipeline.stages' (val, old) {
                 if (val) {
                     val.forEach(stage => {
                         const stageDisabled = stage.stageControlOption && stage.stageControlOption.enable === false
-                        Vue.set(stage, 'runStage', !stageDisabled)
+                        if (!stage.hasOwnProperty('runStage')) {
+                            Vue.set(stage, 'runStage', !stageDisabled)
+                        }
                         stage.containers.forEach(container => {
                             if (container['@type'] !== 'trigger') {
                                 const containerDisabled = container.jobControlOption && container.jobControlOption.enable === false
                                 if (!container.hasOwnProperty('runContainer')) {
-                                    Vue.set(container, 'runContainer', true)
-                                } else {
-                                    container.runContainer = true
+                                    Vue.set(container, 'runContainer', !containerDisabled)
                                 }
-                                if (containerDisabled) {
-                                    container.runContainer = false
-                                }
+
                                 container.elements.forEach(element => {
+                                    debugger
+                                    const isSkipEle = (element.additionalOptions && element.additionalOptions.enable === false) || containerDisabled
                                     if (!element.hasOwnProperty('canElementSkip')) {
-                                        Vue.set(element, 'canElementSkip', true)
-                                    } else {
-                                        element.canElementSkip = true
-                                    }
-                                    if ((element.additionalOptions && element.additionalOptions.enable === false) || containerDisabled) {
-                                        element.canElementSkip = false
+                                        Vue.set(element, 'canElementSkip', !isSkipEle)
                                     }
                                 })
                             }
