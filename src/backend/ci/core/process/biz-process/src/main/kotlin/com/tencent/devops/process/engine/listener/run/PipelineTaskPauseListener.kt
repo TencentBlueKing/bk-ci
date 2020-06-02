@@ -184,18 +184,34 @@ class PipelineTaskPauseListener @Autowired constructor(
             jobId = containerId,
             executeCount = 1
         )
+        val containerRecord = pipelineRuntimeService.getContainer(
+            buildId = buildId,
+            stageId = stageId,
+            containerId = containerId
+        )
 
         // 刷新stage状态
         pipelineEventDispatcher.dispatch(
-            PipelineBuildStageEvent(
+            PipelineBuildContainerEvent(
                 source = "taskCancel",
-                stageId = stageId,
+                actionType = ActionType.END,
                 pipelineId = pipelineId,
                 projectId = projectId,
-                actionType = ActionType.REFRESH,
+                userId = userId,
                 buildId = buildId,
-                userId = userId
+                containerId = containerId,
+                stageId = stageId,
+                containerType = containerRecord?.containerType ?: "vmBuild"
             )
+//            PipelineBuildStageEvent(
+//                source = "taskCancel",
+//                stageId = stageId,
+//                pipelineId = pipelineId,
+//                projectId = projectId,
+//                actionType = ActionType.REFRESH,
+//                buildId = buildId,
+//                userId = userId
+//            )
         )
     }
 
