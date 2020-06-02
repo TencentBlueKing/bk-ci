@@ -157,16 +157,16 @@ class PipelineTaskPauseListener @Autowired constructor(
         )
         logger.info("taskCancel update|$buildId|$taskId| task status  to ${BuildStatus.CANCELED}")
 
-        // 修改容器状态位运行
-        pipelineRuntimeService.updateContainerStatus(
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
-            startTime = null,
-            endTime = null,
-            buildStatus = BuildStatus.CANCELED
-        )
-        logger.info("taskCancel update|$buildId|$taskId| container status  to ${BuildStatus.CANCELED}")
+//        // 修改容器状态位运行
+//        pipelineRuntimeService.updateContainerStatus(
+//            buildId = buildId,
+//            stageId = stageId,
+//            containerId = containerId,
+//            startTime = null,
+//            endTime = null,
+//            buildStatus = BuildStatus.CANCELED
+//        )
+//        logger.info("taskCancel update|$buildId|$taskId| container status  to ${BuildStatus.CANCELED}")
 
         // 刷新detail内model
         buildDetailService.taskCancel(
