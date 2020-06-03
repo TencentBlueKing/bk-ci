@@ -105,6 +105,7 @@ import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.util.ImageUtil
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.impl.DSL
@@ -665,14 +666,18 @@ abstract class ImageService @Autowired constructor() {
         logger.info("$interfaceName:getImageRepoInfoByCodeAndVersion:Input:($userId,$projectCode,$pipelineId,$buildId,$imageCode,$imageVersion)")
         // 区分是否为调试项目
         val imageStatusList = imageCommonService.generateImageStatusList(imageCode, projectCode)
-        val imageRecord =
-            imageDao.getLatestImageByBaseVersion(
+        val imageRecords =
+            imageDao.getImagesByBaseVersion(
                 dslContext = dslContext,
                 imageCode = imageCode,
                 imageStatusSet = imageStatusList.toSet(),
                 baseVersion = imageVersion?.replace("*", "")
             )
-        val imageRepoInfo = if (null == imageRecord) {
+        imageRecords?.sortWith(Comparator { o1, o2 ->
+            ImageUtil.compareVersion(o2.get(KEY_IMAGE_VERSION) as String?, o1.get(KEY_IMAGE_VERSION) as String?)
+        })
+        val latestImage = imageRecords?.get(0)
+        val imageRepoInfo = if (null == latestImage) {
             // 运行时异常情况兜底，通知管理员
             val titleParams = mutableMapOf<String, String>()
             titleParams["userId"] = userId
@@ -695,7 +700,7 @@ abstract class ImageService @Autowired constructor() {
             }
             getDefaultImageRepoInfo()
         } else {
-            getImageRepoInfoByRecord(imageRecord)
+            getImageRepoInfoByRecord(latestImage)
         }
         with(imageRepoInfo) {
             logger.info("getImageRepoInfoByCodeAndVersion:Output($sourceType,$repoUrl,$repoName,$repoTag,$ticketId,$ticketProject)")
