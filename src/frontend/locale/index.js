@@ -35,9 +35,10 @@ function getLsLocale () {
 }
 
 function setLsLocale (locale) {
+    const formateLocale = locale === 'zh-CN' ? 'zh-cn' : 'en'
     if (typeof cookies.set === 'function') {
         cookies.remove(LS_KEY)
-        cookies.set(LS_KEY, locale, { domain: BK_CI_DOMAIN, path: '/' })
+        cookies.set(LS_KEY, formateLocale, { domain: BK_CI_DOMAIN, path: '/' })
     }
 }
 
