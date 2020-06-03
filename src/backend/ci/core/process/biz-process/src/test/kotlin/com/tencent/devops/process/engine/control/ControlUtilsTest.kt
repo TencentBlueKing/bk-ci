@@ -437,7 +437,7 @@ class ControlUtilsTest {
         )
     }
 
-    private fun elementAdditionalOptions(runCondition: RunCondition = RunCondition.PRE_TASK_FAILED_ONLY, enable: Boolean = true, customeVarabiles: List<NameAndValue>? = null): ElementAdditionalOptions {
+    private fun elementAdditionalOptions(runCondition: RunCondition = RunCondition.PRE_TASK_FAILED_ONLY, enable: Boolean = true, customVarabiles: List<NameAndValue>? = null): ElementAdditionalOptions {
         return ElementAdditionalOptions(
             enable = enable,
             retryCount = 1,
@@ -446,7 +446,7 @@ class ControlUtilsTest {
             timeout = 0,
             otherTask = nullObject,
             customCondition = nullObject,
-            customVariables = customeVarabiles,
+            customVariables = customVarabiles,
             runCondition = runCondition
         )
     }
@@ -463,7 +463,7 @@ class ControlUtilsTest {
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
                     enable = true,
-                    customeVarabiles = customeVarabiles
+                    customVarabiles = customeVarabiles
                 ))
         )
 
@@ -474,7 +474,7 @@ class ControlUtilsTest {
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
                     enable = true,
-                    customeVarabiles = customeVarabiles
+                    customVarabiles = customeVarabiles
                 ))
         )
 
@@ -485,7 +485,7 @@ class ControlUtilsTest {
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
                     enable = true,
-                    customeVarabiles = customeVarabiles
+                    customVarabiles = customeVarabiles
                 ))
         )
 
@@ -496,7 +496,57 @@ class ControlUtilsTest {
                 additionalOptions = elementAdditionalOptions(
                     runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
                     enable = true,
-                    customeVarabiles = customeVarabiles
+                    customVarabiles = customeVarabiles
+                ))
+        )
+
+        // 支持变量
+
+        variables["a"] = "1"
+        variables["var_1"] = "1"
+        customeVarabiles.add(NameAndValue("a", "\${var_1}"))
+        Assert.assertFalse(
+            ControlUtils.checkCustomVariableSkip(buildId = buildId, variables = variables,
+                additionalOptions = elementAdditionalOptions(
+                    runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
+                    enable = true,
+                    customVarabiles = customeVarabiles
+                ))
+        )
+
+        variables["a"] = "1"
+        variables["var_1"] = "1"
+        customeVarabiles.add(NameAndValue("a", "\${var_1}"))
+        Assert.assertTrue(
+            ControlUtils.checkCustomVariableSkip(buildId = buildId, variables = variables,
+                additionalOptions = elementAdditionalOptions(
+                    runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
+                    enable = true,
+                    customVarabiles = customeVarabiles
+                ))
+        )
+
+        variables["a"] = "2"
+        variables["var_1"] = "1"
+        customeVarabiles.add(NameAndValue("a", "\${var_1}"))
+        Assert.assertFalse(
+            ControlUtils.checkCustomVariableSkip(buildId = buildId, variables = variables,
+                additionalOptions = elementAdditionalOptions(
+                    runCondition = RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
+                    enable = true,
+                    customVarabiles = customeVarabiles
+                ))
+        )
+
+        variables["a"] = "2"
+        variables["var_1"] = "1"
+        customeVarabiles.add(NameAndValue("a", "\${var_1}"))
+        Assert.assertTrue(
+            ControlUtils.checkCustomVariableSkip(buildId = buildId, variables = variables,
+                additionalOptions = elementAdditionalOptions(
+                    runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
+                    enable = true,
+                    customVarabiles = customeVarabiles
                 ))
         )
     }
