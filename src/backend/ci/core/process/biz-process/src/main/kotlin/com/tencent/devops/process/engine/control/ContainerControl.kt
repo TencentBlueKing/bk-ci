@@ -520,7 +520,7 @@ class ContainerControl @Autowired constructor(
         stageId: String,
         container: PipelineBuildContainer,
         containerTaskList: Collection<PipelineBuildTask>,
-        variables: Map<String, Any>
+        variables: Map<String, String>
     ): Boolean {
 
         val containerId = container.containerId
