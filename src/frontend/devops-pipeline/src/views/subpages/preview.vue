@@ -306,7 +306,8 @@
 </script>
 
 <style lang="scss">
-    @import './../../scss/conf';
+    @import '../../scss/conf';
+    @import '../../scss/mixins/ellipsis';
 
     .pipeline-execute-preview {
         height: 100%;
@@ -354,14 +355,10 @@
                     position: relative;
                 }
                 .bk-form-help {
-                    position: absolute;
-                    top: 36px;
                     margin: 0;
-                    display: inline-block;
                     width: 100%;
-                    white-space: nowrap;
-                    text-overflow: ellipsis;
-                    overflow: hidden;
+                    @include ellipsis();
+                    display: inline-block;
                 }
             }
             .bk-form-item {
@@ -371,9 +368,7 @@
             .bk-label {
                 width: 100%;
                 text-align: left;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow: hidden;
+                @include ellipsis();
             }
             .bk-form-content {
                 float: left;
