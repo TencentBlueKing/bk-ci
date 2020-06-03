@@ -28,8 +28,9 @@ package job
 
 import (
 	"os"
-	"pkg/api"
 	"testing"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
 )
 
 func Test_writeStartBuildAgentScript_01(t *testing.T) {

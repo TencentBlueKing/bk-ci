@@ -27,14 +27,14 @@
 package agent
 
 import (
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/collector"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/cron"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/heartbeat"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/job"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/pipeline"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/upgrade"
 	"github.com/astaxie/beego/logs"
-	"pkg/collector"
-	"pkg/config"
-	"pkg/cron"
-	"pkg/heartbeat"
-	"pkg/job"
-	"pkg/pipeline"
-	"pkg/upgrade"
 )
 
 func Run() {
