@@ -205,7 +205,6 @@ class PipelineSettingService @Autowired constructor(
     }
 
     fun updatePipelineModel(
-        projectId: String,
         userId: String,
         updatePipelineModelRequest: UpdatePipelineModelRequest,
         checkPermission: Boolean = true
@@ -215,7 +214,7 @@ class PipelineSettingService @Autowired constructor(
             pipelineModelVersionList.forEach {
                 checkEditPermission(
                     userId = userId,
-                    projectId = projectId,
+                    projectId = it.projectId,
                     pipelineId = it.pipelineId,
                     message = "The user (\$ userId) does not have permission to edit the pipeline (\$ pipelineId) under the project (\$ projectId)"
                 )
@@ -224,7 +223,6 @@ class PipelineSettingService @Autowired constructor(
         pipelineResDao.updatePipelineModel(
             dslContext = dslContext,
             userId = userId,
-            model = updatePipelineModelRequest.model,
             pipelineModelVersionList = pipelineModelVersionList
         )
         return true
