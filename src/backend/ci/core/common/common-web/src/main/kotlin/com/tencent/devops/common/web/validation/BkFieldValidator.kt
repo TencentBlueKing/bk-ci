@@ -47,7 +47,11 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
         val attributes = constraintDescriptor.attributes
         val required = attributes[REQUIRED] as Boolean
         // 判断参数是否可以为空
-        if (required && paramValue == null) {
+        var flag = false
+        if (paramValue == null || (paramValue is String && paramValue.isBlank())) {
+            flag = true
+        }
+        if (required && flag) {
             return false
         }
         val patternStyle = attributes[PATTERN_STYLE] as BkStyleEnum
