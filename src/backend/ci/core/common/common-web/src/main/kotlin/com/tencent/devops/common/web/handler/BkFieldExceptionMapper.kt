@@ -73,7 +73,7 @@ class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
                 // 生成错误信息
                 errorResult = MessageCodeUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
-                    params = arrayOf(parameterName),
+                    params = arrayOf(parameterName, patternStyleMessage),
                     data = null,
                     defaultMessage = MessageFormat(patternStyleMessage).format(arrayOf(parameterName))
                 )
