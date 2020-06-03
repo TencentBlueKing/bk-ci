@@ -3,10 +3,9 @@
         <form class="bk-form" action="http://localhost" target="previewHiddenIframe" ref="previewParamsForm" onsubmit="return false;">
             <form-field v-for="(param, index) in paramList"
                 :key="param.id" :required="param.required"
-                :is-error="errors.has(param.id)"
-                :error-msg="errors.first(param.id)"
+                :is-error="errors.has('devops' + param.name)"
+                :error-msg="errors.first('devops' + param.name)"
                 :label="param.id">
-
                 <section class="component-row">
                     <component :is="param.component" v-validate="{ required: param.required }" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;"></component>
                     <span class="meta-data" v-show="showMetadata(param.type, param.value)">{{ $t('metaData') }}
@@ -15,7 +14,7 @@
                         </aside>
                     </span>
                 </section>
-                <span v-if="!errors.has(param.id)" style="color: #999; font-size:12px;" :title="param.desc">{{ param.desc }}</span>
+                <span v-if="!errors.has('devops' + param.name)" class="preview-params-desc" :title="param.desc">{{ param.desc }}</span>
             </form-field>
         </form>
         <iframe v-show="false" name="previewHiddenIframe"></iframe>
@@ -151,6 +150,7 @@
 
 <style lang="scss" scoped>
     @import '@/scss/conf';
+    @import '@/scss/mixins/ellipsis';
     .component-row {
         display: flex;
         .metadata-box {
@@ -170,5 +170,11 @@
                 display: block;
             }
         }
+    }
+     .preview-params-desc {
+        color: #999;
+        width: 100%;
+        font-size: 12px;
+        @include ellipsis();
     }
 </style>
