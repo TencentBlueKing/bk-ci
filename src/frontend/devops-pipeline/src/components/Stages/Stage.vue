@@ -18,7 +18,7 @@
         </bk-button>
         <draggable v-model="computedContainer" v-bind="dragOptions" :move="checkMove" tag="ul" class="soda-process-stage">
             <stage-container v-for="(container, index) in computedContainer"
-                :key="`${container.id}-${index}`"
+                :key="container.containerId"
                 :stage-index="stageIndex"
                 :container-index="index"
                 :stage-length="stageLength"
@@ -61,7 +61,7 @@
     import Vue from 'vue'
     import { mapActions, mapState, mapGetters } from 'vuex'
     import StageContainer from './StageContainer'
-    import { getOuterHeight } from '@/utils/util'
+    import { getOuterHeight, hashID } from '@/utils/util'
     import Logo from '@/components/Logo'
 
     export default {
@@ -312,16 +312,19 @@
             copyStage () {
                 try {
                     const copyStage = JSON.parse(JSON.stringify(this.stage))
-                    const { id, ...stage } = copyStage
-                    stage.containers = stage.containers.map(container => {
-                        const { id, ...job } = container
+                    const stage = {
+                        ...copyStage,
+                        id: `s-${hashID(32)}`,
+                        containers: copyStage.containers.map(container => ({
+                            ...container,
+                            containerId: `c-${hashID(32)}`,
+                            elements: container.elements.map(element => ({
+                                ...element,
+                                id: `e-${hashID(32)}`
+                            }))
+                        }))
 
-                        job.elements = job.elements.map(element => {
-                            const { id, ...ele } = element
-                            return ele
-                        })
-                        return job
-                    })
+                    }
 
                     this.pipeline.stages.splice(this.stageIndex + 1, 0, JSON.parse(JSON.stringify(stage)))
                     this.setPipelineEditing(true)
