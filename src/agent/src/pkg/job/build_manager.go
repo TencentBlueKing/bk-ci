@@ -31,7 +31,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"os"
-	"pkg/api"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
 )
 
 type buildManager struct {

@@ -28,14 +28,15 @@ package heartbeat
 
 import (
 	"errors"
-	"github.com/astaxie/beego/logs"
-	"pkg/api"
-	"pkg/config"
-	"pkg/job"
-	"pkg/upgrade"
-	"pkg/util"
-	"pkg/util/systemutil"
 	"time"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/job"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/upgrade"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/astaxie/beego/logs"
 )
 
 func DoAgentHeartbeat() {
@@ -74,7 +75,7 @@ func agentHeartbeat() error {
 		config.GAgentConfig.ParallelTaskCount = heartbeatResponse.ParallelTaskCount
 		configChanged = true
 	}
-	if heartbeatResponse.Gateway != "" &&  heartbeatResponse.Gateway != config.GAgentConfig.Gateway {
+	if heartbeatResponse.Gateway != "" && heartbeatResponse.Gateway != config.GAgentConfig.Gateway {
 		config.GAgentConfig.Gateway = heartbeatResponse.Gateway
 		configChanged = true
 	}

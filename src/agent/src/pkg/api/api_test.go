@@ -27,8 +27,9 @@
 package api
 
 import (
-	"pkg/config"
 	"testing"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 )
 
 func loadConfig() {
