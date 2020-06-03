@@ -157,7 +157,7 @@
             display: none;
         }
         .meta-data {
-            margin-top: 8px;
+            align-self: center;
             margin-left: 10px;
             font-size: 12px;
             color: $primaryColor;

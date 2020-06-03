@@ -39,7 +39,7 @@
 
 <script>
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import { getOuterHeight } from '@/utils/util'
+    import { getOuterHeight, hashID } from '@/utils/util'
     import ContainerType from './ContainerType'
     import AtomList from './AtomList'
     import StatusIcon from './StatusIcon'
@@ -187,11 +187,14 @@
             copyContainer () {
                 try {
                     const copyContainer = JSON.parse(JSON.stringify(this.container))
-                    const { containerId, ...container } = copyContainer
-                    container.elements = container.elements.map(element => {
-                        const { id, ...ele } = element
-                        return ele
-                    })
+                    const container = {
+                        ...copyContainer,
+                        containerId: `c-${hashID(32)}`,
+                        elements: copyContainer.elements.map(element => ({
+                            ...element,
+                            id: `e-${hashID(32)}`
+                        }))
+                    }
                     this.pipeline.stages[this.stageIndex].containers.splice(this.containerIndex + 1, 0, JSON.parse(JSON.stringify(container)))
                     this.setPipelineEditing(true)
                 } catch (e) {
