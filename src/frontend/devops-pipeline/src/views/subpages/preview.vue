@@ -176,7 +176,6 @@
                                 }
 
                                 container.elements.forEach(element => {
-                                    debugger
                                     const isSkipEle = (element.additionalOptions && element.additionalOptions.enable === false) || containerDisabled
                                     if (!element.hasOwnProperty('canElementSkip')) {
                                         Vue.set(element, 'canElementSkip', !isSkipEle)
@@ -214,7 +213,6 @@
             },
             async init () {
                 this.isLoading = true
-
                 try {
                     if (!this.curParamList) {
                         const res = await this.$store.dispatch('pipelines/requestStartupInfo', {
@@ -278,6 +276,12 @@
                         res[skip] = true
                         return res
                     }, newParams), true)
+                } else {
+                    // 参数非法
+                    this.$showTips({
+                        message: this.$t('preview.paramsInvalidMsg'),
+                        theme: 'error'
+                    })
                 }
             },
             toggleIcon (type) {

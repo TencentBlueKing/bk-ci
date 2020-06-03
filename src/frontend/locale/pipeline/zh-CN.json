@@ -428,7 +428,8 @@
         "selectNone": "全不选",
         "majorVersion": "主版本",
         "minorVersion": "特性版本",
-        "fixVersion": "修正版本"
+        "fixVersion": "修正版本",
+        "paramsInvalidMsg": "流水线执行参数出错"
     },
     "details": {
         "executeDetail": "执行详情",
