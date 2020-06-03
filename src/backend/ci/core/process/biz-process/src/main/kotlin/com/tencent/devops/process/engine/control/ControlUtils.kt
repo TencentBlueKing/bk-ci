@@ -69,13 +69,13 @@ object ControlUtils {
     }
 
     fun retryWhenFailure(additionalOptions: ElementAdditionalOptions?, retryCount: Int): Boolean {
-        if (additionalOptions == null) {
+        if (additionalOptions == null || !isEnable(additionalOptions)) {
             return false
         }
-        val retryWhenFailed = additionalOptions.retryWhenFailed ?: false
+        val retryWhenFailed = additionalOptions.retryWhenFailed
 
         return if (retryWhenFailed) {
-            var settingRetryCount = additionalOptions!!.retryCount ?: 1
+            var settingRetryCount = additionalOptions.retryCount
             if (settingRetryCount > TASK_FAIL_RETRY_MAX_COUNT) {
                 settingRetryCount = TASK_FAIL_RETRY_MAX_COUNT
             }
