@@ -345,6 +345,11 @@
             }
             .global-params {
                 margin-bottom: 30px;
+                .bk-form {
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: space-between;
+                }
                 .bk-form-content {
                     position: relative;
                 }
@@ -360,13 +365,8 @@
                 }
             }
             .bk-form-item {
-                float: left;
                 margin-top: 20px;
-                width: 46%;
-                height: 70px;
-                &:nth-child(2n) {
-                    margin-left: 30px;
-                }
+                width: 48%;
             }
             .bk-label {
                 width: 100%;
