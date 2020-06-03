@@ -56,7 +56,6 @@ class ContainerControlTest {
         Assert.assertTrue(result)
     }
 
-
     private fun genVmContainer(jobControlOption: JobControlOption? = null): PipelineBuildContainer {
         val containerId = "c-1"
         val status = BuildStatus.RUNNING
