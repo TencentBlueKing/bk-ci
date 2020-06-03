@@ -508,7 +508,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     body = body
                 )
             }
-
         }
 
         // 企业微信消息
