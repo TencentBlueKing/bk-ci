@@ -26,19 +26,20 @@
 
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.process.api.service.ServicePipelineSettingResource
-import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
 import com.tencent.devops.store.pojo.common.enums.ScopeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.TxStorePipelineService
-import org.apache.commons.lang.StringEscapeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,16 +49,16 @@ import org.springframework.stereotype.Service
 class TxStorePipelineServiceImpl : TxStorePipelineService {
 
     @Autowired
-    private lateinit var  storeProjectRelDao: StoreProjectRelDao
+    private lateinit var storeProjectRelDao: StoreProjectRelDao
 
     @Autowired
-    private lateinit var  businessConfigDao: BusinessConfigDao
+    private lateinit var businessConfigDao: BusinessConfigDao
 
     @Autowired
-    private lateinit var  redisOperation: RedisOperation
+    private lateinit var redisOperation: RedisOperation
 
     @Autowired
-    private lateinit var  gray: Gray
+    private lateinit var gray: Gray
 
     @Autowired
     private lateinit var dslContext: DSLContext
@@ -74,30 +75,36 @@ class TxStorePipelineServiceImpl : TxStorePipelineService {
         logger.info("updatePipelineModel userId:$userId,updateStorePipelineModelRequest:$updateStorePipelineModelRequest")
         val scopeType = updateStorePipelineModelRequest.scopeType
         val storeType = updateStorePipelineModelRequest.storeType
+        val storeCodeList = updateStorePipelineModelRequest.storeCodeList
         val businessConfig = businessConfigDao.get(dslContext, StoreTypeEnum.ATOM.name, "initBuildPipeline", "PIPELINE_MODEL")
         when (scopeType) {
             ScopeTypeEnum.ALL.name -> {
-
             }
             ScopeTypeEnum.GRAY.name -> {
                 val grayProjectSet = gray.grayProjectSet(redisOperation)
             }
             ScopeTypeEnum.NO_GRAY.name -> {
                 val grayProjectSet = gray.grayProjectSet(redisOperation)
-
             }
             ScopeTypeEnum.SPEC.name -> {
                 val projectRelRecords = storeProjectRelDao.getStoreInitProjects(
                     dslContext = dslContext,
                     storeType = StoreTypeEnum.valueOf(storeType).type.toByte(),
                     descFlag = false,
-                    specProjectCodeList = updateStorePipelineModelRequest.storeCodeList,
+                    specProjectCodeList = storeCodeList,
                     grayFlag = null,
                     grayProjectCodeList = null,
                     page = null,
                     pageSize = null
                 )
+                val storeCommonDao = SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
+                if (storeCodeList == null) {
+                    return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_NULL, arrayOf("storeCodeList"))
+                }
+                // 获取研发商店组件信息
+                val storeInfoRecords = storeCommonDao.getLatestStoreInfoListByCodes(dslContext, storeCodeList)
                 var pipelineModel = businessConfig!!.configValue
+
 /*                val pipelineName = "am-$projectCode-$atomCode-${System.currentTimeMillis()}"
                 val paramMap = mapOf(
                     "pipelineName" to pipelineName,

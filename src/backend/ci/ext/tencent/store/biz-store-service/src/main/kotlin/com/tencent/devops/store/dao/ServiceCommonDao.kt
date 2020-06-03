@@ -27,6 +27,7 @@
 package com.tencent.devops.store.dao
 
 import com.tencent.devops.model.store.tables.TExtensionService
+import com.tencent.devops.model.store.tables.TExtensionServiceFeature
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -65,6 +66,16 @@ class ServiceCommonDao : AbstractStoreCommonDao() {
         dslContext: DSLContext,
         storeCodeList: List<String>
     ): Result<out Record>? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val tes = TExtensionService.T_EXTENSION_SERVICE.`as`("tes")
+        val tesf = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("tesf")
+        return dslContext.select(
+            tes.SERVICE_CODE.`as`("storeCode"),
+            tes.VERSION.`as`("version"),
+            tesf.REPOSITORY_HASH_ID.`as`("repositoryHashId"),
+            tesf.CODE_SRC.`as`("codeSrc")
+        ).from(tes).join(tesf).on(tes.SERVICE_CODE.eq(tesf.SERVICE_CODE))
+            .where(tes.SERVICE_CODE.`in`(storeCodeList))
+            .and(tes.LATEST_FLAG.eq(true))
+            .fetch()
     }
 }
