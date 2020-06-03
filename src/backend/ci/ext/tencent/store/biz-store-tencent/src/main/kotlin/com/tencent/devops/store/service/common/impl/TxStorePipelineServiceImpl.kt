@@ -40,6 +40,7 @@ import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
 import com.tencent.devops.store.pojo.common.enums.ScopeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.TxStorePipelineService
+import org.apache.commons.lang.StringEscapeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -104,7 +105,20 @@ class TxStorePipelineServiceImpl : TxStorePipelineService {
                 // 获取研发商店组件信息
                 val storeInfoRecords = storeCommonDao.getLatestStoreInfoListByCodes(dslContext, storeCodeList)
                 var pipelineModel = businessConfig!!.configValue
+                storeInfoRecords?.forEach { storeInfo ->
+                    val projectCode = storeInfo["projectCode"]
+                    val storeCode = storeInfo["storeCode"]
+                    val pipelineName = "am-$projectCode-$storeCode-${System.currentTimeMillis()}"
+                    val paramMap = mapOf(
+                            "pipelineName" to pipelineName,
+                            "storeCode" to storeCode,
+                            "version" to storeInfo["storeCode"],
+                            "script" to StringEscapeUtils.escapeJava(storeInfo["script"] as String),
+                            "repositoryHashId" to storeInfo["storeCode"],
+                            "repositoryPath" to storeInfo["storeCode"]
+                    )
 
+                }
 /*                val pipelineName = "am-$projectCode-$atomCode-${System.currentTimeMillis()}"
                 val paramMap = mapOf(
                     "pipelineName" to pipelineName,
