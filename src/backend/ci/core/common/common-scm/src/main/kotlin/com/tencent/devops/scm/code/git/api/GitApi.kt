@@ -233,7 +233,7 @@ open class GitApi {
                 params[CodeGitWebhookEvent.PUSH_EVENTS.value] = false.toString()
             }
         }
-
+        params[CodeGitWebhookEvent.ENABLE_SSL_VERIFICATION.value] = false.toString()
         val body = JsonUtil.getObjectMapper().writeValueAsString(params)
         val request = post(host, token, "projects/${urlEncode(projectName)}/hooks", body)
         try {

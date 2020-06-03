@@ -32,6 +32,7 @@ enum class CodeGitWebhookEvent(val value: String) {
     ISSUES_EVENTS("issues_events"),
     MERGE_REQUESTS_EVENTS("merge_requests_events"),
     NOTE_EVENTS("note_events"),
+    ENABLE_SSL_VERIFICATION("enable_ssl_verification"),
     REVIEW_EVENTS("review_events");
 
     companion object {
