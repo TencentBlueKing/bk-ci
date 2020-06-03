@@ -6,6 +6,7 @@
                 :is-error="errors.has(param.id)"
                 :error-msg="errors.first(param.id)"
                 :label="param.id">
+
                 <section class="component-row">
                     <component :is="param.component" v-validate="{ required: param.required }" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;"></component>
                     <span class="meta-data" v-show="showMetadata(param.type, param.value)">{{ $t('metaData') }}
@@ -14,7 +15,7 @@
                         </aside>
                     </span>
                 </section>
-                <span v-if="!errors.has(param.id)" style="color: #63656E; position:static" :title="param.desc" class="bk-form-help">{{ param.desc }}</span>
+                <span v-if="!errors.has(param.id)" style="color: #999; font-size:12px;" :title="param.desc">{{ param.desc }}</span>
             </form-field>
         </form>
         <iframe v-show="false" name="previewHiddenIframe"></iframe>
