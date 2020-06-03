@@ -27,7 +27,7 @@
 package config
 
 import (
-	"pkg/util/systemutil"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 const ActionUpgrade = "upgrade"
