@@ -29,16 +29,17 @@ package upgrader
 import (
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/gofrs/flock"
 	"os"
-	"pkg/api"
-	"pkg/config"
-	"pkg/util/command"
-	"pkg/util/fileutil"
-	"pkg/util/systemutil"
 	"strconv"
 	"time"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/astaxie/beego/logs"
+	"github.com/gofrs/flock"
 )
 
 func DoUpgradeAgent() error {

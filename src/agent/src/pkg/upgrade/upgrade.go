@@ -28,13 +28,14 @@ package upgrade
 
 import (
 	"errors"
-	"github.com/astaxie/beego/logs"
 	"os"
-	"pkg/api"
-	"pkg/config"
-	"pkg/util/fileutil"
-	"pkg/util/systemutil"
 	"time"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/astaxie/beego/logs"
 )
 
 func DoPollAndUpgradeAgent() {

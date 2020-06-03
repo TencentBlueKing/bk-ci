@@ -30,15 +30,16 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego/logs"
 	"io/ioutil"
 	"os"
-	"pkg/api"
-	"pkg/util"
-	"pkg/util/command"
-	"pkg/util/systemutil"
 	"strings"
 	"time"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/astaxie/beego/logs"
 )
 
 func Start() {
