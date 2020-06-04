@@ -172,9 +172,9 @@ class StoreProjectRelDao {
 
     private fun TStoreProjectRel.getStoreInitProjectsCondition(
         storeType: Byte,
-        specProjectCodeList: List<String>?,
+        specProjectCodeList: Set<String>?,
         grayFlag: Boolean?,
-        grayProjectCodeList: List<String>?
+        grayProjectCodeList: Set<String>?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(STORE_TYPE.eq(storeType))
