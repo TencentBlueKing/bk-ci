@@ -132,9 +132,9 @@ class StoreProjectRelDao {
         dslContext: DSLContext,
         storeType: Byte,
         descFlag: Boolean = true,
-        specProjectCodeList: List<String>? = null,
+        specProjectCodeList: Set<String>? = null,
         grayFlag: Boolean? = null,
-        grayProjectCodeList: List<String>? = null
+        grayProjectCodeList: Set<String>? = null
     ): Long {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             val conditions =
@@ -147,9 +147,9 @@ class StoreProjectRelDao {
         dslContext: DSLContext,
         storeType: Byte,
         descFlag: Boolean = true,
-        specProjectCodeList: List<String>? = null,
+        specProjectCodeList: Set<String>? = null,
         grayFlag: Boolean? = null,
-        grayProjectCodeList: List<String>? = null,
+        grayProjectCodeList: Set<String>? = null,
         page: Int? = null,
         pageSize: Int? = null
     ): Result<TStoreProjectRelRecord>? {
