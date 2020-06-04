@@ -57,7 +57,14 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
-import org.jooq.*
+import org.jooq.Condition
+import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Record10
+import org.jooq.Record15
+import org.jooq.Record5
+import org.jooq.Record9
+import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
