@@ -35,6 +35,7 @@ import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -60,6 +61,7 @@ interface UserAtomReleaseResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("插件市场工作台-新增插件请求报文体", required = true)
+        @Valid
         marketAtomCreateRequest: MarketAtomCreateRequest
     ): Result<Boolean>
 
