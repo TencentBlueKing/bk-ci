@@ -24,45 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.constant
+package com.tencent.devops.common.web.constant
 
-const val BCI_CODE_PREFIX = "BCI_CODE_"
-const val DEVOPS = "DevOps"
-const val NUM_ONE = 1
-const val NUM_TWO = 2
-const val NUM_THREE = 3
-const val NUM_FOUR = 4
-const val NUM_FIVE = 5
-const val NUM_SIX = 6
-const val NUM_SEVEN = 7
-const val NUM_EIGHT = 8
-const val NUM_NINE = 9
-const val INIT_VERSION = "1.0.0" // 初始化版本
-const val BEGIN = "begin" // 开始
-const val EDIT = "edit" // 提交信息
-const val COMMIT = "commit" // 提交
-const val BUILD = "build" // 构建
-const val CHECK = "check" // 验证
-const val TEST = "test" // 测试
-const val APPROVE = "approve" // 审核
-const val END = "end" // 结束
-const val SUCCESS = "success" // 成功
-const val UNDO = "undo" // 未执行
-const val DOING = "doing" // 执行中
-const val FAIL = "fail" // 失败
-const val ING = "ing" // 中
-const val LATEST = "latest" // 最新
-const val DEVELOP = "develop" // 开发
-const val DEPLOY = "deploy" // 部署
-const val SECURITY = "security" // 安全
-const val NORMAL = "normal" // 正常
-const val EXCEPTION = "exception" // 异常
-const val NUM_UNIT = "numUnit" // 数量单位：个
-const val REQUIRED = "required" // 必选
-const val DEFAULT = "default" // 默认
-const val JAVA = "java" // java
-const val PYTHON = "python" // python
-const val NODEJS = "nodejs" // nodejs
-const val GOLANG = "golang" // golang
-const val PATTERN_STYLE = "patternStyle" // 正则表达式规则
-const val MESSAGE = "message" // 提示信息
+enum class BkStyleEnum(val style: String) {
+    COMMON_STYLE("^.*\$"), // 通用正则表达式
+    NUMBER_STYLE("[0-9]*\$"), // 数字正则表达式
+    STORE_NAME_STYLE("^[\\w-\\u4E00-\\u9FBB\\u3400-\\u4DBF\\uF900-\\uFAD9\\u3000-\\u303F\\u2000-\\u206F\\uFF00-\\uFFEF]{1,32}\$"), // 研发商店名称正则表达式
+    STORE_CODE_STYLE("^[a-zA-Z_][\\w]{0,31}\$"), // 研发商店组件标识正则表达式
+    SERVICE_CODE_STYLE("^[a-z][([-a-z-0-9]*[a-z-0-9])?]{0,31}\$"), // 研发商店扩展服务标识正则表达式
+    EMAIL_STYLE("^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*\$"), // 电子邮箱正则表达式
+    AUTH_STYLE("^HTTP|HTTPS|OAUTH|SSH\$"), // 权限认证类型正则表达式
+    PRIVATE_REASON_STYLE("^[A-Za-z0-9\\u4E00-\\u9FBB\\u3400-\\u4DBF\\uF900-\\uFAD9\\u3000-\\u303F\\u2000-\\u206F\\uFF00-\\uFFEF.。?？！!,()，、；;：:'‘’“”\"…\\s]{2,256}\$"), // 不开源原因正则表达式
+    VISIBILITY_LEVEL_STYLE("^PRIVATE|LOGIN_PUBLIC\$"), // 项目可视范围正则表达式
+    LANGUAGE_STYLE("^java|python|nodejs|golang|c|c++|php|c#\$") // 开发语言正则表达式
+}
