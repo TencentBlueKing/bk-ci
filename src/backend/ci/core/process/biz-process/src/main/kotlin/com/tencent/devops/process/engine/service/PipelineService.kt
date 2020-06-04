@@ -1670,7 +1670,10 @@ class PipelineService @Autowired constructor(
                     hasCollect = favorPipelines.contains(pipelineId),
                     latestBuildUserId = starter,
                     instanceFromTemplate = pipelineTemplateMap[pipelineId] != null,
-                    creator = creator
+                    creator = creator,
+                    groupLabel = pipelineRuntimeService.getGroupLabelList(
+                            pipeLineId = pipelineId
+                    )!!
                 )
             )
         }
