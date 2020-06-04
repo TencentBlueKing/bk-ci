@@ -1,7 +1,7 @@
 <template>
     <draggable v-model="computedStage" v-bind="dragOptions" :move="checkMove" class="devops-stage-list">
         <Stage v-for="(stage, index) in computedStage"
-            :key="`${stage.id}-${index}`"
+            :key="stage.id"
             class="list-item"
             :editable="editable"
             :stage="stage"
