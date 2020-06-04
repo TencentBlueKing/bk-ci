@@ -24,34 +24,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom
+package com.tencent.devops.common.web.validation
 
+import com.tencent.devops.common.api.constant.PATTERN_STYLE
+import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorContextImpl
+import java.util.regex.Pattern
+import javax.validation.ConstraintValidator
+import javax.validation.ConstraintValidatorContext
 
-@ApiModel("插件市场工作台-新增插件请求报文体")
-data class MarketAtomCreateRequest(
-    @ApiModelProperty("项目编码", required = true)
-    var projectCode: String,
-    @ApiModelProperty("插件代码", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.STORE_CODE_STYLE)
-    var atomCode: String,
-    @ApiModelProperty("插件名称", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.STORE_NAME_STYLE)
-    var name: String,
-    @ApiModelProperty("开发语言", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.LANGUAGE_STYLE)
-    var language: String,
-    @ApiModelProperty("认证方式", required = false)
-    @field:BkField(patternStyle = BkStyleEnum.AUTH_STYLE, required = false)
-    val authType: String? = null,
-    @ApiModelProperty(value = "项目可视范围", required = false)
-    @field:BkField(patternStyle = BkStyleEnum.VISIBILITY_LEVEL_STYLE, required = false)
-    val visibilityLevel: VisibilityLevelEnum? = VisibilityLevelEnum.LOGIN_PUBLIC,
-    @ApiModelProperty(value = "插件代码库不开源原因", required = false)
-    @field:BkField(patternStyle = BkStyleEnum.PRIVATE_REASON_STYLE, required = false)
-    val privateReason: String? = null
-)
+class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
+
+    override fun initialize(parameters: BkField?) {}
+
+    override fun isValid(
+        paramValue: Any?,
+        constraintValidatorContext: ConstraintValidatorContext
+    ): Boolean {
+        val constraintDescriptor = (constraintValidatorContext as ConstraintValidatorContextImpl).constraintDescriptor
+        val attributes = constraintDescriptor.attributes
+        val required = attributes[REQUIRED] as Boolean
+        // 判断参数是否可以为空
+        var flag = false
+        if (paramValue == null || (paramValue is String && paramValue.isBlank())) {
+            flag = true
+        }
+        if (required && flag) {
+            return false
+        }
+        val patternStyle = attributes[PATTERN_STYLE] as BkStyleEnum
+        // 判断参数值是否满足配置的正则表达式规范
+        if (!flag && !Pattern.matches(patternStyle.style, paramValue.toString())) {
+            return false
+        }
+        return true
+    }
+}
