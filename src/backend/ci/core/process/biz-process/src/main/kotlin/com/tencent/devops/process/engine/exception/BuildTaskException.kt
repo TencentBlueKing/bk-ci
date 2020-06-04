@@ -26,7 +26,7 @@
 
 package com.tencent.devops.process.engine.exception
 
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
 
 /**
  * 构建任务执行异常

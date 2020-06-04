@@ -47,4 +47,8 @@ class UserCodeccResourceImpl @Autowired constructor(
     override fun getCodeccRuleSet(projectId: String, userId: String, toolName: String): Result<Map<String, Any>> {
         return codeccApi.getRuleSets(projectId, userId, toolName)
     }
+
+    override fun languageCodeccRuleSet(projectId: String, userId: String): Result<Map<String, Any>> {
+        return codeccApi.getLanguageRuleSets(projectId, userId)
+    }
 }

@@ -35,8 +35,8 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
@@ -176,6 +176,6 @@ val defaultSuccessAtomResponse = AtomResponse(BuildStatus.SUCCEED)
 val defaultFailAtomResponse = AtomResponse(
     buildStatus = BuildStatus.FAILED,
     errorType = ErrorType.USER,
-    errorCode = AtomErrorCode.USER_DEFAULT_ERROR,
+    errorCode = ErrorCode.USER_DEFAULT_ERROR,
     errorMsg = "not definded error"
 )

@@ -151,6 +151,21 @@ interface BuildBuildResource {
         channelCode: ChannelCode?
     ): Result<BuildHistory?>
 
+    @ApiOperation("获取流水线最近成功构建")
+    @GET
+    @Path("/{projectId}/{pipelineId}/latestSuccessBuild")
+    fun getLatestSuccessBuild(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("渠道号，默认为DS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode?
+    ): Result<BuildHistory?>
+
     @ApiOperation("获取构建详情")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")

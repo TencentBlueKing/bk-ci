@@ -21,7 +21,7 @@
                                     :name="service.key"
                                     size="16"
                                 />
-                                {{ service.name }}
+                                {{ serviceName(service.name) }}
                             </router-link>
                         </template>
                         <p
@@ -62,6 +62,19 @@
                     :key="index"
                     :style="{ left: item.left }"
                 >{{ item.label }}</span>
+                <div class="bkdevops-button">
+                    <a
+                        :href="DOCS_URL_PREFIX"
+                        target="_blank"
+                    >
+                        <bk-button
+                            theme="primary"
+                            icon-right="angle-double-right"
+                        >
+                            {{ $t('accessGuide') }}
+                        </bk-button>
+                    </a>
+                </div>
             </div>
 
             <div class="devops-news">
@@ -106,7 +119,7 @@
                 <p>
                     {{ $t("bkdevopsWay") }}
                     <a
-                        :href="`${DOCS_URL_PREFIX}/所有服务/流水线/什么是流水线/summary.html`"
+                        :href="DOCS_URL_PREFIX"
                         target="_blank"
                         class="more"
                     >{{ $t("learnMore") }}</a>
@@ -190,6 +203,11 @@
             return urlJoin('/console/', link)
         }
 
+        serviceName (name = ''): string {
+            const charPos = name.indexOf('(')
+            return charPos > -1 ? name.slice(0, charPos) : name
+        }
+
         created () {
             this.fetchLinks({
                 type: 'news'
@@ -266,7 +284,7 @@
                     .service-item {
                         padding: 0;
                         > h4 {
-                            .bk-icon {
+                            .devops-icon {
                                 opacity: 1;
                             }
                         }
@@ -316,8 +334,10 @@
                 .bkdevops-button {
                     position: absolute;
                     bottom: 30px;
-                    left: 342px;
-                    .bk-icon {
+                    left: 0;
+                    width: 100%;
+                    text-align: center;
+                    .devops-icon {
                         font-size: 12px;
                     }
                 }

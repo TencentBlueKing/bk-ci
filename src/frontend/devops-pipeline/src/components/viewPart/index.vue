@@ -15,7 +15,7 @@
             <div class="table-body">
                 <div class="table-row" v-for="(row, index) of partList" :key="index">
                     <div class="table-part-item part-item-name" @click.stop="showDetail(row)">
-                        <i :class="['bk-icon', `icon-${extForFile(row.name)}`]"></i>
+                        <i :class="['devops-icon', `icon-${extForFile(row.name)}`]"></i>
                         <span :title="row.name">{{ row.name }}</span>
                     </div>
                     <div class="table-part-item part-item-path">
@@ -29,12 +29,17 @@
                         <span v-if="row.artifactoryType === 'PIPELINE'">{{ $t('details.pipelineRepo') }}</span>
                     </div>
                     <div class="table-part-item part-item-handler">
-                        <!-- <i @click.stop="gotoArtifactory" class="bk-icon icon-position-shape handler-btn" title="到版本仓库查看"></i> -->
-                        <i class="bk-icon icon-new-download handler-btn" v-if="hasPermission" :title="$t('download')"
+                        <!-- <i @click.stop="gotoArtifactory" class="devops-icon icon-position-shape handler-btn" :title="$t('editPage.atomForm.toArtifactory')"></i> -->
+                        <i class="devops-icon icon-new-download handler-btn" v-if="hasPermission" :title="$t('download')"
                             @click="requestUrl(row, 'download')"></i>
+                        <!-- <i class="devops-icon icon-tree-module-shape handler-btn" v-if="hasPermission && isMof && isWindows && isApkOrIpa(row)" :title="$t('details.mofDownload')"
+                            @click="requestUrl(row, 'download', null, 'MoF')"></i> -->
+                        <!-- <span class="handler-btn-tool copy" v-if="row.artifactoryType === 'PIPELINE'" :title="$t('details.saveToCustom')" @click="copyToCustom(row)">
+                            <Logo class="icon-copy" name="copy" size="15"></Logo>
+                        </span> -->
                         <span class="handler-btn-tool qrcode"
                             v-if="(extForFile(row.name) === 'ipafile' || extForFile(row.name) === 'apkfile') && hasPermission">
-                            <i class="bk-icon icon-qrcode handler-btn"
+                            <i class="devops-icon icon-qrcode handler-btn"
                                 id="partviewqrcode"
                                 :title="$t('details.qrcode')"
                                 @click="requestUrl(row, 'url', index)"></i>
@@ -47,7 +52,7 @@
                             </p>
                         </span>
                         <bk-popover placement="left" v-if="!hasPermission">
-                            <i class="bk-icon icon-new-download disabled-btn"></i>
+                            <i class="devops-icon icon-new-download disabled-btn"></i>
                             <template slot="content">
                                 <p>{{ $t('details.noDownloadPermTips') }}</p>
                             </template>
@@ -99,12 +104,12 @@
                                 </ul>
                             </div>
                         </tab-panel>
-                        <tab-panel name="metaDate" :title="$t('details.metaData')" v-if="!lastClickItem.folder">
+                        <tab-panel name="metaDate" :title="$t('metaData')" v-if="!lastClickItem.folder">
                             <table class="bk-table has-thead-bordered has-table-striped" v-if="Object.keys(sideSliderConfig.data.meta).length">
                                 <thead>
                                     <tr>
-                                        <th>{{ $t('key') }}</th>
-                                        <th>{{ $t('value') }}</th>
+                                        <th>{{ $t('view.key') }}</th>
+                                        <th>{{ $t('view.value') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -180,8 +185,8 @@
             buildNo () {
                 return this.$route.params.buildNo
             },
-            artifactoryUrl () {
-                return `${WEB_URL_PIRFIX}/artifactory/${this.projectId}/?pipelineId=${this.pipelineId}&buildId=${this.buildNo}`
+            isWindows () {
+                return /WINDOWS/.test(window.navigator.userAgent.toUpperCase())
             }
         },
         watch: {
@@ -255,12 +260,14 @@
 
                         this.curIndexItemUrl = res.url
                     } else {
+                        const isDevnet = await this.$store.dispatch('soda/requestDevnetGateway')
                         const res = await this.$store.dispatch('soda/requestDownloadUrl', {
                             projectId: this.projectId,
                             artifactoryType: row.artifactoryType,
                             path: row.path
                         })
-                        window.location.href = res.url
+                        const url = isDevnet ? res.url : res.url2
+                        window.location.href = type ? `${GW_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -279,9 +286,7 @@
                     })
                 }
             },
-            gotoArtifactory () {
-                window.open(this.artifactoryUrl, '_blank')
-            },
+
             addClickListenr () {
                 document.addEventListener('mouseup', this.clickHandler)
             },
@@ -381,6 +386,10 @@
                 } else {
                     return value
                 }
+            },
+            isApkOrIpa (row) {
+                const type = row.name.toUpperCase().substring(row.name.lastIndexOf('.') + 1)
+                return type === 'APK' || type === 'IPA'
             },
             async copyToCustom (artifactory) {
                 let message, theme

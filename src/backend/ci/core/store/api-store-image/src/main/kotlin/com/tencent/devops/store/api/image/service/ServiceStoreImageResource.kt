@@ -83,4 +83,9 @@ interface ServiceStoreImageResource {
         @QueryParam("buildId")
         buildId: String?
     ): Result<ImageRepoInfo>
+
+    @ApiOperation("获取所有的自研公共镜像")
+    @GET
+    @Path("/image/self_develop/public_images")
+    fun getSelfDevelopPublicImages(): Result<List<ImageRepoInfo>>
 }

@@ -29,10 +29,8 @@ package com.tencent.devops.common.es
 import com.floragunn.searchguard.ssl.SearchGuardSSLPlugin
 import com.floragunn.searchguard.ssl.util.SSLConfigConstants
 import com.tencent.devops.common.web.WebAutoConfiguration
-import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
-import org.elasticsearch.plugins.Plugin
 import org.elasticsearch.transport.client.PreBuiltTransportClient
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
@@ -53,8 +51,10 @@ class ESAutoConfiguration {
     private val ip: String? = null
     @Value("\${elasticsearch.port}")
     private val port: Int? = 0
-    @Value("\${elasticsearch.cluster:#{null}}")
+    @Value("\${elasticsearch.cluster}")
     private val cluster: String? = null
+    @Value("\${elasticsearch.name}")
+    private val name: String? = null
     @Value("\${elasticsearch.keystore.filePath:#{null}}")
     private val keystoreFilePath: String? = null
     @Value("\${elasticsearch.keystore.password:#{null}}")
@@ -66,50 +66,58 @@ class ESAutoConfiguration {
 
     @Bean
     @Primary
-    fun transportClient(): TransportClient {
+    fun transportClient(): ESClient {
         if (ip.isNullOrBlank()) {
-            throw IllegalArgumentException("ES集群地址尚未配置")
+            throw IllegalArgumentException("ES集群地址尚未配置: elasticsearch.ip")
         }
         if (port == null || port!! <= 0) {
-            throw IllegalArgumentException("ES集群端口尚未配置")
+            throw IllegalArgumentException("ES集群端口尚未配置: elasticsearch.port")
+        }
+        if (cluster.isNullOrBlank()) {
+            throw IllegalArgumentException("ES集群名称尚未配置: elasticsearch.cluster")
+        }
+        if (name.isNullOrBlank()) {
+            throw IllegalArgumentException("ES唯一名称尚未配置: elasticsearch.name")
         }
 
         val builder = Settings.builder()
+            .put("cluster.name", cluster)
+            .put("client.transport.sniff", true)
+        val searchGuard =
+            !keystoreFilePath.isNullOrBlank() || !truststoreFilePath.isNullOrBlank() ||
+                !keystorePassword.isNullOrBlank() || !truststorePassword.isNullOrBlank()
 
-        var plugin: Class<out Plugin>? = null
+        val client = if (searchGuard) {
+            if (keystoreFilePath.isNullOrBlank()) {
+                throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.keystore.filePath")
+            }
+            if (truststoreFilePath.isNullOrBlank()) {
+                throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.keystore.password")
+            }
+            if (keystorePassword.isNullOrBlank()) {
+                throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.truststore.filePath")
+            }
+            if (truststorePassword.isNullOrBlank()) {
+                throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.truststore.password")
+            }
 
-        if (!cluster.isNullOrBlank()) {
-            builder.put("cluster.name", cluster)
-        }
-
-        if (!keystoreFilePath.isNullOrBlank()) {
-            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_FILEPATH, keystoreFilePath)
-                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION, false)
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION, false)
                 .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENABLED, true)
                 .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION_RESOLVE_HOST_NAME, true)
-        }
-        if (!truststoreFilePath.isNullOrBlank()) {
-            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_FILEPATH, truststoreFilePath)
-        }
-        if (!keystorePassword.isNullOrBlank()) {
-            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_PASSWORD, keystorePassword)
-        }
-        if (!truststorePassword.isNullOrBlank()) {
-            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_PASSWORD, truststorePassword)
-            plugin = SearchGuardSSLPlugin::class.java
-        }
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_FILEPATH, keystoreFilePath)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_FILEPATH, truststoreFilePath)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_PASSWORD, keystorePassword)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_PASSWORD, truststorePassword)
 
-        val settings = builder.build()
-        val ips = ip!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-
-        val client = if (plugin != null) {
-            PreBuiltTransportClient(settings, plugin)
+            PreBuiltTransportClient(builder.build(), SearchGuardSSLPlugin::class.java)
         } else {
-            PreBuiltTransportClient(settings)
+            PreBuiltTransportClient(builder.build())
         }
+
+        val ips = ip!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         for (ipAddress in ips) {
             client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), port!!))
         }
-        return client
+        return ESClient(name!!, client)
     }
 }

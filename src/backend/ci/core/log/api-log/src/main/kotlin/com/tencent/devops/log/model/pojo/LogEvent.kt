@@ -39,5 +39,6 @@ data class LogEvent(
     override val buildId: String,
     val logs: List<LogMessage>,
     override val retryTime: Int = 2,
-    override val delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills)
+    override val delayMills: Int = 0,
+    override var esName: String? = null
+) : ILogEvent(buildId, retryTime, delayMills, esName)

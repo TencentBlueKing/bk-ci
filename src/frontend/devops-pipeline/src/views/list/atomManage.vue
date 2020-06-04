@@ -31,7 +31,7 @@
                     </bk-table-column>
                     <bk-table-column class-name="primary-color" width="120">
                         <template slot-scope="props">
-                            <bk-popover :content="`${$t('atomManage.relatedNumPrefix')}${props.row.pipelineCnt}${$t('atomManage.relatedNumSuffix')}`" placement="top">
+                            <bk-popover :content="$t('atomManage.relatedNumTips', [props.row.pipelineCnt])" placement="top">
                                 <span @click="showDetail(props.row)" class="cursor-pointer">{{ props.row.pipelineCnt }}</span>
                             </bk-popover>
                         </template>

@@ -17,6 +17,8 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import { v4 as uuidv4 } from 'uuid'
+
 export function isVNode (node) {
     return typeof node === 'object' && node.hasOwnProperty('componentOptions')
 }
@@ -304,11 +306,11 @@ function convertToEn (time) {
     const sec = time / 1000
     let res = ''
     if (sec <= 60) {
-        res = 'less than one minute'
+        res = 'less than 1 minute'
     } else if (sec <= 60 * 60) {
-        res = `${Math.floor(sec / 60)}minutes and ${(Math.floor(sec % 60))}seconds`
+        res = `${Math.floor(sec / 60)}m and ${(Math.floor(sec % 60))}s`
     } else if (time <= 60 * 60 * 24) {
-        res = `${Math.floor(sec / 3600)}hours and ${Math.floor(sec % 60 / 60)}minutes`
+        res = `${Math.floor(sec / 3600)}h and ${Math.floor(sec % 60 / 60)}m`
     } else {
         res = `more than ${Math.floor(sec / 86400)} days`
     }
@@ -447,15 +449,9 @@ export const deepCopy = obj => {
     return JSON.parse(JSON.stringify(obj))
 }
 
-export const hashID = (length = 8) => {
-    let pos = 0
-    let result = ''
-    while (pos < length) {
-        const n = Math.round(Math.random() * 126) + 33
-        result += String.fromCharCode(n)
-        pos++
-    }
-    return result
+export const hashID = () => {
+    const uuid = uuidv4().replace(/-/g, '')
+    return uuid
 }
 
 export function getServiceLogoByPath (link) {
@@ -561,13 +557,13 @@ export function throttle (func, interval = DEFAULT_TIME_INTERVAL) {
     }
 }
 
-export function navConfirm ({ content, title }) {
+export function navConfirm ({ content, title, ...restProps }) {
     return new Promise((resolve, reject) => {
         if (typeof window.globalVue.$leaveConfirm !== 'function') {
             reject(new Error('')); return
         }
 
-        window.globalVue.$leaveConfirm({ content, title })
+        window.globalVue.$leaveConfirm({ content, title, ...restProps })
 
         window.globalVue.$once('order::leaveConfirm', resolve)
 
@@ -579,11 +575,34 @@ export function getQueryParamList (arr = [], key) {
     if (Array.isArray(arr) && arr.length > 0) {
         const arrLen = arr.length
         return arr.reduce((result, item, index) => {
-            result += `${key}=${item}`
+            result += `${key}=${encodeURIComponent(item)}`
             if (index < arrLen - 1) result += '&'
             return result
         }, '')
     } else if (arr && typeof arr === 'string') {
-        return `${key}=${arr}`
+        return `${key}=${encodeURIComponent(arr)}`
+    }
+}
+
+export function getParamsValuesMap (params = []) {
+    if (!Array.isArray(params)) return {}
+    return params.reduce((values, param) => {
+        if (param.id) {
+            values[param.id] = param.defaultValue
+        }
+        return values
+    }, {})
+}
+
+/**
+ * 判断两个数组是否有交集
+ * @param {Array} arr1
+ * @param {Array} arr2
+ */
+export function hasIntersection (arr1, arr2) {
+    try {
+        return arr2.some(item => arr1.includes(item))
+    } catch (e) {
+        return false
     }
 }

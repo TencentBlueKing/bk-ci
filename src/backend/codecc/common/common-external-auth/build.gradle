@@ -1,0 +1,20 @@
+apply plugin: "maven"
+
+dependencies {
+    compile project(":common:common-service")
+//    compile project(":common:common-basic")
+//    compile project(":common:common-redis")
+    compile project(":common:common-api")
+    compile project(":common:common-util")
+    compile "com.fasterxml.jackson.core:jackson-databind"
+    compile "com.fasterxml.jackson.core:jackson-core"
+    compile "com.fasterxml.jackson.core:jackson-annotations"
+    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
+    compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
+    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base"
+    compile "com.fasterxml.jackson.module:jackson-module-kotlin"
+    compile "org.springframework.boot:spring-boot-starter-jersey"
+    compile "org.springframework.boot:spring-boot-starter-undertow"
+    compile "org.springframework.boot:spring-boot-starter-web"
+    compile "io.swagger:swagger-jersey2-jaxrs"
+}

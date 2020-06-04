@@ -21,10 +21,18 @@
                         <draggable v-model="globalParams" :options="paramsDragOptions">
                             <accordion v-for="(param, index) in globalParams" :key="param.paramIdKey" :is-error="errors.any(`param-${param.id}`)">
                                 <header class="param-header" slot="header">
-                                    <span>{{ param.id }}</span>
-                                    <i v-if="!disabled && settingKey !== &quot;templateParams&quot;" @click.stop.prevent="editParamShow(index)" class="bk-icon" :class="[`${param.required ? 'icon-eye' : 'icon-eye-slash'}`]" />
-                                    <i v-if="!disabled" class="bk-icon icon-move" />
-                                    <i v-if="!disabled" @click.stop.prevent="editParam(index, false)" class="bk-icon icon-minus" />
+                                    <span>
+                                        <bk-popover style="vertical-align: middle" v-if="errors.all(`param-${param.id}`).length" placement="top">
+                                            <i class="bk-icon icon-info-circle-shape"></i>
+                                            <div slot="content">
+                                                <p v-for="error in errors.all(`param-${param.id}`)" :key="error">{{ error }}</p>
+                                            </div>
+                                        </bk-popover>
+                                        {{ param.id }}
+                                    </span>
+                                    <i v-if="!disabled && settingKey !== 'templateParams'" @click.stop.prevent="editParamShow(index)" class="devops-icon" :class="[`${param.required ? 'icon-eye' : 'icon-eye-slash'}`]" />
+                                    <i v-if="!disabled" class="devops-icon icon-move" />
+                                    <i v-if="!disabled" @click.stop.prevent="editParam(index, false)" class="devops-icon icon-minus" />
                                 </header>
                                 <bk-form slot="content">
                                     <div class="params-flex-col">
@@ -45,7 +53,7 @@
                                     </div>
                                     <div class="params-flex-col pt10">
                                         <bk-form-item class="flex-col-span-1" :label="$t('name')" :is-error="errors.has(`param-${param.id}.id`)" :error-msg="errors.first(`param-${param.id}.id`)">
-                                            <vuex-input :ref="`paramId${index}Input`" :data-vv-scope="`param-${param.id}`" :disabled="disabled" :handle-change="(name, value) => handleUpdateParamId(name, value, index)" v-validate.initial="`required|unique:${validateParams.map(p => p.id).join(&quot;,&quot;)}`" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
+                                            <vuex-input :ref="`paramId${index}Input`" :data-vv-scope="`param-${param.id}`" :disabled="disabled" :handle-change="(name, value) => handleUpdateParamId(name, value, index)" v-validate.initial="`required|unique:${validateParams.map(p => p.id).join(',')}`" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
                                         </bk-form-item>
                                         <bk-form-item class="flex-col-span-1" :label="$t('editPage.defaultValue')" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="showTips">
                                             <selector
@@ -58,6 +66,7 @@
                                                 :data-vv-scope="`param-${param.id}`"
                                                 :placeholder="$t('editPage.defaultValueTips')"
                                                 :disabled="disabled"
+                                                :key="param.type"
                                                 :value="getSelectorDefaultVal(param)"
                                             >
                                             </selector>
@@ -78,11 +87,11 @@
                                     </div>
 
                                     <bk-form-item v-if="isSelectorParam(param.type)" :label="$t('editPage.selectOptions')" :desc="$t('editPage.optionsDesc')" :is-error="errors.has(`param-${param.id}.options`)" :error-msg="errors.first(`param-${param.id}.options`)">
-                                        <vuex-textarea v-validate.initial="&quot;excludeComma&quot;" :disabled="disabled" :handle-change="(name, value) => editOption(name, value, index)" name="options" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.optionTips')" :value="getOptions(param)"></vuex-textarea>
+                                        <vuex-textarea v-validate.initial="'excludeComma'" :disabled="disabled" :handle-change="(name, value) => editOption(name, value, index)" name="options" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.optionTips')" :value="getOptions(param)"></vuex-textarea>
                                     </bk-form-item>
 
                                     <bk-form-item v-if="isSvnParam(param.type)" :label="$t('editPage.svnParams')" :is-error="errors.has(`param-${param.id}.repoHashId`)" :error-msg="errors.first(`param-${param.id}.repoHashId`)">
-                                        <request-selector v-bind="getRepoOption('CODE_SVN')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="&quot;required&quot;"></request-selector>
+                                        <request-selector v-bind="getRepoOption('CODE_SVN')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="'required'"></request-selector>
                                     </bk-form-item>
 
                                     <bk-form-item v-if="isSvnParam(param.type)" :label="$t('editPage.relativePath')" :is-error="errors.has(`param-${param.id}.relativePath`)" :error-msg="errors.first(`param-${param.id}.relativePath`)">
@@ -90,7 +99,7 @@
                                     </bk-form-item>
 
                                     <bk-form-item v-if="isGitParam(param.type)" :label="$t('editPage.gitRepo')" :is-error="errors.has(`param-${param.id}.repoHashId`)" :error-msg="errors.first(`param-${param.id}.repoHashId`)">
-                                        <request-selector v-bind="getRepoOption('CODE_GIT')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="&quot;required&quot;"></request-selector>
+                                        <request-selector v-bind="getRepoOption('CODE_GIT')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="'required'"></request-selector>
                                     </bk-form-item>
 
                                     <bk-form-item v-if="isCodelibParam(param.type)" :label="$t('editPage.codelibParams')" :is-error="errors.has(`param-${param.id}.scmType`)" :error-msg="errors.first(`param-${param.id}.scmType`)">
@@ -111,7 +120,7 @@
                                         <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="glob" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.filterRuleTips')" :value="param.glob"></vuex-input>
                                     </bk-form-item>
 
-                                    <bk-form-item v-if="isArtifactoryParam(param.type)" :label="$t('history.metaData')" :is-error="errors.has(`param-${param.id}.properties`)" :error-msg="errors.first(`param-${param.id}.properties`)">
+                                    <bk-form-item v-if="isArtifactoryParam(param.type)" :label="$t('metaData')" :is-error="errors.has(`param-${param.id}.properties`)" :error-msg="errors.first(`param-${param.id}.properties`)">
                                         <key-value-normal :disabled="disabled" name="properties" :data-vv-scope="`param-${param.id}`" :is-metadata-var="true" :add-btn-text="$t('editPage.addMetaData')" :value="getProperties(param)" :handle-change="(name, value) => handleProperties(name, value, index)"></key-value-normal>
                                     </bk-form-item>
 
@@ -122,7 +131,7 @@
                             </accordion>
                         </draggable>
                         <a class="text-link" v-if="!disabled" @click.stop.prevent="editParam(globalParams.length, true)">
-                            <i class="bk-icon icon-plus-circle" />
+                            <i class="devops-icon icon-plus-circle" />
                             <span>{{ $t('editPage.addParams') }}</span>
                         </a>
                     </template>
@@ -145,6 +154,7 @@
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import validMixins from '../validMixins'
     import draggable from 'vuedraggable'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
     import { STORE_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
     import {
         isStringParam,
@@ -234,13 +244,6 @@
                 'osList',
                 'getBuildResourceTypeList'
             ]),
-            versionConfig () {
-                return {
-                    MajorVersion: {},
-                    MinorVersion: {},
-                    FixVersion: {}
-                }
-            },
             baseOSList () {
                 return this.osList.filter(os => os.value !== 'NONE').map(os => ({
                     id: os.value,
@@ -272,7 +275,6 @@
             },
             globalParams: {
                 get () {
-                    const allVersionKeyList = Object.keys(this.versionConfig)
                     return this.renderParams.filter(p => !allVersionKeyList.includes(p.id))
                 },
                 set (params) {
@@ -280,7 +282,6 @@
                 }
             },
             versions () {
-                const allVersionKeyList = Object.keys(this.versionConfig)
                 return this.params.filter(p => allVersionKeyList.includes(p.id))
             },
             hasGlobalParams () {
@@ -334,7 +335,7 @@
             getBuildTypeList (os) {
                 return this.getBuildResourceTypeList(os)
             },
-            getSelectorDefaultVal ({ type, defaultValue }) {
+            getSelectorDefaultVal ({ type, defaultValue = '' }) {
                 if (isMultipleParam(type)) {
                     return defaultValue && typeof defaultValue === 'string' ? defaultValue.split(',') : []
                 }
@@ -362,6 +363,7 @@
                 try {
                     const param = this.globalParams[paramIndex]
                     const preValue = param[key]
+
                     if (preValue !== value) {
                         Object.assign(param, {
                             [key]: value
@@ -441,9 +443,12 @@
                     if (value && typeof value === 'string') {
                         opts = value.split('\n').map(opt => {
                             const v = opt.trim()
+                            const res = v.match(/^([\w\.\\\/]+)=(\S+)$/) || [v, v, v]
+                            const [, key, value] = res
+                            console.log(key, value)
                             return {
-                                key: v,
-                                value: v
+                                key,
+                                value
                             }
                         })
                     }
@@ -505,7 +510,7 @@
 
             getOptions (param) {
                 try {
-                    return param.options.map(opt => opt.key).join('\n')
+                    return param.options.map(opt => opt.key === opt.value ? opt.key : `${opt.key}=${opt.value}`).join('\n')
                 } catch (e) {
                     return ''
                 }
@@ -526,7 +531,6 @@
 
             // 全局参数添加遍历的key值
             getParams (params) {
-                const allVersionKeyList = Object.keys(this.versionConfig)
                 const result = params.map(item => {
                     const temp = { ...item }
                     if (!allVersionKeyList.includes(item.id)) {
@@ -546,7 +550,7 @@
                         return true
                     }
                     return false
-                }).map(opt => ({ id: opt.key, name: opt.key })) : []
+                }).map(opt => ({ id: opt.key, name: opt.value })) : []
             }
         }
     }
@@ -576,10 +580,6 @@
             .flex-col-span-1 {
                 flex: 1;
                 overflow: hidden;
-                label.bk-label {
-                    height: 30px;
-                    line-height: 30px;
-                }
             }
         }
         .content .text-link {
@@ -604,7 +604,7 @@
                 margin-right: 10px;
             }
         }
-        .bk-icon {
+        .devops-icon {
             font-size: 14px;
             padding: 10px  0 0 10px;
             cursor: pointer;
@@ -624,7 +624,7 @@
         > span {
             flex: 1;
         }
-        >.bk-icon {
+        >.devops-icon {
             width: 24px;
             text-align: center;
             &.icon-plus {

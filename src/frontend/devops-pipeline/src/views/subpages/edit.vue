@@ -16,12 +16,14 @@
             :desc="noPermissionTipsConfig.desc"
             :btns="noPermissionTipsConfig.btns">
         </empty-tips>
+        <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section" v-if="!isLoading && currentTab === 'pipeline'"></mini-map>
     </section>
 </template>
 
 <script>
     import { mapActions, mapState } from 'vuex'
     import emptyTips from '@/components/devops/emptyTips'
+    import MiniMap from '@/components/MiniMap'
     import { navConfirm } from '@/utils/util'
     import { PipelineEditTab, BaseSettingTab } from '@/components/PipelineEditTabs/'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
@@ -30,7 +32,8 @@
         components: {
             emptyTips,
             PipelineEditTab,
-            BaseSettingTab
+            BaseSettingTab,
+            MiniMap
         },
         mixins: [pipelineOperateMixin],
         data () {
@@ -66,6 +69,12 @@
             ...mapState([
                 'fetchError'
             ]),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
             currentTab () {
                 return this.$route.params.tab || 'pipeline'
             },
@@ -100,6 +109,7 @@
             },
             pipeline (val) {
                 this.isLoading = false
+                this.requestInterceptAtom()
                 if (val && val.instanceFromTemplate) this.requestMatchTemplateRules(val.templateId)
             },
             fetchError (error) {
@@ -111,6 +121,7 @@
         },
         mounted () {
             this.init()
+            this.requestQualityAtom()
             this.addLeaveListenr()
         },
         beforeDestroy () {
@@ -136,11 +147,16 @@
                 'togglePropertyPanel',
                 'setPipeline',
                 'setPipelineEditing',
+                'setAuthEditing',
                 'setSaveStatus'
             ]),
             ...mapActions('pipelines', [
                 'requestPipelineSetting',
                 'updatePipelineSetting'
+            ]),
+            ...mapActions('soda', [
+                'requestQualityAtom',
+                'requestInterceptAtom'
             ]),
             init () {
                 this.isLoading = true
@@ -158,7 +174,7 @@
                 if (!this.leaving) {
                     if (this.isEditing) {
                         this.leaving = true
-                        navConfirm({ content: this.confirmMsg, title: this.confirTitle })
+                        navConfirm({ content: this.confirmMsg, type: 'warning' })
                             .then(() => {
                                 next(true)
                                 this.leaving = false
@@ -181,6 +197,17 @@
             leaveSure (e) {
                 e.returnValue = this.confirmMsg
                 return this.confirmMsg
+            },
+            requestQualityAtom () {
+                this.$store.dispatch('soda/requestQualityAtom', {
+                    projectId: this.projectId
+                })
+            },
+            requestInterceptAtom () {
+                this.$store.dispatch('soda/requestInterceptAtom', {
+                    projectId: this.projectId,
+                    pipelineId: this.pipelineId
+                })
             },
             requestMatchTemplateRules (templateId) {
                 this.$store.dispatch('soda/requestMatchTemplateRuleList', {

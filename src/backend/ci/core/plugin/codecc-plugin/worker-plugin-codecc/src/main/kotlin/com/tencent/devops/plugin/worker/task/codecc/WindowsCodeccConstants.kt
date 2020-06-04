@@ -33,8 +33,8 @@ object WindowsCodeccConstants {
     // windows公共构建机路径
     // windows不需要安装，直接配置路径即可
     val WINDOWS_CODECC_FOLDER = File("c:/software/codecc")
-    val WINDOWS_COV_PY_FILE = File(WINDOWS_CODECC_FOLDER, "script/${LinuxCodeccConstants.getCovPyFile()}")
-    val WINDOWS_TOOL_PY_FILE = File(WINDOWS_CODECC_FOLDER, "script/${LinuxCodeccConstants.getToolPyFile()}")
+    val WINDOWS_COV_PY_FILE = File(WINDOWS_CODECC_FOLDER, "script/${LinuxCodeccConstants.getCovPyFile().name}")
+    val WINDOWS_TOOL_PY_FILE = File(WINDOWS_CODECC_FOLDER, "script/${LinuxCodeccConstants.getToolPyFile().name}")
     val WINDOWS_COVRITY_HOME = File(WINDOWS_CODECC_FOLDER, "cov-analysis-win64-2018.06")
     val WINDOWS_KLOCWORK_HOME = File(WINDOWS_CODECC_FOLDER, "kw-analysis-win64-12.3")
     val WINDOWS_PYTHON2_PATH = File(WINDOWS_CODECC_FOLDER, "Python27")

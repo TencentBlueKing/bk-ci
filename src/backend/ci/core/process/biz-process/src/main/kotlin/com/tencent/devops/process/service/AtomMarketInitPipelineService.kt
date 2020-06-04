@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveEl
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.AtomMarketInitPipelineResp
@@ -85,12 +86,48 @@ class AtomMarketInitPipelineService @Autowired constructor(
         val stageFirstElement = ManualTriggerElement(id = "T-1-1-1")
         val stageFirstElements = listOf<Element>(stageFirstElement)
         val params = mutableListOf<BuildFormProperty>()
-        params.add(BuildFormProperty("atomCode", true, BuildFormPropertyType.STRING, atomBaseInfo.atomCode, null, null,
-            null, null, null, null, null, null))
-        params.add(BuildFormProperty("version", true, BuildFormPropertyType.STRING, atomBaseInfo.version, null, null,
-            null, null, null, null, null, null))
-        params.add(BuildFormProperty("script", true, BuildFormPropertyType.STRING, script, null, null,
-            null, null, null, null, null, null))
+        params.add(BuildFormProperty(
+            id = "atomCode",
+            required = true,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = atomBaseInfo.atomCode,
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
+        params.add(BuildFormProperty(
+            id = "version",
+            required = true,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = atomBaseInfo.version,
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
+        params.add(BuildFormProperty(
+            id = "script",
+            required = true,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = script,
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
         val stageFirstContainer = TriggerContainer(
             id = containerSeqId.toString(),
             name = "构建触发",
@@ -104,7 +141,7 @@ class AtomMarketInitPipelineService @Autowired constructor(
         )
         containerSeqId++
         val stageFirstContainers = listOf<Container>(stageFirstContainer)
-        val stageFirst = Stage(stageFirstContainers, "stage-1")
+        val stageFirst = Stage(stageFirstContainers, VMUtils.genStageId(1))
         // stage-2
         val stageSecondPullCodeElement = CodeGitElement(
             name = "拉取Git仓库代码",
@@ -144,7 +181,7 @@ class AtomMarketInitPipelineService @Autowired constructor(
             dispatchType = DockerDispatchType(DockerVersion.TLINUX2_2.value)
         )
         val stageSecondContainers = listOf<Container>(stageSecondContainer)
-        val stageSecond = Stage(stageSecondContainers, "stage-2")
+        val stageSecond = Stage(stageSecondContainers, VMUtils.genStageId(2))
         val stages = mutableListOf(stageFirst, stageSecond)
         val atomCode = atomBaseInfo.atomCode
         val pipelineName = "am-$projectCode-$atomCode-${System.currentTimeMillis()}"

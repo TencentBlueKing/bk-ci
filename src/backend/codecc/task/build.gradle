@@ -1,0 +1,7 @@
+subprojects {
+    apply plugin: "maven"
+
+    dependencies {
+        compile "org.glassfish.jersey.ext:jersey-bean-validation"
+    }
+}

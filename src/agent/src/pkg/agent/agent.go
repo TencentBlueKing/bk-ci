@@ -27,13 +27,14 @@
 package agent
 
 import (
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/collector"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/cron"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/heartbeat"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/job"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/pipeline"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/upgrade"
 	"github.com/astaxie/beego/logs"
-	"pkg/collector"
-	"pkg/config"
-	"pkg/heartbeat"
-	"pkg/job"
-	"pkg/pipeline"
-	"pkg/upgrade"
 )
 
 func Run() {
@@ -55,6 +56,9 @@ func Run() {
 
 	// 启动pipeline
 	go pipeline.Start()
+
+	// 定期清理 24小时内生成 hs_err 文件
+	go cron.CleanDumpFileJob(1, 24)
 
 	job.DoPollAndBuild()
 }

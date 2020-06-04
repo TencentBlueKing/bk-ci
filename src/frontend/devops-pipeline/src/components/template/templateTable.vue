@@ -6,8 +6,8 @@
                     <th width="10%">{{ $t('icon') }}</th>
                     <th width="16%">{{ $t('template.name') }}</th>
                     <th width="10%">{{ $t('version') }}</th>
-                    <th width="10%">{{ $t('template.relatedCodelib') }}</th>
-                    <th width="30%">{{ $t('template.name') }}</th>
+                    <th width="10%">{{ $t('template.source') }}</th>
+                    <th width="30%">{{ $t('template.relatedCodelib') }}</th>
                     <th width="8%">{{ $t('template.pipelineInstance') }}</th>
                     <th width="16%">{{ $t('operate') }}</th>
                 </tr>
@@ -221,17 +221,13 @@
             },
 
             templateTypeFilter (val) {
-                let res = ''
                 switch (val) {
                     case 'constraint':
                     case 'CONSTRAINT':
-                        res = this.$t('store')
-                        break
+                        return this.$t('store')
                     default:
-                        res = this.$t('template.customize')
-                        break
+                        return this.$t('template.customize')
                 }
-                return res
             },
 
             toInstanceList (row) {
@@ -254,15 +250,15 @@
             toRelativeStore (row) {
                 if (!this.isManagerUser) return
 
-                const href = `${WEB_URL_PIRFIX}/store/atomList/template?projectCode=${this.projectId}&templateId=${row.templateId}`
+                const href = `${WEB_URL_PIRFIX}/store/workList/template?projectCode=${this.projectId}&templateId=${row.templateId}`
                 window.open(href, '_blank')
             },
 
             deleteTemplate (row) {
                 if (!this.isManagerUser) return
-                const content = `${this.$t('delete')}${row.name}`
+                const content = `${this.$t('template.deleteTemplateTips', [row.name])}`
 
-                navConfirm({ title: this.$t('confirm'), content })
+                navConfirm({ type: 'warning', content })
                     .then(() => {
                         this.confirmDeleteTemplate(row)
                     }).catch(() => {})

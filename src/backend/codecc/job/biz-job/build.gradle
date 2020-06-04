@@ -1,0 +1,17 @@
+apply plugin: "java"
+dependencies {
+    compile project(":common:common-service")
+    compile project(":common:common-web")
+    compile project(":common:common-client")
+//    compile project(":common:common-auth")
+    compile project(":common:common-db")
+    compile project(":job:model-job")
+    compile project(":job:api-job")
+    compile project(":defect:api-defect")
+    compile project(":defect:model-defect")
+//    compile group: 'com.tencent.bk.devops', name: 'common-license', version: '0.0.2', changing: true
+}
+
+version = null
+
+// version "1.2.3"  // 这里可以设定版本号

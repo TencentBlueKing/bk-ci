@@ -147,6 +147,8 @@ object LoggerService {
         }
     }
 
+    fun finishTask() = finishLog(elementId, jobId, executeCount)
+
     fun addNormalLine(message: String) {
         val logMessage = LogMessage(
             message = message,
@@ -172,48 +174,48 @@ object LoggerService {
 
     fun addFoldStartLine(foldName: String) {
         val logMessage = LogMessage(
-            "##[group] $foldName",
-            System.currentTimeMillis(),
-            elementId,
-            jobId,
-            LogType.LOG,
-            executeCount
+            message = "##[group]$foldName",
+            timestamp = System.currentTimeMillis(),
+            tag = elementId,
+            jobId = jobId,
+            logType = LogType.LOG,
+            executeCount = executeCount
         )
         addLog(logMessage)
     }
 
     fun addFoldEndLine(foldName: String) {
         val logMessage = LogMessage(
-            "##[endgroup] $foldName",
-            System.currentTimeMillis(),
-            elementId,
-            jobId,
-            LogType.LOG,
-            executeCount
+            message = "##[endgroup]$foldName",
+            timestamp = System.currentTimeMillis(),
+            tag = elementId,
+            jobId = jobId,
+            logType = LogType.LOG,
+            executeCount = executeCount
         )
         addLog(logMessage)
     }
 
     fun addRangeStartLine(rangeName: String) {
         val logMessage = LogMessage(
-            "[START]  $rangeName",
-            System.currentTimeMillis(),
-            elementId,
-            jobId,
-            LogType.START,
-            executeCount
+            message = "[START] $rangeName",
+            timestamp = System.currentTimeMillis(),
+            tag = elementId,
+            jobId = jobId,
+            logType = LogType.START,
+            executeCount = executeCount
         )
         addLog(logMessage)
     }
 
     fun addRangeEndLine(rangeName: String) {
         val logMessage = LogMessage(
-            "[END]  $rangeName",
-            System.currentTimeMillis(),
-            elementId,
-            jobId,
-            LogType.END,
-            executeCount
+            message = "[END] $rangeName",
+            timestamp = System.currentTimeMillis(),
+            tag = elementId,
+            jobId = jobId,
+            logType = LogType.END,
+            executeCount = executeCount
         )
         addLog(logMessage)
     }
@@ -229,6 +231,18 @@ object LoggerService {
             }
         } catch (e: Exception) {
             logger.warn("Fail to send the logs(${logMessages.size})", e)
+        }
+    }
+
+    private fun finishLog(tag: String?, jobId: String?, executeCount: Int?) {
+        try {
+            logger.info("Start to finish the log")
+            val result = logResourceApi.finishLog(tag, jobId, executeCount)
+            if (result.isNotOk()) {
+                logger.error("上报日志状态日志失败：${result.message}")
+            }
+        } catch (e: Exception) {
+            logger.warn("Fail to finish the logs", e)
         }
     }
 }

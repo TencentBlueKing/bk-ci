@@ -31,6 +31,8 @@ import com.tencent.devops.common.pipeline.NameAndValue
 data class ElementAdditionalOptions(
     val enable: Boolean,
     val continueWhenFailed: Boolean,
+    val retryWhenFailed: Boolean,
+    val retryCount: Int,
     val timeout: Long?,
     val runCondition: RunCondition?,
 

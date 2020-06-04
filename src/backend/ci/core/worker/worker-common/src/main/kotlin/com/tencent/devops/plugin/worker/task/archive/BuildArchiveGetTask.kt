@@ -28,6 +28,9 @@ package com.tencent.devops.plugin.worker.task.archive
 
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.archive.element.BuildArchiveGetElement
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.BuildHistory
@@ -101,7 +104,11 @@ class BuildArchiveGetTask : ITask() {
         }
 
         LoggerService.addNormalLine("total $count file(s) found")
-        if (count == 0 && notFoundContinue == "false") throw RuntimeException("0 file found in path: $srcPaths")
+        if (count == 0 && notFoundContinue == "false") throw TaskExecuteException(
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+            errorType = ErrorType.USER,
+            errorMsg = "0 file found in path: $srcPaths"
+        )
     }
 
     private fun getBuildId(pipelineId: String, buildVariables: BuildVariables, buildNo: String): BuildHistory {
@@ -110,6 +117,10 @@ class BuildArchiveGetTask : ITask() {
             pipelineId = pipelineId,
             buildNum = buildNo,
             channelCode = ChannelCode.BS
-        ).data ?: throw RuntimeException("no build($buildNo) history found in pipeline($pipelineId})")
+        ).data ?: throw TaskExecuteException(
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+            errorType = ErrorType.USER,
+            errorMsg = "no build($buildNo) history found in pipeline($pipelineId})"
+        )
     }
 }

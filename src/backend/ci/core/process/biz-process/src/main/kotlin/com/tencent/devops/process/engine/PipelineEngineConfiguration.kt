@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
+import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
@@ -38,10 +39,12 @@ import com.tencent.devops.process.engine.extend.DefaultModelCheckPlugin
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.interceptor.QueueInterceptor
 import com.tencent.devops.process.engine.interceptor.RunLockInterceptor
+import com.tencent.devops.process.engine.interceptor.TimerTriggerScmChangeInterceptor
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -59,6 +62,7 @@ import org.springframework.core.Ordered
 class PipelineEngineConfiguration {
 
     @Bean
+    @ConditionalOnMissingBean(ModelCheckPlugin::class)
     fun modelContainerAgentCheckPlugin(@Autowired client: Client) = DefaultModelCheckPlugin(client)
 
     @Bean
@@ -79,11 +83,13 @@ class PipelineEngineConfiguration {
     @Bean
     fun pipelineInterceptorChain(
         runLockInterceptor: RunLockInterceptor,
-        queueInterceptor: QueueInterceptor
+        queueInterceptor: QueueInterceptor,
+        timerTriggerScmChangeInterceptor: TimerTriggerScmChangeInterceptor
     ): PipelineInterceptorChain {
         val list = listOf(
             runLockInterceptor,
-            queueInterceptor
+            queueInterceptor,
+            timerTriggerScmChangeInterceptor
         )
         return PipelineInterceptorChain(list)
     }

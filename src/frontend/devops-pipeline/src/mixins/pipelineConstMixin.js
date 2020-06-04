@@ -1,19 +1,6 @@
 const pipelineConstMixin = {
     data () {
         return {
-            statusMap: {
-                RUNNING: this.$t('details.statusMap.RUNNING'),
-                PREPARE_ENV: this.$t('details.statusMap.PREPARE_ENV'),
-                CANCELED: this.$t('details.statusMap.CANCELED'),
-                FAILED: this.$t('details.statusMap.FAILED'),
-                SUCCEED: this.$t('details.statusMap.SUCCEED'),
-                REVIEW_ABORT: this.$t('details.statusMap.REVIEW_ABORT'),
-                HEARTBEAT_TIMEOUT: this.$t('details.statusMap.HEARTBEAT_TIMEOUT'),
-                QUALITY_CHECK_FAIL: this.$t('details.statusMap.QUALITY_CHECK_FAIL'),
-                QUEUE: this.$t('details.statusMap.QUEUE'),
-                QUEUE_TIMEOUT: this.$t('details.statusMap.QUEUE_TIMEOUT'),
-                EXEC_TIMEOUT: this.$t('details.statusMap.EXEC_TIMEOUT')
-            },
             BUILD_HISTORY_TABLE_COLUMNS_MAP: {
                 buildNum: {
                     index: 0,
@@ -21,64 +8,70 @@ const pipelineConstMixin = {
                     label: this.$t('buildNum'),
                     width: 120
                 },
-                material: {
+                stageStatus: {
                     index: 1,
+                    prop: 'stageStatus',
+                    label: this.$t('history.stageStatus'),
+                    width: localStorage.getItem('stageStatusWidth') ? localStorage.getItem('stageStatusWidth') : 520
+                },
+                material: {
+                    index: 2,
                     prop: 'material',
                     label: this.$t('editPage.material'),
                     width: localStorage.getItem('materialWidth') ? localStorage.getItem('materialWidth') : 500
                 },
                 startType: {
-                    index: 2,
+                    index: 3,
                     prop: 'startType',
                     label: this.$t('history.triggerType'),
                     width: 120
                 },
                 queueTime: {
-                    index: 3,
+                    index: 4,
                     prop: 'queueTime',
                     label: this.$t('history.tableMap.queueTime'),
                     width: 120
                 },
                 startTime: {
-                    index: 4,
+                    index: 5,
                     prop: 'startTime',
                     label: this.$t('history.tableMap.startTime'),
                     width: 120
                 },
                 endTime: {
-                    index: 5,
+                    index: 6,
                     prop: 'endTime',
                     label: this.$t('history.tableMap.endTime'),
                     width: 120
                 },
                 totalTime: {
-                    index: 6,
+                    index: 7,
                     prop: 'totalTime',
                     label: this.$t('history.tableMap.totalTime')
                 },
                 artifactList: {
-                    index: 7,
+                    index: 8,
                     prop: 'artifactList',
                     label: this.$t('history.artifactList'),
                     width: 180
                 },
                 appVersions: {
-                    index: 8,
+                    index: 9,
                     prop: 'appVersions',
                     label: this.$t('history.tableMap.appVersions')
                 },
                 remark: {
-                    index: 9,
+                    index: 10,
                     prop: 'remark',
                     label: this.$t('history.remark')
                 },
                 recommendVersion: {
-                    index: 10,
+                    index: 11,
                     prop: 'recommendVersion',
                     label: this.$t('history.tableMap.recommendVersion')
                 },
                 pipelineVersion: {
-                    index: 11,
+                    index: 12,
                     prop: 'pipelineVersion',
                     label: this.$t('history.tableMap.pipelineVersion')
                 },
@@ -87,6 +80,7 @@ const pipelineConstMixin = {
                     prop: 'entry',
                     label: this.$t('history.tableMap.entry'),
                     width: 120,
+                    hiddenInHistory: true,
                     entries: [{
                         type: '',
                         label: this.$t('detail')
@@ -104,6 +98,11 @@ const pipelineConstMixin = {
                     }]
                 }
             }
+        }
+    },
+    methods: {
+        getStatusLabel (STATUS) {
+            return this.$t(`details.statusMap.${STATUS}`)
         }
     }
 }

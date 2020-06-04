@@ -28,7 +28,7 @@ package com.tencent.devops.common.pipeline.utils
 
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.JobControlOption
+import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -125,7 +125,7 @@ object ModelUtils {
             e.canRetry = e.canRetry ?: false && BuildStatus.isFailure(status)
         }
         val additionalOptions = e.additionalOptions
-        if (additionalOptions != null) {
+        if (additionalOptions != null && additionalOptions.enable) {
             if (additionalOptions.continueWhenFailed) {
                 e.canRetry = false
             } else if (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||

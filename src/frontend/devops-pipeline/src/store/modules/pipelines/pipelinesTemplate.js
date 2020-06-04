@@ -19,7 +19,8 @@
 
 import ajax from '@/utils/request'
 import {
-    PROCESS_API_URL_PREFIX
+    PROCESS_API_URL_PREFIX,
+    STORE_API_URL_PREFIX
 } from '@/store/constants'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user`
@@ -37,6 +38,11 @@ const mutations = {
 }
 
 const actions = {
+    requestInstallTemplate (_, params) {
+        return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install`, params).then(response => {
+            return response.data
+        })
+    },
     requestTemplatePermission: async (_, projectId) => {
         return ajax.get(`${prefix}/templates/projects/${projectId}/templates/hasManagerPermission`).then(response => {
             return response.data

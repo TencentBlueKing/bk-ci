@@ -94,10 +94,7 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
                 }
 
                 CodeEventType.TAG_PUSH -> {
-                    // 只触发tag创建事件
-                    val gitTagPushEvent = event as GitTagPushEvent
-                    val isCreateTag = gitTagPushEvent.operation_kind == "create"
-                    ScmWebhookMatcher.MatchResult(isCreateTag)
+                    doTagMatch(webHookParams, pipelineId)
                 }
 
                 null -> {
@@ -234,6 +231,34 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
             logger.info("Do push match success for pipeline: $pipelineId")
             return ScmWebhookMatcher.MatchResult(true, mapOf(MATCH_BRANCH to matchBranch, MATCH_PATHS to matchPaths))
+        }
+    }
+
+    private fun doTagMatch(webHookParams: ScmWebhookMatcher.WebHookParams, pipelineId: String): ScmWebhookMatcher.MatchResult {
+        // 只触发tag创建事件
+        val gitTagPushEvent = event as GitTagPushEvent
+        val isCreateTag = gitTagPushEvent.operation_kind == "create"
+        if (!isCreateTag) {
+            logger.info("Do tag match event fail for pipeline: $pipelineId, ${gitTagPushEvent.operation_kind}")
+            return ScmWebhookMatcher.MatchResult(false)
+        }
+
+        // 匹配
+        val eventTag = getTag(gitTagPushEvent.ref)
+        with(webHookParams) {
+            if (doExcludeBranchMatch(excludeTagName, eventTag, pipelineId)) {
+                logger.warn("Do tag event match fail for exclude branch match for pipeline: $pipelineId")
+                return ScmWebhookMatcher.MatchResult(false)
+            }
+
+            val matchBranch = doIncludeBranchMatch(tagName, eventTag, pipelineId)
+            if (matchBranch == null) {
+                logger.warn("Do tag event match fail for include branch not match for pipeline: $pipelineId")
+                return ScmWebhookMatcher.MatchResult(false)
+            }
+
+            logger.info("Do tag match success for pipeline: $pipelineId")
+            return ScmWebhookMatcher.MatchResult(true, mapOf(MATCH_BRANCH to matchBranch, MATCH_PATHS to ""))
         }
     }
 

@@ -31,7 +31,7 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"os"
-	"pkg/api"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
 )
 
 type buildManager struct {
@@ -70,10 +70,7 @@ func (b *buildManager) waitProcessDone(processId int) {
 		errMsg := fmt.Sprintf("build process err, pid: %d, err: %s", processId, err.Error())
 		logs.Warn(errMsg)
 		delete(b.instances, processId)
-		workerBuildFinish(&api.ThirdPartyBuildWithStatus{
-			*b.instances[processId],
-			false,
-			"errMsg"})
+		workerBuildFinish(&api.ThirdPartyBuildWithStatus{*b.instances[processId], false, errMsg})
 		return
 	}
 

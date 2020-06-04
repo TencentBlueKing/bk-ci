@@ -21,36 +21,36 @@
             <devops-form-item
                 :label="$t('projectName')"
                 :required="true"
-                :is-error="errors.has('project_name')"
+                :is-error="errors.has('projectName')"
             >
                 <bk-input
-                    v-model="newProject.project_name"
-                    v-validate="{ required: true, min: 1, max: 12, projectNameUnique: [newProject.project_id] }"
+                    v-model="newProject.projectName"
+                    v-validate="{ required: true, min: 1, max: 12, projectNameUnique: [newProject.projectCode] }"
                     maxlength="12"
-                    name="project_name"
+                    name="projectName"
                     :placeholder="$t('projectNamePlaceholder')"
                 />
                 <div
-                    v-if="errors.has('project_name')"
+                    v-if="errors.has('projectName')"
                     slot="error-tips"
                     class="project-dialog-error-tips"
                 >
-                    {{ errors.first('project_name') }}
+                    {{ errors.first('projectName') }}
                 </div>
             </devops-form-item>
             <devops-form-item
                 :label="$t('englishName')"
                 :required="true"
                 :rules="[]"
-                property="english_name"
-                :is-error="errors.has('english_name')"
-                :error-msg="errors.first('english_name')"
+                property="englishName"
+                :is-error="errors.has('englishName')"
+                :error-msg="errors.first('englishName')"
             >
                 <bk-input
-                    v-model="newProject.english_name"
+                    v-model="newProject.englishName"
                     v-validate="{ required: true, min: 2, max: 32, projectEnglishNameReg: true, projectEnglishNameUnique: isNew }"
                     :placeholder="$t('projectEnglishNamePlaceholder')"
-                    name="english_name"
+                    name="englishName"
                     maxlength="32"
                     :disabled="!isNew"
                 />
@@ -110,8 +110,8 @@
         width: number | string
 
         descriptionLength: number = 100
+        defaultProjectInfo: any = {}
         validate: object = {}
-        title: any = ''
         isNew: boolean = true
         isCreating: boolean = false
         deptLoading: any = {
@@ -124,7 +124,6 @@
         @State showProjectDialog
         @Getter isEmptyProject
         @Action updateNewProject
-        @Action checkProjectField
         @Action toggleProjectDialog
         @Action ajaxUpdatePM
         @Action ajaxAddPM
@@ -150,17 +149,28 @@
             })
         }
 
+        get title () {
+            return this.isNew ? this.$t('newProject') : this.$t('editProject')
+        }
+
         @Watch('showDialog')
         async watchDialog (show: boolean) {
             if (show) {
                 this.$validator.reset()
-                if (this.newProject.project_name) {
+                if (this.newProject.projectName) {
                     this.isNew = false
                 } else {
                     this.isNew = true
                 }
-                
-                this.title = this.isEmptyProject(this.newProject) ? this.$t('newProject') : this.$t('editProject')
+            }
+        }
+        
+        isErrorsRule (errors, rule): boolean {
+            try {
+                return errors.items.find(item => item.rule === rule)
+            } catch (e) {
+                console.error(e)
+                return false
             }
         }
 
@@ -233,6 +243,8 @@
         }
 
         async saveProject () {
+            const data = this.newProject
+            // @ts-ignore
             const valid = await this.$validator.validate()
             if (!valid) {
                 return valid
@@ -241,10 +253,10 @@
             if (this.isNew) {
                 this.addProject()
             } else {
-                const id = this.newProject.project_id
+                const { projectCode } = this.newProject
                 const params = {
-                    id: id,
-                    data: this.newProject
+                    projectCode,
+                    data
                 }
                 this.updateProject(params)
             }
@@ -254,10 +266,6 @@
         cancelProject () {
             this.isCreating = false
             this.showDialog = false
-        }
-
-        async created () {
-            this.title = this.isEmptyProject(this.newProject) ? this.$t('newProject') : this.$t('editProject')
         }
     }
 </script>

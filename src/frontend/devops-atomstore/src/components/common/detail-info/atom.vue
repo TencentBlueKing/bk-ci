@@ -3,22 +3,26 @@
         <img class="detail-pic atom-logo" :src="detail.logoUrl">
         <hgroup class="detail-info-group">
             <h3 class="title-with-img">
-                {{detail.name}}
+                <span :class="{ 'not-recommend': detail.recommendFlag === false }" :title="detail.recommendFlag === false ? $t('store.该插件不推荐使用') : ''">{{detail.name}}</span>
                 <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
-                    <h5 :title="approveMsg" :class="[{ 'not-public': approveMsg !== $t('协作') }]" @click="cooperation">
+                    <h5 :title="approveTip" :class="[{ 'not-public': approveMsg !== $t('store.协作') }]" @click="cooperation">
                         <icon class="detail-img" name="cooperation" size="16" />
-                        <span>{{approveMsg}}</span>
+                        <span class="approve-msg">{{approveMsg}}</span>
                     </h5>
                 </template>
+                <h5 :title="$t('store.点击查看YAML片段')" v-if="detail.yamlFlag && detail.recommendFlag" @click="$emit('update:currentTab', 'YAML')">
+                    <icon class="detail-img" name="yaml" size="16" />
+                    <span class="approve-msg">{{ $t('store.YAML可用') }}</span>
+                </h5>
             </h3>
             <h5 class="detail-info">
-                <span> {{ $t('发布者：') }} </span><span>{{detail.publisher || '-'}}</span>
+                <span> {{ $t('store.发布者：') }} </span><span>{{detail.publisher || '-'}}</span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('版本：') }} </span><span>{{detail.version || '-'}}</span>
+                <span> {{ $t('store.版本：') }} </span><span>{{detail.version || '-'}}</span>
             </h5>
-            <h5 class="detail-info detail-score" :title="`${$t('平均评分为')}${detail.score || 0}${$t('星（总分为5星）')}，${detail.totalNum || 0}${$t('位用户评价了此项内容')}`">
-                <span> {{ $t('评分：') }} </span>
+            <h5 class="detail-info detail-score" :title="$t('store.rateTips', [(detail.score || 0), (detail.totalNum || 0)])">
+                <span> {{ $t('store.评分：') }} </span>
                 <p class="score-group">
                     <comment-rate :rate="5" :width="14" :height="14" :style="{ width: starWidth }" class="score-real"></comment-rate>
                     <comment-rate :rate="0" :width="14" :height="14"></comment-rate>
@@ -26,51 +30,51 @@
                 <span class="rate-num">{{detail.totalNum || 0}}</span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('Job类型：') }} </span>
+                <span> {{ $t('store.Job类型：') }} </span>
                 <span>
                     {{detail.jobType|atomJobType}}
                     <template v-if="detail.os && detail.os.length">
-                        (<i v-for="item in getJobList(detail.os)" :class="[item.icon, 'bk-icon']" :key="item" :title="item.name"></i>)
+                        (<i v-for="item in getJobList(detail.os)" :class="[item.icon, 'devops-icon']" :key="item" :title="item.name"></i>)
                     </template>
                 </span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('分类：') }} </span><span>{{detail.classifyName || '-'}}</span>
+                <span> {{ $t('store.分类：') }} </span><span>{{detail.classifyName || '-'}}</span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('热度：') }} </span><span>{{detail.downloads || 0}}</span>
+                <span> {{ $t('store.热度：') }} </span><span>{{detail.downloads || 0}}</span>
             </h5>
             <h5 class="detail-info detail-label">
-                <span> {{ $t('功能标签：') }} </span>
+                <span> {{ $t('store.功能标签：') }} </span>
                 <span v-for="(label, index) in detail.labelList" :key="index" class="info-label">{{label.labelName}}</span>
                 <span v-if="!detail.labelList || detail.labelList.length <= 0 ">-</span>
             </h5>
             <h5 class="detail-info detail-maxwidth" :title="detail.summary">
-                <span> {{ $t('简介：') }} </span><span>{{detail.summary || '-'}}</span>
+                <span> {{ $t('store.简介：') }} </span><span>{{detail.summary || '-'}}</span>
             </h5>
         </hgroup>
 
         <bk-popover placement="top" v-if="buttonInfo.disable">
-            <button class="bk-button bk-primary" type="button" disabled> {{ $t('安装') }} </button>
+            <button class="bk-button bk-primary" type="button" disabled> {{ $t('store.安装') }} </button>
             <template slot="content">
                 <p>{{buttonInfo.des}}</p>
             </template>
         </bk-popover>
-        <button class="detail-install" @click="goToInstall" v-else> {{ $t('安装') }} </button>
+        <button class="detail-install" @click="goToInstall" v-else> {{ $t('store.安装') }} </button>
 
-        <bk-dialog v-model="showCooperDialog" :title="$t('申请成为协作者')" width="600" :on-close="closeDialog" @confirm="confirmDialog" :loading="dialogLoading" :close-icon="false">
+        <bk-dialog v-model="showCooperDialog" :title="$t('store.申请成为协作者')" width="600" :on-close="closeDialog" @confirm="confirmDialog" :loading="dialogLoading" :close-icon="false">
             <bk-form label-width="90" ref="validateForm" :model="cooperData" v-if="showCooperDialog">
-                <bk-form-item :label="$t('申请人')">
+                <bk-form-item :label="$t('store.申请人')">
                     <bk-input v-model="user" :disabled="true"></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('调试项目')" :required="true" :rules="rules" property="testProjectCode" :icon-offset="30">
+                <bk-form-item :label="$t('store.调试项目')" :required="true" :rules="rules" property="testProjectCode" :icon-offset="30">
                     <big-select class="big-select" v-model="cooperData.testProjectCode" :searchable="true" :options="projectList" setting-key="projectCode" display-key="projectName" :loading="isLoading"></big-select>
                 </bk-form-item>
-                <bk-form-item :label="$t('申请原因')" :required="true" :rules="rules" property="applyReason">
-                    <bk-input type="textarea" v-model="cooperData.applyReason" :placeholder="$t('请输入申请原因')"></bk-input>
+                <bk-form-item :label="$t('store.申请原因')" :required="true" :rules="rules" property="applyReason">
+                    <bk-input type="textarea" v-model="cooperData.applyReason" :placeholder="$t('store.请输入申请原因')"></bk-input>
                 </bk-form-item>
             </bk-form>
-            <form-tips :prompt-list="[$t('欢迎加入插件开发，成为协作者后，可以丰富插件功能，优化插件'), $t('调试项目用来测试插件，建议使用非正式业务项目，避免影响正式流水线')]"></form-tips>
+            <form-tips :prompt-list="[$t('store.欢迎加入插件开发，成为协作者后，可以丰富插件功能，优化插件'), $t('store.调试项目用来测试插件，建议使用非正式业务项目，避免影响正式流水线')]"></form-tips>
         </bk-dialog>
     </section>
 </template>
@@ -90,21 +94,22 @@
                 const local = window.devops || {}
                 switch (val) {
                     case 'AGENT':
-                        return local.$t('编译环境')
+                        return local.$t('store.编译环境')
                     case 'AGENT_LESS':
-                        return local.$t('无编译环境')
+                        return local.$t('store.无编译环境')
                 }
             }
         },
 
         props: {
-            detail: Object
+            detail: Object,
+            currentTab: String
         },
 
         data () {
             return {
                 showCooperDialog: false,
-                user: JSON.parse(localStorage.getItem('_cache_userInfo')).username,
+                user: window.userInfo.username,
                 cooperData: {
                     testProjectCode: '',
                     applyReason: ''
@@ -115,7 +120,7 @@
                 userInfo: {
                     type: ''
                 },
-                rules: [{ required: true, message: this.$t('必填项'), trigger: 'change' }]
+                rules: [{ required: true, message: this.$t('store.必填项'), trigger: 'change' }]
             }
         },
 
@@ -130,20 +135,26 @@
             approveMsg () {
                 const key = `${typeof this.userInfo.type}-${this.detail.approveStatus}`
                 const mapStatus = {
-                    'undefined-WAIT': this.$t('审批中'),
-                    'undefined-PASS': this.$t('协作'),
-                    'undefined-undefined': this.$t('协作'),
-                    'undefined-REFUSE': this.$t('协作')
+                    'undefined-WAIT': this.$t('store.审批中'),
+                    'undefined-PASS': this.$t('store.协作'),
+                    'undefined-undefined': this.$t('store.协作'),
+                    'undefined-REFUSE': this.$t('store.协作')
                 }
-                const res = mapStatus[key] || this.$t('已协作')
+                const res = mapStatus[key] || this.$t('store.已协作')
+                return res
+            },
+
+            approveTip () {
+                let res = this.approveMsg
+                if (res === this.$t('store.协作')) res = this.$t('store.点击申请成为协作者')
                 return res
             },
 
             buttonInfo () {
                 const info = {}
                 info.disable = this.detail.defaultFlag || !this.detail.flag
-                if (this.detail.defaultFlag) info.des = `${this.$t('通用流水线插件，所有项目默认可用，无需安装')}`
-                if (!this.detail.flag) info.des = `${this.$t('你没有该流水线插件的安装权限，请联系流水线插件发布者')}`
+                if (this.detail.defaultFlag) info.des = `${this.$t('store.通用流水线插件，所有项目默认可用，无需安装')}`
+                if (!this.detail.flag) info.des = `${this.$t('store.你没有该流水线插件的安装权限，请联系流水线插件发布者')}`
                 return info
             }
         },
@@ -154,13 +165,15 @@
             }
         },
 
+        created () {
+            this.initData()
+        },
+
         methods: {
             initData () {
-                if (this.type === 'atom') {
-                    this.$store.dispatch('store/getMemberInfo', this.$route.params.code).then((res = {}) => {
-                        this.userInfo = res
-                    })
-                }
+                this.$store.dispatch('store/getMemberInfo', this.$route.params.code).then((res = {}) => {
+                    this.userInfo = res
+                })
             },
 
             closeDialog () {
@@ -174,7 +187,7 @@
                     this.$store.dispatch('store/applyCooperation', data).then((res) => {
                         if (res) {
                             this.clearFormData()
-                            this.$bkMessage({ message: this.$t('申请成功'), theme: 'success' })
+                            this.$bkMessage({ message: this.$t('store.申请成功'), theme: 'success' })
                             this.showCooperDialog = false
                             this.detail.approveStatus = res.approveStatus
                         }
@@ -190,7 +203,7 @@
             },
 
             cooperation () {
-                if (this.approveMsg !== this.$t('协作')) return
+                if (this.approveMsg !== this.$t('store.协作')) return
                 this.showCooperDialog = true
                 this.getProjectList()
             },
@@ -241,8 +254,11 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin: 47px auto 30px;
-        width: 1200px;
+        margin: 26px auto 0;
+        width: 95vw;
+        background: $white;
+        box-shadow: 1px 2px 3px 0px rgba(0,0,0,0.05);
+        padding: 32px;
         .detail-pic {
             width: 130px;
         }
@@ -250,15 +266,17 @@
             height: 160px;
             width: 160px;
         }
+        button {
+            border-radius: 4px;
+            width: 120px;
+            height: 40px;
+        }
         .detail-install {
-            width: 89px;
-            height: 36px;
             background: $primaryColor;
-            border-radius: 2px;
             border: none;
             font-size: 14px;
             color: $white;
-            line-height: 36px;
+            line-height: 40px;
             text-align: center;
             &.opicity-hidden {
                 opacity: 0;
@@ -268,14 +286,11 @@
                 transform: scale(.97)
             }
         }
-        .bk-tooltip button {
-            width: 89px;
-        }
     }
     .detail-info-group {
-        width: 829px;
-        margin: 0 76px;
-        
+        flex: 1;
+        margin: 0 32px;
+        max-width: calc(100% - 314px);
         h3 {
             font-size: 22px;
             line-height: 29px;
@@ -286,6 +301,7 @@
             align-items: center;
             .score-group {
                 position: relative;
+                margin-top: -2px;
                 .score-real {
                     position: absolute;
                     overflow: hidden;
@@ -299,7 +315,6 @@
                 }
             }
             .rate-num {
-                margin-top: 2px;
                 margin-left: 6px;
                 color: $fontWeightColor;
             }
@@ -311,12 +326,13 @@
             width: 33.33%;
             font-size: 14px;
             font-weight: normal;
-            line-height: 19px;
+            line-height: 20px;
             color: $fontBlack;
             span:nth-child(1) {
                 color: $fontWeightColor;
                 display: inline-block;
-                width: 70px;
+                width: 90px;
+                padding-right: 10px;
                 text-align: right;
             }
             span:nth-child(2) {
@@ -324,33 +340,57 @@
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 display: inline-block;
-                width: calc(100% - 70px);
+                width: calc(100% - 90px);
             }
         }
         .title-with-img {
             display: flex;
             align-items: center;
-            h5 {
-                cursor: pointer;
+            .not-recommend {
+                text-decoration: line-through;
             }
-            span {
-                margin-left: -2px;
-                font-size: 14px;
+            >h5 {
+                margin-left: 12px;
+                line-height: 14px;
+                padding: 2px 5px;
+                cursor: pointer;
+                background: rgba(21, 146, 255, 0.08);
+                color: #1592ff;
+                .detail-img {
+                    fill: #1592ff;
+                }
+                span {
+                    font-weight: normal;
+                    font-size: 12px;
+                    line-height: 14px;
+                }
+            }
+            >span {
+                font-size: 20px;
                 color: $fontLightGray;
-                line-height: 19px;
+                line-height: 20px;
                 font-weight: normal;
             }
             .detail-img {
-                margin-left: 12px;
                 vertical-align: middle;
             }
-            .not-public {
+            h5.not-public {
                 cursor: auto;
+                background: none;
+                color: #9e9e9e;
+                .detail-img {
+                    fill: #9e9e9e;
+                }
+            }
+            h5.nomal-title {
+                cursor: auto;
+                background: none;
+                color: #333C48;
             }
         }
         .detail-info.detail-label {
-            width: 829px;
-            padding-left: 70px;
+            width: 994px;
+            padding-left: 90px;
             display: inline-block;
             position: relative;
             span {

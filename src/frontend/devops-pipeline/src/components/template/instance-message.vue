@@ -12,7 +12,7 @@
                 v-bkloading="{
                     isLoading: instanceMessageConfig.loading
                 }">
-                <i class="bk-icon icon-close" @click="cancel()"></i>
+                <i class="devops-icon icon-close" @click="cancel()"></i>
                 <div class="message-title">{{ message }}</div>
                 <div class="fail-pipeline-content">
                     <span>{{ $t('template.instantiationFailMsg') }}：</span>
@@ -52,9 +52,9 @@
             message () {
                 let msg
                 if (this.successList.length) {
-                    msg = `${this.successList.length}${this.$t('template.instantiationSucTips')}，${this.failList.length}${this.$t('template.instantiationFailTips')}`
+                    msg = `${this.$t('template.instantiationSucTips', [this.successList.length])}${this.$t('template.instantiationFailTips', [this.failList.length])}`
                 } else if (!this.successList.length) {
-                    msg = `${this.failList.length}${this.$t('template.instantiationFailTips')}`
+                    msg = this.$t('template.instantiationFailTips', [this.failList.length])
                 }
                 return msg
             }

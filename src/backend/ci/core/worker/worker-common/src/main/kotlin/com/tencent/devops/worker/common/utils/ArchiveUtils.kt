@@ -26,6 +26,9 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
@@ -46,7 +49,11 @@ object ArchiveUtils {
         var count = 0
         filePath.split(",").forEach { f -> matchFiles(workspace, f.trim()).forEach {
             count++
-            if (!isFileLegal(it.name)) throw RuntimeException("不允许归档以 $FIlTER_FILE 后缀结尾的文件: ${it.name}")
+            if (!isFileLegal(it.name)) throw TaskExecuteException(
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
+                errorType = ErrorType.USER,
+                errorMsg = "不允许归档以 $FIlTER_FILE 后缀结尾的文件: ${it.name}"
+            )
             api.uploadCustomize(it, destPath, buildVariables) }
         }
         LoggerService.addNormalLine("共成功自定义归档了 $count 个文件")
@@ -59,7 +66,11 @@ object ArchiveUtils {
             fileNum += matchFiles(workspace, f.trim()).size
         }
         if (fileNum > maxFileCount) {
-            throw RuntimeException("单次归档文件数太多，请打包后再归档！")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
+                errorType = ErrorType.USER,
+                errorMsg = "单次归档文件数太多，请打包后再归档！"
+            )
         }
     }
 
@@ -69,7 +80,11 @@ object ArchiveUtils {
         var count = 0
         filePath.split(",").forEach { f -> matchFiles(workspace, f.trim()).forEach {
             count++
-            if (!isFileLegal(it.name)) throw RuntimeException("不允许归档以 $FIlTER_FILE 后缀结尾的文件: ${it.name}")
+            if (!isFileLegal(it.name)) throw TaskExecuteException(
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
+                errorType = ErrorType.USER,
+                errorMsg = "不允许归档以 $FIlTER_FILE 后缀结尾的文件: ${it.name}"
+            )
             api.uploadPipeline(it, buildVariables) }
         }
         LoggerService.addNormalLine("共成功归档了 $count 个文件")

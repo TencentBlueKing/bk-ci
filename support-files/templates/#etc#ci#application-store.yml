@@ -17,3 +17,27 @@ store:
   artifactoryServiceUrlPrefix: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/ms/artifactory/api
   ideAtomDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/ide/
   imageDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/image/
+  baseImageDocsLink: /console/store/atomStore/detail/image/
+  imageAdminUsers: admin
+  buildResultBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/pipeline
+  defaultImageSourceType: bkdevops
+  defaultImageRepoUrl: __HTTP_SCHEMA__://__JFROG_FQDN__:__DOCKER_PORT__
+  defaultImageRepoName: paas/bkdevops/docker-builder2.2
+  defaultImageTag: v1
+  defaultTicketId:
+  defaultTicketProject:
+  defaultImageRDType: SELF_DEVELOPED
+  imageExecuteNullNotifyTplCode: IMAGE_EXECUTE_NULL_NOTIFY_TPL
+  templateApproveSwitch: close
+  imageApproveSwitch: close
+
+logo:
+  allowUploadLogoTypes: jpg,png,svg
+  allowUploadLogoWidth: 200
+  allowUploadLogoHeight: 200
+  maxUploadLogoSize: 2097152
+
+aes:
+  # 部署前修改好，后续升级如果再修改，会导致历史数据读取不了，所以如果修改需要先解密重新入库
+  aesKey: "J%k^yO{?vt}3tXpG"
+  aesMock: "******"

@@ -703,6 +703,18 @@ abstract class ImageService @Autowired constructor() {
         return imageRepoInfo
     }
 
+    fun getSelfDevelopPublicImages(
+        interfaceName: String? = "Anon interface"
+    ): List<ImageRepoInfo> {
+        logger.info("$interfaceName:Input()")
+        val records = imageDao.listRunnableSelfDevelopPublicImages(dslContext)
+        val resultList = records?.map {
+            getImageRepoInfoByRecord(it)
+        } ?: emptyList()
+        logger.info("$interfaceName:Output(resultList.size=${resultList.size},${resultList.map { it.repoUrl + "/" + it.repoName + ":" + it.repoTag }})")
+        return resultList
+    }
+
     @Value("\${store.defaultImageSourceType}")
     private lateinit var defaultImageSourceType: String
     @Value("\${store.defaultImageRepoUrl}")
@@ -922,6 +934,8 @@ abstract class ImageService @Autowired constructor() {
             imageSizeNum = imageSizeNum,
             imageStatus = ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt()),
             description = imageRecord.description ?: "",
+            dockerFileType = imageRecord.dockerFileType ?: "INPUT",
+            dockerFileContent = imageRecord.dockerFileContent ?: "",
             labelList = labelList ?: listOf(),
             category = category?.categoryCode ?: "",
             categoryName = category?.categoryName ?: "",

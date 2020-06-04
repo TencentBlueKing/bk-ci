@@ -26,7 +26,7 @@
 
 package com.tencent.devops.process.engine.pojo
 
-import com.tencent.devops.common.pipeline.container.JobControlOption
+import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.container.MutexGroup
 
 /**

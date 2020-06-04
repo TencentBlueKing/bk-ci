@@ -28,7 +28,6 @@ package com.tencent.devops.artifactory.service.impl
 
 import com.tencent.devops.artifactory.client.JFrogServiceClient
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
-import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
@@ -40,8 +39,10 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.util.JFrogUtil
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import okhttp3.Request
 import org.slf4j.LoggerFactory
@@ -102,7 +103,7 @@ class JFrogArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl()
         val folderName = generateFolderName(fileType)
         val handleDestPath = filePath.removePrefix(fileSeparator)
         val finalFilePath = URLDecoder.decode(handleDestPath.substring(handleDestPath.indexOf(fileSeparator) + 1), "UTF-8")
-        val fileUrl = "${commonConfig.devopsApiGateway}/artifactory/$folderName/download/service/${URLDecoder.decode(finalFilePath, "UTF-8")}"
+        val fileUrl = "${HomeHostUtil.getHost(commonConfig.devopsApiGateway!!)}/artifactory/$folderName/download/service/${URLDecoder.decode(finalFilePath, "UTF-8")}"
         logger.info("getFileHttpResponse fileUrl is:$fileUrl")
         val request = Request.Builder().url(fileUrl).get().build()
         val httpResponse = OkhttpUtils.doHttp(request)
@@ -206,10 +207,10 @@ class JFrogArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl()
         val filePath = URLDecoder.decode(handleDestPath.substring(handleDestPath.indexOf(fileSeparator) + 1), "UTF-8")
         val folderName = generateFolderName(fileType)
         val fileDownloadPath = when (fileChannelType) {
-            FileChannelTypeEnum.WEB_SHOW -> "${commonConfig.devopsHostGateway}/artifactory/$folderName/view/user/$filePath"
-            FileChannelTypeEnum.WEB_DOWNLOAD -> "${commonConfig.devopsHostGateway}/artifactory/$folderName/download/user/$filePath"
-            FileChannelTypeEnum.SERVICE -> "${commonConfig.devopsApiGateway}/artifactory/$folderName/download/service/$filePath"
-            FileChannelTypeEnum.BUILD -> "${commonConfig.devopsBuildGateway}/artifactory/$folderName/download/build/$filePath"
+            FileChannelTypeEnum.WEB_SHOW -> "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/artifactory/$folderName/view/user/$filePath"
+            FileChannelTypeEnum.WEB_DOWNLOAD -> "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/artifactory/$folderName/download/user/$filePath"
+            FileChannelTypeEnum.SERVICE -> "${HomeHostUtil.getHost(commonConfig.devopsApiGateway!!)}/artifactory/$folderName/download/service/$filePath"
+            FileChannelTypeEnum.BUILD -> "${HomeHostUtil.getHost(commonConfig.devopsBuildGateway!!)}/artifactory/$folderName/download/build/$filePath"
         }
         logger.info("generateFileDownloadPath fileDownloadPath is: $fileDownloadPath")
         return fileDownloadPath

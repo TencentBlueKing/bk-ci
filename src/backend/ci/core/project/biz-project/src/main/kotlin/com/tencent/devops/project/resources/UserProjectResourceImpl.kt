@@ -44,11 +44,15 @@ class UserProjectResourceImpl @Autowired constructor(
     private val projectService: ProjectService
 ) : UserProjectResource {
 
-    override fun list(userId: String): Result<List<ProjectVO>> {
+    override fun list(userId: String, accessToken: String?): Result<List<ProjectVO>> {
         return Result(projectService.list(userId))
     }
 
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<Boolean> {
+    override fun get(projectId: String, accessToken: String?): Result<ProjectVO> {
+        return Result(projectService.getByEnglishName(projectId) ?: throw OperationException("项目不存在"))
+    }
+
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
         // 创建项目
         projectService.create(userId, projectCreateInfo)
 
@@ -58,16 +62,27 @@ class UserProjectResourceImpl @Autowired constructor(
     override fun update(
         userId: String,
         projectId: String,
-        projectUpdateInfo: ProjectUpdateInfo
+        projectUpdateInfo: ProjectUpdateInfo,
+        accessToken: String?
     ): Result<Boolean> {
         return Result(projectService.update(userId, projectId, projectUpdateInfo))
+    }
+
+    override fun enable(
+        userId: String,
+        projectId: String,
+        enabled: Boolean
+    ): Result<Boolean> {
+        projectService.updateUsableStatus(userId, projectId, enabled)
+        return Result(true)
     }
 
     override fun updateLogo(
         userId: String,
         projectId: String,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        accessToken: String?
     ): Result<Boolean> {
         return projectService.updateLogo(userId, projectId, inputStream, disposition)
     }
@@ -80,9 +95,5 @@ class UserProjectResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         projectService.validate(validateType, name, projectId)
         return Result(true)
-    }
-
-    override fun get(projectId: String): Result<ProjectVO> {
-        return Result(projectService.getByEnglishName(projectId) ?: throw OperationException("项目不存在"))
     }
 }

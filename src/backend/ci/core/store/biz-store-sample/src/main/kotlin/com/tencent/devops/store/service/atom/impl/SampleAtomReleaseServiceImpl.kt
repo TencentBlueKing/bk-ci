@@ -129,18 +129,21 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
     ): Pair<Boolean, String> {
         logger.info("checkAtomVersionOptRight, userId=$userId, atomId=$atomId, status=$status, isNormalUpgrade=$isNormalUpgrade")
         val record =
-            marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Pair(false, CommonMessageCode.PARAMETER_IS_INVALID)
+            marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Pair(
+                false,
+                CommonMessageCode.PARAMETER_IS_INVALID
+            )
         val atomCode = record.atomCode
-        val modifier = record.modifier
+        val creator = record.creator
         val recordStatus = record.atomStatus
 
-        // 判断用户是否有权限
+        // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
         if (!(storeMemberDao.isStoreAdmin(
-                dslContext,
-                userId,
-                atomCode,
-                StoreTypeEnum.ATOM.type.toByte()
-            ) || modifier == userId)
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            ) || creator == userId)
         ) {
             return Pair(false, CommonMessageCode.PERMISSION_DENIED)
         }

@@ -25,7 +25,6 @@
  */
 
 subprojects {
+    group "com.tencent.bk.devops.ci.common"
     apply from: "$rootDir/task_deploy_to_maven.gradle"
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

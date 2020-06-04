@@ -341,7 +341,7 @@ class NodeService @Autowired constructor(
             errorCode = ERROR_NODE_NOT_EXISTS,
             params = arrayOf(nodeHashId)
         )
-        if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.EDIT)) {
+        if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
             throw ErrorCodeException(errorCode = ERROR_NODE_NO_EDIT_PERMISSSION)
         }
         checkDisplayName(projectId, nodeId, displayName)
@@ -352,5 +352,16 @@ class NodeService @Autowired constructor(
                 environmentPermissionService.updateNode(userId, projectId, nodeId, displayName)
             }
         }
+    }
+
+    fun getByDisplayName(userId: String, projectId: String, displayName: String): List<NodeBaseInfo> {
+        val nodes = nodeDao.getByDisplayName(dslContext, projectId, displayName, null)
+        if (nodes.isEmpty()) {
+            return emptyList()
+        }
+
+        val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
+        val validRecordList = nodes.filter { canUseNodeIds.contains(it.nodeId) }
+        return validRecordList.map { NodeStringIdUtils.getNodeBaseInfo(it) }
     }
 }

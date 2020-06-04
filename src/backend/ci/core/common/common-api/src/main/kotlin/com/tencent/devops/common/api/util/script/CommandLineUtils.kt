@@ -26,6 +26,9 @@
 
 package com.tencent.devops.common.api.util.script
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
@@ -82,7 +85,11 @@ object CommandLineUtils {
         try {
             val exitCode = executor.execute(cmdLine)
             if (exitCode != 0) {
-                throw RuntimeException("$prefix Script command execution failed with exit code($exitCode)")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "$prefix Script command execution failed with exit code($exitCode)"
+                )
             }
         } catch (t: Throwable) {
             logger.warn("Fail to execute the command($command)", t)

@@ -26,6 +26,7 @@
 
 package com.tencent.devops.common.api.util
 
+import com.fasterxml.jackson.annotation.JsonFilter
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.type.TypeReference
@@ -33,21 +34,96 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.Module
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.ser.FilterProvider
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache
+import com.tencent.devops.common.api.annotation.SkipLogField
+import java.util.HashSet
 
 /**
  *
  * Powered By Tencent
  */
 object JsonUtil {
-    private val objectMapper = ObjectMapper().apply {
-        registerModule(KotlinModule())
-        configure(SerializationFeature.INDENT_OUTPUT, true)
-        configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
-        configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true)
-        setSerializationInclusion(JsonInclude.Include.NON_NULL)
-        disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+
+    private const val MAX_CLAZZ = 50000L
+
+    /**
+     * 序列化时忽略bean中的某些字段,字段需要用注解SkipLogFields声明
+     *
+     * @param bean 对象
+     * @param <T>  对象类型
+     * @return Json字符串
+     * @see SkipLogField
+    </T> */
+    fun <T : Any> skipLogFields(bean: T): String? {
+        return try {
+            beanMapperCache.get(bean.javaClass).writeValueAsString(bean)
+        } catch (e: Throwable) {
+            loadMapper(bean.javaClass).writeValueAsString(bean)
+        }
+    }
+
+    // 如果出现50000+以上的不同的数据类（不是对象）时。。。
+    // 系统性能一定会下降，永久代区可能会OOM了，但不会是在这里引起的。所以这里限制了一个几乎不可能达到的值
+    private val beanMapperCache: LoadingCache<Class<Any>, ObjectMapper> =
+        CacheBuilder.newBuilder().maximumSize(MAX_CLAZZ).build(object : CacheLoader<Class<Any>, ObjectMapper>() {
+            override fun load(clazz: Class<Any>): ObjectMapper {
+                return loadMapper(clazz)
+            }
+        })
+
+    private fun loadMapper(clazz: Class<Any>): ObjectMapper {
+        val nonEmptyMapper = objectMapper()
+        var aClass: Class<*>? = clazz // bean.javaClass
+        val skipFields: MutableSet<String> = HashSet()
+        val skipLogFieldClass = SkipLogField::class.java
+        while (aClass != null) {
+            val fields = aClass.declaredFields
+            for (field in fields) {
+                val fieldAnnotation = field.getAnnotation(skipLogFieldClass) ?: continue
+                if (fieldAnnotation.value.trim().isNotEmpty()) {
+                    skipFields.add(fieldAnnotation.value)
+                } else {
+                    skipFields.add(field.name)
+                }
+            }
+            aClass = aClass.superclass
+        }
+        if (skipFields.isNotEmpty()) {
+            nonEmptyMapper.addMixIn(clazz, skipLogFieldClass)
+            // 仅包含
+            val filterProvider: FilterProvider = SimpleFilterProvider()
+                .addFilter(
+                    skipLogFieldClass.getAnnotation(JsonFilter::class.java).value,
+                    SimpleBeanPropertyFilter.serializeAllExcept(skipFields)
+                )
+            nonEmptyMapper.setFilterProvider(filterProvider)
+        }
+        return nonEmptyMapper
+    }
+
+    private val jsonModules = mutableSetOf<Module>()
+
+    private val objectMapper = objectMapper()
+
+    private fun objectMapper(): ObjectMapper {
+        return ObjectMapper().apply {
+            registerModule(KotlinModule())
+            configure(SerializationFeature.INDENT_OUTPUT, true)
+            configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
+            configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true)
+            setSerializationInclusion(JsonInclude.Include.NON_NULL)
+            disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+            jsonModules.forEach { jsonModule ->
+                registerModule(jsonModule)
+            }
+        }
     }
 
     private val skipEmptyObjectMapper = ObjectMapper().apply {
@@ -58,11 +134,25 @@ object JsonUtil {
         setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
         disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
         configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+        jsonModules.forEach { jsonModule ->
+            registerModule(jsonModule)
+        }
     }
 
     fun getObjectMapper() = objectMapper
 
+    /**
+     * 此方法仅在系统初始化时调用，不建议在运行过程中调用
+     * 子模块/类注册最佳时机是在系统初始化时调用，而不是在运行过程中
+     * @param subModules 子模块/类
+     */
     fun registerModule(vararg subModules: Module) {
+        synchronized(jsonModules) {
+            // 过量保护，子类过多会导致解析慢，系统业务正常情况下永远不应该达到该值，如果出现必须出错
+            if (jsonModules.size < MAX_CLAZZ) {
+                jsonModules.addAll(subModules)
+            }
+        }
         subModules.forEach { subModule ->
             objectMapper.registerModule(subModule)
             skipEmptyObjectMapper.registerModule(subModule)

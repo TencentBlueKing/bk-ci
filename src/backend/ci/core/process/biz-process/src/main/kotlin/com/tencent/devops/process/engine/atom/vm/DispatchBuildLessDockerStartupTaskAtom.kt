@@ -52,8 +52,8 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -114,7 +114,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
+                errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                 errorMsg = t.message
             )
         } finally {
@@ -160,7 +160,11 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 buildId = buildId,
                 taskId = taskId
             )
-
+        pipelineBuildDetailService.updateStartVMStatus(
+            buildId = buildId,
+            containerId = task.containerId,
+            buildStatus = BuildStatus.RUNNING
+        )
         // 读取原子市场中的原子信息，写入待构建处理
         val atoms = AtomUtils.parseContainerMarketAtom(container, task, client, rabbitTemplate)
 
@@ -240,7 +244,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 containerHashId = container.containerId ?: "",
                 containerType = container.getClassType(),
                 taskSeq = taskSeq,
-                taskId = VMUtils.genStartVMTaskId(containerSeq, taskSeq),
+                taskId = VMUtils.genStartVMTaskId(container.id!!),
                 taskName = "Prepare_Job#${container.id!!}(N)",
                 taskType = EnvControlTaskType.NORMAL.name,
                 taskAtom = AtomUtils.parseAtomBeanName(DispatchBuildLessDockerStartupTaskAtom::class.java),

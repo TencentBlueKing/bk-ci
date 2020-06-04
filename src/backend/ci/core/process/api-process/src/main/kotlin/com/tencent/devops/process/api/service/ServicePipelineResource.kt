@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -266,4 +267,36 @@ interface ServicePipelineResource {
         @ApiParam("构建id", required = true)
         buildIds: Set<String>
     ): Result<Map<String/*buildId*/, String/*buildNo*/>>
+
+    @ApiOperation("流水线重命名")
+    @POST
+    @Path("/{pipelineId}/projects/{projectId}/rename")
+    fun rename(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "流水线名称", required = true)
+        name: PipelineName
+    ): Result<Boolean>
+
+    @ApiOperation("还原流水线编排")
+    @PUT
+    @Path("/{pipelineId}/projects/{projectId}/restore")
+    fun restore(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<Boolean>
 }

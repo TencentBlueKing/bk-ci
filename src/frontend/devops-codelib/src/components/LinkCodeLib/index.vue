@@ -1,7 +1,7 @@
 <template>
     <bk-dropdown-menu :class="{ &quot;devops-button-dropdown&quot;: true, &quot;disabled&quot;: disabled }">
         <bk-button :disabled="disabled" theme="primary" slot="dropdown-trigger">
-            <i class="bk-icon icon-plus"></i>
+            <i class="devops-icon icon-plus"></i>
             <span>{{ $t('codelib.linkCodelib') }}</span>
         </bk-button>
         <ul class="devops-button-dropdown-menu" slot="dropdown-content">

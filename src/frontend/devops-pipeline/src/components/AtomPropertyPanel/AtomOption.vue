@@ -2,7 +2,7 @@
     <accordion show-checkbox show-content key="otherChoice">
         <header class="var-header" slot="header">
             <span>{{ $t('editPage.atomOption') }}</span>
-            <i class="bk-icon icon-angle-down" style="display:block"></i>
+            <i class="devops-icon icon-angle-down" style="display:block"></i>
         </header>
         <div slot="content" class="bk-form bk-form-vertical">
             <template v-for="(obj, key) in optionModel">
@@ -15,6 +15,7 @@
 </template>
 
 <script>
+    import Vue from 'vue'
     import { mapActions } from 'vuex'
     import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
@@ -57,6 +58,9 @@
             ]),
             // getAtomOptionDefault,
             handleUpdateElementOption (name, value) {
+                if (this.element.additionalOptions && this.element.additionalOptions[name] === undefined) {
+                    Vue.set(this.element.additionalOptions, name, value)
+                }
                 this.setPipelineEditing(true)
                 this.handleUpdateElement('additionalOptions',
                                          Object.assign(this.element.additionalOptions || {}, { [name]: value })

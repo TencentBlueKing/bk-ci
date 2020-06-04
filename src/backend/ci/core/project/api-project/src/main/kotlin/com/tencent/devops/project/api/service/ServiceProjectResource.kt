@@ -51,17 +51,8 @@ interface ServiceProjectResource {
 
     @GET
     @Path("/")
-    @ApiOperation("查询所有项目")
+    @ApiOperation("查询当前用户有权限的项目列表")
     fun list(
-        @ApiParam("用户ID", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String
-    ): Result<List<ProjectVO>>
-
-    @GET
-    @Path("/query_all")
-    @ApiOperation("查询所有项目")
-    fun listV2(
         @ApiParam("用户ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
@@ -96,27 +87,10 @@ interface ServiceProjectResource {
         projectCodes: List<String>
     ): Result<List<ProjectVO>>
 
-    @POST
-    @Path("/query")
-    @ApiOperation("查询指定项目")
-    fun listByProjectCodeV2(
-        @ApiParam(value = "项目id", required = true)
-        projectCodes: Set<String>
-    ): Result<List<ProjectVO>>
-
     @GET
     @Path("/getProjectByUser")
     @ApiOperation("查询所有项目")
     fun getProjectByUser(
-        @ApiParam("userId", required = true)
-        @QueryParam("userId")
-        userName: String
-    ): Result<List<ProjectVO>>
-
-    @GET
-    @Path("/query/by_username")
-    @ApiOperation("根据用户名查询项目")
-    fun getProjectByUserV2(
         @ApiParam("userId", required = true)
         @QueryParam("userId")
         userName: String
@@ -147,29 +121,11 @@ interface ServiceProjectResource {
     ): Result<HashMap<String, String>>
 
     @GET
-    @Path("/query/by_code")
-    @ApiOperation("根据项目Code获取对应的名称")
-    fun getNameByCodeV2(
-        @ApiParam("projectCodes，多个以英文逗号分隔", required = true)
-        @QueryParam("projectCodes")
-        projectCodes: String
-    ): Result<HashMap<String, String>>
-
-    @GET
     @Path("/{projectId}")
     @ApiOperation("查询指定EN项目")
     fun get(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
-        englishName: String
-    ): Result<ProjectVO?>
-
-    @GET
-    @Path("/names/{englishName}")
-    @ApiOperation("查询指定EN项目")
-    fun getV2(
-        @ApiParam("项目ID", required = true)
-        @PathParam("englishName")
         englishName: String
     ): Result<ProjectVO?>
 }

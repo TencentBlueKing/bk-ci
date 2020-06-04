@@ -133,7 +133,9 @@ class CallBackControl @Autowired constructor(
             status = modelDetail.status,
             startTime = modelDetail.startTime,
             endTime = modelDetail.endTime ?: 0,
-            model = SimpleModel(stages)
+            model = SimpleModel(stages),
+            projectId = projectId,
+            trigger = modelDetail.trigger
         )
 
         sendToCallBack(CallBackData(event = callBackEvent, data = buildEvent), list)
@@ -156,6 +158,7 @@ class CallBackControl @Autowired constructor(
     private fun send(callBack: ProjectPipelineCallBack, requestBody: String, executeCount: Int = 1) {
         if (executeCount > 3) {
             logger.error("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}| retry fail!")
+            return
         }
         val request = Request.Builder()
             .url(callBack.callBackUrl)
@@ -249,7 +252,7 @@ class CallBackControl @Autowired constructor(
     private fun parseTask(c: Container, tasks: MutableList<SimpleTask>) {
         c.elements.forEach { e ->
             val taskStartTimeMills = e.startEpoch ?: 0
-            val taskStatus = BuildStatus.parse(c.status)
+            val taskStatus = BuildStatus.parse(e.status)
             val taskEndTimeMills = if (BuildStatus.isFinish(taskStatus)) {
                 taskStartTimeMills + (e.elapsed ?: 0)
             } else {

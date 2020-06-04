@@ -58,7 +58,11 @@ data class CodeGitWebHookTriggerElement(
     @ApiModelProperty("新版的git原子的类型")
     val repositoryType: RepositoryType? = null,
     @ApiModelProperty("新版的git代码库名")
-    val repositoryName: String? = null
+    val repositoryName: String? = null,
+    @ApiModelProperty("tagName", required = false)
+    val tagName: String? = null,
+    @ApiModelProperty("excludeTagName", required = false)
+    val excludeTagName: String? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitWebHookTrigger"

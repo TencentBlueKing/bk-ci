@@ -27,6 +27,9 @@
 package com.tencent.devops.scm
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.scm.code.CodeGitScmOauthImpl
 import com.tencent.devops.scm.code.CodeGitlabScmImpl
@@ -52,15 +55,27 @@ object ScmOauthFactory {
         return when (type) {
             ScmType.CODE_SVN -> {
                 if (region == null) {
-                    throw RuntimeException("The svn region is null")
+                    throw TaskExecuteException(
+                        errorCode = ErrorCode.USER_INPUT_INVAILD,
+                        errorType = ErrorType.USER,
+                        errorMsg = "The svn region is null"
+                    )
                 }
 
                 if (userName == null) {
-                    throw RuntimeException("The svn username is null")
+                    throw TaskExecuteException(
+                        errorCode = ErrorCode.USER_INPUT_INVAILD,
+                        errorType = ErrorType.USER,
+                        errorMsg = "The svn username is null"
+                    )
                 }
 
                 if (privateKey == null) {
-                    throw RuntimeException("The svn private key is null")
+                    throw TaskExecuteException(
+                        errorCode = ErrorCode.USER_INPUT_INVAILD,
+                        errorType = ErrorType.USER,
+                        errorMsg = "The svn private key is null"
+                    )
                 }
                 val svnConfig = SpringContextUtil.getBean(SVNConfig::class.java)
                 CodeSvnScmImpl(
@@ -75,7 +90,11 @@ object ScmOauthFactory {
             }
             ScmType.CODE_GIT -> {
                 if (token == null) {
-                    throw RuntimeException("The git token is null")
+                    throw TaskExecuteException(
+                        errorCode = ErrorCode.USER_INPUT_INVAILD,
+                        errorType = ErrorType.USER,
+                        errorMsg = "The git token is null"
+                    )
                 }
                 val gitConfig = SpringContextUtil.getBean(GitConfig::class.java)
                 CodeGitScmOauthImpl(
@@ -91,12 +110,20 @@ object ScmOauthFactory {
             }
             ScmType.CODE_GITLAB -> {
                 if (token == null) {
-                    throw RuntimeException("The gitlab access token is null")
+                    throw TaskExecuteException(
+                        errorCode = ErrorCode.USER_INPUT_INVAILD,
+                        errorType = ErrorType.USER,
+                        errorMsg = "The gitlab access token is null"
+                    )
                 }
                 val gitConfig = SpringContextUtil.getBean(GitConfig::class.java)
                 CodeGitlabScmImpl(projectName, branchName, url, token, gitConfig)
             }
-            else -> throw RuntimeException("Unknown repo($type)")
+            else -> throw TaskExecuteException(
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
+                errorType = ErrorType.USER,
+                errorMsg = "Unknown repo($type)"
+            )
         }
     }
 }

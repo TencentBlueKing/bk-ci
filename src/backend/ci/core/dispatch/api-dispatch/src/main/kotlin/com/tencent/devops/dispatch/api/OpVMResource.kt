@@ -83,7 +83,7 @@ interface OpVMResource {
     fun get(
         @ApiParam(value = "虚拟机ID", required = true)
         @PathParam("vmId")
-        vmId: Int
+        vmId: Long
     ): Result<VM>
 
     @ApiOperation("虚拟机入库")
@@ -107,7 +107,7 @@ interface OpVMResource {
     @Path("/")
     fun delete(
         @ApiParam(value = "VM ID", required = true)
-        @QueryParam("id") id: Int
+        @QueryParam("id") id: Long
     ): Result<Boolean>
 
     @ApiOperation("更新虚拟机")
@@ -131,7 +131,7 @@ interface OpVMResource {
     @Path("/maintain")
     fun maintain(
         @ApiParam(value = "VM ID", required = true)
-        @QueryParam("vmId") vmId: Int,
+        @QueryParam("vmId") vmId: Long,
         @ApiParam(value = "Enable", required = true)
         @QueryParam("enable") enable: Boolean
     ): Result<Boolean>
@@ -141,7 +141,7 @@ interface OpVMResource {
     @Path("/maintain")
     fun maintain(
         @ApiParam(value = "VM ID", required = true)
-        @QueryParam("vmId") vmId: Int
+        @QueryParam("vmId") vmId: Long
     ): Result<Boolean>
 
     @ApiOperation("If need to shutdown the vm after the build (currently just for investigating issues")

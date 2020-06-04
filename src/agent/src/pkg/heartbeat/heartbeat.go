@@ -28,19 +28,20 @@ package heartbeat
 
 import (
 	"errors"
-	"github.com/astaxie/beego/logs"
-	"pkg/api"
-	"pkg/config"
-	"pkg/job"
-	"pkg/upgrade"
-	"pkg/util"
 	"time"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/job"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/upgrade"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/astaxie/beego/logs"
 )
 
 func DoAgentHeartbeat() {
 	for {
 		agentHeartbeat()
-
 		time.Sleep(10 * time.Second)
 	}
 }
@@ -68,14 +69,32 @@ func agentHeartbeat() error {
 		return nil
 	}
 
-	// 修改agent配置
+	// agent配置
+	configChanged := false
 	if config.GAgentConfig.ParallelTaskCount != heartbeatResponse.ParallelTaskCount {
 		config.GAgentConfig.ParallelTaskCount = heartbeatResponse.ParallelTaskCount
+		configChanged = true
+	}
+	if heartbeatResponse.Gateway != "" && heartbeatResponse.Gateway != config.GAgentConfig.Gateway {
+		config.GAgentConfig.Gateway = heartbeatResponse.Gateway
+		configChanged = true
+	}
+	if configChanged {
 		config.GAgentConfig.SaveConfig()
 	}
 
 	// agent环境变量
 	config.GEnvVars = heartbeatResponse.Envs
+
+	// 检测agent版本与agent文件是否匹配
+	if config.AgentVersion != heartbeatResponse.MasterVersion {
+		agentFileVersion := config.DetectAgentVersion()
+		if agentFileVersion != "" && config.AgentVersion != agentFileVersion {
+			logs.Warn("agent version mismatch, exiting agent process")
+			systemutil.ExitProcess(1)
+		}
+	}
+
 	logs.Info("agent heartbeat done")
 	return nil
 }

@@ -37,13 +37,22 @@ import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.process.engine.service.PipelineBuildTaskService
+import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
+import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
+import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -56,9 +65,13 @@ import org.springframework.stereotype.Service
 class BuildEndControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
+    private val pipelineBuildService: PipelineBuildService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val pipelineRuntimeExtService: PipelineRuntimeExtService
+    private val pipelineBuildTaskService: PipelineBuildTaskService,
+    private val pipelineRuntimeExtService: PipelineRuntimeExtService,
+    private val buildVariableService: BuildVariableService,
+    private val dslContext: DSLContext
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -89,7 +102,7 @@ class BuildEndControl @Autowired constructor(
     private fun PipelineBuildFinishEvent.finish() {
 
         // 将状态设置正确
-        val buildStatus = if (BuildStatus.isFinish(status)) {
+        val buildStatus = if (BuildStatus.isFinish(status) || status.name == BuildStatus.STAGE_SUCCESS.name) {
             status
         } else {
             BuildStatus.SUCCEED
@@ -106,7 +119,7 @@ class BuildEndControl @Autowired constructor(
 
         logger.info("[$pipelineId]|BUILD_FINISH| finish the build[$buildId] event ($status)")
 
-        fixTask(buildInfo)
+        fixTask(buildInfo, buildStatus)
 
         // 记录本流水线最后一次构建的状态
         pipelineRuntimeService.finishLatestRunningBuild(
@@ -120,6 +133,10 @@ class BuildEndControl @Autowired constructor(
             errorCode = buildInfo.errorCode,
             errorMsg = buildInfo.errorMsg
         )
+
+        if (BuildStatus.isFailure(status)) {
+            addFailElementVar(buildId, projectId, pipelineId)
+        }
 
         // 设置状态
         pipelineBuildDetailService.buildEnd(
@@ -150,7 +167,7 @@ class BuildEndControl @Autowired constructor(
         )
     }
 
-    private fun PipelineBuildFinishEvent.fixTask(buildInfo: BuildInfo) {
+    private fun PipelineBuildFinishEvent.fixTask(buildInfo: BuildInfo, buildStatus: BuildStatus) {
         val allBuildTask = pipelineRuntimeService.getAllBuildTask(buildId)
 
         allBuildTask.forEach {
@@ -173,6 +190,11 @@ class BuildEndControl @Autowired constructor(
                             taskParam = it.taskParams, actionType = ActionType.TERMINATE
                         )
                     )
+
+                    // 如果是取消的构建，则会统一取消子流水线的构建
+                    if (BuildStatus.isCancel(buildStatus)) {
+                        terminateSubPipeline(buildInfo.buildId, it)
+                    }
                 }
             }
             // 优先保存SYSTEM错误，若无SYSTEM错误，将BuildData中错误信息更新为编排顺序的最后一个Element错误
@@ -180,6 +202,27 @@ class BuildEndControl @Autowired constructor(
                 buildInfo.errorType = it.errorType
                 buildInfo.errorCode = it.errorCode
                 buildInfo.errorMsg = it.errorMsg
+            }
+        }
+    }
+
+    private fun terminateSubPipeline(buildId: String, buildTask: PipelineBuildTask) {
+
+        if (!buildTask.subBuildId.isNullOrBlank()) {
+            val subBuildInfo = pipelineRuntimeService.getBuildInfo(buildTask.subBuildId!!)
+            if (subBuildInfo != null && !BuildStatus.isFinish(subBuildInfo.status)) {
+                try {
+                    pipelineBuildService.buildManualShutdown(
+                        userId = subBuildInfo.startUser,
+                        projectId = subBuildInfo.projectId,
+                        pipelineId = subBuildInfo.pipelineId,
+                        buildId = subBuildInfo.buildId,
+                        channelCode = subBuildInfo.channelCode,
+                        checkPermission = false
+                    )
+                } catch (e: Throwable) {
+                    logger.warn("[$buildId]|TerminateSubPipeline|subBuildId=${subBuildInfo.buildId}|e=$e")
+                }
             }
         }
     }
@@ -206,5 +249,46 @@ class BuildEndControl @Autowired constructor(
                 actionType = ActionType.START
             )
         )
+    }
+
+    private fun addFailElementVar(buildId: String, projectId: String, pipelineId: String) {
+        val taskRecords = pipelineBuildTaskService.getAllBuildTask(buildId)
+        var errorElements = ""
+        var errorElementsName = ""
+        val model = pipelineBuildDetailService.getBuildModel(buildId)
+        taskRecords.forEach {
+            if (it.status == BuildStatus.FAILED || it.status == BuildStatus.QUEUE_TIMEOUT || it.status == BuildStatus.EXEC_TIMEOUT || it.status == BuildStatus.QUALITY_CHECK_FAIL) {
+                val errorElement = findElementMsg(model, it)
+                errorElements += errorElement.first
+                errorElementsName += errorElement.second
+            }
+        }
+        logger.info("pipeline build fail, add $BK_CI_BUILD_FAIL_TASKS, value[$errorElements]")
+        val valueMap = mutableMapOf<String, Any>()
+        valueMap[BK_CI_BUILD_FAIL_TASKS] = errorElements ?: ""
+        valueMap[BK_CI_BUILD_FAIL_TASKNAMES] = errorElementsName.substringBeforeLast(",") ?: ""
+        buildVariableService.batchSetVariable(
+            buildId = buildId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            variables = valueMap
+        )
+    }
+
+    private fun findElementMsg(model: Model?, taskRecord: PipelineBuildTaskInfo): Pair<String, String> {
+        var containerName = ""
+        model?.stages?.forEach { stage ->
+            if (stage.id == taskRecord.stageId) {
+                stage.containers.forEach nextContainer@{ container ->
+                    if (container.id == taskRecord.containerId) {
+                        containerName = container.name
+                        return@forEach
+                    }
+                }
+            }
+        }
+        val failTask = "[${taskRecord.stageId}][$containerName]${taskRecord.taskName} \n"
+        val failTaskName = "${taskRecord.taskName},"
+        return Pair(failTask, failTaskName)
     }
 }

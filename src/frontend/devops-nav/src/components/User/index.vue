@@ -8,14 +8,17 @@
             @click.stop="toggleUserInfo"
         >
             {{ username }}
-            <i class="bk-icon icon-down-shape" />
+            <i class="devops-icon icon-down-shape" />
         </div>
         <div
             v-if="show"
             class="user-info-dropmenu"
         >
             <p class="user-avatar">
-                <!--<img :src="avatarUrl" alt="用户头像" />-->
+                <!-- <img
+                    :src="avatarUrl"
+                    alt="userAvatar"
+                > -->
                 <span>{{ chineseName }}</span>
             </p>
             <slot name="menu">
@@ -68,11 +71,11 @@
 
         @Action togglePopupShow
 
-        toggleUserInfo (show: boolean) :void {
+        toggleUserInfo (show: boolean): void {
             this.show = !this.show
         }
 
-        hideUserInfo () : void {
+        hideUserInfo (): void {
             this.show = false
         }
 
@@ -84,12 +87,24 @@
         }
 
         get menu (): object[] {
+            try {
                 return [
                     {
                         to: '/console/pm',
                         label: this.$t('projectManage')
+                    },
+                    {
+                        cb: this.logout,
+                        label: this.$t('logout')
                     }
                 ]
+            } catch (e) {
+                console.warn(e)
+                return []
+            }
+        }
+        logout (): void {
+            // logout logic
         }
     }
 </script>
@@ -113,7 +128,7 @@
             align-items: center;
         }
 
-        .bk-icon.icon-down-shape {
+        .devops-icon.icon-down-shape {
             vertical-align: -2px;
         }
 

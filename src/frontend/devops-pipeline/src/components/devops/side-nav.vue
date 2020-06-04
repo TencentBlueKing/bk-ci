@@ -1,7 +1,7 @@
 <template>
     <div class="side-nav">
         <div class="side-menu-nav clearfix">
-            <div @click.stop="backUrl(nav.backUrl)" v-if="nav.backUrl" class="back-icon"><i class="bk-icon icon-angle-left"></i></div>
+            <div @click.stop="backUrl(nav.backUrl)" v-if="nav.backUrl" class="back-icon"><i class="devops-icon icon-angle-left"></i></div>
             <logo :name="nav.icon" size="32" class="nav-icon" />
             <span class="side-menu-title">{{ nav.title }}</span>
         </div>

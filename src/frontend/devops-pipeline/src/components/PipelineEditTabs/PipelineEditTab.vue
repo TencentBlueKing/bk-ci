@@ -28,6 +28,7 @@
                 handler (newVal, oldVal) {
                     this.isLoading = false
                     if (this.isPipelineIdDiff) { // 如果是切换了pipeline，无需置为编辑状态
+                        this.requestInterceptAtom()
                         this.isPipelineIdDiff = false
                         return
                     }
@@ -62,6 +63,10 @@
                 'setPipeline',
                 'setPipelineEditing'
             ]),
+            ...mapActions('soda', [
+                'requestQualityAtom',
+                'requestInterceptAtom'
+            ]),
             getLinkAtomIndex (stages, hash) { // 新增
                 let index = null
                 const atomId = hash.substr(1)
@@ -85,7 +90,7 @@
                 stages.map((stage, sIndex) => {
                     stage.containers.map((container, cIndex) => {
                         container.elements.map((ele, eIndex) => {
-                            if (ele['@type'] === atomName) {
+                            if (ele['@type'] === atomName || ele.atomCode === atomName) {
                                 index = {
                                     stageIndex: sIndex,
                                     containerIndex: cIndex,

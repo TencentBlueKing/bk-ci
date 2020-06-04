@@ -30,7 +30,7 @@
                     title: ''
                 },
                 sideMenuNav: {
-                    backUrl: 'atomList',
+                    backUrl: 'workList',
                     backType: 'template',
                     icon: 'atom-story',
                     title: '',
@@ -42,7 +42,7 @@
                             {
                                 id: 'tplOverview',
                                 selectId: ['tplOverview'],
-                                name: this.$t('概览'),
+                                name: this.$t('store.概览'),
                                 icon: 'icon-overview',
                                 showChildren: false
                             },
@@ -55,7 +55,7 @@
                             {
                                 id: 'tplSettings',
                                 selectId: ['tplSettings'],
-                                name: this.$t('设置'),
+                                name: this.$t('store.设置'),
                                 icon: 'icon-cog',
                                 isOpen: false,
                                 showChildren: true,
@@ -64,7 +64,6 @@
                                     //     id: 'member',
                                     //     name: '成员管理',
                                     //     icon: ''
-                                    // }
                                 ]
                             }
                         ]
@@ -100,7 +99,7 @@
         methods: {
             goBack () {
                 this.$router.push({
-                    name: 'atomList',
+                    name: 'workList',
                     params: {
                         type: 'template'
                     }

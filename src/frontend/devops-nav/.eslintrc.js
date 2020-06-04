@@ -37,24 +37,25 @@ module.exports = {
     env: {
         browser: true
     },
-    extends: [
-        'plugin:vue/recommended',
-        'standard'
-    ],
     // required to lint *.vue files
     plugins: [
         '@typescript-eslint',
         'vue'
     ],
     globals: {
-        'LOGOUT_SERVICE_URL': true,
-        'X_DEVOPS_PROJECT_ID': true
+        'LOGOUT_SERVICE_URL': false,
+        'DEVOPS_LS_VERSION': false
     },
     overrides: [
         {
             files: ['*.vue'],
             rules: {
                 indent: 'off'
+            },
+            files: ['*.ts'],
+            rules: {
+                "no-unused-vars": "off",
+                "@typescript-eslint/no-unused-vars": "error"
             }
         }
     ]
