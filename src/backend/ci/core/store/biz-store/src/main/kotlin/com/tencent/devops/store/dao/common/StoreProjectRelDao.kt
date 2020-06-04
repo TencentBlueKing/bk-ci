@@ -132,9 +132,9 @@ class StoreProjectRelDao {
         dslContext: DSLContext,
         storeType: Byte,
         descFlag: Boolean = true,
-        specProjectCodeList: List<String>?,
-        grayFlag: Boolean?,
-        grayProjectCodeList: List<String>?
+        specProjectCodeList: List<String>? = null,
+        grayFlag: Boolean? = null,
+        grayProjectCodeList: List<String>? = null
     ): Long {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             val conditions =
@@ -147,11 +147,11 @@ class StoreProjectRelDao {
         dslContext: DSLContext,
         storeType: Byte,
         descFlag: Boolean = true,
-        specProjectCodeList: List<String>?,
-        grayFlag: Boolean?,
-        grayProjectCodeList: List<String>?,
-        page: Int?,
-        pageSize: Int?
+        specProjectCodeList: List<String>? = null,
+        grayFlag: Boolean? = null,
+        grayProjectCodeList: List<String>? = null,
+        page: Int? = null,
+        pageSize: Int? = null
     ): Result<TStoreProjectRelRecord>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             val conditions =
@@ -178,14 +178,15 @@ class StoreProjectRelDao {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(STORE_TYPE.eq(storeType))
+        conditions.add(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
         if (specProjectCodeList != null) {
-            conditions.add(STORE_CODE.`in`(specProjectCodeList))
+            conditions.add(PROJECT_CODE.`in`(specProjectCodeList))
         }
         if (grayFlag != null && grayProjectCodeList != null) {
             if (grayFlag) {
-                conditions.add(STORE_CODE.`in`(grayProjectCodeList))
+                conditions.add(PROJECT_CODE.`in`(grayProjectCodeList))
             } else {
-                conditions.add(STORE_CODE.notIn(grayProjectCodeList))
+                conditions.add(PROJECT_CODE.notIn(grayProjectCodeList))
             }
         }
         return conditions
