@@ -26,6 +26,7 @@
 
 package com.tencent.devops.quality.service.v2
 
+import com.google.common.collect.Maps
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
@@ -94,17 +95,23 @@ class QualityIndicatorService @Autowired constructor(
                 val elementType = controlPoint.key
 
                 // 根据codeccToolNameMap的key顺序排序
+                val detailIndicatorSortedMap = Maps.newLinkedHashMap<String /*detail*/, MutableList<QualityIndicator>>()
                 if (CodeccUtils.isCodeccAtom(elementType)) {
                     val propertyMap = codeccToolNameMap.entries.mapIndexed { index, entry ->
                         entry.key to index
                     }.toMap()
-                    detailIndicatorMap = detailIndicatorMap.filter { propertyMap.containsKey(it.key) }.toSortedMap(Comparator { o1, o2 ->
-                        (propertyMap[o1] ?: Int.MAX_VALUE) - (propertyMap[o2] ?: Int.MAX_VALUE)
+
+                    // toSortedMap 在key值相等会互相覆盖，所以要分开处理
+                    val originMap = detailIndicatorMap.filter { propertyMap.containsKey(it.key) }.toSortedMap(Comparator { o1, o2 ->
+                        propertyMap[o1]!! - propertyMap[o2]!!
                     })
+                    val dynamicMap = detailIndicatorMap.filter { !propertyMap.containsKey(it.key) }
+                    detailIndicatorSortedMap.putAll(originMap)
+                    detailIndicatorSortedMap.putAll(dynamicMap)
                 }
 
                 // 按elementDetail做分组
-                val detailGroups = detailIndicatorMap.map { detailEntry ->
+                val detailGroups = detailIndicatorSortedMap.map { detailEntry ->
                     val elementDetail = detailEntry.key
                     var detailCnName = elementDetail
                     val indicatorList: List<QualityIndicator> = detailEntry.value
