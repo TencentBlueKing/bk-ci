@@ -33,6 +33,9 @@ import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_SUMMARY
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.Tables.T_PIPELINE_SETTING
+import com.tencent.devops.model.process.Tables.T_PIPELINE_LABEL_PIPELINE
+import com.tencent.devops.model.process.Tables.T_PIPELINE_LABEL
+import com.tencent.devops.model.process.Tables.T_PIPELINE_GROUP
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
@@ -423,6 +426,29 @@ class PipelineBuildSummaryDao {
         } else {
             baseStep.fetch()
         }
+    }
+
+    /**
+     * 获取Pipeline的group与label
+     */
+    fun getPipelineGroupLabelQuery(
+            dslContext: DSLContext,
+            pipeLineId: String
+    ): org.jooq.Result<org.jooq.Record2<String, String>>? {
+        return dslContext.select(
+                T_PIPELINE_GROUP.NAME.`as`("GROUP_NAME"),
+                T_PIPELINE_LABEL.NAME.`as`("LABEL_NAME")
+        )
+                .from(T_PIPELINE_LABEL_PIPELINE)
+                .innerJoin(
+                        T_PIPELINE_LABEL
+                                .innerJoin(
+                                        T_PIPELINE_GROUP
+                                ).on(T_PIPELINE_LABEL.GROUP_ID.eq(T_PIPELINE_GROUP.ID))
+                ).on(T_PIPELINE_LABEL_PIPELINE.LABEL_ID.eq(T_PIPELINE_LABEL.ID))
+                .where(T_PIPELINE_LABEL_PIPELINE.PIPELINE_ID.eq(pipeLineId))
+                .fetch()
+
     }
 
     /**
