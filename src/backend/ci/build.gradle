@@ -166,11 +166,13 @@ subprojects {
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
         kotlinOptions {
             jvmTarget = "1.8"
+            javaParameters = true
         }
     }
 
     tasks.withType(JavaCompile).all {
         options.encoding = "UTF-8"
+        options.compilerArgs.add '-parameters'
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
