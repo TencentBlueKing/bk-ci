@@ -56,7 +56,7 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
         }
         val patternStyle = attributes[PATTERN_STYLE] as BkStyleEnum
         // 判断参数值是否满足配置的正则表达式规范
-        if (paramValue != null && !Pattern.matches(patternStyle.style, paramValue.toString())) {
+        if (!flag && !Pattern.matches(patternStyle.style, paramValue.toString())) {
             return false
         }
         return true
