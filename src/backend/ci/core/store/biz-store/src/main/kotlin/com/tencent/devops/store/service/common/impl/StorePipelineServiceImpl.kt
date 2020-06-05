@@ -227,7 +227,9 @@ class StorePipelineServiceImpl : StorePipelineService {
             // 将流水线模型中的变量替换成具体的值
             var convertModel = pipelineModel
             paramMap.forEach { (key, value) ->
-                convertModel = convertModel.replace("#{$key}", value.toString())
+                if (value != null) {
+                    convertModel = convertModel.replace("#{$key}", value.toString())
+                }
             }
             pipelineModelVersionList.add(
                 PipelineModelVersion(
