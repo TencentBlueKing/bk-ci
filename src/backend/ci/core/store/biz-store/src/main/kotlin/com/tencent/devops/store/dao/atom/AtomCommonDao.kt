@@ -90,9 +90,10 @@ class AtomCommonDao : AbstractStoreCommonDao() {
             .join(tsbi).on(taei.LANGUAGE.eq(tsbi.LANGUAGE))
             .join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
             .join(tspir).on(ta.ATOM_CODE.eq(tspir.STORE_CODE))
-            .where(tspir.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+            .where(tsbi.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
             .and(ta.LATEST_FLAG.eq(true))
             .and(tspr.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+            .and(ta.ATOM_CODE.`in`(storeCodeList))
             .fetch()
     }
 }
