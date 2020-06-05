@@ -213,7 +213,7 @@ class PipelineSettingService @Autowired constructor(
         if (checkPermission) {
             pipelineModelVersionList.forEach {
                 checkEditPermission(
-                    userId = userId,
+                    userId = it.creator,
                     projectId = it.projectId,
                     pipelineId = it.pipelineId,
                     message = "The user (\$ userId) does not have permission to edit the pipeline (\$ pipelineId) under the project (\$ projectId)"
