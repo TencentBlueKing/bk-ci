@@ -487,7 +487,7 @@ class ContainerControl @Autowired constructor(
             if (waitToDoTask == null && BuildStatus.isRunning(task.status)) {
                 // 拿到按序号排列的第一个正在执行的插件
                 waitToDoTask = task
-            } else if (BuildStatus.isFailure(task.status)) {
+            } else if (BuildStatus.isFailure(task.status) || BuildStatus.isCancel(task.status)) {
                 containerFinalStatus = task.status
                 if (waitToDoTask != null) {
                     waitToDoTask = null
