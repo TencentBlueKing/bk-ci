@@ -84,6 +84,7 @@ class AtomCommonDao : AbstractStoreCommonDao() {
             tsbi.SCRIPT.`as`("script"),
             tsbi.REPOSITORY_PATH.`as`("repositoryPath"),
             tspr.PROJECT_CODE.`as`("projectCode"),
+            tspr.CREATOR.`as`("creator"),
             tspir.PIPELINE_ID.`as`("pipelineId")
         ).from(ta).join(taei).on(ta.ID.eq(taei.ATOM_ID))
             .join(tsbi).on(taei.LANGUAGE.eq(tsbi.LANGUAGE))

@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -36,14 +37,18 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.process.api.service.ServicePipelineSettingResource
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.BusinessConfigDao
+import com.tencent.devops.store.dao.common.OperationLogDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
+import com.tencent.devops.store.pojo.common.OperationLogCreateRequest
 import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
 import com.tencent.devops.store.pojo.common.enums.ScopeTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.TxStorePipelineService
 import org.apache.commons.lang.StringEscapeUtils
@@ -51,6 +56,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 class TxStorePipelineServiceImpl : TxStorePipelineService {
@@ -60,6 +66,9 @@ class TxStorePipelineServiceImpl : TxStorePipelineService {
 
     @Autowired
     private lateinit var businessConfigDao: BusinessConfigDao
+
+    @Autowired
+    private lateinit var operationLogDao: OperationLogDao
 
     @Autowired
     private lateinit var redisOperation: RedisOperation
@@ -73,6 +82,12 @@ class TxStorePipelineServiceImpl : TxStorePipelineService {
     @Autowired
     private lateinit var client: Client
 
+    private final val pageSize = 50
+
+    private final val handlePageKeyPrefix = "updatePipelineModel:handlePage"
+
+    private val executorService = Executors.newSingleThreadScheduledExecutor()
+
     private val logger = LoggerFactory.getLogger(TxStorePipelineServiceImpl::class.java)
 
     override fun updatePipelineModel(
@@ -84,28 +99,36 @@ class TxStorePipelineServiceImpl : TxStorePipelineService {
         val scopeType = updateStorePipelineModelRequest.scopeType
         val storeType = updateStorePipelineModelRequest.storeType
         val storeCodeList = updateStorePipelineModelRequest.storeCodeList
+        val businessConfig =
+            businessConfigDao.get(dslContext, storeType, "initBuildPipeline", "PIPELINE_MODEL")
+                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+        val pipelineModel = businessConfig.configValue
         when (scopeType) {
             ScopeTypeEnum.ALL.name -> {
+                handleStorePipelineModel(
+                    storeType = storeType,
+                    taskId = taskId,
+                    userId = userId,
+                    pipelineModel = pipelineModel
+                )
             }
             ScopeTypeEnum.GRAY.name -> {
-                val grayProjectSet = gray.grayProjectSet(redisOperation)
-                val projectRelCount = storeProjectRelDao.getStoreInitProjectCount(
-                    dslContext = dslContext,
-                    storeType = StoreTypeEnum.valueOf(storeType).type.toByte(),
-                    descFlag = false,
-                    grayProjectCodeList = grayProjectSet
-                )
-                val projectRelRecords = storeProjectRelDao.getStoreInitProjects(
-                    dslContext = dslContext,
-                    storeType = StoreTypeEnum.valueOf(storeType).type.toByte(),
-                    descFlag = false,
-                    grayProjectCodeList = grayProjectSet,
-                    page = 1,
-                    pageSize = 20
+                handleStorePipelineModel(
+                    storeType = storeType,
+                    taskId = taskId,
+                    userId = userId,
+                    pipelineModel = pipelineModel,
+                    grayFlag = true
                 )
             }
             ScopeTypeEnum.NO_GRAY.name -> {
-                val grayProjectSet = gray.grayProjectSet(redisOperation)
+                handleStorePipelineModel(
+                    storeType = storeType,
+                    taskId = taskId,
+                    userId = userId,
+                    pipelineModel = pipelineModel,
+                    grayFlag = false
+                )
             }
             ScopeTypeEnum.SPEC.name -> {
                 if (storeCodeList == null) {
@@ -114,21 +137,78 @@ class TxStorePipelineServiceImpl : TxStorePipelineService {
                         arrayOf("storeCodeList")
                     )
                 }
-                updatePipelineModel(storeType, storeCodeList, userId)
+                updatePipelineModel(
+                    storeType = storeType,
+                    storeCodeList = storeCodeList,
+                    userId = userId,
+                    taskId = taskId,
+                    pipelineModel = pipelineModel
+                )
             }
         }
         return Result(true)
     }
 
+    private fun handleStorePipelineModel(
+        storeType: String,
+        taskId: String,
+        userId: String,
+        pipelineModel: String,
+        grayFlag: Boolean? = null
+    ) {
+        val grayProjectSet = gray.grayProjectSet(redisOperation)
+        executorService.submit<Unit> {
+            loop@ while (true) {
+                val projectRelCount = storeProjectRelDao.getStoreInitProjectCount(
+                    dslContext = dslContext,
+                    storeType = StoreTypeEnum.valueOf(storeType).type.toByte(),
+                    descFlag = false,
+                    grayFlag = grayFlag,
+                    grayProjectCodeList = if (grayFlag != null) grayProjectSet else null
+                )
+                // 获取实际处理的页数
+                val handlePage = redisOperation.get("$handlePageKeyPrefix:$taskId")?.toInt() ?: 0
+                // 计算当前实际的页数
+                val actPage = PageUtil.calTotalPage(pageSize, projectRelCount)
+                if (projectRelCount > 0 && actPage > handlePage) {
+                    val page = handlePage + 1
+                    val projectRelRecords = storeProjectRelDao.getStoreInitProjects(
+                        dslContext = dslContext,
+                        storeType = StoreTypeEnum.valueOf(storeType).type.toByte(),
+                        descFlag = false,
+                        grayFlag = grayFlag,
+                        grayProjectCodeList = if (grayFlag != null) grayProjectSet else null,
+                        page = page,
+                        pageSize = pageSize
+                    )
+                    val grayStoreCodeList =
+                        projectRelRecords?.getValues(TStoreProjectRel.T_STORE_PROJECT_REL.STORE_CODE)
+                    if (grayStoreCodeList != null && grayStoreCodeList.isNotEmpty()) {
+                        updatePipelineModel(
+                            storeType = storeType,
+                            storeCodeList = grayStoreCodeList,
+                            userId = userId,
+                            taskId = taskId,
+                            pipelineModel = pipelineModel
+                        )
+                    }
+                    // 把当前任务处理的页数放入redis缓存
+                    redisOperation.set("$handlePageKeyPrefix:$taskId", page.toString())
+                } else {
+                    redisOperation.delete("$handlePageKeyPrefix:$taskId")
+                    break@loop
+                }
+            }
+        }
+    }
+
     private fun updatePipelineModel(
         storeType: String,
         storeCodeList: List<String>,
-        userId: String
+        userId: String,
+        taskId: String,
+        pipelineModel: String
     ) {
-        val businessConfig =
-            businessConfigDao.get(dslContext, storeType, "initBuildPipeline", "PIPELINE_MODEL")
-                ?: return
-        var pipelineModel = businessConfig.configValue
         val storeCommonDao =
             SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
         // 获取研发商店组件信息
@@ -147,24 +227,56 @@ class TxStorePipelineServiceImpl : TxStorePipelineService {
                 "repositoryPath" to storeInfo["repositoryPath"]
             )
             // 将流水线模型中的变量替换成具体的值
+            var convertModel = pipelineModel
             paramMap.forEach { (key, value) ->
-                pipelineModel = pipelineModel.replace("#{$key}", value.toString())
+                convertModel = convertModel.replace("#{$key}", value.toString())
             }
             pipelineModelVersionList.add(
                 PipelineModelVersion(
                     projectId = projectCode,
                     pipelineId = storeInfo["pipelineId"] as String,
-                    model = JsonUtil.to(pipelineModel, Model::class.java)
+                    creator = storeInfo["creator"] as String,
+                    model = JsonUtil.to(convertModel, Model::class.java)
                 )
             )
         }
-        val updatePipelineModelResult = client.get(ServicePipelineSettingResource::class)
-            .updatePipelineModel(
-                userId = userId,
-                updatePipelineModelRequest = UpdatePipelineModelRequest(
-                    pipelineModelVersionList = pipelineModelVersionList
+        try {
+            val updatePipelineModelResult = client.get(ServicePipelineSettingResource::class)
+                .updatePipelineModel(
+                    userId = userId,
+                    updatePipelineModelRequest = UpdatePipelineModelRequest(
+                        pipelineModelVersionList = pipelineModelVersionList
+                    )
+                )
+            logger.info("updatePipelineModelResult:$updatePipelineModelResult")
+            if (updatePipelineModelResult.isNotOk()) {
+                batchAddOperateLogs(storeCodeList, storeType, userId, taskId)
+            }
+        } catch (e: Exception) {
+            logger.error("updatePipelineModel error is :", e)
+            // 将刷新失败的组件信息入库
+            batchAddOperateLogs(storeCodeList, storeType, userId, taskId)
+        }
+    }
+
+    private fun batchAddOperateLogs(
+        storeCodeList: List<String>,
+        storeType: String,
+        userId: String,
+        taskId: String
+    ) {
+        val operationLogList = mutableListOf<OperationLogCreateRequest>()
+        storeCodeList.forEach {
+            operationLogList.add(
+                OperationLogCreateRequest(
+                    storeCode = it,
+                    storeType = StoreTypeEnum.valueOf(storeType).type.toByte(),
+                    optType = StoreOperationTypeEnum.UPDATE_PIPELINE_MODEL.name,
+                    optUser = userId,
+                    optDesc = taskId
                 )
             )
-        logger.info("updatePipelineModelResult:$updatePipelineModelResult")
+        }
+        operationLogDao.batchAddLogs(dslContext, userId, operationLogList)
     }
 }

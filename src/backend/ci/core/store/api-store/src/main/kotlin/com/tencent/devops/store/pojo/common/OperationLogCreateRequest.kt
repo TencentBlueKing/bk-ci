@@ -24,9 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:store:api-store-tencent")
-    compile project(":ext:tencent:store:api-store-service")
-}
+package com.tencent.devops.store.pojo.common
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("新增操作日志")
+data class OperationLogCreateRequest(
+    @ApiModelProperty("store组件代码", required = true)
+    val storeCode: String,
+    @ApiModelProperty("store组件类型", required = true)
+    val storeType: Byte,
+    @ApiModelProperty("操作类型", required = true)
+    val optType: String,
+    @ApiModelProperty("操作用户", required = true)
+    val optUser: String,
+    @ApiModelProperty("操作内容", required = true)
+    val optDesc: String
+)

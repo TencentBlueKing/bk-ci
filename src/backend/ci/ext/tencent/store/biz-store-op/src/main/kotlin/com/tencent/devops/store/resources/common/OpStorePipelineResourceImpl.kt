@@ -23,10 +23,22 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.resources.common
 
-dependencies {
-    compile project(":ext:tencent:store:api-store-tencent")
-    compile project(":ext:tencent:store:api-store-service")
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.OpStorePipelineResource
+import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpStorePipelineResourceImpl @Autowired constructor(
+) : OpStorePipelineResource {
+
+    override fun approveVisibleDept(
+        userId: String,
+        updateStorePipelineModelRequest: UpdateStorePipelineModelRequest
+    ): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
