@@ -234,8 +234,17 @@ class PipelineService @Autowired constructor(
                 logger.info("instanceType: $instanceType")
                 if (model.templateId != null) {
                     val templateId = model.templateId as String
+                    val srcTemplateVersion = model.srcTemplateVersion as Long
                     logger.info("templateId: $templateId")
-                    createRelationBtwTemplate(userId, templateId, pipelineId, instanceType!!, buildNo, param)
+                    createRelationBtwTemplate(
+                        userId = userId,
+                        templateId = templateId,
+                        srcTemplateVersion = srcTemplateVersion,
+                        pipelineId = pipelineId,
+                        instanceType = instanceType!!,
+                        buildNo = buildNo,
+                        param = param
+                    )
                 }
                 success = true
                 return pipelineId
@@ -268,6 +277,7 @@ class PipelineService @Autowired constructor(
     fun createRelationBtwTemplate(
         userId: String,
         templateId: String,
+        srcTemplateVersion: Long,
         pipelineId: String,
         instanceType: String,
         buildNo: BuildNo? = null,
@@ -276,7 +286,7 @@ class PipelineService @Autowired constructor(
         logger.info("start createRelationBtwTemplate: $userId|$templateId|$pipelineId|$instanceType")
         val template = templateDao.getLatestTemplate(dslContext, templateId)
         var rootTemplateId = templateId
-        var templateVersion = template.version
+        var templateVersion = srcTemplateVersion
         var versionName = template.versionName
         if (template.type == TemplateType.CONSTRAINT.name) {
             logger.info("template[$templateId] is from store, srcTemplateId is ${template.srcTemplateId}")
