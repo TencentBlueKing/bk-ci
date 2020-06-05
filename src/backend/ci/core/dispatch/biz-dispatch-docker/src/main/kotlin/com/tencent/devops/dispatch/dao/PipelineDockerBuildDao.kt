@@ -31,7 +31,9 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerBuild
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -165,6 +167,31 @@ class PipelineDockerBuildDao {
                 .orderBy(CREATED_TIME.desc())
                 .fetch()
         }
+    }
+
+    fun getTimeOutBuild(dslContext: DSLContext): Result<TDispatchPipelineDockerBuildRecord> {
+        with(TDispatchPipelineDockerBuild.T_DISPATCH_PIPELINE_DOCKER_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(STATUS.eq(2))
+                .and(DOCKER_IP.notEqual(""))
+                .and(UPDATED_TIME.lessOrEqual(timestampSubDay(2)))
+                .fetch()
+        }
+    }
+
+    fun updateTimeOutBuild(dslContext: DSLContext, buildId: String): Boolean {
+        with(TDispatchPipelineDockerBuild.T_DISPATCH_PIPELINE_DOCKER_BUILD) {
+            return dslContext.update(this)
+                .set(STATUS, PipelineTaskStatus.DONE.status)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .where(BUILD_ID.eq(buildId))
+                .execute() == 1
+        }
+    }
+
+    fun timestampSubDay(day: Long): Field<LocalDateTime> {
+        return DSL.field("date_sub(NOW(), interval $day day)",
+            LocalDateTime::class.java)
     }
 }
 

@@ -36,9 +36,9 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
@@ -63,6 +63,7 @@ import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -75,24 +76,19 @@ import com.tencent.devops.process.engine.atom.vm.DispatchBuildLessDockerStartupT
 import com.tencent.devops.process.engine.atom.vm.DispatchVMShutdownTaskAtom
 import com.tencent.devops.process.engine.atom.vm.DispatchVMStartupTaskAtom
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
-import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
-import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
-import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_DESC
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.common.Timeout
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
+import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
+import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
+import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -100,11 +96,17 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOptio
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.pojo.PipelineFilterParam
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
+import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
@@ -251,9 +253,30 @@ class PipelineRuntimeService @Autowired constructor(
     fun getBuildSummaryRecords(
         projectId: String,
         channelCode: ChannelCode,
-        pipelineIds: Collection<String>? = null
+        pipelineIds: Collection<String>? = null,
+        sortType: PipelineSortType? = null,
+        favorPipelines: List<String> = emptyList(),
+        authPipelines: List<String> = emptyList(),
+        viewId: String? = null,
+        pipelineFilterParamList: List<PipelineFilterParam>? = null,
+        permissionFlag: Boolean? = null,
+        page: Int? = null,
+        pageSize: Int? = null
     ): Result<out Record> {
-        return pipelineBuildSummaryDao.listPipelineInfoBuildSummary(dslContext, projectId, channelCode, pipelineIds)
+        return pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = channelCode,
+            sortType = sortType,
+            pipelineIds = pipelineIds,
+            favorPipelines = favorPipelines,
+            authPipelines = authPipelines,
+            viewId = viewId,
+            pipelineFilterParamList = pipelineFilterParamList,
+            permissionFlag = permissionFlag,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
     fun getBuildSummaryRecords(
@@ -274,7 +297,11 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getLatestBuild(projectId: String, pipelineIds: List<String>): Map<String, PipelineLatestBuild> {
-        val records = getBuildSummaryRecords(projectId, ChannelCode.BS, pipelineIds)
+        val records = getBuildSummaryRecords(
+            projectId = projectId,
+            channelCode = ChannelCode.BS,
+            pipelineIds = pipelineIds
+        )
         val df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val ret = mutableMapOf<String, PipelineLatestBuild>()
         records.forEach {
@@ -294,21 +321,22 @@ class PipelineRuntimeService @Autowired constructor(
         return ret
     }
 
-    fun getRunningTask(projectId: String, buildId: String): List<Map<String, String>> {
+    fun getRunningTask(projectId: String, buildId: String): List<Map<String, Any>> {
         val listByStatus = pipelineBuildTaskDao.listByStatus(
             dslContext = dslContext,
             buildId = buildId,
             containerId = null,
             statusSet = listOf(BuildStatus.RUNNING, BuildStatus.REVIEWING)
         )
-        val list = mutableListOf<Map<String, String>>()
+        val list = mutableListOf<Map<String, Any>>()
         val buildStatus = BuildStatus.values()
         listByStatus.forEach {
             list.add(
                 mapOf(
                     "taskId" to it.taskId,
                     "containerId" to it.containerId,
-                    "status" to buildStatus[it.status].name
+                    "status" to buildStatus[it.status].name,
+                    "executeCount" to it.executeCount
                 )
             )
         }
@@ -745,9 +773,21 @@ class PipelineRuntimeService @Autowired constructor(
         sModel.stages.forEachIndexed s@{ index, stage ->
             val stageId = stage.id!!
             var needUpdateStage = false
-
+            // 当前 stage 是否是重试的 stage
+            val retryStage = stageId == retryStartTaskId
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach c@{ container ->
+                // 判断当前是否是因为 stage 重试而启动, 当前 stage 是否是重试的 stage
+                val ignoreRetryStartTaskId = if (true == retryStartTaskId?.startsWith("stage-")) {
+                    if (!retryStage) {
+                        null
+                    } else {
+                        container.elements[0].id
+                    }
+                } else {
+                    retryStartTaskId
+                }
+
                 var needUpdateContainer = false
                 var taskSeq = 0
                 // 构建机环境处理，需要先创建一个的启动构建机原子任务
@@ -767,7 +807,7 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = buildId,
                     stageId = stageId,
                     userId = userId,
-                    retryStartTaskId = retryStartTaskId,
+                    retryStartTaskId = ignoreRetryStartTaskId,
                     retryCount = retryCount
                 )
 
@@ -817,7 +857,9 @@ class PipelineRuntimeService @Autowired constructor(
                         }
 
                         if (lastTimeBuildTaskRecords.isNotEmpty()) {
-                            if (!retryStartTaskId.isNullOrBlank()) {
+                            // 判断是否 stage 重试
+                            if (!retryStartTaskId.isNullOrBlank() &&
+                                !retryStage) {
                                 if (retryStartTaskId == atomElement.id) {
                                     // 重试判断是否存在原子重试，其他保持不变
                                     val taskRecord = retryDetailModelStatus(
@@ -855,6 +897,20 @@ class PipelineRuntimeService @Autowired constructor(
                                         updateExistsRecord.add(taskRecord)
                                         needUpdateContainer = true
                                     }
+                                }
+                            } else if (retryStage) {
+                                // 如果是 stage 重试, 当前 stage 所有原子重试
+                                val taskRecord = retryDetailModelStatus(
+                                    lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                                    stage = stage,
+                                    container = container,
+                                    retryStartTaskId = atomElement.id!!,
+                                    retryCount = retryCount,
+                                    atomElement = atomElement
+                                )
+                                if (taskRecord != null) {
+                                    updateExistsRecord.add(taskRecord)
+                                    needUpdateContainer = true
                                 }
                             } else {
                                 // 如果当前原子之前是要求跳过的状态，则忽略不重试
@@ -926,7 +982,7 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = buildId,
                     stageId = stageId,
                     userId = userId,
-                    retryStartTaskId = retryStartTaskId,
+                    retryStartTaskId = ignoreRetryStartTaskId,
                     retryCount = retryCount
                 )
 
@@ -1561,7 +1617,11 @@ class PipelineRuntimeService @Autowired constructor(
             // 减1,当作没执行过
             pipelineBuildSummaryDao.updateQueueCount(dslContext, latestRunningBuild.pipelineId, -1)
         } else {
-            pipelineBuildSummaryDao.finishLatestRunningBuild(dslContext, latestRunningBuild)
+            pipelineBuildSummaryDao.finishLatestRunningBuild(
+                dslContext = dslContext,
+                latestRunningBuild = latestRunningBuild,
+                isStageFinish = currentBuildStatus.name == BuildStatus.STAGE_SUCCESS.name
+            )
         }
         with(latestRunningBuild) {
             val executeTime = try {
@@ -1588,7 +1648,7 @@ class PipelineRuntimeService @Autowired constructor(
             }
             logger.info("[$pipelineId]|getRecommendVersion-$buildId recommendVersion: $recommendVersion")
             val remark = buildVariableService.getVariable(buildId, PIPELINE_BUILD_REMARK)
-            val finalStatus = if (BuildStatus.isFinish(status) || status == BuildStatus.STAGE_SUCCESS) {
+            val finalStatus = if (BuildStatus.isFinish(status) || status.name == BuildStatus.STAGE_SUCCESS.name) {
                 status
             } else {
                 BuildStatus.FAILED
@@ -1689,8 +1749,8 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildDao.convert(historyRecord)
     }
 
-    fun getLastTimeBuild(pipelineId: String): BuildInfo? {
-        return pipelineBuildDao.convert(pipelineBuildDao.getLatestBuild(dslContext, pipelineId))
+    fun getLastTimeBuild(projectId: String, pipelineId: String): BuildInfo? {
+        return pipelineBuildDao.convert(pipelineBuildDao.getLatestBuild(dslContext, projectId, pipelineId))
     }
 
     fun updateTaskSubBuildId(buildId: String, taskId: String, subBuildId: String) {
@@ -1830,8 +1890,23 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     // 获取流水线最后的构建号
-    fun getLatestFinishedBuildId(pipelineId: String): String? {
-        return pipelineBuildDao.getLatestFinishedBuild(dslContext, pipelineId)?.buildId
+    fun getLatestBuildId(projectId: String, pipelineId: String): String? {
+        return pipelineBuildDao.getLatestBuild(dslContext, projectId, pipelineId)?.buildId
+    }
+
+    // 获取流水线最后完成的构建号
+    fun getLatestFinishedBuildId(projectId: String, pipelineId: String): String? {
+        return pipelineBuildDao.getLatestFinishedBuild(dslContext, projectId, pipelineId)?.buildId
+    }
+
+    // 获取流水线最后成功的构建号
+    fun getLatestSucceededBuildId(projectId: String, pipelineId: String): String? {
+        return pipelineBuildDao.getLatestSuccessedBuild(dslContext, projectId, pipelineId)?.buildId
+    }
+
+    // 获取流水线最后失败的构建号
+    fun getLatestFailedBuildId(projectId: String, pipelineId: String): String? {
+        return pipelineBuildDao.getLatestFailedBuild(dslContext, projectId, pipelineId)?.buildId
     }
 
     fun getBuildIdbyBuildNo(projectId: String, pipelineId: String, buildNo: Int): String? {

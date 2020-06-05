@@ -46,7 +46,7 @@ class ErrorCodeExceptionMapper : ExceptionMapper<ErrorCodeException> {
             messageCode = exception.errorCode,
             params = exception.params,
             data = null,
-            defaultMessage = exception.message
+            defaultMessage = exception.defaultMessage
         )
 //        // 在提示信息末尾附加uniqueId定位信息
 //        if (null != errorResult.message && errorResult.message!!.startsWith("[uniqueId=")) {

@@ -127,7 +127,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
                 dockerIp = taskHistory.dockerIp
             } else {
                 dockerIp = dockerHostUtils.getAvailableDockerIp(debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId, setOf()).first
-                pipelineDockerTaskSimpleDao.create(dslContext, debugStartParam.pipelineId, debugStartParam.vmSeqId, dockerIp)
+                pipelineDockerTaskSimpleDao.createOrUpdate(dslContext, debugStartParam.pipelineId, debugStartParam.vmSeqId, dockerIp)
             }
             // 首次构建poolNo=1
             poolNo = 1

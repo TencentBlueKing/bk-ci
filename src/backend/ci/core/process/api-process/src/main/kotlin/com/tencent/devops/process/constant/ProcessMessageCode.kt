@@ -99,6 +99,7 @@ object ProcessMessageCode {
     const val ILLEGAL_TIMER_CRONTAB = "2101048" // 定时触发器的定时参数不合法
     const val ERROR_PIPELINE_PARAMS_NAME_ERROR = "2101054" // 请使用英文命名流水线变量
     const val ERROR_PIPELINE_STAGE_NO_TRIGGER_USER = "2101055" // 手动触发的Stage没有未配置可执行人
+    const val ERROR_PIPELINE_DESC_TOO_LONG = "2101056" // 流水线描述过长
 
     const val ERROR_PIPELINE_NOT_EXISTS = "2101038" // 流水线不存在
     const val ERROR_PIPELINE_MODEL_NOT_EXISTS = "2101039" // 流水线的模型不存在
@@ -111,6 +112,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_DISPATCH_STORE_IMAGE_CODE_BLANK = "2101051" // 模型中使用了商店镜像，但code为空
     const val ERROR_PIPELINE_DISPATCH_STORE_IMAGE_VERSION_BLANK = "2101052" // 模型中使用了商店镜像，但version为空
     const val ERROR_PIPELINE_DISPATCH_VALUE_BLANK = "2101053" // 模型中非商店蓝盾源/第三方源的镜像value为空
+    const val ERROR_PIEPELINE_IS_CANCELED = "2101182" // 流水线: 流水线已经被取消构建
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败

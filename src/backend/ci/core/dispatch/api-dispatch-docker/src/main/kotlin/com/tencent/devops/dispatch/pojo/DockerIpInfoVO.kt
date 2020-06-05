@@ -3,7 +3,7 @@ package com.tencent.devops.dispatch.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("IdcIpInfoVO")
+@ApiModel("DockerIpInfoVO")
 data class DockerIpInfoVO(
     @ApiModelProperty("主键ID")
     val id: Long,
@@ -25,10 +25,10 @@ data class DockerIpInfoVO(
     val averageDiskIOLoad: Int,
     @ApiModelProperty("构建机是否可用")
     val enable: Boolean,
-    @ApiModelProperty("是否为灰度节点")
-    val grayEnv: Boolean,
-    @ApiModelProperty("是否为专用机独占")
-    val specialOn: Boolean,
-    @ApiModelProperty("创建时间")
-    val createTime: String
+    @ApiModelProperty("是否为灰度节点", required = false)
+    val grayEnv: Boolean?,
+    @ApiModelProperty("是否为专用机独占", required = false)
+    val specialOn: Boolean?,
+    @ApiModelProperty("创建时间", required = false)
+    val createTime: String?
 )

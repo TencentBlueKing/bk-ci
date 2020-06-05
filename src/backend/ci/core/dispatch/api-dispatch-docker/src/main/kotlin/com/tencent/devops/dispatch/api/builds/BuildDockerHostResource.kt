@@ -31,6 +31,7 @@ import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
+import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -39,6 +40,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -219,4 +221,15 @@ interface BuildDockerHostResource {
     @GET
     @Path("/public/images")
     fun getPublicImages(): Result<List<ImageRepoInfo>>
+
+    @POST
+    @Path("/dockerIp/{dockerIp}/refresh")
+    @ApiOperation("刷新Docker构建机状态")
+    fun refresh(
+        @ApiParam("构建机信息", required = true)
+        @PathParam("dockerIp")
+        dockerIp: String,
+        @ApiParam("构建机信息", required = true)
+        dockerIpInfoVO: DockerIpInfoVO
+    ): Result<Boolean>
 }

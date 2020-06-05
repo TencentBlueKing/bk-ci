@@ -112,10 +112,12 @@ class CommitDao {
         page: Int?,
         pageSize: Int?
     ): Result<TRepositoryCommitRecord>? {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
         with(TRepositoryCommit.T_REPOSITORY_COMMIT) {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(ELEMENT_ID.eq(elementId)).and(REPO_NAME.eq(repoName)))
                 .orderBy(COMMIT_TIME.desc())
+                .limit(sqlLimit.offset, sqlLimit.limit)
                 .fetch()
         }
     }

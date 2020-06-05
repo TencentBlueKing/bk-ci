@@ -93,7 +93,6 @@
                 </template>
             </bk-table-column>
             <empty-tips v-if="emptyTipsConfig" class="build-list-table-empty-tips" slot="empty" v-bind="emptyTipsConfig"></empty-tips>
-            <div v-if="loadingMore" class="loading-more" slot="append"><i class="devops-icon icon-circle-2-1 spin-icon"></i><span>{{ $t('loadingTips') }}</span></div>
         </bk-table>
         <portal to="artifactory-popup">
             <div ref="artifactPopup" class="artifact-list-popup" v-show="actifactories.length" v-bk-clickoutside="hideArtifactoriesPopup">
@@ -636,15 +635,6 @@
                     color: $primaryColor;
                 }
             }
-        }
-    }
-    .loading-more {
-        display: flex;
-        height: 36px;
-        justify-content: center;
-        align-items: center;
-        .devops-icon {
-            margin-right: 8px;
         }
     }
     .artifact-list-popup {

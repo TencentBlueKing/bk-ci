@@ -57,4 +57,13 @@ object PipelineUtils {
             }
         }
     }
+
+    fun checkPipelineDescLength(desc: String?) {
+        if (desc != null && desc!!.toCharArray().size > 100) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_DESC_TOO_LONG,
+                defaultMessage = "Pipeline's desc is too long"
+            )
+        }
+    }
 }

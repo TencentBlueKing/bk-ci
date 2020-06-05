@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS `T_NOTIFY_EMAIL` (
   `SENDER` varchar(255) NOT NULL,
   `TO` text NOT NULL,
   `TITLE` varchar(255) NOT NULL,
-  `BODY` text NOT NULL,
+  `BODY` mediumtext NOT NULL,
   `PRIORITY` int(11) NOT NULL,
   `RETRY_COUNT` int(11) NOT NULL,
   `LAST_ERROR` text,

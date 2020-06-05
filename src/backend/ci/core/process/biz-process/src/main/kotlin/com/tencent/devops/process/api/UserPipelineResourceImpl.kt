@@ -39,6 +39,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
@@ -185,6 +186,8 @@ class UserPipelineResourceImpl @Autowired constructor(
     override fun edit(userId: String, projectId: String, pipelineId: String, pipeline: Model): Result<Boolean> {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
+        checkName(pipeline.name)
+        PipelineUtils.checkPipelineDescLength(pipeline.desc)
         pipelineService.editPipeline(userId, projectId, pipelineId, pipeline, ChannelCode.BS)
         // pipelineGroupService.setPipelineGroup(userId, pipelineId,projectId,pipeline.group)
         return Result(true)
@@ -199,6 +202,8 @@ class UserPipelineResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         checkParam(modelAndSetting.setting)
         checkPipelineId(pipelineId)
+        checkName(modelAndSetting.model.name)
+        PipelineUtils.checkPipelineDescLength(modelAndSetting.model.desc)
         pipelineService.saveAll(
             userId,
             projectId,
@@ -387,6 +392,12 @@ class UserPipelineResourceImpl @Autowired constructor(
     private fun checkPipelineId(pipelineId: String) {
         if (pipelineId.isBlank()) {
             throw ParamBlankException("Invalid pipelineId")
+        }
+    }
+
+    private fun checkName(name: String) {
+        if (name.isBlank()) {
+            throw ParamBlankException("Invalid pipeline name")
         }
     }
 

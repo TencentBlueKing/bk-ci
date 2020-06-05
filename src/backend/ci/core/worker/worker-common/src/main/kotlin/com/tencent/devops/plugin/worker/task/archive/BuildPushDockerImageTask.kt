@@ -175,8 +175,18 @@ class BuildPushDockerImageTask : ITask() {
     private fun startDockerBuild(buildVariables: BuildVariables, imageName: String?, imageTag: String?, buildDir: String?, dockerFile: String?, repoAddr: String, userName: String, password: String, elementId: String?) {
         val dockerHostIp = System.getenv("docker_host_ip")
         val dockerHostPort = System.getenv("docker_host_port")
+        val poolNo = System.getenv("pool_no")
         val url = "http://$dockerHostIp:$dockerHostPort/api/docker/build/${buildVariables.projectId}/${buildVariables.pipelineId}/${buildVariables.vmSeqId}/${buildVariables.buildId}/$elementId"
-        val dockerbuildParam = DockerBuildParam(imageName!!, imageTag!!, buildDir, dockerFile, repoAddr, userName, password)
+        val dockerbuildParam = DockerBuildParam(
+            imageName = imageName!!,
+            imageTag = imageTag!!,
+            buildDir = buildDir,
+            dockerFile = dockerFile,
+            repoAddr = repoAddr,
+            userName = userName,
+            password = password,
+            poolNo = poolNo
+        )
         val requestBody = jacksonObjectMapper().writeValueAsString(dockerbuildParam)
         logger.info("request url: $url")
         logger.info("request body: $requestBody")

@@ -31,6 +31,7 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.environment.dao.EnvDao
+import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.AbstractEnvironmentPermissionService
 import org.jooq.DSLContext
 
@@ -40,6 +41,7 @@ import org.jooq.DSLContext
 class MockEnvironmentPermissionService constructor(
     private val dslContext: DSLContext,
     private val envDao: EnvDao,
+    private val nodeDao: NodeDao,
     authResourceApi: AuthResourceApi,
     authPermissionApi: AuthPermissionApi,
     environmentAuthServiceCode: EnvironmentAuthServiceCode
@@ -49,7 +51,7 @@ class MockEnvironmentPermissionService constructor(
     environmentAuthServiceCode = environmentAuthServiceCode
 ) {
 
-    override fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
+    override fun supplierForEnvFakePermission(projectId: String): () -> MutableList<String> {
         return {
             val fakeList = mutableListOf<String>()
             envDao.list(
@@ -57,6 +59,19 @@ class MockEnvironmentPermissionService constructor(
                 projectId = projectId
             ).forEach {
                 fakeList.add(HashUtil.encodeLongId(it.envId))
+            }
+            fakeList
+        }
+    }
+
+    override fun supplierForNodeFakePermission(projectId: String): () -> MutableList<String> {
+        return {
+            val fakeList = mutableListOf<String>()
+            nodeDao.listNodes(
+                dslContext = dslContext,
+                projectId = projectId
+            ).forEach {
+                fakeList.add(HashUtil.encodeLongId(it.nodeId))
             }
             fakeList
         }

@@ -170,9 +170,9 @@ interface ServiceGitResource {
     @GET
     @Path("/getRedirectUrl")
     fun getRedirectUrl(
-        @ApiParam("重定向url类型", required = false)
-        @QueryParam("redirectUrlType")
-        redirectUrlType: String?
+        @ApiParam("参数json串", required = true)
+        @QueryParam("authParamJsonStr")
+        authParamJsonStr: String
     ): Result<String>
 
     @ApiOperation("获取git文件内容")
