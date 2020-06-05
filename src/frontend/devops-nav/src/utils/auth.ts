@@ -21,7 +21,7 @@ export default {
         window.location.href = LOGIN_SERVICE_URL + '/?c_url=' + window.location.href
     },
     async requestCurrentUser (refresh = false) {
-       if (currentUser && !refresh) { // 如果已经获取到用户了， 直接返回
+        if (currentUser && !refresh) { // 如果已经获取到用户了， 直接返回
             return currentUser
         }
 

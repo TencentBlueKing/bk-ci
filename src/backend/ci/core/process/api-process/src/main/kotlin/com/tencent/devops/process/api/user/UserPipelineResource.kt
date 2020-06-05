@@ -323,7 +323,7 @@ interface UserPipelineResource {
         @ApiParam("按标签过滤", required = false)
         @QueryParam("filterByLabels")
         filterByLabels: String?,
-        @ApiParam("用户视图ID", required = false)
+        @ApiParam("用户视图ID", required = true)
         @QueryParam("viewId")
         viewId: String
     ): Result<PipelineViewPipelinePage<Pipeline>>

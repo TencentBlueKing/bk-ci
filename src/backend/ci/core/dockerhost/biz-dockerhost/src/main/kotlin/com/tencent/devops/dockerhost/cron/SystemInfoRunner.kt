@@ -33,7 +33,7 @@ import org.springframework.stereotype.Component
 @Component
 class SystemInfoRunner {
 
-    @Scheduled(cron = "0/10 * * * * ?")
+    @Scheduled(cron = "0/5 * * * * ?")
     fun startCollect() {
         SigarUtil.pushMem()
         SigarUtil.pushCpu()

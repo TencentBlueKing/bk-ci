@@ -51,7 +51,7 @@ interface IGitService {
     fun refreshToken(userId: String, accessToken: GitToken): GitToken
     fun getAuthUrl(authParamJsonStr: String): String
     fun getToken(userId: String, code: String): GitToken
-    fun getRedirectUrl(redirectUrlType: String?): String
+    fun getRedirectUrl(authParamJsonStr: String): String
     fun getGitFileContent(
         repoName: String,
         filePath: String,

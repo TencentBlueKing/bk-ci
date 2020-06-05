@@ -154,11 +154,10 @@
             }
         },
         watch: {
-            atomValue: {
-                handler: function (newAtomValues, oldAtomValues) {
-                    if (this.urlParamKeys.some(key => newAtomValues[key] !== oldAtomValues[key])) {
-                        this.debounceGetOptionList()
-                    }
+            queryParams (newQueryParams, oldQueryParams) {
+                if (this.urlParamKeys.some(key => newQueryParams[key] !== oldQueryParams[key])) {
+                    this.debounceGetOptionList()
+                    this.handleChange(this.name, '')
                 }
             },
             options (newOptions) {

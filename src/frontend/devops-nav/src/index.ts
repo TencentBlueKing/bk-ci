@@ -6,33 +6,32 @@ import Vue from 'vue'
 import createRouter from '@/router'
 import store from '@/store'
 import eventBus from '@/utils/eventBus'
-import Logo from './components/Logo/index.vue'
-import iframeUtil from './utils/iframeUtil'
-import Icon from './components/Icon/index.vue'
-import EmptyTips from './components/EmptyTips/index.vue'
-import ShowTooltip from './components/ShowTooltip/index.vue'
-import DevopsFormItem from './components/DevopsFormItem/index.vue'
-import AsideNav from './components/AsideNav/index.vue'
-import ContentHeader from './components/ContentHeader/index.vue'
-import BigSelect from './components/Select/index.vue'
+import Logo from '@/components/Logo/index.vue'
+import iframeUtil from '@/utils/iframeUtil'
+import Icon from '@/components/Icon/index.vue'
+import EmptyTips from '@/components/EmptyTips/index.vue'
+import ShowTooltip from '@/components/ShowTooltip/index.vue'
+import DevopsFormItem from '@/components/DevopsFormItem/index.vue'
+import AsideNav from '@/components/AsideNav/index.vue'
+import ContentHeader from '@/components/ContentHeader/index.vue'
+import BigSelect from '@/components/Select/index.vue'
 import App from '@/views/App.vue'
 
 import createLocale from '../../locale'
 
 import VeeValidate from 'vee-validate'
-import validationENMessages from 'vee-validate/dist/locale/en';
-import validationCNMessages from 'vee-validate/dist/locale/zh_CN';
+import validationENMessages from 'vee-validate/dist/locale/en'
+import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 import showAskPermissionDialog from './components/AskPermissionDialog'
-import bsWebSocket from './utils/bsWebSocket.js'
+import bsWebSocket from '@/utils/bsWebSocket.js'
+import '@/assets/scss/index.scss'
+import { judgementLsVersion } from './utils/util'
 // 全量引入 bk-magic-vue
 import bkMagic from 'bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
 require('bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
-import './assets/scss/index.scss'
-
-import { judgementLsVersion } from './utils/util'
 
 declare module 'vue/types/vue' {
     interface Vue {
@@ -42,7 +41,6 @@ declare module 'vue/types/vue' {
         iframeUtil: any
     }
 }
-
 
 Vue.use(bkMagic)
 Vue.component('AsideNav', AsideNav)

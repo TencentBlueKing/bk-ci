@@ -121,6 +121,16 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
         }
     }
 
+    fun deleteEarlyVersion(dslContext: DSLContext, pipelineId: String, maxPipelineResNum: Int): Int {
+        return with(T_PIPELINE_RESOURCE) {
+            val pipelineMaxVersion = dslContext.select(VERSION.max()).from(this).where(PIPELINE_ID.eq(pipelineId)).fetchOne(0, Int::class.java)
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.le(pipelineMaxVersion - maxPipelineResNum))
+                .execute()
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineResDao::class.java)
     }

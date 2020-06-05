@@ -65,7 +65,7 @@
         watch: {
             currentTab (val) {
                 this.$router.replace({
-                    name: 'atomList',
+                    name: 'workList',
                     params: {
                         type: val
                     }
