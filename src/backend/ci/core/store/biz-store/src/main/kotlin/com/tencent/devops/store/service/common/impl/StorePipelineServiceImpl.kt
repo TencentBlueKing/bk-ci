@@ -50,7 +50,7 @@ import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
 import com.tencent.devops.store.pojo.common.enums.ScopeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.common.TxStorePipelineService
+import com.tencent.devops.store.service.common.StorePipelineService
 import org.apache.commons.lang.StringEscapeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -59,7 +59,7 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
 @Service
-class TxStorePipelineServiceImpl : TxStorePipelineService {
+class StorePipelineServiceImpl : StorePipelineService {
 
     @Autowired
     private lateinit var storeProjectRelDao: StoreProjectRelDao
@@ -88,7 +88,7 @@ class TxStorePipelineServiceImpl : TxStorePipelineService {
 
     private val executorService = Executors.newSingleThreadScheduledExecutor()
 
-    private val logger = LoggerFactory.getLogger(TxStorePipelineServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(StorePipelineServiceImpl::class.java)
 
     override fun updatePipelineModel(
         userId: String,

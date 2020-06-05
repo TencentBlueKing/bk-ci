@@ -29,16 +29,18 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpStorePipelineResource
 import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
+import com.tencent.devops.store.service.common.StorePipelineService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpStorePipelineResourceImpl @Autowired constructor(
+    private val storePipelineService: StorePipelineService
 ) : OpStorePipelineResource {
 
     override fun approveVisibleDept(
         userId: String,
         updateStorePipelineModelRequest: UpdateStorePipelineModelRequest
     ): Result<Boolean> {
-        TODO("Not yet implemented")
+        return storePipelineService.updatePipelineModel(userId, updateStorePipelineModelRequest)
     }
 }

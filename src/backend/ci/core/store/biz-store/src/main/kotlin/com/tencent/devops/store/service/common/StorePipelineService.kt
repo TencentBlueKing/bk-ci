@@ -31,7 +31,7 @@ package com.tencent.devops.store.service.common
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
 
-interface TxStorePipelineService {
+interface StorePipelineService {
 
     /**
      * @param userId 用户ID
