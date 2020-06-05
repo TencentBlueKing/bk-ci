@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.redis.RedisOperation
@@ -38,8 +39,6 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.api.service.ServicePipelineSettingResource
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
-import com.tencent.devops.repository.api.ServiceGitRepositoryResource
-import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
@@ -80,12 +79,11 @@ class TxStorePipelineServiceImpl : TxStorePipelineService {
         userId: String,
         updateStorePipelineModelRequest: UpdateStorePipelineModelRequest
     ): Result<Boolean> {
-        logger.info("updatePipelineModel userId:$userId,updateStorePipelineModelRequest:$updateStorePipelineModelRequest")
+        val taskId = UUIDUtil.generate()
+        logger.info("updatePipelineModel taskId:$taskId,userId:$userId,updateStorePipelineModelRequest:$updateStorePipelineModelRequest")
         val scopeType = updateStorePipelineModelRequest.scopeType
         val storeType = updateStorePipelineModelRequest.storeType
         val storeCodeList = updateStorePipelineModelRequest.storeCodeList
-        val businessConfig =
-            businessConfigDao.get(dslContext, StoreTypeEnum.ATOM.name, "initBuildPipeline", "PIPELINE_MODEL")
         when (scopeType) {
             ScopeTypeEnum.ALL.name -> {
             }
@@ -95,71 +93,78 @@ class TxStorePipelineServiceImpl : TxStorePipelineService {
                     dslContext = dslContext,
                     storeType = StoreTypeEnum.valueOf(storeType).type.toByte(),
                     descFlag = false,
-                    specProjectCodeList = storeCodeList,
-                    grayFlag = null,
-                    grayProjectCodeList = null
+                    grayProjectCodeList = grayProjectSet
                 )
                 val projectRelRecords = storeProjectRelDao.getStoreInitProjects(
                     dslContext = dslContext,
                     storeType = StoreTypeEnum.valueOf(storeType).type.toByte(),
                     descFlag = false,
-                    specProjectCodeList = null,
-                    grayFlag = null,
-                    grayProjectCodeList = grayProjectSet.toList(),
-                    page = null,
-                    pageSize = null
+                    grayProjectCodeList = grayProjectSet,
+                    page = 1,
+                    pageSize = 20
                 )
             }
             ScopeTypeEnum.NO_GRAY.name -> {
                 val grayProjectSet = gray.grayProjectSet(redisOperation)
             }
             ScopeTypeEnum.SPEC.name -> {
-                val storeCommonDao =
-                    SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
                 if (storeCodeList == null) {
                     return MessageCodeUtil.generateResponseDataObject(
                         CommonMessageCode.PARAMETER_IS_NULL,
                         arrayOf("storeCodeList")
                     )
                 }
-                // 获取研发商店组件信息
-                val storeInfoRecords = storeCommonDao.getLatestStoreInfoListByCodes(dslContext, storeCodeList)
-                var pipelineModel = businessConfig!!.configValue
-                val pipelineModelVersionList = mutableListOf<PipelineModelVersion>()
-                storeInfoRecords?.forEach { storeInfo ->
-                    val projectCode = storeInfo["projectCode"] as String
-                    val storeCode = storeInfo["storeCode"] as String
-                    val pipelineName = "am-$projectCode-$storeCode-${System.currentTimeMillis()}"
-                    val paramMap = mapOf(
-                        "pipelineName" to pipelineName,
-                        "storeCode" to storeCode,
-                        "version" to storeInfo["storeCode"],
-                        "script" to StringEscapeUtils.escapeJava(storeInfo["script"] as String),
-                        "repositoryHashId" to storeInfo["repositoryHashId"],
-                        "repositoryPath" to storeInfo["repositoryPath"]
-                    )
-                    // 将流水线模型中的变量替换成具体的值
-                    paramMap.forEach { (key, value) ->
-                        pipelineModel = pipelineModel.replace("#{$key}", value.toString())
-                    }
-                    pipelineModelVersionList.add(
-                        PipelineModelVersion(
-                            projectId = projectCode,
-                            pipelineId = storeInfo["pipelineId"] as String,
-                            model = JsonUtil.to(pipelineModel, Model::class.java)
-                        )
-                    )
-                }
-                val updatePipelineModelResult = client.get(ServicePipelineSettingResource::class)
-                    .updatePipelineModel(
-                        userId = userId,
-                        updatePipelineModelRequest = UpdatePipelineModelRequest(
-                            pipelineModelVersionList = pipelineModelVersionList
-                        )
-                    )
-                logger.info("updatePipelineModelResult:$updatePipelineModelResult")
+                updatePipelineModel(storeType, storeCodeList, userId)
             }
         }
         return Result(true)
+    }
+
+    private fun updatePipelineModel(
+        storeType: String,
+        storeCodeList: List<String>,
+        userId: String
+    ) {
+        val businessConfig =
+            businessConfigDao.get(dslContext, storeType, "initBuildPipeline", "PIPELINE_MODEL")
+                ?: return
+        var pipelineModel = businessConfig.configValue
+        val storeCommonDao =
+            SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
+        // 获取研发商店组件信息
+        val storeInfoRecords = storeCommonDao.getLatestStoreInfoListByCodes(dslContext, storeCodeList)
+        val pipelineModelVersionList = mutableListOf<PipelineModelVersion>()
+        storeInfoRecords?.forEach { storeInfo ->
+            val projectCode = storeInfo["projectCode"] as String
+            val storeCode = storeInfo["storeCode"] as String
+            val pipelineName = "am-$projectCode-$storeCode-${System.currentTimeMillis()}"
+            val paramMap = mapOf(
+                "pipelineName" to pipelineName,
+                "storeCode" to storeCode,
+                "version" to storeInfo["version"],
+                "script" to StringEscapeUtils.escapeJava(storeInfo["script"] as String),
+                "repositoryHashId" to storeInfo["repositoryHashId"],
+                "repositoryPath" to storeInfo["repositoryPath"]
+            )
+            // 将流水线模型中的变量替换成具体的值
+            paramMap.forEach { (key, value) ->
+                pipelineModel = pipelineModel.replace("#{$key}", value.toString())
+            }
+            pipelineModelVersionList.add(
+                PipelineModelVersion(
+                    projectId = projectCode,
+                    pipelineId = storeInfo["pipelineId"] as String,
+                    model = JsonUtil.to(pipelineModel, Model::class.java)
+                )
+            )
+        }
+        val updatePipelineModelResult = client.get(ServicePipelineSettingResource::class)
+            .updatePipelineModel(
+                userId = userId,
+                updatePipelineModelRequest = UpdatePipelineModelRequest(
+                    pipelineModelVersionList = pipelineModelVersionList
+                )
+            )
+        logger.info("updatePipelineModelResult:$updatePipelineModelResult")
     }
 }
