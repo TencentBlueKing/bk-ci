@@ -147,7 +147,7 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
                     conditions.add(VERSION.eq(version))
                 }
                 dslContext.update(this)
-                    .set(MODEL, objectMapper.writeValueAsString(it.model))
+                    .set(MODEL, it.model)
                     .where(conditions)
             }
             dslContext.batch(updateStep).execute()
