@@ -28,11 +28,9 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -236,7 +234,7 @@ class StorePipelineServiceImpl : StorePipelineService {
                     projectId = projectCode,
                     pipelineId = storeInfo["pipelineId"] as String,
                     creator = storeInfo["creator"] as String,
-                    model = JsonUtil.to(convertModel, Model::class.java)
+                    model = convertModel
                 )
             )
         }
