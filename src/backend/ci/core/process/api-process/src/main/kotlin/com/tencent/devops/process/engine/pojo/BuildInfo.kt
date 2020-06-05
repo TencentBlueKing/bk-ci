@@ -62,7 +62,7 @@ data class BuildInfo(
 
     fun isFailure() = BuildStatus.isFailure(status)
 
-    fun isCancel() = BuildStatus.isCancel(status)
+    fun isCancel() = BuildStatus.isPassiveStop(status)
 
     fun isStageSuccess() = status == BuildStatus.STAGE_SUCCESS
 
