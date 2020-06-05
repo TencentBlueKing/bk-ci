@@ -142,7 +142,6 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
-import com.tencent.devops.process.pojo.GroupLabel
 
 /**
  * 流水线运行时相关的服务
@@ -278,33 +277,6 @@ class PipelineRuntimeService @Autowired constructor(
             page = page,
             pageSize = pageSize
         )
-    }
-
-    fun getGroupLabelList(
-            pipeLineId: String
-    ): MutableList<GroupLabel>? {
-        val pipelineGroupLabel = pipelineBuildSummaryDao.getPipelineGroupLabelQuery(
-                dslContext = dslContext,
-                pipeLineId = pipeLineId
-        )
-        val groupLabelList:MutableList<GroupLabel> = mutableListOf()
-        if (pipelineGroupLabel != null) {
-            val keySet = mutableSetOf<String>()
-            pipelineGroupLabel.forEach {
-                keySet.add(it["GROUP_NAME"] as String)
-            }
-            for (key: String in keySet) {
-                val groupLabel = GroupLabel()
-                groupLabel.key = key
-                for (item :Record in pipelineGroupLabel){
-                    if(key == item["GROUP_NAME"] as String?){
-                        groupLabel.value.add((item["LABEL_NAME"] as String?)!!)
-                    }
-                }
-                groupLabelList.add(groupLabel)
-            }
-        }
-        return groupLabelList
     }
 
     fun getBuildSummaryRecords(

@@ -29,7 +29,6 @@ package com.tencent.devops.process.pojo
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import com.tencent.devops.process.pojo.GroupLabel
 
 @ApiModel("流水线模型-列表信息")
 data class Pipeline(
@@ -84,5 +83,5 @@ data class Pipeline(
     @ApiModelProperty("流水线创建人", required = false)
     val creator: String,
     @ApiModelProperty("流水线分组和标签", required = false)
-    val groupLabel: List<GroupLabel>
+    val groupLabel: Map<String, List<String>>? = null
 )
