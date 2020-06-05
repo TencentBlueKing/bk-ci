@@ -492,7 +492,7 @@
                     query: {
                         code,
                         type: 'template',
-                        from: 'atomList'
+                        from: 'workList'
                     }
                 })
             },

@@ -75,7 +75,7 @@
                         @click="$router.push({ name: 'editImage', params: { imageId: props.row.imageId } })"> {{ $t('store.升级') }} </span>
                     <span class="shelf-btn"
                         v-if="props.row.imageStatus === 'RELEASED' && !props.row.publicFlag"
-                        @click="$router.push({ name: 'install', query: { code: props.row.imageCode, type: 'image', from: 'atomList' } })"> {{ $t('store.安装') }} </span>
+                        @click="$router.push({ name: 'install', query: { code: props.row.imageCode, type: 'image', from: 'workList' } })"> {{ $t('store.安装') }} </span>
                     <span class="schedule-btn"
                         v-if="['AUDITING', 'COMMITTING', 'CHECKING', 'CHECK_FAIL', 'UNDERCARRIAGING', 'TESTING'].includes(props.row.imageStatus)"
                         @click="$router.push({ name: 'imageProgress', params: { imageId: props.row.imageId } })"> {{ $t('store.进度') }} </span>

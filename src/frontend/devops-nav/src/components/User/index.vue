@@ -71,11 +71,11 @@
 
         @Action togglePopupShow
 
-        toggleUserInfo (show: boolean) :void {
+        toggleUserInfo (show: boolean): void {
             this.show = !this.show
         }
 
-        hideUserInfo () : void {
+        hideUserInfo (): void {
             this.show = false
         }
 

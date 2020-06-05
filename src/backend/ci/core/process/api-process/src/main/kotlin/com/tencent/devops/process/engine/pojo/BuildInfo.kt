@@ -66,4 +66,6 @@ data class BuildInfo(
     fun isCancel() = BuildStatus.isCancel(status)
 
     fun isStageSuccess() = status == BuildStatus.STAGE_SUCCESS
+
+    fun isReadyToRun() = BuildStatus.isReadyToRun(status)
 }

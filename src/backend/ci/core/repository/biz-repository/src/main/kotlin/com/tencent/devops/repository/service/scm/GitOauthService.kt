@@ -26,6 +26,8 @@
 
 package com.tencent.devops.repository.service.scm
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.AESUtil
@@ -119,12 +121,17 @@ class GitOauthService @Autowired constructor(
         return gitService.getTag(accessToken = accessToken.accessToken, userId = userId, repository = repository, page = pageNotNull, pageSize = pageSizeNotNull)
     }
 
-    override fun isOAuth(userId: String, redirectUrlType: RedirectUrlTypeEnum?, atomCode: String?): AuthorizeResult {
+    override fun isOAuth(userId: String, redirectUrlType: RedirectUrlTypeEnum?, redirectUrl: String?): AuthorizeResult {
         logger.info("isOAuth userId is: $userId,redirectUrlType is: $redirectUrlType")
+        if (redirectUrlType == RedirectUrlTypeEnum.SPEC) {
+            if (redirectUrl.isNullOrEmpty()) {
+                throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf("redirectUrl"))
+            }
+        }
         val authParams = mapOf(
             "userId" to userId,
             "redirectUrlType" to redirectUrlType?.type,
-            "atomCode" to atomCode,
+            "redirectUrl" to redirectUrl,
             "randomStr" to "BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}"
         )
         val accessToken = getAccessToken(userId) ?: return AuthorizeResult(403, getAuthUrl(authParams))

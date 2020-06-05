@@ -86,12 +86,48 @@ class AtomMarketInitPipelineService @Autowired constructor(
         val stageFirstElement = ManualTriggerElement(id = "T-1-1-1")
         val stageFirstElements = listOf<Element>(stageFirstElement)
         val params = mutableListOf<BuildFormProperty>()
-        params.add(BuildFormProperty("atomCode", true, BuildFormPropertyType.STRING, atomBaseInfo.atomCode, null, null,
-            null, null, null, null, null, null))
-        params.add(BuildFormProperty("version", true, BuildFormPropertyType.STRING, atomBaseInfo.version, null, null,
-            null, null, null, null, null, null))
-        params.add(BuildFormProperty("script", true, BuildFormPropertyType.STRING, script, null, null,
-            null, null, null, null, null, null))
+        params.add(BuildFormProperty(
+            id = "atomCode",
+            required = true,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = atomBaseInfo.atomCode,
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
+        params.add(BuildFormProperty(
+            id = "version",
+            required = true,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = atomBaseInfo.version,
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
+        params.add(BuildFormProperty(
+            id = "script",
+            required = true,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = script,
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
         val stageFirstContainer = TriggerContainer(
             id = containerSeqId.toString(),
             name = "构建触发",

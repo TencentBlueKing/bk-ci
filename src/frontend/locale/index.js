@@ -16,8 +16,10 @@ const localeLabelMap = {
     'us': 'English'
 }
 const localeAliasMap = {
+    'zh-CN': 'zh-CN',
     'zh-cn': 'zh-CN',
     'cn': 'zh-CN',
+    'en-US': 'en-US',
     'en-us': 'en-US',
     'en': 'en-US',
     'us': 'en-US'
@@ -27,18 +29,18 @@ const BK_CI_DOMAIN = location.host
 
 function getLsLocale () {
     try {
-        const cookieLcale = cookies.get(LS_KEY) ||  DEFAULT_LOCALE
+        const cookieLcale = cookies.get(LS_KEY) || DEFAULT_LOCALE
         return localeAliasMap[cookieLcale.toLowerCase()] || DEFAULT_LOCALE
     } catch (error) {
         return DEFAULT_LOCALE
     }
 }
 
-
 function setLsLocale (locale) {
+    const formateLocale = localeAliasMap[locale] === 'zh-CN' ? 'zh-cn' : 'en'
     if (typeof cookies.set === 'function') {
         cookies.remove(LS_KEY)
-        cookies.set(LS_KEY, locale, { domain: BK_CI_DOMAIN, path: '/' })
+        cookies.set(LS_KEY, formateLocale, { domain: BK_CI_DOMAIN, path: '/' })
     }
 }
 
@@ -56,7 +58,6 @@ export default (r) => {
     setLocale(initLocale)
 
     locale.i18n((key, value) => i18n.t(key, value))
-
 
     function dynamicLoadModule (module, locale = DEFAULT_LOCALE) {
         const localeModuleId = getLocalModuleId(module, locale)
@@ -78,7 +79,7 @@ export default (r) => {
 
     function setLocale (localeLang) {
         Object.keys(loadedModule).map(mod => {
-            const [ , module ] = mod.split('_')
+            const [, module] = mod.split('_')
             if (!loadedModule[getLocalModuleId(module, localeLang)]) {
                 dynamicLoadModule(module, localeLang)
             }
@@ -91,8 +92,7 @@ export default (r) => {
         
         return localeLang
     }
-    
- 
+     
     return {
         i18n,
         setLocale,
@@ -101,13 +101,12 @@ export default (r) => {
     }
 }
 
-
 function getLocalModuleId (module, locale) {
     return `${locale}_${module}`
 }
 
 function importAll (r) {
-    let localeList = []
+    const localeList = []
     const messages = r.keys().reduce((acc, key) => {
         const mod = r(key)
         
@@ -124,7 +123,7 @@ function importAll (r) {
             })
         }
         return acc
-    }, {});
+    }, {})
 
     return {
         localeList,

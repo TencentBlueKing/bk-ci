@@ -44,7 +44,11 @@ class BluekingEnvironmentPermissionService constructor(
     environmentAuthServiceCode = environmentAuthServiceCode
 ) {
 
-    override fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
+    override fun supplierForEnvFakePermission(projectId: String): () -> MutableList<String> {
+        return { mutableListOf() }
+    }
+
+    override fun supplierForNodeFakePermission(projectId: String): () -> MutableList<String> {
         return { mutableListOf() }
     }
 }

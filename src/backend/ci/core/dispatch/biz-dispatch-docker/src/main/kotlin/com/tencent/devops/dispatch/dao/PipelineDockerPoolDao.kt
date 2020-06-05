@@ -99,20 +99,22 @@ class PipelineDockerPoolDao @Autowired constructor() {
         }
     }
 
-    fun getTimeOutTask(dslContext: DSLContext): Result<TDispatchPipelineDockerPoolRecord> {
+    fun getTimeOutPool(dslContext: DSLContext): Result<TDispatchPipelineDockerPoolRecord> {
         with(TDispatchPipelineDockerPool.T_DISPATCH_PIPELINE_DOCKER_POOL) {
             return dslContext.selectFrom(this)
-                .where(GMT_MODIFIED.lessOrEqual(timestampSubDay(2)))
+                .where(STATUS.eq(2))
+                .and(GMT_MODIFIED.lessOrEqual(timestampSubDay(2)))
                 .fetch()
         }
     }
 
-    fun updateTimeOutTask(dslContext: DSLContext): Boolean {
+    fun updateTimeOutPool(dslContext: DSLContext): Boolean {
         with(TDispatchPipelineDockerPool.T_DISPATCH_PIPELINE_DOCKER_POOL) {
             return dslContext.update(this)
-                .set(STATUS, PipelineTaskStatus.FAILURE.status)
+                .set(STATUS, PipelineTaskStatus.DONE.status)
                 .set(GMT_MODIFIED, LocalDateTime.now())
-                .where(GMT_MODIFIED.lessOrEqual(timestampSubDay(2)))
+                .where(STATUS.eq(2))
+                .and(GMT_MODIFIED.lessOrEqual(timestampSubDay(2)))
                 .execute() == 1
         }
     }

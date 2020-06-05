@@ -26,9 +26,9 @@
 
 package com.tencent.devops.quality.api.v2.pojo.response
 
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
-import com.tencent.devops.quality.pojo.enum.NotifyType
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import io.swagger.annotations.ApiModelProperty
 

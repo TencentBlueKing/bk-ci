@@ -89,6 +89,10 @@
     "stageOptionLabel": "Run this Stage",
     "stageTriggerDesc": "Multiple people separated by commas",
     "skipStageDesc": "SKIPED",
+    "pipelinesHistory": "Builds",
+    "pipelinesEdit": "Edit",
+    "pipelinesPreview": "Preview",
+    "pipelinesDetail": "Details",
     "execDetail": {
         "log": "Log",
         "setting": "Configuration",
@@ -366,7 +370,6 @@
         "logClose": "Log is closed",
         "logErr": "Other exceptions",
         "stageStatus": "Stage",
-        "execHistory": "Builds",
         "trendData": "Artifacts size trending",
         "chooseDateRange": "Please select a date range",
         "noPackages": " No artifacts found in this period",
@@ -424,7 +427,8 @@
         "selectNone": "Select none",
         "majorVersion": "Major version",
         "minorVersion": "Feature version",
-        "fixVersion": "Fix version"
+        "fixVersion": "Fix version",
+        "paramsInvalidMsg": "Params Invalid"
     },
     "details": {
         "executeDetail": "Build detail",
@@ -757,7 +761,7 @@
         "timeoutDesc": "All the integers between 0 and 10080 with 0 indicating the maximum timeout allowed by the system",
         "timeoutPlaceholder": "Specifies the maximum time, in minutes, that a task is allowed to execute before being canceled by server. A zero value indicates an infinite timeout.",
         "atomRunCondition": "Run this task",
-        "atomPreSuc": "Only when all previous tasks have succeeded",
+        "atomPreSuc": "Run when all pre-plugins run successfully (including continue when failed)",
         "atomEvenFail": "Even if a previous task has failed, unless the build was canceled",
         "atomOnlyFail": "Only when a previous task has failed",
         "varMatch": "run it when all the custom variables are macthed",

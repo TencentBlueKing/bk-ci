@@ -3,9 +3,7 @@
         v-bkloading="{
             isLoading: pageLoading
         }">
-        <pipeline-header
-            :title="header.title"
-            :links="header.links">
+        <pipeline-header :title="header.title">
             <span class="default-subheader-icon"
                 slot="logo">
                 <logo size="32" name="pipeline"></logo>
@@ -83,12 +81,7 @@
                 isLoading: false,
                 toggleIsMore: false,
                 header: {
-                    title: this.$t('pipeline'),
-                    links: [
-                        {
-                            handler: this.tutorial
-                        }
-                    ]
+                    title: this.$t('pipeline')
                 }
             }
         },

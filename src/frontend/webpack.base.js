@@ -9,7 +9,6 @@ const BundleWebpackPlugin = require('./webpackPlugin/bundle-webpack-plugin')
 
 module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     const isDev = argv.mode === 'development'
-    const isMaster = process.env.NODE_ENV === 'master'
     const envDist = env && env.dist ? env.dist : 'frontend'
     const buildDist = path.join(__dirname, envDist, dist)
     return {
@@ -18,7 +17,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
         output: {
             publicPath,
             chunkFilename: '[name].[chunkhash].js',
-            filename: isMaster ? '[name].[contentHash].min.js' : '[name].js',
+            filename: '[name].[contentHash].min.js',
             path: buildDist
         },
         module: {
@@ -85,7 +84,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             }),
             new webpack.HashedModuleIdsPlugin(),
             new MiniCssExtractPlugin({
-                filename: isMaster ? '[name].[chunkHash].css' : '[name].css',
+                filename: '[name].[chunkHash].css',
                 chunkName: '[id].css'
             }),
             new CopyWebpackPlugin([{ from: path.join(__dirname, 'locale', dist), to: buildDist }])

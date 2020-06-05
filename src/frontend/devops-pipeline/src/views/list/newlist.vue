@@ -1,141 +1,141 @@
 <template>
-    <article class="pipeline-list" v-bkloading="{ isLoading: false, title: loading.title }">
-        <section class="loading-wrapper">
-            <div class="pipeline-list-wrapper" v-if="showContent">
-                <template>
-                    <list-empty
-                        v-if="!pipelineList.length"
+    <article class="pipeline-list">
+        <infinite-scroll class="pipeline-list-wrapper" ref="infiniteScroll" :data-fetcher="requestPipelineList" :page-size="60" scroll-box-class-name="pipeline-list" v-slot="slotProps">
+            <template v-if="!slotProps.isLoading">
+                <list-empty
+                    v-if="!slotProps.list.length"
+                    :has-filter="hasFilter"
+                    @showCreate="toggleTemplatePopup"
+                    @showSlide="showSlide"
+                    :has-pipeline="hasPipeline">
+                </list-empty>
+
+                <section v-if="slotProps.list.length">
+                    <list-create-header
+                        :layout="layout"
                         :has-filter="hasFilter"
-                        @showCreate="toggleTemplatePopup"
+                        :num="slotProps.totals"
                         @showSlide="showSlide"
-                        :has-pipeline="hasPipeline">
-                    </list-empty>
+                        @changeLayout="changeLayoutType"
+                        @changeOrder="changeOrderType"
+                        @showCreate="toggleTemplatePopup">
+                    </list-create-header>
 
-                    <section v-if="pipelineList.length">
-                        <list-create-header
-                            :layout="layout"
-                            :has-filter="hasFilter"
-                            :num="pipelineList.length"
-                            @showSlide="showSlide"
-                            @changeLayout="changeLayoutType"
-                            @changeOrder="changeOrderType"
-                            @showCreate="toggleTemplatePopup">
-                        </list-create-header>
-
-                        <section class="pipeline-list-content">
-                            <div class="pipeline-list-cards clearfix" v-if="layout === 'card'">
-                                <task-card
-                                    v-for="(card, index) of pipelineList"
-                                    :has-permission="card.hasPermission"
-                                    :config="card.feConfig"
-                                    :index="index"
-                                    :key="`taskCard${card.pipelineId}`"
-                                    :can-manual-startup="card.canManualStartup">
-                                </task-card>
-                            </div>
-
-                            <div class="pipeline-list-table" v-if="layout === 'table'">
-                                <task-table
-                                    :list="pipelineList">
-                                </task-table>
-                            </div>
-                        </section>
-                    </section>
-                </template>
-            </div>
-
-            <pipeline-template-popup :toggle-popup="toggleTemplatePopup" :is-show="templatePopupShow"></pipeline-template-popup>
-
-            <pipeline-filter v-if="slideShow" :is-show="slideShow" @showSlide="showSlide" :is-disabled="isDisabled" :selected-filter="currentFilter" @filter="filterCommit" class="pipeline-filter"></pipeline-filter>
-
-            <bk-dialog
-                width="800"
-                v-model="copyDialogConfig.isShow"
-                :title="copyDialogConfig.title"
-                :mask-close="false"
-                :close-icon="false"
-                :auto-close="false"
-                header-position="left"
-                @confirm="copyConfirmHandler"
-                @cancel="copyCancelHandler"
-            >
-                <template>
-                    <section class="copy-pipeline bk-form" v-bkloading="{ isLoading: copyConfig.loading }">
-                        <div class="bk-form-item">
-                            <label class="bk-label">{{ $t('name') }}：</label>
-                            <div class="bk-form-content">
-                                <input type="text" class="bk-form-input" :placeholder="$t('pipelineNameInputTips')"
-                                    name="newPipelineName"
-                                    v-validate="&quot;required|max:40&quot;"
-                                    v-model="copyConfig.newPipelineName"
-                                    :class="{
-                                        'is-danger': errors.has('newPipelineName')
-                                    }"
-                                >
-                                <p class="error-tips" v-if="errors.has('newPipelineName')">{{ $t('pipelineNameInputTips') }}</p>
-                            </div>
+                    <section class="pipeline-list-content">
+                        <div class="pipeline-list-cards" v-if="layout === 'card'">
+                            <task-card
+                                v-for="(card, index) of slotProps.list"
+                                :has-permission="card.hasPermission"
+                                :config="pipelineFeConfMap[card.pipelineId]"
+                                :index="index"
+                                :key="`taskCard${card.pipelineId}`"
+                                :can-manual-startup="card.canManualStartup">
+                            </task-card>
                         </div>
 
-                        <div class="bk-form-item">
-                            <label class="bk-label">{{ $t('desc') }}：</label>
-                            <div class="bk-form-content">
-                                <input type="text" class="bk-form-input" :placeholder="$t('pipelineDescInputTips')"
-                                    name="newPipelineDesc"
-                                    v-model="copyConfig.newPipelineDesc"
-                                    v-validate.initial="&quot;max:100&quot;"
-                                    :class="{
-                                        'is-danger': errors.has('newPipelineDesc')
-                                    }"
-                                >
-                                <p class="error-tips" v-if="errors.has('newPipelineDesc')"> {{ errors.first("newPipelineDesc") }}</p>
-                            </div>
+                        <div class="pipeline-list-table" v-if="layout === 'table'">
+                            <task-table
+                                :pipeline-fe-conf-map="pipelineFeConfMap"
+                                :list="slotProps.list">
+                            </task-table>
                         </div>
                     </section>
-                </template>
-            </bk-dialog>
 
-            <bk-dialog
-                width="800"
-                v-model="saveAsTemp.isShow"
-                :title="saveAsTemp.title"
-                :close-icon="false"
-                :mask-close="false"
-                :auto-close="false"
-                header-position="left"
-                @confirm="saveAsConfirmHandler"
-                @cancel="saveAsCancelHandler">
-                <section class="copy-pipeline bk-form" ref="saveAsTemp">
+                </section>
+            </template>
+        </infinite-scroll>
+
+        <pipeline-template-popup :toggle-popup="toggleTemplatePopup" :is-show="templatePopupShow"></pipeline-template-popup>
+
+        <pipeline-filter v-if="slideShow" :is-show="slideShow" @showSlide="showSlide" :is-disabled="isDisabled" :selected-filter="currentFilter" @filter="filterCommit" class="pipeline-filter"></pipeline-filter>
+
+        <bk-dialog
+            width="800"
+            v-model="copyDialogConfig.isShow"
+            :title="copyDialogConfig.title"
+            :mask-close="false"
+            :close-icon="false"
+            :auto-close="false"
+            header-position="left"
+            @confirm="copyConfirmHandler"
+            @cancel="copyCancelHandler"
+        >
+            <template>
+                <section class="copy-pipeline bk-form" v-bkloading="{ isLoading: copyConfig.loading }">
                     <div class="bk-form-item">
-                        <label class="bk-label">{{ $t('template.name') }}</label>
+                        <label class="bk-label">{{ $t('name') }}：</label>
                         <div class="bk-form-content">
-                            <input type="text"
-                                class="bk-form-input"
-                                :placeholder="$t('template.nameInputTips')"
-                                v-model="saveAsTemp.templateName"
-                                :class="{ 'is-danger': errors.has('saveTemplateName') }"
-                                name="saveTemplateName"
-                                v-validate="&quot;required|max:30&quot;"
-                                maxlength="30"
+                            <input type="text" class="bk-form-input" :placeholder="$t('pipelineNameInputTips')"
+                                name="newPipelineName"
+                                v-validate="'required|max:40'"
+                                v-model="copyConfig.newPipelineName"
+                                :class="{
+                                    'is-danger': errors.has('newPipelineName')
+                                }"
                             >
+                            <p class="error-tips" v-if="errors.has('newPipelineName')">{{ $t('pipelineNameInputTips') }}</p>
                         </div>
-                        <div v-if="errors.has('saveTemplateName')" class="error-tips err-name">{{ $t('template.nameInputTips') }}</div>
                     </div>
 
                     <div class="bk-form-item">
-                        <label class="bk-label tip-bottom">{{ $t('template.applySetting') }}
-                            <span v-bk-tooltips.bottom="$t('template.tipsSetting')" class="bottom-start">
-                                <i class="bk-icon icon-info-circle"></i>
-                            </span>
-                        </label>
+                        <label class="bk-label">{{ $t('desc') }}：</label>
                         <div class="bk-form-content">
-                            <bk-radio-group v-model="saveAsTemp.isCopySetting">
-                                <bk-radio v-for="(entry, key) in copySettings" :key="key" :value="entry.value" class="auth-radio">{{ entry.label }}</bk-radio>
-                            </bk-radio-group>
+                            <input type="text" class="bk-form-input" :placeholder="$t('pipelineDescInputTips')"
+                                name="newPipelineDesc"
+                                v-model="copyConfig.newPipelineDesc"
+                                v-validate.initial="'max:100'"
+                                :class="{
+                                    'is-danger': errors.has('newPipelineDesc')
+                                }"
+                            >
+                            <p class="error-tips" v-if="errors.has('newPipelineDesc')"> {{ errors.first("newPipelineDesc") }}</p>
                         </div>
                     </div>
                 </section>
-            </bk-dialog>
-        </section>
+            </template>
+        </bk-dialog>
+
+        <bk-dialog
+            width="800"
+            v-model="saveAsTemp.isShow"
+            :title="saveAsTemp.title"
+            :close-icon="false"
+            :mask-close="false"
+            :auto-close="false"
+            header-position="left"
+            @confirm="saveAsConfirmHandler"
+            @cancel="saveAsCancelHandler">
+            <section class="copy-pipeline bk-form" ref="saveAsTemp">
+                <div class="bk-form-item">
+                    <label class="bk-label">{{ $t('template.name') }}</label>
+                    <div class="bk-form-content">
+                        <input type="text"
+                            class="bk-form-input"
+                            :placeholder="$t('template.nameInputTips')"
+                            v-model="saveAsTemp.templateName"
+                            :class="{ 'is-danger': errors.has('saveTemplateName') }"
+                            name="saveTemplateName"
+                            v-validate="'required|max:30'"
+                            maxlength="30"
+                        >
+                    </div>
+                    <div v-if="errors.has('saveTemplateName')" class="error-tips err-name">{{ $t('template.nameInputTips') }}</div>
+                </div>
+
+                <div class="bk-form-item">
+                    <label class="bk-label tip-bottom">{{ $t('template.applySetting') }}
+                        <span v-bk-tooltips.bottom="$t('template.tipsSetting')" class="bottom-start">
+                            <i class="bk-icon icon-info-circle"></i>
+                        </span>
+                    </label>
+                    <div class="bk-form-content">
+                        <bk-radio-group v-model="saveAsTemp.isCopySetting">
+                            <bk-radio v-for="(entry, key) in copySettings" :key="key" :value="entry.value" class="auth-radio">{{ entry.label }}</bk-radio>
+                        </bk-radio-group>
+                    </div>
+                </div>
+            </section>
+        </bk-dialog>
     </article>
 </template>
 
@@ -150,6 +150,7 @@
     import listEmpty from '@/components/pipelineList/listEmpty'
     import listCreateHeader from '@/components/pipelineList/listCreateHeader'
     import pipelineFilter from '@/components/pipelineList/PipelineFilter'
+    import InfiniteScroll from '@/components/InfiniteScroll'
     import {
         convertMStoString,
         convertMStoStringByRule,
@@ -163,7 +164,8 @@
             'list-create-header': listCreateHeader,
             'list-empty': listEmpty,
             PipelineTemplatePopup,
-            pipelineFilter
+            pipelineFilter,
+            InfiniteScroll
         },
 
         data () {
@@ -172,11 +174,6 @@
             return {
                 hasTemplatePermission: true,
                 templatePopupShow: false,
-                loading: {
-                    isLoading: false,
-                    title: ''
-                },
-                showContent: false,
                 responsiveConfig: {
                     wrapper: null,
                     width: 0,
@@ -226,13 +223,13 @@
                 slideShow: false,
                 isDisabled: false,
                 filter: {},
-                currentFilter: {}
+                currentFilter: {},
+                pipelineFeConfMap: {}
             }
         },
 
         computed: {
             ...mapGetters({
-                'pipelineList': 'pipelines/getAllPipelineList',
                 'statusMap': 'pipelines/getStatusMap',
                 'tagGroupList': 'pipelines/getTagGroupList'
             }),
@@ -250,24 +247,25 @@
             hasFilter () {
                 const res = (this.filter && Object.keys(this.filter).length && (this.filter.filterByCreator !== '' || this.filter.filterByPipelineName !== '' || this.filter.filterByLabels !== ''))
                 return res
+            },
+            pipelineList () {
+                return this.$refs.infiniteScroll ? this.$refs.infiniteScroll.list : []
             }
         },
 
         watch: {
-            '$route.params.type' (val) {
+            pageType (val) {
                 if (val) {
                     this.filter = {}
                     this.currentFilter = {}
                     this.initPage()
-                    this.showContent = true
+                    this.$nextTick(() => {
+                        if (this.$refs.infiniteScroll) {
+                            this.$refs.infiniteScroll.fetchData()
+                        }
+                    })
                 }
             }
-            // projectId: {
-            //     handler (val) {
-            //         this.initWebSocket(val)
-            //     },
-            //     immediate: true
-            // }
         },
 
         created () {
@@ -320,13 +318,19 @@
             async changeOrderType (val) {
                 localStorage.setItem('pipelineSortType', val)
                 this.sortType = val
-                await this.requestPipelineList(val)
+                this.$nextTick(() => {
+                    if (this.$refs.infiniteScroll) {
+                        this.$refs.infiniteScroll.updateList()
+                    }
+                })
             },
             async filterCommit (data, currentFilter, needLoad = true) { // needLoad 阻止重复请求流水线列表
                 this.filter = data
                 this.currentFilter = currentFilter
-                if (needLoad) {
-                    await this.requestPipelineList(this.sortType)
+                if (needLoad && this.$refs.infiniteScroll) {
+                    this.$nextTick(() => {
+                        this.$refs.infiniteScroll.updateList()
+                    })
                 }
                 this.isDisabled = false
             },
@@ -400,19 +404,18 @@
              *  初始化页面数据
              */
             async init () {
-                await this.requestTemplatePermission()
-                await this.requestHasCreatePermission()
-                await this.requestPipelineList(this.sortType)
+                this.requestTemplatePermission()
+                this.requestHasCreatePermission()
                 this.requestGrouptLists()
             },
 
             async initPage () {
-                console.time('init')
+                performance.mark('initList:start')
                 this.togglePageLoading(true)
                 await this.init()
 
-                this.showContent = true
-                console.timeEnd('init')
+                performance.mark('initList:end')
+                performance.measure('initList', 'initList:start', 'initList:end')
                 this.togglePageLoading(false)
             },
 
@@ -425,88 +428,85 @@
             /**
              *  请求pipeline列表
              */
-            async requestPipelineList (sortType) {
+            async requestPipelineList (page = 1, pageSize) {
                 const {
                     $store,
                     filter
                 } = this
                 let response
                 try {
-                    // response = await $store.dispatch('pipelines/requestAllPipelinesList', {
                     response = await $store.dispatch('pipelines/requestAllPipelinesListByFilter', {
                         projectId: this.projectId,
-                        page: 1,
-                        pageSize: -1,
-                        sortType: sortType || 'CREATE_TIME',
+                        page,
+                        pageSize,
+                        sortType: this.sortType || 'CREATE_TIME',
                         filterByLabels: filter.filterByLabels,
                         filterByPipelineName: filter.filterByPipelineName,
                         filterByCreator: filter.filterByCreator,
                         viewId: this.currentViewId
                     })
 
-                    let res
-
-                    if (response.count) {
-                        const $data = response.records
-                        let obj = {}
-
-                        res = $data.map((item, index) => {
-                            obj = {
-                                name: item.pipelineName,
-                                desc: typeof item.pipelineDesc === 'string' && item.pipelineDesc.trim(),
-                                isRunning: false,
-                                status: '',
-                                content: [
-                                    {
-                                        key: this.$t('lastBuildNum'),
-                                        value: `${item.latestBuildNum ? `#${item.latestBuildNum}` : '--'}`
-                                    },
-                                    {
-                                        key: this.$t('lastExecTime'),
-                                        value: ''
-                                    }
-                                ],
-                                runningInfo: {
-                                    time: 0,
-                                    percentage: this.calcPercentage(item),
-                                    log: '',
-                                    buildCount: item.runningBuildCount || 0
+                    const pipelineFeConfMap = response.records.reduce((pipelineFeConfMap, item, index) => {
+                        pipelineFeConfMap[item.pipelineId] = {
+                            name: item.pipelineName,
+                            pipelineName: item.pipelineName,
+                            desc: typeof item.pipelineDesc === 'string' && item.pipelineDesc.trim(),
+                            isRunning: false,
+                            status: '',
+                            content: [
+                                {
+                                    key: this.$t('lastBuildNum'),
+                                    value: `${item.latestBuildNum ? `#${item.latestBuildNum}` : '--'}`
                                 },
-                                footer: [
-                                    {
-                                        upperText: item.taskCount,
-                                        lowerText: this.$t('newlist.totalAtomNums'),
-                                        handler: this.goEditPipeline
-                                    },
-                                    {
-                                        upperText: item.buildCount,
-                                        lowerText: this.$t('newlist.execTimes'),
-                                        handler: this.goHistory
-                                    }
-                                ],
-                                marginRight: 0,
-                                width: '352px',
-                                customBtns: [],
-                                buttonAllow: {
-                                    confirmFailure: true,
-                                    terminatePipeline: true,
-                                    exec: true,
-                                    continuePipeline: true
+                                {
+                                    key: this.$t('lastExecTime'),
+                                    value: ''
+                                }
+                            ],
+                            runningInfo: {
+                                time: 0,
+                                percentage: this.calcPercentage(item),
+                                log: '',
+                                buildCount: item.runningBuildCount || 0
+                            },
+                            footer: [
+                                {
+                                    upperText: item.taskCount,
+                                    lowerText: this.$t('newlist.totalAtomNums'),
+                                    handler: this.goEditPipeline
                                 },
-                                pipelineId: item.pipelineId,
-                                buildId: item.latestBuildId || 0,
-                                extMenu: [],
-                                isInstanceTemplate: item.instanceFromTemplate
-                            }
+                                {
+                                    upperText: item.buildCount,
+                                    lowerText: this.$t('newlist.execTimes'),
+                                    handler: this.goHistory
+                                }
+                            ],
+                            marginRight: 0,
+                            width: '352px',
+                            customBtns: [],
+                            buttonAllow: {
+                                confirmFailure: true,
+                                terminatePipeline: true,
+                                exec: true,
+                                continuePipeline: true
+                            },
+                            pipelineId: item.pipelineId,
+                            buildId: item.latestBuildId || 0,
+                            extMenu: [],
+                            isInstanceTemplate: item.instanceFromTemplate
+                        }
+                        return pipelineFeConfMap
+                    }, {})
 
-                            item.feConfig = obj
-                            return item
-                        })
-                    } else {
-                        res = []
+                    this.pipelineFeConfMap = {
+                        ...this.pipelineFeConfMap,
+                        ...pipelineFeConfMap
                     }
-                    $store.commit('pipelines/updateAllPipelineList', res)
-                    this.updatePipelineStatus(res, true)
+                    this.updatePipelineStatus(response.records.reduce((itemMap, item) => {
+                        itemMap[item.pipelineId] = item
+                        return itemMap
+                    }, {}), true)
+                    return response
                 } catch (err) {
                     $store.commit('pipelines/updateAllPipelineList', [])
                     this.$showTips({
@@ -562,7 +562,8 @@
                         isCollect
                     })
                     pipeline.hasCollect = isCollect
-                    pipeline.feConfig.extMenu[1].text = isCollect ? this.$t('uncollect') : this.$t('collect')
+
+                    this.pipelineFeConfMap[pipelineId].extMenu[1].text = isCollect ? this.$t('uncollect') : this.$t('collect')
                     if (this.currentViewId === 'collect' && !isCollect) {
                         this.$store.commit('pipelines/removePipelineById', pipelineId)
                     }
@@ -602,155 +603,107 @@
                     }
                 })
             },
-            /**
-             *  请求pipeline列表状态
-             */
-            async requestPipelineStatus (isAll) {
-                const {
-                    $store,
-                    pipelineList,
-                    projectId
-                } = this
-
-                const pipelineId = isAll
-                    ? pipelineList.map((item, index) => {
-                        return item.pipelineId
-                    })
-                    : pipelineList.filter((item, index) => {
-                        if (item.feConfig && item.feConfig.status === 'running') return item
-                    }).map((item, index) => {
-                        return item.pipelineId
-                    })
-
-                if (pipelineId.length === 0) return false
-
-                try {
-                    const data = await $store.dispatch('pipelines/requestPipelineStatus', {
-                        projectId,
-                        pipelineId
-                    })
-
-                    this.updatePipelineStatus(data)
-                } catch (err) {
-                    this.$showTips({
-                        message: err.message || err,
-                        theme: 'error'
-                    })
-                }
-                return true
-            },
             updatePipelineStatus (data, isFirst = false) {
                 const {
-                    $store,
-                    pipelineList,
                     statusMap
                 } = this
-                const knownErrorList = JSON.parse(localStorage.getItem('pipelineKnowError'))
+                const knownErrorList = JSON.parse(localStorage.getItem('pipelineKnowError')) || {}
+                Object.keys(data).map(pipelineId => {
+                    const item = data[pipelineId]
+                    if (item) {
+                        const status = statusMap[item.latestBuildStatus]
+                        let feConfig = {
+                            isRunning: false,
+                            status: status || 'not_built'
+                        }
 
-                pipelineList.map((pipeline, index) => {
-                    const cur = isFirst ? pipeline : data[pipeline.pipelineId]
-                    if (cur) {
-                        const customBtns = []
-                        let isRunning = false
-                        const status = statusMap[cur.latestBuildStatus]
-                        let mappedStatus
-
-                        // 是否已经确认错误
-                        if (status === 'error') {
-                            if (knownErrorList) {
-                                if (knownErrorList[`${pipeline.projectId}_${pipeline.pipelineId}_${pipeline.latestBuildId}`]) {
-                                    mappedStatus = 'known_error'
-                                } else {
-                                    mappedStatus = 'error'
+                        // 单独修改当前任务是否在执行的状态, 拼接右下角按钮
+                        switch (feConfig.status) {
+                            case 'error':
+                                const isKnowErrorPipeline = !!knownErrorList[`${this.projectId}_${pipelineId}_${item.latestBuildId}`]
+                                feConfig = {
+                                    ...feConfig,
+                                    customBtns: isKnowErrorPipeline ? [] : [{
+                                        icon: 'check-1',
+                                        text: this.$t('newlist.known'),
+                                        handler: 'error-noticed'
+                                    }],
+                                    isRunning: !isKnowErrorPipeline,
+                                    status: isKnowErrorPipeline ? 'known_error' : 'error'
                                 }
-                            } else {
-                                mappedStatus = 'error'
-                            }
-                        } else {
-                            mappedStatus = status || 'not_built'
-                        }
-
-                        // 单独修改当前任务是否在执行的状态
-                        switch (mappedStatus) {
-                            case 'known_error':
-                            case 'success':
-                                isRunning = false
                                 break
                             case 'running':
-                            case 'warning':
-                            case 'error':
-                                isRunning = true
-                                break
-                            default:
-                                isRunning = false
-                        }
-
-                        $store.commit('pipelines/updatePipelineValueById', {
-                            pipelineId: pipeline.pipelineId,
-                            obj: {
-                                isRunning
-                            }
-                        })
-
-                        // 拼接右下角按钮
-                        switch (mappedStatus) {
-                            case 'error':
-                                customBtns.splice(0, customBtns.length, {
-                                    icon: 'check-1',
-                                    text: this.$t('newlist.known'),
-                                    handler: 'error-noticed'
-                                })
-                                break
-                            case 'running':
-                                customBtns.splice(0, customBtns.length, {
-                                    text: this.$t('terminate'),
-                                    handler: 'terminate-pipeline'
-                                })
-                                break
-                            case 'warning':
-                                const tmpArr = [
-                                    {
-                                        text: this.$t('resume'),
-                                        handler: 'resume-pipeline'
-                                    },
-                                    {
+                                feConfig = {
+                                    ...feConfig,
+                                    isRunning: true,
+                                    customBtns: [{
                                         text: this.$t('terminate'),
                                         handler: 'terminate-pipeline'
-                                    }
-                                ]
-                                customBtns.splice(0, customBtns.length, ...tmpArr)
+                                    }]
+                                }
                                 break
+                            case 'warning':
+                                feConfig = {
+                                    ...feConfig,
+                                    customBtns: [
+                                        {
+                                            text: this.$t('resume'),
+                                            handler: 'resume-pipeline'
+                                        },
+                                        {
+                                            text: this.$t('terminate'),
+                                            handler: 'terminate-pipeline'
+                                        }
+                                    ],
+                                    isRunning: true
+                                }
+                                break
+                            default:
+                                feConfig.isRunning = false
                         }
 
-                        const obj = {
-                            status: mappedStatus,
-                            content: {
-                                index: [0, 1],
-                                key: ['value', 'value'],
-                                value: [cur.latestBuildNum ? `#${cur.latestBuildNum}` : '--', cur.latestBuildStartTime ? this.calcLatestStartBuildTime(cur) : this.$t('newlist.noExecution')]
-                            },
-                            footer: {
-                                index: [0, 1],
-                                key: ['upperText', 'upperText'],
-                                value: [cur.taskCount, cur.buildCount]
-                            },
+                        feConfig = {
+                            ...feConfig,
+                            content: [
+                                {
+                                    key: this.$t('lastBuildNum'),
+                                    value: item.latestBuildNum ? `#${item.latestBuildNum}` : '--'
+                                },
+                                {
+                                    key: this.$t('lastExecTime'),
+                                    value: item.latestBuildStartTime ? this.calcLatestStartBuildTime(item) : this.$t('newlist.noExecution')
+                                }
+                            ],
+                            footer: [
+                                {
+                                    upperText: item.taskCount,
+                                    lowerText: this.$t('newlist.totalAtomNums'),
+                                    handler: this.goEditPipeline
+                                },
+                                {
+                                    upperText: item.buildCount,
+                                    lowerText: this.$t('newlist.execTimes'),
+                                    handler: this.goHistory
+                                }
+                            ],
                             runningInfo: {
-                                key: ['time', 'percentage', 'log', 'buildCount'],
-                                value: [convertMStoStringByRule(status === 'error' ? (cur.latestBuildEndTime - cur.latestBuildStartTime) : (cur.currentTimestamp - cur.latestBuildStartTime)), this.calcPercentage(cur), cur.latestBuildTaskName, cur.runningBuildCount || 0]
+                                time: convertMStoStringByRule(status === 'error' ? (item.latestBuildEndTime - item.latestBuildStartTime) : (item.currentTimestamp - item.latestBuildStartTime)),
+                                percentage: this.calcPercentage(item),
+                                log: item.latestBuildTaskName,
+                                buildCount: item.runningBuildCount || 0
                             },
-                            customBtns,
-                            buildId: cur.latestBuildId || 0
+                            projectId: this.projectId,
+                            pipelineId,
+                            buildId: item.latestBuildId || 0
                         }
-                        const cPipeline = this.pipelineList.find(item => item.pipelineId === pipeline.pipelineId)
-                        if (!pipeline.feConfig.extMenu.length) {
-                            obj.extMenu = [
+                        if (!this.pipelineFeConfMap[pipelineId].extMenu.length) {
+                            feConfig.extMenu = [
                                 {
                                     text: this.$t('edit'),
                                     handler: this.goEditPipeline
                                 },
                                 {
-                                    text: (cPipeline.hasCollect ? this.$t('uncollect') : this.$t('collect')),
-                                    // text: cur.favor,
+                                    text: (item.hasCollect ? this.$t('uncollect') : this.$t('collect')),
                                     handler: this.togglePipelineCollect
                                 },
                                 {
@@ -769,10 +722,10 @@
                             ]
                         }
 
-                        $store.commit('pipelines/updatePipelineValueById', {
-                            pipelineId: pipeline.pipelineId,
-                            obj
-                        })
+                        this.pipelineFeConfMap[pipelineId] = {
+                            ...(this.pipelineFeConfMap[pipelineId] || {}),
+                            ...feConfig
+                        }
                     }
                 })
             },
@@ -786,9 +739,6 @@
                     pipelineList
                 } = this
                 const curPipeline = pipelineList.find(item => item.pipelineId === pipelineId)
-                const {
-                    feConfig
-                } = curPipeline
                 let message = ''
                 let theme = ''
 
@@ -796,7 +746,7 @@
                     // 请求执行构建
                     const res = await $store.dispatch('pipelines/requestExecPipeline', {
                         projectId,
-                        pipelineId: pipelineId,
+                        pipelineId,
                         params
                     })
 
@@ -805,22 +755,30 @@
                     curPipeline.latestBuildId = res.id
 
                     // 重置执行进度
-                    const runningInfo = feConfig.runningInfo
-                    runningInfo.percentage = '1%'
-                    runningInfo.time = '0秒'
-                    runningInfo.log = ''
-                    runningInfo.buildCount = 1
 
-                    feConfig.status = 'running'
-                    feConfig.isRunning = true
+                    this.pipelineFeConfMap[pipelineId] = {
+                        ...this.pipelineFeConfMap[pipelineId],
+                        runningInfo: {
+                            ...this.pipelineFeConfMap[pipelineId].runningInfo,
+                            percentage: '1%',
+                            time: '0秒',
+                            log: '',
+                            buildCount: 1
+                        },
+                        status: 'running',
+                        isRunning: true,
+                        buildId: res.id
+                    }
                 } catch (err) {
                     if (err.code === 403) { // 没有权限执行
                         this.setPermissionConfig(`${this.$t('pipeline')}：${curPipeline.pipelineName}`, this.$t('exec'), curPipeline.pipelineId)
                         return
                     } else {
-                        feConfig.status = 'known_error'
-                        feConfig.isRunning = false
-
+                        this.pipelineFeConfMap[pipelineId] = {
+                            ...this.pipelineFeConfMap[pipelineId],
+                            status: 'known_error',
+                            isRunning: false
+                        }
                         message = err.message || err
                         theme = 'error'
                     }
@@ -836,23 +794,21 @@
              */
             async errorNoticed (pipelineId) {
                 let knownErrorList = JSON.parse(localStorage.getItem('pipelineKnowError'))
-                // let target = pipelineList[index]
-                const target = this.pipelineList.find(item => item.pipelineId === pipelineId)
-                const key = `${target.projectId}_${target.pipelineId}_${target.latestBuildId}`
+                const target = this.pipelineFeConfMap[pipelineId]
+                const key = `${this.projectId}_${target.pipelineId}_${target.buildId}`
 
-                if (!knownErrorList) {
-                    knownErrorList = {
-                        [key]: 1
-                    }
-                } else {
-                    knownErrorList[key] = 1
+                knownErrorList = {
+                    ...(knownErrorList || {}),
+                    [key]: 1
                 }
-
                 localStorage.setItem('pipelineKnowError', JSON.stringify(knownErrorList))
                 // 更新DOM节点的样式
-                if (target.feConfig) {
-                    target.feConfig.status = 'known_error'
-                    target.feConfig.isRunning = false
+                if (this.pipelineFeConfMap[pipelineId]) {
+                    this.pipelineFeConfMap[pipelineId] = {
+                        ...this.pipelineFeConfMap[pipelineId],
+                        status: 'known_error',
+                        isRunning: false
+                    }
                 }
             },
             /**
@@ -860,32 +816,27 @@
              */
             async terminatePipeline (pipelineId) {
                 const { $store, projectId } = this
-                const target = this.pipelineList.find(item => item.pipelineId === pipelineId)
-                const {
-                    feConfig
-                } = target
+                const feConfig = this.pipelineFeConfMap[pipelineId]
 
                 if (!feConfig.buttonAllow.terminatePipeline) return
 
-                feConfig.buttonAllow.terminatePipeline = false
+                this.pipelineFeConfMap[pipelineId].buttonAllow.terminatePipeline = false
 
                 try {
                     await $store.dispatch('pipelines/requestTerminatePipeline', {
                         projectId,
-                        pipelineId: target.pipelineId,
-                        buildId: feConfig.buildId || target.latestBuildId
+                        pipelineId,
+                        buildId: feConfig.buildId
                     })
 
-                    $store.commit('pipelines/updatePipelineValueById', {
-                        pipelineId,
-                        obj: {
-                            isRunning: false,
-                            status: 'known_error'
-                        }
-                    })
+                    this.pipelineFeConfMap[pipelineId] = {
+                        ...this.pipelineFeConfMap[pipelineId],
+                        isRunning: false,
+                        status: 'known_error'
+                    }
                 } catch (err) {
                     if (err.code === 403) { // 没有权限终止
-                        this.setPermissionConfig(`${this.$t('pipeline')}：${target.pipelineName}`, this.$t('exec'), target.pipelineId)
+                        this.setPermissionConfig(`${this.$t('pipeline')}：${feConfig.pipelineName}`, this.$t('exec'), pipelineId)
                     } else {
                         this.$showTips({
                             message: err.message || err,
@@ -893,7 +844,7 @@
                         })
                     }
                 } finally {
-                    feConfig.buttonAllow.terminatePipeline = true
+                    this.pipelineFeConfMap[pipelineId].buttonAllow.terminatePipeline = true
                 }
             },
             /**
@@ -901,35 +852,28 @@
              */
             async resumePipeline (pipelineId) {
                 const { $store, projectId } = this
-                const target = this.pipelineList.find(item => item.pipelineId === pipelineId)
-                const {
-                    feConfig
-                } = target
 
-                if (!feConfig.buttonAllow.continuePipeline) return
+                if (!this.pipelineFeConfMap[pipelineId].buttonAllow.continuePipeline) return
 
-                feConfig.buttonAllow.continuePipeline = false
+                this.pipelineFeConfMap[pipelineId].buttonAllow.continuePipeline = false
 
                 try {
                     await $store.dispatch('pipeline/requestResumePipeline', {
                         projectId,
-                        pipelineId: target.id
+                        pipelineId
                     })
-
-                    $store.commit('pipelines/updatePipelineValueById', {
-                        pipelineId,
-                        obj: {
-                            isRunning: true,
-                            status: 'running'
-                        }
-                    })
+                    this.pipelineFeConfMap[pipelineId] = {
+                        ...this.pipelineFeConfMap[pipelineId],
+                        isRunning: true,
+                        status: 'running'
+                    }
                 } catch (err) {
                     this.$showTips({
                         message: err.data ? err.data.message : err,
                         theme: 'error'
                     })
                 } finally {
-                    feConfig.buttonAllow.continuePipeline = true
+                    this.pipelineFeConfMap[pipelineId].buttonAllow.continuePipeline = true
                 }
             },
             /**
@@ -949,8 +893,8 @@
              * 另存为模板
              */
             copyAsTemplate (pipelineId) {
-                const curPipeline = this.pipelineList.find(item => item.pipelineId === pipelineId)
-                this.saveAsTemp.templateName = `${curPipeline.pipelineName}_template`
+                const feConfig = this.pipelineFeConfMap[pipelineId]
+                this.saveAsTemp.templateName = `${feConfig.pipelineName}_template`
                 this.saveAsTemp.isShow = true
                 this.saveAsTemp.pipelineId = pipelineId
             },
@@ -991,7 +935,7 @@
                 const {
                     copyDialogConfig
                 } = this
-                const curPipeline = this.pipelineList.find(item => item.pipelineId === pipelineId)
+                const curPipeline = this.pipelineFeConfMap[pipelineId]
                 this.copyConfig.newPipelineName = `${curPipeline.pipelineName}_copy`
                 copyDialogConfig.isShow = true
                 copyDialogConfig.pipelineId = pipelineId
@@ -1003,17 +947,12 @@
                 const {
                     $store
                 } = this
-                const curPipeline = this.pipelineList.find(item => item.pipelineId === pipelineId)
+                const curPipeline = this.pipelineFeConfMap[pipelineId]
                 const content = `${this.$t('newlist.deletePipeline')}: ${curPipeline.pipelineName}?`
 
                 navConfirm({ type: 'warning', content })
                     .then(() => {
                         let message, theme
-                        const {
-                            loading
-                        } = this
-
-                        loading.title = this.$t('newlist.deleteTips')
                         this.togglePageLoading(true)
                         setTimeout(async () => {
                             try {
@@ -1021,8 +960,7 @@
                                     projectId: this.projectId,
                                     pipelineId: curPipeline.pipelineId
                                 })
-
-                                $store.commit('pipelines/removePipelineById', pipelineId)
+                                await this.$refs.infiniteScroll.updateList()
                                 message = this.$t('deleteSuc')
                                 theme = 'success'
                             } catch (err) {
@@ -1067,7 +1005,7 @@
                 try {
                     copyConfig.loading = true
 
-                    const res = await $store.dispatch('pipelines/copyPipeline', {
+                    await $store.dispatch('pipelines/copyPipeline', {
                         projectId,
                         pipelineId: this.copyDialogConfig.pipelineId,
                         args: {
@@ -1084,59 +1022,7 @@
                         this.copyDialogConfig.isShow = false
                     }, 500)
 
-                    const copyItem = JSON.parse(JSON.stringify(prePipeline))
-                    const extMenu = [
-                        {
-                            text: this.$t('edit'),
-                            handler: this.goEditPipeline
-                        },
-                        {
-                            text: this.$t('collect'),
-                            handler: this.togglePipelineCollect
-                        },
-                        {
-                            text: this.$t('newlist.copyAs'),
-                            handler: this.copyPipeline
-                        },
-                        {
-                            text: this.$t('newlist.saveAsTemp'),
-                            handler: this.copyAsTemplate
-                        },
-                        {
-                            text: this.$t('delete'),
-                            handler: this.deletePipeline
-                        }
-                    ]
-                    const footer = [
-                        {
-                            upperText: copyItem.feConfig.footer[0].upperText,
-                            lowerText: this.$t('newlist.totalAtomNums'),
-                            handler: this.goEditPipeline
-                        },
-                        {
-                            upperText: '0',
-                            lowerText: this.$t('newlist.execTimes'),
-                            handler: this.goHistory
-                        }
-                    ]
-                    copyItem.pipelineId = res.id
-                    copyItem.hasCollect = false
-                    copyItem.pipelineName = newPipelineName
-                    copyItem.pipelineDesc = newPipelineDesc
-                    copyItem.latestBuildStatus = ''
-                    copyItem.feConfig.name = newPipelineName
-                    copyItem.feConfig.desc = newPipelineDesc
-                    copyItem.feConfig.pipelineId = res.id
-                    copyItem.feConfig.content[1].value = this.$t('newlist.noExecution')
-                    copyItem.feConfig.status = 'not_built'
-                    // copyItem.feConfig.footer[1].upperText = 0
-                    copyItem.feConfig.extMenu.splice(0, copyItem.feConfig.extMenu.length, ...extMenu)
-                    copyItem.feConfig.footer.splice(0, copyItem.feConfig.footer.length, ...footer)
-                    copyItem.feConfig.isInstanceTemplate = false
-
-                    $store.commit('pipelines/addPipeline', {
-                        item: copyItem
-                    })
+                    this.$refs.infiniteScroll.queryList(1, this.pipelineList.length + 1)
                 } catch (err) {
                     if (err.code === 403) { // 没有权限复制
                         this.copyDialogConfig.isShow = false
@@ -1200,6 +1086,7 @@
     .pipeline-list {
         height: calc(100% - 60px);
         padding-top: 2px;
+        overflow: auto;
         .devops-empty-tips {
             .bk-button {
                 width: 147px;
@@ -1240,8 +1127,9 @@
             padding-top: 20px;
         }
         &-cards {
+            display: flex;
+            flex-wrap: wrap;
             .task-card {
-                float: left;
                 width: 311px;
                 margin: 0 20px 20px 0;
             }
@@ -1249,7 +1137,6 @@
         .loading-wrapper {
             min-height: calc(100% - 60px);
             height: 100%;
-            overflow: auto;
         }
         .toggle-layout {
             display: inline-block;
