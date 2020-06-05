@@ -36,6 +36,8 @@ data class PipelineModelVersion(
     val projectId: String,
     @ApiModelProperty("流水线ID", required = true)
     val pipelineId: String,
+    @ApiModelProperty("流水线创建人", required = true)
+    val creator: String,
     @ApiModelProperty("流水线模型", required = true)
     val model: Model,
     @ApiModelProperty("流水线模型版本", required = false)
