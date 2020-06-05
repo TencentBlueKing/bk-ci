@@ -37,7 +37,7 @@ class OpStorePipelineResourceImpl @Autowired constructor(
     private val storePipelineService: StorePipelineService
 ) : OpStorePipelineResource {
 
-    override fun approveVisibleDept(
+    override fun updateStorePipelineModel(
         userId: String,
         updateStorePipelineModelRequest: UpdateStorePipelineModelRequest
     ): Result<Boolean> {

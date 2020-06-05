@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
@@ -46,9 +46,9 @@ import javax.ws.rs.core.MediaType
 interface OpStorePipelineResource {
 
     @ApiOperation("更新研发商店组件流水线模型")
-    @POST
+    @PUT
     @Path("/model/update")
-    fun approveVisibleDept(
+    fun updateStorePipelineModel(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
