@@ -275,7 +275,7 @@ class PipelineInfoDao {
         pipelineId: String,
         channelCode: ChannelCode? = null,
         delete: Boolean = false,
-        days: Long? //搜索范围：{days}天内的流水线
+        days: Long? // 搜索范围：{days}天内的流水线
     ): TPipelineInfoRecord? {
         return with(T_PIPELINE_INFO) {
             val query = if (!projectId.isNullOrBlank()) {
