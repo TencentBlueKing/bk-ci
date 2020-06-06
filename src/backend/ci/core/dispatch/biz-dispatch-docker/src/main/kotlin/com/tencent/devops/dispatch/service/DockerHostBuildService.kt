@@ -575,9 +575,9 @@ class DockerHostBuildService @Autowired constructor(
         }
     }
 
-    /**
+/*    *//**
      * 每30分钟执行一次，清理大于两天的任务
-     */
+     *//*
     @Scheduled(initialDelay = 30 * 1000, fixedDelay = 1800 * 1000)
     @Deprecated("this function is deprecated!")
     fun clearTimeoutTask() {
@@ -595,7 +595,7 @@ class DockerHostBuildService @Autowired constructor(
                 for (i in timeoutTask.indices) {
                     logger.info("clear pipelineId:(${timeoutTask[i].pipelineId}), vmSeqId:(${timeoutTask[i].vmSeqId}), containerId:(${timeoutTask[i].containerId})")
                 }
-                pipelineDockerTaskDao.updateTimeOutTask(dslContext)
+                pipelineDockerTaskDao.deleteTimeOutTask(dslContext)
                 message = "timeoutTask.size=${timeoutTask.size}"
             }
             stopWatch.stop()
@@ -605,7 +605,7 @@ class DockerHostBuildService @Autowired constructor(
             stopWatch.stop()
             logger.info("[$grayFlag]|clearTimeoutTask| $message| watch=$stopWatch")
         }
-    }
+    }*/
 
     /**
      * 每120分钟执行一次，更新大于两天状态还是running的pool，以及大于两天状态还是running的build history，并主动关机
