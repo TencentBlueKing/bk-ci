@@ -116,26 +116,26 @@ class GitCISettingDao {
                 return null
             } else {
                 return GitRepositoryConf(
-                        conf.id,
-                        conf.name,
-                        conf.url,
-                        conf.homePage,
-                        conf.gitHttpUrl,
-                        conf.gitSshUrl,
-                        conf.enableCi,
-                        conf.buildPushedBranches,
-                        conf.limitConcurrentJobs,
-                        conf.buildPushedPullRequest,
-                        conf.autoCancelBranchBuilds,
-                        conf.autoCancelPullRequestBuilds,
-                        if (conf.env.isNullOrBlank()) {
-                            null
-                        } else {
-                            JsonUtil.getObjectMapper().readValue(conf.env) as List<EnvironmentVariables>
-                        },
-                        conf.createTime.timestampmilli(),
-                        conf.updateTime.timestampmilli(),
-                        conf.projectCode
+                    gitProjectId = conf.id,
+                    name = conf.name,
+                    url = conf.url,
+                    homepage = conf.homePage,
+                    gitHttpUrl = conf.gitHttpUrl,
+                    gitSshUrl = conf.gitSshUrl,
+                    enableCi = conf.enableCi,
+                    buildPushedBranches = conf.buildPushedBranches,
+                    limitConcurrentJobs = conf.limitConcurrentJobs,
+                    buildPushedPullRequest = conf.buildPushedPullRequest,
+                    autoCancelBranchBuilds = conf.autoCancelBranchBuilds,
+                    autoCancelPullRequestBuilds = conf.autoCancelPullRequestBuilds,
+                    env = if (conf.env.isNullOrBlank()) {
+                        null
+                    } else {
+                        JsonUtil.getObjectMapper().readValue(conf.env) as List<EnvironmentVariables>
+                    },
+                    createTime = conf.createTime.timestampmilli(),
+                    updateTime = conf.updateTime.timestampmilli(),
+                    projectCode = conf.projectCode
                         )
             }
         }

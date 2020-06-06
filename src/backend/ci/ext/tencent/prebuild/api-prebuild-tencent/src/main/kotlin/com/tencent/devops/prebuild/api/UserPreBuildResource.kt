@@ -29,6 +29,7 @@ package com.tencent.devops.prebuild.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
@@ -88,6 +89,24 @@ interface UserPreBuildResource {
         @PathParam("hostName")
         hostName: String
     ): Result<ThirdPartyAgentStaticInfo>
+
+    @ApiOperation("获取agent状态")
+    @GET
+    @Path("/agent/status/{os}/{ip}/{hostName}")
+    fun getAgentStatus(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("操作系统类型", required = true)
+        @PathParam("os")
+        os: OS,
+        @ApiParam("IP", required = true)
+        @PathParam("ip")
+        ip: String,
+        @ApiParam("hostName", required = true)
+        @PathParam("hostName")
+        hostName: String
+    ): Result<AgentStatus>
 
     @ApiOperation("查询所有PreBuild项目")
     @GET

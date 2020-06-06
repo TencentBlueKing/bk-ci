@@ -149,9 +149,9 @@ class PreBuildAgentMgrService @Autowired constructor(
     }
 
     fun listPreBuildAgent(userId: String, projectId: String, os: OS?): List<ThirdPartyAgentStaticInfo> {
-        return thirdPartyAgentDao.listPreBuildAgent(dslContext, userId, projectId, os ?: OS.LINUX).map {
+        return thirdPartyAgentDao.listPreBuildAgent(dslContext, userId, projectId, os ?: OS.LINUX).filter { it.nodeId != null }.map {
             ThirdPartyAgentStaticInfo(
-                agentId = HashUtil.encodeLongId(it.id),
+                agentId = HashUtil.encodeLongId(it.nodeId),
                 projectId = it.projectId,
                 os = it.os,
                 secretKey = SecurityUtil.decrypt(it.secretKey),

@@ -26,6 +26,7 @@
 
 package com.tencent.devops.prebuild.service
 
+import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
@@ -33,6 +34,7 @@ import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.task.AbstractTask
 import com.tencent.devops.common.ci.task.CodeCCScanClientTask
+import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -49,7 +51,9 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.log.model.pojo.LogLine
@@ -60,6 +64,7 @@ import com.tencent.devops.prebuild.dao.PrebuildPersonalMachineDao
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
 import com.tencent.devops.prebuild.pojo.HistoryResponse
 import com.tencent.devops.prebuild.pojo.PreProject
+import com.tencent.devops.prebuild.pojo.StartUpReq
 import com.tencent.devops.prebuild.pojo.UserProject
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -97,21 +102,20 @@ class PreBuildService @Autowired constructor(
     fun startBuild(
         userId: String,
         preProjectId: String,
-        workspace: String,
-        yamlStr: String,
+        startUpReq: StartUpReq,
         yaml: CIBuildYaml,
         agentId: ThirdPartyAgentStaticInfo
     ): BuildId {
         val userProject = getUserProjectId(userId)
         val pipeline = getPipelineByName(userId, preProjectId)
-        val model = createPipelineModel(userId, preProjectId, workspace, yaml, agentId)
+        val model = createPipelineModel(userId, preProjectId, startUpReq, yaml, agentId)
         val pipelineId = if (null == pipeline) {
             client.get(ServicePipelineResource::class).create(userId, userProject, model, channelCode).data!!.id
         } else {
             client.get(ServicePipelineResource::class).edit(userId, userProject, pipeline.pipelineId, model, channelCode)
             pipeline.pipelineId
         }
-        prebuildProjectDao.createOrUpdate(dslContext, preProjectId, userProject, userId, yamlStr.trim(), pipelineId, workspace)
+        prebuildProjectDao.createOrUpdate(dslContext, preProjectId, userProject, userId, startUpReq.yaml.trim(), pipelineId, startUpReq.workspace)
 
         logger.info("pipelineId: $pipelineId")
 
@@ -149,7 +153,7 @@ class PreBuildService @Autowired constructor(
         return client.get(ServiceBuildResource::class).manualShutdown(userId, projectId, preProjectRecord.pipelineId, buildId, channelCode).data!!
     }
 
-    private fun createPipelineModel(userId: String, preProjectId: String, workspace: String, prebuild: CIBuildYaml, agentInfo: ThirdPartyAgentStaticInfo): Model {
+    private fun createPipelineModel(userId: String, preProjectId: String, startUpReq: StartUpReq, prebuild: CIBuildYaml, agentInfo: ThirdPartyAgentStaticInfo): Model {
         val stageList = mutableListOf<Stage>()
 
         // 第一个stage，触发类
@@ -164,6 +168,9 @@ class PreBuildService @Autowired constructor(
             stage.stage.forEachIndexed { jobIndex, job ->
                 val elementList = mutableListOf<Element>()
                 job.job.steps.forEach {
+                    if (it is CodeCCScanInContainerTask && startUpReq.extraParam != null && !(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
+                        it.inputs.path = listOf(startUpReq.extraParam!!.codeccScanPath!!)
+                    }
                     val element = it.covertToElement(getCiBuildConf(preBuildConfig))
                     elementList.add(element)
                     if (element is MarketBuildAtomElement) {
@@ -175,7 +182,7 @@ class PreBuildService @Autowired constructor(
                 }
                 val dispatchType = ThirdPartyAgentIDDispatchType(
                     displayName = agentInfo.agentId,
-                    workspace = workspace,
+                    workspace = startUpReq.workspace,
                     agentType = AgentType.ID
                 )
 
@@ -353,6 +360,7 @@ class PreBuildService @Autowired constructor(
             if (it.hostName == hostName) {
                 logger.info("Get user personal vm, hostName: $hostName")
                 if (it.ip != ip) { // IP 有变更
+                    logger.info("Update ip, ip: $ip")
                     prebuildPersonalMachineDao.updateIp(dslContext, userId, hostName, ip)
                 }
 
@@ -363,6 +371,7 @@ class PreBuildService @Autowired constructor(
             if (it.ip == ip) {
                 logger.info("Get user personal vm, ip: $ip")
                 if (it.hostName != hostName) { // hostname 有变更
+                    logger.info("Update hostName, hostName: $hostName")
                     prebuildPersonalMachineDao.updateHostname(dslContext, userId, hostName, ip)
                 }
                 return it
@@ -389,5 +398,26 @@ class PreBuildService @Autowired constructor(
             buildConf.devCloudToken,
             buildConf.devCloudUrl
         )
+    }
+
+    fun getAgentStatus(userId: String, os: OS, ip: String, hostName: String): AgentStatus {
+        val agent = getAgent(userId, os, ip, hostName)
+        if (null == agent) {
+            logger.info("Agent not exists. need to install.")
+            return AgentStatus.IMPORT_EXCEPTION
+        }
+        return try {
+            logger.info("AgentId: ${agent.agentId}")
+            val agentStatus = client.get(ServiceNodeResource::class).listByHashIds(userId, getUserProjectId(userId), listOf(agent.agentId))
+            logger.info("nodeStatus: ${agentStatus.data?.first()?.nodeStatus}")
+            if (NodeStatus.NORMAL.statusName == agentStatus.data?.first()?.nodeStatus) {
+                AgentStatus.IMPORT_OK
+            } else {
+                AgentStatus.IMPORT_EXCEPTION
+            }
+        } catch (e: Exception) {
+            logger.error("listByHashIds exception: $e")
+            AgentStatus.IMPORT_EXCEPTION
+        }
     }
 }
