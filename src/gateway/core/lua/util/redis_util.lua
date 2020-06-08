@@ -32,7 +32,7 @@ function _M:new()
     ngx.log( ngx.ERR, "red new error:", res ,err)
     return nil
   end
-  red:set_timeout(1000) -- 1 second
+  red:set_timeout(2000) -- 2 second
   local res, err  = red:connect(redisConfig['host'], redisConfig['port'])
   if not res then
       ngx.log( ngx.ERR, "red connect error:",redisConfig['host'],",",redisConfig['port']," ", err )
