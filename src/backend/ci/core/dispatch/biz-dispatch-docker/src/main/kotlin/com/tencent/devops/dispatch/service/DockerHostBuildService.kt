@@ -663,9 +663,9 @@ class DockerHostBuildService @Autowired constructor(
         }
     }
 
-    /**
+/*    *//**
      * 每20秒执行一次，清理固定构建机的任务IP，以让其他构建机可以认领
-     */
+     *//*
     @Scheduled(initialDelay = 60 * 1000, fixedDelay = 20 * 1000)
     @Deprecated("this function is deprecated!")
     fun resetHostTag() {
@@ -710,11 +710,11 @@ class DockerHostBuildService @Autowired constructor(
             stopWatch.stop()
             logger.info("[$grayFlag]|resetHostTag| $message| watch=$stopWatch")
         }
-    }
+    }*/
 
-    /**
+/*    *//**
      * 每40秒执行一次，重置长时间未认领的固定区域的任务，重置为深圳区域
-     */
+     *//*
     @Scheduled(initialDelay = 90 * 1000, fixedDelay = 40 * 1000)
     @Deprecated("this function is deprecated!")
     fun resetTaskZone() {
@@ -749,7 +749,7 @@ class DockerHostBuildService @Autowired constructor(
             stopWatch.stop()
             logger.info("[$grayFlag]|resetTaskZone| $message| watch=$stopWatch")
         }
-    }
+    }*/
 
     fun getContainerInfo(buildId: String, vmSeqId: Int): Result<ContainerInfo> {
         logger.info("get containerId, buildId:$buildId, vmSeqId:$vmSeqId")
