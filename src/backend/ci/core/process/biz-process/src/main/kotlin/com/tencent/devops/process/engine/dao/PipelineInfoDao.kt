@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
@@ -198,12 +199,32 @@ class PipelineInfoDao {
         }
     }
 
-    fun listDeletePipelineIdByProject(dslContext: DSLContext, projectId: String): Result<TPipelineInfoRecord>? {
-        return with(T_PIPELINE_INFO) {
-            dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(DELETE.eq(true))
-                .fetch()
+    fun listDeletePipelineIdByProject(dslContext: DSLContext, projectId: String, days: Long?): Result<TPipelineInfoRecord>? {
+        with(T_PIPELINE_INFO) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(DELETE.eq(true))
+            if (days != null) {
+                conditions.add(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(days)))
+            }
+            return dslContext.selectFrom(this)
+                .where(conditions).fetch()
+        }
+    }
+
+    /**
+     * 查找updateTime之前被删除的流水线
+     */
+    fun listDeletePipelineBefore(dslContext: DSLContext, updateTime: LocalDateTime, offset: Int?, limit: Int?): Result<TPipelineInfoRecord>? {
+        with(T_PIPELINE_INFO) {
+            val baseQuery = dslContext.selectFrom(this)
+                .where(DELETE.eq(true))
+                .and(UPDATE_TIME.le(updateTime))
+            return if (offset != null && offset >= 0 && limit != null && limit >= 0) {
+                baseQuery.limit(offset, limit).fetch()
+            } else {
+                baseQuery.fetch()
+            }
         }
     }
 
@@ -253,7 +274,8 @@ class PipelineInfoDao {
         projectId: String?,
         pipelineId: String,
         channelCode: ChannelCode? = null,
-        delete: Boolean = false
+        delete: Boolean = false,
+        days: Long? // 搜索范围：{days}天内的流水线
     ): TPipelineInfoRecord? {
         return with(T_PIPELINE_INFO) {
             val query = if (!projectId.isNullOrBlank()) {
@@ -265,6 +287,10 @@ class PipelineInfoDao {
 
             if (channelCode != null) {
                 query.and(CHANNEL.eq(channelCode.name))
+            }
+
+            if (days != null && days > 0) {
+                query.and(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(days)))
             }
             query.and(DELETE.eq(delete)).fetchAny()
         }

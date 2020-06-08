@@ -24,45 +24,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.constant
+package com.tencent.devops.store.util
 
-const val BCI_CODE_PREFIX = "BCI_CODE_"
-const val DEVOPS = "DevOps"
-const val NUM_ONE = 1
-const val NUM_TWO = 2
-const val NUM_THREE = 3
-const val NUM_FOUR = 4
-const val NUM_FIVE = 5
-const val NUM_SIX = 6
-const val NUM_SEVEN = 7
-const val NUM_EIGHT = 8
-const val NUM_NINE = 9
-const val INIT_VERSION = "1.0.0" // 初始化版本
-const val BEGIN = "begin" // 开始
-const val EDIT = "edit" // 提交信息
-const val COMMIT = "commit" // 提交
-const val BUILD = "build" // 构建
-const val CHECK = "check" // 验证
-const val TEST = "test" // 测试
-const val APPROVE = "approve" // 审核
-const val END = "end" // 结束
-const val SUCCESS = "success" // 成功
-const val UNDO = "undo" // 未执行
-const val DOING = "doing" // 执行中
-const val FAIL = "fail" // 失败
-const val ING = "ing" // 中
-const val LATEST = "latest" // 最新
-const val DEVELOP = "develop" // 开发
-const val DEPLOY = "deploy" // 部署
-const val SECURITY = "security" // 安全
-const val NORMAL = "normal" // 正常
-const val EXCEPTION = "exception" // 异常
-const val NUM_UNIT = "numUnit" // 数量单位：个
-const val REQUIRED = "required" // 必选
-const val DEFAULT = "default" // 默认
-const val JAVA = "java" // java
-const val PYTHON = "python" // python
-const val NODEJS = "nodejs" // nodejs
-const val GOLANG = "golang" // golang
-const val PATTERN_STYLE = "patternStyle" // 正则表达式规则
-const val MESSAGE = "message" // 提示信息
+import org.jooq.tools.StringUtils
+import java.lang.Integer.min
+
+object ImageUtil {
+    fun compareVersion(version1: String?, version2: String?): Int {
+        if (null == version1 && null == version2) {
+            return 0
+        } else if (null == version1) {
+            return -1
+        } else if (null == version2) {
+            return 1
+        }
+        val arr1 = version1.split(".").filter { !StringUtils.isBlank(it) }
+        val arr2 = version2.split(".").filter { !StringUtils.isBlank(it) }
+        val shortLen = min(arr1.size, arr2.size)
+        for (i in 0 until shortLen) {
+            if (arr1[i].toInt() < arr2[i].toInt()) {
+                return -1
+            } else if (arr1[i].toInt() > arr2[i].toInt()) {
+                return 1
+            }
+        }
+        if (arr1.size < arr2.size) {
+            return -1
+        } else if (arr1.size > arr2.size) {
+            return 1
+        }
+        return 0
+    }
+}
