@@ -29,17 +29,20 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
+import com.tencent.devops.process.pojo.template.TemplateId
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateListModel
-import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
-import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
@@ -47,17 +50,18 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_PROJECT_TEMPLATE_V3"], description = "OPENAPI-项目模板资源")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ApigwProjectTemplateResourceV3 {
+interface ApigwTemplateResourceV3 {
 
     @ApiOperation("获取所有种类流水线模板列表")
     @GET
-    @Path("/projects/{projectId}/projectTemplates/allTemplates")
+    @Path("/projects/{projectId}/templates/allTemplates")
     fun listAllTemplate(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -75,7 +79,7 @@ interface ApigwProjectTemplateResourceV3 {
 
     @ApiOperation("获取流水线模板详情")
     @GET
-    @Path("/projects/{projectId}/projectTemplates/{templateId}")
+    @Path("/projects/{projectId}/templates/{templateId}")
     fun getTemplate(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -99,7 +103,7 @@ interface ApigwProjectTemplateResourceV3 {
 
     @ApiOperation("模版管理-获取模版列表")
     @GET
-    @Path("/projects/{projectId}/projectTemplates")
+    @Path("/projects/{projectId}/templates")
     fun listTemplate(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -121,18 +125,59 @@ interface ApigwProjectTemplateResourceV3 {
         storeFlag: Boolean?
     ): Result<TemplateListModel>
 
-    @ApiOperation("实例化流水线模板")
+    @ApiOperation("创建流水线模板")
     @POST
-    @Path("/projects/{projectId}/projectTemplates/{templateId}/templateInstances")
-    fun createTemplateInstances(
+    @Path("/projects/{projectId}/templates")
+    fun createTemplate(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("模板", required = true)
+        template: Model
+    ): Result<TemplateId>
+
+    @ApiOperation("删除流水线模板")
+    @DELETE
+    @Path("/projects/{projectId}/templates/{templateId}")
+    fun deleteTemplate(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String
+    ): Result<Boolean>
+
+    @ApiOperation("删除流水线模板的版本")
+    @DELETE
+    @Path("/projects/{projectId}/templates/{templateId}/versions/{version}")
+    fun deleteTemplateVersion(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -140,13 +185,34 @@ interface ApigwProjectTemplateResourceV3 {
         @ApiParam("模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @ApiParam("模板版本", required = true)
-        @QueryParam("version")
-        version: Long,
-        @ApiParam("是否应用模板设置")
-        @QueryParam("useTemplateSettings")
-        useTemplateSettings: Boolean,
-        @ApiParam("创建实例", required = true)
-        instances: List<TemplateInstanceCreate>
-    ): TemplateOperationRet
+        @ApiParam("版本号", required = true)
+        @PathParam("version")
+        version: Long
+    ): Result<Boolean>
+
+    @ApiOperation("更新流水线模板")
+    @PUT
+    @Path("/projects/{projectId}/templates/{templateId}")
+    fun updateTemplate(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @ApiParam("版本名", required = true)
+        @QueryParam("versionName")
+        versionName: String,
+        @ApiParam("模板", required = true)
+        template: Model
+    ): Result<Boolean>
 }
