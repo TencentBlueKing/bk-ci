@@ -416,7 +416,7 @@ class ExperienceService @Autowired constructor(
         val appBundleIdentifier = propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
         val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
         val buildNo = propertyMap[ARCHIVE_PROPS_BUILD_NO]!!
-        val remark = "构建号#$buildNo"
+        val remark = if (experience.description.isNullOrBlank()) "构建号#$buildNo" else experience.description
 
         val experienceId = experienceDao.create(
             dslContext = dslContext,

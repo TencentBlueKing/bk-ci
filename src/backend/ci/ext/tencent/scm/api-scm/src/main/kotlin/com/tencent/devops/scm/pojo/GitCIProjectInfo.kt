@@ -24,9 +24,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.yaml
+package com.tencent.devops.scm.pojo
 
-data class Credential(
-    val user: String,
-    val password: String
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("工蜂CI查询代码库项目信息")
+data class GitCIProjectInfo(
+    @ApiModelProperty("项目ID")
+    @JsonProperty("id")
+    val gitProjectId: Int,
+    @ApiModelProperty("项目名称")
+    @JsonProperty("name")
+    val name: String,
+    @ApiModelProperty("页面地址")
+    @JsonProperty("web_url")
+    val homepage: String?,
+    @ApiModelProperty("HTTP链接", required = true)
+    @JsonProperty("http_url_to_repo")
+    val gitHttpUrl: String,
+    @ApiModelProperty("HTTPS链接")
+    @JsonProperty("https_url_to_repo")
+    val gitHttpsUrl: String?,
+    @ApiModelProperty("gitSshUrl")
+    @JsonProperty("ssh_url_to_repo")
+    val gitSshUrl: String?
 )

@@ -33,7 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.TriggerBuildResource
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
 import com.tencent.devops.gitci.service.GitCIRequestService
-import com.tencent.devops.gitci.service.GitProjectConfService
+import com.tencent.devops.gitci.service.RepositoryConfService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
@@ -41,7 +41,7 @@ import javax.ws.rs.core.Response
 @RestResource
 class TriggerBuildResourceImpl @Autowired constructor(
     private val gitCIRequestService: GitCIRequestService,
-    private val gitProjectConfService: GitProjectConfService
+    private val repositoryConfService: RepositoryConfService
 ) : TriggerBuildResource {
     companion object {
         private val logger = LoggerFactory.getLogger(TriggerBuildResourceImpl::class.java)
@@ -83,8 +83,8 @@ class TriggerBuildResourceImpl @Autowired constructor(
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
-        if (!gitProjectConfService.isEnable(gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，请联系蓝盾助手")
+        if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
+            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
         }
     }
 }

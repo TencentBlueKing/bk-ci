@@ -1,6 +1,8 @@
-package com.tencent.devops.process.engine.atom.vm.parser
+package com.tencent.devops.process.engine.atom.parser
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.ci.image.Credential
+import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.DispatchType
@@ -113,7 +115,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
             password = ticketsMap["v2"] as String
         }
         val credential = Credential(user, password)
-        val pool = Pool(dispatchType.value, credential)
+        val pool = Pool(dispatchType.value, credential, null)
         dispatchType.image = JsonUtil.toJson(pool)
     }
 }
