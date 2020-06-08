@@ -24,34 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom
+package com.tencent.devops.common.web.annotation
 
-import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.web.validation.BkFieldValidator
+import javax.validation.Constraint
+import javax.validation.Payload
+import kotlin.reflect.KClass
 
-@ApiModel("插件市场工作台-新增插件请求报文体")
-data class MarketAtomCreateRequest(
-    @ApiModelProperty("项目编码", required = true)
-    var projectCode: String,
-    @ApiModelProperty("插件代码", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.STORE_CODE_STYLE)
-    var atomCode: String,
-    @ApiModelProperty("插件名称", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.STORE_NAME_STYLE)
-    var name: String,
-    @ApiModelProperty("开发语言", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.LANGUAGE_STYLE)
-    var language: String,
-    @ApiModelProperty("认证方式", required = false)
-    @field:BkField(patternStyle = BkStyleEnum.AUTH_STYLE, required = false)
-    val authType: String? = null,
-    @ApiModelProperty(value = "项目可视范围", required = false)
-    @field:BkField(patternStyle = BkStyleEnum.VISIBILITY_LEVEL_STYLE, required = false)
-    val visibilityLevel: VisibilityLevelEnum? = VisibilityLevelEnum.LOGIN_PUBLIC,
-    @ApiModelProperty(value = "插件代码库不开源原因", required = false)
-    @field:BkField(patternStyle = BkStyleEnum.PRIVATE_REASON_STYLE, required = false)
-    val privateReason: String? = null
+@Target(AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
+@kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
+@Constraint(validatedBy = [BkFieldValidator::class])
+annotation class BkField(
+    val patternStyle: BkStyleEnum = BkStyleEnum.COMMON_STYLE, // 字段对应的正则表达式
+    val required: Boolean = true, // 是否必须
+    val message: String = "{0} parameter is not valid", // 默认错误提示信息
+    val groups: Array<KClass<*>> = [], // 约束注解在验证时所属的组别
+    val payload: Array<KClass<out Payload>> = [] // 给约束条件指定严重级别
 )
