@@ -45,6 +45,7 @@ import com.github.dockerjava.core.command.PushImageResultCallback
 import com.github.dockerjava.core.command.WaitContainerResultCallback
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
@@ -273,7 +274,9 @@ class DockerHostBuildService(
             // docker run
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
+            val containerName = "dispatch-${UUIDUtil.generate()}"
             val container = dockerCli.createContainerCmd(imageName)
+                .withName(containerName)
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
                 .withEnv(DockerEnvLoader.loadEnv(dockerBuildInfo))
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
@@ -521,7 +524,9 @@ class DockerHostBuildService(
             logger.info("env is $env")
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
+            val containerName = "dockerRun-${UUIDUtil.generate()}"
             val container = dockerCli.createContainerCmd(imageName)
+                .withName(containerName)
                 .withCmd(dockerRunParam.command)
                 .withEnv(env)
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
@@ -708,7 +713,7 @@ class DockerHostBuildService(
                 tag = tag,
                 jobId = containerHashId
             )
-        } catch (e: Exception) {
+        } catch (t: Throwable) {
             logger.info("write log to dispatch failed")
         }
     }
