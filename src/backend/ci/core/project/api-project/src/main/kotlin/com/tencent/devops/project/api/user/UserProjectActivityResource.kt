@@ -26,56 +26,35 @@
 
 package com.tencent.devops.project.api.user
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.ActivityInfo
-import com.tencent.devops.project.pojo.ProjectCreateInfo
-import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ActivityType
 import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_PROJECT_ACTIVITIES"], description = "蓝盾项目列表最近动态信息")
-@Path("/user/projects")
+@Path("/user/activities")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserProjectActivityResource {
 
-    @POST
-    @Path("/")
-    @ApiOperation("创建项目")
-    fun create(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam(value = "项目信息", required = true)
-        projectCreateInfo: ProjectCreateInfo,
-        @ApiParam("access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
-    ): Result<Boolean>
-
     @GET
-    @Path("/")
-    @ApiOperation("查询所有项目")
-    fun list(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+    @Path("/types/{type}")
+    fun getActivities(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("access_token")
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
-    ): Result<List<ProjectVO>>
+        @ApiParam("最新动态类型")
+        @PathParam("type")
+        type: ActivityType
+    ): Result<List<ActivityInfo>>
 }
