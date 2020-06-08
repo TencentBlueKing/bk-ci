@@ -55,28 +55,28 @@ interface ApigwCallBackResourceV3 {
     @Path("/projects/{projectId}/callbacks")
     fun create(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-    @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-    appCode: String?,
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
         @ApiParam(value = "apigw Type", required = true)
-    @PathParam("apigwType")
-    apigwType: String?,
+        @PathParam("apigwType")
+        apigwType: String?,
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-    @HeaderParam(AUTH_HEADER_USER_ID)
-    userId: String,
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("projectId", required = true)
-    @PathParam("projectId")
-    projectId: String,
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("url", required = true)
-    @QueryParam("url")
-    url: String,
+        @QueryParam("url")
+        url: String,
         @ApiParam("region", required = true)
-    @QueryParam("region")
-    region: CallBackNetWorkRegionType,
+        @QueryParam("region")
+        region: CallBackNetWorkRegionType,
         @ApiParam("event", required = true)
-    @QueryParam("event")
-    event: CallBackEvent,
+        @QueryParam("event")
+        event: CallBackEvent,
         @ApiParam("secretToken", required = false)
-    @QueryParam("secretToken")
-    secretToken: String?
+        @QueryParam("secretToken")
+        secretToken: String?
     ): Result<Boolean>
 }
