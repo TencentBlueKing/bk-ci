@@ -129,8 +129,8 @@ end
 
 local dns, err = resolver:new{
   nameservers = dnsIps,
-  retrans = 2,
-  timeout = 250
+  retrans = 5,
+  timeout = 2000
 }
 
 if not dns then
