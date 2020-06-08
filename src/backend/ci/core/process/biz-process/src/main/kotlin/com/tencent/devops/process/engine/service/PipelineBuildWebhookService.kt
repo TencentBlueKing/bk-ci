@@ -374,7 +374,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             val repo = client.get(ServiceRepositoryResource::class)
                 .get(projectId, repositoryConfig.getURLEncodeRepositoryId(), repositoryConfig.repositoryType).data
             if (repo == null) {
-                logger.error("repo[$repositoryConfig] does not exist")
+                logger.warn("repo[$repositoryConfig] does not exist")
                 return@elements
             }
 

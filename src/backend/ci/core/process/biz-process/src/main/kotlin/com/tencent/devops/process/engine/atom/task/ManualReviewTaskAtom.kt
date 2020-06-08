@@ -79,7 +79,7 @@ class ManualReviewTaskAtom(
         val reviewDesc = parseVariable(param.desc, runVariables)
 
         if (reviewUsers.isBlank()) {
-            logger.error("[$buildId]|taskId=$taskId|Review user is empty")
+            logger.warn("[$buildId]|taskId=$taskId|Review user is empty")
             return AtomResponse(BuildStatus.FAILED)
         }
 
