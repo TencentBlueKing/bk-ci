@@ -262,7 +262,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     private fun buildClaim(buildId: String, vmSeqId: String, vmName: String): BuildTask {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
             ?: run {
-                logger.error("[$buildId]| buildInfo not found, End")
+                logger.warn("[$buildId]| buildInfo not found, End")
                 return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
         val allTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
@@ -543,11 +543,11 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             .filter { it.taskId == "end-${it.taskSeq}" }
 
         if (tasks.isEmpty()) {
-            logger.error("[$buildId]|name=$vmName|containerId=$vmSeqId|There are no stopVM tasks!")
+            logger.warn("[$buildId]|name=$vmName|containerId=$vmSeqId|There are no stopVM tasks!")
             return false
         }
         if (tasks.size > 1) {
-            logger.error("[$buildId]|name=$vmName|containerId=$vmSeqId|There are multiple stopVM tasks!")
+            logger.warn("[$buildId]|name=$vmName|containerId=$vmSeqId|There are multiple stopVM tasks!")
             return false
         }
         redisOperation.delete(HeartBeatUtils.genHeartBeatKey(buildId, vmSeqId))
