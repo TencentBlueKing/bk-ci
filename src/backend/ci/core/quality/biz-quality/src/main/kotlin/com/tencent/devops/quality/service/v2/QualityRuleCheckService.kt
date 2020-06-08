@@ -413,8 +413,10 @@ class QualityRuleCheckService @Autowired constructor(
     /**
      * 记录拦截历史
      */
-    private fun recordHistory(buildCheckParams: BuildCheckParams,
-                              result: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>) {
+    private fun recordHistory(
+        buildCheckParams: BuildCheckParams,
+        result: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>
+    ) {
         val time = LocalDateTime.now()
 
         with(buildCheckParams) {
@@ -432,7 +434,6 @@ class QualityRuleCheckService @Autowired constructor(
                 }
             }
         }
-
     }
 
     private fun sendAuditNotification(
