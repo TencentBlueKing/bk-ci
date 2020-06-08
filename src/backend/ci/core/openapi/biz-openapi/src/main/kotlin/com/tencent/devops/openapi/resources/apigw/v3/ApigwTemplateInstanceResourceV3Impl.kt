@@ -28,68 +28,19 @@ package com.tencent.devops.openapi.resources.apigw.v3
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.api.apigw.v3.ApigwProjectTemplateResourceV3
+import com.tencent.devops.openapi.api.apigw.v3.ApigwTemplateInstanceResourceV3
 import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
-import com.tencent.devops.process.api.template.ServiceTemplateResource
-import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.pojo.template.TemplateListModel
-import com.tencent.devops.process.pojo.template.TemplateModelDetail
-import com.tencent.devops.process.pojo.template.OptionalTemplateList
+import com.tencent.devops.process.api.template.UserTemplateInstanceResource
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
+import com.tencent.devops.process.pojo.template.TemplateInstancePage
+import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwProjectTemplateResourceV3Impl @Autowired constructor(private val client: Client) : ApigwProjectTemplateResourceV3 {
-    override fun listTemplate(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        projectId: String,
-        templateType: TemplateType?,
-        storeFlag: Boolean?
-    ): Result<TemplateListModel> {
-        logger.info("get project's pipeline all template, projectId($projectId) by user $userId")
-        return client.get(ServiceTemplateResource::class).listTemplate(
-            userId = userId,
-            projectId = projectId,
-            templateType = templateType,
-            storeFlag = storeFlag
-        )
-    }
-
-    override fun getTemplate(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        projectId: String,
-        templateId: String,
-        version: Long?
-    ): Result<TemplateModelDetail> {
-        logger.info("get project's pipeline template, projectId($projectId) templateId($templateId) version($version) by $userId")
-        return client.get(ServiceTemplateResource::class).getTemplate(
-            userId = userId,
-            projectId = projectId,
-            templateId = templateId,
-            version = version
-        )
-    }
-
-    override fun listAllTemplate(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        projectId: String
-    ): Result<OptionalTemplateList> {
-        logger.info("get project's pipeline all template, projectId($projectId) by user $userId")
-        return client.get(ServiceTemplateResource::class).listAllTemplate(
-            userId = userId,
-            projectId = projectId,
-            templateType = null
-        )
-    }
-
+class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val client: Client) :
+    ApigwTemplateInstanceResourceV3 {
     override fun createTemplateInstances(
         appCode: String?,
         apigwType: String?,
@@ -102,15 +53,58 @@ class ApigwProjectTemplateResourceV3Impl @Autowired constructor(private val clie
     ): TemplateOperationRet {
         logger.info("create TemplateInstances :userId=$userId,projectId=$projectId,templateId:$templateId,version:$version,useTemplateSettings:$useTemplateSettings,instances:$instances")
         return client.get(ServiceTemplateInstanceResource::class).createTemplateInstances(
-                userId = userId,
-                projectId = projectId,
-                templateId = templateId,
-                version = version,
-                useTemplateSettings = useTemplateSettings,
-                instances = instances)
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            version = version,
+            useTemplateSettings = useTemplateSettings,
+            instances = instances
+        )
+    }
+
+    override fun updateTemplateInstances(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        templateId: String,
+        version: Long,
+        useTemplateSettings: Boolean,
+        instances: List<TemplateInstanceUpdate>
+    ): TemplateOperationRet {
+        logger.info("update TemplateInstances :userId=$userId,projectId=$projectId,templateId:$templateId,version:$version,useTemplateSettings:$useTemplateSettings,instances:$instances")
+        return client.get(UserTemplateInstanceResource::class).updateTemplate(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            version = version,
+            useTemplateSettings = useTemplateSettings,
+            instances = instances
+        )
+    }
+
+    override fun listTemplateInstances(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        templateId: String,
+        page: Int?,
+        pageSize: Int?,
+        searchKey: String?
+    ): Result<TemplateInstancePage> {
+        logger.info("list TemplateInstances :userId=$userId,projectId=$projectId,templateId:$templateId,page:$page,pageSize:$pageSize,searchKey:$searchKey")
+        return client.get(UserTemplateInstanceResource::class).listTemplate(
+            userId = userId,
+            projectId = projectId,
+            templateId = templateId,
+            page = page,
+            pageSize = pageSize,
+            searchKey = searchKey
+        )
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ApigwProjectTemplateResourceV3Impl::class.java)
+        private val logger = LoggerFactory.getLogger(ApigwTemplateInstanceResourceV3Impl::class.java)
     }
 }
