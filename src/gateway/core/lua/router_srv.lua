@@ -38,7 +38,7 @@ if ngx.var.access_type == 'build' or ngx.var.access_type == 'external' then
 end
 
 -- report服务和bkrepo服务不做频率限制
-if ngx.var.service == 'report' or ngx.var.service == 'bkrepo'then
+if ngx.var.service == 'report' or ngx.var.service == 'bkrepo' then
   access_util = nil
 end
 
