@@ -206,7 +206,7 @@ class PipelineBuildStageDao {
         return with(T_PIPELINE_BUILD_STAGE) {
             val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
             // 根据状态来设置字段
-            if (BuildStatus.isFinish(buildStatus) || buildStatus == BuildStatus.STAGE_SUCCESS) {
+            if (BuildStatus.isFinish(buildStatus) || buildStatus.name == BuildStatus.STAGE_SUCCESS.name) {
                 update.set(END_TIME, LocalDateTime.now())
                 update.set(COST, COST + END_TIME - START_TIME)
             } else if (BuildStatus.isRunning(buildStatus)) {
