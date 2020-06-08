@@ -24,45 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.constant
+package com.tencent.devops.store.util
 
-const val BCI_CODE_PREFIX = "BCI_CODE_"
-const val DEVOPS = "DevOps"
-const val NUM_ONE = 1
-const val NUM_TWO = 2
-const val NUM_THREE = 3
-const val NUM_FOUR = 4
-const val NUM_FIVE = 5
-const val NUM_SIX = 6
-const val NUM_SEVEN = 7
-const val NUM_EIGHT = 8
-const val NUM_NINE = 9
-const val INIT_VERSION = "1.0.0" // 初始化版本
-const val BEGIN = "begin" // 开始
-const val EDIT = "edit" // 提交信息
-const val COMMIT = "commit" // 提交
-const val BUILD = "build" // 构建
-const val CHECK = "check" // 验证
-const val TEST = "test" // 测试
-const val APPROVE = "approve" // 审核
-const val END = "end" // 结束
-const val SUCCESS = "success" // 成功
-const val UNDO = "undo" // 未执行
-const val DOING = "doing" // 执行中
-const val FAIL = "fail" // 失败
-const val ING = "ing" // 中
-const val LATEST = "latest" // 最新
-const val DEVELOP = "develop" // 开发
-const val DEPLOY = "deploy" // 部署
-const val SECURITY = "security" // 安全
-const val NORMAL = "normal" // 正常
-const val EXCEPTION = "exception" // 异常
-const val NUM_UNIT = "numUnit" // 数量单位：个
-const val REQUIRED = "required" // 必选
-const val DEFAULT = "default" // 默认
-const val JAVA = "java" // java
-const val PYTHON = "python" // python
-const val NODEJS = "nodejs" // nodejs
-const val GOLANG = "golang" // golang
-const val PATTERN_STYLE = "patternStyle" // 正则表达式规则
-const val MESSAGE = "message" // 提示信息
+import org.junit.Assert
+import org.junit.Test
+
+class ImageUtilTest {
+
+    @Test
+    fun testCompareVersion() {
+        Assert.assertEquals(ImageUtil.compareVersion("1.0.1", "1. ."), 1)
+        Assert.assertEquals(ImageUtil.compareVersion("1.0.1", "1.0"), 1)
+        Assert.assertEquals(ImageUtil.compareVersion("1.0.1", "1.0.2"), -1)
+        Assert.assertEquals(ImageUtil.compareVersion("1.0.9", "1.0.10"), -1)
+        Assert.assertEquals(ImageUtil.compareVersion("1.0.9", "1.0.100"), -1)
+        Assert.assertEquals(ImageUtil.compareVersion("1.0.9", "1.0.9"), 0)
+        Assert.assertEquals(ImageUtil.compareVersion("2.0.9", "1.0.9"), 1)
+        Assert.assertEquals(ImageUtil.compareVersion(null, "1.0.9"), -1)
+        Assert.assertEquals(ImageUtil.compareVersion(null, null), 0)
+        Assert.assertEquals(ImageUtil.compareVersion("1.", null), 1)
+    }
+}

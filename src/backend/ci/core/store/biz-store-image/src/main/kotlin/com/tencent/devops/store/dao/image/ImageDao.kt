@@ -60,6 +60,7 @@ import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record10
 import org.jooq.Record15
 import org.jooq.Record5
 import org.jooq.Record9
@@ -211,12 +212,12 @@ class ImageDao {
         }
     }
 
-    fun getLatestImageByBaseVersion(
+    fun getImagesByBaseVersion(
         dslContext: DSLContext,
         imageCode: String,
         imageStatusSet: Set<Byte>,
         baseVersion: String?
-    ): Record9<String, String, String, String, String, String, String, String, String>? {
+    ): Result<Record10<String, String, String, String, String, String, String, String, String, String>>? {
         val tImage = TImage.T_IMAGE.`as`("tImage")
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tStoreProjectRel")
         val conditions = mutableSetOf<Condition>()
@@ -230,6 +231,7 @@ class ImageDao {
         val baseStep = dslContext.select(
             tImage.ID.`as`(KEY_IMAGE_ID),
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
+            tImage.VERSION.`as`(KEY_IMAGE_VERSION),
             tImage.IMAGE_NAME.`as`(KEY_IMAGE_NAME),
             tImage.IMAGE_SOURCE_TYPE.`as`(KEY_IMAGE_SOURCE_TYPE),
             tImage.IMAGE_REPO_URL.`as`(KEY_IMAGE_REPO_URL),
@@ -239,9 +241,7 @@ class ImageDao {
             tStoreProjectRel.PROJECT_CODE.`as`(Constants.KEY_IMAGE_INIT_PROJECT)
         ).from(tImage).join(tStoreProjectRel).on(tImage.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE))
         return baseStep.where(conditions)
-            .orderBy(tImage.VERSION.desc())
-            .limit(1)
-            .fetchOne()
+            .fetch()
     }
 
     fun getImage(dslContext: DSLContext, imageCode: String, version: String): TImageRecord? {
