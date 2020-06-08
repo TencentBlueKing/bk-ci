@@ -125,7 +125,7 @@ class PipelineService @Autowired constructor(
     private val client: Client
 ) {
 
-    @Value("\${deletedPipelineStoreDays:30}")
+    @Value("\${process.deletedPipelineStoreDays:30}")
     private val deletedPipelineStoreDays: Int = 30
 
     companion object {
