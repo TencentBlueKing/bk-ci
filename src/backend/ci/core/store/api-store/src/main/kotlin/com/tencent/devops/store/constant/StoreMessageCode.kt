@@ -105,7 +105,6 @@ object StoreMessageCode {
     const val USER_ITEM_SERVICE_USED_IS_NOT_ALLOW_DELETE = "2120410" // 研发商店：扩展点下还有可用的扩展服务，不能删除
     const val USER_EXTENSION_JSON_GET_FAIL = "2120411" // 研发商店：扩展点extension.json获取失败,请查看工蜂代码库是否创建成功
 
-
     // store公共业务相关的错误提示
     const val USER_PRAISE_IS_INVALID = "2120901" // 研发商店：你已点赞过
     const val USER_PROJECT_IS_NOT_ALLOW_INSTALL = "2120902" // 研发商店：你没有权限将组件安装到项目：{0}
