@@ -1,13 +1,14 @@
 <template>
     <section class="parameter-input">
         <span v-if="label" class="input-label" :title="label">{{ label }}：</span>
-        <bk-input class="input-main" :clearable="!disabled" v-model="value" v-if="type === 'input'" :disabled="disabled"></bk-input>
+        <bk-input class="input-main" :clearable="!disabled" :value="value" @change="(newValue) => $emit('updateValue', newValue)" v-if="type === 'input'" :disabled="disabled"></bk-input>
         <section v-else class="parameter-select input-main" v-bk-clickoutside="toggleShowList">
             <bk-input ref="inputItem"
                 :clearable="!disabled"
-                :value="Array.isArray(value) ? value.join(',') : value"
+                :value="displayValue"
                 :disabled="disabled"
-                @change="inputManually"
+                @blur="handleBlur"
+                @change="handleInput"
                 @focus="toggleShowList(true)">
             </bk-input>
             <ul v-if="showList && paramList.length" class="parameter-list">
@@ -62,14 +63,16 @@
                 showList: false,
                 paramList: [],
                 loading: false,
-                queryKey: []
+                queryKey: [],
+                displayValue: ''
             }
         },
 
         watch: {
             value (newValue) {
-                this.$emit('updateValue', newValue)
+                this.calcDisplayVal()
             },
+
             paramValues: {
                 handler (value, oldValue) {
                     const index = this.queryKey.findIndex((key) => value[key] !== oldValue[key])
@@ -88,16 +91,44 @@
         },
 
         methods: {
+            calcDisplayVal () {
+                const findItemName = (id) => {
+                    let tempName
+                    const item = this.paramList.find(x => x.id === id)
+                    if (item) {
+                        tempName = item.name
+                    } else if (/^\$\{.+\}$/.test(id)) {
+                        tempName = id
+                    }
+                    return tempName
+                }
+
+                let res
+                if (this.isMultiple) {
+                    const tempArr = [];
+                    (this.value || []).forEach((val) => {
+                        const name = findItemName(val)
+                        if (name !== undefined) tempArr.push(name)
+                    })
+                    res = tempArr.join(',')
+                } else {
+                    res = findItemName(this.value)
+                }
+                this.displayValue = res
+            },
+
             chooseOption (option) {
                 if (!this.isMultiple) {
                     this.$emit('updateValue', option.id)
                     this.$refs.inputItem.$refs.input.blur()
                     this.toggleShowList()
                 } else {
-                    if (Array.isArray(this.value)) {
-                        const index = this.value.findIndex(x => x === option.id)
-                        if (index > -1) this.value.splice(index, 1)
-                        else this.value.push(option.id)
+                    const cloneValue = JSON.parse(JSON.stringify(this.value))
+                    if (Array.isArray(cloneValue)) {
+                        const index = cloneValue.findIndex(x => x === option.id)
+                        if (index > -1) cloneValue.splice(index, 1)
+                        else cloneValue.push(option.id)
+                        this.$emit('updateValue', cloneValue)
                     } else {
                         this.$emit('updateValue', [option.id])
                     }
@@ -109,12 +140,35 @@
                 this.showList = value
             },
 
-            inputManually (value) {
-                if (this.isMultiple) {
-                    if (value === '') value = []
-                    else value = value.split(',')
+            handleInput (value) {
+                this.displayValue = value
+            },
+
+            handleBlur (value) {
+                const findItemId = (name) => {
+                    let item = this.paramList.find(x => x.name === name)
+                    if (!item) {
+                        if (/^\$\{.+\}$/.test(name)) item = name
+                        else item = undefined
+                    } else {
+                        item = item.id
+                    }
+                    return item
                 }
-                this.$emit('updateValue', value)
+
+                let res = ''
+                let tempId = ''
+                if (this.isMultiple) {
+                    res = [];
+                    (value.split(',') || []).forEach((val) => {
+                        tempId = findItemId(val)
+                        if (tempId !== undefined) res.push(tempId)
+                    })
+                } else {
+                    tempId = findItemId(value)
+                    res = tempId === undefined ? '' : tempId
+                }
+                this.$emit('updateValue', res)
             },
 
             isActive (id) {
@@ -128,6 +182,7 @@
             initList () {
                 if (this.listType === 'list') {
                     this.paramList = JSON.parse(JSON.stringify(this.list))
+                    this.calcDisplayVal()
                     return
                 }
 
@@ -147,6 +202,7 @@
                     this.$ajax.get(url).then((res) => {
                         const data = res.data || []
                         this.paramList.splice(0, this.paramList.length, ...data)
+                        this.calcDisplayVal()
                     }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.loading = false))
                 }
             }
