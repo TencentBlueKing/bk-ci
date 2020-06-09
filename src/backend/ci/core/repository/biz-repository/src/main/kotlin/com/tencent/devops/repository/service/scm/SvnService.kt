@@ -137,8 +137,7 @@ class SvnService : ISvnService {
         } catch (e: Exception) {
             logger.error("getDirectories error, msg:$e")
             throw e
-        }
-        finally {
+        } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the directories")
         }
     }
