@@ -33,6 +33,11 @@ public class ObjectReplaceEnvVarUtilTest {
         originDataObj = "变量替换测试_${jsonStrEnvVar}";
         convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap);
         assertEquals("变量替换测试_{\"abc\":\"123\"}", JsonUtil.INSTANCE.toJson(convertDataObj));
+        // number类型变量替换
+        originDataObj = "[1,2,3]";
+        convertDataObj = ObjectReplaceEnvVarUtil.replaceEnvVar(originDataObj, envMap);
+        System.out.println(JsonUtil.INSTANCE.toJson(convertDataObj));
+        assertEquals("[ 1, 2, 3 ]", JsonUtil.INSTANCE.toJson(convertDataObj));
         // 对map对象进行变量替换
         Map<String, Object> originDataMapObj = new HashMap<>();
         originDataMapObj.put("normalStrEnvVarKey", "变量替换测试_${normalStrEnvVar}");
