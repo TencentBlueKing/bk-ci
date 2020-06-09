@@ -35,9 +35,7 @@ import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
-import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
@@ -48,6 +46,7 @@ import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.services.LocalImageCache
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.RandomUtil
+import com.tencent.devops.store.pojo.app.BuildEnv
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.io.File
