@@ -183,12 +183,12 @@ class PipelineTaskService @Autowired constructor(
             errorElementsName = if (failTaskNames.isNullOrBlank()) {
                 errorElement.second
             } else {
-                (failTaskNames + errorElement.second)
+                "$failTaskNames,${errorElement.second}"
             }
             logger.info("$buildId| $taskId| atom fail record, tasks:$errorElement, taskNames:$errorElementsName")
             val valueMap = mutableMapOf<String, Any>()
-            valueMap[BK_CI_BUILD_FAIL_TASKS] = errorElements
-            valueMap[BK_CI_BUILD_FAIL_TASKNAMES] = errorElementsName.substringBeforeLast(",")
+            valueMap[BK_CI_BUILD_FAIL_TASKS] = errorElements.substringBeforeLast(",")
+            valueMap[BK_CI_BUILD_FAIL_TASKNAMES] = errorElementsName
             pipelineVariableService.batchSetVariable(
                 buildId = buildId,
                 projectId = projectId,
