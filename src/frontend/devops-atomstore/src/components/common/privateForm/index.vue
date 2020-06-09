@@ -5,17 +5,17 @@
                 <li :class="{ 'control-active': isNameFocus, 'input-error': isNameError }">
                     <span class="must-input"> {{ $t('store.字段名：') }} </span>
                     <input type="text" v-model="privateObj.fieldName" class="g-input-border" @focus="isNameFocus = true" @blur="(startNameVerify = true,isNameFocus = false)">
-                    <i class="bk-icon icon-close-circle-shape clear-icon" v-if="privateObj.fieldName" @click="privateObj.fieldName = ''"></i>
-                    <i class="bk-icon icon-info-circle icon-right" v-bk-tooltips="{ content: $t('store.以英文字母开头，由英文字母、数字、连接符(-)或下划线(_)组成，长度大于3小于30个字符'), placements: ['top'] }"></i>
+                    <i class="devops-icon icon-close-circle-shape clear-icon" v-if="privateObj.fieldName" @click="privateObj.fieldName = ''"></i>
+                    <i class="devops-icon icon-info-circle icon-right" v-bk-tooltips="{ content: $t('store.以英文字母开头，由英文字母、数字、连接符(-)或下划线(_)组成，长度大于3小于30个字符'), placements: ['top'] }"></i>
                     <span v-if="isNameError" class="err-message"> {{ $t('store.以英文字母开头，由英文字母、数字、连接符(-)或下划线(_)组成，长度大于3小于30个字符') }} </span>
                 </li>
                 <li :class="{ 'control-active': isValueFocus, 'input-error': isValueError }">
                     <span class="must-input"> {{ $t('store.字段值：') }} </span>
                     <input :type="showPassWord ? 'text' : 'password'" v-model="privateObj.fieldValue" class="g-input-border" @focus="valueFocus" @blur="(startValueVerify = true,isValueFocus = false)">
-                    <i class="bk-icon icon-close-circle-shape clear-icon" v-if="privateObj.fieldValue" @click="privateObj.fieldValue = ''"></i>
+                    <i class="devops-icon icon-close-circle-shape clear-icon" v-if="privateObj.fieldValue" @click="privateObj.fieldValue = ''"></i>
                     <template v-if="showEye">
-                        <i class="bk-icon icon-eye icon-right" v-if="showPassWord" @click="showPassWord = false"></i>
-                        <i class="bk-icon icon-hide icon-right" v-else @click="showPassWord = true"></i>
+                        <i class="devops-icon icon-eye icon-right" v-if="showPassWord" @click="showPassWord = false"></i>
+                        <i class="devops-icon icon-hide icon-right" v-else @click="showPassWord = true"></i>
                     </template>
                     <span v-if="isValueError" class="err-message"> {{ $t('store.字段值不能为空') }} </span>
                 </li>
@@ -155,7 +155,7 @@
                         border-color: $failColor;
                         outline-color: $failColor;
                     }
-                    i.bk-icon {
+                    i.devops-icon {
                         color: $failColor;
                     }
                 }

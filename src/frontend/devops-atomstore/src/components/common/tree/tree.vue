@@ -15,7 +15,7 @@
                 <span
                     @click="expandNode(item)"
                     v-if="!item.parent || item.children && item.children.length || item.async"
-                    :class="['bk-icon', 'tree-expanded-icon', item.expanded ? 'icon-down-shape' : 'icon-right-shape']">
+                    :class="['devops-icon', 'tree-expanded-icon', item.expanded ? 'icon-down-shape' : 'icon-right-shape']">
                 </span>
                 <label :class="[item.halfcheck ? 'bk-form-half-checked' : 'bk-form-checkbox','bk-checkbox-small', 'mr5',!item.parent || item.children && item.children.length ? 'parent-node-left' : '']"
                     v-if="multiple && !item.nocheck"
@@ -28,7 +28,7 @@
                         @change.stop="changeCheckStatus(item, $event)">
                 </label>
                 <div class="tree-node" @click="triggerExpand(item)">
-                    <span class="node-icon bk-icon" v-if="item.icon || item.openedIcon || item.closedIcon" :class="setNodeIcon(item)"></span>
+                    <span class="node-icon devops-icon" v-if="item.icon || item.openedIcon || item.closedIcon" :class="setNodeIcon(item)"></span>
                     <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary loading" v-if="item.loading && item.expanded">
                         <div class="rotate rotate1"></div>
                         <div class="rotate rotate2"></div>

@@ -48,13 +48,13 @@ class ServicePipelineInitResourceImpl @Autowired constructor(
         atomMarketInitPipelineReq: AtomMarketInitPipelineReq
     ): Result<AtomMarketInitPipelineResp> {
         return atomMarketInitPipelineService.initPipeline(
-            userId,
-            projectCode,
-            atomMarketInitPipelineReq.atomBaseInfo,
-            atomMarketInitPipelineReq.repositoryHashId,
-            atomMarketInitPipelineReq.repositoryPath,
-            atomMarketInitPipelineReq.script,
-            atomMarketInitPipelineReq.buildEnv
+            userId = userId,
+            projectCode = projectCode,
+            atomBaseInfo = atomMarketInitPipelineReq.atomBaseInfo,
+            repositoryHashId = atomMarketInitPipelineReq.repositoryHashId,
+            repositoryPath = atomMarketInitPipelineReq.repositoryPath,
+            script = atomMarketInitPipelineReq.script,
+            buildEnv = atomMarketInitPipelineReq.buildEnv
         )
     }
 

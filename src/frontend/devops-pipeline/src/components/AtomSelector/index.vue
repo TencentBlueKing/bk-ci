@@ -3,8 +3,8 @@
         <transition name="selector-slide">
             <div v-if="showAtomSelectorPopup" class="atom-selector-popup">
                 <header class="atom-selector-header">
-                    <h3>{{ $t('editPage.chooseAtom') }}<i @click="freshAtomList(searchKey)" class="bk-icon icon-refresh atom-fresh" :class="fetchingAtomList ? &quot;spin-icon&quot; : &quot;&quot;" /></h3>
-                    <bk-input class="atom-search-input" ref="searchStr" :clearable="true" :placeholder="$t('editPage.searchTips')" right-icon="bk-icon icon-search" :value="searchKey" @input="handleClear" @enter="handleSearch"></bk-input>
+                    <h3>{{ $t('editPage.chooseAtom') }}<i @click="freshAtomList(searchKey)" class="devops-icon icon-refresh atom-fresh" :class="fetchingAtomList ? &quot;spin-icon&quot; : &quot;&quot;" /></h3>
+                    <bk-input class="atom-search-input" ref="searchStr" :clearable="true" :placeholder="$t('editPage.searchTips')" right-icon="icon-search" :value="searchKey" @input="handleClear" @enter="handleSearch"></bk-input>
                 </header>
                 <bk-tab v-bkloading="{ isLoading: fetchingAtomList }" class="atom-tab" size="small" ref="tab" :active.sync="classifyCode" type="unborder-card" v-if="!searchKey">
                     <bk-tab-panel
@@ -499,7 +499,7 @@
                 line-height: 50px;
                 margin-right: 15px;
                 color: $fontLigtherColor;
-                .bk-icon {
+                .devops-icon {
                     fill: currentColor
                 }
                 > img {

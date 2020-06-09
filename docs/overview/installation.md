@@ -6,17 +6,17 @@
 
 ```
 |- /data/bkee  # 蓝鲸根目录
-  |- bkci      # bkci部署程序目录
+  |- ci      # ci部署程序目录
   |- etc       # 蓝鲸配置文件总目录
-    |- bkci    # bkci配置文件目录
+    |- ci    # ci配置文件目录
 ```
 
 具体说明下以下章节。
 
-### 1.1 bkci部署目录
+### 1.1 ci部署目录
 
 ```
-|- /data/bkee/bkci       # 程序主目录
+|- /data/bkee/ci       # 程序主目录
   |- agent-package       # 提供下载的agent的安装包位置
   |- frontend            # 存放的前端发布的静态资源目录
   |- gateway             # 网关配置文件及lua脚本
@@ -25,11 +25,11 @@
     |- boot-project.jar  # Project微服务的SpringBoot.jar
 ```
 
-### 1.2 bkci配置文件目录
+### 1.2 ci配置文件目录
 
 ```
 |- /data/bkee/etc   # 蓝鲸配置文件总目录
-  |- bkci 				  # bkci配置文件目录
+  |- ci 				  # ci配置文件目录
     |- common.yml   # 所有微服务通用配置
     |- application-project.yml  # project微服务的配置,有10个微服务配置，如有增加微服务也放此处
 ```
@@ -66,8 +66,8 @@
 
 前端构建之后生成的模板配置文件变量替换
 ```bash
-  ./render_tpl -m bkci /data/bkee/ci/frontend/pipeline/frontend#pipeline#index.html
-  ./render_tpl -m bkci /data/bkee/ci/frontend/console/frontend#console#index.html
+  ./render_tpl -m ci /data/bkee/ci/frontend/pipeline/frontend#pipeline#index.html
+  ./render_tpl -m ci /data/bkee/ci/frontend/console/frontend#console#index.html
 ```
 
 ### 3.3 后端微服务部署
@@ -87,14 +87,14 @@
 - scripts/bkenv.properties 中有对应的配置项，需要进行修改，如果遇到配置项涉及到蓝鲸的或者不会用到的，则可以保持默认配置不修改即可，修改后保存退出。
 
   - 修改INSTALL_PATH，这个为安装主目录，默认是/data/bkee
-  - 修改MODULE变量建议不要修改，默认为bkci
+  - 修改MODULE变量建议不要修改，默认为ci
 
 - 执行scripts/render_tpl 脚本将自动将所有support-files/templates下的所有文件变量替换掉并移到正常安装路径下。
 
   ```bash 
-  cd /data/bkee/bk-ci/scripts
+  cd /data/bkee/ci/scripts
   chmod +x render_tpl 
-  ./render_tpl -m bkci ../support-files/templates/*
+  ./render_tpl -m ci ../support-files/templates/*
   ```
 
   

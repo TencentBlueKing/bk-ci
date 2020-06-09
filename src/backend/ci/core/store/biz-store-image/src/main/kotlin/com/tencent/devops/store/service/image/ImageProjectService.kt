@@ -536,7 +536,7 @@ class ImageProjectService @Autowired constructor(
         val userDeptList = storeUserService.getUserDeptList(userId)
         logger.info("$interfaceName:searchMarketImages:Inner:userDeptList=$userDeptList")
         val installImageCodes = marketImageDao.getInstalledImageCodes(dslContext, projectCode)
-        var testImageCodes = storeProjectRelDao.getTestImageCodes(dslContext, projectCode, StoreTypeEnum.IMAGE)?.map { it.value1() }
+        var testImageCodes = storeProjectRelDao.getTestStoreCodes(dslContext, projectCode, StoreTypeEnum.IMAGE)?.map { it.value1() }
             ?: emptyList()
         testImageCodes = marketImageDao.getTestingImageCodes(dslContext, testImageCodes)?.map {
             it.value1()

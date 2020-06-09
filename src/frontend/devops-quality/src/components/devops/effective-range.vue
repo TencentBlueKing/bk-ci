@@ -8,7 +8,7 @@
         <div>
             <div class="range-list-header">
                 <div class="title">生效范围</div>
-                <div><i class="bk-icon icon-close" @click="close" style="color: #C3CDD7;"></i></div>
+                <div><i class="devops-icon icon-close" @click="close" style="color: #C3CDD7;"></i></div>
             </div>
             <div class="range-content">
                 <bk-table
@@ -95,7 +95,7 @@
                 line-height: 16px;
                 color: $fontWeightColor;
             }
-            .bk-icon {
+            .devops-icon {
                 cursor: pointer;
             }
         }

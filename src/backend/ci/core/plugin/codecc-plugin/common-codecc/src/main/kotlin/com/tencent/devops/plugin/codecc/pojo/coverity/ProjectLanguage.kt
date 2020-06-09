@@ -45,6 +45,7 @@ enum class ProjectLanguage(val value: String) {
     TYPESCRIPT("typescript"),
     KOTLIN("kotlin"),
     CLOJURE("clojure"),
+    SOLIDITY("solidity"),
     OTHERS("others");
 
     companion object {

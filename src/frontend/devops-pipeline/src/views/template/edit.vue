@@ -10,7 +10,7 @@
                     <bk-button @click="exit">{{ $t('cancel') }}</bk-button>
                 </div>
             </pipeline>
-            <bk-sideslider :title="$t('template.versionList')" class="sodaci-property-panel" width="640" :is-show.sync="showVersionSideBar" :quick-close="true">
+            <bk-sideslider :title="$t('template.versionList')" class="bkci-property-panel" width="640" :is-show.sync="showVersionSideBar" :quick-close="true">
                 <template slot="content">
                     <section class="version-list-wrapper">
                         <bk-table
@@ -34,6 +34,7 @@
                     </section>
                 </template>
             </bk-sideslider>
+            <mini-map :stages="pipeline.stages" scroll-class=".scroll-container" v-if="!isLoading"></mini-map>
         </template>
 
         <bk-dialog
@@ -57,6 +58,7 @@
     import Pipeline from '@/components/Pipeline'
     import AutoComplete from '@/components/atomFormField/AutoComplete'
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import MiniMap from '@/components/MiniMap'
     import {
         convertMStoStringByRule,
         navConfirm
@@ -66,7 +68,8 @@
         components: {
             Pipeline,
             AutoComplete,
-            FormField
+            FormField,
+            MiniMap
         },
         data () {
             return {

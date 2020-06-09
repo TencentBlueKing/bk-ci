@@ -36,6 +36,7 @@ import com.tencent.devops.dispatch.pojo.PipelineBuild
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.jooq.DSLContext
@@ -101,7 +102,7 @@ class PipelineDispatchService @Autowired constructor(
                 rabbitTemplate = rabbitTemplate,
                 buildId = pipelineAgentStartupEvent.buildId,
                 message = "构建环境准备中...",
-                tag = "",
+                tag = VMUtils.genStartVMTaskId(pipelineAgentStartupEvent.containerId),
                 jobId = pipelineAgentStartupEvent.containerHashId,
                 executeCount = pipelineAgentStartupEvent.executeCount ?: 1
             )

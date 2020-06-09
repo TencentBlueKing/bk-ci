@@ -2,12 +2,12 @@
     <div>
         <li> 
             <span :title="node.title"  @click="toggle(node)" :class="spanClass(node)">
-                <i v-if="node.children && node.children.length > 0" class="bk-icon" :class='{"icon-folder": !node.isOpen, "icon-folder-open": node.isOpen}'></i>
-                <i v-else class="bk-icon" :class="iconClass(node)" ></i>
+                <i v-if="node.children && node.children.length > 0" class="devops-icon" :class='{"icon-folder": !node.isOpen, "icon-folder-open": node.isOpen}'></i>
+                <i v-else class="devops-icon" :class="iconClass(node)" ></i>
                 <span>{{node.name}}</span>
             </span>
             <a v-for="(btn, index) in node.buttons" :key="index" href="javascript:" @click="btnClick(btn, node)" v-if="node.buttons && node.buttons.length">
-                <i class="bk-icon" :class="buttonIcon(btn)"></i>
+                <i class="devops-icon" :class="buttonIcon(btn)"></i>
             </a>
             <ul v-show="node.isOpen && (node.children && node.children.length)">
                 <tree-item v-for="(item, index) in node.children" :node.sync="item" :key="index" :is-multiple="isMultiple"></tree-item>

@@ -147,6 +147,8 @@ object LoggerService {
         }
     }
 
+    fun finishTask() = finishLog(elementId, jobId, executeCount)
+
     fun addNormalLine(message: String) {
         val logMessage = LogMessage(
             message = message,
@@ -229,6 +231,18 @@ object LoggerService {
             }
         } catch (e: Exception) {
             logger.warn("Fail to send the logs(${logMessages.size})", e)
+        }
+    }
+
+    private fun finishLog(tag: String?, jobId: String?, executeCount: Int?) {
+        try {
+            logger.info("Start to finish the log")
+            val result = logResourceApi.finishLog(tag, jobId, executeCount)
+            if (result.isNotOk()) {
+                logger.error("上报日志状态日志失败：${result.message}")
+            }
+        } catch (e: Exception) {
+            logger.warn("Fail to finish the logs", e)
         }
     }
 }

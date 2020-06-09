@@ -165,4 +165,13 @@ object CommonUtils {
             else -> "EN" // 英文描述
         }
     }
+
+    /**
+     * 获取字符串的头部指定长度
+     */
+    fun interceptStringInLength(string: String?, length: Int): String? {
+        return if (string != null && string.length > length) {
+            string.substring(0, length - 1)
+        } else string
+    }
 }

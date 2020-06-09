@@ -26,6 +26,8 @@
 
 package com.tencent.devops.common.es
 
+import com.floragunn.searchguard.ssl.SearchGuardSSLPlugin
+import com.floragunn.searchguard.ssl.util.SSLConfigConstants
 import com.tencent.devops.common.web.WebAutoConfiguration
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
@@ -53,25 +55,66 @@ class ESAutoConfiguration {
     private val cluster: String? = null
     @Value("\${elasticsearch.name}")
     private val name: String? = null
+    @Value("\${elasticsearch.keystore.filePath:#{null}}")
+    private val keystoreFilePath: String? = null
+    @Value("\${elasticsearch.keystore.password:#{null}}")
+    private val keystorePassword: String? = null
+    @Value("\${elasticsearch.truststore.filePath:#{null}}")
+    private val truststoreFilePath: String? = null
+    @Value("\${elasticsearch.truststore.password:#{null}}")
+    private val truststorePassword: String? = null
 
     @Bean
     @Primary
     fun transportClient(): ESClient {
         if (ip.isNullOrBlank()) {
-            throw IllegalArgumentException("ES集群地址尚未配置")
+            throw IllegalArgumentException("ES集群地址尚未配置: elasticsearch.ip")
         }
         if (port == null || port!! <= 0) {
-            throw IllegalArgumentException("ES集群端口尚未配置")
+            throw IllegalArgumentException("ES集群端口尚未配置: elasticsearch.port")
         }
         if (cluster.isNullOrBlank()) {
-            throw IllegalArgumentException("ES集群名称尚未配置")
+            throw IllegalArgumentException("ES集群名称尚未配置: elasticsearch.cluster")
         }
         if (name.isNullOrBlank()) {
-            throw IllegalArgumentException("ES唯一名称尚未配置")
+            throw IllegalArgumentException("ES唯一名称尚未配置: elasticsearch.name")
         }
-        val settings = Settings.builder().put("cluster.name", cluster).build()
+
+        val builder = Settings.builder()
+            .put("cluster.name", cluster)
+            .put("client.transport.sniff", true)
+        val searchGuard =
+            !keystoreFilePath.isNullOrBlank() || !truststoreFilePath.isNullOrBlank() ||
+                !keystorePassword.isNullOrBlank() || !truststorePassword.isNullOrBlank()
+
+        val client = if (searchGuard) {
+            if (keystoreFilePath.isNullOrBlank()) {
+                throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.keystore.filePath")
+            }
+            if (truststoreFilePath.isNullOrBlank()) {
+                throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.keystore.password")
+            }
+            if (keystorePassword.isNullOrBlank()) {
+                throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.truststore.filePath")
+            }
+            if (truststorePassword.isNullOrBlank()) {
+                throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.truststore.password")
+            }
+
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION, false)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENABLED, true)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION_RESOLVE_HOST_NAME, true)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_FILEPATH, keystoreFilePath)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_FILEPATH, truststoreFilePath)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_PASSWORD, keystorePassword)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_PASSWORD, truststorePassword)
+
+            PreBuiltTransportClient(builder.build(), SearchGuardSSLPlugin::class.java)
+        } else {
+            PreBuiltTransportClient(builder.build())
+        }
+
         val ips = ip!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-        val client = PreBuiltTransportClient(settings)
         for (ipAddress in ips) {
             client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), port!!))
         }

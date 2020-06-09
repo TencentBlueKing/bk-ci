@@ -38,6 +38,11 @@ data class ThirdPartyAgentIDDispatchType(
 ) : DispatchType(
     displayName
 ) {
+    override fun cleanDataBeforeSave() {
+        this.displayName = this.displayName.trim()
+        this.workspace = this.workspace?.trim()
+    }
+
     override fun replaceField(variables: Map<String, String>) {
         displayName = EnvUtils.parseEnv(displayName, variables)
         if (!workspace.isNullOrBlank()) {

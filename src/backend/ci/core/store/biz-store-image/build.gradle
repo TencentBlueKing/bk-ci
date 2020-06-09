@@ -30,5 +30,3 @@ dependencies {
     compile project(":core:store:biz-store")
     compile project(":core:store:model-store")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

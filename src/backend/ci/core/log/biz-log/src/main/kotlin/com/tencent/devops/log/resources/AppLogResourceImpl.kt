@@ -150,7 +150,7 @@ class AppLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Response {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.downloadLogs(projectId, pipelineId, buildId, tag, jobId, executeCount)
+        return logDispatcher.downloadLogs(projectId, pipelineId, buildId, tag, jobId, executeCount, null)
     }
 
     override fun getEndLogs(

@@ -27,13 +27,13 @@
 package com.tencent.devops.common.api.util
 
 object EnvUtils {
-    fun parseEnv(command: String, data: Map<String, String>, replaceWithEmpty: Boolean = false, isEscape: Boolean = false): String {
-        if (command.isBlank()) {
-            return command
+    fun parseEnv(command: String?, data: Map<String, String>, replaceWithEmpty: Boolean = false, isEscape: Boolean = false): String {
+        if (command.isNullOrBlank()) {
+            return command ?: ""
         }
         val newValue = StringBuilder()
         var index = 0
-        while (index < command.length) {
+        while (index < command!!.length) {
             val c = command[index]
             if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
                 val inside = StringBuilder()
