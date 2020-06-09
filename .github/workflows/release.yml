@@ -83,7 +83,7 @@ jobs:
         with:
           gradle-version: 4.8.1
           build-root-directory: src/backend/ci/core
-          arguments: clean test build uploadArchives -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"
+          arguments: clean test build -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"
       
       - name: Create artifact - Step1:init
         run: |
