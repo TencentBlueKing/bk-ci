@@ -158,7 +158,7 @@ class PreBuildAgentMgrService @Autowired constructor(
                 secretKey = SecurityUtil.decrypt(it.secretKey),
                 createdUser = it.createdUser,
                 gateway = it.gateway,
-                link = agentUrlService.genAgentInstallUrl(it),
+                link = if (os == OS.WINDOWS) { agentUrlService.genAgentUrl(it) } else { agentUrlService.genAgentInstallUrl(it) },
                 script = agentUrlService.genAgentInstallScript(it),
                 ip = it.ip,
                 hostName = it.hostname,
