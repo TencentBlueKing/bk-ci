@@ -112,7 +112,6 @@ class ExtServiceNotifyService {
         val receivers = mutableSetOf(receiver)
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = templateCode,
-            sender = DEVOPS,
             receivers = receivers,
             cc = receivers,
             titleParams = titleParams,
