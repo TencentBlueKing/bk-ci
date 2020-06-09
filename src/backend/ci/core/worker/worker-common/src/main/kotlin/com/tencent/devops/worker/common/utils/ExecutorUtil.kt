@@ -35,9 +35,12 @@ import org.apache.commons.exec.DefaultExecutor
 import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
 import java.io.File
+import java.util.concurrent.ThreadLocalRandom
 
 object ExecutorUtil {
     private val executor = DefaultExecutor()
+
+    private val threadLocal = ThreadLocal<String>()
 
     fun runCommand(command: String, maskCommand: String, workDir: File? = null): Int {
         val outputStream = object : LogOutputStream() {
@@ -73,5 +76,18 @@ object ExecutorUtil {
         }
         LoggerService.addNormalLine("Finish the command, exitValue=$exitValue")
         return exitValue
+    }
+
+    private fun setThreadLocal() {
+        val randomNum = ThreadLocalRandom.current().nextInt().toString()
+        threadLocal.set(randomNum)
+    }
+
+    fun getThreadLocal(): String {
+        val value = threadLocal.get()
+        if (value == null) {
+            setThreadLocal()
+        }
+        return threadLocal.get()
     }
 }
