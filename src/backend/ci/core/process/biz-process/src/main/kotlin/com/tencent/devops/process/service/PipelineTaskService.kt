@@ -187,7 +187,7 @@ class PipelineTaskService @Autowired constructor(
             }
             logger.info("$buildId| $taskId| atom fail record, tasks:$errorElement, taskNames:$errorElementsName")
             val valueMap = mutableMapOf<String, Any>()
-            valueMap[BK_CI_BUILD_FAIL_TASKS] = errorElements.substringBeforeLast(",")
+            valueMap[BK_CI_BUILD_FAIL_TASKS] = errorElements
             valueMap[BK_CI_BUILD_FAIL_TASKNAMES] = errorElementsName
             pipelineVariableService.batchSetVariable(
                 buildId = buildId,
@@ -241,7 +241,7 @@ class PipelineTaskService @Autowired constructor(
             }
         }
         val failTask = "[${taskRecord.stageId}][$containerName]${taskRecord.taskName} \n"
-        val failTaskName = "${taskRecord.taskName},"
+        val failTaskName = "${taskRecord.taskName}"
 
         redisOperation.set(failTaskRedisKey(taskRecord.buildId, taskRecord.taskId), failTask)
         redisOperation.set(failTaskNameRedisKey(taskRecord.buildId, taskRecord.taskId), failTaskName)
