@@ -94,7 +94,7 @@ class CodeService @Autowired constructor(
             return directories
         } catch (t: Throwable) {
             logger.warn("[$projectId|$repoHashId|$relativePath] Fail to get SVN directory", t)
-            throw OperationException("获取Svn目录失败")
+            throw OperationException("获取Svn目录失败, msg:${t.message}")
         }
     }
 
