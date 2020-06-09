@@ -67,8 +67,12 @@ class CodeService @Autowired constructor(
         try {
             val credential = getSvnCredential(projectId, repository)
             val username = repository.userName
-            val svnType = repository.svnType ?: "SSH"
-
+            val svnType = if(repository.svnType.isNullOrEmpty()) {
+                "SSH"
+            } else {
+                repository.svnType!!
+            }
+            logger.info("Code get svn svnType| $svnType")
             val svnFileInfoList = client.get(ServiceSvnResource::class).getDirectories(
                 url = repository.url,
                 userId = username,
