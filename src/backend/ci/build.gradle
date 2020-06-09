@@ -122,6 +122,13 @@ allprojects {
         version = devops_version
     }
 
+    def snapshot = System.getProperty("snapshot")
+    if (snapshot == "true") {
+        version = version + "-SNAPSHOT"
+    } else {
+        version = version + "-RELEASE"
+    }
+
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
     if (mavenRepoUrl == null) {
         mavenRepoUrl = System.getenv("mavenRepoUrl")
