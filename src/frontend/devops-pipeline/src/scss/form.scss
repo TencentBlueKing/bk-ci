@@ -70,18 +70,6 @@
 
 .bk-form-item,
 .bk-form-inline-item {
-	&.is-required {
-        .bk-label {
-            position: relative;
-        }
-        .bk-label:after {
-            content: '*';
-            color: $dangerColor;
-            position: absolute;
-            display: inline-block;
-            margin: 2px -7px 0 2px;
-        }
-	}
 
 	&.is-danger,
 	&.is-error {
@@ -210,7 +198,7 @@
 		border-left: none;
 		border-radius: 0 2px 2px 0;
 		padding: 0 7px;
-		> .bk-icon {
+		> .devops-icon {
 			font-size: 18px;
 			line-height: 34px;
 		}

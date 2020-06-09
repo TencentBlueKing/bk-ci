@@ -14,13 +14,13 @@
         </thead>
         <tbody>
             <template
-                v-for="(row, index) of list">
+                v-for="(row, index) of listWithConfig">
                 <tr
                     style="position: relative"
                     :key="`taskTable${index}_re`">
                     <td class="table-list-name text-overflow"
                         :class="row.feConfig && row.feConfig.status">
-                        <a v-if="row.hasPermission" href="javascript:;" class="text-link" @click="emitEventHandler('title-click', row.pipelineId)">
+                        <a v-if="row.hasPermission" :href="getHistoryURL(row.pipelineId)" :title="row.pipelineName" class="text-link" @click.prevent.stop="e => goHistory(e, row.pipelineId)">
                             {{ row.pipelineName }}
                         </a>
                         <span v-else>{{ row.pipelineName }}</span>
@@ -52,7 +52,7 @@
                             v-if="row.feConfig && row.feConfig.status === 'error'"
                             @click.stop.prevent="emitEventHandler('error-noticed', row.pipelineId)">
                             {{ $t('newlist.known') }}
-                            <i class="bk-icon icon-check-1"></i>
+                            <i class="devops-icon icon-check-1"></i>
                         </a>
                     </td>
                     <td v-else></td>
@@ -89,7 +89,7 @@
                             :config="row.feConfig">
                         </ext-menu>
                         <a v-else href="javascript:;" class="text-link"
-                            @click.stop.prevent="applyPermission(row.pipelineName, row.pipelineId)">
+                            @click.stop.prevent="applyPermission(row)">
                             {{ $t('newlist.applyPerm') }}
                         </a>
                     </td>
@@ -100,26 +100,31 @@
 </template>
 
 <script>
-    import progressBar from '@/components/devops/progressBar'
-    import triggers from '@/components/pipeline/triggers'
-    import extMenu from '@/components/pipelineList/extMenu'
-    import { bus } from '@/utils/bus'
     import { convertMStoString } from '@/utils/util'
+    import mixins from '../pipeline-list-mixins'
     export default {
-        components: {
-            progressBar,
-            triggers,
-            extMenu
-        },
+        mixins: [mixins],
         props: {
             list: {
                 type: Array,
-                default: []
+                default: () => []
+            },
+            pipelineFeConfMap: {
+                type: Object,
+                deafult: () => ({})
             }
         },
         data () {
             return {
                 isShowExtMenu: false
+            }
+        },
+        computed: {
+            listWithConfig () {
+                return this.list.map(item => ({
+                    ...item,
+                    feConfig: this.pipelineFeConfMap[item.pipelineId] || {}
+                }))
             }
         },
         methods: {
@@ -140,18 +145,6 @@
                 } else {
                     return '--'
                 }
-            },
-            triggersExec ({ pipelineId, ...params }) {
-                bus.$emit('triggers-exec', params, pipelineId)
-            },
-            /**
-             *  参数为pipelineId的触发全局bus事件
-             */
-            emitEventHandler (eventName, pipelineId) {
-                bus.$emit(eventName, pipelineId)
-            },
-            applyPermission (pipelineName, pipelineId) {
-                bus.$emit('set-permission', `${this.$t('pipeline')}：${pipelineName}`, this.$t('newlist.view'), pipelineId)
             }
         }
     }

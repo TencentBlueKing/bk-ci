@@ -46,12 +46,12 @@ import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.pojo.PipelineWebhook
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.websocket.page.EditPageBuild
 import com.tencent.devops.process.websocket.push.WebHookWebsocketPush
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import org.springframework.util.StopWatch
 
 /**
  *  MQ实现的流水线创建事件
@@ -60,7 +60,6 @@ import org.springframework.stereotype.Component
  */
 @Component
 class MQPipelineCreateListener @Autowired constructor(
-    private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineWebhookService: PipelineWebhookService,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val redisOperation: RedisOperation,
@@ -70,15 +69,21 @@ class MQPipelineCreateListener @Autowired constructor(
 ) : BaseListener<PipelineCreateEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineCreateEvent) {
+        val watch = StopWatch("pipelineCreateEventWatch")
+        val pipelineId = event.pipelineId
         if (event.source == ("create_pipeline")) {
-            pipelineRuntimeService.createPipelineBuildSummary(event.projectId, event.pipelineId, event.buildNo)
-            logger.info("[${event.pipelineId}] createPipelineBuildSummary!")
-            callBackControl.pipelineCreateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
+            logger.info("[$pipelineId] createPipelineBuildSummary!")
+            watch.start("createPipeline[pipelineId:$pipelineId]")
+            callBackControl.pipelineCreateEvent(projectId = event.projectId, pipelineId = pipelineId)
+            watch.stop()
         }
         if (event.source == "createWebhook") {
-            logger.info("[${event.pipelineId}] createGitWebhook!MQ内调用")
+            logger.info("[$pipelineId] createGitWebhook!MQ内调用")
+            watch.start("createWebHook[pipelineId:$pipelineId]")
             addWebHook(event.element!!, event)
+            watch.stop()
         }
+        logger.info("pipelineId:$pipelineId pipelineCreateEvent watch is:$watch")
     }
 
     private fun addWebHook(e: Element, event: PipelineCreateEvent) {

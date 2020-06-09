@@ -21,7 +21,7 @@ import * as atom from './atom'
 import * as template from './template'
 import * as Image from './image'
 import { mergeModules } from '@/utils/index'
-import { UPDATE_CURRENT_LIST, UPDATE_MARKET_QUERY } from './constants'
+import { UPDATE_CURRENT_LIST, UPDATE_MARKET_QUERY, UPDATE_MARKET_DETAIL, CLEAR_MARKET_DETAIL } from './constants'
 
 const Vue = window.Vue
 const vue = new Vue()
@@ -31,7 +31,8 @@ const commonModules = {
     namespaced: true,
     state: {
         commentList: [],
-        marketQuery: {}
+        marketQuery: {},
+        marketDetail: {}
     },
     mutations: {
         [UPDATE_CURRENT_LIST]: (state, res) => {
@@ -39,9 +40,24 @@ const commonModules = {
         },
         [UPDATE_MARKET_QUERY]: (state, res) => {
             Vue.set(state, 'marketQuery', res)
+        },
+        [UPDATE_MARKET_DETAIL]: (state, res) => {
+            const detail = Object.assign(JSON.parse(JSON.stringify(state.marketDetail)), res)
+            Vue.set(state, 'marketDetail', detail)
+        },
+        [CLEAR_MARKET_DETAIL]: (state, res) => {
+            Vue.set(state, 'marketDetail', {})
         }
     },
     actions: {
+        clearDetail ({ commit }) {
+            commit(CLEAR_MARKET_DETAIL)
+        },
+
+        setDetail ({ commit }, res) {
+            commit(UPDATE_MARKET_DETAIL, res)
+        },
+
         setMarketQuery ({ commit }, res) {
             commit(UPDATE_MARKET_QUERY, res)
         },
@@ -96,7 +112,8 @@ const commonModules = {
     },
     getters: {
         getCommentList: state => state.commentList,
-        getMarketQuery: state => state.marketQuery
+        getMarketQuery: state => state.marketQuery,
+        getDetail: state => state.marketDetail
     }
 }
 

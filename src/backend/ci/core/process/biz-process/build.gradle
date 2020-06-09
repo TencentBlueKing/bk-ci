@@ -30,6 +30,7 @@ dependencies {
     compile project(":core:common:common-web")
     compile project(":core:common:common-client")
     compile project(":core:common:common-redis")
+    compile project(":core:common:common-archive")
     compile project(":core:common:common-log")
     compile project(":core:common:common-auth:common-auth-api")
     compile project(":core:common:common-db")
@@ -44,7 +45,6 @@ dependencies {
     compile project(":core:artifactory:api-artifactory")
     compile project(":core:process:api-process")
     compile project(":core:quality:api-quality")
-    compile project(":core:quality:common-quality")
     compile project(":core:plugin:api-plugin")
     compile project(":core:plugin:codecc-plugin:common-codecc")
     compile project(":core:notify:api-notify")
@@ -58,5 +58,3 @@ dependencies {
     compile "io.undertow:undertow-websockets-jsr"
     testCompile project(":core:common:common-test")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

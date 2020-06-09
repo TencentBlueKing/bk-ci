@@ -85,6 +85,17 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             ),
             interfaceName = taskName
         )
+
+        storeType = StoreTypeEnum.SERVICE.type.toByte()
+        calculateAndStorage(
+            storeType = storeType,
+            statistics = storeStatisticDao.batchGetStatisticByStoreCode(
+                dslContext = dslContext,
+                storeCodeList = listOf(),
+                storeType = storeType
+            ),
+            interfaceName = taskName
+        )
         logger.info("$taskName:stat:end")
     }
 

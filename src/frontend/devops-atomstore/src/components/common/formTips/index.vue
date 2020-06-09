@@ -1,7 +1,7 @@
 <template>
     <div class="form-tips">
         <div class="tips-icon">
-            <i class="bk-icon icon-info-circle-shape"></i>
+            <i class="devops-icon icon-info-circle-shape"></i>
         </div>
         <div class="tips-content">
             <p class="tips-row">

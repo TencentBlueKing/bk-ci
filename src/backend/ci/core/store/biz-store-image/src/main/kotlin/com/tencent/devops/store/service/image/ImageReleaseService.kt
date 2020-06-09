@@ -805,8 +805,7 @@ abstract class ImageReleaseService {
             return Triple(false, CommonMessageCode.PERMISSION_DENIED, null)
         }
         logger.info("imageRecord status=$imageStatus, status=$status")
-        val allowReleaseStatus = if (isNormalUpgrade != null && isNormalUpgrade) ImageStatusEnum.TESTING
-        else ImageStatusEnum.AUDITING
+        val allowReleaseStatus = getAllowReleaseStatus(isNormalUpgrade)
         var validateFlag = true
         if (status == ImageStatusEnum.COMMITTING.status.toByte() &&
             imageStatus != ImageStatusEnum.INIT.status.toByte()
@@ -871,6 +870,8 @@ abstract class ImageReleaseService {
             null
         )
     }
+
+    abstract fun getAllowReleaseStatus(isNormalUpgrade: Boolean?): ImageStatusEnum
 
     private fun validateNameIsExist(
         count: Int,

@@ -2,7 +2,7 @@
     <div class="record-list" v-if="records.length">
         <div class="search-area">
             <input v-bk-focus="1" v-model.trim="searchValue" />
-            <i class="bk-icon icon-search"></i>
+            <i class="devops-icon icon-search"></i>
         </div>
         <ul>
             <li v-for="item in filterRecords" :title="item[paramName]" :key="item[paramId]" :class="{ 'active': activeId === item[paramId] }" @click.stop="handleRecordClick(item)">

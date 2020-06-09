@@ -26,6 +26,10 @@
 
 rootProject.name = "bk-ci-backend"
 
+// Single CI Service
+include ":boot-assembly"
+
+// CI Core Micro Service
 include ":core"
 include ":core:common"
 include ":core:common:common-event"
@@ -45,7 +49,8 @@ include ":core:common:common-log"
 include ":core:common:common-test"
 include ":core:common:common-auth"
 include ":core:common:common-auth:common-auth-api"
-include ":core:common:common-auth:common-auth-sample"
+include ":core:common:common-auth:common-auth-mock"
+include ":core:common:common-auth:common-auth-blueking"
 
 include ":core:common:common-notify"
 include ":core:common:common-websocket"
@@ -71,7 +76,6 @@ include ":core:misc:api-misc"
 include ":core:misc:biz-misc"
 include ":core:misc:boot-misc"
 include ":core:quality"
-include ":core:quality:common-quality"
 include ":core:quality:api-quality"
 include ":core:quality:biz-quality"
 include ":core:quality:boot-quality"
@@ -94,9 +98,11 @@ include ":core:artifactory"
 include ":core:artifactory:api-artifactory"
 include ":core:artifactory:api-artifactory-sample"
 include ":core:artifactory:api-artifactory-store"
+include ":core:artifactory:api-artifactory-push"
 include ":core:artifactory:biz-artifactory"
 include ":core:artifactory:biz-artifactory-sample"
 include ":core:artifactory:biz-artifactory-store"
+include ":core:artifactory:biz-artifactory-push"
 include ":core:artifactory:boot-artifactory"
 include ":core:artifactory:model-artifactory"
 
@@ -167,8 +173,6 @@ include ":core:worker:worker-agent"
 include ":core:worker:worker-common"
 include ":core:worker:worker-api-sdk"
 
-include ":core:boot-assembly"
-
 include ":core:notify"
 include ":core:notify:api-notify"
 include ":core:notify:biz-notify"
@@ -178,4 +182,12 @@ include ":core:notify:boot-notify"
 
 include ":core:websocket"
 include ":core:websocket:biz-websocket"
+include ":core:websocket:biz-websocket-blueking"
+include ":core:websocket:api-websocket"
 include ":core:websocket:boot-websocket"
+
+include ":core:openapi"
+include ":core:openapi:api-openapi"
+include ":core:openapi:biz-openapi"
+include ":core:openapi:boot-openapi"
+include ":core:openapi:model-openapi"

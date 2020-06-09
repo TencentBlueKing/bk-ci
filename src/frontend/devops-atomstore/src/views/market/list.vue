@@ -88,14 +88,23 @@
 
             getListData (isReset = false) {
                 this.isLoadingMore = true
-                const { searchStr, classifyKey, classifyValue, score, rdType, pipeType } = this.$route.query || {}
+                const { searchStr, classifyKey, classifyValue, score, features, pipeType } = this.$route.query || {}
+
+                const featureObj = {}
+                if (features) {
+                    const featuresArray = features.split(';')
+                    featuresArray.forEach((feature) => {
+                        feature = feature.split('-')
+                        featureObj[feature[0]] = feature[1]
+                    })
+                }
 
                 const postData = {
                     sortType: this.orderType.id,
-                    rdType,
                     score,
                     page: this.page,
-                    pageSize: this.pageSize
+                    pageSize: this.pageSize,
+                    ...featureObj
                 }
                 if (classifyValue !== 'all') postData[classifyKey] = classifyValue
 

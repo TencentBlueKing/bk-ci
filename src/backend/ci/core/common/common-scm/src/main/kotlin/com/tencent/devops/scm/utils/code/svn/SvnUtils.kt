@@ -29,7 +29,6 @@ package com.tencent.devops.scm.utils.code.svn
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.exception.ScmException
 import org.tmatesoft.svn.core.SVNURL
-import org.tmatesoft.svn.core.auth.BasicAuthenticationManager
 import org.tmatesoft.svn.core.auth.SVNPasswordAuthentication
 import org.tmatesoft.svn.core.auth.SVNSSHAuthentication
 import org.tmatesoft.svn.core.io.SVNRepository
@@ -55,7 +54,7 @@ object SvnUtils {
         } else {
             SVNPasswordAuthentication.newInstance(userName, privateKey.toCharArray(), false, svnURL, false)
         }
-        return SVNClientManager.newInstance(options, BasicAuthenticationManager(arrayOf(auth)))
+        return SVNClientManager.newInstance(options, TmatesoftBasicAuthenticationManager2(arrayOf(auth)))
     }
 
     fun getRepository(url: String, userName: String, privateKey: String, passphrase: String?): SVNRepository {
@@ -75,7 +74,7 @@ object SvnUtils {
             SVNPasswordAuthentication.newInstance(userName, privateKey.toCharArray(), false, svnURL, false)
         }
 
-        val basicAuthenticationManager = BasicAuthenticationManager(arrayOf(auth))
+        val basicAuthenticationManager = TmatesoftBasicAuthenticationManager2(arrayOf(auth))
         val options =
             DefaultSVNRepositoryPool(basicAuthenticationManager, SVNWCUtil.createDefaultOptions(true), 30 * 1000L, true)
         val repository = SVNRepositoryFactory.create(svnURL, options)
@@ -96,8 +95,8 @@ object SvnUtils {
     fun getSVNProjectUrl(url: String): String {
         // 第一个以_proj结尾的
         // 比如
-        // svn+ssh://user@svn.xx.com/sodash/maven_hello_world_proj/trunk
-        // 返回svn+ssh://user@svn.xx.com/sodash/maven_hello_world_proj
+        // svn+ssh://user@svn.xx.com/proj/maven_hello_world_proj/trunk
+        // 返回svn+ssh://user@svn.xx.com/proj/maven_hello_world_proj
         val split = url.split("/")
         val builder = StringBuilder()
         run lit@{
@@ -125,7 +124,6 @@ object SvnUtils {
         }
 
         return if (pathArray.size >= 3 && pathArray[2].endsWith("_proj")) {
-            // 如果项目名是三层的，比如ied/ied_kihan_rep/server_proj
             "${pathArray[0]}/${pathArray[1]}/${pathArray[2]}"
         } else {
             "${pathArray[0]}/${pathArray[1]}"

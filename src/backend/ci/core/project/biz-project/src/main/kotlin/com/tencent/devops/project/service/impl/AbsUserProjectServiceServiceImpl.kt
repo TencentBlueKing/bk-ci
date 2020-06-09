@@ -258,7 +258,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
      * @param grayUrl 灰度链接
      * @param projectId 项目id
      */
-    private fun genUrl(url: String?, grayUrl: String?, projectId: String?): String {
+    public fun genUrl(url: String?, grayUrl: String?, projectId: String?): String {
         return if (gray.isGray() && !projectId.isNullOrBlank()) {
             if (gray.isGrayMatchProject(projectId!!, redisOperation)) {
                 grayUrl ?: url

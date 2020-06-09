@@ -24,7 +24,7 @@ import {
     LOG_API_URL_PREFIX,
     MACOS_API_URL_PREFIX
 } from '@/store/constants'
-import { SET_PIPELINE_STAGE, SET_PIPELINE_CONTAINER, SET_TEMPLATE, SET_CONTAINER_DETAIL, SET_ATOMS, SET_ATOM_MODAL, SET_ATOM_MODAL_FETCHING, UPDATE_ATOM_TYPE, UPDATE_ATOM, INSERT_ATOM, PROPERTY_PANEL_VISIBLE, SET_PIPELINE_EDITING, DELETE_CONTAINER, DELETE_STAGE, ADD_CONTAINER, DELETE_ATOM, UPDATE_CONTAINER, ADD_STAGE, CONTAINER_TYPE_SELECTION_VISIBLE, SET_INSERT_STAGE_INDEX, SET_PIPELINE, SET_BUILD_PARAM, DELETE_ATOM_PROP, SET_PIPELINE_EXEC_DETAIL, SET_REMOTE_TRIGGER_TOKEN, SET_GLOBAL_ENVS, TOGGLE_ATOM_SELECTOR_POPUP, UPDATE_ATOM_INPUT, UPDATE_WHOLE_ATOM_INPUT, UPDATE_ATOM_OUTPUT, UPDATE_ATOM_OUTPUT_NAMESPACE, FETCHING_ATOM_LIST, SET_STORE_DATA, SET_STORE_LOADING, SET_STORE_SEARCH, FETCHING_ATOM_VERSION, SET_ATOM_VERSION_LIST, SET_EXECUTE_STATUS, SET_SAVE_STATUS } from './constants'
+import { SET_STAGE_TAG_LIST, SET_PIPELINE_STAGE, SET_PIPELINE_CONTAINER, SET_TEMPLATE, SET_CONTAINER_DETAIL, SET_ATOMS, SET_ATOM_MODAL, SET_ATOM_MODAL_FETCHING, UPDATE_ATOM_TYPE, UPDATE_ATOM, INSERT_ATOM, PROPERTY_PANEL_VISIBLE, SET_PIPELINE_EDITING, DELETE_CONTAINER, DELETE_STAGE, ADD_CONTAINER, DELETE_ATOM, UPDATE_CONTAINER, ADD_STAGE, UPDATE_STAGE, CONTAINER_TYPE_SELECTION_VISIBLE, SET_INSERT_STAGE_INDEX, SET_PIPELINE, SET_BUILD_PARAM, DELETE_ATOM_PROP, SET_PIPELINE_EXEC_DETAIL, SET_REMOTE_TRIGGER_TOKEN, SET_GLOBAL_ENVS, TOGGLE_ATOM_SELECTOR_POPUP, UPDATE_ATOM_INPUT, UPDATE_WHOLE_ATOM_INPUT, UPDATE_ATOM_OUTPUT, UPDATE_ATOM_OUTPUT_NAMESPACE, FETCHING_ATOM_LIST, SET_STORE_DATA, SET_STORE_LOADING, SET_STORE_SEARCH, FETCHING_ATOM_VERSION, SET_ATOM_VERSION_LIST, SET_EXECUTE_STATUS, SET_SAVE_STATUS, SET_DEFAULT_STAGE_TAG, TOGGLE_REVIEW_DIALOG } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 
 function rootCommit (commit, ACTION_CONST, payload) {
@@ -42,11 +42,27 @@ function getMapByKey (list, key) {
 }
 
 export default {
+    triggerStage ({ commit }, { projectId, pipelineId, buildNo, stageId, cancel }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart?cancel=${cancel}`)
+    },
+    async fetchStageTagList ({ commit }) {
+        try {
+            const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/pipelines/stageTag`)
+            const defaultStageTag = res.data.filter(item => item.defaultFlag).map(item => item.id)
+            commit(SET_STAGE_TAG_LIST, res.data)
+            commit(SET_DEFAULT_STAGE_TAG, defaultStageTag)
+        } catch (error) {
+            console.log(error)
+        }
+    },
     setExecuteStatus ({ commit }, status) {
         commit(SET_EXECUTE_STATUS, status)
     },
     setSaveStatus ({ commit }, status) {
         commit(SET_SAVE_STATUS, status)
+    },
+    toggleReviewDialog ({ commit }, { isShow, reviewInfo }) {
+        commit(TOGGLE_REVIEW_DIALOG, { isShow, reviewInfo })
     },
     addStoreAtom ({ commit, state }) {
         const store = state.storeAtomData || {}
@@ -240,8 +256,10 @@ export default {
         const newContainer = getters.getContainerModalByType(type)
         if (newContainer) {
             const { name, required, typeList, type, baseOS, defaultBuildType, defaultPublicBuildResource = '', ...restProps } = newContainer
+            const defaultType = (typeList || []).find(type => type.type === defaultBuildType) || {}
+            const defaultBuildResource = defaultType.defaultBuildResource || {}
             const baseOSObject = baseOS !== 'NONE' ? { baseOS } : {}
-            const isError = ['WINDOWS', 'LINUX'].includes(baseOS)
+            const isError = ['WINDOWS'].includes(baseOS)
             commit(ADD_CONTAINER, {
                 ...restPayload,
                 newContainer: {
@@ -251,7 +269,12 @@ export default {
                     ...baseOSObject,
                     dispatchType: {
                         buildType: defaultBuildType,
-                        value: defaultPublicBuildResource
+                        imageVersion: defaultBuildResource.version || '',
+                        value: defaultBuildResource.code || defaultPublicBuildResource || '',
+                        imageCode: defaultBuildResource.code || '',
+                        imageName: defaultBuildResource.name || '',
+                        recommendFlag: defaultBuildResource.recommendFlag,
+                        imageType: 'BKSTORE'
                     },
                     elements: [],
                     isError
@@ -265,6 +288,7 @@ export default {
         commit(SET_PIPELINE_EDITING, true)
     },
     updateContainer: PipelineEditActionCreator(UPDATE_CONTAINER),
+    updateStage: PipelineEditActionCreator(UPDATE_STAGE),
     addAtom: ({ commit }, { stageIndex, containerIndex, atomIndex, container }) => {
         const insertIndex = atomIndex + 1
         commit(INSERT_ATOM, {
@@ -345,8 +369,8 @@ export default {
     toggleAtomSelectorPopup: actionCreator(TOGGLE_ATOM_SELECTOR_POPUP),
 
     // 安装插件
-    installAtom ({ commit }, param) {
-        return request.post(`${STORE_API_URL_PREFIX}/user/market/atom/install`, param)
+    installAtom ({ dispatch }, param) {
+        return request.post(`${STORE_API_URL_PREFIX}/user/market/atom/install`, param).then(() => dispatch('fetchAtoms', { projectCode: param.projectCode[0] }))
     },
 
     // 获取项目下已安装的插件列表

@@ -25,7 +25,7 @@
                                 <bk-radio v-for="(item, index) in certTypeList" :key="index" :value="item.value" :disabled="isEdit"> -->
                             <bk-radio-group class="cert-type-group" v-model="certType" @change="changeType">
                                 <bk-radio class="cert-type-group-item" v-for="(item, index) in certTypeList" :key="index" :value="item.value" :disabled="isEdit">
-                                    <i class="bk-icon" :class="item.icon"></i>
+                                    <i class="devops-icon" :class="item.icon"></i>
                                     {{ item.label }}
                                 </bk-radio>
                             </bk-radio-group>

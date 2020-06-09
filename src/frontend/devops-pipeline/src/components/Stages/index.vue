@@ -4,6 +4,7 @@
             :key="`${stage.id}-${index}`"
             class="list-item"
             :editable="editable"
+            :stage="stage"
             :is-preview="isPreview"
             :can-skip-element="canSkipElement"
             :stage-index="index"
@@ -44,11 +45,20 @@
                     return this.stages
                 },
                 set (stages) {
-                    const data = []
-                    stages.forEach((stage, index) => {
-                        const containers = stage.containers || [stage]
+                    const data = stages.map((stage, index) => {
                         const id = `stage-${index + 1}`
-                        if (containers.length) data.push({ containers, id })
+                        if (!stage.containers) { // container
+                            return {
+                                id,
+                                name: id,
+                                containers: [stage]
+                            }
+                        }
+
+                        return {
+                            id,
+                            ...stage
+                        }
                     })
                     this.setPipelineStage(data)
                     this.setPipelineEditing(true)
@@ -69,7 +79,6 @@
         },
         methods: {
             ...mapActions('atom', ['setPipelineStage', 'setPipelineEditing']),
-
             checkMove (event) {
                 const dragContext = event.draggedContext || {}
                 const element = dragContext.element || {}

@@ -34,8 +34,7 @@
                 },
                 sideMenuNav: {
                     icon: 'artifactory',
-                    title: '制品库',
-                    url: `${DOCS_URL_PREFIX}`
+                    title: '制品库'
                 },
                 baseObj: {
                     icon: 'icon-folder',

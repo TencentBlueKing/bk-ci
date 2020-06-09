@@ -57,6 +57,7 @@ class DispatchTypeBizPlugin : ContainerBizPlugin<VMBuildContainer> {
             throw ErrorCodeException(defaultMessage = "Job需要至少有一个任务插件", errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_NEED_TASK)
         }
         val dispatchType = container.dispatchType
+        dispatchType?.cleanDataBeforeSave()
         if (dispatchType is StoreDispatchType) {
             if (dispatchType.imageType == ImageType.BKSTORE) {
                 // BKSTORE的镜像确保code与version不为空

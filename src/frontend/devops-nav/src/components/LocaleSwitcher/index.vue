@@ -12,7 +12,7 @@
                 size="20"
             />
             <span>{{ localeLabel }}</span>
-            <!-- <i class="bk-icon icon-down-shape" /> -->
+            <!-- <i class="devops-icon icon-down-shape" /> -->
         </div>
 
         <!-- <ul

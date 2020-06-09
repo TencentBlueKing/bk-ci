@@ -4,7 +4,7 @@
             v-bk-tooltips="{ content: atomOsPrompt, delay: 300 }">
             <div class="atom-logo">
                 <img v-if="atom.logoUrl" :src="atom.logoUrl" />
-                <logo v-else class="bk-icon" :name="getIconByCode(atom.atomCode)" size="50" />
+                <logo v-else class="devops-icon" :name="getIconByCode(atom.atomCode)" size="50" />
             </div>
             <div class="atom-info-content">
                 <p class="atom-name">
@@ -13,12 +13,12 @@
                         <template v-if="atom.os && atom.os.length > 0">
                             <template v-for="os in atom.os">
                                 <bk-popover :content="`${jobConst[os]}${$t('editPage.hasEnv')}`" :key="os">
-                                    <i :class="`os-tag bk-icon icon-${os.toLowerCase()}`"></i>
+                                    <i :class="`os-tag devops-icon icon-${os.toLowerCase()}`"></i>
                                 </bk-popover>
                             </template>
                         </template>
                         <bk-popover v-else :content="`${$t('editPage.noEnv')}`">
-                            <i :class="`os-tag bk-icon icon-none`"></i>
+                            <i :class="`os-tag devops-icon icon-none`"></i>
                         </bk-popover>
                     </span>
                 </p>

@@ -48,6 +48,7 @@ import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.worker.common.JAVA_PATH_ENV
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
@@ -222,8 +223,9 @@ open class MarketAtomTask : ITask() {
 
             checkSha1(atomExecuteFile, atomData.shaContent!!)
             val buildHostType = if (BuildEnv.isThirdParty()) BuildHostTypeEnum.THIRD else BuildHostTypeEnum.PUBLIC
+            val atomLanguage = atomData.language!!
             val atomDevLanguageEnvVarsResult = atomApi.getAtomDevLanguageEnvVars(
-                atomData.language!!, buildHostType.name, AgentEnv.getOS().name)
+                atomLanguage, buildHostType.name, AgentEnv.getOS().name)
             logger.info("atomCode is:$atomCode ,atomDevLanguageEnvVarsResult is:$atomDevLanguageEnvVarsResult")
             val atomDevLanguageEnvVars = atomDevLanguageEnvVarsResult.data
             val systemEnvVariables = mutableMapOf(
@@ -242,7 +244,15 @@ open class MarketAtomTask : ITask() {
                     preCmds.add(atomData.preCmd!!)
                 }
             }
-
+            val atomTargetHandleService = AtomTargetFactory.createAtomTargetHandleService(atomLanguage)
+            val buildEnvs = buildVariables.buildEnvs
+            val atomTarget = atomTargetHandleService.handleAtomTarget(
+                target = atomData.target,
+                osType = AgentEnv.getOS(),
+                buildHostType = buildHostType,
+                systemEnvVariables = systemEnvVariables,
+                buildEnvs = buildEnvs
+            )
             when {
                 AgentEnv.getOS() == OSType.WINDOWS -> {
                     if (preCmds.isNotEmpty()) {
@@ -250,7 +260,7 @@ open class MarketAtomTask : ITask() {
                             command.append("\r\n$cmd\r\n")
                         }
                     }
-                    command.append("\r\n${atomData.target.replace("\$bk_java_path", "%bk_java_path%")}\r\n")
+                    command.append("\r\n$atomTarget\r\n")
                     BatScriptUtil.execute(
                         buildId = buildVariables.buildId,
                         script = command.toString(),
@@ -265,12 +275,12 @@ open class MarketAtomTask : ITask() {
                             command.append("\n$cmd\n")
                         }
                     }
-                    command.append("\n${atomData.target}\n")
+                    command.append("\n$atomTarget\n")
                     ShellUtil.execute(
                         buildId = buildVariables.buildId,
                         script = command.toString(),
                         dir = atomTmpSpace,
-                        buildEnvs = buildVariables.buildEnvs,
+                        buildEnvs = buildEnvs,
                         runtimeVariables = environment,
                         systemEnvVariables = systemEnvVariables
                     )
@@ -636,7 +646,6 @@ open class MarketAtomTask : ITask() {
         private const val DIR_ENV = "bk_data_dir"
         private const val INPUT_ENV = "bk_data_input"
         private const val OUTPUT_ENV = "bk_data_output"
-        private const val JAVA_PATH_ENV = "bk_java_path"
         private val logger = LoggerFactory.getLogger(MarketAtomTask::class.java)
     }
 }

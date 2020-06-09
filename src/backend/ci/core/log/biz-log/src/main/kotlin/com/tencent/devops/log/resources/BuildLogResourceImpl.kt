@@ -66,12 +66,12 @@ class BuildLogResourceImpl @Autowired constructor(
             throw ParamBlankException("无效的构建ID")
         }
         LogUtils.updateLogStatus(
-                rabbitTemplate = rabbitTemplate,
-                buildId = buildId,
-                finished = false,
-                tag = tag ?: "",
-                jobId = jobId ?: "",
-                executeCount = executeCount
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            finished = false,
+            tag = tag ?: "",
+            jobId = jobId ?: "",
+            executeCount = executeCount
         )
         return Result(true)
     }
@@ -81,12 +81,12 @@ class BuildLogResourceImpl @Autowired constructor(
             throw ParamBlankException("无效的构建ID")
         }
         LogUtils.updateLogStatus(
-                rabbitTemplate = rabbitTemplate,
-                buildId = buildId,
-                finished = finished,
-                tag = tag ?: "",
-                jobId = jobId ?: "",
-                executeCount = executeCount
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            finished = finished,
+            tag = tag ?: "",
+            jobId = jobId ?: "",
+            executeCount = executeCount
         )
         return Result(true)
     }

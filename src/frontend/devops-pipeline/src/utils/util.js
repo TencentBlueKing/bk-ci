@@ -304,7 +304,7 @@ function convertToEn (time) {
     const sec = time / 1000
     let res = ''
     if (sec <= 60) {
-        res = 'less than one minute'
+        res = 'less than 1 minute'
     } else if (sec <= 60 * 60) {
         res = `${Math.floor(sec / 60)}m and ${(Math.floor(sec % 60))}s`
     } else if (time <= 60 * 60 * 24) {
@@ -579,12 +579,12 @@ export function getQueryParamList (arr = [], key) {
     if (Array.isArray(arr) && arr.length > 0) {
         const arrLen = arr.length
         return arr.reduce((result, item, index) => {
-            result += `${key}=${item}`
+            result += `${key}=${encodeURIComponent(item)}`
             if (index < arrLen - 1) result += '&'
             return result
         }, '')
     } else if (arr && typeof arr === 'string') {
-        return `${key}=${arr}`
+        return `${key}=${encodeURIComponent(arr)}`
     }
 }
 
@@ -596,4 +596,17 @@ export function getParamsValuesMap (params = []) {
         }
         return values
     }, {})
+}
+
+/**
+ * 判断两个数组是否有交集
+ * @param {Array} arr1
+ * @param {Array} arr2
+ */
+export function hasIntersection (arr1, arr2) {
+    try {
+        return arr2.some(item => arr1.includes(item))
+    } catch (e) {
+        return false
+    }
 }

@@ -43,7 +43,7 @@ module.exports = (env, argv) => {
     config.plugins = [
         ...config.plugins,
         // brace 优化，只提取需要的语法
-        new webpack.ContextReplacementPlugin(/brace\/mode$/, /^\.\/(json|python|sh|text|powershell|batchfile)$/),
+        new webpack.ContextReplacementPlugin(/brace\/mode$/, /^\.\/(javascript|yaml|json|python|sh|text|powershell|batchfile)$/),
         // brace 优化，只提取需要的 theme
         new webpack.ContextReplacementPlugin(/brace\/theme$/, /^\.\/(monokai)$/),
         new HtmlWebpackPlugin({

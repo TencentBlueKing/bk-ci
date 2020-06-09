@@ -6,7 +6,7 @@
             <icon name="linux" size="180" style="fill:#3b3b3b" class="option-logo" />
             <div class="node-details">
                 <div class="count-select-row">
-                    <i class="bk-icon icon-minus" @click="handleCount('remove')"></i>
+                    <i class="devops-icon icon-minus" @click="handleCount('remove')"></i>
                     <input type="number" class="bk-form-input node-count-input"
                         name="nodeCount"
                         v-model="count"
@@ -14,7 +14,7 @@
                         :disabled="!availablcount"
                         @keyup="input($event)"
                     />
-                    <i class="bk-icon icon-plus" @click="handleCount('add')"></i>
+                    <i class="devops-icon icon-plus" @click="handleCount('add')"></i>
                     <p class="count-tips">{{ `${$t('environment.nodeInfo.alreadyApplied')}${devCloudVmQuta.devCloudVmUsedCount}${$t('environment.nodeInfo.set')}，${$t('environment.nodeInfo.remaining')}${availablcount}${$t('environment.nodeInfo.canApplyCount')}` }}</p>
                 </div>
                 <h3>{{ currentSelectedModel.moduleName }}</h3>
@@ -212,7 +212,7 @@
                     width: 50px;
                     text-align: center;
                 }
-                .bk-icon {
+                .devops-icon {
                     font-size: 12px;
                     cursor: pointer;
                 }

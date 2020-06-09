@@ -21,7 +21,7 @@
         <template v-if="mergedOptionsConf.hasAddItem">
             <div slot="extension" class="bk-selector-create-item">
                 <a :href="addItemUrl" target="_blank">
-                    <i class="bk-icon icon-plus-circle" />
+                    <i class="devops-icon icon-plus-circle" />
                     {{ mergedOptionsConf.itemText }}
                 </a>
             </div>
@@ -91,17 +91,17 @@
                 }
                 return []
             },
-            isLackParam () {
-                return this.urlParamKeys.some(key => {
-                    return this.queryParams.hasOwnProperty(key) && (typeof this.queryParams[key] === 'undefined' || this.queryParams[key] === null || this.queryParams[key] === '')
-                })
-            },
             queryParams () {
                 const { atomValue = {}, $route: { params = {} } } = this
                 return {
                     ...params,
                     ...atomValue
                 }
+            },
+            isLackParam () {
+                return this.urlParamKeys.some(key => {
+                    return this.queryParams.hasOwnProperty(key) && (typeof this.queryParams[key] === 'undefined' || this.queryParams[key] === null || this.queryParams[key] === '')
+                })
             },
             dropdownConf () {
                 const { searchable, tools, multiple, clearable } = this.mergedOptionsConf
@@ -120,14 +120,13 @@
             }
         },
         watch: {
-            atomValue: {
-                deep: true,
-                handler: function (params) {
-                    // this.freshList()
-                }
-            },
             options (newOptions) {
                 this.list = newOptions
+            },
+            queryParams (newQueryParams, oldQueryParams) {
+                if (this.urlParamKeys.some(key => newQueryParams[key] !== oldQueryParams[key])) {
+                    this.handleClear()
+                }
             }
         },
         created () {
