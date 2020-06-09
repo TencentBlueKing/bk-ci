@@ -24,33 +24,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.thirdPartyAgent
+package com.tencent.devops.process.engine.dao
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import org.jooq.DSLContext
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.junit4.SpringRunner
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
-@ApiModel("第三方接入机-信息")
-data class ThirdPartyAgentStaticInfo(
-    @ApiModelProperty("Agent Hash ID", required = true)
-    val agentId: String,
-    @ApiModelProperty("项目ID", required = true)
-    val projectId: String,
-    @ApiModelProperty("操作系统", required = true)
-    val os: String,
-    @ApiModelProperty("密钥", required = true)
-    val secretKey: String,
-    @ApiModelProperty("创建人", required = true)
-    val createdUser: String,
-    @ApiModelProperty("gateway", required = false)
-    val gateway: String?,
-    @ApiModelProperty("link", required = true)
-    val link: String,
-    @ApiModelProperty("script", required = true)
-    val script: String,
-    @ApiModelProperty("ip", required = true)
-    val ip: String,
-    @ApiModelProperty("hostName", required = false)
-    val hostName: String?,
-    @ApiModelProperty("状态")
-    val status: Int?
-)
+@RunWith(SpringRunner::class)
+@SpringBootTest(properties = ["spring.jmx.enabled=true"])
+class PipelineBuildContainerDaoTest {
+
+    @Autowired
+    private lateinit var dslContext: DSLContext
+    @Autowired
+    private lateinit var pipelineBuildContainerDao: PipelineBuildContainerDao
+
+    @Test
+    fun updateStatus() {
+        val buildId = "b-0603933b2b70418b9bf56d040be4b650"
+        val stageId = "stage-2"
+        val containerId = "1"
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        pipelineBuildContainerDao.updateStatus(
+            dslContext,
+            buildId,
+            stageId,
+            containerId,
+            LocalDateTime.parse("2020-06-08 19:47:00", formatter),
+            LocalDateTime.parse("2020-06-09 19:47:00", formatter),
+            BuildStatus.SUCCEED
+        )
+    }
+}
