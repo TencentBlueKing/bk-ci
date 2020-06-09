@@ -62,12 +62,13 @@ class CodeService @Autowired constructor(
             repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
             repositoryType = repositoryConfig.repositoryType
         ).data
-            ?: throw NotFoundException("代码库($repoHashId)不存在")) as? CodeSvnRepository ?: throw RuntimeException("代码库($repoHashId)不是svn代码库")
+            ?: throw NotFoundException("代码库($repoHashId)不存在")) as? CodeSvnRepository
+            ?: throw RuntimeException("代码库($repoHashId)不是svn代码库")
 
         try {
             val credential = getSvnCredential(projectId, repository)
             val username = repository.userName
-            val svnType = if(repository.svnType.isNullOrEmpty()) {
+            val svnType = if (repository.svnType.isNullOrEmpty()) {
                 "SSH"
             } else {
                 repository.svnType!!
@@ -122,7 +123,10 @@ class CodeService @Autowired constructor(
         }
     }
 
-    private fun getSvnCredential(projectId: String, repository: CodeSvnRepository): Triple<String /*username*/, String /*password*/, String? /*passPhrase*/> {
+    private fun getSvnCredential(
+        projectId: String,
+        repository: CodeSvnRepository
+    ): Triple<String /*username*/, String /*password*/, String? /*passPhrase*/> {
         val pair = getCredential(projectId, repository.credentialId)
         val credentials = pair.first
         val credentialType = pair.second
@@ -157,7 +161,8 @@ class CodeService @Autowired constructor(
         try {
             val pair = DHUtil.initKey()
             val encoder = Base64.getEncoder()
-            val result = client.get(ServiceCredentialResource::class).get(projectId, credentialId, encoder.encodeToString(pair.publicKey))
+            val result = client.get(ServiceCredentialResource::class)
+                .get(projectId, credentialId, encoder.encodeToString(pair.publicKey))
 
             if (result.isNotOk() || result.data == null) {
                 logger.error("Fail to get the credential($credentialId) because of ${result.message}")
@@ -168,9 +173,27 @@ class CodeService @Autowired constructor(
 
             val credentialList = mutableListOf<String>()
             credentialList.add(decode(credential.v1, credential.publicKey, pair.privateKey))
-            if (!credential.v2.isNullOrEmpty()) credentialList.add(decode(credential.v2!!, credential.publicKey, pair.privateKey))
-            if (!credential.v3.isNullOrEmpty()) credentialList.add(decode(credential.v3!!, credential.publicKey, pair.privateKey))
-            if (!credential.v4.isNullOrEmpty()) credentialList.add(decode(credential.v4!!, credential.publicKey, pair.privateKey))
+            if (!credential.v2.isNullOrEmpty()) credentialList.add(
+                decode(
+                    credential.v2!!,
+                    credential.publicKey,
+                    pair.privateKey
+                )
+            )
+            if (!credential.v3.isNullOrEmpty()) credentialList.add(
+                decode(
+                    credential.v3!!,
+                    credential.publicKey,
+                    pair.privateKey
+                )
+            )
+            if (!credential.v4.isNullOrEmpty()) credentialList.add(
+                decode(
+                    credential.v4!!,
+                    credential.publicKey,
+                    pair.privateKey
+                )
+            )
 
             return Pair(credentialList, credential.credentialType)
         } catch (e: Exception) {
