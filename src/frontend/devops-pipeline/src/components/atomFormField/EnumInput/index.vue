@@ -1,7 +1,6 @@
 <template>
     <form>
         <bk-radio-group @change="handleSelect" :value="value" :name="name">
-            {{lineNumber}}
             <template v-for="(item) in list">
                 <bk-popover v-if="item.tips" :key="item.id">
                     <bk-radio class="bkdevops-radio" :style="`width: calc(${100 / lineNumber}% - 10px)`" :value="item.value" v-bk-tooltips="{ content: item.tips }" :disabled="disabled || item.disabled">
