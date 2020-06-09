@@ -197,7 +197,7 @@ class DockerHostDebugService(
                 binds.add(Bind(getProjectShareDir(containerInfo.projectId), volumeProjectShare))
             }
 
-            val containerName = "debug-${UUIDUtil.generate()}"
+            val containerName = "debug-${containerInfo.pipelineId}-${containerInfo.vmSeqId}-"
             val container = dockerCli.createContainerCmd(imageName)
                 .withName(containerName)
                 .withCmd("/bin/sh", entryPointCmd)
