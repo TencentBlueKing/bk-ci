@@ -465,9 +465,9 @@ class MarketImageDao @Autowired constructor(
                 .set(IMAGE_STATUS, ImageStatusEnum.COMMITTING.status.toByte())
                 .set(IMAGE_SIZE, imageSize)
                 .set(IMAGE_SOURCE_TYPE, marketImageUpdateRequest.imageSourceType.type)
-                .set(IMAGE_REPO_URL, marketImageUpdateRequest.imageRepoUrl)
-                .set(IMAGE_REPO_NAME, marketImageUpdateRequest.imageRepoName)
-                .set(IMAGE_TAG, marketImageUpdateRequest.imageTag)
+                .set(IMAGE_REPO_URL, marketImageUpdateRequest.imageRepoUrl?.trim())
+                .set(IMAGE_REPO_NAME, marketImageUpdateRequest.imageRepoName.trim())
+                .set(IMAGE_TAG, marketImageUpdateRequest.imageTag.trim())
             if (!marketImageUpdateRequest.dockerFileType.isNullOrBlank()) {
                 steps.set(DOCKER_FILE_TYPE, marketImageUpdateRequest.dockerFileType)
             }
@@ -537,9 +537,9 @@ class MarketImageDao @Autowired constructor(
                     ImageStatusEnum.COMMITTING.status.toByte(),
                     imageSize,
                     marketImageUpdateRequest.imageSourceType.type,
-                    marketImageUpdateRequest.imageRepoUrl,
-                    marketImageUpdateRequest.imageRepoName,
-                    marketImageUpdateRequest.imageTag,
+                    marketImageUpdateRequest.imageRepoUrl?.trim(),
+                    marketImageUpdateRequest.imageRepoName.trim(),
+                    marketImageUpdateRequest.imageTag.trim(),
                     marketImageUpdateRequest.dockerFileType ?: "INPUT",
                     marketImageUpdateRequest.dockerFileContent ?: "",
                     marketImageUpdateRequest.ticketId,

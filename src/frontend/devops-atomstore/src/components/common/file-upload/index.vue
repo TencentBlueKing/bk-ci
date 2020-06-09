@@ -17,7 +17,7 @@
                             <div :class="['file-progress-bar']" :style="`width: ${progress}%`"></div>
                         </div>
                     </div>
-                    <i class="bk-icon icon-close" @click="removeFile(index)" v-if="file.status !== 'success'"></i>
+                    <i class="devops-icon icon-close" @click="removeFile(index)" v-if="file.status !== 'success'"></i>
                 </div>
                 <p class="tip" v-if="file.statusText && file.status === 'error'">{{file.statusText}}</p>
             </div>
@@ -34,9 +34,9 @@
     </div>
 </template>
 <script>
-    import cookie from 'cookie'
+    import * as cookie from 'js-cookie'
 
-    const CSRFToken = cookie.parse(document.cookie).backend_csrftoken
+    const CSRFToken = cookie.get('backend_csrftoken')
     export default {
         props: {
             // 必选参数，上传的地址

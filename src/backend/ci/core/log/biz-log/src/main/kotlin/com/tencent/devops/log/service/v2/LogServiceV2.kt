@@ -171,7 +171,6 @@ class LogServiceV2 @Autowired constructor(
                         buildId = buildId,
                         index = index,
                         type = type,
-                        keywords = defaultKeywords,
                         tag = tag,
                         jobId = jobId,
                         executeCount = executeCount
@@ -386,7 +385,7 @@ class LogServiceV2 @Autowired constructor(
             val indexAndType = indexServiceV2.getIndexAndType(buildId)
             val index = indexAndType.index
             val type = indexAndType.type
-            val result = doQueryMoreOriginLogsAfterLine(
+            val result = doQueryLargeLogsAfterLine(
                 buildId = buildId,
                 index = index,
                 type = type,
@@ -402,7 +401,14 @@ class LogServiceV2 @Autowired constructor(
         }
     }
 
-    fun downloadLogs(pipelineId: String, buildId: String, tag: String?, jobId: String?, executeCount: Int?): Response {
+    fun downloadLogs(
+        pipelineId: String,
+        buildId: String,
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        fileName: String?
+    ): Response {
         val indexAndType = indexServiceV2.getIndexAndType(buildId)
 
         val query = getQuery(buildId, tag, jobId, executeCount)
@@ -446,9 +452,10 @@ class LogServiceV2 @Autowired constructor(
             } while (scrollResp.hits.hits.isNotEmpty())
         }
 
+        val resultName = fileName ?: "$pipelineId-$buildId-log"
         return Response
             .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-            .header("content-disposition", "attachment; filename = $pipelineId-$buildId-log.txt")
+            .header("content-disposition", "attachment; filename = $resultName.log")
             .header("Cache-Control", "no-cache")
             .build()
     }
@@ -849,7 +856,6 @@ class LogServiceV2 @Autowired constructor(
                 .setSize(querySize)
                 .addDocValueField("lineNo")
                 .addDocValueField("timestamp")
-//                .addDocValueField("message")
                 .addSort("lineNo", SortOrder.ASC)
                 .get(TimeValue.timeValueSeconds(60))
             var lastLineNo = -1L
@@ -1021,7 +1027,6 @@ class LogServiceV2 @Autowired constructor(
         buildId: String,
         index: String,
         type: String,
-        keywords: List<String>,
         tag: String? = null,
         jobId: String? = null,
         executeCount: Int?
@@ -1101,6 +1106,82 @@ class LogServiceV2 @Autowired constructor(
             queryLogs.hasMore = false
         }
         return queryLogs
+    }
+
+    private fun doQueryLargeLogsAfterLine(
+        buildId: String,
+        index: String,
+        type: String,
+        start: Long,
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): QueryLogs {
+        logger.info("[$index|$type|$buildId|$tag|$jobId|$executeCount] doQueryLargeInitLogs")
+        val logStatus = if (tag == null && jobId != null) {
+            getLogStatus(buildId, jobId, null, executeCount)
+        } else {
+            getLogStatus(buildId, tag, jobId, executeCount)
+        }
+        val moreLogs = QueryLogs(buildId, logStatus)
+
+        try {
+            val startTime = System.currentTimeMillis()
+            val logs = mutableListOf<LogLine>()
+            val boolQueryBuilder = getQuery(buildId, tag, jobId, executeCount)
+                .must(QueryBuilders.rangeQuery("lineNo").gte(start))
+
+            var scrollResp = client.prepareSearch(buildId, index)
+                .setTypes(type)
+                .setQuery(boolQueryBuilder)
+                .addDocValueField("lineNo")
+                .addDocValueField("timestamp")
+                .addSort("lineNo", SortOrder.ASC)
+                .setScroll(TimeValue(1000 * 64))
+                .setSize(Constants.MAX_LINES)
+                .get()
+            var times = 0
+            do {
+                scrollResp.hits.forEach { searchHitFields ->
+                    val sourceMap = searchHitFields.source
+                    val ln = sourceMap["lineNo"].toString().toLong()
+                    val t = sourceMap["tag"]?.toString() ?: ""
+                    val logLine = LogLine(
+                        lineNo = ln,
+                        timestamp = sourceMap["timestamp"].toString().toLong(),
+                        message = sourceMap["message"].toString(),
+                        priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
+                        tag = t,
+                        jobId = sourceMap["jobId"]?.toString() ?: "",
+                        executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
+                    )
+                    logs.add(logLine)
+                }
+                times++
+                scrollResp = client.prepareSearchScroll(buildId, scrollResp.scrollId)
+                    .setScroll(TimeValue(1000 * 64)).execute().actionGet()
+            } while (scrollResp.hits.hits.isNotEmpty() && times < Constants.SCROLL_MAX_TIMES)
+
+            logger.info("logs query time cost($type): ${System.currentTimeMillis() - startTime}")
+            moreLogs.logs.addAll(logs)
+            moreLogs.hasMore = moreLogs.logs.size >= Constants.MAX_LINES * Constants.SCROLL_MAX_TIMES
+        } catch (ex: IndexNotFoundException) {
+            logger.error("Query after logs failed because of IndexNotFoundException. buildId: $buildId", ex)
+            moreLogs.status = LogStatus.CLEAN
+            moreLogs.finished = true
+            moreLogs.hasMore = false
+        } catch (e: IndexClosedException) {
+            logger.error("Query after logs failed because of IndexClosedException. buildId: $buildId", e)
+            moreLogs.status = LogStatus.CLOSED
+            moreLogs.finished = true
+            moreLogs.hasMore = false
+        } catch (e: Exception) {
+            logger.error("Query after logs failed because of ${e.javaClass}. buildId: $buildId", e)
+            moreLogs.status = LogStatus.FAIL
+            moreLogs.finished = true
+            moreLogs.hasMore = false
+        }
+        return moreLogs
     }
 
     private fun getLogStatus(buildId: String, tag: String?, jobId: String?, executeCount: Int?): Boolean {

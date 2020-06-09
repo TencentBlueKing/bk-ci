@@ -1,5 +1,5 @@
 <template>
-    <div ref='container' class="devops-container">
+    <div ref="container" class="devops-container">
         <router-view></router-view>
     </div>
 </template>
@@ -13,10 +13,9 @@
             None
         }
     })
-    export default DevopsContainer extend Vue {   
+    export default class DevopsContainer extends Vue {
     }
 </script>
-
 
 <style lang="scss">
     .devops-container {

@@ -135,14 +135,41 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
             throw ParamBlankException("Invalid buildId")
         }
         buildService.buildManualReview(
-            userId,
-            projectId,
-            pipelineId,
-            buildId,
-            elementId,
-            params,
-            ChannelCode.BS,
-            ChannelCode.isNeedAuth(ChannelCode.BS)
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            elementId = elementId,
+            params = params,
+            channelCode = ChannelCode.BS,
+            checkPermission = ChannelCode.isNeedAuth(ChannelCode.BS)
+        )
+        return Result(true)
+    }
+
+    override fun manualStartStage(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        cancel: Boolean?
+    ): Result<Boolean> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (stageId.isBlank()) {
+            throw ParamBlankException("Invalid stageId")
+        }
+
+        buildService.buildManualStartStage(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            isCancel = cancel ?: false
         )
         return Result(true)
     }
@@ -215,8 +242,13 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         checkParam(userId, projectId, pipelineId)
         val check = checkPermission ?: true
         val result = buildService.getHistoryBuild(
-            userId, projectId, pipelineId,
-            page, pageSize, ChannelCode.BS, check
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize,
+            channelCode = ChannelCode.BS,
+            checkPermission = check
         )
         return Result(result)
     }
@@ -248,29 +280,29 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
         val result = buildService.getHistoryBuild(
-            userId,
-            projectId,
-            pipelineId,
-            page,
-            pageSize,
-            materialAlias,
-            materialUrl,
-            materialBranch,
-            materialCommitId,
-            materialCommitMessage,
-            status,
-            trigger,
-            queueTimeStartTime,
-            queueTimeEndTime,
-            startTimeStartTime,
-            startTimeEndTime,
-            endTimeStartTime,
-            endTimeEndTime,
-            totalTimeMin,
-            totalTimeMax,
-            remark,
-            buildNoStart,
-            buildNoEnd
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize,
+            materialAlias = materialAlias,
+            materialUrl = materialUrl,
+            materialBranch = materialBranch,
+            materialCommitId = materialCommitId,
+            materialCommitMessage = materialCommitMessage,
+            status = status,
+            trigger = trigger,
+            queueTimeStartTime = queueTimeStartTime,
+            queueTimeEndTime = queueTimeEndTime,
+            startTimeStartTime = startTimeStartTime,
+            startTimeEndTime = startTimeEndTime,
+            endTimeStartTime = endTimeStartTime,
+            endTimeEndTime = endTimeEndTime,
+            totalTimeMin = totalTimeMin,
+            totalTimeMax = totalTimeMax,
+            remark = remark,
+            buildNoStart = buildNoStart,
+            buildNoEnd = buildNoEnd
         )
         return Result(result)
     }
@@ -283,7 +315,13 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         remark: BuildHistoryRemark?
     ): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)
-        buildService.updateRemark(userId, projectId, pipelineId, buildId, remark?.remark)
+        buildService.updateRemark(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            remark = remark?.remark
+        )
         return Result(true)
     }
 
@@ -317,7 +355,12 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         alias: List<String>?
     ): Result<List<String>> {
         checkParam(userId, projectId, pipelineId)
-        return Result(buildService.getHistoryConditionBranch(userId, projectId, pipelineId, alias))
+        return Result(buildService.getHistoryConditionBranch(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            alias = alias
+        ))
     }
 
     private fun checkParam(userId: String, projectId: String, pipelineId: String) {

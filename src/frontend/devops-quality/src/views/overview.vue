@@ -2,7 +2,7 @@
     <div class="quality-overview-wrapper">
         <div class="inner-header">
             <div class="title">总览</div>
-            <a class="job-guide" @click="linkToDocs">了解更多质量红线<i class="bk-icon icon-tiaozhuan"></i></a>
+            <a class="job-guide" @click="linkToDocs">了解更多质量红线<i class="devops-icon icon-tiaozhuan"></i></a>
         </div>
 
         <section
@@ -22,7 +22,7 @@
                         v-for="(entry, index) in indicatorList" :key="index"
                         @click="toLink(entry.label)">
                         <div class="card-info-title">
-                            <i :class="{ &quot;bk-icon&quot;: true, [`icon-${entry.icon}`]: true }"></i>
+                            <i :class="{ &quot;devops-icon&quot;: true, [`icon-${entry.icon}`]: true }"></i>
                             <span class="title">{{ entry.name }}</span>
                         </div>
                         <div class="card-info-stastics">
@@ -54,7 +54,7 @@
                         <p class="info-title">拦截历史</p>
                     </div>
                     <div class="intercept-tips" v-if="interceptRecordList.length">
-                        <i class="bk-icon icon-exclamation-circle"></i>
+                        <i class="devops-icon icon-exclamation-circle"></i>
                         <span class="intercept-count">仅展示最近10条。
                             <span class="more-history" v-if="interceptRecordList.length" @click="toRouteLink('interceptHistory')">查看更多</span>
                         </span>
@@ -487,7 +487,7 @@
                 cursor: pointer;
             }
             .card-info-title {
-                .bk-icon {
+                .devops-icon {
                     position: relative;
                     top: 4px;
                     margin-right: 4px;
@@ -553,7 +553,7 @@
                 line-height: 42px;
                 border: 1px solid #FFC947;
                 background-color: #FFF3DA;
-                .bk-icon {
+                .devops-icon {
                     position: relative;
                     top: 2px;
                     margin-right: 6px;

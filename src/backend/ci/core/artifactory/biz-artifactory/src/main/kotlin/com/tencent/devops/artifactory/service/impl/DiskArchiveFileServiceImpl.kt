@@ -52,7 +52,7 @@ import javax.ws.rs.core.Response
 @Service
 class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() {
 
-    @Value("\${artifactory.archiveLocalBasePath:#{null}}")
+    @Value("\${artifactory.archiveLocalBasePath:/data/bkee/public/ci/artifactory/}")
     private lateinit var archiveLocalBasePath: String
 
     override fun uploadFileToRepo(destPath: String, file: File) {
@@ -73,9 +73,9 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
         if (filePath.contains("..")) {
             // 非法路径则抛出错误提示
             val result = MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(filePath),
-                null
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(filePath),
+                data = null
             )
             response.writer.println(JsonUtil.toJson(result))
             return
@@ -104,7 +104,11 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
     }
 
     override fun getBasePath(): String {
-        return archiveLocalBasePath
+        return if (archiveLocalBasePath.endsWith("/")) {
+            archiveLocalBasePath
+        } else {
+            "$archiveLocalBasePath/"
+        }
     }
 
     override fun getFileDownloadUrls(
@@ -116,17 +120,26 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
         customFilePath: String?,
         fileChannelType: FileChannelTypeEnum
     ): Result<GetFileDownloadUrlsResponse?> {
-        logger.info("getFileDownloadUrls fileChannelType is:$fileChannelType")
-        logger.info("getFileDownloadUrls userId is:$userId,projectId is:$projectId,pipelineId is:$pipelineId")
-        logger.info("getFileDownloadUrls buildId is:$buildId,artifactoryType is:$artifactoryType,customFilePath is:$customFilePath")
+        logger.info("[$buildId]|getFileDownloadUrls|fileChannelType=$fileChannelType|userId=$userId|projectId=$projectId|pipelineId=$pipelineId" +
+        "|artifactoryType=$artifactoryType|customFilePath=$customFilePath")
         val fileType = if (artifactoryType == ArtifactoryType.PIPELINE) FileTypeEnum.BK_ARCHIVE else FileTypeEnum.BK_CUSTOM
-        val result = generateDestPath(fileType, projectId, customFilePath, pipelineId, buildId)
+        val result = generateDestPath(
+            fileType = fileType,
+            projectId = projectId,
+            customFilePath = customFilePath,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
         logger.info("generateDestPath result is:$result")
         if (result.isNotOk()) {
             return Result(result.status, result.message, null)
         }
         val filePath = result.data!!
-        return getFileDownloadUrls(filePath, artifactoryType, fileChannelType)
+        return getFileDownloadUrls(
+            filePath = filePath,
+            artifactoryType = artifactoryType,
+            fileChannelType = fileChannelType
+        )
     }
 
     override fun getFileDownloadUrls(
@@ -138,9 +151,9 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
         if (filePath.contains("..")) {
             // 非法路径则抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(filePath),
-                null
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(filePath),
+                data = null
             )
         }
 
@@ -156,13 +169,19 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
         if (!file.exists()) {
             // 目录或者文件不存在则抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(filePath),
-                null
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(filePath),
+                data = null
             )
         }
         val fileType = if (artifactoryType == ArtifactoryType.PIPELINE) FileTypeEnum.BK_ARCHIVE else FileTypeEnum.BK_CUSTOM
-        val fileUrlList = traverseFolder(file, fileType, pathPattern, true, fileChannelType)
+        val fileUrlList = traverseFolder(
+            file = file,
+            fileType = fileType,
+            pathPattern = pathPattern,
+            wildFlag = true,
+            fileChannelType = fileChannelType
+        )
         logger.info("getFileDownloadUrls fileUrlList is:$fileUrlList")
         return Result(fileUrlList)
     }
@@ -179,14 +198,26 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
             file.listFiles()?.forEach { subFile ->
                 // 考虑到文件夹下面层级太深的问题，只支持遍历当前文件夹下的文件
                 if (!subFile.isDirectory) {
-                    val url = transformFileUrl(fileType, wildFlag, pathPattern, fileChannelType, subFile.absolutePath)
+                    val url = transformFileUrl(
+                        fileType = fileType,
+                        wildFlag = wildFlag,
+                        pathPattern = pathPattern,
+                        fileChannelType = fileChannelType,
+                        filePath = subFile.absolutePath
+                    )
                     if (!url.isNullOrBlank()) {
                         fileUrlList.add(url!!)
                     }
                 }
             }
         } else {
-            val url = transformFileUrl(fileType, wildFlag, pathPattern, fileChannelType, file.absolutePath)
+            val url = transformFileUrl(
+                fileType = fileType,
+                wildFlag = wildFlag,
+                pathPattern = pathPattern,
+                fileChannelType = fileChannelType,
+                filePath = file.absolutePath
+            )
             if (!url.isNullOrBlank()) {
                 fileUrlList.add(url!!)
             }

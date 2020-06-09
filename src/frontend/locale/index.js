@@ -27,13 +27,12 @@ const BK_CI_DOMAIN = location.host
 
 function getLsLocale () {
     try {
-        const cookieLcale = cookies.get(LS_KEY) ||  DEFAULT_LOCALE
+        const cookieLcale = cookies.get(LS_KEY) || DEFAULT_LOCALE
         return localeAliasMap[cookieLcale.toLowerCase()] || DEFAULT_LOCALE
     } catch (error) {
         return DEFAULT_LOCALE
     }
 }
-
 
 function setLsLocale (locale) {
     if (typeof cookies.set === 'function') {
@@ -57,7 +56,6 @@ export default (r) => {
 
     locale.i18n((key, value) => i18n.t(key, value))
 
-
     function dynamicLoadModule (module, locale = DEFAULT_LOCALE) {
         const localeModuleId = getLocalModuleId(module, locale)
         if (loadedModule[localeModuleId]) {
@@ -78,7 +76,7 @@ export default (r) => {
 
     function setLocale (localeLang) {
         Object.keys(loadedModule).map(mod => {
-            const [ , module ] = mod.split('_')
+            const [, module] = mod.split('_')
             if (!loadedModule[getLocalModuleId(module, localeLang)]) {
                 dynamicLoadModule(module, localeLang)
             }
@@ -91,8 +89,7 @@ export default (r) => {
         
         return localeLang
     }
-    
- 
+     
     return {
         i18n,
         setLocale,
@@ -101,13 +98,12 @@ export default (r) => {
     }
 }
 
-
 function getLocalModuleId (module, locale) {
     return `${locale}_${module}`
 }
 
 function importAll (r) {
-    let localeList = []
+    const localeList = []
     const messages = r.keys().reduce((acc, key) => {
         const mod = r(key)
         
@@ -124,7 +120,7 @@ function importAll (r) {
             })
         }
         return acc
-    }, {});
+    }, {})
 
     return {
         localeList,

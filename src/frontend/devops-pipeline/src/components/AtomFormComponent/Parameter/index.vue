@@ -115,6 +115,9 @@
                     const defaultValue = defaultValues.find(x => x.key === key) || {}
                     param.value = value.value || defaultValue.value || param.value
                     param.key = value.key || defaultValue.key || param.key
+                    if (Array.isArray(param.value)) { // 去掉空字符串, 空字符串无意义
+                        param.value = param.value.filter(v => v !== '')
+                    }
                 })
                 this.updateParameters()
             },
@@ -152,7 +155,7 @@
             }
         }
     }
-    .bk-icon {
+    .devops-icon {
         margin-left: 5px;
         cursor: pointer;
     }

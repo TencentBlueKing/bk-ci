@@ -31,6 +31,10 @@
             title: {
                 type: String,
                 default: false
+            },
+            disabled: {
+                type: Boolean,
+                default: false
             }
         },
         methods: {

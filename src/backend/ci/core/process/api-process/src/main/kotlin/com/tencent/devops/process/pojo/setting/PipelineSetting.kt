@@ -40,5 +40,6 @@ data class PipelineSetting(
     val labels: List<String> = emptyList(),
     val waitQueueTimeMinute: Int = PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT,
     val maxQueueSize: Int = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
-    val hasPermission: Boolean? = null
+    val hasPermission: Boolean? = null,
+    val maxPipelineResNum: Int = 50 // 保存流水线编排的最大个数
 )

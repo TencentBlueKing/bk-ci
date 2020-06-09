@@ -9,7 +9,7 @@
                             <div style="cursor: pointer;" slot="dropdown-trigger">
                                 <span>{{cpuToggleRangeStr}}</span>
                                 <button class="dropdown-button">
-                                    <i class="bk-icon icon-angle-down"></i>
+                                    <i class="devops-icon icon-angle-down"></i>
                                 </button>
                             </div>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
@@ -39,7 +39,7 @@
                             <div style="cursor: pointer;" slot="dropdown-trigger">
                                 <span>{{memToggleRangeStr}}</span>
                                 <button class="dropdown-button">
-                                    <i class="bk-icon icon-angle-down"></i>
+                                    <i class="devops-icon icon-angle-down"></i>
                                 </button>
                             </div>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
@@ -71,7 +71,7 @@
                             <div style="cursor: pointer;" slot="dropdown-trigger">
                                 <span>{{networkToggleRangeStr}}</span>
                                 <button class="dropdown-button">
-                                    <i class="bk-icon icon-angle-down"></i>
+                                    <i class="devops-icon icon-angle-down"></i>
                                 </button>
                             </div>
                             <ul class="bk-dropdown-list" slot="dropdown-content">
@@ -101,7 +101,7 @@
                             <div style="cursor: pointer;" slot="dropdown-trigger">
                                 <span>{{storageToggleRangeStr}}</span>
                                 <button class="dropdown-button">
-                                    <i class="bk-icon icon-angle-down"></i>
+                                    <i class="devops-icon icon-angle-down"></i>
                                 </button>
                             </div>
                             <ul class="bk-dropdown-list" slot="dropdown-content">

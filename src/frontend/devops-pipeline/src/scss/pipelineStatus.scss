@@ -46,7 +46,8 @@
     color: $dangerColor;
 }
 .SUCCEED,
-.REVIEW_PROCESSED {
+.REVIEW_PROCESSED,
+.STAGE_SUCCESS {
     color: $successColor;
 }
 

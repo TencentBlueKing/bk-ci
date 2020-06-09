@@ -43,7 +43,7 @@ data class MarketAtomCreateRequest(
     @ApiModelProperty("认证方式", required = false)
     val authType: String? = null,
     @ApiModelProperty(value = "项目可视范围", required = false)
-    val visibilityLevel: VisibilityLevelEnum? = null,
+    val visibilityLevel: VisibilityLevelEnum? = VisibilityLevelEnum.LOGIN_PUBLIC,
     @ApiModelProperty(value = "插件代码库不开源原因", required = false)
     val privateReason: String? = null
 )

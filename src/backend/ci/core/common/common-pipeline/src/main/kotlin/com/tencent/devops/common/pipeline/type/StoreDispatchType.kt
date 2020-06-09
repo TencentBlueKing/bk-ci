@@ -48,7 +48,9 @@ abstract class StoreDispatchType(
     open var imageName: String? = "",
     // 商店镜像公共标识
     open var imagePublicFlag: Boolean? = false,
-    // 商店镜像研发来源
-    open var imageRDType: String? = ""
+    // 商店镜像研发来源c
+    open var imageRDType: String? = "",
+    // 商店镜像是否推荐
+    open var recommendFlag: Boolean? = true
 ) : DispatchType((if (dockerBuildVersion.isNullOrBlank()) imageCode else dockerBuildVersion)
     ?: "StoreDispatchType empty image", routeKeySuffix)

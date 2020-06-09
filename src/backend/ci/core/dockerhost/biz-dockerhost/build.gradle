@@ -42,5 +42,3 @@ dependencies {
     compile "com.squareup.okhttp3:okhttp"
     compile "org.fusesource:sigar"
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

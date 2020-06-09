@@ -4,10 +4,10 @@
         <div class="process-wrapper" v-if="processHead.list.length">
             <div v-for="(item, index) in processHead.list" :key="index"
                 :class="['process-section', { 'process-completed': index < processHead.current, 'process-current': index === processHead.current }]">
-                <i class="bk-icon icon-check-circle process-state-icon" v-if="index < processHead.current"></i>
+                <i class="devops-icon icon-check-circle process-state-icon" v-if="index < processHead.current"></i>
                 <span v-else class="process-icon">{{ index + 1 }}</span>
                 <span class="process-text">{{ item }}</span>
-                <i v-if="index < processHead.list.length - 1" class="bk-icon icon-ellipsis process-ellipsis"></i>
+                <i v-if="index < processHead.list.length - 1" class="devops-icon icon-ellipsis process-ellipsis"></i>
             </div>
         </div>
     </div>

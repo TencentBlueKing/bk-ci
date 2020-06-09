@@ -118,5 +118,5 @@ devops.master.restart.hour=0
 - devops.agent.id 是Agent的ID，用户下载安装时会自动替换
 - devops.agent.secret.key Agent的密钥，用户下载安装时会自动替换
 - devops.parallel.task.count 构建并发数量，默认4个构建并发
-- landun.gateway 蓝盾网关，用户下载安装时会自动替换
+- landun.gateway bkci网关，用户下载安装时会自动替换
 - landun.env 环境类型，用户下载安装时会自动替换

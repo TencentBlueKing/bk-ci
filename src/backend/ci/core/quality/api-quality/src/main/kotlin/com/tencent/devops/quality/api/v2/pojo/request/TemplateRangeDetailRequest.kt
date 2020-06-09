@@ -33,5 +33,6 @@ data class TemplateRangeDetailRequest(
     val projectId: String,
     val templateIds: Set<String>,
     val indicatorIds: Collection<String>,
-    val controlPointType: String?
+    val controlPointType: String?,
+    val gatewayId: String?
 )

@@ -26,6 +26,7 @@
 
 dependencies {
     compile project(":core:websocket:biz-websocket")
+    compile project(":core:websocket:biz-websocket-blueking")
 }
 
 

@@ -14,7 +14,7 @@
         </div>
         <div class="cron-build-time">
             <span>触发于</span>
-            <input :disabled="disabled" type="text" :value="normalTime" class="bk-form-input" @change="changeTimes" placeholder="多个触发时间可以用英文逗号分隔，比如09:00,15:30，为空的时候默认为00:00" />
+            <bk-input :disabled="disabled" :value="normalTime" @input="changeTimes" placeholder="多个触发时间可以用英文逗号分隔，比如09:00,15:30，为空的时候默认为00:00" />
             <div class="bk-form-help is-danger" v-if="error">触发时间格式有误，请用英文逗号分隔，如09:00,15:30</div>
         </div>
     </div>
@@ -117,8 +117,7 @@
                 this.normalTime = ''
                 this.getExp()
             },
-            changeTimes (e) {
-                const { value } = e.target
+            changeTimes (value) {
                 const trimVal = value.trim()
                 this.$emit('input', trimVal)
                 this.normalTime = trimVal

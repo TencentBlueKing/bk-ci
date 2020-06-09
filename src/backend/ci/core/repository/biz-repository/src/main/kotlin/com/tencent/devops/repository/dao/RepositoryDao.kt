@@ -287,4 +287,18 @@ class RepositoryDao {
                 .fetch()
         }
     }
+
+    fun getRepoByNames(
+        dslContext: DSLContext,
+        repositoryNames: List<String>,
+        checkDelete: Boolean = false
+    ): Result<TRepositoryRecord>? {
+        with(TRepository.T_REPOSITORY) {
+            val conditions = mutableListOf(ALIAS_NAME.`in`(repositoryNames))
+            if (checkDelete) conditions.add(IS_DELETED.eq(false))
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetch()
+        }
+    }
 }

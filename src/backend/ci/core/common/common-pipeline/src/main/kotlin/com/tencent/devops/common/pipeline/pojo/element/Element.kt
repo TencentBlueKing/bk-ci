@@ -39,6 +39,8 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElemen
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketCheckImageElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -66,7 +68,9 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
     JsonSubTypes.Type(value = SubPipelineCallElement::class, name = SubPipelineCallElement.classType),
     JsonSubTypes.Type(value = MarketBuildAtomElement::class, name = MarketBuildAtomElement.classType),
     JsonSubTypes.Type(value = MarketBuildLessAtomElement::class, name = MarketBuildLessAtomElement.classType),
-    JsonSubTypes.Type(value = MarketCheckImageElement::class, name = MarketCheckImageElement.classType)
+    JsonSubTypes.Type(value = MarketCheckImageElement::class, name = MarketCheckImageElement.classType),
+    JsonSubTypes.Type(value = QualityGateInElement::class, name = QualityGateInElement.classType),
+    JsonSubTypes.Type(value = QualityGateOutElement::class, name = QualityGateOutElement.classType)
 )
 abstract class Element(
     open val name: String,

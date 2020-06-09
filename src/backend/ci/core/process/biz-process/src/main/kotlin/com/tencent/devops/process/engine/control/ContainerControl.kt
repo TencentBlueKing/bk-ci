@@ -46,7 +46,11 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.container.MutexGroup
+import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineQuotaService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -64,6 +68,8 @@ class ContainerControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val buildVariableService: BuildVariableService,
+    private val pipelineQuotaService: PipelineQuotaService,
     private val mutexControl: MutexControl
 ) {
 
@@ -94,7 +100,7 @@ class ContainerControl @Autowired constructor(
 
         // Container互斥组的判断
         // 并初始化互斥组的值
-        val variables = pipelineRuntimeService.getAllVariable(buildId)
+        val variables = buildVariableService.getAllVariable(buildId)
         val mutexGroup = mutexControl.initMutexGroup(
             mutexGroup = container.controlOption?.mutexGroup,
             variables = variables
@@ -111,26 +117,50 @@ class ContainerControl @Autowired constructor(
                     variables = variables
                 )
             ) {
-                pipelineRuntimeService.updateContainerStatus(
-                    buildId = buildId,
-                    stageId = stageId,
-                    containerId = containerId,
-                    buildStatus = BuildStatus.SKIP,
-                    startTime = LocalDateTime.now(),
-                    endTime = LocalDateTime.now()
+                skipContainer(
+                    event = this,
+                    containerTaskList = containerTaskList,
+                    container = container,
+                    mutexGroup = mutexGroup,
+                    status = BuildStatus.SKIP
                 )
                 logger.info("[$buildId]|CONTAINER_SKIP|stage=$stageId|container=$containerId|action=$actionType")
-                pipelineBuildDetailService.normalContainerSkip(buildId, container.containerId)
-                // 返回stage的时候，需要解锁
-                mutexControl.releaseContainerMutex(
-                    projectId = projectId,
-                    buildId = buildId,
-                    stageId = stageId,
-                    containerId = containerId,
-                    mutexGroup = mutexGroup
-                )
                 return sendBackStage("container_skip")
             }
+
+            // 检查配额
+            // job配额为0
+            val quotaPair = pipelineQuotaService.getProjectRemainQuota(projectId)
+            val remainQuota = quotaPair.first
+            if (remainQuota <= 0) {
+                LogUtils.addRedLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "Project has no quota to run the job...(max quota: ${quotaPair.second})",
+                    tag = "",
+                    jobId = containerId,
+                    executeCount = 1
+                )
+                skipContainer(
+                    event = this,
+                    containerTaskList = containerTaskList,
+                    container = container,
+                    mutexGroup = mutexGroup,
+                    status = BuildStatus.QUOTA_FAILED
+                )
+                return sendBackStage("not enough quota to run...")
+            }
+
+            // 开始构建，构建次数+1
+            LogUtils.addLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId,
+                message = "Container control inc project used quota",
+                tag = "",
+                jobId = containerId,
+                executeCount = 1
+            )
+            pipelineQuotaService.incQuotaByProject(projectId, buildId, containerId)
         }
 
         // 终止或者结束事件，跳过是假货和不启动job配置，都不做互斥判断
@@ -210,7 +240,7 @@ class ContainerControl @Autowired constructor(
                     }
                 }
             }
-
+            pipelineBuildDetailService.updateStartVMStatus(buildId, containerId, containerFinalStatus)
             val finallyTasks = containerTaskList.filter { task ->
                 if (task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) || // end-xxx 结束拦截点
                     task.taskId == VMUtils.genStopVMTaskId(task.taskSeq) // 停止构建机
@@ -256,8 +286,12 @@ class ContainerControl @Autowired constructor(
             } else null
 
             pipelineRuntimeService.updateContainerStatus(
-                buildId = buildId, stageId = stageId, containerId = containerId,
-                startTime = startTime, endTime = endTime, buildStatus = containerFinalStatus
+                buildId = buildId,
+                stageId = stageId,
+                containerId = containerId,
+                startTime = startTime,
+                endTime = endTime,
+                buildStatus = containerFinalStatus
             )
         }
 
@@ -275,9 +309,53 @@ class ContainerControl @Autowired constructor(
                 containerId = containerId,
                 mutexGroup = mutexGroup
             )
-            sendBackStage("CONTAINER_END_$containerFinalStatus")
+
+            // 配额使用-1
+            LogUtils.addLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId,
+                message = "Container finish and dec the quota for project: $projectId",
+                tag = "",
+                jobId = containerId,
+                executeCount = 1
+            )
+            pipelineQuotaService.decQuotaByProject(projectId, buildId, containerId)
+
+            sendBackStage("$BS_CONTAINER_END_SOURCE_PREIX$containerFinalStatus")
         } else {
             sendTask(waitToDoTask, actionType)
+        }
+    }
+
+    private fun skipContainer(event: PipelineBuildContainerEvent, containerTaskList: List<PipelineBuildTask>, container: PipelineBuildContainer, mutexGroup: MutexGroup?, status: BuildStatus) {
+        with(event) {
+            pipelineRuntimeService.updateContainerStatus(
+                buildId = buildId,
+                stageId = stageId,
+                containerId = containerId,
+                buildStatus = status,
+                startTime = LocalDateTime.now(),
+                endTime = LocalDateTime.now()
+            )
+
+            containerTaskList.forEach {
+                pipelineRuntimeService.updateTaskStatus(
+                    buildId = buildId,
+                    taskId = it.taskId,
+                    userId = it.starter,
+                    buildStatus = status
+                )
+            }
+
+            pipelineBuildDetailService.normalContainerSkip(buildId, container.containerId)
+            // 返回stage的时候，需要解锁
+            mutexControl.releaseContainerMutex(
+                projectId = projectId,
+                buildId = buildId,
+                stageId = stageId,
+                containerId = containerId,
+                mutexGroup = mutexGroup
+            )
         }
     }
 
@@ -365,13 +443,6 @@ class ContainerControl @Autowired constructor(
         containerTaskList.forEach nextOne@{ task ->
             if (!ControlUtils.isEnable(task.additionalOptions)) {
                 logger.info("[$buildId]|container=$containerId|task(${task.taskSeq})=${task.taskId}|${task.taskName}|is not enable, will skip")
-                pipelineRuntimeService.updateTaskStatus(
-                    buildId = buildId, taskId = task.taskId, userId = task.starter, buildStatus = BuildStatus.SKIP
-                )
-                pipelineBuildDetailService.taskEnd(
-                    buildId = buildId, taskId = task.taskId, buildStatus = BuildStatus.SKIP
-                )
-//                containerFinalStatus = BuildStatus.SKIP
 
                 LogUtils.addYellowLine(
                     rabbitTemplate = rabbitTemplate,
@@ -397,7 +468,7 @@ class ContainerControl @Autowired constructor(
             } else if (waitToDoTask == null && BuildStatus.isReadyToRun(task.status)) {
                 // 拿到按序号排列的第一个待执行的插件
                 waitToDoTask = task
-                val variables = pipelineRuntimeService.getAllVariable(buildId)
+                val variables = buildVariableService.getAllVariable(buildId)
                 if (ControlUtils.checkAdditionalSkip(
                         task.buildId,
                         task.additionalOptions,
@@ -466,7 +537,7 @@ class ContainerControl @Autowired constructor(
             jobControlOption.runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH
         ) {
             val conditions = jobControlOption.customVariables ?: emptyList()
-            skip = ControlUtils.checkSkipCondition(conditions, variables, buildId, jobControlOption.runCondition)
+            skip = ControlUtils.checkJobSkipCondition(conditions, variables, buildId, jobControlOption.runCondition)
         }
 
         if (skip) {
@@ -491,7 +562,7 @@ class ContainerControl @Autowired constructor(
         }
 
         if (skip) {
-            logger.info("[$buildId]|MANUAL_SKIP|stageId=$stageId|container=$containerId|skipped")
+            logger.info("[$buildId]|CONTAINER_MANUAL_SKIP|stageId=$stageId|container=$containerId|skipped")
         }
 
         return skip

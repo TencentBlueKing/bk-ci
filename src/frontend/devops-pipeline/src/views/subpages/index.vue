@@ -9,15 +9,15 @@
                                 <template v-if="execDetail">
                                     <span>#{{ execDetail.buildNum }}</span>
                                     <p>
-                                        <i class="bk-icon icon-angle-up" :disabled="execDetail.latestBuildNum === execDetail.buildNum || isLoading" @click="switchBuildNum(1)" />
-                                        <i class="bk-icon icon-angle-down" :disabled="1 === execDetail.buildNum || isLoading" @click="switchBuildNum(-1)" />
+                                        <i class="devops-icon icon-angle-up" :disabled="execDetail.latestBuildNum === execDetail.buildNum || isLoading" @click="switchBuildNum(1)" />
+                                        <i class="devops-icon icon-angle-down" :disabled="1 === execDetail.buildNum || isLoading" @click="switchBuildNum(-1)" />
                                     </p>
-                                    <i class="bk-icon icon-txt" :title="$t('history.completedLog')" @click="showLog"></i>
+                                    <i class="devops-icon icon-txt" :title="$t('history.completedLog')" @click="showLog"></i>
                                 </template>
                             </div>
                         </bread-crumb-item>
                     </template>
-                    <i v-else class="bk-icon icon-circle-2-1 spin-icon" />
+                    <i v-else class="devops-icon icon-circle-2-1 spin-icon" />
                 </bread-crumb>
             </div>
             <template v-if="$route.name === 'pipelinesPreview'" slot="right">
@@ -27,7 +27,7 @@
                 </bk-button>
             </template>
             <template v-else slot="right">
-                <bk-button v-if="$route.name === 'pipelinesEdit'" @click="save" :disabled="saveBtnDisabled" :icon="saveStatus ? 'loading' : ''" theme="primary">
+                <bk-button v-if="isEditPage" @click="save" :disabled="saveBtnDisabled" :icon="saveStatus ? 'loading' : ''" theme="primary">
                     {{ $t('save') }}
                 </bk-button>
                 <router-link v-else :to="{ name: 'pipelinesEdit' }"><bk-button>{{ $t('edit') }}</bk-button></router-link>
@@ -36,11 +36,11 @@
                     :pipeline-id="pipelineId"
                     :status="pipelineStatus"
                     :can-manual-startup="canManualStartup"
-                    :before-exec="isEditing && !saveBtnDisabled ? save : undefined"
+                    :before-exec="isSaveAndRun ? save : undefined"
                     @exec="toExecute">
                     <section slot="exec-bar" slot-scope="triggerProps">
                         <bk-button v-if="pipelineStatus !== 'running'" theme="primary" :disabled="btnDisabled || !canManualStartup || triggerProps.isDisable" :icon="executeStatus || triggerProps.isDisable ? 'loading' : ''" :title="canManualStartup ? '' : '不支持手动启动流水线'">
-                            {{ isEditing && !saveBtnDisabled ? $t('subpage.saveAndExec') : $t('exec') }}
+                            {{ isSaveAndRun ? $t('subpage.saveAndExec') : $t('exec') }}
                         </bk-button>
                     </section>
                 </triggers>
@@ -138,6 +138,12 @@
                 'isEditing': 'atom/isEditing',
                 'getAllElements': 'atom/getAllElements'
             }),
+            isEditPage () {
+                return this.$route.name === 'pipelinesEdit'
+            },
+            isSaveAndRun () {
+                return this.isEditing && this.isEditPage && !this.saveBtnDisabled
+            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -225,7 +231,7 @@
                     },
                     handleSelected: this.handleSelected
                 }, {
-                    selectedValue: this.$route.params.type && this.tabMap[this.$route.params.type] ? this.tabMap[this.$route.params.type] : this.$t('history.execHistory')
+                    selectedValue: this.$route.params.type && this.tabMap[this.$route.params.type] ? this.tabMap[this.$route.params.type] : this.$t(this.$route.name)
                 }]
             }
         },
@@ -507,7 +513,7 @@
                 > p {
                     display: flex;
                     flex-direction: column;
-                    > i.bk-icon {
+                    > i.devops-icon {
                         color: $primaryColor;
                         cursor: pointer;
                         font-size: 10px;
@@ -552,7 +558,7 @@
             align-items: center;
             height: 100%;
 
-            .bk-icon {
+            .devops-icon {
                 color: $fontLigtherColor;
                 padding-left: 16px;
                 cursor: pointer;
