@@ -38,6 +38,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
@@ -56,6 +57,8 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskService
+import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
+import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
@@ -84,6 +87,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     private val redisOperation: RedisOperation,
     private val jmxElements: JmxElements,
     private val consulClient: ConsulDiscoveryClient?,
+    private val pipelineVariableService: BuildVariableService,
     private val client: Client
 ) {
 
@@ -525,6 +529,13 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
         val buildStatus = if (result.success) {
             pipelineTaskService.removeRetryCache(buildId, result.taskId)
+            // 清理插件错误信息（重试插件成功的情况下）
+            removeFailVarWhenSuccess(
+                buildId = buildId,
+                projectId = buildInfo.projectId,
+                pipelineId = buildInfo.pipelineId,
+                taskId = result.taskId
+            )
             BuildStatus.SUCCEED
         } else {
             if (pipelineTaskService.isRetryWhenFail(result.taskId, buildId)) {
@@ -533,6 +544,13 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 Thread.sleep(5000)
                 BuildStatus.RETRY
             } else {
+                // 记录错误插件信息
+                createFailElementVar(
+                    buildId = buildId,
+                    projectId = buildInfo.projectId,
+                    pipelineId = buildInfo.pipelineId,
+                    taskId = result.taskId
+                )
                 BuildStatus.FAILED
             }
         }
@@ -682,6 +700,101 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             logger.warn("Get turbo task info failed, $e")
             return ""
         }
+    }
+
+    private fun createFailElementVar(buildId: String, projectId: String, pipelineId: String, taskId: String) {
+        logger.info("$buildId| $taskId| atom fail, save var record")
+        val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
+        val model = pipelineBuildDetailService.getBuildModel(buildId)
+        val failTask = pipelineVariableService.getVariable(buildId, BK_CI_BUILD_FAIL_TASKS)
+        val failTaskNames = pipelineVariableService.getVariable(buildId, BK_CI_BUILD_FAIL_TASKNAMES)
+        var errorElements = ""
+        var errorElementsName = ""
+        if (taskRecord == null) {
+            return
+        }
+        try {
+            val errorElement = findElementMsg(model, taskRecord)
+            errorElements = if (failTask.isNullOrBlank()) {
+                errorElement.first
+            } else {
+                failTask + errorElement.first
+            }
+
+            errorElementsName = if (failTaskNames.isNullOrBlank()) {
+                errorElement.second
+            } else {
+                (failTaskNames + errorElement.second).substringBeforeLast(",")
+            }
+            logger.info("$buildId| $taskId| atom fail record, tasks:$errorElement, taskNames:$errorElementsName")
+            val valueMap = mutableMapOf<String, Any>()
+            valueMap[BK_CI_BUILD_FAIL_TASKS] = errorElements
+            valueMap[BK_CI_BUILD_FAIL_TASKNAMES] = errorElementsName
+            buildVariableService.batchSetVariable(
+                buildId = buildId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                variables = valueMap
+            )
+        } catch (e: Exception) {
+            logger.warn("createFailElementVar error, msg: $e")
+        }
+    }
+
+    private fun removeFailVarWhenSuccess(buildId: String, projectId: String, pipelineId: String, taskId: String) {
+        val failTaskRecord = redisOperation.get(failTaskRedisKey(buildId, taskId))
+        val failTaskNameRecord = redisOperation.get(failTaskNameRedisKey(buildId, taskId))
+        if (failTaskRecord.isNullOrBlank() || failTaskNameRecord.isNullOrBlank()) {
+            logger.info("$buildId|$taskId| retry fail, keep record")
+            return
+        }
+        logger.info("$buildId|$taskId| retry success, start remove fail recode")
+        try {
+            val failTask = pipelineVariableService.getVariable(buildId, BK_CI_BUILD_FAIL_TASKS)
+            val failTaskNames = pipelineVariableService.getVariable(buildId, BK_CI_BUILD_FAIL_TASKNAMES)
+            failTask!!.replace(failTaskRecord!!, "")
+            failTaskNames!!.replace(failTaskNameRecord!!, "")
+            val valueMap = mutableMapOf<String, Any>()
+            valueMap[BK_CI_BUILD_FAIL_TASKS] = failTask
+            valueMap[BK_CI_BUILD_FAIL_TASKNAMES] = failTaskNames
+            buildVariableService.batchSetVariable(
+                buildId = buildId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                variables = valueMap
+            )
+            logger.info("$buildId|$taskId| retry success, success remove fail recode")
+        } catch (e: Exception) {
+            logger.warn("removeFailVarWhenSuccess error, msg: $e")
+        }
+    }
+
+    private fun findElementMsg(model: Model?, taskRecord: PipelineBuildTask): Pair<String, String> {
+        var containerName = ""
+        model?.stages?.forEach { stage ->
+            if (stage.id == taskRecord.stageId) {
+                stage.containers.forEach nextContainer@{ container ->
+                    if (container.id == taskRecord.containerId) {
+                        containerName = container.name
+                        return@forEach
+                    }
+                }
+            }
+        }
+        val failTask = "[${taskRecord.stageId}][$containerName]${taskRecord.taskName} \n"
+        val failTaskName = "${taskRecord.taskName},"
+
+        redisOperation.set(failTaskRedisKey(taskRecord.buildId, taskRecord.taskId), failTask)
+        redisOperation.set(failTaskNameRedisKey(taskRecord.buildId, taskRecord.taskId), failTaskName)
+        return Pair(failTask, failTaskName)
+    }
+
+    private fun failTaskRedisKey(buildId: String, taskId: String): String {
+        return "devops:failTask:redis:key:$buildId:$taskId"
+    }
+
+    private fun failTaskNameRedisKey(buildId: String, taskId: String): String {
+        return "devops:failTaskName:redis:key:$buildId:$taskId"
     }
 
     companion object {
