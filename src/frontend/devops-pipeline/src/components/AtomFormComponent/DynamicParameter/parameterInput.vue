@@ -7,6 +7,7 @@
                 :clearable="!disabled"
                 :value="displayValue"
                 :disabled="disabled"
+                @clear="$emit('updateValue', '')"
                 @blur="handleBlur"
                 @change="handleInput"
                 @focus="toggleShowList(true)">
@@ -77,8 +78,7 @@
                 handler (value, oldValue) {
                     const index = this.queryKey.findIndex((key) => value[key] !== oldValue[key])
                     if (index > -1) {
-                        const defaultValue = this.isMultiple ? [] : ''
-                        this.$emit('updateValue', defaultValue)
+                        this.$emit('updateValue', '')
                         this.initList()
                     }
                 },
@@ -103,18 +103,17 @@
                     return tempName
                 }
 
-                let res
+                const res = []
                 if (this.isMultiple) {
-                    const tempArr = [];
-                    (this.value || []).forEach((val) => {
+                    const valArr = this.value.split(',')
+                    valArr.forEach((val) => {
                         const name = findItemName(val)
-                        if (name !== undefined) tempArr.push(name)
+                        if (name !== undefined) res.push(name)
                     })
-                    res = tempArr.join(',')
                 } else {
-                    res = findItemName(this.value)
+                    res.push(findItemName(this.value))
                 }
-                this.displayValue = res
+                this.displayValue = res.join(',')
             },
 
             chooseOption (option) {
@@ -123,15 +122,11 @@
                     this.$refs.inputItem.$refs.input.blur()
                     this.toggleShowList()
                 } else {
-                    const cloneValue = JSON.parse(JSON.stringify(this.value))
-                    if (Array.isArray(cloneValue)) {
-                        const index = cloneValue.findIndex(x => x === option.id)
-                        if (index > -1) cloneValue.splice(index, 1)
-                        else cloneValue.push(option.id)
-                        this.$emit('updateValue', cloneValue)
-                    } else {
-                        this.$emit('updateValue', [option.id])
-                    }
+                    const valArr = this.value.split(',').filter(x => x !== '')
+                    const index = valArr.findIndex(x => x === option.id)
+                    if (index > -1) valArr.splice(index, 1)
+                    else valArr.push(option.id)
+                    this.$emit('updateValue', valArr.join(','))
                 }
             },
 
@@ -149,34 +144,28 @@
                     let item = this.paramList.find(x => x.name === name)
                     if (!item) {
                         if (/^\$\{.+\}$/.test(name)) item = name
-                        else item = undefined
+                        else item = ''
                     } else {
                         item = item.id
                     }
                     return item
                 }
 
-                let res = ''
-                let tempId = ''
+                const res = []
                 if (this.isMultiple) {
-                    res = [];
                     (value.split(',') || []).forEach((val) => {
-                        tempId = findItemId(val)
-                        if (tempId !== undefined) res.push(tempId)
+                        const tempId = findItemId(val)
+                        if (tempId !== '') res.push(tempId)
                     })
                 } else {
-                    tempId = findItemId(value)
-                    res = tempId === undefined ? '' : tempId
+                    res.push(findItemId(value))
                 }
-                this.$emit('updateValue', res)
+                this.$emit('updateValue', res.join(','))
             },
 
             isActive (id) {
-                if (Array.isArray(this.value)) {
-                    return this.value.includes(id)
-                } else {
-                    return this.value === id
-                }
+                const valArr = this.value.split(',')
+                return valArr.includes(id)
             },
 
             initList () {
