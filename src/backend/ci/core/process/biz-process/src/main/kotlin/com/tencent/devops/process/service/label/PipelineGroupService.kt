@@ -353,6 +353,28 @@ class PipelineGroupService @Autowired constructor(
         return result
     }
 
+    fun getPipelinesGroupLabel(pipelineIds: List<String>): Map<String, Map<String, List<String>>> {
+        val records = pipelineLabelPipelineDao.listPipelinesGroupsAndLabels(dslContext, pipelineIds)
+        val result = mutableMapOf<String, MutableMap<String, MutableList<String>>>()
+        records.forEach { it ->
+            val pipelineId = it.value1()
+            val groupName = it.value2()
+            val labelName = it.value3()
+            if (result.containsKey(pipelineId)) {
+                if (result[pipelineId]!!.containsKey(groupName)) {
+                    if (!result[pipelineId]!![groupName]!!.contains(labelName)) {
+                        result[pipelineId]!![groupName]!!.add(labelName)
+                    }
+                } else {
+                    result[pipelineId]!![groupName] = mutableListOf(labelName)
+                }
+            } else {
+                result[pipelineId] = mutableMapOf(Pair(groupName, mutableListOf(labelName)))
+            }
+        }
+        return result
+    }
+
     private fun encode(id: Long) =
         HashUtil.encodeLongId(id)
 
