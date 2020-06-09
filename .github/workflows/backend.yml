@@ -47,4 +47,4 @@ jobs:
       with:
         gradle-version: 4.8.1
         build-root-directory: src/backend/ci
-        arguments: test clean :boot-assembly:classes -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/" uploadArchives -DmavenRepoUsername=${{ github.actor }} -DmavenRepoPassword=${{ secrets.GITHUB_TOKEN }} -Dsnapshot=true
+        arguments: test clean :boot-assembly:classes -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"
