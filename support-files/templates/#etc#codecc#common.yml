@@ -62,5 +62,6 @@ codeccGateway:
   host: __CODECC_GATEWAY_HOST__:__CODECC_GATEWAY_PORT__
   api: __CODECC_GATEWAY_HOST__:__CODECC_GATEWAY_PORT__
 
+service-suffix: "-__BKCI_CONSUL_TAG__"
 
 
