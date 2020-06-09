@@ -47,6 +47,7 @@ import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.services.LocalImageCache
 import com.tencent.devops.dockerhost.utils.CommonUtils
+import com.tencent.devops.dockerhost.utils.RandomUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.io.File
@@ -197,7 +198,7 @@ class DockerHostDebugService(
                 binds.add(Bind(getProjectShareDir(containerInfo.projectId), volumeProjectShare))
             }
 
-            val containerName = "debug-${containerInfo.pipelineId}-${containerInfo.vmSeqId}-"
+            val containerName = "debug-${containerInfo.pipelineId}-${containerInfo.vmSeqId}-${RandomUtil.randomString()}"
             val container = dockerCli.createContainerCmd(imageName)
                 .withName(containerName)
                 .withCmd("/bin/sh", entryPointCmd)
