@@ -455,7 +455,6 @@ class QualityRuleCheckService @Autowired constructor(
         // 推送消息
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE,
-            sender = "DevOps",
             receivers = notifyUserSet,
             cc = notifyUserSet,
             titleParams = mapOf(
@@ -509,7 +508,6 @@ class QualityRuleCheckService @Autowired constructor(
 
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_QUALITY_END_NOTIFY_TEMPLATE,
-            sender = "DevOps",
             receivers = notifyUserSet,
             notifyType = endNotifyTypeList.map { it.name }.toMutableSet(),
             titleParams = mapOf(),

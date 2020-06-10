@@ -126,7 +126,6 @@ class TxAtomNotifyServiceImpl @Autowired constructor() : AtomNotifyService {
         }
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = templateCode,
-            sender = DEVOPS,
             receivers = receivers,
             cc = receivers,
             titleParams = titleParams,

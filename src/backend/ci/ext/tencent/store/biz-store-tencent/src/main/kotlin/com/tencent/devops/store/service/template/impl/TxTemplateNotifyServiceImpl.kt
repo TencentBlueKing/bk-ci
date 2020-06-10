@@ -93,7 +93,6 @@ class TxTemplateNotifyServiceImpl @Autowired constructor() : TemplateNotifyServi
         }
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = templateCode,
-            sender = DEVOPS,
             receivers = receivers,
             cc = receivers,
             titleParams = titleParams,

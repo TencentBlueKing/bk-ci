@@ -488,7 +488,6 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
     ) {
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = getNotifyTemplateCode(type, detailFlag),
-            sender = "DevOps",
             receivers = users,
             notifyType = notifyTypes,
             titleParams = mapData,
