@@ -56,7 +56,6 @@ class TxStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
         logger.info("sendNotifyMessage titleParams is:$titleParams,bodyParams is:$bodyParams,cc is:$cc,bcc is:$bcc")
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = templateCode,
-            sender = sender,
             receivers = receivers,
             titleParams = titleParams,
             bodyParams = bodyParams,

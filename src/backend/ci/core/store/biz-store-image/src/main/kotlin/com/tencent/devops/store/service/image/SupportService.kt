@@ -71,7 +71,6 @@ class SupportService @Autowired constructor(
         val receivers = imageAdminUsersStr!!.trim().split(";").toMutableSet()
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = imageExecuteNullNotifyTplCode,
-            sender = "DevOps",
             receivers = receivers,
             cc = receivers,
             titleParams = titleParams,

@@ -70,9 +70,16 @@ class IptRepoService @Autowired constructor(
     }
 
     private fun getBuildByCommitId(projectId: String, pipelineId: String, commitId: String): String? {
-        val headCommits = pipelineBuildVarDao
-            .getVarsByProjectAndPipeline(dslContext, projectId, pipelineId, "DEVOPS_GIT_REPO_HEAD_COMMIT_ID")
-        return headCommits?.firstOrNull { it.value == commitId }?.buildId
+        val headCommits = pipelineBuildVarDao.getVarsByProjectAndPipeline(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            key = "DEVOPS_GIT_REPO_HEAD_COMMIT_ID",
+            value = commitId,
+            offset = 0,
+            limit = 1
+        )
+        return headCommits.firstOrNull()?.buildId
     }
 
     private fun checkPermission(projectId: String, pipelineId: String, userId: String) {

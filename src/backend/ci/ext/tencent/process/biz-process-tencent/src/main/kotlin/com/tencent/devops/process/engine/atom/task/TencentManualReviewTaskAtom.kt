@@ -183,7 +183,6 @@ class TencentManualReviewTaskAtom(
     ) {
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE,
-            sender = "DevOps",
             receivers = receivers,
             cc = receivers,
             titleParams = mapOf(
