@@ -52,6 +52,11 @@
                                 :class="{ 'selected-item': routeName === 'atomManage' }"
                                 @click="routerToManage('atomManage')">{{$t('pluginManage')}}</a>
                         </li>
+                        <li>
+                            <a href="javascript:;" class="text-link" id="toggleManage"
+                                :class="{ 'selected-item': routeName === 'pipelinesRestore' }"
+                                @click="routerToManage('pipelinesRestore')">{{$t('restore.recycleBin')}}</a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -109,6 +114,9 @@
                         break
                     case 'atomManage':
                         title = this.$t('pluginManage')
+                        break
+                    case 'pipelinesRestore':
+                        title = this.$t('restore.recycleBin')
                         break
                     default:
                         title = this.$t('more')
