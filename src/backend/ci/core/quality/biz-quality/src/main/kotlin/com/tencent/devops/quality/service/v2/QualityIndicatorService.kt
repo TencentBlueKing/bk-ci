@@ -108,6 +108,8 @@ class QualityIndicatorService @Autowired constructor(
                     val dynamicMap = detailIndicatorMap.filter { !propertyMap.containsKey(it.key) }
                     detailIndicatorSortedMap.putAll(originMap)
                     detailIndicatorSortedMap.putAll(dynamicMap)
+                } else {
+                    detailIndicatorSortedMap.putAll(detailIndicatorMap)
                 }
 
                 // 按elementDetail做分组
