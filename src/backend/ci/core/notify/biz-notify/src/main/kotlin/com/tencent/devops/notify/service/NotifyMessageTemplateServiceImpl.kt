@@ -509,7 +509,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     sender = emailTplRecord.sender
                 )
             }
-
         }
 
         // 企业微信消息
