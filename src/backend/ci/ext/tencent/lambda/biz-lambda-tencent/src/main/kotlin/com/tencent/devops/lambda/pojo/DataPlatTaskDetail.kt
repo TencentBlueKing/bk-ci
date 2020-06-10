@@ -23,20 +23,24 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.lambda.pojo
 
-dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:common:common-kafka-tencent")
-    compile project(":core:common:common-es")
-    compile project(":core:common:common-event")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-client")
-    compile project(":core:process:api-process")
-    compile project(":core:process:model-process")
-    compile project(":ext:tencent:lambda:model-lambda")
-    compile project(":core:project:api-project")
-    compile project(":ext:tencent:lambda:api-lambda-tencent")
-    testCompile project(":core:common:common-test")
-}
+import org.json.simple.JSONObject
+
+data class DataPlatTaskDetail(
+    val pipelineId: String,
+    val buildId: String,
+    val type: String,
+    val projectEnglishName: String,
+    val itemId: String,
+    val atomCode: String,
+    val taskParams: JSONObject?,
+    val status: String,
+    val errorCode: Int?,
+    val errorMsg: String?,
+    val startTime: String?,
+    val endTime: String?,
+    val costTime: Long,
+    val starter: String?,
+    val washTime: String
+)
