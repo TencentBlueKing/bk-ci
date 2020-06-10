@@ -60,7 +60,7 @@ class RepositoryConfService @Autowired constructor(
                     homepage = projectInfo.homepage ?: "",
                     gitHttpUrl = projectInfo.gitHttpsUrl ?: "",
                     gitSshUrl = projectInfo.gitSshUrl ?: "",
-                    enableCi = true,
+                    enableCi = false,
                     env = null,
                     createTime = null,
                     updateTime = null,
