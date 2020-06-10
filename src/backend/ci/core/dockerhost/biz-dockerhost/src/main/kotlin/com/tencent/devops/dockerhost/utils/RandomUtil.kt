@@ -24,46 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.cron
+package com.tencent.devops.dockerhost.utils
 
-import com.tencent.devops.dockerhost.services.DockerHostBuildService
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
+import java.util.Random
 
-// @Component
-class Runner @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService) {
-    private val logger = LoggerFactory.getLogger(Runner::class.java)
+/**
+ *
+ * Powered By Tencent
+ */
+object RandomUtil {
+    private val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-    //    @Scheduled(initialDelay = 300 * 1000, fixedDelay = 3600 * 1000)
-    fun clearExitedContainer() {
-        try {
-            dockerHostBuildService.clearContainers()
-        } catch (t: Throwable) {
-            logger.error("clear exited containers encounter unknown exception", t)
+    fun randomString(): String {
+        val random = Random()
+        val buf = StringBuffer()
+        for (i in 0 until 7) {
+            val num = random.nextInt(secretSeed.length)
+            buf.append(secretSeed[num])
         }
-    }
-
-    fun clearDockerRunTimeoutContainers() {
-        try {
-            dockerHostBuildService.clearDockerRunTimeoutContainers()
-        } catch (t: Throwable) {
-            logger.error("clear dockerRun timeout containers unknown exception", t)
-        }
-    }
-
-    fun clearLocalImages() {
-        try {
-            dockerHostBuildService.clearLocalImages()
-        } catch (t: Throwable) {
-            logger.error("clear local images encounter unknown exception", t)
-        }
-    }
-
-    fun refreshDockerIpStatus() {
-        try {
-            dockerHostBuildService.refreshDockerIpStatus()
-        } catch (t: Throwable) {
-            logger.error("refresh docker status error.", t)
-        }
+        return buf.toString()
     }
 }
