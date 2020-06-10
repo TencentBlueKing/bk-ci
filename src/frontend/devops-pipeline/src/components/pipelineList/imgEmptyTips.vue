@@ -51,6 +51,7 @@
         },
         created () {
             this.noDataSrc = noData
+            console.log(this.$i18n.locale)
             this.noCollect = require(`../../images/${this.$i18n.locale}-no-collect.png`)
         }
     }

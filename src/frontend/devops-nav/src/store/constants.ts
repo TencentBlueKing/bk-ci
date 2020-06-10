@@ -53,6 +53,13 @@ export const EMPTY_PROJECT: Project = {
     englishName: '',
     projectType: '',
     description: '',
+    bgId: '',
+    bgName: '',
+    deptId: '', 
+    deptName: '',
+    centerId: '',
+    centerName: '',
     isSecrecy: false,
+    deployType: [],
     kind: '0'
 }

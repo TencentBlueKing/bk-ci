@@ -30,9 +30,20 @@ const store = {
         nodeTypes: nodeTypeMap,
         nodeStatus: nodeStatusMap,
         devCloudVmQuta: {},
-        currentSelectedModel: {}
+        currentSelectedModel: {},
+        processHeadConf: {
+            current: 0,
+            process: 'modelType'
+        }
     },
-    getters: {},
+    getters: {
+        getProcessHeadConf: state => () => {
+            const envLocale = window.devops.$i18n.t('environment')
+            state.processHeadConf.title = envLocale.node
+            state.processHeadConf.list = [envLocale.selectModel, envLocale.confirmInfo]
+            return state.processHeadConf
+        }
+    },
     mutations,
     actions
 }

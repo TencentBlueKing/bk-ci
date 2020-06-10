@@ -15,10 +15,10 @@
             class="user-info-dropmenu"
         >
             <p class="user-avatar">
-                <!-- <img
+                <img
                     :src="avatarUrl"
                     alt="userAvatar"
-                > -->
+                >
                 <span>{{ chineseName }}</span>
             </p>
             <slot name="menu">
@@ -51,6 +51,7 @@
     import Vue from 'vue'
     import { Component, Prop, Watch } from 'vue-property-decorator'
     import { Action } from 'vuex-class'
+    import bkLogout from '../../utils/bklogout.js'
     import { clickoutside } from '../../directives/index'
 
     @Component({
@@ -88,10 +89,15 @@
 
         get menu (): object[] {
             try {
+                const { projectId } = this.$route.params
                 return [
                     {
                         to: '/console/pm',
                         label: this.$t('projectManage')
+                    },
+                    {
+                        to: `/console/perm/my-perm?project_code=${projectId || ''}`,
+                        label: this.$t('accessCenter')
                     },
                     {
                         cb: this.logout,
@@ -104,7 +110,8 @@
             }
         }
         logout (): void {
-            // logout logic
+            bkLogout.logout()
+            window.location.href = LOGIN_SERVICE_URL + '/?c_url=' + window.location.href
         }
     }
 </script>

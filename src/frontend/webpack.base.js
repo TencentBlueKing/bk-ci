@@ -10,7 +10,9 @@ const BundleWebpackPlugin = require('./webpackPlugin/bundle-webpack-plugin')
 module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     const isDev = argv.mode === 'development'
     const envDist = env && env.dist ? env.dist : 'frontend'
+    const version = env && env.version ? env.version : 'tencent'
     const buildDist = path.join(__dirname, envDist, dist)
+    console.log(path.join(__dirname, 'locale', dist), version)
     return {
         devtool: '#source-map',
         entry,
@@ -86,6 +88,9 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             new MiniCssExtractPlugin({
                 filename: '[name].[chunkHash].css',
                 chunkName: '[id].css'
+            }),
+            new webpack.DefinePlugin({
+                VERSION_TYPE: JSON.stringify(version)
             }),
             new CopyWebpackPlugin([{ from: path.join(__dirname, 'locale', dist), to: buildDist }])
         ],

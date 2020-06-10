@@ -158,6 +158,33 @@
                                 <div v-if="atomErrors.languageError" class="error-tips"> {{ $t('store.开发语言不能为空') }} </div>
                             </div>
                         </div>
+                        <template v-if="!isEnterprise">
+                            <div class="bk-form-item is-required">
+                                <label class="bk-label"> {{ $t('store.授权方式') }} </label>
+                                <div class="bk-form-content atom-item-content">
+                                    <bk-radio-group v-model="createAtomForm.authType">
+                                        <bk-radio :value="entry.value" v-for="(entry, key) in authTypeList" :key="key">{{ entry.label }}</bk-radio>
+                                    </bk-radio-group>
+                                </div>
+                            </div>
+                            <div class="bk-form-item is-required">
+                                <label class="bk-label"> {{ $t('store.是否开源') }} </label>
+                                <div class="bk-form-content atom-item-content">
+                                    <bk-radio-group v-model="createAtomForm.visibilityLevel">
+                                        <bk-radio :disabled="entry.disable" :title="entry.title" :value="entry.value" v-for="(entry, key) in isOpenSource" :key="key" @click.native="changeOpenSource">{{ entry.label }}</bk-radio>
+                                    </bk-radio-group>
+                                    <p v-if="atomErrors.openSourceError" class="error-tips"> {{ $t('store.是否开源不能为空') }} </p>
+                                </div>
+                            </div>
+                            <div class="bk-form-item is-required" v-if="createAtomForm.visibilityLevel === 'PRIVATE'">
+                                <label class="bk-label"> {{ $t('store.不开源原因') }} </label>
+                                <div class="bk-form-content atom-item-content">
+                                    <bk-input v-model="createAtomForm.privateReason" type="textarea" :placeholder="$t('store.请输入不开源原因')" @input="atomErrors.privateReasonError = false"></bk-input>
+                                    <p v-if="atomErrors.privateReasonError" class="error-tips"> {{ $t('store.不开源原因不能为空') }} </p>
+                                </div>
+                            </div>
+                            <form-tips :tips-content="createTips" class="atom-tip"></form-tips>
+                        </template>
                         <div class="form-footer">
                             <button class="bk-button bk-primary" type="button" @click="submitCreateAtom()"> {{ $t('store.提交') }} </button>
                             <button class="bk-button bk-default" type="button" @click="cancelCreateAtom()"> {{ $t('store.取消') }} </button>
@@ -245,6 +272,13 @@
                 renderList: [],
                 projectList: [],
                 languageList: [],
+                authTypeList: [
+                    { label: this.$t('store.工蜂OAUTH'), value: 'OAUTH' }
+                ],
+                isOpenSource: [
+                    { label: this.$t('store.是'), value: 'LOGIN_PUBLIC' },
+                    { label: this.$t('store.否'), value: 'PRIVATE', disable: true, title: this.$t('store.若有特殊原因无法开源，请联系蓝盾助手（务必联系蓝盾助手，自行修改工蜂项目配置会失效，每次升级插件时将根据插件配置自动刷新）') }
+                ],
                 promptList: [
                     this.$t('store.1、插件市场不再展示插件'),
                     this.$t('store.2、已安装插件的项目不能再添加插件到流水线'),
@@ -260,7 +294,9 @@
                     projectCode: '',
                     atomCode: '',
                     name: '',
-                    language: ''
+                    language: '',
+                    authType: 'OAUTH',
+                    visibilityLevel: 'LOGIN_PUBLIC'
                 },
                 isLoading: false,
                 atomErrors: {
@@ -292,6 +328,20 @@
             }
         },
 
+        computed: {
+            createTips () {
+                const host = location.host
+                const innerHosts = ['dev.devops.oa.com', 'test.devops.oa.com']
+                const index = innerHosts.findIndex(innerHost => innerHost === host)
+                const group = index > -1 ? 'bkdevops-plugins-test' : 'bkdevops-plugins'
+                return `${this.$t('store.提交后，系统将在工蜂自动创建插件代码库，地址示例')}：http://git.code.oa.com/${group}/${this.createAtomForm.atomCode}.git`
+            },
+
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
+            }
+        },
+
         watch: {
             'createAtomsideConfig.show' (val) {
                 if (!val) {
@@ -316,6 +366,7 @@
 
         created () {
             this.getLanguage()
+            this.checkIsOAuth()
             this.requestList()
         },
 
@@ -324,6 +375,19 @@
                 this.$store.dispatch('store/getDevelopLanguage').then((res) => {
                     this.languageList = (res || []).map(({ language }) => ({ name: language, language }))
                 }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' }))
+            },
+
+            async checkIsOAuth () {
+                try {
+                    const res = await this.$store.dispatch('store/checkIsOAuth', { type: 'ATOM_MARKET', atomCode: '' })
+                    this.hasOauth = res.status === 200
+                    this.gitOAuthUrl = res.url
+                } catch (err) {
+                    this.$bkMessage({
+                        message: err.message ? err.message : err,
+                        theme: 'error'
+                    })
+                }
             },
 
             async requestList () {
@@ -387,6 +451,11 @@
                 }
                 if (!this.createAtomForm.language) {
                     this.atomErrors.languageError = true
+                    errorCount++
+                }
+
+                if (this.isOpenSource.findIndex(x => x.value === this.createAtomForm.visibilityLevel) < 0) {
+                    this.atomErrors.openSourceError = true
                     errorCount++
                 }
 

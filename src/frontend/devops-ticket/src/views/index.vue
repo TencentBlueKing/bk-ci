@@ -10,7 +10,7 @@
     export default {
         computed: {
             nav () {
-                return {
+                const navConf = {
                     icon: 'ticket',
                     title: this.$t('ticket.credentialManage'),
                     menu: [
@@ -37,27 +37,31 @@
                                     icon: 'devops-icon icon-id'
                                 }
                             ]
+                        },
+                        {
+                            id: 'certList',
+                            name: this.$t('ticket.myCert'),
+                            icon: 'icon-personal-cert'
+                        },
+                        {
+                            id: 'createCert',
+                            name: this.$t('ticket.createCert'),
+                            icon: 'icon-personal-cert',
+                            showChildren: false,
+                            children: [
+                                {
+                                    id: 'editCert',
+                                    name: this.$t('ticket.editCert'),
+                                    icon: 'icon-personal-cert'
+                                }
+                            ]
                         }
-                        // {
-                        //     id: 'certList',
-                        //     name: this.$t('ticket.myCert'),
-                        //     icon: 'icon-personal-cert'
-                        // },
-                        // {
-                        //     id: 'createCert',
-                        //     name: this.$t('ticket.createCert'),
-                        //     icon: 'icon-personal-cert',
-                        //     showChildren: false,
-                        //     children: [
-                        //         {
-                        //             id: 'editCert',
-                        //             name: this.$t('ticket.editCert'),
-                        //             icon: 'icon-personal-cert'
-                        //         }
-                        //     ]
-                        // }
                     ]
                 }
+                if (VERSION_TYPE === 'ee') {
+                    navConf.menu.splice(2, 2)
+                }
+                return navConf
             }
         },
         methods: {

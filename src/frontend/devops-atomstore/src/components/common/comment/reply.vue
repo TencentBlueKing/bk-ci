@@ -48,11 +48,13 @@
                     expandReplys: {
                         atom: (id) => this.requestAtomReplyList(id),
                         template: (id) => this.requestTemplateReplyList(id),
+                        ide: (id) => this.requestIDEReplyList(id),
                         image: (id) => this.requestImageReplyList(id)
                     },
                     priase: {
                         atom: (id) => this.requestAtomPraiseComment(id),
                         template: (id) => this.requestTemplatePraiseComment(id),
+                        ide: (id) => this.requestIDEPraiseComment(id),
                         image: (id) => this.requestImagePraiseComment(id)
                     }
                 },
@@ -84,6 +86,8 @@
                 'requestAtomPraiseComment',
                 'requestTemplatePraiseComment',
                 'requestTemplateReplyList',
+                'requestIDEPraiseComment',
+                'requestIDEReplyList',
                 'requestImageReplyList',
                 'requestImagePraiseComment',
                 'clearCommentReply'
