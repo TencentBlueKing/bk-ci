@@ -738,7 +738,8 @@ class ProjectLocalService @Autowired constructor(
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 return if (response["code"] as Int == 0) {
-                    response["project_id"] as String
+                    val responseData = response["data"] as Map<String, Any>
+                    return responseData["project_id"] as String
                 } else {
                     null
                 }
