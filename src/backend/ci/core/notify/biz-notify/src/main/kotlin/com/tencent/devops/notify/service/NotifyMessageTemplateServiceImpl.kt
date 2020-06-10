@@ -492,61 +492,64 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         if (sendAllNotify || request.notifyType?.contains(NotifyType.EMAIL.name) == true) {
             if (!notifyTypeScope.contains(NotifyType.EMAIL.name)) {
                 logger.error("sendNotifyMessageByTemplate has error: Can not find ${NotifyType.EMAIL.name} in NotifyTemplate[${request.templateCode}]")
-                return Result(false)
+            } else {
+                val emailTplRecord = notifyMessageTemplateDao.getEmailNotifyMessageTemplate(
+                    dslContext,
+                    commonNotifyMessageTemplateRecord.id
+                )!!
+                // 替换标题里的动态参数
+                val title = replaceContentParams(request.titleParams, emailTplRecord.title)
+                // 替换内容里的动态参数
+                val body = replaceContentParams(request.bodyParams, emailTplRecord.body)
+                sendEmailNotifyMessage(
+                    commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
+                    sendNotifyMessageTemplateRequest = request,
+                    title = title,
+                    body = body,
+                    sender = emailTplRecord.sender
+                )
             }
-            val emailTplRecord = notifyMessageTemplateDao.getEmailNotifyMessageTemplate(
-                dslContext,
-                commonNotifyMessageTemplateRecord.id
-            )!!
-            // 替换标题里的动态参数
-            val title = replaceContentParams(request.titleParams, emailTplRecord.title)
-            // 替换内容里的动态参数
-            val body = replaceContentParams(request.bodyParams, emailTplRecord.body)
-            sendEmailNotifyMessage(
-                commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
-                sendNotifyMessageTemplateRequest = request,
-                title = title,
-                body = body
-            )
         }
 
         // 企业微信消息
         if (sendAllNotify || request.notifyType?.contains(NotifyType.RTX.name) == true) {
             if (!notifyTypeScope.contains(NotifyType.RTX.name)) {
-                logger.error("sendNotifyMessageByTemplate has error: Can not find ${NotifyType.EMAIL.name} in NotifyTemplate[${request.templateCode}]")
-                return Result(false)
+                logger.error("sendNotifyMessageByTemplate has error: Can not find ${NotifyType.RTX.name} in NotifyTemplate[${request.templateCode}]")
+            } else {
+                val rtxTplRecord =
+                    notifyMessageTemplateDao.getRtxNotifyMessageTemplate(dslContext, commonNotifyMessageTemplateRecord.id)!!
+                // 替换标题里的动态参数
+                val title = replaceContentParams(request.titleParams, rtxTplRecord.title)
+                // 替换内容里的动态参数
+                val body = replaceContentParams(request.bodyParams, rtxTplRecord.body)
+                sendRtxNotifyMessage(
+                    commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
+                    sendNotifyMessageTemplateRequest = request,
+                    title = title,
+                    body = body,
+                    sender = rtxTplRecord.sender
+                )
             }
-            val rtxTplRecord =
-                notifyMessageTemplateDao.getRtxNotifyMessageTemplate(dslContext, commonNotifyMessageTemplateRecord.id)!!
-            // 替换标题里的动态参数
-            val title = replaceContentParams(request.titleParams, rtxTplRecord.title)
-            // 替换内容里的动态参数
-            val body = replaceContentParams(request.bodyParams, rtxTplRecord.body)
-            sendRtxNotifyMessage(
-                commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
-                sendNotifyMessageTemplateRequest = request,
-                title = title,
-                body = body
-            )
         }
 
         // 微信消息
         if (sendAllNotify || request.notifyType?.contains(NotifyType.WECHAT.name) == true) {
             if (!notifyTypeScope.contains(NotifyType.WECHAT.name)) {
-                logger.error("sendNotifyMessageByTemplate has error: Can not find ${NotifyType.EMAIL.name} in NotifyTemplate[${request.templateCode}]")
-                return Result(false)
+                logger.error("sendNotifyMessageByTemplate has error: Can not find ${NotifyType.WECHAT.name} in NotifyTemplate[${request.templateCode}]")
+            } else {
+                val wechatTplRecord = notifyMessageTemplateDao.getWechatNotifyMessageTemplate(
+                    dslContext = dslContext,
+                    commonTemplateId = commonNotifyMessageTemplateRecord.id
+                )!!
+                // 替换内容里的动态参数
+                val body = replaceContentParams(request.bodyParams, wechatTplRecord.body)
+                sendWechatNotifyMessage(
+                    commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
+                    sendNotifyMessageTemplateRequest = request,
+                    body = body,
+                    sender = wechatTplRecord.sender
+                )
             }
-            val wechatTplRecord = notifyMessageTemplateDao.getWechatNotifyMessageTemplate(
-                dslContext,
-                commonNotifyMessageTemplateRecord.id
-            )!!
-            // 替换内容里的动态参数
-            val body = replaceContentParams(request.bodyParams, wechatTplRecord.body)
-            sendWechatNotifyMessage(
-                commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
-                sendNotifyMessageTemplateRequest = request,
-                body = body
-            )
         }
         return Result(true)
     }
@@ -599,11 +602,12 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         commonNotifyMessageTemplate: TCommonNotifyMessageTemplateRecord,
         sendNotifyMessageTemplateRequest: SendNotifyMessageTemplateRequest,
         title: String,
-        body: String
+        body: String,
+        sender: String
     ) {
         logger.info("sendRtxNotifyMessage:\ntitle:$title,\nbody:$body")
         val rtxNotifyMessage = RtxNotifyMessage()
-        rtxNotifyMessage.sender = sendNotifyMessageTemplateRequest.sender
+        rtxNotifyMessage.sender = sender
         rtxNotifyMessage.addAllReceivers(sendNotifyMessageTemplateRequest.receivers)
         rtxNotifyMessage.title = title
         rtxNotifyMessage.body = body
@@ -616,11 +620,12 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     private fun sendWechatNotifyMessage(
         commonNotifyMessageTemplate: TCommonNotifyMessageTemplateRecord,
         sendNotifyMessageTemplateRequest: SendNotifyMessageTemplateRequest,
-        body: String
+        body: String,
+        sender: String
     ) {
         logger.info("sendWechatNotifyMessage:\nbody:$body")
         val wechatNotifyMessage = WechatNotifyMessage()
-        wechatNotifyMessage.sender = sendNotifyMessageTemplateRequest.sender
+        wechatNotifyMessage.sender = sender
         wechatNotifyMessage.addAllReceivers(sendNotifyMessageTemplateRequest.receivers)
         wechatNotifyMessage.body = body
         wechatNotifyMessage.priority = EnumNotifyPriority.parse(commonNotifyMessageTemplate.priority.toString())
@@ -633,14 +638,15 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         commonNotifyMessageTemplate: TCommonNotifyMessageTemplateRecord,
         sendNotifyMessageTemplateRequest: SendNotifyMessageTemplateRequest,
         title: String,
-        body: String
+        body: String,
+        sender: String
     ) {
         logger.info("sendEmailNotifyMessage:\ntitle:$title,\nbody:$body")
         val commonTemplateId = commonNotifyMessageTemplate.id
         val emailNotifyMessageTemplate =
             notifyMessageTemplateDao.getEmailNotifyMessageTemplate(dslContext, commonTemplateId)
         val emailNotifyMessage = EmailNotifyMessage()
-        emailNotifyMessage.sender = sendNotifyMessageTemplateRequest.sender
+        emailNotifyMessage.sender = sender
         emailNotifyMessage.addAllReceivers(sendNotifyMessageTemplateRequest.receivers)
         val cc = sendNotifyMessageTemplateRequest.cc
         if (null != cc) {
