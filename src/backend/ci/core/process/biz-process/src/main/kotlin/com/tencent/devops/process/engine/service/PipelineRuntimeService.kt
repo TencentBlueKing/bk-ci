@@ -1749,8 +1749,8 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildDao.convert(historyRecord)
     }
 
-    fun getLastTimeBuild(pipelineId: String): BuildInfo? {
-        return pipelineBuildDao.convert(pipelineBuildDao.getLatestBuild(dslContext, pipelineId))
+    fun getLastTimeBuild(projectId: String, pipelineId: String): BuildInfo? {
+        return pipelineBuildDao.convert(pipelineBuildDao.getLatestBuild(dslContext, projectId, pipelineId))
     }
 
     fun updateTaskSubBuildId(buildId: String, taskId: String, subBuildId: String) {
@@ -1890,8 +1890,23 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     // 获取流水线最后的构建号
-    fun getLatestFinishedBuildId(pipelineId: String): String? {
-        return pipelineBuildDao.getLatestFinishedBuild(dslContext, pipelineId)?.buildId
+    fun getLatestBuildId(projectId: String, pipelineId: String): String? {
+        return pipelineBuildDao.getLatestBuild(dslContext, projectId, pipelineId)?.buildId
+    }
+
+    // 获取流水线最后完成的构建号
+    fun getLatestFinishedBuildId(projectId: String, pipelineId: String): String? {
+        return pipelineBuildDao.getLatestFinishedBuild(dslContext, projectId, pipelineId)?.buildId
+    }
+
+    // 获取流水线最后成功的构建号
+    fun getLatestSucceededBuildId(projectId: String, pipelineId: String): String? {
+        return pipelineBuildDao.getLatestSuccessedBuild(dslContext, projectId, pipelineId)?.buildId
+    }
+
+    // 获取流水线最后失败的构建号
+    fun getLatestFailedBuildId(projectId: String, pipelineId: String): String? {
+        return pipelineBuildDao.getLatestFailedBuild(dslContext, projectId, pipelineId)?.buildId
     }
 
     fun getBuildIdbyBuildNo(projectId: String, pipelineId: String, buildNo: Int): String? {

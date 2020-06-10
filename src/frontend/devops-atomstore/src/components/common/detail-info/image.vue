@@ -158,6 +158,7 @@
     .detail-info-group {
         width: 996px;
         margin: 0 32px;
+        max-width: calc(100% - 314px);
         
         h3 {
             font-size: 22px;

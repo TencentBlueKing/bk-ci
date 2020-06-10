@@ -30,11 +30,12 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
-	"github.com/astaxie/beego/logs"
 	"io"
 	"io/ioutil"
 	"os"
 	"strconv"
+
+	"github.com/astaxie/beego/logs"
 )
 
 func Exists(file string) bool {
