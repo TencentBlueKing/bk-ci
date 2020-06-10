@@ -28,3 +28,5 @@ dependencies {
     compile project(":core:common:common-api")
     compile project(":core:common:common-web")
 }
+
+apply from: "$rootDir/task_deploy_to_maven.gradle"

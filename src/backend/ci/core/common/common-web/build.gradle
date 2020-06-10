@@ -37,3 +37,5 @@ dependencies {
     compile "org.springframework.boot:spring-boot-starter-amqp"
     compile('org.springframework.cloud:spring-cloud-starter-config')
 }
+
+apply from: "$rootDir/task_deploy_to_maven.gradle"
