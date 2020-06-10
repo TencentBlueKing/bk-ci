@@ -73,10 +73,10 @@ class BcsContainerOpByNameAtom @Autowired constructor(
     }
 
     @Value("\${project.url}")
-    private val projectUrl = "http://api.apigw-biz.o.oa.com/api/paas-cc/test/projects/"
+    private val projectUrl = "http://paas-cc.apigw.o.oa.com/uat/projects/"
 
     @Value("\${bcsApp.url}")
-    private val bcsAppUrl = "http://api.apigw-biz.o.oa.com/api/paas-cd/test/apps/"
+    private val bcsAppUrl = "http://paas-cd.apigw.o.oa.com/staging/apps/"
 
     override fun execute(
         task: PipelineBuildTask,
