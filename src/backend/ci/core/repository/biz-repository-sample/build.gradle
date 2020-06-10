@@ -27,5 +27,3 @@
 dependencies {
     compile project(":core:repository:biz-repository")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
