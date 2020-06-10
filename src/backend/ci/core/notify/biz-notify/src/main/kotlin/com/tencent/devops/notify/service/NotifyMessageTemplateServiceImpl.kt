@@ -505,7 +505,8 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
                     sendNotifyMessageTemplateRequest = request,
                     title = title,
-                    body = body
+                    body = body,
+                    sender = emailTplRecord.sender
                 )
             }
         }
@@ -525,7 +526,8 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
                     sendNotifyMessageTemplateRequest = request,
                     title = title,
-                    body = body
+                    body = body,
+                    sender = rtxTplRecord.sender
                 )
             }
         }
@@ -544,7 +546,8 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 sendWechatNotifyMessage(
                     commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
                     sendNotifyMessageTemplateRequest = request,
-                    body = body
+                    body = body,
+                    sender = wechatTplRecord.sender
                 )
             }
         }
@@ -599,11 +602,12 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         commonNotifyMessageTemplate: TCommonNotifyMessageTemplateRecord,
         sendNotifyMessageTemplateRequest: SendNotifyMessageTemplateRequest,
         title: String,
-        body: String
+        body: String,
+        sender: String
     ) {
         logger.info("sendRtxNotifyMessage:\ntitle:$title,\nbody:$body")
         val rtxNotifyMessage = RtxNotifyMessage()
-        rtxNotifyMessage.sender = sendNotifyMessageTemplateRequest.sender
+        rtxNotifyMessage.sender = sender
         rtxNotifyMessage.addAllReceivers(sendNotifyMessageTemplateRequest.receivers)
         rtxNotifyMessage.title = title
         rtxNotifyMessage.body = body
@@ -616,11 +620,12 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     private fun sendWechatNotifyMessage(
         commonNotifyMessageTemplate: TCommonNotifyMessageTemplateRecord,
         sendNotifyMessageTemplateRequest: SendNotifyMessageTemplateRequest,
-        body: String
+        body: String,
+        sender: String
     ) {
         logger.info("sendWechatNotifyMessage:\nbody:$body")
         val wechatNotifyMessage = WechatNotifyMessage()
-        wechatNotifyMessage.sender = sendNotifyMessageTemplateRequest.sender
+        wechatNotifyMessage.sender = sender
         wechatNotifyMessage.addAllReceivers(sendNotifyMessageTemplateRequest.receivers)
         wechatNotifyMessage.body = body
         wechatNotifyMessage.priority = EnumNotifyPriority.parse(commonNotifyMessageTemplate.priority.toString())
@@ -633,14 +638,15 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         commonNotifyMessageTemplate: TCommonNotifyMessageTemplateRecord,
         sendNotifyMessageTemplateRequest: SendNotifyMessageTemplateRequest,
         title: String,
-        body: String
+        body: String,
+        sender: String
     ) {
         logger.info("sendEmailNotifyMessage:\ntitle:$title,\nbody:$body")
         val commonTemplateId = commonNotifyMessageTemplate.id
         val emailNotifyMessageTemplate =
             notifyMessageTemplateDao.getEmailNotifyMessageTemplate(dslContext, commonTemplateId)
         val emailNotifyMessage = EmailNotifyMessage()
-        emailNotifyMessage.sender = sendNotifyMessageTemplateRequest.sender
+        emailNotifyMessage.sender = sender
         emailNotifyMessage.addAllReceivers(sendNotifyMessageTemplateRequest.receivers)
         val cc = sendNotifyMessageTemplateRequest.cc
         if (null != cc) {
