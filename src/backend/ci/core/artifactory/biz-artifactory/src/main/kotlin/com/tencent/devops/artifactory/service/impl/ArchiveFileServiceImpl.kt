@@ -189,7 +189,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         }
         logger.info("$uploadFileName destPath is:$destPath")
         uploadFileToRepo(destPath, file)
-        val shaContent = ShaUtils.sha1(file.readBytes())
+        val shaContent = file.inputStream().use { ShaUtils.sha1InputStream(it) }
         var fileProps: Map<String, String?> = props ?: mapOf()
         fileProps = fileProps.plus("shaContent" to shaContent)
         val path = destPath.substring(getBasePath().length)
