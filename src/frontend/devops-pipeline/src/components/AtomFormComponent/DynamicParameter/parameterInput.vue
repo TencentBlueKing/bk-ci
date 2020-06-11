@@ -56,6 +56,14 @@
             paramValues: {
                 type: Object,
                 default: () => ({})
+            },
+            paramId: {
+                type: String,
+                default: 'id'
+            },
+            paramName: {
+                type: String,
+                default: 'name'
             }
         },
 
@@ -170,7 +178,7 @@
 
             initList () {
                 if (this.listType === 'list') {
-                    this.paramList = JSON.parse(JSON.stringify(this.list))
+                    this.paramList = (JSON.parse(JSON.stringify(this.list)) || []).map((item) => ({ id: item[this.paramId], name: item[this.paramName] }))
                     this.calcDisplayVal()
                     return
                 }
@@ -189,7 +197,7 @@
                     if (isErrorParam) return
                     this.loading = true
                     this.$ajax.get(url).then((res) => {
-                        const data = res.data || []
+                        const data = (res.data || []).map((item) => ({ id: item[this.paramId], name: item[this.paramName] }))
                         this.paramList.splice(0, this.paramList.length, ...data)
                         this.calcDisplayVal()
                     }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.loading = false))
