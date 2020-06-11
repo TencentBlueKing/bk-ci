@@ -146,7 +146,17 @@ data class Model(
             )
         }
 
-        return Model(name, desc, stageList, labels, instanceFromTemplate, pipelineCreator, null, templateId)
+        return Model(
+            name = name,
+            desc = desc,
+            stages = stageList,
+            labels = labels,
+            instanceFromTemplate = instanceFromTemplate,
+            pipelineCreator = pipelineCreator,
+            srcTemplateId = null,
+            srcTemplateVersion = null,
+            templateId = templateId
+        )
     }
 
     fun getContainer(vmSeqId: String): Container? {
