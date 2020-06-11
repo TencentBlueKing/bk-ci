@@ -64,7 +64,7 @@ class PreBuildAgentMgrService @Autowired constructor(
         zoneName: String?,
         initIp: String?
     ): ThirdPartyAgentStaticInfo {
-        val gateway = slaveGatewayService.getGateway(zoneName)
+        val gateway = slaveGatewayService.getGateway(zoneName)?.removePrefix("http://")
         val secretKey = generateSecretKey()
 
         var result: ThirdPartyAgentStaticInfo? = null
