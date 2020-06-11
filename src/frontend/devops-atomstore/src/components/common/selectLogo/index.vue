@@ -279,7 +279,6 @@
                 height: 32px;
                 padding-bottom: 19px;
                 box-sizing: content-box;
-                border-bottom: 1px dotted $lightColor;
                 .input-file {
                     position: absolute;
                     left: 0;
