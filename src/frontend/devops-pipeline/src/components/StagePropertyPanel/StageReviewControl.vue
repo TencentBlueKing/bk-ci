@@ -91,6 +91,9 @@
             },
             hasTriggerMember (hasTriggerMember) {
                 this.handleUpdateStageControl('isError', !this.validateStageControl())
+            },
+            validTimeout (valid) {
+                this.handleUpdateStageControl('isError', !this.validateStageControl())
             }
         },
         mounted () {
