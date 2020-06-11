@@ -51,8 +51,6 @@ BEGIN
 			ALTER TABLE T_REPORT ADD INDEX `inx_tr_element_id` (`ELEMENT_ID`);
         END IF;
 
-    END IF;
-
 
     COMMIT;
 END <CI_UBF>
