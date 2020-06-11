@@ -493,6 +493,7 @@ class TemplateService @Autowired constructor(
                 projectId = projectId,
                 includePublicFlag = null,
                 templateType = templateType,
+                category = null,
                 templateIdList = null,
                 storeFlag = storeFlag,
                 page = page,
@@ -544,6 +545,7 @@ class TemplateService @Autowired constructor(
             projectId = null,
             includePublicFlag = null,
             templateType = null,
+            category = null,
             templateIdList = constrainedTemplateList,
             storeFlag = null,
             page = null,
@@ -754,6 +756,7 @@ class TemplateService @Autowired constructor(
     fun listAllTemplate(
         projectId: String?,
         templateType: TemplateType?,
+        category: String?,
         templateIds: Collection<String>?,
         page: Int?,
         pageSize: Int?
@@ -763,7 +766,17 @@ class TemplateService @Autowired constructor(
         val templateCount = templateDao.countTemplate(dslContext, projectId, true, templateType, null, null)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val templates = templateDao.listTemplate(context, projectId, true, templateType, templateIds, null, page, pageSize)
+            val templates = templateDao.listTemplate(
+                dslContext = context,
+                projectId = projectId,
+                includePublicFlag = true,
+                templateType = templateType,
+                category = category,
+                templateIdList = templateIds,
+                storeFlag = null,
+                page = page,
+                pageSize = pageSize
+            )
 
             val constrainedTemplateList = mutableListOf<String>()
             val templateIdList = mutableSetOf<String>()
@@ -773,7 +786,17 @@ class TemplateService @Autowired constructor(
                 }
                 templateIdList.add(tempTemplate["templateId"] as String)
             }
-            val srcTemplateRecords = templateDao.listTemplate(context, null, null, null, constrainedTemplateList, null, null, null)
+            val srcTemplateRecords = templateDao.listTemplate(
+                dslContext = context,
+                projectId = null,
+                includePublicFlag = null,
+                templateType = null,
+                category = category,
+                templateIdList = constrainedTemplateList,
+                storeFlag = null,
+                page = null,
+                pageSize = null
+            )
             val srcTemplates = srcTemplateRecords?.associateBy { it["templateId"] as String }
 
             val settings = pipelineSettingDao.getSettings(context, templateIdList).map { it.pipelineId to it }.toMap()
