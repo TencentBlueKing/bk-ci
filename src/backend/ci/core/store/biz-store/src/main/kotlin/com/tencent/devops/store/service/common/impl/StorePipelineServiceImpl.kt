@@ -27,6 +27,7 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -84,6 +85,8 @@ class StorePipelineServiceImpl : StorePipelineService {
 
     private final val handlePageKeyPrefix = "updatePipelineModel:handlePage"
 
+    private final val featureName = "initBuildPipeline"
+
     private val executorService = Executors.newSingleThreadScheduledExecutor()
 
     private val logger = LoggerFactory.getLogger(StorePipelineServiceImpl::class.java)
@@ -97,17 +100,29 @@ class StorePipelineServiceImpl : StorePipelineService {
         val scopeType = updateStorePipelineModelRequest.scopeType
         val storeType = updateStorePipelineModelRequest.storeType
         val storeCodeList = updateStorePipelineModelRequest.storeCodeList
-        val businessConfig =
-            businessConfigDao.get(dslContext, storeType, "initBuildPipeline", "PIPELINE_MODEL")
+        val pipelineModelConfig =
+            businessConfigDao.get(dslContext, storeType, featureName, "PIPELINE_MODEL")
                 ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-        val pipelineModel = businessConfig.configValue
+        val grayPipelineModelConfig =
+            businessConfigDao.get(dslContext, storeType, featureName, "GRAY_PIPELINE_MODEL")
+                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+        val pipelineModel = pipelineModelConfig.configValue
+        val grayPipelineModel = grayPipelineModelConfig.configValue
         when (scopeType) {
             ScopeTypeEnum.ALL.name -> {
                 handleStorePipelineModel(
                     storeType = storeType,
                     taskId = taskId,
                     userId = userId,
-                    pipelineModel = pipelineModel
+                    pipelineModel = grayPipelineModel,
+                    grayFlag = true
+                )
+                handleStorePipelineModel(
+                    storeType = storeType,
+                    taskId = taskId,
+                    userId = userId,
+                    pipelineModel = pipelineModel,
+                    grayFlag = false
                 )
             }
             ScopeTypeEnum.GRAY.name -> {
@@ -115,7 +130,7 @@ class StorePipelineServiceImpl : StorePipelineService {
                     storeType = storeType,
                     taskId = taskId,
                     userId = userId,
-                    pipelineModel = pipelineModel,
+                    pipelineModel = grayPipelineModel,
                     grayFlag = true
                 )
             }
@@ -140,7 +155,9 @@ class StorePipelineServiceImpl : StorePipelineService {
                     storeCodeList = storeCodeList,
                     userId = userId,
                     taskId = taskId,
-                    pipelineModel = pipelineModel
+                    defaultPipelineModel = pipelineModel,
+                    checkGrayFlag = true,
+                    grayPipelineModel = grayPipelineModel
                 )
             }
         }
@@ -187,7 +204,7 @@ class StorePipelineServiceImpl : StorePipelineService {
                             storeCodeList = grayStoreCodeList,
                             userId = userId,
                             taskId = taskId,
-                            pipelineModel = pipelineModel
+                            defaultPipelineModel = pipelineModel
                         )
                     }
                     // 把当前任务处理的页数放入redis缓存
@@ -205,8 +222,16 @@ class StorePipelineServiceImpl : StorePipelineService {
         storeCodeList: List<String>,
         userId: String,
         taskId: String,
-        pipelineModel: String
+        defaultPipelineModel: String,
+        checkGrayFlag: Boolean = false,
+        grayPipelineModel: String? = null
     ) {
+        if (checkGrayFlag && (grayPipelineModel == null)) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                params = arrayOf("grayPipelineModel")
+            )
+        }
         val storeCommonDao =
             SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
         // 获取研发商店组件信息
@@ -225,7 +250,12 @@ class StorePipelineServiceImpl : StorePipelineService {
                 "repositoryPath" to storeInfo["repositoryPath"]
             )
             // 将流水线模型中的变量替换成具体的值
-            var convertModel = pipelineModel
+            var convertModel = if (checkGrayFlag) {
+                val grayProjectSet = gray.grayProjectSet(redisOperation)
+                if (grayProjectSet.contains(projectCode)) grayPipelineModel!! else defaultPipelineModel
+            } else {
+                defaultPipelineModel
+            }
             paramMap.forEach { (key, value) ->
                 if (value != null) {
                     convertModel = convertModel.replace("#{$key}", value.toString())
