@@ -323,6 +323,7 @@ class TemplateDao {
         projectId: String?,
         includePublicFlag: Boolean?,
         templateType: TemplateType?,
+        category: String?,
         templateIdList: Collection<String>?,
         storeFlag: Boolean?,
         page: Int?,
@@ -337,6 +338,10 @@ class TemplateDao {
             } else {
                 conditions.add(a.PROJECT_ID.eq(projectId))
             }
+        }
+
+        if (category != null) {
+            conditions.add(a.CATEGORY.contains(category))
         }
 
         return listTemplateByProjectCondition(

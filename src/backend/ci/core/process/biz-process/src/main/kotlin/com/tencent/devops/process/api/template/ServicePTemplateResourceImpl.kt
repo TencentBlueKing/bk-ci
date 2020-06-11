@@ -85,7 +85,7 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         projectId: String,
         templateType: TemplateType?
     ): Result<OptionalTemplateList> {
-        return Result(templateService.listAllTemplate(projectId, templateType, null, 1, 9999))
+        return Result(templateService.listAllTemplate(projectId, templateType, null, null, 1, 9999))
     }
 
     override fun updateStoreFlag(userId: String, templateId: String, storeFlag: Boolean): Result<Boolean> {
@@ -93,6 +93,6 @@ class ServicePTemplateResourceImpl @Autowired constructor(
     }
 
     override fun listTemplateById(templateIds: Collection<String>, templateType: TemplateType?): Result<OptionalTemplateList> {
-        return Result(templateService.listAllTemplate(null, templateType, templateIds, null, null))
+        return Result(templateService.listAllTemplate(null, templateType, null, templateIds, null, null))
     }
 }
