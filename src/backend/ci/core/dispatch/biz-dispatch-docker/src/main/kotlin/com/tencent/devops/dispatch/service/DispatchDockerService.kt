@@ -175,6 +175,17 @@ class DispatchDockerService @Autowired constructor(
         }
     }
 
+    fun removeDockerBuildBinding(userId: String, pipelineId: String, vmSeqId: String): Boolean {
+        logger.info("$userId remove dockerBuildBinding pipelineId: $pipelineId vmSeqId: $vmSeqId")
+        try {
+            pipelineDockerTaskSimpleDao.deleteByPipelineIdAndVmSeqId(dslContext, pipelineId, vmSeqId)
+            return true
+        } catch (e: Exception) {
+            logger.error("OP $userId remove dockerBuildBinding pipelineId: $pipelineId vmSeqId: $vmSeqId error.", e)
+            throw RuntimeException("OP $userId remove dockerBuildBinding pipelineId: $pipelineId vmSeqId: $vmSeqId error.")
+        }
+    }
+
     fun createDockerHostLoadConfig(
         userId: String,
         dockerHostLoadConfigMap: Map<String, DockerHostLoadConfig>
