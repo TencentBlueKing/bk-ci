@@ -85,7 +85,7 @@ gradle.properties 配置修改如下配置项:
 #### 编译
 
 ```shell
-cd bk-ci/src/backend/ci & gradle clean build
+cd bk-ci/src/backend/ci &  ./gradlew clean build
 ```
 
 构建出来的产物都放在backend/release目录下，主要包含以下产物:
