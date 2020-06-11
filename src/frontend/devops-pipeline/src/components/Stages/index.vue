@@ -1,8 +1,9 @@
 <template>
     <draggable v-model="computedStage" v-bind="dragOptions" :move="checkMove" class="devops-stage-list">
-        <Stage v-for="(stage, index) in computedStage"
-            :key="stage.id"
+        <Stage
             class="list-item"
+            v-for="(stage, index) in computedStage"
+            :key="stage.id"
             :editable="editable"
             :stage="stage"
             :is-preview="isPreview"
@@ -17,6 +18,7 @@
 <script>
     import { mapActions } from 'vuex'
     import Stage from './Stage'
+    import { hashID } from '@/utils/util'
     export default {
         components: {
             Stage
@@ -46,11 +48,12 @@
                 },
                 set (stages) {
                     const data = stages.map((stage, index) => {
-                        const id = `stage-${index + 1}`
+                        const name = `stage-${index + 1}`
+                        const id = `s-${hashID()}`
                         if (!stage.containers) { // container
                             return {
                                 id,
-                                name: id,
+                                name,
                                 containers: [stage]
                             }
                         }
@@ -96,12 +99,14 @@
 </script>
 
 <style lang="scss">
+    @import 'Stage';
     .devops-stage-list {
         display: flex;
         padding-right: 120px;
         width: fit-content;
         position: relative;
         align-items: flex-start;
+        padding-top: $StagepaddingTop;
     }
 
     .list-item {

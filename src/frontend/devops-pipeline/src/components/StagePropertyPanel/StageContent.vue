@@ -67,8 +67,7 @@
             errors: {
                 deep: true,
                 handler: function (errors, old) {
-                    const validStageControl = !this.$refs.stageControl || (this.$refs.stageControl && this.$refs.stageControl.validateStageControl())
-                    const isError = errors.any() || !validStageControl
+                    const isError = errors.any()
                     this.handleStageChange('isError', isError)
                 }
             }

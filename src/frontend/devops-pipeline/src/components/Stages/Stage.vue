@@ -1,11 +1,13 @@
 <template>
-    <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'show-stage-area': !isTriggerStage }, 'pipeline-stage']" ref="stageRef">
-        <bk-button v-if="!isTriggerStage" :class="['pipeline-stage-entry', [stageStatusCls], { 'editable-stage-entry': editable, 'stage-disabled': stageDisabled }]" @click="showStagePanel">
-            <span v-if="stage.status === 'PAUSE'" class="bk-icon icon-play-circle-shape" v-bk-tooltips.top="canTriggerStage ? $t('editPage.toCheck') : $t('editPage.noAuthToCheck')" @click.stop="startNextStage"></span>
-            <logo v-else-if="stage.status === 'SKIP'" v-bk-tooltips="$t('skipStageDesc')" class="skip-icon redo-arrow" name="redo-arrow" size="16"></logo>
+    <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'readonly': !editable || stageDisabled }, 'pipeline-stage']" ref="stageRef">
+        <span :class="{ 'stage-review-logo': true, 'pointer': isStagePause }" v-bk-tooltips.top="reviewTooltip" @click.stop="startNextStage">
+            <logo v-if="!isTriggerStage" color="#999" :name="reviewStatausIcon" size="28" />
+        </span>
+        <bk-button :class="['pipeline-stage-entry', [stageStatusCls], { 'editable-stage-entry': editable, 'stage-disabled': stageDisabled }]" @click.stop="showStagePanel">
+            <logo v-if="stage.status === 'SKIP'" v-bk-tooltips="$t('skipStageDesc')" class="skip-icon redo-arrow" name="redo-arrow" size="16"></logo>
             <i v-else-if="stageStatusIcon" :class="`stage-status-icon bk-icon icon-${stageStatusIcon}`"></i>
             <span class="stage-entry-name">{{ stageTitle }}</span>
-            <i v-if="stage.isError" class="bk-icon icon-exclamation-triangle-shape stage-entry-error-icon" />
+            <i v-if="isStageError" class="bk-icon icon-exclamation-triangle-shape stage-entry-error-icon" />
             <span @click.stop v-if="showCheckedToatal && canSkipElement" class="check-total-stage">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="stage.runStage" :disabled="stageDisabled"></bk-checkbox>
             </span>
@@ -16,7 +18,8 @@
                 <i v-if="showCopyStage" @click.stop="deleteStageHandler" class="add-plus-icon close" />
             </span>
         </bk-button>
-        <draggable v-model="computedContainer" v-bind="dragOptions" :move="checkMove" tag="ul" class="soda-process-stage">
+        <cruveLine v-if="!isTriggerStage" class="first-connect-line connect-line left" :width="60" :height="60"></cruveLine>
+        <draggable v-model="computedContainer" v-bind="dragOptions" :move="checkMove" tag="ul">
             <stage-container v-for="(container, index) in computedContainer"
                 :key="container.containerId"
                 :stage-index="stageIndex"
@@ -30,18 +33,22 @@
                 :container="container">
             </stage-container>
         </draggable>
+        <cruve-line class="first-connect-line connect-line right" :width="60" :direction="false" :height="60"></cruve-line>
+        <span class="stage-connector">
+            <i class="devops-icon icon-right-shape connector-angle"></i>
+        </span>
         <template v-if="editable">
             <span v-bk-clickoutside="toggleAddMenu" v-if="!isFirstStage" class="add-menu" @click.stop="toggleAddMenu(!isAddMenuShow)">
                 <i :class="{ [iconCls]: true, 'active': isAddMenuShow }" />
                 <template v-if="isAddMenuShow">
+                    <cruve-line class="add-connector connect-line left" :width="60" :height="cruveHeight"></cruve-line>
                     <span class="insert-tip direction line-add" @click.stop="showStageSelectPopup(false)">
                         <i class="tip-icon" />
                         <span>
                             {{ $t('editPage.insert') }}
                         </span>
                     </span>
-                    <span class="cruve-line left"></span>
-                    <div @click.stop="showStageSelectPopup(true)" class="insert-tip parallel-add">
+                    <div @click.stop="showStageSelectPopup(true)" class="insert-tip parallel-add" :style="`top: ${cruveHeight}px`">
                         <i class="tip-icon" />
                         <span>
                             {{ $t('editPage.append') }}
@@ -63,10 +70,12 @@
     import StageContainer from './StageContainer'
     import { getOuterHeight, hashID } from '@/utils/util'
     import Logo from '@/components/Logo'
+    import CruveLine from '@/components/Stages/CruveLine'
 
     export default {
         components: {
             StageContainer,
+            CruveLine,
             Logo
         },
         props: {
@@ -92,7 +101,8 @@
         },
         data () {
             return {
-                isAddMenuShow: false
+                isAddMenuShow: false,
+                cruveHeight: 0
             }
         },
         computed: {
@@ -103,6 +113,14 @@
             ...mapGetters('atom', [
                 'isTriggerContainer'
             ]),
+            isStageError () {
+                try {
+                    return this.stage.isError || this.stage.stageControlOption.isError
+                } catch (e) {
+                    console.warn(e)
+                    return false
+                }
+            },
             showCopyStage () {
                 return !this.isTriggerStage && this.editable
             },
@@ -138,7 +156,7 @@
                 },
                 set (containers) {
                     let data = []
-                    containers.forEach((container) => {
+                    containers.forEach(container => {
                         if (container.containers) data = [...data, ...container.containers] // 拖动的是stage
                         else data.push(container)
                     })
@@ -182,11 +200,36 @@
                         return 'redo-arrow'
                     case 'RUNNING':
                         return 'circle-2-1 spin-icon'
+                    default:
+                        return ''
                 }
-                return ''
             },
             stageStatusCls () {
                 return this.stage && this.stage.status ? this.stage.status : ''
+            },
+            enableReview () {
+                return this.stage.stageControlOption && this.stage.stageControlOption.manualTrigger
+            },
+            reviewStatausIcon () {
+                switch (this.stage.status) {
+                    case 'PAUSE':
+                        return 'reviewing'
+                    case 'SUCCEED':
+                        return this.enableReview ? 'reviewed' : 'review-disable'
+                    case 'FAILED':
+                    case 'REVIEW_ABORT':
+                        return this.enableReview ? 'review-abort' : 'review-disable'
+                    case 'RUNNING':
+                        return this.enableReview ? 'reviewed' : 'review-disable'
+                    default:
+                        return this.enableReview ? this.editable || this.isPreview ? 'review-enable' : 'review-waiting' : 'review-disable'
+                }
+            },
+            reviewTooltip () {
+                return {
+                    content: this.canTriggerStage ? this.$t('editPage.toCheck') : this.$t('editPage.noAuthToCheck'),
+                    disabled: !this.isStagePause
+                }
             }
         },
         watch: {
@@ -225,7 +268,8 @@
                 'updateStage',
                 'triggerStage',
                 'deleteStage',
-                'toggleReviewDialog'
+                'toggleReviewDialog',
+                'toggleStageReviewPanel'
             ]),
             checkIsTriggerStage (stage) {
                 try {
@@ -283,24 +327,23 @@
             },
 
             startNextStage () {
-                if (this.canTriggerStage) {
+                if (this.canTriggerStage && this.isStagePause) {
                     this.toggleReviewDialog({
                         isShow: true,
                         reviewInfo: this.stage
                     })
                 }
+                this.toggleStageReviewPanel({
+                    isShow: true,
+                    editingElementPos: {
+                        stageIndex: this.stageIndex
+                    }
+                })
             },
             updateHeight () {
                 const parentEle = this.$refs.stageRef
-                const cruveEle = parentEle.querySelector('.cruve-line')
-                const parallelAddTip = parentEle.querySelector('.parallel-add')
-                const height = getOuterHeight('.soda-process-stage', parentEle)
-                if (cruveEle) {
-                    cruveEle.style.height = `${height}px`
-                }
-                if (parallelAddTip) {
-                    parallelAddTip.style.top = `${height + 10}px`
-                }
+                const height = getOuterHeight(parentEle)
+                this.cruveHeight = height
             },
             deleteStageHandler () {
                 const { stageIndex } = this
@@ -342,22 +385,32 @@
 
 <style lang='scss'>
     @import 'Stage';
-    $addIconTop: $itemHeight / 2 - $addBtnSize / 2 + $StagepaddingTop;
+    $addIconTop: $stageEntryHeight / 2 - $addBtnSize / 2;
+
     .pipeline-drag {
         cursor: url('../../images/grab.cur'), default;
     }
+
     .pipeline-stage {
         position: relative;
-        margin: 0;
-        padding-top: $StagepaddingTop;
-        .pipeline-stage-entry {
+        width: 280px;
+        border-radius: 2px;
+        padding: 0 0 24px 0;
+        background: $stageBGColor;
+        margin: 0 $StageMargin 0 0;
+
+        .stage-review-logo {
             position: absolute;
+            left: -$reviewIconSize / 2;
+            top: ($stageEntryHeight - $reviewIconSize) / 2;
+            z-index: 2;
+        }
+
+        .pipeline-stage-entry {
             display: block;
-            width: 88%;
-            left: 6%;
-            top: 0;
-            height: 32px;
-            line-height: 32px;
+            width: 100%;
+            height: 50px;
+            line-height: 50px;
             background-color: #EFF5FF;
             border-color: #D4E8FF;
             color: $primaryColor;
@@ -433,7 +486,7 @@
                 position: absolute;
                 right: 27px;
                 &.stage-entry-error-icon {
-                    top: 7px;
+                    top: 16px;
                     right: 8px;
                     color: $dangerColor;
                 }
@@ -442,7 +495,7 @@
             .stage-entry-btns {
                 position: absolute;
                 right: 0;
-                top: 7px;
+                top: 16px;
                 display: none;
                 .copy-stage {
                     margin-right: 8px;
@@ -463,57 +516,86 @@
             }
         }
 
-        &.show-stage-area {
-            .soda-process-stage:before {
-                position: absolute;
-                content: '';
-                width: 88%;
-                top: 0;
-                left: 6%;
-                height: 100%;
-                background: $stageBGColor;
+        .first-connect-line {
+            height: 76px;
+            width: $svgWidth;
+            top: $stageEntryHeight / 2 - 2;
+            left: $addIconLeft + $addBtnSize / 2;
+            &.right {
+                left: auto;
+                right: -$StageMargin - $addIconLeft - $addBtnSize / 2;
             }
         }
+
+        .add-connector {
+            stroke-dasharray: 4,4;
+            top: 7px;
+            left: $addBtnSize / 2;
+        }
+
         .append-stage {
             position: absolute;
             top: $addIconTop;
-            right: -$StagePadding - $addBtnSize / 2 + $StageMargin / 2;
+            right: $appendIconRight;
             z-index: 3;
             .add-plus-icon {
                 box-shadow: 0px 2px 4px 0px rgba(60, 150, 255, 0.2);
             }
         }
+
         .add-menu {
             position: absolute;
             top: $addIconTop;
-            left: -9px;
+            left: $addIconLeft;
             cursor: pointer;
             z-index: 3;
             .add-plus-icon {
                 box-shadow: 0px 2px 4px 0px rgba(60, 150, 255, 0.2);
             }
+            .minus-icon {
+                z-index: 4;
+            }
             .line-add {
                 top: -30px;
                 left: -16px;
             }
-            .cruve-line {
-                @include cruve-connect ($lineRadius, dashed, $primaryColor, false);
-                position: absolute;
-                top: 10px + $lineRadius;
-                z-index: -1;
-                left: 21px;
-            }
             .parallel-add {
                 left: 50px;
-                &:before {
-                    content: '';
-                    position: absolute;
-                    left: -22px;
-                    top: 10px;
-                    border-top: 2px dashed $primaryColor;
-                    width: 17px;
-                    height: 0px;
+            }
+        }
+
+        &:last-child {
+            .stage-connector {
+                width: $StageMargin / 2;
+                right: -$StageMargin / 2;
+                .connector-angle {
+                    display: none;
                 }
+            }
+        }
+        .stage-connector {
+            position: absolute;
+            width: $StageMargin - $reviewIconSize / 2;
+            height: $stageConnectorSize;
+            right: - $StageMargin + $reviewIconSize / 2;
+            top: $stageEntryHeight / 2 - 1;
+            color: $primaryColor;
+            background-color: $primaryColor;
+
+            &:before {
+                content: '';
+                width: $dotR;
+                height: $dotR;
+                position: absolute;
+                left: -$dotR / 2;
+                top: - ($dotR / 2 - 1);
+                background-color: $primaryColor;
+                border-radius: 50%;
+            }
+            .connector-angle {
+                position: absolute;
+                right: -$angleSize;
+                top: -$angleSize;
             }
         }
     }

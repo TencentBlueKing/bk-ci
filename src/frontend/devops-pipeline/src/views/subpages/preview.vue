@@ -1,7 +1,7 @@
 <template>
     <div class="pipeline-execute-preview" v-bkloading="{ isLoading }">
         <div class="scroll-container">
-            <div class="execute-previe-content">
+            <div class="execute-preview-content">
                 <div class="version-option" v-if="isVisibleVersion">
                     <p class="item-title">{{ $t('preview.introVersion') }}：<i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShowVersion }]" @click="toggleIcon('version')"></i></p>
                     <pipeline-versions-form ref="versionForm"
@@ -25,47 +25,17 @@
                         </section>
                     </p>
                     <div class="pipeline-detail">
-                        <stages :stages="pipeline.stages" :editable="false" :is-preview="true" :can-skip-element="curPipelineInfo.canElementSkip"></stages>
+                        <pipeline :show-header="false" :pipeline="pipeline" :editable="false" :is-preview="true" :can-skip-element="curPipelineInfo.canElementSkip"></pipeline>
                     </div>
                 </div>
             </div>
         </div>
-        <template v-if="editingElementPos">
-            <template v-if="typeof editingElementPos.elementIndex !== &quot;undefined&quot;">
-                <atom-property-panel
-                    :element-index="editingElementPos.elementIndex"
-                    :container-index="editingElementPos.containerIndex"
-                    :stage-index="editingElementPos.stageIndex"
-                    :editable="false"
-                    :stages="pipeline.stages"
-                />
-            </template>
-            <template v-else-if="typeof editingElementPos.containerIndex !== &quot;undefined&quot;">
-                <container-property-panel
-                    :title="panelTitle"
-                    :container-index="editingElementPos.containerIndex"
-                    :stage-index="editingElementPos.stageIndex"
-                    :stages="pipeline.stages"
-                    :editable="false"
-                />
-            </template>
-            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined'">
-                <stage-property-panel
-                    :stage="currentStage"
-                    :stage-index="editingElementPos.stageIndex"
-                    :editable="false"
-                />
-            </template>
-        </template>
     </div>
 </template>
 
 <script>
-    import { mapState, mapGetters, mapActions } from 'vuex'
-    import Stages from '@/components/Stages'
-    import AtomPropertyPanel from '@/components/AtomPropertyPanel'
-    import ContainerPropertyPanel from '@/components/ContainerPropertyPanel'
-    import StagePropertyPanel from '@/components/StagePropertyPanel'
+    import { mapGetters, mapActions } from 'vuex'
+    import Pipeline from '@/components/Pipeline'
     import Vue from 'vue'
     import { bus } from '@/utils/bus'
     import { getParamsValuesMap } from '@/utils/util'
@@ -76,12 +46,9 @@
 
     export default {
         components: {
-            Stages,
-            AtomPropertyPanel,
-            ContainerPropertyPanel,
+            Pipeline,
             PipelineParamsForm,
-            PipelineVersionsForm,
-            StagePropertyPanel
+            PipelineVersionsForm
         },
         mixins: [pipelineOperateMixin],
         data () {
@@ -104,34 +71,13 @@
                 curParamList: 'pipelines/getCurAtomPrams'
             }),
             ...mapGetters('atom', [
-                'getContainers',
-                'getStage',
                 'getAllElements'
-            ]),
-            ...mapState('atom', [
-                'editingElementPos',
-                'isPropertyPanelVisible'
             ]),
             projectId () {
                 return this.$route.params.projectId
             },
             pipelineId () {
                 return this.$route.params.pipelineId
-            },
-            currentStage () {
-                const { stageIndex } = this.editingElementPos
-                return this.getStageByIndex(stageIndex)
-            },
-            panelTitle () {
-                const { stageIndex, containerIndex, elementIndex } = this.editingElementPos
-                if (typeof elementIndex !== 'undefined') {
-                    return ''
-                }
-                const stage = this.getStageByIndex(stageIndex)
-                const containers = this.getContainers(stage)
-                return typeof containerIndex !== 'undefined'
-                    ? containers[containerIndex].name + '： ' + (stageIndex + 1) + '-' + (containerIndex + 1)
-                    : this.$t('propertyBar')
             }
         },
         watch: {
@@ -207,10 +153,6 @@
                 'setPipeline',
                 'setPipelineEditing'
             ]),
-            getStageByIndex (stageIndex) {
-                const { getStage, pipeline } = this
-                return getStage(pipeline.stages, stageIndex)
-            },
             async init () {
                 this.isLoading = true
                 try {
@@ -318,7 +260,7 @@
                 display: none;
             }
         }
-        .execute-previe-content {
+        .execute-preview-content {
             padding: 20px 44px 30px;
             height: 100%;
             overflow: auto;
@@ -360,24 +302,25 @@
                     @include ellipsis();
                     display: inline-block;
                 }
+                .bk-form-item {
+                    margin-top: 20px;
+                    width: 48%;
+                }
+                .bk-label {
+                    width: 100%;
+                    text-align: left;
+                    @include ellipsis();
+                }
+                .bk-form-content {
+                    float: left;
+                    margin-left: 0;
+                    width: 100%;
+                }
+                .pipeline-detail {
+                    padding: 20px 10px;
+                }
             }
-            .bk-form-item {
-                margin-top: 20px;
-                width: 48%;
-            }
-            .bk-label {
-                width: 100%;
-                text-align: left;
-                @include ellipsis();
-            }
-            .bk-form-content {
-                float: left;
-                margin-left: 0;
-                width: 100%;
-            }
-            .pipeline-detail {
-                padding: 20px 10px;
-            }
+
             .version-option {
                 margin-bottom: 30px;
                 .bk-form-item {
