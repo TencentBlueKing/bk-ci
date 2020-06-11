@@ -160,7 +160,7 @@
                 background-color: white;
                 right: 0;
                 top: 52px;
-                z-index: 1111;
+                z-index: 1112;
                 width: 640px;
                 margin-bottom: 10px;
                 box-shadow: 0 3px 7px 0 rgba(0,0,0,0.1);
