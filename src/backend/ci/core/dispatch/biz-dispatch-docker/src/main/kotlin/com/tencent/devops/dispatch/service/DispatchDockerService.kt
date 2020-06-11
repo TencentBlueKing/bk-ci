@@ -167,7 +167,7 @@ class DispatchDockerService @Autowired constructor(
         try {
             pipelineDockerIPInfoDao.delete(dslContext, dockerIp)
             // 清空与之关联构建分配
-            pipelineDockerTaskSimpleDao.deleteByDockerIp(dslContext, dockerIp)
+            // pipelineDockerTaskSimpleDao.deleteByDockerIp(dslContext, dockerIp)
             return true
         } catch (e: Exception) {
             logger.error("OP dispatchDocker delete error.", e)
