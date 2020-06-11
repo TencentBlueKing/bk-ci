@@ -352,20 +352,24 @@ class DockerHostDebugService @Autowired constructor(
             )
         }
 
-        val containerStatusRunning = checkContainerStatus(
-            projectId = debugTask.projectId,
-            pipelineId = debugTask.pipelineId,
-            vmSeqId = debugTask.vmSeqId,
-            dockerIp = debugTask.hostTag,
-            containerId = debugTask.containerId
-        )
-
-        if (!containerStatusRunning) {
-            pipelineDockerDebugDao.deleteDebug(dslContext, debugTask.id)
-            return Result(
-                status = 1,
-                message = "登录调试失败，调试容器异常关闭，请重试。"
+        try {
+            val containerStatusRunning = checkContainerStatus(
+                projectId = debugTask.projectId,
+                pipelineId = debugTask.pipelineId,
+                vmSeqId = debugTask.vmSeqId,
+                dockerIp = debugTask.hostTag,
+                containerId = debugTask.containerId
             )
+
+            if (!containerStatusRunning) {
+                pipelineDockerDebugDao.deleteDebug(dslContext, debugTask.id)
+                return Result(
+                    status = 1,
+                    message = "登录调试失败，调试容器异常关闭，请重试。"
+                )
+            }
+        } catch (e: Exception) {
+            logger.warn("get containerStatus error, ignore.")
         }
 
         return Result(
