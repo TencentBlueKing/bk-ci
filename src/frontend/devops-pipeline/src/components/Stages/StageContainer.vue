@@ -1,12 +1,13 @@
 <template>
     <div
         ref="stageContainer"
-        :class="{ 'soda-stage-container': true, 'first-container': stageIndex === 0, 'readonly': !editable || containerDisabled }"
+        :class="{ 'devops-stage-container': true, 'first-container': stageIndex === 0, 'readonly': !editable || containerDisabled }"
     >
         <template v-if="!isOnlyOneContainer && containerLength - 1 !== containerIndex">
-            <span class="connect-line left" :class="{ 'cruve': containerIndex === 0 }"></span>
-            <span class="connect-line right" :class="{ 'cruve': containerIndex === 0 }"></span>
+            <cruve-line :straight="true" :width="60" :height="cruveHeight" class="connect-line left" />
+            <cruve-line :straight="true" :width="60" :height="cruveHeight" :direction="false" class="connect-line right" />
         </template>
+
         <h3 :class="{ 'container-title': true, 'first-ctitle': containerIndex === 0, [container.status]: container.status }" @click.stop="showContainerPanel">
             <status-icon type="container" :editable="editable" :container-disabled="containerDisabled" :status="container.status">
                 {{ containerSerialNum }}
@@ -44,13 +45,15 @@
     import AtomList from './AtomList'
     import StatusIcon from './StatusIcon'
     import Logo from '@/components/Logo'
+    import CruveLine from '@/components/Stages/CruveLine'
 
     export default {
         components: {
             StatusIcon,
             ContainerType,
             AtomList,
-            Logo
+            Logo,
+            CruveLine
         },
         props: {
             container: Object,
@@ -75,7 +78,8 @@
         data () {
             return {
                 showContainerName: false,
-                showAtomName: false
+                showAtomName: false,
+                cruveHeight: 0
             }
         },
         computed: {
@@ -169,10 +173,7 @@
                 if (!this.$refs.stageContainer) {
                     return
                 }
-                const height = `${getOuterHeight(this.$refs.stageContainer) - 12}px`
-                Array.from(this.$refs.stageContainer.querySelectorAll('.connect-line')).map(el => {
-                    el.style.height = height
-                })
+                this.cruveHeight = getOuterHeight(this.$refs.stageContainer)
             },
             showContainerPanel () {
                 const { stageIndex, containerIndex } = this
@@ -211,39 +212,36 @@
 
 <style lang="scss">
     @import "./Stage";
-    .soda-stage-container {
+    .devops-stage-container {
         text-align: left;
-        margin: 0 $StageMargin/2 26px $StageMargin/2;
+        margin: 16px 20px 0 20px;
         position: relative;
 
         // 实心圆点
         &:after {
             content: '';
-            width: $dotR;
-            height: $dotR;
+            width: $smalldotR;
+            height: $smalldotR;
             position: absolute;
-            right: -$dotR / 2;
-            top: $itemHeight / 2 - ($dotR / 2 - 1);
+            right: -$smalldotR / 2;
+            top: $itemHeight / 2 - ($smalldotR / 2 - 1);
             background: $primaryColor;
             border-radius: 50%;
         }
         // 三角箭头
         &:before {
-            content: '';
-            border: $angleSize solid transparent;
-            border-left-color: $primaryColor;
-            height: 0;
-            width: 0;
+            font-family: 'bk-icons-linear' !important;
+            content: "\e94d";
             position: absolute;
-            left: -$angleSize;
-            top: $itemHeight / 2 - $angleSize + 1;
+            font-size: 13px;
+            color: $primaryColor;
+            left: -10px;
+            top: $itemHeight / 2 - 13px / 2 + 1;
             z-index: 2;
         }
 
         &.first-container {
-            margin-left: 0;
-            &:before,
-            .container-title:before {
+            &:before {
                 display: none;
             }
         }
@@ -311,100 +309,20 @@
                 }
             }
 
-            // 实线
-            &:before,
-            &:after {
-                content: '';
-                position: absolute;
-                border-top: 2px $lineStyle $primaryColor;
-                width: $StagePadding;
-                top: $itemHeight / 2;
-                left: -$StagePadding;
-            }
-            &:after {
-                right: -$StagePadding;
-                left: auto;
-            }
-
-            &:not(.first-ctitle) {
-                &:before,
-                &:after {
-                    width: $shortLine;
-                    left: -$shortLine;
-                }
-
-                &:after {
-                    left: auto;
-                    right: -$shortLine;
-                }
-            }
         }
+
         .connect-line {
             position: absolute;
-            top: $itemHeight / 2 + 1 + $lineRadius;
-            @include cruve-connect ($lineRadius, $lineStyle, $primaryColor, false);
-            &.left {
-                left: -$StageMargin / 2 + (2 * $lineRadius);
+            top: $itemHeight / 2 - 4;
+            stroke: $primaryColor;
+            stroke-width: 1;
+            fill: none;
+
+             &.left {
+                left: -$svgWidth + 4;
             }
             &.right {
-                @include cruve-connect ($lineRadius, $lineStyle, $primaryColor, true);
-                right: -$StageMargin / 2  + (2 * $lineRadius);
-            }
-            &:not(.cruve) {
-                &:before {
-                    top: -$itemHeight / 2 + $lineRadius + 1;
-                    transform: rotate(0);
-                    border-radius: 0;
-                }
-            }
-        }
-    }
-
-    .readonly {
-        .connect-line {
-            &.left,
-            &.right {
-                border-color: $lineColor;
-                &:before {
-                    border-right-color: $lineColor;
-                }
-                &:after {
-                    border-bottom-color: $lineColor;
-                }
-            }
-        }
-        &:after {
-            background: $lineColor;
-        }
-        // 三角箭头
-        &:before {
-            border-left-color: $lineColor;
-        }
-        .container-title {
-            cursor: pointer;
-            background-color: $fontWeightColor;
-
-            &.RUNNING {
-                background-color: $loadingColor;
-            }
-            &.PREPARE_ENV {
-                background-color: $loadingColor;
-            }
-            &.CANCELED, &.REVIEWING, &.REVIEW_ABORT {
-                background-color: $cancelColor;
-            }
-            &.FAILED, &.HEARTBEAT_TIMEOUT {
-                background-color: $dangerColor;
-            }
-            &.SUCCEED {
-                background-color: $successColor;
-            }
-            &:before,
-            &:after {
-                border-top-color: $lineColor;
-            }
-            > .container-name span:hover {
-                color: white;
+                right: -$addIconLeftMargin - $containerMargin;
             }
         }
     }

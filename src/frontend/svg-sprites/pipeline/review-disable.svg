@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="28px" height="28px" viewBox="0 0 28 28" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>不启用审核</title>
+    <g id="流水线" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="蓝盾流水线--Stage审核功能设计调整" transform="translate(-1745.000000, -828.000000)">
+            <g id="不启用审核" transform="translate(1745.000000, 828.000000)">
+                <g id="编组-2" fill="#FFFFFF" stroke="#999999">
+                    <rect id="矩形" x="0.5" y="0.5" width="27" height="27" rx="13.5"></rect>
+                </g>
+                <path d="M15.172,21 L16.172,22 L8,22 L8,21 L15.172,21 Z M10.172,16 L14.172,20 L7,20 L7,16 L10.172,16 Z M14,6 C16.209139,6 18,7.790861 18,10 C18,11.4801068 17.1961002,12.7724528 16.0011092,13.4642293 L16,16 L21,16 L21,20 L19.828,20 L10.004,10.175 L10,10 C10,7.790861 11.790861,6 14,6 Z" id="Combined-Shape" fill="#999999" fill-rule="nonzero"></path>
+                <rect id="Rectangle" fill="#999999" transform="translate(13.146447, 16.146447) rotate(-315.000000) translate(-13.146447, -16.146447) " x="4.14644661" y="15.6464466" width="18" height="1"></rect>
+            </g>
+        </g>
+    </g>
+</svg>
