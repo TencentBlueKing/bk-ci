@@ -191,10 +191,15 @@
                     const container = {
                         ...copyContainer,
                         containerId: `c-${hashID(32)}`,
+                        jobId: '',
                         elements: copyContainer.elements.map(element => ({
                             ...element,
                             id: `e-${hashID(32)}`
-                        }))
+                        })),
+                        jobControlOption: {
+                            ...copyContainer.jobControlOption,
+                            dependOn: ''
+                        }
                     }
                     this.pipeline.stages[this.stageIndex].containers.splice(this.containerIndex + 1, 0, JSON.parse(JSON.stringify(container)))
                     this.setPipelineEditing(true)

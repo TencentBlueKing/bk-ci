@@ -416,11 +416,16 @@
                         id: `s-${hashID(32)}`,
                         containers: copyStage.containers.map(container => ({
                             ...container,
+                            jobId: '',
                             containerId: `c-${hashID(32)}`,
                             elements: container.elements.map(element => ({
                                 ...element,
                                 id: `e-${hashID(32)}`
-                            }))
+                            })),
+                            jobControlOption: {
+                                ...container.jobControlOption,
+                                dependOn: ''
+                            }
                         }))
 
                     }

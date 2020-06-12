@@ -25,7 +25,7 @@
         props: {
             jobOption: {
                 type: Object,
-                default: {}
+                default: () => ({})
             },
             disabled: {
                 type: Boolean,
@@ -34,7 +34,13 @@
             updateContainerParams: {
                 type: Function,
                 required: true
-            }
+            },
+            stage: {
+                type: Array,
+                default: () => ({})
+            },
+            stageIndex: Number,
+            containerIndex: Number
         },
         computed: {
             optionModel () {

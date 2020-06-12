@@ -21,58 +21,6 @@
 const jobOptionConfigMixin = {
     data () {
         return {
-            JOB_OPTION: {
-                enable: {
-                    rule: {},
-                    type: 'boolean',
-                    component: 'atom-checkbox',
-                    text: this.$t('storeMap.enableJob'),
-                    default: true
-                },
-                timeout: {
-                    rule: { 'numeric': true, 'max_value': 10080 },
-                    component: 'vuex-input',
-                    required: true,
-                    label: this.$t('storeMap.jobTimeout'),
-                    desc: this.$t('storeMap.timeoutDesc'),
-                    placeholder: this.$t('storeMap.timeoutPlaceholder'),
-                    default: '900'
-                },
-                runCondition: {
-                    rule: {},
-                    component: 'selector',
-                    label: this.$t('storeMap.jobRunCondition'),
-                    default: 'STAGE_RUNNING',
-                    list: [
-                        {
-                            id: 'STAGE_RUNNING',
-                            name: this.$t('storeMap.stageRunning')
-                        },
-                        {
-                            id: 'CUSTOM_VARIABLE_MATCH',
-                            name: this.$t('storeMap.varMatch')
-                        },
-                        {
-                            id: 'CUSTOM_VARIABLE_MATCH_NOT_RUN',
-                            name: this.$t('storeMap.varNotMatch')
-                        }
-                    ]
-                },
-                customVariables: {
-                    rule: {},
-                    component: 'key-value-normal',
-                    default: [{ key: 'param1', value: '' }],
-                    label: this.$t('storeMap.customVar'),
-                    allowNull: false,
-                    isHidden: (jobOptoin) => {
-                        return !(jobOptoin && (jobOptoin.runCondition === 'CUSTOM_VARIABLE_MATCH' || jobOptoin.runCondition === 'CUSTOM_VARIABLE_MATCH_NOT_RUN'))
-                    }
-                },
-                customCondition: {
-                    isHidden: true,
-                    default: ''
-                }
-            },
             JOB_MUTUAL: {
                 enable: {
                     default: false
@@ -118,6 +66,80 @@ const jobOptionConfigMixin = {
                 }
             }
         }
+    },
+    computed: {
+        JOB_OPTION () {
+            return {
+                enable: {
+                    rule: {},
+                    type: 'boolean',
+                    component: 'atom-checkbox',
+                    text: this.$t('storeMap.enableJob'),
+                    default: true
+                },
+                dependOn: {
+                    rule: {},
+                    component: 'vuex-input',
+                    label: this.$t('storeMap.dependOn'),
+                    desc: this.$t('storeMap.dependOnDesc'),
+                    default: ''
+                },
+                timeout: {
+                    rule: { 'numeric': true, 'max_value': 10080 },
+                    component: 'vuex-input',
+                    required: true,
+                    label: this.$t('storeMap.jobTimeout'),
+                    desc: this.$t('storeMap.timeoutDesc'),
+                    placeholder: this.$t('storeMap.timeoutPlaceholder'),
+                    default: '900'
+                },
+                runCondition: {
+                    rule: {},
+                    component: 'selector',
+                    label: this.$t('storeMap.jobRunCondition'),
+                    default: 'STAGE_RUNNING',
+                    list: [
+                        {
+                            id: 'STAGE_RUNNING',
+                            name: this.$t('storeMap.stageRunning')
+                        },
+                        {
+                            id: 'CUSTOM_VARIABLE_MATCH',
+                            name: this.$t('storeMap.varMatch')
+                        },
+                        {
+                            id: 'CUSTOM_VARIABLE_MATCH_NOT_RUN',
+                            name: this.$t('storeMap.varNotMatch')
+                        }
+                    ]
+                },
+                customVariables: {
+                    rule: {},
+                    component: 'key-value-normal',
+                    default: [{ key: 'param1', value: '' }],
+                    label: this.$t('storeMap.customVar'),
+                    allowNull: false,
+                    isHidden: (jobOptoin) => {
+                        return !(jobOptoin && (jobOptoin.runCondition === 'CUSTOM_VARIABLE_MATCH' || jobOptoin.runCondition === 'CUSTOM_VARIABLE_MATCH_NOT_RUN'))
+                    }
+                },
+                customCondition: {
+                    isHidden: true,
+                    default: ''
+                }
+            }
+        }
+        // dependOnList () {
+        //     console.log(this.stage, 'list')
+        //     const list = []
+        //     // if (!this.stage.containers || this.stage.containers.length <= 1) return list
+        //     this.stage.containers && this.stage.containers.map((container, index) => {
+        //         if (index !== this.containerIndex) {
+        //             list.push({ id: container.jobId || container.containerId, name: `Job${this.stageIndex + 1}-${index + 1}` })
+        //         }
+        //     })
+        //     return list
+        // }
     },
     methods: {
         getJobOptionDefault (OPTION = this.JOB_OPTION) {
