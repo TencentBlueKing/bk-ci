@@ -163,9 +163,6 @@ interface UserPTemplateResource {
         @ApiParam("模版类型", required = false)
         @QueryParam("templateType")
         templateType: TemplateType?,
-        @ApiParam("范畴", required = false)
-        @QueryParam("category")
-        category: String?,
         @ApiParam("页码", required = false)
         @QueryParam("page")
         page: Int?,
