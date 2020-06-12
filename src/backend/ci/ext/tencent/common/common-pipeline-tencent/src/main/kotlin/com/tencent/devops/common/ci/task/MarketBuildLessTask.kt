@@ -27,7 +27,6 @@
 package com.tencent.devops.common.ci.task
 
 import com.tencent.devops.common.ci.CiBuildConfig
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -63,15 +62,3 @@ data class MarketBuildLessTask(
         )
     }
 }
-
-//@ApiModel("插件市场入参")
-//data class MarketBuildInput(
-//    @ApiModelProperty("atomCode", required = true)
-//    val atomCode: String,
-//    @ApiModelProperty("name", required = true)
-//    val name: String,
-//    @ApiModelProperty("原子版本", required = false)
-//    var version: String = "1.*",
-//    @ApiModelProperty("原子参数数据", required = true)
-//    val data: Map<String, Any> = mapOf()
-//) : AbstractInput()
