@@ -37,7 +37,7 @@ import javax.ws.rs.core.Response
 class UserReportResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService)
     : UserReportResource {
     override fun get(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, path: String): Response {
-        val filePath = "${FileTypeEnum.BK_REPORT.fileType}/$projectId/$pipelineId/$buildId/$path"
+        val filePath = "${FileTypeEnum.BK_REPORT.fileType}/$projectId/$pipelineId/$buildId/$elementId/$path"
         return archiveFileService.downloadFile(filePath)
     }
 }
