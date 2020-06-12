@@ -102,7 +102,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             val packageFile = File("${getAtomArchiveBasePath()}/$BK_CI_ATOM_DIR/${atomEnvRequest.pkgPath}")
             packageFileName = packageFile.name
             packageFileSize = packageFile.length()
-            shaContent = ShaUtils.sha1(packageFile.readBytes())
+            shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) }
             logger.info("packageFileName is:$packageFileName,shaContent is:$shaContent")
         } finally {
             // 清理服务器的解压的临时文件
