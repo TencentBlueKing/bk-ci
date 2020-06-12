@@ -91,11 +91,10 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateServi
         userId: String,
         projectId: String,
         templateType: TemplateType?,
-        category: String?,
         page: Int?,
         pageSize: Int?
     ): Result<OptionalTemplateList> {
-        return Result(templateService.listAllTemplate(projectId, templateType, category, null, page, pageSize))
+        return Result(templateService.listAllTemplate(projectId, templateType, null, page, pageSize))
     }
 
     override fun getTemplate(
