@@ -10,7 +10,7 @@
         </header>
         <div v-if="pipeline" class="scroll-container">
             <div class="scroll-wraper">
-                <stages :stages="pipeline.stages" :editable="pipelineEditable" :can-skip-element="canSkipElement" :is-running="isRunning"></stages>
+                <stages :stages="pipeline.stages" :editable="pipelineEditable" :can-skip-element="canSkipElement" :is-preview="isPreview"></stages>
             </div>
         </div>
 
@@ -114,6 +114,10 @@
             canSkipElement: {
                 type: Boolean,
                 default: false
+            },
+            isPreview: {
+                type: Boolean,
+                default: false
             }
         },
         computed: {
@@ -136,7 +140,7 @@
                 return this.$route.params
             },
             pipelineEditable () {
-                return this.editable && !this.pipeline.instanceFromTemplate && this.templateType !== 'CONSTRAINT'
+                return this.editable && !this.pipeline.instanceFromTemplate && this.templateType !== 'CONSTRAINT' && !this.isPreview
             },
             isStageShow: {
                 get () {

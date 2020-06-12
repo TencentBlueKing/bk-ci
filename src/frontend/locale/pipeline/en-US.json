@@ -83,7 +83,7 @@
     "stageInTitle": "Stage-In conditions: ",
     "stageOutTitle": "Stage-Out conditions: ",
     "enableStageReview": "Enable Stage Review",
-    "stageReviewDesc": "30-day unreviewed automatically ends the pipeline and marks it as STAGE_SUCCESS",
+    "stageReviewDesc": "60-day unreviewed automatically ends the pipeline and marks it as STAGE_SUCCESS",
     "stageTimeoutLabel": "Stage Timeout",
     "stageTimeoutError": "Stage timeout field error",
     "stageTimeoutDesc": "All the integers between 1 and 1440",

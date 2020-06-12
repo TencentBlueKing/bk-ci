@@ -16,7 +16,7 @@
                 </bk-select>
             </div>
         </form-field>
-        <stage-control ref="stageControl" :stage-control="stageControl" :disabled="!editable" :handle-stage-change="handleStageChange"></stage-control>
+        <stage-control v-if="stageIndex > 0" ref="stageControl" :stage-control="stageControl" :disabled="!editable" :handle-stage-change="handleStageChange"></stage-control>
     </section>
 </template>
 

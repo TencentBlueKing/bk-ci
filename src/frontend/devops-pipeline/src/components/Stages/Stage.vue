@@ -266,7 +266,6 @@
                 'setPipelineContainer',
                 'setPipelineEditing',
                 'updateStage',
-                'triggerStage',
                 'deleteStage',
                 'toggleReviewDialog',
                 'toggleStageReviewPanel'
@@ -333,7 +332,7 @@
                         reviewInfo: this.stage
                     })
                 }
-                this.toggleStageReviewPanel({
+                !this.isStagePause && this.toggleStageReviewPanel({
                     isShow: true,
                     editingElementPos: {
                         stageIndex: this.stageIndex
