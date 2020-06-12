@@ -162,6 +162,9 @@ interface ServiceBuildResource {
         pipelineId: String,
         @ApiParam("启动参数", required = true)
         values: Map<String, String>,
+        @ApiParam("手动指定构建版本参数", required = false)
+        @QueryParam("buildNo")
+        buildNo: Int? = null,
         @ApiParam("渠道号，默认为DS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
