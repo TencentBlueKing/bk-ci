@@ -695,8 +695,13 @@ class DockerHostBuildService(
     }
 
     fun isContainerRunning(containerId: String): Boolean {
-        val inspectContainerResponse = dockerCli.inspectContainerCmd(containerId).exec() ?: return false
-        return inspectContainerResponse.state.running ?: false
+        try {
+            val inspectContainerResponse = dockerCli.inspectContainerCmd(containerId).exec() ?: return false
+            return inspectContainerResponse.state.running ?: false
+        } catch (e: Exception) {
+            logger.error("check container: $containerId status failed.", e)
+            return false
+        }
     }
 
     fun log(buildId: String, message: String, tag: String?, containerHashId: String?) {

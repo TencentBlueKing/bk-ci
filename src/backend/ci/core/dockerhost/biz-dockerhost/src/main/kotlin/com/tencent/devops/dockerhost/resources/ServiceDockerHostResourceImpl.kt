@@ -173,6 +173,10 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
         return Result(dockerService.getDockerHostLoad())
     }
 
+    override fun getContainerStatus(containerId: String): Result<Boolean> {
+        return Result(dockerService.getContainerStatus(containerId))
+    }
+
     private fun checkReq(request: HttpServletRequest) {
         var ip = request.getHeader("x-forwarded-for")
         if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
