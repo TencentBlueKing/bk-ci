@@ -101,6 +101,9 @@
                     }
                 }
             }
+            .navigation-menu-item .devops-icon {
+                font-family: 'bk-icons-linear' !important;
+            }
             .navigation-menu-item[group]:after {
                 content: " ";
                 width: 100%;
