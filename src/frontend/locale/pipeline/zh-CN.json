@@ -83,7 +83,7 @@
     "stageInTitle": "准入：",
     "stageOutTitle": "准出：",
     "enableStageReview": "启用Stage审核",
-    "stageReviewDesc": "30天未审核自动结束该流水线并标记为Stage成功",
+    "stageReviewDesc": "60天未审核自动结束该流水线并标记为Stage成功",
     "stageTimeoutLabel": "Stage超时时间",
     "stageTimeoutError": "Stage超时时间错误",
     "stageTimeoutDesc": "1-1440之间的整数",

@@ -129,6 +129,9 @@
             initStageReview () {
                 if (this.stageControl === undefined || JSON.stringify(this.stageControl) === '{}') {
                     this.handleStageChange('stageControlOption', {
+                        enable: true,
+                        runCondition: 'AFTER_LAST_FINISHED',
+                        customVariables: [{ key: 'param1', value: '' }],
                         manualTrigger: false,
                         triggerUsers: [],
                         timeout: 24

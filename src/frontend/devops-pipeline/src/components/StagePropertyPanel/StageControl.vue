@@ -135,7 +135,10 @@
                     this.handleStageChange('stageControlOption', {
                         enable: true,
                         runCondition: 'AFTER_LAST_FINISHED',
-                        customVariables: [{ key: 'param1', value: '' }]
+                        customVariables: [{ key: 'param1', value: '' }],
+                        manualTrigger: false,
+                        triggerUsers: [],
+                        timeout: 24
                     })
                     this.handleStageChange('fastKill', false)
                 }
