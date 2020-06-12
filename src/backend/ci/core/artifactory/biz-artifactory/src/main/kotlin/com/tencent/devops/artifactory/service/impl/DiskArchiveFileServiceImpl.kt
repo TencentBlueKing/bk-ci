@@ -85,9 +85,11 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
     }
 
     override fun downloadFile(filePath: String): Response {
+        logger.info("downloadFile, filePath: $filePath")
         val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
         // 如果文件不存在，提示404
         if (!file.exists()) {
+            logger.warn("file not found, filePath: $filePath")
             return Response.status(Response.Status.NOT_FOUND).build()
         }
         val fileName: String?
