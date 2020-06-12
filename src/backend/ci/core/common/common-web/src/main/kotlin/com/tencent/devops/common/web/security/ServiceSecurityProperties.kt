@@ -24,15 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web
+package com.tencent.devops.common.web.security
 
-import org.springframework.beans.factory.config.ConfigurableBeanFactory
-import org.springframework.context.annotation.Scope
-import org.springframework.stereotype.Component
+import org.springframework.boot.context.properties.ConfigurationProperties
 
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FILE)
-@Retention(AnnotationRetention.RUNTIME)
-@MustBeDocumented
-@Component
-@Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
-annotation class RequestInterceptor
+/**
+ *
+ * Powered By Tencent
+ */
+@ConfigurationProperties(prefix = "bkci.security")
+data class ServiceSecurityProperties(
+    val publicKeyBase64: String? = null,
+    val privateKeyBase64: String? = null,
+    val enable: String? = null
+)
