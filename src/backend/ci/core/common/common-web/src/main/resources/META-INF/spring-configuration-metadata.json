@@ -5,6 +5,11 @@
       "sourceType": "com.tencent.devops.common.web.SwaggerProperties",
       "name": "spring.application",
       "type": "com.tencent.devops.common.web.SwaggerProperties"
+    },
+    {
+      "sourceType": "com.tencent.devops.common.web.security.ServiceSecurityProperties",
+      "name": "spring.application",
+      "type": "com.tencent.devops.common.web.SwaggerProperties"
     }
   ],
   "properties": [
