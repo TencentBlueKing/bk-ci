@@ -24,31 +24,7 @@ BEGIN
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_REPORT'
                     AND INDEX_NAME = 'inx_tr_project_id') THEN
-			ALTER TABLE T_REPORT ADD INDEX `inx_tr_project_id` (`PROJECT_ID`);
-        END IF;
-		
-		IF NOT EXISTS(SELECT 1
-                  FROM information_schema.statistics
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_REPORT'
-                    AND INDEX_NAME = 'inx_tr_pipeline_id') THEN
-			ALTER TABLE T_REPORT ADD INDEX `inx_tr_pipeline_id` (`PIPELINE_ID`);
-        END IF;
-		
-		IF NOT EXISTS(SELECT 1
-                  FROM information_schema.statistics
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_REPORT'
-                    AND INDEX_NAME = 'inx_tr_build_id') THEN
-			ALTER TABLE T_REPORT ADD INDEX `inx_tr_build_id` (`BUILD_ID`);
-        END IF;
-		
-		IF NOT EXISTS(SELECT 1
-                  FROM information_schema.statistics
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_REPORT'
-                    AND INDEX_NAME = 'inx_tr_element_id') THEN
-			ALTER TABLE T_REPORT ADD INDEX `inx_tr_element_id` (`ELEMENT_ID`);
+			ALTER TABLE T_REPORT ADD INDEX `PROJECT_PIPELINE_BUILD_IDX` (`PROJECT_ID`,`PIPELINE_ID`,`BUILD_ID`);
         END IF;
 
 

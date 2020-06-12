@@ -580,10 +580,7 @@ CREATE TABLE IF NOT EXISTS `T_REPORT` (
   `CREATE_TIME` datetime NOT NULL,
   `UPDATE_TIME` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`ID`),
-  KEY `inx_tr_project_id` (`PROJECT_ID`),
-  KEY `inx_tr_pipeline_id` (`PIPELINE_ID`),
-  KEY `inx_tr_build_id` (`BUILD_ID`),
-  KEY `inx_tr_element_id` (`ELEMENT_ID`)
+  KEY `PROJECT_PIPELINE_BUILD_IDX` (`PROJECT_ID`,`PIPELINE_ID`,`BUILD_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
