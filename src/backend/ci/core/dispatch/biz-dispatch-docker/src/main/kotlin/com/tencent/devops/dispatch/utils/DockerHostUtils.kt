@@ -228,6 +228,7 @@ class DockerHostUtils @Autowired constructor(
         val threshold = getDockerDriftThreshold()
         if (!dockerIpInfo.enable ||
             dockerIpInfo.diskLoad > 90 ||
+            dockerIpInfo.diskIoLoad > 85 ||
             dockerIpInfo.memLoad > threshold ||
             dockerIpInfo.specialOn ||
             (dockerIpInfo.grayEnv != gray.isGray()) ||
