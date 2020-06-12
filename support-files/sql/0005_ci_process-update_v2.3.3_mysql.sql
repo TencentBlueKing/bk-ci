@@ -23,7 +23,7 @@ BEGIN
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_REPORT'
-                    AND INDEX_NAME = 'inx_tr_project_id') THEN
+                    AND INDEX_NAME = 'PROJECT_PIPELINE_BUILD_IDX') THEN
 			ALTER TABLE T_REPORT ADD INDEX `PROJECT_PIPELINE_BUILD_IDX` (`PROJECT_ID`,`PIPELINE_ID`,`BUILD_ID`);
         END IF;
 
