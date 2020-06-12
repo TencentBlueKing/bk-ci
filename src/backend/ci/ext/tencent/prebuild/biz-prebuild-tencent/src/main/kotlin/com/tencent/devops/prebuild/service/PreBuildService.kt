@@ -170,7 +170,7 @@ class PreBuildService @Autowired constructor(
                     val vmContainer = createVMBuildContainer(job, startUpReq, agentInfo, jobIndex)
                     containerList.add(vmContainer)
                 } else if (job.job.type == NORMAL_JOB) {
-                    val normalContainer = createNormalContainer(job, preProjectId, userId)
+                    val normalContainer = createNormalContainer(job, userId)
                     containerList.add(normalContainer)
                 } else {
                     logger.error("Invalid job type: ${job.job.type}")
@@ -181,14 +181,14 @@ class PreBuildService @Autowired constructor(
         return Model(preProjectId, "", stageList, emptyList(), false, userId)
     }
 
-    private fun createNormalContainer(job: Job, preProjectId: String, userId: String): NormalContainer {
+    private fun createNormalContainer(job: Job, userId: String): NormalContainer {
         val elementList = mutableListOf<Element>()
         job.job.steps.forEach {
             val element = it.covertToElement(getCiBuildConf(preBuildConfig))
             elementList.add(element)
             if (element is MarketBuildAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
-                installMarketAtom(preProjectId, userId, element.getAtomCode())
+                installMarketAtom(userId, element.getAtomCode())
             }
         }
 
@@ -209,9 +209,9 @@ class PreBuildService @Autowired constructor(
         )
     }
 
-    private fun installMarketAtom(preProjectId: String, userId: String, atomCode: String) {
+    private fun installMarketAtom(userId: String, atomCode: String) {
         val projectCodes = ArrayList<String>()
-        projectCodes.add(preProjectId)
+        projectCodes.add(getUserProjectId(userId))
         try {
             client.get(ServiceMarketAtomResource::class).installAtom(
                     userId,
