@@ -162,7 +162,11 @@ class CodeService @Autowired constructor(
             val pair = DHUtil.initKey()
             val encoder = Base64.getEncoder()
             val result = client.get(ServiceCredentialResource::class)
-                .get(projectId, credentialId, encoder.encodeToString(pair.publicKey))
+                .get(
+                    projectId = projectId,
+                    credentialId = credentialId,
+                    publicKey = encoder.encodeToString(pair.publicKey)
+                )
 
             if (result.isNotOk() || result.data == null) {
                 logger.error("Fail to get the credential($credentialId) because of ${result.message}")
@@ -175,23 +179,23 @@ class CodeService @Autowired constructor(
             credentialList.add(decode(credential.v1, credential.publicKey, pair.privateKey))
             if (!credential.v2.isNullOrEmpty()) credentialList.add(
                 decode(
-                    credential.v2!!,
-                    credential.publicKey,
-                    pair.privateKey
+                    encode = credential.v2!!,
+                    publicKey = credential.publicKey,
+                    privateKey = pair.privateKey
                 )
             )
             if (!credential.v3.isNullOrEmpty()) credentialList.add(
                 decode(
-                    credential.v3!!,
-                    credential.publicKey,
-                    pair.privateKey
+                    encode = credential.v3!!,
+                    publicKey = credential.publicKey,
+                    privateKey = pair.privateKey
                 )
             )
             if (!credential.v4.isNullOrEmpty()) credentialList.add(
                 decode(
-                    credential.v4!!,
-                    credential.publicKey,
-                    pair.privateKey
+                    encode = credential.v4!!,
+                    publicKey = credential.publicKey,
+                    privateKey = pair.privateKey
                 )
             )
 
@@ -204,7 +208,11 @@ class CodeService @Autowired constructor(
 
     private fun decode(encode: String, publicKey: String, privateKey: ByteArray): String {
         val decoder = Base64.getDecoder()
-        return String(DHUtil.decrypt(decoder.decode(encode), decoder.decode(publicKey), privateKey))
+        return String(DHUtil.decrypt(
+            data = decoder.decode(encode),
+            partBPublicKey = decoder.decode(publicKey),
+            partAPrivateKey = privateKey
+        ))
     }
 
     private fun getRepositoryConfig(repoHashId: String?, repoName: String?): RepositoryConfig {
