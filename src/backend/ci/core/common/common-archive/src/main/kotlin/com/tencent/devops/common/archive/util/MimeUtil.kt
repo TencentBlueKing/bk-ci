@@ -24,23 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.common.archive.util
 
-import com.tencent.devops.artifactory.api.user.UserReportResource
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
-import com.tencent.devops.artifactory.service.ArchiveFileService
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
-import javax.ws.rs.core.Response
+import org.springframework.boot.context.embedded.MimeMappings
 
-@RestResource
-class UserReportResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService)
-    : UserReportResource {
-    override fun get(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, path: String){
-        val filePath = "${FileTypeEnum.BK_REPORT.fileType}/$projectId/$pipelineId/$buildId/$elementId/$path"
-        val response = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).response!!
-        return archiveFileService.downloadFile(filePath, response)
+object MimeUtil {
+    const val YAML_MIME_TYPE = "application/x-yaml"
+    const val TGZ_MIME_TYPE = "application/x-tar"
+    const val ICO_MIME_TYPE = "image/x-icon"
+    const val STREAM_MIME_TYPE = "application/octet-stream"
+
+    private val mimeMappings = MimeMappings(MimeMappings.DEFAULT).apply {
+        add("yaml", YAML_MIME_TYPE)
+        add("tgz", TGZ_MIME_TYPE)
+        add("ico", ICO_MIME_TYPE)
+    }
+
+    fun mediaType(fileName: String): String {
+        val ext = fileName.trim().substring(fileName.lastIndexOf(".") + 1)
+        return mimeMappings.get(ext) ?: STREAM_MIME_TYPE
     }
 }
