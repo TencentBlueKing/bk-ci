@@ -33,7 +33,7 @@ import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.GetLastAnalysisResultsVO;
 import com.tencent.devops.common.api.ToolLastAnalysisResultVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.service.IBizService;
@@ -64,7 +64,7 @@ public class ServiceTaskLogRestResourceImpl implements ServiceTaskLogRestResourc
     private BizServiceFactory<IBizService> bizServiceFactory;
 
     @Override
-    public Result uploadTaskLog(UploadTaskLogStepVO uploadTaskLogStepVO)
+    public CodeCCResult uploadTaskLog(UploadTaskLogStepVO uploadTaskLogStepVO)
     {
         if (StringUtils.isNotEmpty(uploadTaskLogStepVO.getToolName()))
         {
@@ -78,34 +78,34 @@ public class ServiceTaskLogRestResourceImpl implements ServiceTaskLogRestResourc
     }
 
     @Override
-    public Result<Boolean> stopRunningTask(String pipelineId, String streamName, Set<String> toolSet, String projectId, Long taskId, String userName)
+    public CodeCCResult<Boolean> stopRunningTask(String pipelineId, String streamName, Set<String> toolSet, String projectId, Long taskId, String userName)
     {
-        return new Result<>(taskLogService.stopRunningTask(projectId, pipelineId, streamName, taskId, toolSet, userName));
+        return new CodeCCResult<>(taskLogService.stopRunningTask(projectId, pipelineId, streamName, taskId, toolSet, userName));
     }
 
 
     @Override
-    public Result<TaskLogVO> getLatestTaskLog(Long taskId, String toolName)
+    public CodeCCResult<TaskLogVO> getLatestTaskLog(Long taskId, String toolName)
     {
-        return new Result<>(taskLogService.getLatestTaskLog(taskId, toolName.toUpperCase()));
+        return new CodeCCResult<>(taskLogService.getLatestTaskLog(taskId, toolName.toUpperCase()));
     }
 
     @Override
-    public Result<List<ToolLastAnalysisResultVO>> getLastAnalysisResults(GetLastAnalysisResultsVO getLastAnalysisResultsVO)
+    public CodeCCResult<List<ToolLastAnalysisResultVO>> getLastAnalysisResults(GetLastAnalysisResultsVO getLastAnalysisResultsVO)
     {
         long taskId = getLastAnalysisResultsVO.getTaskId();
         Set<String> toolSet = getLastAnalysisResultsVO.getToolSet();
-        return new Result<>(taskLogService.getLastAnalysisResults(taskId, toolSet));
+        return new CodeCCResult<>(taskLogService.getLastAnalysisResults(taskId, toolSet));
     }
 
     @Override
-    public Result<List<ToolLastAnalysisResultVO>> getBatchLatestTaskLog(Long taskId, Set<String> toolSet)
+    public CodeCCResult<List<ToolLastAnalysisResultVO>> getBatchLatestTaskLog(Long taskId, Set<String> toolSet)
     {
-        return new Result<>(taskLogService.getLastAnalysisResults(taskId, toolSet));
+        return new CodeCCResult<>(taskLogService.getLastAnalysisResults(taskId, toolSet));
     }
 
     @Override
-    public Result<Map<String, List<ToolLastAnalysisResultVO>>> getBatchTaskLatestTaskLog(List<TaskDetailVO> taskDetailVOList)
+    public CodeCCResult<Map<String, List<ToolLastAnalysisResultVO>>> getBatchTaskLatestTaskLog(List<TaskDetailVO> taskDetailVOList)
     {
         Map<String, List<ToolLastAnalysisResultVO>> taskAndLogMap = new HashMap<>();
         if(CollectionUtils.isNotEmpty(taskDetailVOList))
@@ -114,17 +114,17 @@ public class ServiceTaskLogRestResourceImpl implements ServiceTaskLogRestResourc
                 taskAndLogMap.put(String.valueOf(taskDetailVO.getTaskId()), taskLogService.getLastAnalysisResults(taskDetailVO.getTaskId(), new HashSet<>(Arrays.asList(taskDetailVO.getToolNames().split(",")))))
             );
         }
-        return new Result<>(taskAndLogMap);
+        return new CodeCCResult<>(taskAndLogMap);
     }
 
 
     @Override
-    public Result<Boolean> uploadDirStructSuggestParam(UploadTaskLogStepVO uploadTaskLogStepVO)
+    public CodeCCResult<Boolean> uploadDirStructSuggestParam(UploadTaskLogStepVO uploadTaskLogStepVO)
     {
         if (StringUtils.isNotEmpty(uploadTaskLogStepVO.getToolName()))
         {
             uploadTaskLogStepVO.setToolName(uploadTaskLogStepVO.getToolName().toUpperCase());
         }
-        return new Result<>(taskLogService.uploadDirStructSuggestParam(uploadTaskLogStepVO));
+        return new CodeCCResult<>(taskLogService.uploadDirStructSuggestParam(uploadTaskLogStepVO));
     }
 }

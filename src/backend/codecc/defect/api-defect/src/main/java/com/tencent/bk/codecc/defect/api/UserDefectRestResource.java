@@ -28,7 +28,7 @@ package com.tencent.bk.codecc.defect.api;
 
 import com.tencent.bk.codecc.defect.vo.GetFileContentSegmentReqVO;
 import com.tencent.bk.codecc.defect.vo.common.*;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -52,7 +52,7 @@ public interface UserDefectRestResource
     @ApiOperation("初始化告警管理页面的缺陷类型、作者以及树")
     @Path("/checker/authors/toolName/{toolName}")
     @GET
-    Result<QueryWarningPageInitRspVO> queryCheckersAndAuthors(
+    CodeCCResult<QueryWarningPageInitRspVO> queryCheckersAndAuthors(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
@@ -65,7 +65,7 @@ public interface UserDefectRestResource
     @ApiOperation("查询告警详情清单")
     @Path("/list")
     @POST
-    Result<CommonFileQueryRspVO> queryFileList(
+    CodeCCResult<CommonFileQueryRspVO> queryFileList(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
@@ -89,7 +89,7 @@ public interface UserDefectRestResource
     @ApiOperation("查询告警详情")
     @Path("/detail")
     @POST
-    Result<CommonDefectQueryRspVO> queryDefectDetail(
+    CodeCCResult<CommonDefectQueryRspVO> queryDefectDetail(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
@@ -106,7 +106,7 @@ public interface UserDefectRestResource
     @ApiOperation("获取文件片段")
     @Path("/fileContentSegment")
     @POST
-    Result<CommonDefectQueryRspVO> getFileContentSegment(
+    CodeCCResult<CommonDefectQueryRspVO> getFileContentSegment(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
@@ -117,7 +117,7 @@ public interface UserDefectRestResource
     @ApiOperation("作者批量转换")
     @Path("/author")
     @PUT
-    Result<Boolean> authorTransfer(
+    CodeCCResult<Boolean> authorTransfer(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
