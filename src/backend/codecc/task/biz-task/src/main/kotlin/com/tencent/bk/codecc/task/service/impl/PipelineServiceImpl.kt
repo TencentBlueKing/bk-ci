@@ -43,7 +43,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.CodeCCException
 import com.tencent.devops.common.api.exception.StreamException
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.CodeCCResult
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.constant.CommonMessageCode
@@ -517,7 +517,7 @@ class PipelineServiceImpl @Autowired constructor(
         //根据构件号获取构建number, 设置7s超时
         var buildNo: String? = null
 
-        var buildInfoResult: Result<Map<String, CodeccBuildInfo>>
+        var buildInfoResult: CodeCCResult<Map<String, CodeccBuildInfo>>
         var realRetryAttempt = retryAttempt
         while (realRetryAttempt > 0 && null == buildNo) {
             try {
