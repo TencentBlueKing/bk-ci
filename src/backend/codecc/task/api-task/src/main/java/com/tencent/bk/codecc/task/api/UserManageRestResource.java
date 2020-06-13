@@ -26,7 +26,7 @@
 
 package com.tencent.bk.codecc.task.api;
 
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -48,7 +48,7 @@ public interface UserManageRestResource
     @ApiOperation("获取用户信息")
     @Path("/userInfo")
     @GET
-    Result getInfo();
+    CodeCCResult getInfo();
 
 
     /*@ApiOperation("获取用户项目列表")
