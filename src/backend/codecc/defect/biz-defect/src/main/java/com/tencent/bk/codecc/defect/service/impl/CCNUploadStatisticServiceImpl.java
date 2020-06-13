@@ -36,7 +36,7 @@ import com.tencent.bk.codecc.defect.service.CCNUploadStatisticService;
 import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
 import com.tencent.bk.codecc.defect.vo.CCNUploadStatisticVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import org.apache.commons.collections.CollectionUtils;
@@ -71,7 +71,7 @@ public class CCNUploadStatisticServiceImpl implements CCNUploadStatisticService
     private ThirdPartySystemCaller thirdPartySystemCaller;
 
     @Override
-    public Result uploadStatistic(CCNUploadStatisticVO uploadStatisticVO)
+    public CodeCCResult uploadStatistic(CCNUploadStatisticVO uploadStatisticVO)
     {
         // 调用task模块的接口获取任务信息
         Long taskId = uploadStatisticVO.getTaskId();
@@ -85,7 +85,7 @@ public class CCNUploadStatisticServiceImpl implements CCNUploadStatisticService
         float averageCCN = Float.valueOf(uploadStatisticVO.getAverageCCN());
         saveStatisticResult(taskId, currentAnalysisVersion, existCount, averageCCN);
 
-        return new Result(CommonMessageCode.SUCCESS, "upload CCN analysis statistic ok");
+        return new CodeCCResult(CommonMessageCode.SUCCESS, "upload CCN analysis statistic ok");
     }
 
     /**

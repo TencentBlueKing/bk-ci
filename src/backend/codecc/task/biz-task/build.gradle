@@ -9,18 +9,14 @@ dependencies {
     compile project(":task:model-task")
     compile project(":task:api-task")
     compile project(":defect:api-defect")
-    compile group: 'com.tencent.bk.devops', name: 'api-process', version: '0.0.3', changing: true
-    compile group: 'com.tencent.bk.devops', name: 'api-repository', version: '0.0.3', changing: true
-    compile group: 'com.tencent.bk.devops', name: 'api-codecc', version: '0.0.2', changing: true
-    compile(group: 'com.tencent.bk.devops', name: 'api-project', version: '0.0.3', changing: true) {
-        exclude group: 'com.tencent.bk.devops', module: 'model-project'
-        exclude group: 'com.tencent.bk.devops', module: 'common-api'
+    compile group: 'com.tencent.bk.devops.ci.process', name: 'api-process', version: "$ci_version", changing: true
+    compile group: 'com.tencent.bk.devops.ci.repository', name: 'api-repository', version: "$ci_version", changing: true
+    compile group: 'com.tencent.bk.devops.ci.plugin', name: 'api-codecc', version: "$ci_version", changing: true
+    compile(group: 'com.tencent.bk.devops.ci.project', name: 'api-project', version: "$ci_version", changing: true) {
+        exclude group: 'com.tencent.bk.devops.ci.common', module: 'common-api'
     }
 
-//    compile(group:'com.tencent.devops', name:'common-pipeline', version:'4.0.0')
     compile "org.json:json:20180130"
-//    compile group: 'com.tencent.bk.devops', name: 'common-license', version: '0.0.2', changing: true
-
 }
 
 version = null
