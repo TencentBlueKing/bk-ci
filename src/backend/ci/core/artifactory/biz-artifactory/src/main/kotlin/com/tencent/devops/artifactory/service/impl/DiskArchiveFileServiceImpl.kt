@@ -34,6 +34,7 @@ import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -81,6 +82,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
             return
         }
         val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
+        response.contentType =  MimeUtil.mediaType(filePath)
         FileCopyUtils.copy(FileInputStream(file), response.outputStream)
     }
 
@@ -101,6 +103,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
 
         return Response
             .ok(file)
+            .header("Content-Type", MimeUtil.STREAM_MIME_TYPE)
             .header("Content-disposition", "attachment;filename=" + fileName!!)
             .header("Cache-Control", "no-cache").build()
     }

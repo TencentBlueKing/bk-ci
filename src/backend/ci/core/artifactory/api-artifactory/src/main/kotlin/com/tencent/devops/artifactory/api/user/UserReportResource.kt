@@ -68,5 +68,5 @@ interface UserReportResource {
         @ApiParam("相对路径", required = true)
         @PathParam("path")
         path: String
-    ): Response
+    )
 }
