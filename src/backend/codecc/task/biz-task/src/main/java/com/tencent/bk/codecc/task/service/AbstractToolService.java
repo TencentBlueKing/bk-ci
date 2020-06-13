@@ -37,7 +37,7 @@ import com.tencent.bk.codecc.task.model.ToolConfigInfoEntity;
 import com.tencent.bk.codecc.task.vo.ToolConfigBaseVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
@@ -203,7 +203,7 @@ public abstract class AbstractToolService implements ToolService
         ToolConfigInfoVO toolConfigInfoVO = new ToolConfigInfoVO();
         BeanUtils.copyProperties(toolConfigInfoEntity, toolConfigInfoVO, "ignoreCheckers", "checkerProps");
 
-        Result<List<CheckerDetailVO>> allCheckerResult = client.get(ServiceCheckerRestResource.class).queryAllChecker(toolConfigInfoVO);
+        CodeCCResult<List<CheckerDetailVO>> allCheckerResult = client.get(ServiceCheckerRestResource.class).queryAllChecker(toolConfigInfoVO);
         if (allCheckerResult.isNotOk() || null == allCheckerResult.getData())
         {
             logger.error("get open checker fail! message: {}", allCheckerResult.getMessage());

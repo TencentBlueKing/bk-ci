@@ -46,7 +46,7 @@ import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.exception.StreamException;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
@@ -314,7 +314,7 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
      */
     private TaskDetailVO getTaskInfo(long taskId)
     {
-        Result<TaskDetailVO> taskDetailVOResult;
+        CodeCCResult<TaskDetailVO> taskDetailVOResult;
         try
         {
             taskDetailVOResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
@@ -342,7 +342,7 @@ public class LintQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
      */
     private ToolConfigInfoVO getToolInfo(long taskId, String toolName)
     {
-        Result<ToolConfigInfoVO> toolConfigInfoVOResult = client.get(ServiceToolRestResource.class).getToolByTaskIdAndName(taskId, toolName);
+        CodeCCResult<ToolConfigInfoVO> toolConfigInfoVOResult = client.get(ServiceToolRestResource.class).getToolByTaskIdAndName(taskId, toolName);
         if (toolConfigInfoVOResult.isNotOk() || null == toolConfigInfoVOResult.getData())
         {
             logger.error("get tool info fail! task id: {}, tool name: {}", taskId, toolName);

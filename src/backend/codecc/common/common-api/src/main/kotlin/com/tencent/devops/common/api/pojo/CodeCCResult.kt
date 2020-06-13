@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("数据返回包装模型")
-data class Result<out T>(
+data class CodeCCResult<out T>(
         @ApiModelProperty("状态码", required = true)
         val status: Int,
         @ApiModelProperty("错误码", required = true)

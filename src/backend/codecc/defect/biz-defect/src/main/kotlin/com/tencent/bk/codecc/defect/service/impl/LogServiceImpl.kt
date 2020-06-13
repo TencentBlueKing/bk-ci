@@ -62,7 +62,7 @@ class LogServiceImpl @Autowired constructor(
      */
     override fun getAnalysisLog(projectId: String, pipelineId: String, buildId: String, queryKeywords: String?, tag: String?): QueryLogRepVO? {
         val result = client.get(ServiceLogResource::class.java)
-                .getInitLogs(projectId, pipelineId, buildId, false, queryKeywords, tag, 1)
+                .getInitLogs(projectId, pipelineId, buildId, false, queryKeywords, tag, "", 1)
         if (result.isNotOk() || null == result.data) {
             logger.error("get log info fail! bs project id: {}, bs pipeline id: {}, build id: {}", projectId, pipelineId, buildId)
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
@@ -79,7 +79,7 @@ class LogServiceImpl @Autowired constructor(
     override fun getMoreLogs(projectId: String, pipelineId: String, buildId: String, num: Int?, fromStart: Boolean?, start: Long, end: Long, tag: String?, executeCount: Int?): QueryLogRepVO {
         val result = client.get(ServiceLogResource::class.java)
                 .getMoreLogs(projectId, pipelineId, buildId, num ?: 100, fromStart
-                        ?: true, start, end, tag, executeCount ?: 1)
+                        ?: true, start, end, tag, "", executeCount ?: 1)
         if (result.isNotOk() || null == result.data) {
             logger.error("get more log info fail! bs project id: {}, bs pipeline id: {}, build id: {}", projectId, pipelineId, buildId)
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
@@ -119,7 +119,7 @@ class LogServiceImpl @Autowired constructor(
      */
     override fun getAfterLogs(projectId: String, pipelineId: String, buildId: String, start: Long, queryKeywords: String?, tag: String?, executeCount: Int?): QueryLogRepVO {
         val result = client.get(ServiceLogResource::class.java)
-                .getAfterLogs(projectId, pipelineId, buildId, start, false, queryKeywords, tag, executeCount ?: 1)
+                .getAfterLogs(projectId, pipelineId, buildId, start, false, queryKeywords, tag, "",executeCount ?: 1)
         if (result.isNotOk() || null == result.data) {
             logger.error("get more log info fail! bs project id: {}, bs pipeline id: {}, build id: {}", projectId, pipelineId, buildId)
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
