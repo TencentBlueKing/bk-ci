@@ -24,10 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:worker:worker-common")
-    compile project(":core:common:common-scm")
-    compile project(":core:repository:api-repository")
+subprojects {
+    group "com.tencent.bk.devops.ci.openapi"
+    dependencies {
+        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+        compile "org.jetbrains.kotlin:kotlin-reflect"
+        testCompile "junit:junit"
+        testCompile "org.springframework.boot:spring-boot-starter-test"
+    }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
