@@ -42,6 +42,7 @@ import com.tencent.bk.codecc.task.vo.TaskUpdateVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.auth.api.external.BkAuthExRegisterApi;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
@@ -49,7 +50,7 @@ import com.tencent.devops.common.pipeline.Model;
 import com.tencent.devops.common.pipeline.enums.ChannelCode;
 import com.tencent.devops.common.pipeline.pojo.element.Element;
 import com.tencent.devops.common.web.aop.annotation.OperationHistory;
-import com.tencent.devops.process.api.ServicePipelineResource;
+import com.tencent.devops.process.api.service.ServicePipelineResource;
 import com.tencent.devops.process.pojo.PipelineId;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -347,7 +348,7 @@ public class DevopsToolServiceImpl extends AbstractToolService
             List<String> defaultExecuteDate = getTaskDefaultReportDate();
             String defaultExecuteTime = getTaskDefaultTime();
             Model modelParam = pipelineService.assembleCreatePipeline(batchRegisterVO, taskInfoEntity, defaultExecuteTime, defaultExecuteDate);
-            CodeCCResult<PipelineId> result = client.get(ServicePipelineResource.class).create(userName, taskInfoEntity.getProjectId(), modelParam, ChannelCode.CODECC);
+            Result<PipelineId> result = client.get(ServicePipelineResource.class).create(userName, taskInfoEntity.getProjectId(), modelParam, ChannelCode.CODECC);
             if (result.isNotOk() || null == result.getData())
             {
                 logger.error("create pipeline fail! err msg: {}", result.getMessage());
