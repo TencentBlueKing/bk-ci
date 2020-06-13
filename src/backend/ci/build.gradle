@@ -186,7 +186,8 @@ subprojects {
 
     jar.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
     uploadArchives.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
-    install.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
+    // boot-xxx biz-xxx model-xxxx do not install
+    install.onlyIf { !sourceSets.main.allSource.files.isEmpty()  && !name.startsWith("model-") && !name.startsWith("boot-") && !name.startsWith("biz-") }
 
     configurations {
         ktlint
