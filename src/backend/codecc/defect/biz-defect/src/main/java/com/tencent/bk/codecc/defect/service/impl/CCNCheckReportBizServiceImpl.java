@@ -40,7 +40,7 @@ import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
 import com.tencent.devops.common.api.CCNLastAnalysisResultVO;
 import com.tencent.devops.common.api.ToolLastAnalysisResultVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
@@ -157,7 +157,7 @@ public class CCNCheckReportBizServiceImpl implements ICheckReportBizService
     private void handleToolBaseInfo(CCNSnapShotEntity ccnSnapShotEntity, long taskId, String toolName, String projectId)
     {
         //获取工具信息
-        Result<ToolConfigInfoVO> toolResult = client.get(ServiceToolRestResource.class).getToolWithNameByTaskIdAndName(taskId, toolName);
+        CodeCCResult<ToolConfigInfoVO> toolResult = client.get(ServiceToolRestResource.class).getToolWithNameByTaskIdAndName(taskId, toolName);
         if (toolResult.isNotOk() || null == toolResult.getData())
         {
             logger.error("get tool config info fail! task id: {}, tool name: {}", taskId, toolName);

@@ -29,7 +29,7 @@ package com.tencent.bk.codecc.task.resources;
 import com.tencent.bk.codecc.task.api.ServiceBaseDataResource;
 import com.tencent.bk.codecc.task.service.BaseDataService;
 import com.tencent.bk.codecc.task.vo.BaseDataVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -49,9 +49,9 @@ public class ServiceBaseDataResourceImpl implements ServiceBaseDataResource
     private BaseDataService baseDataService;
 
     @Override
-    public Result<List<BaseDataVO>> getInfoByTypeAndCode(String paramType, String paramCode)
+    public CodeCCResult<List<BaseDataVO>> getInfoByTypeAndCode(String paramType, String paramCode)
     {
-        return new Result<>(baseDataService.findBaseDataInfoByTypeAndCode(paramType, paramCode));
+        return new CodeCCResult<>(baseDataService.findBaseDataInfoByTypeAndCode(paramType, paramCode));
     }
 
 }

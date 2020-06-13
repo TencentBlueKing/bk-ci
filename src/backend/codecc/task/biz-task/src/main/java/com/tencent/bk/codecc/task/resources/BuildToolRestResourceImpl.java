@@ -29,7 +29,7 @@ package com.tencent.bk.codecc.task.resources;
 import com.tencent.bk.codecc.task.api.BuildToolRestResource;
 import com.tencent.bk.codecc.task.service.DefectConfigService;
 import com.tencent.bk.codecc.task.vo.DefectConfigInfoVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -47,9 +47,9 @@ public class BuildToolRestResourceImpl implements BuildToolRestResource
     private DefectConfigService defectConfigService;
 
     @Override
-    public Result<DefectConfigInfoVO> getDefectConfig(String streamName,
-                                                      String multiToolType)
+    public CodeCCResult<DefectConfigInfoVO> getDefectConfig(String streamName,
+                                                            String multiToolType)
     {
-        return new Result<>(defectConfigService.getDefectConfig(streamName, multiToolType));
+        return new CodeCCResult<>(defectConfigService.getDefectConfig(streamName, multiToolType));
     }
 }
