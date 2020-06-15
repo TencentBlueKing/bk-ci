@@ -96,8 +96,8 @@ function _M:get_ticket(bk_ticket)
         return result.data
     else
 
-        ngx.log(ngx.INFO, "has user info")
-        return json.decode(user_cache_value)
+        ngx.log(ngx.INFO, "has user info:", user_cache_value)
+        return json.decode(user_cache_value).data
     end
 
 end
