@@ -16,8 +16,10 @@ const localeLabelMap = {
     'us': 'English'
 }
 const localeAliasMap = {
+    'zh-CN': 'zh-CN',
     'zh-cn': 'zh-CN',
     'cn': 'zh-CN',
+    'en-US': 'en-US',
     'en-us': 'en-US',
     'en': 'en-US',
     'us': 'en-US'
@@ -35,9 +37,10 @@ function getLsLocale () {
 }
 
 function setLsLocale (locale) {
+    const formateLocale = localeAliasMap[locale] === 'zh-CN' ? 'zh-cn' : 'en'
     if (typeof cookies.set === 'function') {
         cookies.remove(LS_KEY)
-        cookies.set(LS_KEY, locale, { domain: BK_CI_DOMAIN, path: '/' })
+        cookies.set(LS_KEY, formateLocale, { domain: BK_CI_DOMAIN, path: '/' })
     }
 }
 

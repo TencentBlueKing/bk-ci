@@ -333,7 +333,7 @@
                                     meta.isSelected = this.selectedMeta.some(val => meta.hashId === val.hashId)
                                     if (searchKey) {
                                         const metaName = meta.cnName
-                                        meta.isDisplay = this.matchStr(metaName, searchKey)
+                                        meta.isDisplay = this.matchStr(metaName, searchKey) || this.matchStr(task.detail, searchKey)
                                         if (meta.isDisplay) { // 搜索匹配到指标展开所属指标集
                                             task.isDisplay = true
                                             task.isDropdownShow = true
