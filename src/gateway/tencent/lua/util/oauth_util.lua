@@ -93,7 +93,7 @@ function _M:get_ticket(bk_ticket)
         end
         -- 记录用户的访问情况
         -- ngx.log(ngx.ERR, "access user‘s rtx :", result.data.user_id)
-        user_cache.set(bk_ticket, result.data)
+        user_cache.set(bk_ticket, result.data, 240)
         return result.data
     else
         return user_cache_value
