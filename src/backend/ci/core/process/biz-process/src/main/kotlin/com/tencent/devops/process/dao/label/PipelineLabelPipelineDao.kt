@@ -178,6 +178,7 @@ class PipelineLabelPipelineDao {
         val labelPipelineTable = TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE.`as`("t1")
         val labelTable = TPipelineLabel.T_PIPELINE_LABEL.`as`("t2")
         val groupTable = TPipelineGroup.T_PIPELINE_GROUP.`as`("t3")
+        // 排除标签和分组为空的情况
         return dslContext.select(
             labelPipelineTable.PIPELINE_ID.`as`("PIPELINE_ID"),
             groupTable.NAME.`as`("GROUP_NAME"),
@@ -188,6 +189,12 @@ class PipelineLabelPipelineDao {
             .leftJoin(groupTable)
             .on(labelTable.GROUP_ID.eq(groupTable.ID))
             .where(labelPipelineTable.PIPELINE_ID.`in`(pipelineIds))
+            .and(labelTable.NAME.notEqual(""))
+            .and(labelTable.NAME.isNotNull)
+            .and(groupTable.NAME.notEqual(""))
+            .and(groupTable.NAME.isNotNull)
+            .and(labelPipelineTable.PIPELINE_ID.notEqual(""))
+            .and(labelPipelineTable.PIPELINE_ID.isNotNull)
             .fetch()
     }
 
