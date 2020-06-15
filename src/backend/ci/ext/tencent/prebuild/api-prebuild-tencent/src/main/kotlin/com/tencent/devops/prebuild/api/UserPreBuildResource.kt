@@ -253,4 +253,15 @@ interface UserPreBuildResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<HistoryResponse>>
+
+    @ApiOperation("校验yaml格式")
+    @POST
+    @Path("/checkYaml")
+    fun checkYaml(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("yaml内容", required = true)
+        yaml: String
+    ): Result<String>
 }

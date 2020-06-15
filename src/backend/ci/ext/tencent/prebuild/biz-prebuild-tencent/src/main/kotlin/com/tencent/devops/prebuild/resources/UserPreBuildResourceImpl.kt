@@ -117,6 +117,10 @@ class UserPreBuildResourceImpl @Autowired constructor(
         return Result(preBuildService.getBuildLink(userId, preProjectId, buildId))
     }
 
+    override fun checkYaml(userId: String, yaml: String): Result<String> {
+        return preBuildService.checkYaml(userId, yaml)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(UserPreBuildResourceImpl::class.java)
     }
