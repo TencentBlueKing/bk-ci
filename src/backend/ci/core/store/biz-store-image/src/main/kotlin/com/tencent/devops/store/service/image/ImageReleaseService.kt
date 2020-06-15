@@ -623,8 +623,11 @@ abstract class ImageReleaseService {
                 startParams["registryPwd"] = password
             }
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
-                userId, projectCode!!, imagePipelineRelRecord.pipelineId, startParams,
-                ChannelCode.AM
+                userId = userId,
+                projectId = projectCode!!,
+                pipelineId = imagePipelineRelRecord.pipelineId,
+                values = startParams,
+                channelCode = ChannelCode.AM
             ).data
             logger.info("the buildIdObj is:$buildIdObj")
             if (null != buildIdObj) {
