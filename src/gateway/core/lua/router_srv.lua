@@ -19,7 +19,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 --- 是否在白名单里面
 if (ngx.var.whitelist_deny and ngx.var.whitelist_deny ~= "") then
-  ngx.log(ngx.ERR, "owner_uin is not in whitelist!")
+  ngx.log(ngx.INFO, "owner_uin is not in whitelist!")
   ngx.exit(423)
   return
 end
@@ -46,7 +46,7 @@ end
 if access_util then 
   local access_result,err = access_util:isAccess()
   if not access_result then
-    ngx.log(ngx.ERR, "request excess!")
+    ngx.log(ngx.INFO, "request excess!")
     ngx.exit(503)
     return
   end
@@ -58,13 +58,13 @@ if config.service_name ~= nil and config.service_name ~= "" then
 end
 
 if not service_name then
-  ngx.log(ngx.ERR, "failed with no service name")
+  ngx.log(ngx.INFO, "failed with no service name")
   ngx.exit(503)
   return
 end
 
 if service_name == "" then
-  ngx.log(ngx.ERR, "failed with empty service name")
+  ngx.log(ngx.INFO, "failed with empty service name")
   ngx.exit(503)
   return
 end
@@ -84,23 +84,18 @@ end
 -- 获取灰度设置
 local devops_gray = grayUtil:get_gray()
 
--- ngx.log(ngx.ERR, "devops_gray:", devops_gray )
 local ns_config = nil
 if devops_gray ~= true then
   if ngx.var.devops_region ~= "DEVNET" then
     ns_config = config.ns
-    -- ngx.log(ngx.ERR, "ns")
   else
     ns_config = config.ns_devnet
-    -- ngx.log(ngx.ERR, "ns_devnet")
   end
 else
   if ngx.var.devops_region ~= "DEVNET" then
     ns_config = config.ns_gray
-    -- ngx.log(ngx.ERR, "ns_gray")
   else
     ns_config = config.ns_devnet_gray
-    -- ngx.log(ngx.ERR, "ns_devnet_gray")
   end
 end 
 
