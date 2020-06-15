@@ -153,6 +153,16 @@
         "conditionEmpty": "视图条件不能为空",
         "deleteViewTips": "是否确认删除 ( {0} ) ? "
     },
+    "restore": {
+        "recycleBin": "回收站",
+        "restore": "恢复",
+        "title": "可恢复流水线列表",
+        "deleteTime": "删除时间",
+        "createTime": "创建时间",
+        "restoreSuc": "恢复成功",
+        "emptyTitle": "暂无可恢复的流水线",
+        "emptyDesc": "30天内被删除的流水线可在此页面恢复"
+    },
     "atomManage": {
         "installedAtom": "已安装插件",
         "moreAtom": "发现更多插件",
@@ -428,7 +438,8 @@
         "selectNone": "全不选",
         "majorVersion": "主版本",
         "minorVersion": "特性版本",
-        "fixVersion": "修正版本"
+        "fixVersion": "修正版本",
+        "paramsInvalidMsg": "流水线执行参数出错"
     },
     "details": {
         "executeDetail": "执行详情",
@@ -761,7 +772,7 @@
         "timeoutDesc": "10080之间的整数，0表示系统允许的最大超时时间",
         "timeoutPlaceholder": "10080之间的整数，0表示系统允许的最大超时时间",
         "atomRunCondition": "何时运行本插件",
-        "atomPreSuc": "所有前置插件运行成功时运行",
+        "atomPreSuc": "所有前置插件运行成功时运行（包括失败时继续）",
         "atomEvenFail": "即使前面有插件运行失败也运行，除非被取消才不运行",
         "atomOnlyFail": "只有前面有插件运行失败时才运行",
         "varMatch": "自定义变量全部满足时才运行",

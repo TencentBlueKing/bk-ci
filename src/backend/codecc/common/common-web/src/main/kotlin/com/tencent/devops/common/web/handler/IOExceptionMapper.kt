@@ -27,7 +27,7 @@
 package com.tencent.devops.common.web.handler
 
 import com.tencent.devops.common.api.exception.StreamException
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.CodeCCResult
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.slf4j.LoggerFactory
@@ -59,7 +59,7 @@ class IOExceptionMapper : ExceptionMapper<StreamException> {
 
         return Response.status(status)
                 .type(MediaType.APPLICATION_JSON_TYPE)
-                .entity(Result<Void>(status.statusCode, message)).build()
+                .entity(CodeCCResult<Void>(status.statusCode, message)).build()
     }
 
 }

@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.dao
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.util.JooqUtils
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -37,6 +38,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRe
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import org.jooq.DSLContext
+import org.jooq.DatePart
 import org.jooq.InsertOnDuplicateSetMoreStep
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -156,7 +158,13 @@ class PipelineBuildContainerDao {
             if (endTime != null) {
                 update.set(END_TIME, endTime)
                 if (BuildStatus.isFinish(buildStatus)) {
-                    update.set(COST, COST + END_TIME - START_TIME)
+                    update.set(
+                        COST, COST + JooqUtils.timestampDiff(
+                            DatePart.SECOND,
+                            START_TIME.cast(java.sql.Timestamp::class.java),
+                            END_TIME.cast(java.sql.Timestamp::class.java)
+                        )
+                    )
                 }
             }
 

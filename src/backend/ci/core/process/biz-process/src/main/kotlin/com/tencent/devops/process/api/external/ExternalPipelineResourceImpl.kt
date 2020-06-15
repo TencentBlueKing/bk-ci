@@ -39,7 +39,7 @@ class ExternalPipelineResourceImpl @Autowired constructor(
     private val pipelineBadgeService: PipelineBadgeService
 ) : ExternalPipelineResource {
     override fun getBadge(projectId: String, pipelineId: String): String {
-        return pipelineBadgeService.get(pipelineId)
+        return pipelineBadgeService.get(projectId, pipelineId)
     }
 
     override fun remoteBuild(token: String, values: Map<String, String>): Result<BuildId> {

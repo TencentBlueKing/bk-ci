@@ -79,7 +79,7 @@
     "vee-validate": "^2.0.9",
     "vue": "^2.5.16",
     "vue-class-component": "^6.2.0",
-    "vue-i18n": "^8.14.1",
+    "vue-i18n": "^8.18.1",
     "vue-property-decorator": "^6.0.0",
     "vue-router": "^3.0.1",
     "vuex": "^3.0.1",
