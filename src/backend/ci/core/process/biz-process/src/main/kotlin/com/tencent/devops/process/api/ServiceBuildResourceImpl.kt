@@ -104,8 +104,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         values: Map<String, String>,
-        buildNo: Int?,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        buildNo: Int?
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
