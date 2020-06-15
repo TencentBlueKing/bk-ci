@@ -38,6 +38,7 @@ import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.dao.label.PipelineViewLabelDao
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
+import com.tencent.devops.process.pojo.classify.PipelineGroupLabels
 import com.tencent.devops.process.pojo.classify.PipelineGroupUpdate
 import com.tencent.devops.process.pojo.classify.PipelineGroupWithLabels
 import com.tencent.devops.process.pojo.classify.PipelineLabel
@@ -353,23 +354,41 @@ class PipelineGroupService @Autowired constructor(
         return result
     }
 
-    fun getPipelinesGroupLabel(pipelineIds: List<String>): Map<String, Map<String, List<String>>> {
+    fun getPipelinesGroupLabel(pipelineIds: List<String>): Map<String, List<PipelineGroupLabels>> {
         val records = pipelineLabelPipelineDao.listPipelinesGroupsAndLabels(dslContext, pipelineIds)
-        val result = mutableMapOf<String, MutableMap<String, MutableList<String>>>()
+        val result = mutableMapOf<String, MutableList<PipelineGroupLabels>>()
         records.forEach { it ->
             val pipelineId = it.value1()
             val groupName = it.value2()
             val labelName = it.value3()
-            if (result.containsKey(pipelineId)) {
-                if (result[pipelineId]!!.containsKey(groupName)) {
-                    if (!result[pipelineId]!![groupName]!!.contains(labelName)) {
-                        result[pipelineId]!![groupName]!!.add(labelName)
+            // groupName 和 labelName有可能为空
+            if (pipelineId.isNotBlank() && groupName.isNotBlank() && labelName.isNotBlank()) {
+                if (result.containsKey(pipelineId)) {
+                    var notHasGroupName = true
+                    result[pipelineId]!!.forEach { pipelineGroupLabels ->
+                        if (pipelineGroupLabels.groupName == groupName) {
+                            notHasGroupName = false
+                            if (!pipelineGroupLabels.labelName.contains(labelName)) {
+                                pipelineGroupLabels.labelName.add(labelName)
+                            }
+                        }
+                    }
+                    if (notHasGroupName) {
+                        result[pipelineId]!!.add(
+                            PipelineGroupLabels(
+                                groupName = groupName,
+                                labelName = mutableListOf(labelName)
+                            )
+                        )
                     }
                 } else {
-                    result[pipelineId]!![groupName] = mutableListOf(labelName)
+                    result[pipelineId] = mutableListOf(
+                        PipelineGroupLabels(
+                            groupName = groupName,
+                            labelName = mutableListOf(labelName)
+                        )
+                    )
                 }
-            } else {
-                result[pipelineId] = mutableMapOf(Pair(groupName, mutableListOf(labelName)))
             }
         }
         return result
