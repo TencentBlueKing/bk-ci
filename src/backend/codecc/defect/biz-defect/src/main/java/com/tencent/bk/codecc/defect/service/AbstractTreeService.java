@@ -31,7 +31,7 @@ import com.tencent.bk.codecc.defect.vo.TreeNodeVO;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
@@ -118,7 +118,7 @@ public abstract class AbstractTreeService implements TreeService
             return new TreeNodeVO();
         }
 
-        Result<TaskDetailVO> taskBaseResult;
+        CodeCCResult<TaskDetailVO> taskBaseResult;
         try
         {
             taskBaseResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);

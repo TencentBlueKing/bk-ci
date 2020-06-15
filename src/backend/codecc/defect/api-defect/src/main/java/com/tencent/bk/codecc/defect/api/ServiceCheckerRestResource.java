@@ -29,7 +29,7 @@ package com.tencent.bk.codecc.defect.api;
 import com.tencent.bk.codecc.defect.vo.CheckerDetailVO;
 import com.tencent.bk.codecc.defect.vo.IgnoreCheckerVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -57,21 +57,21 @@ public interface ServiceCheckerRestResource
     @ApiOperation("获取打开的规则")
     @Path("/opened")
     @POST
-    Result<Map<String, CheckerDetailVO>> queryOpenChecker(
+    CodeCCResult<Map<String, CheckerDetailVO>> queryOpenChecker(
             @ApiParam(value = "工具信息", required = true)
                     ToolConfigInfoVO toolConfigInfoVO);
 
     @ApiOperation("获取全量的规则")
     @Path("/all")
     @POST
-    Result<List<CheckerDetailVO>> queryAllChecker(
+    CodeCCResult<List<CheckerDetailVO>> queryAllChecker(
             @ApiParam(value = "工具特殊参数信息")
                     ToolConfigInfoVO toolConfigInfoVO);
 
     @ApiOperation("添加忽略规则")
     @Path("/ignored/taskId/{taskId}/toolName/{toolName}")
     @PUT
-    Result<Boolean> mergeIgnoreChecker(
+    CodeCCResult<Boolean> mergeIgnoreChecker(
             @ApiParam(value = "任务id")
             @PathParam("taskId")
             long taskId,
@@ -85,7 +85,7 @@ public interface ServiceCheckerRestResource
     @ApiOperation("新建默认忽略规则")
     @Path("/ignored")
     @POST
-    Result<Boolean> createDefaultIgnoreChecker(
+    CodeCCResult<Boolean> createDefaultIgnoreChecker(
             @ApiParam(value = "忽略规则信息")
             IgnoreCheckerVO ignoreCheckerVO,
             @ApiParam(value = "用户名", required = true)
@@ -95,7 +95,7 @@ public interface ServiceCheckerRestResource
     @ApiOperation("新建默认忽略规则")
     @Path("/ignored/taskId/{taskId}/toolName/{toolName}")
     @GET
-    Result<IgnoreCheckerVO> getIgnoreCheckerInfo(
+    CodeCCResult<IgnoreCheckerVO> getIgnoreCheckerInfo(
             @ApiParam(value = "任务id")
             @PathParam("taskId")
             Long taskId,

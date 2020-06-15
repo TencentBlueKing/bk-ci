@@ -32,7 +32,7 @@ import com.tencent.bk.codecc.defect.service.MultitoolCheckerService;
 import com.tencent.bk.codecc.defect.vo.CheckerDetailVO;
 import com.tencent.bk.codecc.defect.vo.IgnoreCheckerVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -55,33 +55,33 @@ public class ServiceCheckerRestResourceImpl implements ServiceCheckerRestResourc
     private IConfigCheckerPkgBizService iConfigCheckerPkgBizService;
 
     @Override
-    public Result<Map<String, CheckerDetailVO>> queryOpenChecker(ToolConfigInfoVO toolConfigInfoVO)
+    public CodeCCResult<Map<String, CheckerDetailVO>> queryOpenChecker(ToolConfigInfoVO toolConfigInfoVO)
     {
-        return new Result<>(multitoolCheckerService.queryOpenCheckers(toolConfigInfoVO));
+        return new CodeCCResult<>(multitoolCheckerService.queryOpenCheckers(toolConfigInfoVO));
     }
 
     @Override
-    public Result<List<CheckerDetailVO>> queryAllChecker(ToolConfigInfoVO toolConfigInfoVO)
+    public CodeCCResult<List<CheckerDetailVO>> queryAllChecker(ToolConfigInfoVO toolConfigInfoVO)
     {
-        return new Result<>(multitoolCheckerService.queryAllChecker(toolConfigInfoVO));
+        return new CodeCCResult<>(multitoolCheckerService.queryAllChecker(toolConfigInfoVO));
     }
 
     @Override
-    public Result<Boolean> mergeIgnoreChecker(long taskId, String toolName, List<String> ignoreCheckers)
+    public CodeCCResult<Boolean> mergeIgnoreChecker(long taskId, String toolName, List<String> ignoreCheckers)
     {
-        return new Result<>(multitoolCheckerService.mergeIgnoreChecker(taskId, toolName, ignoreCheckers));
+        return new CodeCCResult<>(multitoolCheckerService.mergeIgnoreChecker(taskId, toolName, ignoreCheckers));
     }
 
     @Override
-    public Result<Boolean> createDefaultIgnoreChecker(IgnoreCheckerVO ignoreCheckerVO, String userName)
+    public CodeCCResult<Boolean> createDefaultIgnoreChecker(IgnoreCheckerVO ignoreCheckerVO, String userName)
     {
-        return new Result<>(iConfigCheckerPkgBizService.createDefaultIgnoreChecker(ignoreCheckerVO, userName));
+        return new CodeCCResult<>(iConfigCheckerPkgBizService.createDefaultIgnoreChecker(ignoreCheckerVO, userName));
     }
 
     @Override
-    public Result<IgnoreCheckerVO> getIgnoreCheckerInfo(Long taskId, String toolName)
+    public CodeCCResult<IgnoreCheckerVO> getIgnoreCheckerInfo(Long taskId, String toolName)
     {
-        return new Result<>(iConfigCheckerPkgBizService.getIgnoreCheckerInfo(taskId, toolName));
+        return new CodeCCResult<>(iConfigCheckerPkgBizService.getIgnoreCheckerInfo(taskId, toolName));
     }
 
 }
