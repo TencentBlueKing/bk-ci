@@ -28,5 +28,5 @@ package com.tencent.devops.process.pojo.classify
 
 data class PipelineGroupLabels(
     val groupName: String,
-    val labelNames: MutableList<String/*labelName*/>
+    val labelName: MutableList<String/*labelName*/>
 )

@@ -368,8 +368,8 @@ class PipelineGroupService @Autowired constructor(
                     result[pipelineId]!!.forEach { pipelineGroupLabels ->
                         if (pipelineGroupLabels.groupName == groupName) {
                             notHasGroupName = false
-                            if (!pipelineGroupLabels.labelNames.contains(labelName)) {
-                                pipelineGroupLabels.labelNames.add(labelName)
+                            if (!pipelineGroupLabels.labelName.contains(labelName)) {
+                                pipelineGroupLabels.labelName.add(labelName)
                             }
                         }
                     }
@@ -377,7 +377,7 @@ class PipelineGroupService @Autowired constructor(
                         result[pipelineId]!!.add(
                             PipelineGroupLabels(
                                 groupName = groupName,
-                                labelNames = mutableListOf(labelName)
+                                labelName = mutableListOf(labelName)
                             )
                         )
                     }
@@ -385,7 +385,7 @@ class PipelineGroupService @Autowired constructor(
                     result[pipelineId] = mutableListOf(
                         PipelineGroupLabels(
                             groupName = groupName,
-                            labelNames = mutableListOf(labelName)
+                            labelName = mutableListOf(labelName)
                         )
                     )
                 }
