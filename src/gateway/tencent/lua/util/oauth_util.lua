@@ -23,6 +23,7 @@ function _M:get_ticket(bk_ticket)
     local user_cache = ngx.shared.user_info_store
     local user_cache_value = user_cache:get(bk_ticket)
     if user_cache_value == nil then
+        ngx.log(ngx.INFO, "no user info")
         --- 初始化HTTP连接
         local httpc = http.new()
         --- 开始连接
@@ -68,7 +69,7 @@ function _M:get_ticket(bk_ticket)
         end
         --- 判断返回的状态码是否是200
         if res.status ~= 200 then
-            ngx.log(ngx.ERR, "failed to request get_ticket, status: ", res.status)
+            ngx.log(ngx.INFO, "failed to request get_ticket, status: ", res.status)
             ngx.exit(500)
             return
         end
@@ -87,15 +88,15 @@ function _M:get_ticket(bk_ticket)
 
         --- 判断返回码:Q!
         if result.code ~= 0 then
-            ngx.log(ngx.ERR, "invalid get_ticket: ", result.message)
+            ngx.log(ngx.INFO, "invalid get_ticket: ", result.message)
             ngx.exit(401)
             return
         end
-        -- 记录用户的访问情况
-        -- ngx.log(ngx.ERR, "access user‘s rtx :", result.data.user_id)
         user_cache:set(bk_ticket, responseBody, 180)
         return result.data
     else
+
+        ngx.log(ngx.INFO, "has user info")
         return json.decode(user_cache_value)
     end
 
@@ -110,8 +111,6 @@ function _M:verfiy_permis(project_code, service_code, policy_code, resource_code
         resource_type = resource_type, 
         user_id = user_id
     }
-
-    -- ngx.log(ngx.ERR, "requestBody: ", logUtil:dump(requestBody))
 
     --- 转换请求内容
     local requestBodyJson = json.encode(requestBody)
@@ -143,7 +142,7 @@ function _M:verfiy_permis(project_code, service_code, policy_code, resource_code
     end
     --- 判断返回的状态码是否是200
     if res.status ~= 200 then
-        ngx.log(ngx.ERR, "failed to request verfiy_permis, status: ", res.status)
+        ngx.log(ngx.INFO, "failed to request verfiy_permis, status: ", res.status)
         return false
     end
     --- 获取所有回复
@@ -160,7 +159,7 @@ function _M:verfiy_permis(project_code, service_code, policy_code, resource_code
 
     --- 判断返回码
     if result.code ~= 0 then
-        ngx.log(ngx.ERR, "invalid verfiy_permis: ", result.message)
+        ngx.log(ngx.INFO, "invalid verfiy_permis: ", result.message)
         return false
     end
     return true
@@ -194,7 +193,7 @@ function _M:verify_token(access_token)
     end
     --- 判断返回的状态码是否是200
     if res.status ~= 200 then
-        ngx.log(ngx.ERR, "failed to request verify_token, status: ", res.status)
+        ngx.log(ngx.INFO, "failed to request verify_token, status: ", res.status)
         ngx.exit(500)
         return
     end
@@ -213,12 +212,10 @@ function _M:verify_token(access_token)
 
     --- 判断返回码:Q!
     if result.code ~= 0 then
-        ngx.log(ngx.ERR, "invalid verify_token: ", result.message)
+        ngx.log(ngx.INFO, "invalid verify_token: ", result.message)
         ngx.exit(401)
         return
     end
-    -- 记录用户的访问情况
-    -- ngx.log(ngx.ERR, "access user‘s rtx :", result.data.user_id)
     result.data.access_token = access_token
     return result.data
 end

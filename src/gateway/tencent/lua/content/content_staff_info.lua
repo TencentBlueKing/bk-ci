@@ -22,7 +22,7 @@ local headers_tab = ngx.req.get_headers()
 local ckey = headers_tab["x-ckey"]
 
 if not ckey then
-  ngx.log(ngx.ERR, "request does not has header=x-ckey.")
+  ngx.log(ngx.INFO, "request does not has header=x-ckey.")
   ngx.exit(401)
   return
 end
