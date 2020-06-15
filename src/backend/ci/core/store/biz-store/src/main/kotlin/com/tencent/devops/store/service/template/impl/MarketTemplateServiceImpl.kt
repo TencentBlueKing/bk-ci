@@ -160,14 +160,26 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         pageSize: Int?
     ): Future<MarketTemplateResp> {
         return executor.submit(Callable<MarketTemplateResp> {
-            val results = mutableListOf<MarketItem>()
-
+            val canInstallTemplates = mutableListOf<MarketItem>()
+            val cannotInstallTemplates = mutableListOf<MarketItem>()
             // 获取模版
             val categoryList = if (category.isNullOrEmpty()) listOf() else category?.split(",")
             val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
             val count = marketTemplateDao.count(dslContext, name, classifyCode, categoryList, labelCodeList, score, rdType)
-            val templates = marketTemplateDao.list(dslContext, name, classifyCode, categoryList, labelCodeList, score, rdType, sortType, desc, page, pageSize)
-                ?: return@Callable MarketTemplateResp(0, page, pageSize, results)
+            val templates = marketTemplateDao.list(
+                dslContext = dslContext,
+                templateName = name,
+                classifyCode = classifyCode,
+                categoryList = categoryList,
+                labelCodeList = labelCodeList,
+                score = score,
+                rdType = rdType,
+                sortType = sortType,
+                desc = desc,
+                page = page,
+                pageSize = pageSize
+            )
+                ?: return@Callable MarketTemplateResp(0, page, pageSize, canInstallTemplates)
             logger.info("[list]get templates: $templates")
 
             val templateCodeList = templates.map {
@@ -198,34 +210,35 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 val statistic = templateStatisticData?.get(code)
                 val members = memberData?.get(code)
                 val publicFlag = it["PUBLIC_FLAG"] as Boolean
-                val flag = generateInstallFlag(publicFlag, members, userId, visibleList, userDeptList)
+                val canInstall = generateInstallFlag(publicFlag, members, userId, visibleList, userDeptList)
                 val classifyId = it["CLASSIFY_ID"] as String
-                results.add(
-                    MarketItem(
-                        id = it["ID"] as String,
-                        name = it["TEMPLATE_NAME"] as String,
-                        code = code,
-                        type = "",
-                        rdType = TemplateRdTypeEnum.getTemplateRdType((it["TEMPLATE_RD_TYPE"] as Byte).toInt()),
-                        classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
-                        logoUrl = it["LOGO_URL"] as? String,
-                        publisher = it["PUBLISHER"] as String,
-                        os = listOf(),
-                        downloads = statistic?.downloads
-                            ?: 0,
-                        score = statistic?.score
-                            ?: 0.toDouble(),
-                        summary = it["SUMMARY"] as? String,
-                        flag = flag,
-                        publicFlag = it["PUBLIC_FLAG"] as Boolean,
-                        buildLessRunFlag = false,
-                        docsLink = ""
-                    )
+
+                val marketItem = MarketItem(
+                    id = it["ID"] as String,
+                    name = it["TEMPLATE_NAME"] as String,
+                    code = code,
+                    type = "",
+                    rdType = TemplateRdTypeEnum.getTemplateRdType((it["TEMPLATE_RD_TYPE"] as Byte).toInt()),
+                    classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
+                    logoUrl = it["LOGO_URL"] as? String,
+                    publisher = it["PUBLISHER"] as String,
+                    os = listOf(),
+                    downloads = statistic?.downloads
+                        ?: 0,
+                    score = statistic?.score
+                        ?: 0.toDouble(),
+                    summary = it["SUMMARY"] as? String,
+                    flag = canInstall,
+                    publicFlag = it["PUBLIC_FLAG"] as Boolean,
+                    buildLessRunFlag = false,
+                    docsLink = ""
                 )
+                if (canInstall) canInstallTemplates.add(marketItem)
+                else cannotInstallTemplates.add(marketItem)
             }
 
             logger.info("[list]end")
-            return@Callable MarketTemplateResp(count, page, pageSize, results)
+            return@Callable MarketTemplateResp(count, page, pageSize, canInstallTemplates.plus(cannotInstallTemplates))
         })
     }
 
