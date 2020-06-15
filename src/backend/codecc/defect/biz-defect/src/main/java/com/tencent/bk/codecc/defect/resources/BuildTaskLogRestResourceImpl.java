@@ -29,7 +29,7 @@ package com.tencent.bk.codecc.defect.resources;
 import com.tencent.bk.codecc.defect.api.BuildTaskLogRestResource;
 import com.tencent.bk.codecc.defect.service.TaskLogService;
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.service.IBizService;
@@ -57,7 +57,7 @@ public class BuildTaskLogRestResourceImpl implements BuildTaskLogRestResource
     private TaskLogService taskLogService;
 
     @Override
-    public Result uploadTaskLog(UploadTaskLogStepVO uploadTaskLogStepVO)
+    public CodeCCResult uploadTaskLog(UploadTaskLogStepVO uploadTaskLogStepVO)
     {
         if (StringUtils.isNotEmpty(uploadTaskLogStepVO.getToolName()))
         {
@@ -72,13 +72,13 @@ public class BuildTaskLogRestResourceImpl implements BuildTaskLogRestResource
 
 
     @Override
-    public Result<Boolean> uploadDirStructSuggestParam(UploadTaskLogStepVO uploadTaskLogStepVO)
+    public CodeCCResult<Boolean> uploadDirStructSuggestParam(UploadTaskLogStepVO uploadTaskLogStepVO)
     {
         if (StringUtils.isNotEmpty(uploadTaskLogStepVO.getToolName()))
         {
             uploadTaskLogStepVO.setToolName(uploadTaskLogStepVO.getToolName().toUpperCase());
         }
-        return new Result<>(taskLogService.uploadDirStructSuggestParam(uploadTaskLogStepVO));
+        return new CodeCCResult<>(taskLogService.uploadDirStructSuggestParam(uploadTaskLogStepVO));
     }
 
 }

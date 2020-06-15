@@ -38,7 +38,7 @@ import com.tencent.bk.codecc.task.vo.QueryLogRepVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.exception.UnauthorizedException;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.auth.api.external.BkAuthExPermissionApi;
 import com.tencent.devops.common.auth.api.pojo.external.BkAuthExAction;
 import com.tencent.devops.common.auth.api.pojo.external.model.BkAuthExResourceActionModel;
@@ -91,7 +91,7 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
 
 
     @Override
-    public Result queryTaskLog(QueryTaskLogVO queryTaskLogVO)
+    public CodeCCResult queryTaskLog(QueryTaskLogVO queryTaskLogVO)
     {
         int pageNum = queryTaskLogVO.getPage() - 1;
         pageNum = pageNum < 0 ? 0 : pageNum;
@@ -113,7 +113,7 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
         Page<TaskLogVO> taskLogVoPage = new PageImpl<>(taskLogVOList, pageable, totalCount);
         queryTaskLogVO.setTaskLogPage(taskLogVoPage);
 
-        return new Result(queryTaskLogVO);
+        return new CodeCCResult(queryTaskLogVO);
     }
 
 
@@ -204,7 +204,7 @@ public class GetTaskLogServiceImpl implements GetTaskLogService
         HttpServletRequest request = attributes.getRequest();
         String userName = request.getHeader(AUTH_HEADER_DEVOPS_USER_ID);
 
-        Result<TaskDetailVO> taskInfo = client.get(ServiceTaskRestResource.class).getPipelineTask(pipelineId);
+        CodeCCResult<TaskDetailVO> taskInfo = client.get(ServiceTaskRestResource.class).getPipelineTask(pipelineId);
         if (taskInfo.isNotOk() || null == taskInfo.getData())
         {
             logger.error("get task detail info fail! pipeline id: {}", pipelineId);

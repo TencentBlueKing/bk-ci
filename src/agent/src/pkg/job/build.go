@@ -31,17 +31,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego/logs"
 	"io/ioutil"
-	"pkg/api"
-	"pkg/config"
-	"pkg/util"
-	"pkg/util/command"
-	"pkg/util/fileutil"
-	"pkg/util/httputil"
-	"pkg/util/systemutil"
 	"strings"
 	"time"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/httputil"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/astaxie/beego/logs"
 )
 
 const buildIntervalInSeconds = 5

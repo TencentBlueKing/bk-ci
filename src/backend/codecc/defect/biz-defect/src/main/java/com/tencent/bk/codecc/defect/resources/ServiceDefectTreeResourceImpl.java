@@ -29,7 +29,7 @@ package com.tencent.bk.codecc.defect.resources;
 import com.tencent.bk.codecc.defect.api.ServiceDefectTreeResource;
 import com.tencent.bk.codecc.defect.service.TreeService;
 import com.tencent.bk.codecc.defect.vo.TreeNodeVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -49,9 +49,9 @@ public class ServiceDefectTreeResourceImpl implements ServiceDefectTreeResource
     private TreeService treeService;
 
     @Override
-    public Result<TreeNodeVO> getTreeNode(Long taskId, String toolNames)
+    public CodeCCResult<TreeNodeVO> getTreeNode(Long taskId, String toolNames)
     {
-        return new Result<>(treeService.getTreeNode(taskId, toolNames));
+        return new CodeCCResult<>(treeService.getTreeNode(taskId, toolNames));
     }
 
 

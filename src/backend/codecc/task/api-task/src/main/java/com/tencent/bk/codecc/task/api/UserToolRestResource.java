@@ -29,7 +29,7 @@ package com.tencent.bk.codecc.task.api;
 import com.tencent.bk.codecc.task.vo.BatchRegisterVO;
 import com.tencent.bk.codecc.task.vo.RepoInfoVO;
 import com.tencent.bk.codecc.task.vo.ToolStatusUpdateReqVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -58,7 +58,7 @@ public interface UserToolRestResource
     @ApiOperation("批量注册工具")
     @Path("/")
     @POST
-    Result<Boolean> registerTools(
+    CodeCCResult<Boolean> registerTools(
             @ApiParam(value = "工具注册信息", required = true)
             @Valid
                     BatchRegisterVO batchRegisterVO,
@@ -72,7 +72,7 @@ public interface UserToolRestResource
     @ApiOperation("获取代码库清单")
     @Path("/repos/projCode/{projCode}")
     @GET
-    Result<List<RepoInfoVO>> getRepoList(
+    CodeCCResult<List<RepoInfoVO>> getRepoList(
             @ApiParam(value = "项目code", required = true)
             @PathParam("projCode")
                     String projCode);
@@ -81,7 +81,7 @@ public interface UserToolRestResource
     @ApiOperation("获取代码库分支列表")
     @Path("/branches")
     @GET
-    Result<List<String>> listBranches(
+    CodeCCResult<List<String>> listBranches(
             @ApiParam(value = "项目code", required = true)
             @QueryParam("projCode")
                     String projCode,
@@ -97,7 +97,7 @@ public interface UserToolRestResource
     @ApiOperation("工具启用停用")
     @Path("/status")
     @PUT
-    Result<Boolean> updateToolStatus(
+    CodeCCResult<Boolean> updateToolStatus(
             @ApiParam(value = "工具名清单", required = true)
                     ToolStatusUpdateReqVO toolStatusUpdateReqVO,
             @ApiParam(value = "当前用户", required = true)
@@ -111,7 +111,7 @@ public interface UserToolRestResource
     @ApiOperation("停用流水线")
     @Path("/pipeline")
     @DELETE
-    Result<Boolean> deletePipeline(
+    CodeCCResult<Boolean> deletePipeline(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,

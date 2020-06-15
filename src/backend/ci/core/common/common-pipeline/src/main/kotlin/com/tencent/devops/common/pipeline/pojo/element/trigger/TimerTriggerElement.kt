@@ -92,7 +92,6 @@ data class TimerTriggerElement(
             }
             if (advanceExpression != null && advanceExpression.isNotEmpty()) {
                 advanceExpression.forEach { expression ->
-                    checkLength(expression)
                     expressions.add(convertExpression(expression))
                 }
             }
