@@ -1607,6 +1607,7 @@ class PipelineService @Autowired constructor(
         pipelineRecords.forEach {
             pipelineTemplateMap[it.pipelineId] = it.templateId
         }
+        val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList())
         pipelineBuildSummary.forEach {
             val pipelineId = it["PIPELINE_ID"] as String
             if (excludePipelineId != null && excludePipelineId == pipelineId) {
@@ -1670,7 +1671,8 @@ class PipelineService @Autowired constructor(
                     hasCollect = favorPipelines.contains(pipelineId),
                     latestBuildUserId = starter,
                     instanceFromTemplate = pipelineTemplateMap[pipelineId] != null,
-                    creator = creator
+                    creator = creator,
+                    groupLabel = pipelineGroupLabel[pipelineId]
                 )
             )
         }
