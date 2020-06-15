@@ -417,7 +417,7 @@ class ContainerControl @Autowired constructor(
                     pipelineBuildDetailService.taskEnd(
                         buildId = task.buildId,
                         taskId = task.taskId,
-                        buildStatus = task.status,
+                        buildStatus = containerFinalStatus,
                         canRetry = true,
                         errorType = ErrorType.SYSTEM,
                         errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
