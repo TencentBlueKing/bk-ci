@@ -24,20 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.common.security.autoconfig
 
-dependencies {
-    compile project(":core:common:common-api")
-    implementation 'com.fasterxml.jackson.core:jackson-core'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-    implementation 'com.fasterxml.jackson.core:jackson-annotations'
-    implementation "net.sf.dozer:dozer"
-    implementation 'org.apache.commons:commons-collections4'
-    implementation 'commons-codec:commons-codec'
-    implementation 'com.google.guava:guava'
-    implementation 'io.jsonwebtoken:jjwt'
-    compile 'org.apache.commons:commons-lang3'
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation "org.junit.jupiter:junit-jupiter"
+import com.tencent.devops.common.security.jwt.JwtManager
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import java.io.IOException
+import java.security.GeneralSecurityException
+import org.springframework.core.env.Environment
+
+/**
+ *
+ * Powered By Tencent
+ */
+@Configuration
+@EnableConfigurationProperties(ServiceSecurityProperties::class)
+class ServiceSecurityAutoConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean(name = ["jwtManager"])
+    @Throws(IOException::class, GeneralSecurityException::class)
+    fun jwtManager(
+            @Autowired securityProperties: ServiceSecurityProperties
+    ): JwtManager? {
+        return JwtManager(securityProperties.privateKeyBase64, securityProperties.publicKeyBase64)
+    }
+
 }

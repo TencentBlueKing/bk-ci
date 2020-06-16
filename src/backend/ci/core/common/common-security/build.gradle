@@ -27,17 +27,13 @@
 apply plugin: "maven"
 
 dependencies {
-    compile project(":core:common:common-api")
-    implementation 'com.fasterxml.jackson.core:jackson-core'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-    implementation 'com.fasterxml.jackson.core:jackson-annotations'
-    implementation "net.sf.dozer:dozer"
-    implementation 'org.apache.commons:commons-collections4'
-    implementation 'commons-codec:commons-codec'
-    implementation 'com.google.guava:guava'
+    compile project(":core:common:common-util")
+    compile project(":core:common:common-service")
     implementation 'io.jsonwebtoken:jjwt'
-    compile 'org.apache.commons:commons-lang3'
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation "org.junit.jupiter:junit-jupiter"
+    implementation 'com.google.guava:guava'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    compile (group: 'org.springframework.boot', name: 'spring-boot')
+    compile (group: 'org.springframework.boot', name: 'spring-boot-autoconfigure')
+    implementation 'org.springframework:spring-context'
+    compile (group: 'org.springframework.boot', name: 'spring-boot-configuration-processor')
 }
