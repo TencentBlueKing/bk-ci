@@ -26,34 +26,34 @@
 package com.tencent.devops.common.security.jwt
 
 import com.google.common.cache.CacheBuilder
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.security.pojo.SecurityJwtInfo
+import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.util.crypto.RSAUtils
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.DependsOn
 import org.springframework.core.env.Environment
 import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
+import java.net.InetAddress
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-@Component
-@DependsOn("springContextUtil")
-class JwtManager(
-        private val privateKeyBase64: String?,
-        private val publicKeyBase64: String?
+class JwtManager constructor(
+    private val privateKeyBase64: String?,
+    private val publicKeyBase64: String?
 ) {
     @Volatile
     private var token: String? = null
     private val publicKey: PublicKey
     private val privateKey: PrivateKey
+    private val securityJwtInfo: SecurityJwtInfo
     private val tokenCache = CacheBuilder.newBuilder()
-            .maximumSize(9999).expireAfterWrite(5, TimeUnit.MINUTES).build<String, Long>()
+        .maximumSize(9999).expireAfterWrite(5, TimeUnit.MINUTES).build<String, Long>()
 
     /**
      * 获取JWT jwt token
@@ -69,8 +69,9 @@ class JwtManager(
     private fun generateToken(): String? {
         // token 超时10min
         val expireAt = System.currentTimeMillis() + 1000 * 60 * 10
-        token = Jwts.builder().setSubject("bkdevops-service-auth").setExpiration(Date(expireAt))
-                .signWith(SignatureAlgorithm.RS512, privateKey).compact()
+        val json = JsonUtil.toJson(securityJwtInfo)
+        token = Jwts.builder().setSubject(json).setExpiration(Date(expireAt))
+            .signWith(SignatureAlgorithm.RS512, privateKey).compact()
         return token
     }
 
@@ -91,9 +92,9 @@ class JwtManager(
         }
         try {
             val claims = Jwts.parser()
-                    .setSigningKey(publicKey)
-                    .parseClaimsJws(token)
-                    .body
+                .setSigningKey(publicKey)
+                .parseClaimsJws(token)
+                .body
             val expireAt = claims.get("exp", Date::class.java)
             if (expireAt != null) {
                 tokenCache.put(token, expireAt.time)
@@ -122,6 +123,12 @@ class JwtManager(
     init {
         privateKey = RSAUtils.getPrivateKey(privateKeyBase64!!)
         publicKey = RSAUtils.getPublicKey(publicKeyBase64!!)
+        securityJwtInfo = SecurityJwtInfo(
+            ip = InetAddress.getLocalHost().hostAddress,
+            applicationName = EnvironmentUtil.getApplicationName(),
+            activeProfile = EnvironmentUtil.getApplicationName(),
+            serverPort = EnvironmentUtil.getServerPort()
+        )
         logger.info("Init JwtManager successfully!")
     }
 
