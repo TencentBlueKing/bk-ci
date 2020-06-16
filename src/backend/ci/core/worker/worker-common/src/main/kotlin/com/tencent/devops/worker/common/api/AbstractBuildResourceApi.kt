@@ -51,7 +51,6 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URLEncoder
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
