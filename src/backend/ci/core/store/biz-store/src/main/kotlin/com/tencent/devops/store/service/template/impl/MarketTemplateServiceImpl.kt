@@ -27,6 +27,7 @@
 package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -379,10 +380,13 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         var installedTemplateCodes: List<String>? = null
         run check@{
             if (!projectCode.isNullOrBlank()) {
-                val installedTemplates =
-                    client.get(ServicePipelineTemplateResource::class).listTemplate(projectCode!!).data ?: return@check
-                logger.info("get project($projectCode) installedTemplates :$installedTemplates")
-                installedTemplateCodes = installedTemplates.keys.toList()
+                val installedTemplatesResult =
+                    client.get(ServicePipelineTemplateResource::class).listSrcTemplateCodes(projectCode!!)
+                if (installedTemplatesResult.isNotOk()) {
+                    throw RemoteServiceException("Failed to get project($projectCode) installedTemplates")
+                }
+                logger.info("get project($projectCode) installedTemplates :$installedTemplatesResult")
+                installedTemplateCodes = installedTemplatesResult.data
             }
         }
 
