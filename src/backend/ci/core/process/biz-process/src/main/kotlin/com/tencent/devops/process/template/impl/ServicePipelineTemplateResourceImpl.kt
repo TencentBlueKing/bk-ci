@@ -41,4 +41,8 @@ class ServicePipelineTemplateResourceImpl @Autowired constructor(
     override fun listTemplate(projectCode: String): Result<Map<String, PipelineTemplate>> {
         return Result(pipelineTemplateService.listTemplate(projectCode))
     }
+
+    override fun listSrcTemplateCodes(projectCode: String): Result<List<String>> {
+        return Result(pipelineTemplateService.listSrcTemplateCodes(projectCode))
+    }
 }
