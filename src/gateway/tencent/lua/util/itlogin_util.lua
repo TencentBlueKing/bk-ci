@@ -57,10 +57,9 @@ function _M:get_staff_info(ckey)
         return
     end
 
-    -- ngx.log(ngx.ERR, "result: ", logUtil:dump(res))
     --- 判断返回的状态码是否是200
     if res.status ~= 200 then
-        ngx.log(ngx.ERR, "failed to request ckey info, status: ", res.status)
+        ngx.log(ngx.STDERR, "failed to request ckey info, status: ", res.status)
         ngx.exit(500)
         return
     end
@@ -77,10 +76,9 @@ function _M:get_staff_info(ckey)
         return
     end
 
-    -- ngx.log(ngx.ERR, "ckey info result: ", logUtil:dump(result))
     --- 判断返回码:Q!
     if result.ReturnFlag ~= 0 then
-        ngx.log(ngx.ERR, "invalid ckey info ", result.message)
+        ngx.log(ngx.STDERR, "invalid ckey info ", result.message)
         ngx.exit(401)
         return
     end
