@@ -155,6 +155,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         score: Int?,
         rdType: TemplateRdTypeEnum?,
         sortType: MarketTemplateSortTypeEnum?,
+        installedTemplates: List<String>?,
         desc: Boolean?,
         page: Int?,
         pageSize: Int?
@@ -272,17 +273,37 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         labelInfoList.add(MarketMainItemLabel(LATEST, MessageCodeUtil.getCodeLanMessage(LATEST)))
         futureList.add(
             getMarketTemplateList(
-                userId = userId, userDeptList = userDeptList, name = null, classifyCode = null, category = null,
-                labelCode = null, score = null, rdType = null, sortType = MarketTemplateSortTypeEnum.UPDATE_TIME,
-                desc = true, page = page, pageSize = pageSize
+                userId = userId,
+                userDeptList = userDeptList,
+                name = null,
+                classifyCode = null,
+                category = null,
+                labelCode = null,
+                score = null,
+                rdType = null,
+                sortType = MarketTemplateSortTypeEnum.UPDATE_TIME,
+                installedTemplates = null,
+                desc = true,
+                page = page,
+                pageSize = pageSize
             )
         )
         labelInfoList.add(MarketMainItemLabel(HOTTEST, MessageCodeUtil.getCodeLanMessage(HOTTEST)))
         futureList.add(
             getMarketTemplateList(
-                userId = userId, userDeptList = userDeptList, name = null, classifyCode = null, category = null,
-                labelCode = null, score = null, rdType = null, sortType = MarketTemplateSortTypeEnum.DOWNLOAD_COUNT,
-                desc = true, page = page, pageSize = pageSize
+                userId = userId,
+                userDeptList = userDeptList,
+                name = null,
+                classifyCode = null,
+                category = null,
+                labelCode = null,
+                score = null,
+                rdType = null,
+                sortType = MarketTemplateSortTypeEnum.DOWNLOAD_COUNT,
+                installedTemplates = null,
+                desc = true,
+                page = page,
+                pageSize = pageSize
             )
         )
         val classifyList = classifyDao.getAllClassify(dslContext, StoreTypeEnum.TEMPLATE.type.toByte())
@@ -304,6 +325,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     score = null,
                     rdType = null,
                     sortType = MarketTemplateSortTypeEnum.DOWNLOAD_COUNT,
+                    installedTemplates = null,
                     desc = true,
                     page = page,
                     pageSize = pageSize
@@ -335,6 +357,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         score: Int?,
         rdType: TemplateRdTypeEnum?,
         sortType: MarketTemplateSortTypeEnum?,
+        projectCode: String?,
         page: Int?,
         pageSize: Int?
     ): MarketTemplateResp {
@@ -352,6 +375,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             score = score,
             rdType = rdType,
             sortType = sortType,
+            installedTemplates = listOf(),
             desc = true,
             page = page,
             pageSize = pageSize
