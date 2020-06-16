@@ -27,14 +27,14 @@ else
   isInServiceWhitelist = true
 end
 if not isInServiceWhitelist then
-  ngx.log(STDERR, "client ip do not in service_ip_whitelist: ", err)
+  ngx.log(ngx.STDERR, "client ip do not in service_ip_whitelist: ", err)
   ngx.exit(403)
 end 
 
 --- 获取Cookie中bk_token
 local bk_token, err = cookieUtil:get_cookie("bk_token")
 if not bk_token then
-  ngx.log(STDERR, "failed to read user request bk_token: ", err)
+  ngx.log(ngx.STDERR, "failed to read user request bk_token: ", err)
   ngx.exit(401)
 end
 local ticket = oauthUtil:get_ticket(bk_token)

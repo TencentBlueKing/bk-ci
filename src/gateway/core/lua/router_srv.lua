@@ -19,7 +19,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 --- 是否在白名单里面
 if (ngx.var.whitelist_deny and ngx.var.whitelist_deny ~= "") then
-  ngx.log(STDERR, "owner_uin is not in whitelist!")
+  ngx.log(ngx.STDERR, "owner_uin is not in whitelist!")
   ngx.exit(423)
   return
 end
@@ -46,7 +46,7 @@ end
 if access_util then 
   local access_result,err = access_util:isAccess()
   if not access_result then
-    ngx.log(STDERR, "request excess!")
+    ngx.log(ngx.STDERR, "request excess!")
     ngx.exit(503)
     return
   end
@@ -58,13 +58,13 @@ if config.service_name ~= nil and config.service_name ~= "" then
 end
 
 if not service_name then
-  ngx.log(STDERR, "failed with no service name")
+  ngx.log(ngx.STDERR, "failed with no service name")
   ngx.exit(503)
   return
 end
 
 if service_name == "" then
-  ngx.log(STDERR, "failed with empty service name")
+  ngx.log(ngx.STDERR, "failed with empty service name")
   ngx.exit(503)
   return
 end
