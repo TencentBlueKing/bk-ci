@@ -309,9 +309,10 @@
                 .bk-form .bk-form-item:before, .bk-form:after {
                     display: none;
                 }
-                .pipeline-detail {
-                    padding: 20px 10px;
-                }
+            }
+
+            .pipeline-detail {
+                padding: 20px 10px;
             }
 
             .version-option {
