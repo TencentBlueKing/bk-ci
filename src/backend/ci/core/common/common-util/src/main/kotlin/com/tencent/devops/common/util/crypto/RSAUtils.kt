@@ -1,7 +1,7 @@
 package com.tencent.devops.common.util.crypto
 
 import com.google.common.collect.Lists
-import com.tencent.bk.job.common.util.Base64Util
+import com.tencent.devops.common.util.Base64Util
 import org.apache.commons.codec.binary.Base64
 import java.io.*
 import java.security.*
@@ -11,7 +11,6 @@ import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
 
-import com.tencent.bk.job.common.util.Base64Util
 
 /**
  * RSAUtils 加解密
@@ -38,7 +37,7 @@ object RSAUtils {
     private fun getPermKey(permFile: File): String {
         val strKeyPEM = StringBuilder(2048)
         BufferedReader(FileReader(permFile)).use { br ->
-            var line: String
+            var line: String = ""
             while (br.readLine().also { line = it } != null) {
                 if (SKIP_STR.contains(line)) {
                     continue
@@ -51,10 +50,10 @@ object RSAUtils {
 
     @Throws(IOException::class)
     private fun getPermKey(permBase64: String): String {
-        val perm: String = Base64Util.base64DecodeContentToStr(permBase64)
+        val perm = Base64Util.base64DecodeContentToStr(permBase64)
         val strKeyPEM = StringBuilder(2048)
         BufferedReader(StringReader(perm)).use { br ->
-            var line: String
+            var line: String = ""
             while (br.readLine().also { line = it } != null) {
                 if (SKIP_STR.contains(line)) {
                     continue
@@ -97,7 +96,7 @@ object RSAUtils {
         val sign = Signature.getInstance(SIGNATURE_ALGORITHM)
         sign.initSign(privateKey)
         sign.update(message.toByteArray(charset(CHARSET_NAME)))
-        return String(Base64.encodeBase64(sign.sign()), CHARSET_NAME)
+        return String(Base64.encodeBase64(sign.sign()), charset(CHARSET_NAME))
     }
 
     @Throws(SignatureException::class, NoSuchAlgorithmException::class, UnsupportedEncodingException::class, InvalidKeyException::class)
@@ -119,6 +118,6 @@ object RSAUtils {
     fun decrypt(cipherText: String?, privateKey: PrivateKey?): String {
         val cipher = Cipher.getInstance(KEY_ALGORITHM)
         cipher.init(Cipher.DECRYPT_MODE, privateKey)
-        return String(cipher.doFinal(Base64.decodeBase64(cipherText)), CHARSET_NAME)
+        return String(cipher.doFinal(Base64.decodeBase64(cipherText)), charset(CHARSET_NAME))
     }
 }
