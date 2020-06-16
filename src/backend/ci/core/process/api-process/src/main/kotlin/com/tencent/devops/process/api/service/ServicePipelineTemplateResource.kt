@@ -56,7 +56,7 @@ interface ServicePipelineTemplateResource {
 
     @ApiOperation("获取项目流水线源模板ID")
     @GET
-    @Path("/projects/{projectCode}")
+    @Path("/projects/{projectCode}/srcTemplate")
     fun listSrcTemplateCodes(
         @ApiParam("项目Code", required = true)
         @PathParam("projectCode")
