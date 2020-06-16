@@ -515,6 +515,10 @@ class TemplateService @Autowired constructor(
         return TemplateListModel(projectId, hasManagerPermission, result, count)
     }
 
+    fun getSrcTemplateCodes(projectId: String): com.tencent.devops.common.api.pojo.Result<List<String>> {
+        return com.tencent.devops.common.api.pojo.Result(templateDao.getSrcTemplateCodes(dslContext, projectId))
+    }
+
     /**
      * 从listTemplate与listTemplateByProjectIds中抽取出的公共方法
      * 填充基础模板的其他附加信息
