@@ -38,7 +38,7 @@ for k, v in pairs(allow_hosts) do
 end
 
 if matched == false then
-  ngx.log(ngx.WARN, "can not allow access: ", http_origin)
+  ngx.log(STDERR, "can not allow access: ", http_origin)
   return
 end
 
