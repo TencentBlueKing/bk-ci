@@ -64,7 +64,7 @@ function _M:get_ticket(bk_token)
     end
     --- 判断返回的状态码是否是200
     if res.status ~= 200 then
-        ngx.log(ngx.WARNO, "failed to request get_ticket, status: ", res.status)
+        ngx.log(ngx.WARN, "failed to request get_ticket, status: ", res.status)
         ngx.exit(500)
         return
     end
@@ -83,7 +83,7 @@ function _M:get_ticket(bk_token)
 
     --- 判断返回码:Q!
     if result.code ~= 0 then
-        ngx.log(ngx.WARNO, "invalid get_ticket: ", result.message)
+        ngx.log(ngx.WARN, "invalid get_ticket: ", result.message)
         ngx.exit(401)
         return
     end
