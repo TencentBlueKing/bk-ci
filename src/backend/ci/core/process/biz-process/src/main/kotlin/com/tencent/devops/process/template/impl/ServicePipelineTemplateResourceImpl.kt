@@ -24,20 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.template.resources
+package com.tencent.devops.process.template.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.user.UserPipelineTemplateResource
+import com.tencent.devops.process.api.service.ServicePipelineTemplateResource
 import com.tencent.devops.process.pojo.PipelineTemplate
 import com.tencent.devops.process.template.service.PipelineTemplateService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserPipelineTemplateResourceImpl @Autowired constructor(
+class ServicePipelineTemplateResourceImpl @Autowired constructor(
     private val pipelineTemplateService: PipelineTemplateService
-) :
-    UserPipelineTemplateResource {
+) : ServicePipelineTemplateResource {
 
     override fun listTemplate(projectCode: String): Result<Map<String, PipelineTemplate>> {
         return Result(pipelineTemplateService.listTemplate(projectCode))
