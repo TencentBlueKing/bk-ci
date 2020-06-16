@@ -205,7 +205,7 @@
                     list = (this.storeTemplate || []).map(item => {
                         return {
                             ...item,
-                            isInstall: !Object.keys(pipelineTemplate || []).includes(item.code),
+                            isInstall: !item.installed,
                             isFlag: item.flag,
                             stages: (pipelineTemplate[item.code] && pipelineTemplate[item.code].stages) || []
                         }
@@ -363,7 +363,8 @@
                     page: this.page,
                     pageSize: this.pageSize,
                     templateName: this.searchName,
-                    categoryCode: this.curCategory
+                    categoryCode: this.curCategory,
+                    projectCode: this.projectId
                 }
                 this.requestStoreTemplate(param).then((res) => {
                     this.page++
