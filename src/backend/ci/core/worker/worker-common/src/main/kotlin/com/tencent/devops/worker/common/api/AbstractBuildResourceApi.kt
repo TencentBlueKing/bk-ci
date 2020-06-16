@@ -304,12 +304,12 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             .replace("=", "%5C=")
     }
 
-    fun purePath(destPath: String): Path {
+    fun purePath(destPath: String): String {
         return Paths.get(
             destPath.removeSuffix("/")
                 .replace("./", "/")
                 .replace("../", "/")
                 .replace("//", "/")
-        )!!
+        ).toString().replace("\\", "/") // 保证win/Unix平台兼容性统一转为/分隔文件路径
     }
 }
