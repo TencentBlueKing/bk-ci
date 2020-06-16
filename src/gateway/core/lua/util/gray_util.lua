@@ -59,7 +59,7 @@ function _M:get_gray()
                 ngx.log(ngx.ERR, "gray failed to new redis ", err)
             else
                 --- 获取对应的buildId
-                local redRes, err = red:sismember("project:setting:gray",devops_project)
+                local redRes, err = red:sismember("project:setting:gray:v2",devops_project)
                 --- 将redis连接放回pool中
                 local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
                 if not ok then
