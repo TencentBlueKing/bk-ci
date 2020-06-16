@@ -28,11 +28,6 @@ apply plugin: "maven"
 
 dependencies {
     compile project(":core:common:common-api")
-    implementation 'com.fasterxml.jackson.core:jackson-core'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-    implementation 'com.fasterxml.jackson.core:jackson-annotations'
-    implementation "net.sf.dozer:dozer"
-    implementation 'org.apache.commons:commons-collections4'
     implementation 'commons-codec:commons-codec'
     implementation 'com.google.guava:guava'
     implementation 'io.jsonwebtoken:jjwt'

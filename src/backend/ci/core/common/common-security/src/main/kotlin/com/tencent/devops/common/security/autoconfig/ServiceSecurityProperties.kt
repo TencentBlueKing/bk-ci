@@ -36,5 +36,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 data class ServiceSecurityProperties(
     val publicKeyBase64: String? = null,
     val privateKeyBase64: String? = null,
-    val enable: String? = null
+    val enable: Boolean? = null
 )

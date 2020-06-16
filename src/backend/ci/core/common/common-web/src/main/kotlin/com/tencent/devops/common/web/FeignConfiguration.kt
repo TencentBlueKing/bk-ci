@@ -26,20 +26,25 @@
 
 package com.tencent.devops.common.web
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT
+import com.tencent.devops.common.security.jwt.JwtManager
 import feign.RequestInterceptor
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.DependsOn
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 
 @Configuration
+@DependsOn("jwtManager")
 class FeignConfiguration {
 
     /**
      * feign调用拦截器
      */
     @Bean
-    fun requestInterceptor(): RequestInterceptor {
+    fun requestInterceptor(@Autowired jwtManager: JwtManager): RequestInterceptor {
         return RequestInterceptor { requestTemplate ->
             val attributes =
                 RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes ?: return@RequestInterceptor
@@ -57,6 +62,12 @@ class FeignConfiguration {
                 }
                 requestTemplate.header("Cookie", cookieBuilder.toString()) // 设置cookie信息
             }
+            // 增加X-DEVOPS-JWT验证头部
+            if (!requestTemplate.headers().containsKey(AUTH_HEADER_DEVOPS_JWT)) {
+                val token = jwtManager.getToken()
+                requestTemplate.header(AUTH_HEADER_DEVOPS_JWT, token)
+            }
+            jwtManager.getToken()
         }
     }
 }

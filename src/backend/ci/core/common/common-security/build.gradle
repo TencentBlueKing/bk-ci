@@ -31,7 +31,6 @@ dependencies {
     compile project(":core:common:common-service")
     implementation 'io.jsonwebtoken:jjwt'
     implementation 'com.google.guava:guava'
-    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     compile (group: 'org.springframework.boot', name: 'spring-boot')
     compile (group: 'org.springframework.boot', name: 'spring-boot-autoconfigure')
     implementation 'org.springframework:spring-context'
