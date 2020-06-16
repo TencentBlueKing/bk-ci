@@ -22,7 +22,7 @@ local querysArgs = urlUtil:parseUrl(ngx.var.request_uri)
 local ckey = querysArgs["cKey"]
 
 if ckey == nill and x_ckey == nil then
-ngx.log(ngx.INFO, "request does not has header=x-ckey or arg_cKey.")
+ngx.log(ngx.STDERR, "request does not has header=x-ckey or arg_cKey.")
 ngx.exit(401)
 return
 end

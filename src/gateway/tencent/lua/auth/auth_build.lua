@@ -25,19 +25,19 @@ if build_type == "AGENT" then
     -- if build_type == "AGENT" then 
     -- --- agentId + secretkey 验证
     if ngx.var.http_x_devops_agent_secret_key == nil then
-        ngx.log(ngx.INFO, "lack header X-DEVOPS-AGENT-SECRET-KEY")
+        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-SECRET-KEY")
         ngx.exit(401)
         return
     end
 
     if ngx.var.http_x_devops_agent_id == nil then
-        ngx.log(ngx.INFO, "lack header X-DEVOPS-AGENT-ID")
+        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-ID")
         ngx.exit(401)
         return
     end
 
     if ngx.var.http_x_devops_build_id == nil then
-        ngx.log(ngx.INFO, "lack header X-DEVOPS-BUILD-ID")
+        ngx.log(ngx.STDERR, "lack header X-DEVOPS-BUILD-ID")
         ngx.exit(401)
         return
     end
@@ -62,12 +62,12 @@ if build_type == "AGENT" then
         end
 
         if not redRes then
-            ngx.log(ngx.INFO, "failed to get redis result: ", err)
+            ngx.log(ngx.STDERR, "failed to get redis result: ", err)
             ngx.exit(500)
             return
         else
             if redRes == ngx.null then
-                ngx.log(ngx.INFO, "redis result is null")
+                ngx.log(ngx.STDERR, "redis result is null")
                 ngx.exit(404)
                 return
             else
@@ -85,7 +85,7 @@ if build_type == "AGENT" then
             
                 -- parameter check
                 if obj.projectId == nil then
-                    ngx.log(ngx.INFO, "projectId is null: ")
+                    ngx.log(ngx.STDERR, "projectId is null: ")
                     ngx.exit(500)
                     return
                 end
@@ -101,31 +101,31 @@ if build_type == "AGENT" then
                 end
 
                 if obj.pipelineId == nil then
-                    ngx.log(ngx.INFO, "pipelineId is null: ")
+                    ngx.log(ngx.STDERR, "pipelineId is null: ")
                     ngx.exit(500)
                     return
                 end
 
                 if obj.buildId == nil then
-                    ngx.log(ngx.INFO, "buildId is null: ")
+                    ngx.log(ngx.STDERR, "buildId is null: ")
                     ngx.exit(500)
                     return
                 end
 
                 if obj.vmSeqId == nil then
-                    ngx.log(ngx.INFO, "vmSeqId is null: ")
+                    ngx.log(ngx.STDERR, "vmSeqId is null: ")
                     ngx.exit(500)
                     return
                 end
 
                 if obj.agentId == nil then
-                    ngx.log(ngx.INFO, "agentId is null: ")
+                    ngx.log(ngx.STDERR, "agentId is null: ")
                     ngx.exit(500)
                     return
                 end
 
                 if obj.agentId ~= reqAgentId then
-                    ngx.log(ngx.INFO, "agentId not match")
+                    ngx.log(ngx.STDERR, "agentId not match")
                     ngx.exit(401)
                     return
                 end
@@ -152,13 +152,13 @@ elseif build_type == "DOCKER" then
     -- if build_type == "DOCKETR" then 
     -- --- agentId + secretkey 验证
     if ngx.var.http_x_devops_agent_secret_key == nil then
-        ngx.log(ngx.INFO, "lack header X-DEVOPS-AGENT-SECRET-KEY")
+        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-SECRET-KEY")
         ngx.exit(401)
         return
     end
 
     if ngx.var.http_x_devops_agent_id == nil then
-        ngx.log(ngx.INFO, "lack header X-DEVOPS-AGENT-ID")
+        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-ID")
         ngx.exit(401)
         return
     end
@@ -180,12 +180,12 @@ elseif build_type == "DOCKER" then
         end
 
         if not redRes then
-            ngx.log(ngx.INFO, "failed to get redis result: ", err)
+            ngx.log(ngx.STDERR, "failed to get redis result: ", err)
             ngx.exit(500)
             return
         else
             if redRes == ngx.null then
-                ngx.log(ngx.INFO, "redis result is null")
+                ngx.log(ngx.STDERR, "redis result is null")
                 ngx.exit(404)
                 return
             else
@@ -202,13 +202,13 @@ elseif build_type == "DOCKER" then
             
                 -- parameter check
                 if obj.projectId == nil then
-                    ngx.log(ngx.INFO, "projectId is null: ")
+                    ngx.log(ngx.STDERR, "projectId is null: ")
                     ngx.exit(500)
                     return
                 end
 
                 if obj.pipelineId == nil then
-                    ngx.log(ngx.INFO, "pipelineId is null: ")
+                    ngx.log(ngx.STDERR, "pipelineId is null: ")
                     ngx.exit(500)
                     return
                 end
@@ -224,19 +224,19 @@ elseif build_type == "DOCKER" then
                 end
 
                 if obj.buildId == nil then
-                    ngx.log(ngx.INFO, "buildId is null: ")
+                    ngx.log(ngx.STDERR, "buildId is null: ")
                     ngx.exit(500)
                     return
                 end
 
                 if obj.vmName == nil then
-                    ngx.log(ngx.INFO, "vmName is null: ")
+                    ngx.log(ngx.STDERR, "vmName is null: ")
                     ngx.exit(500)
                     return
                 end
 
                 if obj.vmSeqId == nil then
-                    ngx.log(ngx.INFO, "vmSeqId is null: ")
+                    ngx.log(ngx.STDERR, "vmSeqId is null: ")
                     ngx.exit(500)
                     return
                 end
@@ -263,13 +263,13 @@ elseif build_type == "PLUGIN_AGENT" then
     -- if build_type == "PLUGIN_AGENT" then 
     -- --- agentId + secretkey 验证
     if ngx.var.http_x_devops_agent_secret_key == nil then
-        ngx.log(ngx.INFO, "lack header X-DEVOPS-AGENT-SECRET-KEY")
+        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-SECRET-KEY")
         ngx.exit(401)
         return
     end
 
     if ngx.var.http_x_devops_agent_id == nil then
-        ngx.log(ngx.INFO, "lack header X-DEVOPS-AGENT-ID")
+        ngx.log(ngx.STDERR, "lack header X-DEVOPS-AGENT-ID")
         ngx.exit(401)
         return
     end
@@ -291,12 +291,12 @@ elseif build_type == "PLUGIN_AGENT" then
         end
 
         if not redRes then
-            ngx.log(ngx.INFO, "failed to get redis result: ", err)
+            ngx.log(ngx.STDERR, "failed to get redis result: ", err)
             ngx.exit(500)
             return
         else
             if redRes == ngx.null then
-                ngx.log(ngx.INFO, "redis result is null")
+                ngx.log(ngx.STDERR, "redis result is null")
                 ngx.exit(404)
                 return
             else
@@ -313,7 +313,7 @@ elseif build_type == "PLUGIN_AGENT" then
             
                 -- parameter check
                 if obj.projectId == nil then
-                    ngx.log(ngx.INFO, "projectId is null: ")
+                    ngx.log(ngx.STDERR, "projectId is null: ")
                     ngx.exit(500)
                     return
                 end
@@ -329,25 +329,25 @@ elseif build_type == "PLUGIN_AGENT" then
                 end
 
                 if obj.pipelineId == nil then
-                    ngx.log(ngx.INFO, "pipelineId is null: ")
+                    ngx.log(ngx.STDERR, "pipelineId is null: ")
                     ngx.exit(500)
                     return
                 end
 
                 if obj.buildId == nil then
-                    ngx.log(ngx.INFO, "buildId is null: ")
+                    ngx.log(ngx.STDERR, "buildId is null: ")
                     ngx.exit(500)
                     return
                 end
 
                 if obj.vmName == nil then
-                    ngx.log(ngx.INFO, "vmName is null: ")
+                    ngx.log(ngx.STDERR, "vmName is null: ")
                     ngx.exit(500)
                     return
                 end
 
                 if obj.vmSeqId == nil then
-                    ngx.log(ngx.INFO, "vmSeqId is null: ")
+                    ngx.log(ngx.STDERR, "vmSeqId is null: ")
                     ngx.exit(500)
                     return
                 end
@@ -374,7 +374,7 @@ elseif build_type == "MACOS" then
     --- 构建机IP验证
     local client_ip, err = ipUtil:clientIp()
     if not client_ip then
-        ngx.log(ngx.INFO, "failed to get client ip: ", err)
+        ngx.log(ngx.STDERR, "failed to get client ip: ", err)
         ngx.exit(500)
         return
     end
@@ -394,20 +394,20 @@ elseif build_type == "MACOS" then
         end
         --- 处理获取到的buildID
         if not redRes then
-            ngx.log(ngx.INFO, "failed to get redis result: ", err)
+            ngx.log(ngx.STDERR, "failed to get redis result: ", err)
             ngx.exit(500)
             return
         else
             if redRes == ngx.null then
-                ngx.log(ngx.INFO, "client ip: ", client_ip)
-                ngx.log(ngx.INFO, "redis result is null: ")
+                ngx.log(ngx.STDERR, "client ip: ", client_ip)
+                ngx.log(ngx.STDERR, "redis result is null: ")
                 ngx.exit(500)
                 return
             else
                 local obj = cjson.decode(redRes)
                 -- parameter check
                 if obj.projectId == nil then
-                    ngx.log(ngx.INFO, "projectId is null: ")
+                    ngx.log(ngx.STDERR, "projectId is null: ")
                 end
 
                 -- atom替换projectId
@@ -421,31 +421,31 @@ elseif build_type == "MACOS" then
                 end
 
                 if obj.pipelineId == nil then
-                    ngx.log(ngx.INFO, "pipelineId is null: ")
+                    ngx.log(ngx.STDERR, "pipelineId is null: ")
                 end
 
                 if obj.buildId == nil then
-                    ngx.log(ngx.INFO, "buildId is null: ")
+                    ngx.log(ngx.STDERR, "buildId is null: ")
                 end
 
                 if obj.vmSeqId == nil then
-                    ngx.log(ngx.INFO, "vmSeqId is null: ")
+                    ngx.log(ngx.STDERR, "vmSeqId is null: ")
                 end
 
                 if obj.secretKey == nil then
-                    ngx.log(ngx.INFO, "secretKey is null: ")
+                    ngx.log(ngx.STDERR, "secretKey is null: ")
                 end
 
                 if obj.id == nil then
-                    ngx.log(ngx.INFO, "id is null: ")
+                    ngx.log(ngx.STDERR, "id is null: ")
                 end
 
                 if obj.secretKey == nil then
-                    ngx.log(ngx.INFO, "systemVersion is null: ")
+                    ngx.log(ngx.STDERR, "systemVersion is null: ")
                 end
 
                 if obj.xcodeVersion == nil then
-                    ngx.log(ngx.INFO, "xcodeVersion is null: ")
+                    ngx.log(ngx.STDERR, "xcodeVersion is null: ")
                 end
 
                 ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
@@ -469,7 +469,7 @@ else
     --- 构建机IP验证
     local client_ip, err = ipUtil:clientIp()
     if not client_ip then
-        ngx.log(ngx.INFO, "failed to get client ip: ", err)
+        ngx.log(ngx.STDERR, "failed to get client ip: ", err)
         ngx.exit(500)
         return
     end
@@ -489,13 +489,13 @@ else
         end
         --- 处理获取到的buildID
         if not redRes then
-            ngx.log(ngx.INFO, "failed to get redis result: ", err)
+            ngx.log(ngx.STDERR, "failed to get redis result: ", err)
             ngx.exit(500)
             return
         else
             if redRes == ngx.null then
-                ngx.log(ngx.INFO, "client ip: ", client_ip)
-                ngx.log(ngx.INFO, "redis result is null: ")
+                ngx.log(ngx.STDERR, "client ip: ", client_ip)
+                ngx.log(ngx.STDERR, "redis result is null: ")
                 ngx.exit(500)
                 return
             else
@@ -512,7 +512,7 @@ else
 
                 -- parameter check
                 if obj.projectId == nil then
-                    ngx.log(ngx.INFO, "projectId is null: ")
+                    ngx.log(ngx.STDERR, "projectId is null: ")
                 end
 
                 -- atom替换projectId
@@ -526,19 +526,19 @@ else
                 end
 
                 if obj.pipelineId == nil then
-                    ngx.log(ngx.INFO, "pipelineId is null: ")
+                    ngx.log(ngx.STDERR, "pipelineId is null: ")
                 end
 
                 if obj.buildId == nil then
-                    ngx.log(ngx.INFO, "buildId is null: ")
+                    ngx.log(ngx.STDERR, "buildId is null: ")
                 end
 
                 if obj.vmName == nil then
-                    ngx.log(ngx.INFO, "vmName is null: ")
+                    ngx.log(ngx.STDERR, "vmName is null: ")
                 end
 
                 if obj.vmSeqId == nil then
-                    ngx.log(ngx.INFO, "vmSeqId is null: ")
+                    ngx.log(ngx.STDERR, "vmSeqId is null: ")
                 end
 
                 ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
