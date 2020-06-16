@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.TriggerBuildResource
+import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
 import com.tencent.devops.gitci.service.GitCIRequestService
 import com.tencent.devops.gitci.service.RepositoryConfService
@@ -52,14 +53,14 @@ class TriggerBuildResourceImpl @Autowired constructor(
         return Result(gitCIRequestService.triggerBuild(userId, triggerBuildReq))
     }
 
-    override fun checkYaml(userId: String, yaml: String): Result<String> {
+    override fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
         try {
-            val (validate, message) = gitCIRequestService.validateCIBuildYaml(yaml)
+            val (validate, message) = gitCIRequestService.validateCIBuildYaml(yaml.yaml)
             if (!validate) {
                 logger.error("Validate yaml failed, message: $message")
                 return Result(1, "Invalid yaml: $message", message)
             }
-            gitCIRequestService.createCIBuildYaml(yaml)
+            gitCIRequestService.createCIBuildYaml(yaml.yaml)
         } catch (e: Throwable) {
             logger.error("check yaml failed, error: ${e.message}, yaml: $yaml")
             return Result(1, "Invalid yaml", e.message)
