@@ -35,7 +35,7 @@ else
 end
 
 if not isInServiceWhitelist then
-  ngx.log(ngx.INFO, "client ip do not in service_ip_whitelist: ", err)
+  ngx.log(ngx.WARNO, "client ip do not in service_ip_whitelist: ", err)
   ngx.exit(403)
 end 
 local userId = ""
