@@ -54,6 +54,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.gitci.api.TriggerBuildResource
+import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.log.model.pojo.LogLine
 import com.tencent.devops.log.model.pojo.QueryLogs
@@ -434,7 +435,7 @@ class PreBuildService @Autowired constructor(
         return AgentStatus.fromStatus(agent.status!!)
     }
 
-    fun checkYaml(userId: String, yaml: String): Result<String> {
+    fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
         return client.get(TriggerBuildResource::class).checkYaml(userId, yaml)
     }
 }

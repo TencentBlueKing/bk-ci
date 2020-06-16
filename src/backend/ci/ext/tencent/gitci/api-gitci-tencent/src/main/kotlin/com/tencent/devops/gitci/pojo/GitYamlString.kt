@@ -24,20 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:plugin:codecc-plugin:common-codecc")
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-event")
-    compile project(":ext:tencent:scm:api-scm")
-    compile project(":core:plugin:api-plugin")
-    compile project(":core:environment:api-environment")
-    compile project(":core:image:api-image")
-    compile project(":core:store:api-store")
-    compile project(":core:process:api-process")
-    compile project(":core:log:api-log")
-    compile project(":core:project:api-project")
-    compile project(":ext:tencent:gitci:api-gitci-tencent")
-}
+package com.tencent.devops.gitci.pojo
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("Yaml内容")
+data class GitYamlString(
+    @ApiModelProperty("YAML文件内容")
+    val yaml: String
+)

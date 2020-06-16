@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.log.model.pojo.QueryLogs
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.prebuild.pojo.HistoryResponse
@@ -262,6 +263,6 @@ interface UserPreBuildResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("yaml内容", required = true)
-        yaml: String
+        yaml: GitYamlString
     ): Result<String>
 }
