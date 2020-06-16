@@ -100,6 +100,10 @@ class PipelineTemplateService @Autowired constructor(
         return map
     }
 
+    fun listSrcTemplateCodes(projectCode: String): List<String> {
+        return pipelineTemplateDao.getSrcTemplateCodes(dslContext, projectCode)
+    }
+
     fun addTemplate(
         userId: String,
         author: String,
