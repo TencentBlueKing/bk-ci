@@ -578,7 +578,7 @@
         "toCheck": "Review",
         "noAuthToCheck": "No Access",
         "abortTips": "Review has not passed",
-        "checkUser": "Reviewer",
+        "checkUser": "Reviewer: ",
         "aborted": "Aborted",
         "pendingAtom": "Pending plugins",
         "addAtom": "Add plugins",

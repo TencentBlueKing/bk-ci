@@ -3,7 +3,7 @@
         <header class="stage-panel-header" slot="header">
             {{ stageTitle }}
         </header>
-        <stage-review-control slot="content" v-bind="$attrs"></stage-review-control>
+        <stage-review-control slot="content" v-bind="$props"></stage-review-control>
     </bk-sideslider>
 </template>
 
@@ -15,6 +15,16 @@
         name: 'stage-review-panel',
         components: {
             StageReviewControl
+        },
+        props: {
+            stage: {
+                type: Object,
+                default: () => ({})
+            },
+            disabled: {
+                type: Boolean,
+                default: false
+            }
         },
         computed: {
             ...mapState('atom', [
