@@ -23,7 +23,7 @@ function _M:get_ticket(bk_ticket)
     local user_cache = ngx.shared.user_info_store
     local user_cache_value = user_cache:get(bk_ticket)
     if user_cache_value == nil then
-        ngx.log(ngx.WARN, "no user info")
+        ngx.log(ngx.STDERR, "no user info")
         --- 初始化HTTP连接
         local httpc = http.new()
         --- 开始连接
@@ -69,7 +69,7 @@ function _M:get_ticket(bk_ticket)
         end
         --- 判断返回的状态码是否是200
         if res.status ~= 200 then
-            ngx.log(ngx.WARN, "failed to request get_ticket, status: ", res.status)
+            ngx.log(ngx.STDERR, "failed to request get_ticket, status: ", res.status)
             ngx.exit(500)
             return
         end
@@ -88,7 +88,7 @@ function _M:get_ticket(bk_ticket)
 
         --- 判断返回码:Q!
         if result.code ~= 0 then
-            ngx.log(ngx.WARN, "invalid get_ticket: ", result.message)
+            ngx.log(ngx.STDERR, "invalid get_ticket: ", result.message)
             ngx.exit(401)
             return
         end
@@ -96,7 +96,7 @@ function _M:get_ticket(bk_ticket)
         return result.data
     else
 
-        ngx.log(ngx.WARN, "has user info:", user_cache_value)
+        ngx.log(ngx.STDERR, "has user info:", user_cache_value)
         return json.decode(user_cache_value).data
     end
 
@@ -142,7 +142,7 @@ function _M:verfiy_permis(project_code, service_code, policy_code, resource_code
     end
     --- 判断返回的状态码是否是200
     if res.status ~= 200 then
-        ngx.log(ngx.WARN, "failed to request verfiy_permis, status: ", res.status)
+        ngx.log(ngx.STDERR, "failed to request verfiy_permis, status: ", res.status)
         return false
     end
     --- 获取所有回复
@@ -159,7 +159,7 @@ function _M:verfiy_permis(project_code, service_code, policy_code, resource_code
 
     --- 判断返回码
     if result.code ~= 0 then
-        ngx.log(ngx.WARN, "invalid verfiy_permis: ", result.message)
+        ngx.log(ngx.STDERR, "invalid verfiy_permis: ", result.message)
         return false
     end
     return true
@@ -193,7 +193,7 @@ function _M:verify_token(access_token)
     end
     --- 判断返回的状态码是否是200
     if res.status ~= 200 then
-        ngx.log(ngx.WARN, "failed to request verify_token, status: ", res.status)
+        ngx.log(ngx.STDERR, "failed to request verify_token, status: ", res.status)
         ngx.exit(500)
         return
     end
@@ -212,7 +212,7 @@ function _M:verify_token(access_token)
 
     --- 判断返回码:Q!
     if result.code ~= 0 then
-        ngx.log(ngx.WARN, "invalid verify_token: ", result.message)
+        ngx.log(ngx.STDERR, "invalid verify_token: ", result.message)
         ngx.exit(401)
         return
     end
