@@ -381,7 +381,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         run check@{
             if (!projectCode.isNullOrBlank()) {
                 val installedTemplatesResult =
-                    client.get(ServicePipelineTemplateResource::class).listSrcTemplateCodes(projectCode!!)
+                    client.get(ServiceTemplateResource::class).getSrcTemplateCodes(projectCode!!)
                 if (installedTemplatesResult.isNotOk()) {
                     throw RemoteServiceException("Failed to get project($projectCode) installedTemplates")
                 }
