@@ -10,7 +10,7 @@
                 <form-field :required="true" :label="$t('buildNum')" :is-error="errors.has(&quot;buildNo&quot;)" :error-msg="errors.first(&quot;buildNo&quot;)">
                     <vuex-input :disabled="(isPreview && buildNo.buildNoType !== 'CONSISTENT') || disabled" input-type="number" name="buildNo" placeholder="BuildNo" v-validate.initial="&quot;required|numeric&quot;" :value="buildNo.buildNo" :handle-change="handleBuildNoChange" />
                 </form-field>
-                <form-field class="flex-colspan-2" :required="true" :is-error="errors.has(&quot;buildNoType&quot;)" :error-msg="errors.first(&quot;buildNoType&quot;)">
+                <form-field class="flex-colspan-2 build-no-group" :required="true" :is-error="errors.has(&quot;buildNoType&quot;)" :error-msg="errors.first(&quot;buildNoType&quot;)">
                     <enum-input :list="buildNoRules" :disabled="disabled || isPreview" name="buildNoType" v-validate.initial="&quot;required|string&quot;" :value="buildNo.buildNoType" :handle-change="handleBuildNoChange" />
                 </form-field>
             </div>
@@ -98,6 +98,7 @@
         .bk-form-content {
             margin-top: 42px;
         }
+
         .atom-checkbox {
             padding-right: 0;
             padding-left: 8px;

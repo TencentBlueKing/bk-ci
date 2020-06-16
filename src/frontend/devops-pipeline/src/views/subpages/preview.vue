@@ -306,15 +306,8 @@
                     margin-top: 20px;
                     width: 48%;
                 }
-                .bk-label {
-                    width: 100%;
-                    text-align: left;
-                    @include ellipsis();
-                }
-                .bk-form-content {
-                    float: left;
-                    margin-left: 0;
-                    width: 100%;
+                .bk-form .bk-form-item:before, .bk-form:after {
+                    display: none;
                 }
                 .pipeline-detail {
                     padding: 20px 10px;
@@ -323,20 +316,31 @@
 
             .version-option {
                 margin-bottom: 30px;
-                .bk-form-item {
-                    width: 200px;
-                    margin-left: 0;
-                    margin-right: 20px;
-                }
-                .flex-colspan-2 {
+                 .build-no-group .bk-form-content {
+                    margin-top: 32px;
                     width: 400px;
                 }
+                .bk-form-item {
+                    width: 200px;
+                    margin: 20px 20px 0 0;
+                }
+
             }
-            .flex-colspan-2 {
+            .global-params,
+            .version-option {
+                .bk-label {
+                    width: 100%;
+                    text-align: left;
+                    @include ellipsis();
+                }
+
                 .bk-form-content {
-                    margin-top: 42px;
+                    float: left;
+                    margin-left: 0;
+                    width: 100%;
                 }
             }
+
         }
         .bkci-property-panel {
             .bk-sideslider-wrapper {
