@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
+import com.tencent.devops.process.api.service.ServicePipelineTemplateResource
 import com.tencent.devops.process.api.template.ServiceTemplateResource
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -155,12 +156,13 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         score: Int?,
         rdType: TemplateRdTypeEnum?,
         sortType: MarketTemplateSortTypeEnum?,
-        installedTemplates: List<String>?,
+        installedTemplateCodes: List<String>?,
         desc: Boolean?,
         page: Int?,
         pageSize: Int?
     ): Future<MarketTemplateResp> {
         return executor.submit(Callable<MarketTemplateResp> {
+            val installedTemplates = mutableListOf<MarketItem>()
             val canInstallTemplates = mutableListOf<MarketItem>()
             val cannotInstallTemplates = mutableListOf<MarketItem>()
             // 获取模版
@@ -212,8 +214,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 val members = memberData?.get(code)
                 val publicFlag = it["PUBLIC_FLAG"] as Boolean
                 val canInstall = generateInstallFlag(publicFlag, members, userId, visibleList, userDeptList)
+                val installed = installedTemplateCodes?.contains(code)
                 val classifyId = it["CLASSIFY_ID"] as String
-
                 val marketItem = MarketItem(
                     id = it["ID"] as String,
                     name = it["TEMPLATE_NAME"] as String,
@@ -232,14 +234,23 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     flag = canInstall,
                     publicFlag = it["PUBLIC_FLAG"] as Boolean,
                     buildLessRunFlag = false,
-                    docsLink = ""
+                    docsLink = "",
+                    installed = installed
                 )
-                if (canInstall) canInstallTemplates.add(marketItem)
-                else cannotInstallTemplates.add(marketItem)
+                when {
+                    installed == true -> installedTemplates.add(marketItem)
+                    canInstall -> canInstallTemplates.add(marketItem)
+                    else -> cannotInstallTemplates.add(marketItem)
+                }
             }
 
             logger.info("[list]end")
-            return@Callable MarketTemplateResp(count, page, pageSize, canInstallTemplates.plus(cannotInstallTemplates))
+            return@Callable MarketTemplateResp(
+                count = count,
+                page = page,
+                pageSize = pageSize,
+                records = installedTemplates.plus(canInstallTemplates).plus(cannotInstallTemplates)
+            )
         })
     }
 
@@ -282,7 +293,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 score = null,
                 rdType = null,
                 sortType = MarketTemplateSortTypeEnum.UPDATE_TIME,
-                installedTemplates = null,
+                installedTemplateCodes = null,
                 desc = true,
                 page = page,
                 pageSize = pageSize
@@ -300,7 +311,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 score = null,
                 rdType = null,
                 sortType = MarketTemplateSortTypeEnum.DOWNLOAD_COUNT,
-                installedTemplates = null,
+                installedTemplateCodes = null,
                 desc = true,
                 page = page,
                 pageSize = pageSize
@@ -325,7 +336,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     score = null,
                     rdType = null,
                     sortType = MarketTemplateSortTypeEnum.DOWNLOAD_COUNT,
-                    installedTemplates = null,
+                    installedTemplateCodes = null,
                     desc = true,
                     page = page,
                     pageSize = pageSize
@@ -365,6 +376,16 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         // 获取用户组织架构
         val userDeptList = getUserDeptList(userId)
         logger.info("list userDeptList is:$userDeptList")
+        var installedTemplateCodes: List<String>? = null
+        run check@{
+            if (!projectCode.isNullOrBlank()) {
+                val installedTemplates =
+                    client.get(ServicePipelineTemplateResource::class).listTemplate(projectCode!!).data ?: return@check
+                logger.info("get project($projectCode) installedTemplates :$installedTemplates")
+                installedTemplateCodes = installedTemplates.keys.toList()
+            }
+        }
+
         return getMarketTemplateList(
             userId = userId,
             userDeptList = userDeptList,
@@ -375,7 +396,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             score = score,
             rdType = rdType,
             sortType = sortType,
-            installedTemplates = listOf(),
+            installedTemplateCodes = installedTemplateCodes,
             desc = true,
             page = page,
             pageSize = pageSize
