@@ -579,7 +579,7 @@
         "toCheck": "审核",
         "noAuthToCheck": "无审核权限",
         "abortTips": "审核未通过，",
-        "checkUser": "审核人为",
+        "checkUser": "审核人为：",
         "aborted": "已驳回",
         "pendingAtom": "待选择插件",
         "addAtom": "新增插件",
