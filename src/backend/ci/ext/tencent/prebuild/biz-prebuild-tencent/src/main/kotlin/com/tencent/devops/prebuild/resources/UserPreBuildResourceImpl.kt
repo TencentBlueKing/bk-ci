@@ -34,6 +34,7 @@ import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.log.model.pojo.QueryLogs
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.prebuild.api.UserPreBuildResource
@@ -115,6 +116,10 @@ class UserPreBuildResourceImpl @Autowired constructor(
 
     override fun getBuildLink(userId: String, preProjectId: String, buildId: String): Result<String> {
         return Result(preBuildService.getBuildLink(userId, preProjectId, buildId))
+    }
+
+    override fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
+        return preBuildService.checkYaml(userId, yaml)
     }
 
     companion object {
