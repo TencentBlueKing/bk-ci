@@ -1,0 +1,131 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+package com.tencent.devops.common.security.jwt
+
+import com.google.common.cache.CacheBuilder
+import com.tencent.devops.common.security.pojo.SecurityJwtInfo
+import com.tencent.devops.common.util.crypto.RSAUtils
+import io.jsonwebtoken.ExpiredJwtException
+import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.SignatureAlgorithm
+import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.DependsOn
+import org.springframework.core.env.Environment
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
+import java.security.PrivateKey
+import java.security.PublicKey
+import java.time.Instant
+import java.util.*
+import java.util.concurrent.TimeUnit
+
+@Component
+@DependsOn("springContextUtil")
+class JwtManager(
+        private val privateKeyBase64: String?,
+        private val publicKeyBase64: String?
+) {
+    @Volatile
+    private var token: String? = null
+    private val publicKey: PublicKey
+    private val privateKey: PrivateKey
+    private val tokenCache = CacheBuilder.newBuilder()
+            .maximumSize(9999).expireAfterWrite(5, TimeUnit.MINUTES).build<String, Long>()
+
+    /**
+     * 获取JWT jwt token
+     *
+     * @return
+     */
+    fun getToken(): String? {
+        return if (token != null) {
+            token
+        } else generateToken()
+    }
+
+    private fun generateToken(): String? {
+        // token 超时10min
+        val expireAt = System.currentTimeMillis() + 1000 * 60 * 10
+        token = Jwts.builder().setSubject("bkdevops-service-auth").setExpiration(Date(expireAt))
+                .signWith(SignatureAlgorithm.RS512, privateKey).compact()
+        return token
+    }
+
+    /**
+     * 验证JWT
+     *
+     * @param token jwt token
+     * @return
+     */
+    fun verifyJwt(token: String): Boolean {
+        val start = System.currentTimeMillis()
+        val tokenExpireAt = tokenCache.getIfPresent(token)
+        if (tokenExpireAt != null) {
+            // 如果未超时
+            if (tokenExpireAt > Instant.now().epochSecond) {
+                return true
+            }
+        }
+        try {
+            val claims = Jwts.parser()
+                    .setSigningKey(publicKey)
+                    .parseClaimsJws(token)
+                    .body
+            val expireAt = claims.get("exp", Date::class.java)
+            if (expireAt != null) {
+                tokenCache.put(token, expireAt.time)
+            }
+        } catch (e: ExpiredJwtException) {
+            logger.warn("Token is expire!", e)
+            return false
+        } catch (e: Exception) {
+            logger.warn("Verify jwt caught exception", e)
+            return false
+        } finally {
+            val cost = System.currentTimeMillis() - start
+            if (cost > 5) {
+                logger.warn("Verify jwt cost too much, cost:{}", cost)
+            }
+        }
+        return true
+    }
+
+    @Scheduled(fixedDelay = 5 * 60 * 1000)
+    fun refreshToken() {
+        logger.info("Refresh token")
+        generateToken()
+    }
+
+    init {
+        privateKey = RSAUtils.getPrivateKey(privateKeyBase64!!)
+        publicKey = RSAUtils.getPublicKey(publicKeyBase64!!)
+        logger.info("Init JwtManager successfully!")
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(JwtManager::class.java)
+    }
+}

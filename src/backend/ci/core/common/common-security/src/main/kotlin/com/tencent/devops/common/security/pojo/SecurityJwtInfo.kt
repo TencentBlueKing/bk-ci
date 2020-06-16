@@ -24,20 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.common.security.pojo
 
-dependencies {
-    compile project(":core:common:common-api")
-    implementation 'com.fasterxml.jackson.core:jackson-core'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-    implementation 'com.fasterxml.jackson.core:jackson-annotations'
-    implementation "net.sf.dozer:dozer"
-    implementation 'org.apache.commons:commons-collections4'
-    implementation 'commons-codec:commons-codec'
-    implementation 'com.google.guava:guava'
-    implementation 'io.jsonwebtoken:jjwt'
-    compile 'org.apache.commons:commons-lang3'
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation "org.junit.jupiter:junit-jupiter"
-}
+data class SecurityJwtInfo(
+    val ip: String,
+    val applicationName: String,
+    val activeProfile: String,
+    val serverPort: Int
+)
