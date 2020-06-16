@@ -55,7 +55,7 @@ include ":core:common:common-auth:common-auth-blueking"
 include ":core:common:common-notify"
 include ":core:common:common-websocket"
 include ":core:common:common-util"
-
+include ":core:common:common-security"
 
 include ":core:project"
 include ":core:project:api-project"

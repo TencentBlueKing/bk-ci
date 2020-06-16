@@ -55,14 +55,6 @@ import org.springframework.core.Ordered
 class ServiceSecurityConfiguration {
 
     @Bean
-    @Profile("prod")
-    fun jerseyConfig() = JerseyConfig()
-
-    @Bean
-    @Profile("!prod")
-    fun jerseySwaggerConfig() = JerseySwaggerConfig()
-
-    @Bean
     @Primary
     fun objectMapper() = JsonUtil.getObjectMapper()
 
