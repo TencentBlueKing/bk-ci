@@ -49,6 +49,16 @@ import org.springframework.context.annotation.Configuration
 class PipelineExtendConfiguration {
 
     /**
+     * 流水线扩展行为订阅广播
+     */
+    @Bean
+    fun pipelineExtendsFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_EXTENDS_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    /**
      * 构建启动广播交换机
      */
     @Bean
