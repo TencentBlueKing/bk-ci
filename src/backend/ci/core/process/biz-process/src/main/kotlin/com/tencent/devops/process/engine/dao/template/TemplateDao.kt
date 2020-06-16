@@ -251,6 +251,15 @@ class TemplateDao {
         }
     }
 
+    fun getSrcTemplateCodes(dslContext: DSLContext, projectId: String): List<String> {
+        return with(TTemplate.T_TEMPLATE) {
+            dslContext.select(SRC_TEMPLATE_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(STORE_FLAG.eq(true))
+                .fetch(SRC_TEMPLATE_ID, String::class.java)
+        }
+    }
+
     /**
      * 获取某一些项目下的模板总量
      */
