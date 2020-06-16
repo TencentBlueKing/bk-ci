@@ -23,7 +23,7 @@ function _M:get_cookie(cookie_name)
     --- 获取cookies
     local cookie, err = ck:new()
     if not cookie then
-        ngx.log(ngx.INFO, "failed to get request cookies: ", err)
+        ngx.log(ngx.WARNO, "failed to get request cookies: ", err)
         return nil
     end
 

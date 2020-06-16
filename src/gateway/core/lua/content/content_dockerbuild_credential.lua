@@ -37,15 +37,15 @@ local res, err = httpc:request({
 httpc:set_keepalive(60000, 5)
 --- 判断是否出错了
 if not res then
-  ngx.log(ngx.INFO, "failed to request dockerbuild/credential: ", err)
+  ngx.log(ngx.WARNO, "failed to request dockerbuild/credential: ", err)
   ngx.exit(500)
   return
 end
 
 --- 判断返回的状态码是否是200
 if res.status ~= 200 then
-  ngx.log(ngx.INFO, "Log dockerbuild/credential response http code: ", res.status)
-  ngx.log(ngx.INFO, "Log dockerbuild/credential response http body: ", res:read_body())
+  ngx.log(ngx.WARNO, "Log dockerbuild/credential response http code: ", res.status)
+  ngx.log(ngx.WARNO, "Log dockerbuild/credential response http body: ", res:read_body())
   ngx.exit(500)
   return
 end
@@ -56,13 +56,13 @@ local responseBody = res:read_body()
 local result = json.decode(responseBody)
 --- 判断JSON转换是否成功
 if result == nil then 
-  ngx.log(ngx.INFO, "failed to parse core response：", responseBody)
+  ngx.log(ngx.WARNO, "failed to parse core response：", responseBody)
   ngx.exit(500)
   return
 end
 --- 判断返回码
 if result.status ~= 0 then
-  ngx.log(ngx.INFO, "invalid dockerbuild/credential: ", result.message)
+  ngx.log(ngx.WARNO, "invalid dockerbuild/credential: ", result.message)
   ngx.exit(500)
   return
 end
