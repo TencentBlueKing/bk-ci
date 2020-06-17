@@ -26,32 +26,32 @@
 package com.tencent.devops.common.security.jwt
 
 import com.google.common.cache.CacheBuilder
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.security.pojo.SecurityJwtInfo
-import com.tencent.devops.common.security.util.EnvironmentUtil
-import com.tencent.devops.common.util.crypto.RSAUtils
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
+import org.jolokia.util.Base64Util
 import org.slf4j.LoggerFactory
-import org.springframework.core.env.Environment
 import org.springframework.scheduling.annotation.Scheduled
-import java.net.InetAddress
+import java.security.KeyFactory
 import java.security.PrivateKey
 import java.security.PublicKey
+import java.security.spec.PKCS8EncodedKeySpec
+import java.security.spec.X509EncodedKeySpec
 import java.time.Instant
-import java.util.*
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
-class JwtManager constructor(
-    private val privateKeyBase64: String?,
-    private val publicKeyBase64: String?
+class JwtManager(
+    private val privateKeyString: String?,
+    private val publicKeyString: String?,
+    private val enable: Boolean
 ) {
-    @Volatile
     private var token: String? = null
-    private val publicKey: PublicKey
-    private val privateKey: PrivateKey
-    private val securityJwtInfo: SecurityJwtInfo
+    private val publicKey: PublicKey?
+    private val privateKey: PrivateKey?
+    private val authEnable: Boolean
+
+    //    private val securityJwtInfo: SecurityJwtInfo
     private val tokenCache = CacheBuilder.newBuilder()
         .maximumSize(9999).expireAfterWrite(5, TimeUnit.MINUTES).build<String, Long>()
 
@@ -69,8 +69,8 @@ class JwtManager constructor(
     private fun generateToken(): String? {
         // token 超时10min
         val expireAt = System.currentTimeMillis() + 1000 * 60 * 10
-        val json = JsonUtil.toJson(securityJwtInfo)
-        token = Jwts.builder().setSubject(json).setExpiration(Date(expireAt))
+//        val json = JsonUtil.toJson(securityJwtInfo)
+        token = Jwts.builder().setSubject("X-DEVOPS-JWT AUTH").setExpiration(Date(expireAt))
             .signWith(SignatureAlgorithm.RS512, privateKey).compact()
         return token
     }
@@ -120,15 +120,27 @@ class JwtManager constructor(
         generateToken()
     }
 
+    fun isAuth(): Boolean {
+        return authEnable
+    }
+
     init {
-        privateKey = RSAUtils.getPrivateKey(privateKeyBase64!!)
-        publicKey = RSAUtils.getPublicKey(publicKeyBase64!!)
-        securityJwtInfo = SecurityJwtInfo(
-            ip = InetAddress.getLocalHost().hostAddress,
-            applicationName = EnvironmentUtil.getApplicationName(),
-            activeProfile = EnvironmentUtil.getApplicationName(),
-            serverPort = EnvironmentUtil.getServerPort()
-        )
+        if (privateKeyString.isNullOrBlank() || publicKeyString.isNullOrBlank()) {
+            privateKey = null
+            publicKey = null
+            authEnable = false
+        } else {
+            val keyFactory = KeyFactory.getInstance("RSA")
+            privateKey = keyFactory.generatePrivate(PKCS8EncodedKeySpec(Base64Util.decode(privateKeyString)))
+            publicKey = keyFactory.generatePublic(X509EncodedKeySpec(Base64Util.decode(publicKeyString)))
+            authEnable = enable
+        }
+//        securityJwtInfo = SecurityJwtInfo(
+//            ip = InetAddress.getLocalHost().hostAddress,
+//            applicationName = EnvironmentUtil.getApplicationName(),
+//            activeProfile = EnvironmentUtil.getApplicationName(),
+//            serverPort = EnvironmentUtil.getServerPort()
+//        )
         logger.info("Init JwtManager successfully!")
     }
 

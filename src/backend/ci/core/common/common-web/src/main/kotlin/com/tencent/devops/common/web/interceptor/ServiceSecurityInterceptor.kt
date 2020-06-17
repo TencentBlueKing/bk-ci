@@ -9,10 +9,8 @@ import com.tencent.devops.common.web.constant.SecurityErrorCode.ERROR_SERVICE_NO
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
-import org.springframework.web.servlet.HandlerInterceptor
 import org.springframework.web.servlet.ModelAndView
-import java.lang.Exception
+import org.springframework.web.servlet.handler.HandlerInterceptorAdapter
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -23,7 +21,7 @@ import javax.servlet.http.HttpServletResponse
 class ServiceSecurityInterceptor @Autowired constructor(
     private val jwtManager: JwtManager,
     private val securityProperties: ServiceSecurityProperties
-) : HandlerInterceptor {
+) : HandlerInterceptorAdapter() {
 
     override fun preHandle(
         request: HttpServletRequest,
@@ -58,15 +56,6 @@ class ServiceSecurityInterceptor @Autowired constructor(
         response: HttpServletResponse?,
         handler: Any?,
         modelAndView: ModelAndView?
-    ) {
-        TODO("Not yet implemented")
-    }
-
-    override fun afterCompletion(
-        request: HttpServletRequest?,
-        response: HttpServletResponse?,
-        handler: Any?,
-        ex: Exception?
     ) {
         TODO("Not yet implemented")
     }

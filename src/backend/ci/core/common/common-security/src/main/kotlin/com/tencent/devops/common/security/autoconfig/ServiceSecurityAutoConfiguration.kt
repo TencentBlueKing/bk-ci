@@ -27,28 +27,41 @@
 package com.tencent.devops.common.security.autoconfig
 
 import com.tencent.devops.common.security.jwt.JwtManager
+import com.tencent.devops.common.security.util.EnvironmentUtil
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.io.IOException
-import java.security.GeneralSecurityException
+import org.springframework.core.Ordered
+import org.springframework.core.env.Environment
+import org.springframework.scheduling.annotation.EnableScheduling
 
 /**
  *
  * Powered By Tencent
  */
+@EnableScheduling
 @Configuration
+// @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @EnableConfigurationProperties(ServiceSecurityProperties::class)
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class ServiceSecurityAutoConfiguration {
+    @Value("\${bkci.security.public-key:#{null}}")
+    private val publicKey: String? = null
+    @Value("\${bkci.security.private-key:#{null}}")
+    private val privateKey: String? = null
+    @Value("\${bkci.security.enable:#{false}}")
+    private val enable: Boolean = false
 
     @Bean
-    @ConditionalOnMissingBean(name = ["jwtManager"])
-    @Throws(IOException::class, GeneralSecurityException::class)
+    fun environmentUtil(
+        @Autowired environment: Environment
+    ) = EnvironmentUtil(environment)
+
+    @Bean
     fun jwtManager(
-        @Autowired securityProperties: ServiceSecurityProperties
-    ): JwtManager? {
-        return JwtManager(securityProperties.privateKeyBase64, securityProperties.publicKeyBase64)
-    }
+        serviceSecurityProperties: ServiceSecurityProperties
+    ) = JwtManager(privateKey, publicKey, enable)
 }

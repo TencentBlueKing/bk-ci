@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component
 @Component
 class EnvironmentUtil constructor(
     private val environment: Environment
-): ApplicationContextAware {
+) : ApplicationContextAware {
 
     /**
      * 实现ApplicationContextAware接口的回调方法，设置上下文环境
@@ -34,7 +34,7 @@ class EnvironmentUtil constructor(
          * @return String
          */
         fun getActiveProfile(): String {
-            return StringUtils.join(applicationContext!!.environment.activeProfiles,",")
+            return StringUtils.join(applicationContext!!.environment.activeProfiles, ",")
         }
 
         /**

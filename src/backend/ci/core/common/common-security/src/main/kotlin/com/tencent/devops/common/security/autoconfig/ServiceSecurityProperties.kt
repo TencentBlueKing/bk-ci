@@ -34,7 +34,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  */
 @ConfigurationProperties(prefix = "bkci.security")
 data class ServiceSecurityProperties(
-    val publicKeyBase64: String? = null,
-    val privateKeyBase64: String? = null,
-    val enable: Boolean? = null
+    val publicKey: String = "",
+    val privateKey: String = "",
+    val enable: Boolean = false
 )
