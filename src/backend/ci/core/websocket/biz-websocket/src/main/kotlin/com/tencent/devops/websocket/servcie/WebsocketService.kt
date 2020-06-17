@@ -26,12 +26,14 @@
 
 package com.tencent.devops.websocket.servcie
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 import com.tencent.devops.websocket.event.ChangePageTransferEvent
+import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.event.ClearUserSessionTransferEvent
 import com.tencent.devops.websocket.event.LoginOutTransferEvent
 import com.tencent.devops.websocket.keys.WebsocketKeys
@@ -191,6 +193,27 @@ class WebsocketService @Autowired constructor(
         } finally {
             redisLock.unlock()
         }
+    }
+
+    fun clearSession(userId: String, sessionId: String): Result<Boolean> {
+        logger.info("clearSession| $userId| $sessionId")
+        val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
+        clearUserSession(userId, sessionId, null)
+        if (page != null) {
+            logger.info("$userId| $sessionId| ws loginOut fail, page[$page], refresh by interface")
+            loginOut(userId, sessionId, page)
+        }
+        if (!isCacheSession(sessionId)) {
+            transferDispatch.dispatch(
+                ClearSessionEvent(
+                    userId = userId,
+                    sessionId = sessionId,
+                    page = null,
+                    transferData = mutableMapOf()
+                )
+            )
+        }
+        return Result(true)
     }
 
     fun addCacheSession(sessionId: String) {

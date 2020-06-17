@@ -63,6 +63,7 @@
     import TimePicker from '@/components/AtomFormComponent/TimePicker'
     import Parameter from '@/components/AtomFormComponent/Parameter'
     import Tips from '@/components/AtomFormComponent/Tips'
+    import DynamicParameter from '@/components/AtomFormComponent/DynamicParameter'
     import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
     export default {
         name: 'normal-atom-v2',
@@ -73,7 +74,8 @@
             AppId,
             TimePicker,
             Parameter,
-            Tips
+            Tips,
+            DynamicParameter
         },
         mixins: [atomMixin, validMixins],
         computed: {
