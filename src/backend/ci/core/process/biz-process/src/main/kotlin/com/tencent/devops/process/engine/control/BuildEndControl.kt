@@ -46,12 +46,8 @@ import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.engine.service.PipelineBuildTaskService
-import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
-import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
