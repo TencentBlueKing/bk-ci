@@ -175,7 +175,7 @@
             },
             isStagePause () {
                 try {
-                    return this.stage.status === 'PAUSE'
+                    return this.stage.reviewStatus === 'PAUSE'
                 } catch (error) {
                     return false
                 }
@@ -211,18 +211,17 @@
                 return this.stage.stageControlOption && this.stage.stageControlOption.manualTrigger
             },
             reviewStatausIcon () {
-                switch (this.stage.status) {
+                switch (this.stage.reviewStatus) {
                     case 'PAUSE':
                         return 'reviewing'
-                    case 'SUCCEED':
-                        return this.enableReview ? 'reviewed' : 'review-disable'
-                    case 'FAILED':
+                    case 'QUEUE':
+                        return 'review-waiting'
+                    case 'REVIEW_PROCESSED':
+                        return 'reviewed'
                     case 'REVIEW_ABORT':
-                        return this.enableReview ? 'review-abort' : 'review-disable'
-                    case 'RUNNING':
-                        return this.enableReview ? 'reviewed' : 'review-disable'
+                        return 'review-abort'
                     default:
-                        return this.enableReview ? this.editable || this.isPreview ? 'review-enable' : 'review-waiting' : 'review-disable'
+                        return this.enableReview ? 'review-enable' : 'review-disable'
                 }
             },
             reviewTooltip () {
