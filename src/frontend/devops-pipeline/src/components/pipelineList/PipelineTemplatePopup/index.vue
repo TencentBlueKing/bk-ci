@@ -307,9 +307,8 @@
                 }
                 this.isLoading = true
                 this.requestInstallTemplate(postData).then((res) => {
-                    this.requestPipelineTemplate({
-                        projectId: this.projectId
-                    })
+                    const currentStoreItem = this.storeTemplate.find(x => x.code === temp.code)
+                    currentStoreItem.installed = true
                 }).catch((err) => {
                     this.$showTips({ message: err.message || err, theme: 'error' })
                 }).finally(() => {
