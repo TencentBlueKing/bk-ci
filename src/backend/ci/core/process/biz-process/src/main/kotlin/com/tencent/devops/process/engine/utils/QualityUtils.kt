@@ -254,7 +254,7 @@ object QualityUtils {
             templateId = templateId,
             runtimeVariable = runVariables
         )
-        val result = if (QUALITY_CODECC_LAZY_ATOM.contains(interceptTask)) {
+        val result = if (position == ControlPointPosition.AFTER_POSITION && QUALITY_CODECC_LAZY_ATOM.contains(interceptTask)) {
             run loop@{
                 QUALITY_LAZY_TIME_GAP.forEachIndexed { index, gap ->
                     val hasMetadata = pipelineBuildQualityService.hasCodeccHisMetadata(buildId)

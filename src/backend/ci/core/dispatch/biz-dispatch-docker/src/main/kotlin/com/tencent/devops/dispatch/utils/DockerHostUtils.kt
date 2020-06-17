@@ -114,7 +114,7 @@ class DockerHostUtils @Autowired constructor(
         val dockerPair = if (firstPair.first.isEmpty()) {
             val secondPair = dockerLoadCheck(dockerHostLoadConfigTriple.second, grayEnv, specialIpSet, unAvailableIpList)
             if (secondPair.first.isEmpty()) {
-                return dockerLoadCheck(dockerHostLoadConfigTriple.third, grayEnv, specialIpSet, unAvailableIpList)
+                dockerLoadCheck(dockerHostLoadConfigTriple.third, grayEnv, specialIpSet, unAvailableIpList)
             } else {
                 secondPair
             }

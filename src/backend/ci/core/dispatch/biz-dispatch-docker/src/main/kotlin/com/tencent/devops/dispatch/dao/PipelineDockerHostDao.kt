@@ -81,10 +81,16 @@ class PipelineDockerHostDao {
         type: DockerHostType = DockerHostType.BUILD
     ): List<String> {
         with(TDispatchPipelineDockerHost.T_DISPATCH_PIPELINE_DOCKER_HOST) {
-            return dslContext.select(HOST_IP).from(this)
+            val result = dslContext.select(HOST_IP).from(this)
                 .where(PROJECT_CODE.eq(projectId))
                 .and(TYPE.eq(type.ordinal))
-                .fetch(HOST_IP, String::class.java)
+                .fetchOne(HOST_IP)
+
+            return if (result != null && result.isNotEmpty()) {
+                result.split(",")
+            } else {
+                emptyList()
+            }
         }
     }
 }

@@ -36,6 +36,7 @@ import com.tencent.devops.quality.api.v2.pojo.op.ElementNameData
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -204,6 +205,28 @@ class QualityMetadataService @Autowired constructor(
         val data = metadataDao.listByElementType(dslContext, elementType)
         val testData = data?.filter { it.extra == "IN_READY_TEST" } ?: listOf()
         return metadataDao.delete(testData.map { it.id }, dslContext)
+    }
+
+    fun batchSaveMetadata(userId: String, metadataItemList: List<Map<String, String>>) {
+        dslContext.transaction { context ->
+            val transactionContext = DSL.using(context)
+            metadataItemList.forEach {
+                val metadata = QualityMetaData(id = 0L,
+                    dataId = it["dataId"],
+                    dataName = it["dataName"],
+                    elementType = it["elementType"],
+                    elementName = it["elementName"],
+                    elementDetail = it["elementDetail"],
+                    valueType = it["valueType"],
+                    desc = it["desc"],
+                    extra = it["extra"])
+                metadataDao.insert(userId, metadata, transactionContext)
+            }
+        }
+    }
+
+    fun deleteMetadata(metadataId: Long) {
+        metadataDao.delete(listOf(metadataId), dslContext)
     }
 
     companion object {

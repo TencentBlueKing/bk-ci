@@ -170,7 +170,7 @@
             line-height: 32px;
             background: #fff;
             color: #63656e;
-            overflow: hidden;
+            overflow: auto;
             max-height: 216px;
             z-index: 2;
             li {
