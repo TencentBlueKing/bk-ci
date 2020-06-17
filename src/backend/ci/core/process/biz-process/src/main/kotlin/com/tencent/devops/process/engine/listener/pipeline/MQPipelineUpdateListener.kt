@@ -57,7 +57,7 @@ class MQPipelineUpdateListener @Autowired constructor(
         }
         val model = pipelineRepositoryService.getModel(event.pipelineId)
         if (model == null || model.stages.isEmpty()) {
-            logger.error("[${event.pipelineId}]|pipeline model stage is empty")
+            logger.warn("[${event.pipelineId}]|pipeline model stage is empty")
             return
         }
         val pipelineId = event.pipelineId

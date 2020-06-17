@@ -39,7 +39,7 @@ import com.tencent.bk.codecc.task.service.PipelineService;
 import com.tencent.bk.codecc.task.vo.DefectConfigInfoVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
@@ -210,7 +210,7 @@ public class DefectConfigServiceImpl implements DefectConfigService
             return;
         }
         List<String> checkerDetailEntityList = new ArrayList<>();
-        Result<IgnoreCheckerVO> ignoreCheckerVOResult = client.get(ServiceCheckerRestResource.class).getIgnoreCheckerInfo(toolConfigInfoEntity.getTaskId(),
+        CodeCCResult<IgnoreCheckerVO> ignoreCheckerVOResult = client.get(ServiceCheckerRestResource.class).getIgnoreCheckerInfo(toolConfigInfoEntity.getTaskId(),
                                                 toolConfigInfoEntity.getToolName());
         if(ignoreCheckerVOResult.isOk() || null != ignoreCheckerVOResult.getData())
         {
@@ -232,7 +232,7 @@ public class DefectConfigServiceImpl implements DefectConfigService
             BeanUtils.copyProperties(toolConfigInfoEntity, toolConfigInfoVO);
             toolConfigInfoVO.setIgnoreCheckers(checkerDetailEntityList);
             //加入已开启规则
-            Result<Map<String, CheckerDetailVO>> openCheckerResult = client.get(ServiceCheckerRestResource.class).queryOpenChecker(toolConfigInfoVO);
+            CodeCCResult<Map<String, CheckerDetailVO>> openCheckerResult = client.get(ServiceCheckerRestResource.class).queryOpenChecker(toolConfigInfoVO);
             if (openCheckerResult.isNotOk() || null == openCheckerResult.getData())
             {
                 logger.error("get open checker fail! message: {}", openCheckerResult.getMessage());
