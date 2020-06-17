@@ -30,7 +30,7 @@ import com.tencent.bk.codecc.defect.api.UserCheckerPkgRestResource;
 import com.tencent.bk.codecc.defect.service.IConfigCheckerPkgBizService;
 import com.tencent.bk.codecc.defect.vo.CheckerPkgRspVO;
 import com.tencent.bk.codecc.defect.vo.ConfigCheckersPkgReqVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.auth.api.pojo.external.BkAuthExAction;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
@@ -55,20 +55,20 @@ public class UserCheckerPkgRestResourceImpl implements UserCheckerPkgRestResourc
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<List<CheckerPkgRspVO>> checkerPkg(Long taskId, String toolName)
+    public CodeCCResult<List<CheckerPkgRspVO>> checkerPkg(Long taskId, String toolName)
     {
         IConfigCheckerPkgBizService bizService = fileAndConfigCheckerPkgFactory
                 .createBizService(toolName, ComConstants.BusinessType.CONFIG_PKG.value(), IConfigCheckerPkgBizService.class);
-        return new Result<>(bizService.getConfigCheckerPkg(taskId, toolName));
+        return new CodeCCResult<>(bizService.getConfigCheckerPkg(taskId, toolName));
     }
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<Boolean> configCheckerPkg(ConfigCheckersPkgReqVO packageVo, Long taskId)
+    public CodeCCResult<Boolean> configCheckerPkg(ConfigCheckersPkgReqVO packageVo, Long taskId)
     {
         IConfigCheckerPkgBizService bizService = fileAndConfigCheckerPkgFactory
                 .createBizService(packageVo.getToolName(), ComConstants.BusinessType.CONFIG_PKG.value(), IConfigCheckerPkgBizService.class);
-        return new Result<>(bizService.configCheckerPkg(packageVo, taskId));
+        return new CodeCCResult<>(bizService.configCheckerPkg(packageVo, taskId));
     }
 
 }

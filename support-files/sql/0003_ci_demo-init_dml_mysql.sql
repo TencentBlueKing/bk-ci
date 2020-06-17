@@ -53,5 +53,5 @@ BEGIN
 END <CI_UBF>
 DELIMITER ;
 COMMIT;
-CALL ci_demo_date_update();
+# CALL ci_demo_date_update();
 

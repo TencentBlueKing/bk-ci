@@ -24,37 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.pojo
+package com.tencent.devops.store.util
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.tencent.devops.common.constant.CommonMessageCode
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import org.junit.Assert
+import org.junit.Test
 
-@ApiModel("数据返回包装模型")
-data class Result<out T>(
-        @ApiModelProperty("状态码", required = true)
-        val status: Int,
-        @ApiModelProperty("错误码", required = true)
-        val code: String?,
-        @ApiModelProperty("错误信息", required = false)
-        val message: String? = null,
-        @ApiModelProperty("数据", required = false)
-        val data: T? = null
-) {
-    constructor(data: T) : this(0, CommonMessageCode.SUCCESS, null, data)
-    constructor(status: Int, message: String?) : this(status, CommonMessageCode.SUCCESS, message, null)
-    constructor(errCode: String, message: String?) : this(0, errCode, message, null)
-    constructor(status: Int, message: String?, data: T?) : this(status, CommonMessageCode.SUCCESS, message, data)
-    constructor(status: Int, errCode: String, message: String?) : this(status, errCode, message, null)
+class ImageUtilTest {
 
-    @JsonIgnore
-    fun isOk(): Boolean {
-        return (status == 0 || (null != code && code == CommonMessageCode.SUCCESS))
-    }
-
-    @JsonIgnore
-    fun isNotOk(): Boolean {
-        return (status != 0 || (null != code && code != CommonMessageCode.SUCCESS))
+    @Test
+    fun testCompareVersion() {
+        Assert.assertEquals(ImageUtil.compareVersion("1.0.1", "1. ."), 1)
+        Assert.assertEquals(ImageUtil.compareVersion("1.0.1", "1.0"), 1)
+        Assert.assertEquals(ImageUtil.compareVersion("1.0.1", "1.0.2"), -1)
+        Assert.assertEquals(ImageUtil.compareVersion("1.0.9", "1.0.10"), -1)
+        Assert.assertEquals(ImageUtil.compareVersion("1.0.9", "1.0.100"), -1)
+        Assert.assertEquals(ImageUtil.compareVersion("1.0.9", "1.0.9"), 0)
+        Assert.assertEquals(ImageUtil.compareVersion("2.0.9", "1.0.9"), 1)
+        Assert.assertEquals(ImageUtil.compareVersion(null, "1.0.9"), -1)
+        Assert.assertEquals(ImageUtil.compareVersion(null, null), 0)
+        Assert.assertEquals(ImageUtil.compareVersion("1.", null), 1)
     }
 }

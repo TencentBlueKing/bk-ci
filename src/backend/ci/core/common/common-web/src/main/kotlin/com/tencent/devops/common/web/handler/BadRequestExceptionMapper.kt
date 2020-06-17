@@ -43,7 +43,7 @@ class BadRequestExceptionMapper : ExceptionMapper<BadRequestException> {
     }
 
     override fun toResponse(exception: BadRequestException): Response {
-        logger.error("Failed with bad request exception", exception)
+        logger.warn("Failed with bad request exception", exception)
         val status = Response.Status.BAD_REQUEST
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message

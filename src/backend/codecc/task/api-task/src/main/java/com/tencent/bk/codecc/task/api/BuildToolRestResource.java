@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.task.api;
 
 import com.tencent.bk.codecc.task.vo.DefectConfigInfoVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -51,7 +51,7 @@ public interface BuildToolRestResource
     @ApiOperation("获取配置信息")
     @Path("/config/streamName/{streamName}/toolType/{multiToolType}")
     @GET
-    Result<DefectConfigInfoVO> getDefectConfig(
+    CodeCCResult<DefectConfigInfoVO> getDefectConfig(
             @ApiParam(value = "任务英文名", required = true)
             @PathParam("streamName")
                     String streamName,
