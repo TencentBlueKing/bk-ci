@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
@@ -68,13 +69,13 @@ object ControlUtils {
     }
 
     fun retryWhenFailure(additionalOptions: ElementAdditionalOptions?, retryCount: Int): Boolean {
-        if (additionalOptions == null) {
+        if (additionalOptions == null || !isEnable(additionalOptions)) {
             return false
         }
-        val retryWhenFailed = additionalOptions.retryWhenFailed ?: false
+        val retryWhenFailed = additionalOptions.retryWhenFailed
 
         return if (retryWhenFailed) {
-            var settingRetryCount = additionalOptions!!.retryCount ?: 1
+            var settingRetryCount = additionalOptions.retryCount
             if (settingRetryCount > TASK_FAIL_RETRY_MAX_COUNT) {
                 settingRetryCount = TASK_FAIL_RETRY_MAX_COUNT
             }
@@ -102,14 +103,19 @@ object ControlUtils {
         if (!isEnable(additionalOptions)) {
             return true
         }
+
+        return checkCustomVariableSkip(buildId = buildId, additionalOptions = additionalOptions, variables = variables)
+    }
+
+    fun checkCustomVariableSkip(buildId: String, additionalOptions: ElementAdditionalOptions?, variables: Map<String, String>): Boolean {
         // 自定义变量全部满足时不运行
         if (skipWhenCustomVarMatch(additionalOptions)) {
             for (names in additionalOptions!!.customVariables!!) {
                 val key = names.key
-                val value = names.value
+                val value = EnvUtils.parseEnv(names.value, variables)
                 val existValue = variables[key]
                 if (value != existValue) {
-                    logger.info("buildId=[$buildId]|CUSTOM_VARIABLE_MATCH_NOT_RUN|exists=$existValue|expect=$value")
+                    logger.info("buildId=[$buildId]|CUSTOM_VARIABLE_MATCH_NOT_RUN|key=$key|exists=$existValue|expect=$value|origin=${names.value}")
                     return false
                 }
             }
@@ -121,10 +127,10 @@ object ControlUtils {
         if (notSkipWhenCustomVarMatch(additionalOptions)) {
             for (names in additionalOptions!!.customVariables!!) {
                 val key = names.key
-                val value = names.value
+                val value = EnvUtils.parseEnv(names.value, variables)
                 val existValue = variables[key]
                 if (value != existValue) {
-                    logger.info("buildId=[$buildId]|CUSTOM_VARIABLE_MATCH|exists=$existValue|expect=$value")
+                    logger.info("buildId=[$buildId]|CUSTOM_VARIABLE_MATCH|key=$key|exists=$existValue|expect=$value|origin=${names.value}")
                     return true
                 }
             }
@@ -135,11 +141,11 @@ object ControlUtils {
 
     private fun notSkipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
         additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH &&
-            additionalOptions.customVariables != null && !additionalOptions.customVariables!!.isEmpty()
+            additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
 
     private fun skipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
         additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN &&
-            additionalOptions.customVariables != null && !additionalOptions.customVariables!!.isEmpty()
+            additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
 
     private fun skipWhenPreTaskFailedOnly(
         additionalOptions: ElementAdditionalOptions?,
@@ -154,7 +160,7 @@ object ControlUtils {
 
     fun checkJobSkipCondition(
         conditions: List<NameAndValue>,
-        variables: Map<String, Any>,
+        variables: Map<String, String>,
         buildId: String,
         runCondition: JobRunCondition
     ): Boolean {
@@ -167,7 +173,8 @@ object ControlUtils {
             val key = names.key
             val value = names.value
             val existValue = variables[key]
-            if (value != existValue) {
+            val env = EnvUtils.parseEnv(value, variables)
+            if (env != existValue) {
                 logger.info("[$buildId]|JOB_CONDITION|$runCondition|key=$key|actual=$existValue|expect=$value")
                 return !skip // 不满足则取反
             }

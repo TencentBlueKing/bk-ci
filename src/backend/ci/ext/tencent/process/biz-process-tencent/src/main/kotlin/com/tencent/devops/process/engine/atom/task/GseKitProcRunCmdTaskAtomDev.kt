@@ -269,7 +269,6 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
                 //            val responseStr = HttpUtils.postJson(url, requestStr)
                 val response: Map<String, Any> = JsonUtil.getObjectMapper().readValue(responseStr)
                 if (response["result"] == false) {
-                    logger.error("request failed")
                     val msg = response["msg"].toString()
                     logger.error("Request gsekit proc_run_command failed, response: $msg")
                     return CallResult(false, "", msg)
@@ -277,7 +276,6 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
                     val data = response["data"] as Map<*, *>
                     val errorCode = data["error_code"] as Int
                     return if (0 != errorCode) {
-                        logger.error("request failed")
                         val msg = data["error_msg"].toString()
                         logger.error("Request gsekit proc_run_command failed, error msg: $msg")
                         CallResult(false, "", msg)
@@ -316,7 +314,6 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
 //            val responseStr = HttpUtils.postJson(url, requestStr)
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 if (response["result"] == false) {
-                    logger.error("request failed")
                     val msg = response["msg"].toString()
                     logger.error("Request gsekit proc_create_session failed, response: $msg")
                     return CallResult(false, "", msg)
@@ -324,7 +321,6 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
                     val data = response["data"] as Map<*, *>
                     val errorCode = data["error_code"] as Int
                     return if (0 != errorCode) {
-                        logger.error("request failed")
                         val msg = data["error_msg"].toString()
                         logger.error("Request gsekit proc_create_session failed, error msg: $msg")
                         CallResult(false, "", msg)

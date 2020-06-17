@@ -71,7 +71,7 @@ object CommonUtils {
         val ipMap = getMachineIP()
         var innerIp = ipMap["eth1"]
         if (StringUtils.isBlank(innerIp)) {
-            logger.error("eth1 网卡Ip为空，因此，获取eth0的网卡ip")
+            logger.info("eth1 网卡Ip为空，因此，获取eth0的网卡ip")
             innerIp = ipMap["eth0"]
         }
         if (StringUtils.isBlank(innerIp)) {
@@ -94,7 +94,7 @@ object CommonUtils {
         try {
             val allNetInterfaces = NetworkInterface.getNetworkInterfaces() // 获取服务器的所有网卡
             if (null == allNetInterfaces) {
-                logger.error("#####################getMachineIP Can not get NetworkInterfaces")
+                logger.warn("#####################getMachineIP Can not get NetworkInterfaces")
             } else {
                 while (allNetInterfaces.hasMoreElements()) { // 循环网卡获取网卡的IP地址
                     val netInterface = allNetInterfaces.nextElement()

@@ -493,7 +493,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         }
         val noExistsEnvNames = envNameList.subtract(envNameExistsList)
         if (noExistsEnvNames.isNotEmpty()) {
-            logger.error("The envNames not exists, name:$noExistsEnvNames")
+            logger.warn("The envNames not exists, name:$noExistsEnvNames")
             LogUtils.addRedLine(rabbitTemplate, buildId, "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames", taskId, containerId, executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
@@ -511,7 +511,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
 
         val noAuthEnvIds = envIdList.subtract(userEnvIdList)
         if (noAuthEnvIds.isNotEmpty()) {
-            logger.error("User does not permit to access the env: $noAuthEnvIds")
+            logger.warn("User does not permit to access the env: $noAuthEnvIds")
             LogUtils.addRedLine(rabbitTemplate, buildId, "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds", taskId, containerId, executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
@@ -541,7 +541,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             }
             val noExistsEnvIds = envSet.envHashIds.subtract(envIdList)
             if (noExistsEnvIds.isNotEmpty()) {
-                logger.error("The envIds not exists, id:$noExistsEnvIds")
+                logger.warn("The envIds not exists, id:$noExistsEnvIds")
                 LogUtils.addRedLine(
                     rabbitTemplate,
                     buildId,
@@ -566,7 +566,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             }
             val noExistsNodeIds = envSet.nodeHashIds.subtract(nodeIdList)
             if (noExistsNodeIds.isNotEmpty()) {
-                logger.error("The nodeIds not exists, id:$noExistsNodeIds")
+                logger.warn("The nodeIds not exists, id:$noExistsNodeIds")
                 LogUtils.addRedLine(
                     rabbitTemplate,
                     buildId,

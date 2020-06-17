@@ -29,7 +29,7 @@ package com.tencent.bk.codecc.defect.api;
 import com.tencent.bk.codecc.defect.vo.CCNUploadStatisticVO;
 import com.tencent.bk.codecc.defect.vo.UploadDUPCStatisticVO;
 import com.tencent.bk.codecc.defect.vo.UploadDefectVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -55,21 +55,21 @@ public interface BuildDefectRestResource
     @ApiOperation("工具侧上报告警")
     @Path("/")
     @POST
-    Result reportDefects(
+    CodeCCResult reportDefects(
             @ApiParam(value = "告警详细信息", required = true)
             UploadDefectVO uploadDefectVO);
 
     @ApiOperation("工具侧上报圈复杂度分析的结果统计数据，每次分析完成时调用")
     @Path("/statistic/ccn")
     @POST
-    Result uploadCCNStatistic(
+    CodeCCResult uploadCCNStatistic(
             @ApiParam(value = "圈复杂度统计结果", required = true)
             CCNUploadStatisticVO uploadStatisticVO);
 
     @ApiOperation("工具侧上报重复率分析的结果统计数据，每次分析完成时调用")
     @Path("/statistic/dupc")
     @POST
-    Result uploadDUPCStatistic(
+    CodeCCResult uploadDUPCStatistic(
             @ApiParam(value = "重复率统计结果", required = true)
             UploadDUPCStatisticVO uploadStatisticVO);
 }

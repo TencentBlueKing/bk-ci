@@ -26,7 +26,6 @@
 
 package com.tencent.devops.store.service
 
-import com.tencent.devops.common.api.constant.DEVOPS
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource

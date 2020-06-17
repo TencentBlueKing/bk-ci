@@ -45,11 +45,14 @@ buildscript {
         jerseyValidationVersion = "2.21"
         commonsIOVersion = "2.5"
         xmlrpcVersion = "3.1.3"
+        commonsHttpclientVersion = "3.1"
+        ci_version = "2.3.6-SNAPSHOT"
     }
 
     repositories {
         mavenLocal()
         maven { url MAVEN_REPO_SNAPSHOT_URL }
+        maven { url MAVEN_LOCAL_REPO_URL }
         maven { url MAVEN_REPO_URL }
         mavenCentral()
         jcenter()
@@ -82,6 +85,7 @@ allprojects {
 
     repositories {
         mavenLocal()
+        maven { url MAVEN_LOCAL_REPO_URL }
         maven { url MAVEN_REPO_URL }
         mavenCentral()
         jcenter()
@@ -194,6 +198,8 @@ subprojects {
             dependency "org.glassfish.jersey.ext:jersey-bean-validation:$jerseyValidationVersion"
             dependency "commons-io:commons-io:$commonsIOVersion"
             dependency "org.apache.xmlrpc:xmlrpc-client:$xmlrpcVersion"
+            dependency "commons-httpclient:commons-httpclient:$commonsHttpclientVersion"
+            dependency "com.github.ulisesbocchio:jasypt-spring-boot-starter:$jasyptVersion"
             dependencySet(group: "org.springframework.cloud", version: "$springConsulVersion") {
                 entry "spring-cloud-starter-consul-discovery"
                 entry "spring-cloud-starter-consul-core"

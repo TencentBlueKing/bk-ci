@@ -28,7 +28,7 @@ package com.tencent.bk.codecc.task.service.impl;
 
 import com.tencent.bk.codecc.task.service.UserManageService;
 import com.tencent.bk.codecc.task.vo.UserVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +56,7 @@ public class UserManageServiceImpl implements UserManageService
     private Client client;
 
     @Override
-    public Result<UserVO> getInfo()
+    public CodeCCResult<UserVO> getInfo()
     {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         String userId = request.getHeader(AUTH_HEADER_DEVOPS_USER_ID);
@@ -65,7 +65,7 @@ public class UserManageServiceImpl implements UserManageService
         userVO.setUsername(userId);
         userVO.setAuthenticated(true);
         userVO.setBkToken(bkToken);
-        return new Result<>(userVO);
+        return new CodeCCResult<>(userVO);
     }
 
     /*@Override

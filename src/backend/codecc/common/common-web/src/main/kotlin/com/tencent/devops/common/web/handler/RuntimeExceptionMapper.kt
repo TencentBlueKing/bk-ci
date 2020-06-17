@@ -26,12 +26,10 @@
 
 package com.tencent.devops.common.web.handler
 
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.CodeCCResult
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.jmx.exception.JmxExceptions
-import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.common.web.mq.alert.AlertUtils
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -57,6 +55,6 @@ class RuntimeExceptionMapper : ExceptionMapper<RuntimeException> {
         }
         JmxExceptions.encounter(exception)
 //        AlertUtils.doAlert(AlertLevel.CRITICAL, "RuntimeException", exception.message ?: "Unknown exception")
-        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE).entity(Result<Void>(status.statusCode, message)).build()
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE).entity(CodeCCResult<Void>(status.statusCode, message)).build()
     }
 }

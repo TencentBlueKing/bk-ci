@@ -28,7 +28,7 @@
                 </template>
                 <template v-if="mergedOptionsConf.hasAddItem">
                     <div class="bk-select-extension">
-                        <a :href="webUrl + mergedOptionsConf.itemTargetUrl" target="_blank">
+                        <a :href="addItemUrl" target="_blank">
                             <i class="bk-icon icon-plus-circle" />
                             {{ mergedOptionsConf.itemText }}
                         </a>
@@ -151,6 +151,12 @@
             },
             hasOption () {
                 return Array.isArray(this.filteredList) && this.filteredList.length > 0
+            },
+            addItemUrl () {
+                const { webUrl, urlParse, mergedOptionsConf: { itemTargetUrl }, $route: { params } } = this
+                const originUrl = /^(http|https):\/\//.test(itemTargetUrl) ? itemTargetUrl : webUrl + itemTargetUrl
+
+                return urlParse(originUrl, params)
             }
         },
         watch: {

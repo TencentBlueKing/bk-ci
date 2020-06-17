@@ -41,14 +41,48 @@ uploadArchives {
 
     if (mavenRepoDeployUrl == null) {
         mavenRepoDeployUrl = System.getenv("mavenRepoDeployUrl")
+    }
+
+    if (mavenRepoUsername == null) {
         mavenRepoUsername = System.getenv("mavenRepoUsername")
+    }
+
+    if (mavenRepoPassword == null) {
         mavenRepoPassword = System.getenv("mavenRepoPassword")
     }
 
     if (mavenRepoDeployUrl == null) {
         mavenRepoDeployUrl = MAVEN_REPO_DEPLOY_URL
+    }
+
+    if (mavenRepoUsername == null) {
         mavenRepoUsername = MAVEN_REPO_USERNAME
+    }
+
+    if (mavenRepoPassword == null) {
         mavenRepoPassword = MAVEN_REPO_PASSWORD
+    }
+
+    // if snapshot repository is null
+    def snapshotRepositoryUrl = ""
+    if (MAVEN_REPO_SNAPSHOT_DEPLOY_URL == null || MAVEN_REPO_SNAPSHOT_DEPLOY_URL.toString() == "") {
+        snapshotRepositoryUrl = mavenRepoDeployUrl
+    } else {
+        snapshotRepositoryUrl = MAVEN_REPO_SNAPSHOT_DEPLOY_URL
+    }
+
+    def snapshotRepositoryUsername = ""
+    if (MAVEN_REPO_SNAPSHOT_USERNAME == null || MAVEN_REPO_SNAPSHOT_USERNAME.toString() == "") {
+        snapshotRepositoryUsername = mavenRepoUsername
+    } else {
+        snapshotRepositoryUsername = MAVEN_REPO_SNAPSHOT_USERNAME
+    }
+
+    def snapshotRepositoryPassword = ""
+    if (MAVEN_REPO_SNAPSHOT_PASSWORD == null || MAVEN_REPO_SNAPSHOT_PASSWORD.toString() == "") {
+        snapshotRepositoryPassword = mavenRepoPassword
+    } else {
+        snapshotRepositoryPassword = MAVEN_REPO_SNAPSHOT_PASSWORD
     }
 
     repositories {
@@ -57,8 +91,8 @@ uploadArchives {
                 authentication(userName: mavenRepoUsername, password: mavenRepoPassword)
             }
 
-            snapshotRepository(url: MAVEN_REPO_SNAPSHOT_DEPLOY_URL) {
-                authentication(userName: MAVEN_REPO_SNAPSHOT_USERNAME, password: MAVEN_REPO_SNAPSHOT_PASSWORD)
+            snapshotRepository(url: snapshotRepositoryUrl) {
+                authentication(userName: snapshotRepositoryUsername, password: snapshotRepositoryPassword)
             }
         }
 

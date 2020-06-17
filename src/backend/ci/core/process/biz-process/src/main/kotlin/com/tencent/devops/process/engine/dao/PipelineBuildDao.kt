@@ -306,10 +306,13 @@ class PipelineBuildDao {
     /**
      * 取最近一次构建的参数
      */
-    fun getLatestBuild(dslContext: DSLContext, pipelineId: String): TPipelineBuildHistoryRecord? {
+    fun getLatestBuild(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(
+                        PIPELINE_ID.eq(pipelineId),
+                        PROJECT_ID.eq(projectId)
+                )
                 .orderBy(BUILD_NUM.desc()).limit(1)
             select.fetchAny()
         }
@@ -318,11 +321,12 @@ class PipelineBuildDao {
     /**
      * 取最近一次完成的构建
      */
-    fun getLatestFinishedBuild(dslContext: DSLContext, pipelineId: String): TPipelineBuildHistoryRecord? {
+    fun getLatestFinishedBuild(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(
                     PIPELINE_ID.eq(pipelineId),
+                    PROJECT_ID.eq(projectId),
                     STATUS.notIn(
                         mutableListOf(
                             3, // 3 运行中
@@ -331,6 +335,38 @@ class PipelineBuildDao {
                     )
                 )
                 .orderBy(BUILD_NUM.desc()).limit(1)
+            select.fetchAny()
+        }
+    }
+
+    /**
+     * 取最近一次成功的构建
+     */
+    fun getLatestFailedBuild(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineBuildHistoryRecord? {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val select = dslContext.selectFrom(this)
+                    .where(
+                            PIPELINE_ID.eq(pipelineId),
+                            PROJECT_ID.eq(projectId),
+                            STATUS.eq(1)
+                    )
+                    .orderBy(BUILD_NUM.desc()).limit(1)
+            select.fetchAny()
+        }
+    }
+
+    /**
+     * 取最近一次失败的构建
+     */
+    fun getLatestSuccessedBuild(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineBuildHistoryRecord? {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val select = dslContext.selectFrom(this)
+                    .where(
+                            PIPELINE_ID.eq(pipelineId),
+                            PROJECT_ID.eq(projectId),
+                            STATUS.eq(0)
+                    )
+                    .orderBy(BUILD_NUM.desc()).limit(1)
             select.fetchAny()
         }
     }

@@ -164,7 +164,7 @@ export default {
                 this.$router.push({
                     name: 'pipelinesList'
                 })
-                
+
                 message = this.$t('deleteSuc')
                 theme = 'success'
             } catch (err) {
@@ -277,7 +277,7 @@ export default {
                     pipelineId
                 })
 
-                if (res.id) {
+                if (res && res.id) {
                     message = this.$t('newlist.sucToStartBuild')
                     theme = 'success'
                     if (goDetail) {
@@ -394,7 +394,7 @@ export default {
                     buildId
                 })
 
-                if (res.id) {
+                if (res && res.id) {
                     message = this.$t('subpage.rebuildSuc')
                     theme = 'success'
                     if (goDetail) {

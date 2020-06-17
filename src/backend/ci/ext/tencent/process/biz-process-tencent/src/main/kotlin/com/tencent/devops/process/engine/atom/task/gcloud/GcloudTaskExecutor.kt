@@ -75,7 +75,6 @@ class GcloudTaskExecutor(var rabbitTemplate: RabbitTemplate, var gcloudApiUrl: S
 
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 return if (response["res"] == false) {
-                    logger.error("request failed")
                     val msg = response["msg"].toString()
                     CallResult(false, 0, msg)
                 } else {
@@ -136,7 +135,6 @@ class GcloudTaskExecutor(var rabbitTemplate: RabbitTemplate, var gcloudApiUrl: S
 
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 return if (response["res"] == false) {
-                    logger.error("request failed")
                     val msg = response["msg"].toString()
                     CallResult(false, 0, msg)
                 } else {
