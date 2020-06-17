@@ -30,12 +30,14 @@ import com.tencent.devops.artifactory.service.ReportService
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.util.MimeUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.util.FileCopyUtils
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @Service
 class BkRepoReportService @Autowired constructor(
@@ -47,7 +49,7 @@ class BkRepoReportService @Autowired constructor(
         buildId: String,
         elementId: String,
         path: String
-    ): Response {
+    ) {
         logger.info("get, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, , " +
             "elementId: $elementId, path: $path")
         val normalizedPath = JFrogUtil.normalize(path)
@@ -55,8 +57,10 @@ class BkRepoReportService @Autowired constructor(
         bkRepoClient.getFileDetail("", projectId, RepoUtils.REPORT_REPO, realPath)
             ?: throw NotFoundException("文件($path)不存在")
         logger.info("get file content, projectId: $projectId, repo: $RepoUtils.REPORT_REPO , realPath:$realPath")
-        val response = bkRepoClient.getFileContent("", projectId, RepoUtils.REPORT_REPO, realPath)
-        return Response.ok(response.first, MediaType.valueOf(response.second.toString())).build()
+        val fileContent = bkRepoClient.getFileContent("", projectId, RepoUtils.REPORT_REPO, realPath)
+        val response = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).response!!
+        response.contentType = MimeUtil.mediaType(path)
+        FileCopyUtils.copy(fileContent.first.inputStream(), response.outputStream)
     }
 
     companion object {

@@ -35,5 +35,5 @@ interface ReportService {
         buildId: String,
         elementId: String,
         path: String
-    ): Response
+    )
 }
