@@ -28,6 +28,10 @@
             <h5 class="detail-info">
                 <span> {{ $t('store.热度：') }} </span><span>{{detail.downloads || 0}}</span>
             </h5>
+            <h5 class="detail-info detail-maxwidth" :title="`${detail.imageRepoUrl}${detail.imageRepoUrl ? '/' : ''}${detail.imageRepoName}:${detail.imageTag}`">
+                <span> {{ $t('store.镜像地址') }}： </span><span class="detail-image-address">{{detail.imageRepoUrl}}{{detail.imageRepoUrl ? '/' : ''}}{{detail.imageRepoName}}:{{detail.imageTag}}</span>
+                <i class="bk-icon icon-clipboard" :title="$t('store.复制')" @click="copyImagePath(`${detail.imageRepoUrl}${detail.imageRepoUrl ? '/' : ''}${detail.imageRepoName}:${detail.imageTag}`)"></i>
+            </h5>
             <h5 class="detail-info detail-label">
                 <span> {{ $t('store.功能标签：') }} </span>
                 <span v-for="(label, index) in detail.labelList" :key="index" class="info-label">{{label.labelName}}</span>
@@ -102,6 +106,18 @@
         },
 
         methods: {
+            copyImagePath (val) {
+                const input = document.createElement('input')
+                document.body.appendChild(input)
+                input.setAttribute('value', val)
+                input.select()
+                if (document.execCommand('copy')) {
+                    document.execCommand('copy')
+                    this.$bkMessage({ theme: 'success', message: this.$t('store.复制成功') })
+                }
+                document.body.removeChild(input)
+            },
+
             goToInstall () {
                 this.$router.push({
                     name: 'install',
@@ -158,6 +174,7 @@
     .detail-info-group {
         width: 996px;
         margin: 0 32px;
+        max-width: calc(100% - 314px);
         
         h3 {
             font-size: 22px;
@@ -238,11 +255,12 @@
         .detail-info.detail-label {
             width: 994px;
             padding-left: 90px;
+            padding-top: 0;
             display: inline-block;
             position: relative;
             span {
                 overflow: inherit;
-                margin-bottom: 7px;
+                margin-top: 7px;
             }
             span:first-child {
                 position: absolute;
@@ -251,12 +269,12 @@
             span.info-label {
                 display: inline-block;
                 width: auto;
-                height: 19px;
+                height: 20px;
                 padding: 0 7px;
                 border: 1px solid $laberColor;
                 border-radius: 20px;
                 margin-right: 8px;
-                line-height: 17px;
+                line-height: 18px;
                 text-align: center;
                 font-size: 12px;
                 color: $laberColor;
@@ -266,7 +284,18 @@
         .detail-maxwidth {
             max-width: 100%;
             width: auto;
-            padding-top: 0;
+            .icon-clipboard {
+                cursor: pointer;
+                opacity: 0;
+                align-self: center;
+                margin-left: 7px;
+            }
+            span.detail-image-address {
+                width: calc(100% - 107px);
+            }
+            &:hover .icon-clipboard{
+                opacity: 1;
+            }
         }
     }
 </style>

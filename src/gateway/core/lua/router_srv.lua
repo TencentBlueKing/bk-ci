@@ -37,8 +37,8 @@ if ngx.var.access_type == 'build' or ngx.var.access_type == 'external' then
   access_util = require 'access_control_ip'
 end
 
--- defect服务不做频率限制
-if ngx.var.service == 'report' then
+-- report服务和bkrepo服务不做频率限制
+if ngx.var.service == 'report' or ngx.var.service == 'bkrepo' then
   access_util = nil
 end
 
@@ -129,8 +129,8 @@ end
 
 local dns, err = resolver:new{
   nameservers = dnsIps,
-  retrans = 2,
-  timeout = 250
+  retrans = 5,
+  timeout = 2000
 }
 
 if not dns then

@@ -167,11 +167,22 @@ class DispatchDockerService @Autowired constructor(
         try {
             pipelineDockerIPInfoDao.delete(dslContext, dockerIp)
             // 清空与之关联构建分配
-            pipelineDockerTaskSimpleDao.deleteByDockerIp(dslContext, dockerIp)
+            // pipelineDockerTaskSimpleDao.deleteByDockerIp(dslContext, dockerIp)
             return true
         } catch (e: Exception) {
             logger.error("OP dispatchDocker delete error.", e)
             throw RuntimeException("OP dispatchDocker delete error.")
+        }
+    }
+
+    fun removeDockerBuildBinding(userId: String, pipelineId: String, vmSeqId: String): Boolean {
+        logger.info("$userId remove dockerBuildBinding pipelineId: $pipelineId vmSeqId: $vmSeqId")
+        try {
+            pipelineDockerTaskSimpleDao.deleteByPipelineIdAndVmSeqId(dslContext, pipelineId, vmSeqId)
+            return true
+        } catch (e: Exception) {
+            logger.error("OP $userId remove dockerBuildBinding pipelineId: $pipelineId vmSeqId: $vmSeqId error.", e)
+            throw RuntimeException("OP $userId remove dockerBuildBinding pipelineId: $pipelineId vmSeqId: $vmSeqId error.")
         }
     }
 

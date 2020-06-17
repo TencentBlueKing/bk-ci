@@ -490,7 +490,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val repoResult =
             client.get(ServiceRepositoryResource::class).get(projectId, repositoryId, repositoryConfig.repositoryType)
         if (repoResult.isNotOk() || repoResult.data == null) {
-            logger.error("Fail to get the repo($repositoryConfig) of project($projectId) because of ${repoResult.message}")
+            logger.warn("Fail to get the repo($repositoryConfig) of project($projectId) because of ${repoResult.message}")
             throw RuntimeException("Fail to get the repo")
         }
         return repoResult.data!!
@@ -506,7 +506,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             encoder.encodeToString(pair.publicKey)
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
-            logger.error("Fail to get the credential($credentialId) of project($projectId) because of ${credentialResult.message}")
+            logger.warn("Fail to get the credential($credentialId) of project($projectId) because of ${credentialResult.message}")
             throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
         }
 

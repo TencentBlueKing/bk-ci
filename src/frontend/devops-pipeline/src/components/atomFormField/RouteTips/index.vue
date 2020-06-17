@@ -87,10 +87,11 @@
                 .tips-route {
                     display: inline-block;
                     font-size: 12px;
-                    width: 420px;
+                    width: calc(100% - 133px);
                     overflow: hidden;
                     text-overflow:ellipsis;
                     white-space: nowrap;
+                    overflow: hidden;
                     vertical-align: middle;
                     padding-bottom: 3px;
                 }

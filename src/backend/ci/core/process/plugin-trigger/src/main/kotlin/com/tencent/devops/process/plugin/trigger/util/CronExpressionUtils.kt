@@ -24,10 +24,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:worker:worker-common")
-    compile project(":core:common:common-scm")
-    compile project(":core:repository:api-repository")
-}
+package com.tencent.devops.process.plugin.trigger.util
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import org.quartz.TriggerUtils
+import org.quartz.impl.triggers.CronTriggerImpl
+import java.util.Date
+
+object CronExpressionUtils {
+
+    // 有效时间间隔60s
+    private const val VALID_TIME_INTERVAL = 60 * 1000
+
+    /**
+     * 计算cron表达式接下来的执行时间
+     * @param cron cron表达式
+     * @param numTimes 输出几次
+     */
+    fun getRecentTriggerTime(
+        cron: String,
+        numTimes: Int = 2
+    ): List<Date> {
+        val trigger = CronTriggerImpl()
+        trigger.cronExpression = cron
+        return TriggerUtils.computeFireTimes(trigger, null, numTimes)
+    }
+
+    /**
+     * 为了防止流水线执行太频繁，需要控制cron表达式执行时间间隔，不能秒级执行
+     */
+    fun isValidTimeInterval(
+        cron: String
+    ): Boolean {
+        val recentTriggerTimes = getRecentTriggerTime(cron)
+        // 如果最近2次执行时间为空，表示表达式已经不会运行
+        if (recentTriggerTimes.isEmpty() ||
+            recentTriggerTimes.size == 1
+        ) {
+            return true
+        }
+        val interval = recentTriggerTimes[1].time - recentTriggerTimes[0].time
+        if (interval < VALID_TIME_INTERVAL) {
+            return false
+        }
+        return true
+    }
+}

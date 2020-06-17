@@ -88,6 +88,21 @@ interface OPDispatchDockerResource {
         dockerIp: String
     ): Result<Boolean>
 
+    @DELETE
+    @Path("/dockerBuildBinding/delete/{pipelineId}/{vmSeqId}")
+    @ApiOperation("删除Docker构建绑定关系")
+    fun removeDockerBuildBinding(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建序列号", required = true)
+        @PathParam("vmSeqId")
+        vmSeqId: String
+    ): Result<Boolean>
+
     @POST
     @Path("/load-config/add")
     @ApiOperation("新增Docker构建机负载配置")
