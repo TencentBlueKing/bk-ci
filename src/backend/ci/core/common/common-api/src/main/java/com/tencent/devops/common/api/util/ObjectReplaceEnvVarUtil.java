@@ -95,6 +95,7 @@ public class ObjectReplaceEnvVarUtil {
 
     @NotNull
     private static Object handleNormalEnvVar(Object obj, Map<String, String> envMap) {
+        // 只有字符串参数才需要进行变量替换，其它基本类型参数无需进行变量替换
         if (obj instanceof String) {
             String objStr = ((String) obj).trim();
             if (objStr.startsWith("{") && objStr.endsWith("}")) {
@@ -121,8 +122,6 @@ public class ObjectReplaceEnvVarUtil {
                 // 转换不了map或者list的字符串对象则直接替换
                 obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj), envMap, false, false);
             }
-        } else {
-            obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj), envMap, false, false);
         }
         return obj;
     }

@@ -1,7 +1,7 @@
 # 服务配置文件模板
 spring:
   application:
-    name: defect
+    name: defect${service-suffix}
     desc: Defect Service
   data:
     mongodb:
