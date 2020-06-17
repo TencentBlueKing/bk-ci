@@ -24,16 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.common.web
 
-dependencies {
-    compile project(":core:common:common-api")
-    implementation 'commons-codec:commons-codec'
-    implementation 'com.google.guava:guava'
-    implementation 'io.jsonwebtoken:jjwt'
-    implementation 'org.jolokia:jolokia-core'
-    compile 'org.apache.commons:commons-lang3'
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation "org.junit.jupiter:junit-jupiter"
+import com.tencent.devops.common.security.jwt.JwtManager
+import com.tencent.devops.common.web.filter.ServiceSecurityFilter
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+
+/**
+ *
+ * Powered By Tencent
+ */
+@Configuration
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
+class FilterAutoConfiguration(
+    private val jwtManager: JwtManager
+) {
+
+    @Bean
+    fun serviceAuthFilter() = ServiceSecurityFilter(jwtManager)
 }

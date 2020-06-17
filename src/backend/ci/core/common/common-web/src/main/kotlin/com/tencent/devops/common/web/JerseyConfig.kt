@@ -104,6 +104,6 @@ open class JerseyConfig : ResourceConfig(), ApplicationContextAware, Initializin
             logger.info("requestInterceptor: $it")
             register(it)
         }
-        logger.info("JerseyConfig-Interceptor-register-start")
+        logger.info("JerseyConfig-Interceptor-register-end")
     }
 }
