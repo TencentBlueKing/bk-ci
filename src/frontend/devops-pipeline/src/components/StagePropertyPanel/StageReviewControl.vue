@@ -2,8 +2,8 @@
     <div class="pipeline-stage-review-control bk-form bk-form-vertical">
         <form-field>
             <bk-radio-group class="stage-review-radio-group" v-model="manualTrigger">
-                <bk-radio :value="true">{{ $t('enableStageReviewRadioLabel') }}</bk-radio>
-                <bk-radio :value="false">{{ $t('disableStageReviewRadioLabel') }}</bk-radio>
+                <bk-radio :disabled="disabled" :value="false">{{ $t('disableStageReviewRadioLabel') }}</bk-radio>
+                <bk-radio :disabled="disabled" :value="true">{{ $t('enableStageReviewRadioLabel') }}</bk-radio>
             </bk-radio-group>
         </form-field>
         <template v-if="manualTrigger">
