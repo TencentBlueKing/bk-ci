@@ -164,7 +164,10 @@ interface ServiceBuildResource {
         values: Map<String, String>,
         @ApiParam("渠道号，默认为DS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @ApiParam("手动指定构建版本参数", required = false)
+        @QueryParam("buildNo")
+        buildNo: Int? = null
     ): Result<BuildId>
 
     @ApiOperation("重试流水线")

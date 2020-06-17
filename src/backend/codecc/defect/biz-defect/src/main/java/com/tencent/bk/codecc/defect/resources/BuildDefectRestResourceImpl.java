@@ -32,7 +32,7 @@ import com.tencent.bk.codecc.defect.service.DUPCUploadStatisticService;
 import com.tencent.bk.codecc.defect.vo.CCNUploadStatisticVO;
 import com.tencent.bk.codecc.defect.vo.UploadDUPCStatisticVO;
 import com.tencent.bk.codecc.defect.vo.UploadDefectVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.service.IBizService;
@@ -63,7 +63,7 @@ public class BuildDefectRestResourceImpl implements BuildDefectRestResource
     private DUPCUploadStatisticService dupcUploadStatisticService;
 
     @Override
-    public Result reportDefects(UploadDefectVO uploadDefectVO)
+    public CodeCCResult reportDefects(UploadDefectVO uploadDefectVO)
     {
         if (StringUtils.isNotEmpty(uploadDefectVO.getToolName()))
         {
@@ -78,14 +78,14 @@ public class BuildDefectRestResourceImpl implements BuildDefectRestResource
     }
 
     @Override
-    public Result uploadCCNStatistic(CCNUploadStatisticVO uploadStatisticVO)
+    public CodeCCResult uploadCCNStatistic(CCNUploadStatisticVO uploadStatisticVO)
     {
         logger.info("upload ccn statistic, stream name: {}", uploadStatisticVO.getStreamName());
         return ccnUploadStatisticService.uploadStatistic(uploadStatisticVO);
     }
 
     @Override
-    public Result uploadDUPCStatistic(UploadDUPCStatisticVO uploadStatisticVO)
+    public CodeCCResult uploadDUPCStatistic(UploadDUPCStatisticVO uploadStatisticVO)
     {
         logger.info("upload dupc statistic, stream name: {}", uploadStatisticVO.getStreamName());
         return dupcUploadStatisticService.uploadStatistic(uploadStatisticVO);

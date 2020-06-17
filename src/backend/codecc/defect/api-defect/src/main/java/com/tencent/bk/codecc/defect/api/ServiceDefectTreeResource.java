@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.defect.api;
 
 import com.tencent.bk.codecc.defect.vo.TreeNodeVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -51,7 +51,7 @@ public interface ServiceDefectTreeResource
     @ApiOperation("获取告警文件树")
     @Path("/taskId/{taskId}/toolNames/{toolNames}")
     @GET
-    Result<TreeNodeVO> getTreeNode(
+    CodeCCResult<TreeNodeVO> getTreeNode(
             @ApiParam(value = "任务ID", required = true)
             @PathParam(value = "taskId")
                     Long taskId,

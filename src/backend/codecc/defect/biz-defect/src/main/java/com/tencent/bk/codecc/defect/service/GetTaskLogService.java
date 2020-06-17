@@ -28,7 +28,7 @@ package com.tencent.bk.codecc.defect.service;
 
 import com.tencent.bk.codecc.defect.vo.QueryTaskLogVO;
 import com.tencent.bk.codecc.task.vo.QueryLogRepVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 
 /**
  * 任务分析记录服务层
@@ -45,7 +45,7 @@ public interface GetTaskLogService
      * @param queryTaskLogVO
      * @return
      */
-    Result queryTaskLog(QueryTaskLogVO queryTaskLogVO);
+    CodeCCResult queryTaskLog(QueryTaskLogVO queryTaskLogVO);
 
 
     /**

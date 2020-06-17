@@ -32,7 +32,7 @@ import com.tencent.bk.codecc.task.service.PipelineService;
 import com.tencent.bk.codecc.task.service.TaskRegisterService;
 import com.tencent.bk.codecc.task.service.TaskService;
 import com.tencent.bk.codecc.task.vo.*;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.auth.api.pojo.external.BkAuthExAction;
 import com.tencent.devops.common.web.RestResource;
 import com.tencent.devops.common.web.security.AuthMethod;
@@ -63,144 +63,144 @@ public class UserTaskRestResourceImpl implements UserTaskRestResource
 
 
     @Override
-    public Result<TaskListVO> getTaskList(String projectId, String user)
+    public CodeCCResult<TaskListVO> getTaskList(String projectId, String user)
     {
-        return new Result<>(taskService.getTaskList(projectId, user));
+        return new CodeCCResult<>(taskService.getTaskList(projectId, user));
     }
 
     @Override
-    public Result<TaskListVO> getTaskBaseList(String projectId, String user)
+    public CodeCCResult<TaskListVO> getTaskBaseList(String projectId, String user)
     {
-        return new Result<>(taskService.getTaskBaseList(projectId, user));
+        return new CodeCCResult<>(taskService.getTaskBaseList(projectId, user));
     }
 
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<TaskBaseVO> getTaskInfo()
+    public CodeCCResult<TaskBaseVO> getTaskInfo()
     {
-        return new Result<>(taskService.getTaskInfo());
+        return new CodeCCResult<>(taskService.getTaskInfo());
     }
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<TaskDetailVO> getTask(Long taskId)
+    public CodeCCResult<TaskDetailVO> getTask(Long taskId)
     {
-        return new Result<>(taskService.getTaskInfoById(taskId));
+        return new CodeCCResult<>(taskService.getTaskInfoById(taskId));
     }
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<TaskOverviewVO> getTaskOverview(Long taskId)
+    public CodeCCResult<TaskOverviewVO> getTaskOverview(Long taskId)
     {
-        return new Result<>(taskService.getTaskOverview(taskId));
+        return new CodeCCResult<>(taskService.getTaskOverview(taskId));
     }
 
 
     @Override
-    public Result<TaskIdVO> registerDevopsTask(TaskDetailVO taskDetailVO, String projectId, String userName)
+    public CodeCCResult<TaskIdVO> registerDevopsTask(TaskDetailVO taskDetailVO, String projectId, String userName)
     {
         taskDetailVO.setProjectId(projectId);
-        return new Result<>(taskRegisterService.registerTask(taskDetailVO, userName));
+        return new CodeCCResult<>(taskRegisterService.registerTask(taskDetailVO, userName));
     }
 
     @Override
-    public Result<Boolean> checkDuplicateStream(String streamName)
+    public CodeCCResult<Boolean> checkDuplicateStream(String streamName)
     {
-        return new Result<>(taskRegisterService.checkeIsStreamRegistered(streamName));
-    }
-
-    @Override
-    @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<Boolean> updateTask(TaskUpdateVO taskUpdateVO, Long taskId, String projectId, String userName)
-    {
-        return new Result<>(taskService.updateTask(taskUpdateVO, taskId, userName));
+        return new CodeCCResult<>(taskRegisterService.checkeIsStreamRegistered(streamName));
     }
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<Boolean> modifyTimeAnalysisTask(TimeAnalysisReqVO timeAnalysisReqVO, Long taskId, String userName)
+    public CodeCCResult<Boolean> updateTask(TaskUpdateVO taskUpdateVO, Long taskId, String projectId, String userName)
     {
-        return new Result<>(taskRegisterService.modifyTimeAnalysisTask(timeAnalysisReqVO.getExecuteDate(), timeAnalysisReqVO.getExecuteTime(),
+        return new CodeCCResult<>(taskService.updateTask(taskUpdateVO, taskId, userName));
+    }
+
+    @Override
+    @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
+    public CodeCCResult<Boolean> modifyTimeAnalysisTask(TimeAnalysisReqVO timeAnalysisReqVO, Long taskId, String userName)
+    {
+        return new CodeCCResult<>(taskRegisterService.modifyTimeAnalysisTask(timeAnalysisReqVO.getExecuteDate(), timeAnalysisReqVO.getExecuteTime(),
                 taskId, userName));
     }
 
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<Boolean> addFilterPath(FilterPathInputVO filterPathInput, String userName)
+    public CodeCCResult<Boolean> addFilterPath(FilterPathInputVO filterPathInput, String userName)
     {
-        return new Result<>(pathFilterService.addFilterPaths(filterPathInput, userName));
+        return new CodeCCResult<>(pathFilterService.addFilterPaths(filterPathInput, userName));
     }
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<Boolean> deleteFilterPath(String path, String pathType, Long taskId, String userName)
+    public CodeCCResult<Boolean> deleteFilterPath(String path, String pathType, Long taskId, String userName)
     {
-        return new Result<>(pathFilterService.deleteFilterPath(path, pathType, taskId, userName));
+        return new CodeCCResult<>(pathFilterService.deleteFilterPath(path, pathType, taskId, userName));
     }
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<FilterPathOutVO> filterPath(Long taskId)
+    public CodeCCResult<FilterPathOutVO> filterPath(Long taskId)
     {
-        return new Result<>(pathFilterService.getFilterPath(taskId));
+        return new CodeCCResult<>(pathFilterService.getFilterPath(taskId));
     }
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<TreeNodeTaskVO> filterPathTree(Long taskId)
+    public CodeCCResult<TreeNodeTaskVO> filterPathTree(Long taskId)
     {
-        return new Result<>(pathFilterService.filterPathTree(taskId));
+        return new CodeCCResult<>(pathFilterService.filterPathTree(taskId));
     }
 
     @Override
-    public Result<Boolean> startTask(Long taskId, String userName)
+    public CodeCCResult<Boolean> startTask(Long taskId, String userName)
     {
-        return new Result<>(taskService.startTask(taskId, userName));
+        return new CodeCCResult<>(taskService.startTask(taskId, userName));
     }
 
     @Override
-    public Result<TaskStatusVO> getTaskStatus(Long taskId)
+    public CodeCCResult<TaskStatusVO> getTaskStatus(Long taskId)
     {
-        return new Result<>(taskService.getTaskStatus(taskId));
+        return new CodeCCResult<>(taskService.getTaskStatus(taskId));
     }
 
-
-    @Override
-    @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<Boolean> stopTask(Long taskId, String disabledReason, String userName)
-    {
-        return new Result<>(taskService.stopTask(taskId, disabledReason, userName));
-    }
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<TaskCodeLibraryVO> getCodeLibrary(Long taskId)
+    public CodeCCResult<Boolean> stopTask(Long taskId, String disabledReason, String userName)
     {
-        return new Result<>(taskService.getCodeLibrary(taskId));
+        return new CodeCCResult<>(taskService.stopTask(taskId, disabledReason, userName));
     }
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<Boolean> updateCodeLibrary(Long taskId, String userName, TaskCodeLibraryVO taskCodeLibrary)
+    public CodeCCResult<TaskCodeLibraryVO> getCodeLibrary(Long taskId)
     {
-        return new Result<>(taskService.updateCodeLibrary(taskId, userName, taskCodeLibrary));
+        return new CodeCCResult<>(taskService.getCodeLibrary(taskId));
     }
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<Boolean> executeTask(Long taskId, String isFirstTrigger,
-                                       String userName)
+    public CodeCCResult<Boolean> updateCodeLibrary(Long taskId, String userName, TaskCodeLibraryVO taskCodeLibrary)
     {
-        return new Result<>(taskService.manualExecuteTask(taskId, isFirstTrigger, userName));
+        return new CodeCCResult<>(taskService.updateCodeLibrary(taskId, userName, taskCodeLibrary));
     }
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<TaskMemberVO> getTaskMemberAndAdmin(Long taskId, String projectId)
+    public CodeCCResult<Boolean> executeTask(Long taskId, String isFirstTrigger,
+                                             String userName)
     {
-        return new Result<>(taskService.getTaskMemberAndAdmin(taskId, projectId));
+        return new CodeCCResult<>(taskService.manualExecuteTask(taskId, isFirstTrigger, userName));
+    }
+
+    @Override
+    @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
+    public CodeCCResult<TaskMemberVO> getTaskMemberAndAdmin(Long taskId, String projectId)
+    {
+        return new CodeCCResult<>(taskService.getTaskMemberAndAdmin(taskId, projectId));
     }
 
 

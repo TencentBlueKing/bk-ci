@@ -43,10 +43,10 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.constant.CommonMessageCode
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.plugin.codecc.api.ServiceCodeccResource
+import com.tencent.devops.plugin.api.ServiceCodeccResource
 import com.tencent.devops.plugin.codecc.pojo.CodeccBuildInfo
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
-import com.tencent.devops.process.api.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.quality.api.v2.ExternalQualityResource
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.quality.api.v2.pojo.request.MetadataCallback
@@ -65,7 +65,7 @@ class PipelineServiceImpl @Autowired constructor(
 
     override fun getFileContent(taskId: Long, repoId: String, filePath: String,
                                 reversion: String, branch: String?, subModule: String): String? {
-        if (repoId.isNullOrBlank() || reversion.isNullOrBlank()) {
+        if (repoId.isBlank() || reversion.isBlank()) {
             return null
         }
 
@@ -149,7 +149,7 @@ class PipelineServiceImpl @Autowired constructor(
 
     override fun stopRunningTask(projectId: String, pipelineId: String, taskId: Long?, buildId: String, userName: String){
         logger.info("execute pipeline task! task id: $taskId")
-        if (projectId.isNullOrBlank() || pipelineId.isNullOrBlank() || null == taskId) {
+        if (projectId.isBlank() || pipelineId.isBlank() || null == taskId) {
             logger.error("task not exists! task id is: {}", taskId)
             throw CodeCCException(
                     errorCode = CommonMessageCode.RECORD_NOT_EXITS,

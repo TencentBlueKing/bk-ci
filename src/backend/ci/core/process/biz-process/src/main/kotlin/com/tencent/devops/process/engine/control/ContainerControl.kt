@@ -189,6 +189,18 @@ class ContainerControl @Autowired constructor(
                     )
                     // job互斥失败的时候，设置详情页面为失败。
                     pipelineBuildDetailService.updateContainerStatus(buildId, containerId, BuildStatus.FAILED)
+
+                    // 配额使用-1
+                    LogUtils.addLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "Container finish and dec the quota for project: $projectId",
+                        tag = "",
+                        jobId = containerId,
+                        executeCount = 1
+                    )
+                    pipelineQuotaService.decQuotaByProject(projectId, buildId, containerId)
+
                     return sendBackStage("container_mutex_cancel")
                 }
                 ContainerMutexStatus.WAITING -> {
@@ -226,6 +238,18 @@ class ContainerControl @Autowired constructor(
                         containerId = containerId,
                         mutexGroup = mutexGroup
                     )
+
+                    // 配额使用-1
+                    LogUtils.addLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "Container finish and dec the quota for project: $projectId",
+                        tag = "",
+                        jobId = containerId,
+                        executeCount = 1
+                    )
+                    pipelineQuotaService.decQuotaByProject(projectId, buildId, containerId)
+
                     return sendBackStage("CONTAINER_UNKNOWN_ACTION")
                 }
             }
@@ -393,7 +417,7 @@ class ContainerControl @Autowired constructor(
                     pipelineBuildDetailService.taskEnd(
                         buildId = task.buildId,
                         taskId = task.taskId,
-                        buildStatus = task.status,
+                        buildStatus = containerFinalStatus,
                         canRetry = true,
                         errorType = ErrorType.SYSTEM,
                         errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
@@ -520,7 +544,7 @@ class ContainerControl @Autowired constructor(
         stageId: String,
         container: PipelineBuildContainer,
         containerTaskList: Collection<PipelineBuildTask>,
-        variables: Map<String, Any>
+        variables: Map<String, String>
     ): Boolean {
 
         val containerId = container.containerId

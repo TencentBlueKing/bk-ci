@@ -31,7 +31,7 @@ import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.GetLastAnalysisResultsVO;
 import com.tencent.devops.common.api.ToolLastAnalysisResultVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -61,7 +61,7 @@ public interface ServiceTaskLogRestResource
     @ApiOperation("上报任务分析记录")
     @Path("/")
     @POST
-    Result uploadTaskLog(
+    CodeCCResult uploadTaskLog(
             @ApiParam(value = "上传分析任务详情", required = true)
                     UploadTaskLogStepVO uploadTaskLogStepVO
     );
@@ -70,7 +70,7 @@ public interface ServiceTaskLogRestResource
     @ApiOperation("停止正在运行的任务")
     @Path("/runningTask/pipelineId/{pipelineId}/streamName/{streamName}")
     @POST
-    Result<Boolean> stopRunningTask(
+    CodeCCResult<Boolean> stopRunningTask(
             @ApiParam(value = "流水线id", required = true)
             @PathParam("pipelineId")
                     String pipelineId,
@@ -93,7 +93,7 @@ public interface ServiceTaskLogRestResource
     @ApiOperation("获取最新分析记录")
     @Path("/latest/toolName/{toolName}/taskId/{taskId}")
     @GET
-    Result<TaskLogVO> getLatestTaskLog(
+    CodeCCResult<TaskLogVO> getLatestTaskLog(
             @ApiParam(value = "任务id", required = true)
             @PathParam("taskId")
                     Long taskId,
@@ -105,7 +105,7 @@ public interface ServiceTaskLogRestResource
     @ApiOperation("平台侧获取任务所有有效工具的最近一次分析结果")
     @Path("/lastAnalysisResults")
     @POST
-    Result<List<ToolLastAnalysisResultVO>> getLastAnalysisResults(
+    CodeCCResult<List<ToolLastAnalysisResultVO>> getLastAnalysisResults(
             @ApiParam(value = "获取最近一次分析结果的请求对象", required = true)
                     GetLastAnalysisResultsVO getLastAnalysisResultsVO);
 
@@ -113,7 +113,7 @@ public interface ServiceTaskLogRestResource
     @ApiOperation("批量获取最新分析记录")
     @Path("/latest/batch/taskId/{taskId}")
     @POST
-    Result<List<ToolLastAnalysisResultVO>> getBatchLatestTaskLog(
+    CodeCCResult<List<ToolLastAnalysisResultVO>> getBatchLatestTaskLog(
             @ApiParam(value = "任务id", required = true)
             @PathParam("taskId")
                     Long taskId,
@@ -123,14 +123,14 @@ public interface ServiceTaskLogRestResource
     @ApiOperation("任务维度批量获取最新分析记录")
     @Path("/latest/batchTask")
     @POST
-    Result<Map<String, List<ToolLastAnalysisResultVO>>> getBatchTaskLatestTaskLog(
+    CodeCCResult<Map<String, List<ToolLastAnalysisResultVO>>> getBatchTaskLatestTaskLog(
             @ApiParam(value = "任务id及工具集映射参数", required = true)
                     List<TaskDetailVO> taskDetailVOList);
 
     @ApiOperation("批量获取最新分析记录")
     @Path("/suggest/param")
     @PUT
-    Result<Boolean> uploadDirStructSuggestParam(
+    CodeCCResult<Boolean> uploadDirStructSuggestParam(
             @ApiParam(value = "上传参数建议值信息", required = true)
                     UploadTaskLogStepVO uploadTaskLogStepVO);
 }

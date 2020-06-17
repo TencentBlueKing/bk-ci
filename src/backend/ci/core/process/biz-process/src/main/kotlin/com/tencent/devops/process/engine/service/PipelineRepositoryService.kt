@@ -584,7 +584,7 @@ class PipelineRepositoryService constructor(
         val template = templatePipelineDao.get(dslContext, pipelineId)
         val templateId = template?.templateId
         return pipelineInfoDao.convert(
-            pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode),
+            pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode, false, null),
             templateId
         )
     }
@@ -615,7 +615,7 @@ class PipelineRepositoryService constructor(
             val transactionContext = DSL.using(configuration)
 
             val record =
-                (pipelineInfoDao.getPipelineInfo(transactionContext, projectId, pipelineId, channelCode, delete)
+                (pipelineInfoDao.getPipelineInfo(transactionContext, projectId, pipelineId, channelCode, delete, null)
                     ?: throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                         defaultMessage = "要删除的流水线不存在"
@@ -792,8 +792,8 @@ class PipelineRepositoryService constructor(
     /**
      * 列出已经删除的流水线
      */
-    fun listDeletePipelineIdByProject(projectId: String): List<PipelineInfo> {
-        val result = pipelineInfoDao.listDeletePipelineIdByProject(dslContext, projectId)
+    fun listDeletePipelineIdByProject(projectId: String, days: Long?): List<PipelineInfo> {
+        val result = pipelineInfoDao.listDeletePipelineIdByProject(dslContext, projectId, days)
         val list = mutableListOf<PipelineInfo>()
         result?.forEach {
             if (it != null)
@@ -802,7 +802,13 @@ class PipelineRepositoryService constructor(
         return list
     }
 
-    fun restorePipeline(projectId: String, pipelineId: String, userId: String, channelCode: ChannelCode): Model {
+    fun restorePipeline(
+        projectId: String,
+        pipelineId: String,
+        userId: String,
+        channelCode: ChannelCode,
+        days: Long?
+    ): Model {
         val existModel = getModel(pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
@@ -816,7 +822,8 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 channelCode = null,
-                delete = true
+                delete = true,
+                days = days
             ) ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_RESTORE_PIPELINE_NOT_FOUND,
