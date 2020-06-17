@@ -1,10 +1,10 @@
 <template>
     <div class="pipeline-stage-review-control bk-form bk-form-vertical">
         <form-field>
-            <bk-checkbox :disabled="disabled" v-model="manualTrigger">
-                {{ $t('enableStageReview') }}
-            </bk-checkbox>
-            <i v-bk-tooltips="$t('stageReviewDesc')" class="bk-icon icon-info-circle" />
+            <bk-radio-group class="stage-review-radio-group" v-model="manualTrigger">
+                <bk-radio :value="true">{{ $t('enableStageReviewRadioLabel') }}</bk-radio>
+                <bk-radio :value="false">{{ $t('disableStageReviewRadioLabel') }}</bk-radio>
+            </bk-radio-group>
         </form-field>
         <template v-if="manualTrigger">
             <form-field :required="true" :disabled="disabled" :label="$t('stageUserTriggers')" :is-error="!hasTriggerMember" :desc="$t('stageTriggerDesc')" :error-msg="$t('editPage.stageManualTriggerUserNoEmptyTips')">
@@ -144,3 +144,11 @@
         }
     }
 </script>
+
+<style lang="scss" scoped>
+    .stage-review-radio-group {
+        .bk-form-radio {
+            margin-right: 16px;
+        }
+    }
+</style>
