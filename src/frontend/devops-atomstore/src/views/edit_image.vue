@@ -131,7 +131,7 @@
             </bk-form>
             <section class="edit-image button-padding" v-show="!isLoading">
                 <bk-button theme="primary" @click="submitImage"> {{ $t('store.提交') }} </bk-button>
-                <bk-button @click="toImageList"> {{ $t('store.取消') }} </bk-button>
+                <bk-button @click="$router.back()"> {{ $t('store.取消') }} </bk-button>
             </section>
         </main>
     </article>
