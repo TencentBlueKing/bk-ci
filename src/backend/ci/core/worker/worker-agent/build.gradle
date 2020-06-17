@@ -34,3 +34,5 @@ dependencies {
 
     compile project (":core:plugin:codecc-plugin:worker-plugin-codecc")
 }
+
+install.enabled = false

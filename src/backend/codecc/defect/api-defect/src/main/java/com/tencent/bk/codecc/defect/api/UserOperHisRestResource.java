@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.defect.api;
 
 import com.tencent.bk.codecc.defect.vo.OperationHistoryVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -51,7 +51,7 @@ public interface UserOperHisRestResource
     @ApiOperation("获取操作记录清单")
     @Path("/taskId/{taskId}")
     @POST
-    Result<List<OperationHistoryVO>> getOperHisRecord(
+    CodeCCResult<List<OperationHistoryVO>> getOperHisRecord(
             @ApiParam(value = "任务id", required = true)
             @PathParam("taskId")
             Long taskId,

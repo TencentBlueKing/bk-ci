@@ -28,6 +28,7 @@ package com.tencent.devops.common.web
 
 import com.tencent.devops.common.web.handler.AllExceptionMapper
 import com.tencent.devops.common.web.handler.BadRequestExceptionMapper
+import com.tencent.devops.common.web.handler.BkFieldExceptionMapper
 import com.tencent.devops.common.web.handler.ClientExceptionMapper
 import com.tencent.devops.common.web.handler.CodeccReportExceptionMapper
 import com.tencent.devops.common.web.handler.CustomExceptionMapper
@@ -57,12 +58,14 @@ import javax.ws.rs.ApplicationPath
 open class JerseyConfig : ResourceConfig(), ApplicationContextAware, InitializingBean {
     private lateinit var applicationContext: ApplicationContext
     private val logger = LoggerFactory.getLogger(JerseyConfig::class.java)
+
     override fun setApplicationContext(applicationContext: ApplicationContext) {
         this.applicationContext = applicationContext
     }
 
     override fun afterPropertiesSet() {
         logger.info("JerseyConfig-register-start")
+        register(ValidationConfigurationContextResolver::class.java)
         register(DependNotFoundExceptionMapper::class.java)
         register(ParamBlankExceptionMapper::class.java)
         register(IllegalArgumentExceptionMapper::class.java)
@@ -83,6 +86,7 @@ open class JerseyConfig : ResourceConfig(), ApplicationContextAware, Initializin
         register(PermissionForbiddenExceptionMapper::class.java)
         register(CodeccReportExceptionMapper::class.java)
         register(ErrorCodeExceptionMapper::class.java)
+        register(BkFieldExceptionMapper::class.java)
         logger.info("JerseyConfig-RestResource-find-start")
         val restResources = applicationContext.getBeansWithAnnotation(RestResource::class.java)
         logger.info("JerseyConfig-RestResource-register-start")

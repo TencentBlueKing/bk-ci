@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.task.api;
 
 import com.tencent.bk.codecc.task.vo.*;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -53,7 +53,7 @@ public interface ServiceTaskRestResource
     @ApiOperation("获取任务信息")
     @Path("/taskInfo")
     @GET
-    Result<TaskBaseVO> getTaskInfo(
+    CodeCCResult<TaskBaseVO> getTaskInfo(
             @ApiParam(value = "任务英文名", required = true)
             @QueryParam("nameEn")
                     String nameEn);
@@ -61,7 +61,7 @@ public interface ServiceTaskRestResource
     @ApiOperation("获取任务已接入工具列表")
     @Path("/tools")
     @GET
-    Result<TaskBaseVO> getTaskToolList(
+    CodeCCResult<TaskBaseVO> getTaskToolList(
             @ApiParam(value = "任务ID", required = true)
             @QueryParam("taskId")
                     long taskId);
@@ -70,7 +70,7 @@ public interface ServiceTaskRestResource
     @ApiOperation("从流水线注册任务")
     @Path("/")
     @POST
-    Result<TaskIdVO> registerPipelineTask(
+    CodeCCResult<TaskIdVO> registerPipelineTask(
             @ApiParam(value = "任务详细信息", required = true)
                     TaskDetailVO taskDetailVO,
             @ApiParam(value = "当前项目", required = true)
@@ -84,7 +84,7 @@ public interface ServiceTaskRestResource
     @ApiOperation("获取任务信息")
     @Path("/taskId/{taskId}")
     @GET
-    Result<TaskDetailVO> getTaskInfoById(
+    CodeCCResult<TaskDetailVO> getTaskInfoById(
             @ApiParam(value = "任务ID", required = true)
             @PathParam(value = "taskId")
                     Long taskId
@@ -94,7 +94,7 @@ public interface ServiceTaskRestResource
     @ApiOperation("修改任务信息")
     @Path("/")
     @PUT
-    Result<Boolean> updateTask(
+    CodeCCResult<Boolean> updateTask(
             @ApiParam(value = "任务修改信息", required = true)
                     TaskDetailVO taskDetailVO,
             @ApiParam(value = "当前用户", required = true)
@@ -105,7 +105,7 @@ public interface ServiceTaskRestResource
     @ApiOperation("停用任务")
     @Path("/{taskId}")
     @DELETE
-    Result<Boolean> stopTask(
+    CodeCCResult<Boolean> stopTask(
             @ApiParam(value = "任务ID", required = true)
             @PathParam(value = "taskId")
                     Long taskId,
@@ -120,7 +120,7 @@ public interface ServiceTaskRestResource
     @ApiOperation("检查任务是否存在")
     @Path("/exists/{taskId}")
     @GET
-    Result<Boolean> checkTaskExists(
+    CodeCCResult<Boolean> checkTaskExists(
             @ApiParam(value = "任务ID", required = true)
             @PathParam(value = "taskId")
             Long taskId
@@ -130,14 +130,14 @@ public interface ServiceTaskRestResource
     @ApiOperation("获取所有的基础工具信息")
     @Path("/tool/meta")
     @GET
-    Result<Map<String, ToolMetaBaseVO>> getToolMetaListFromCache();
+    CodeCCResult<Map<String, ToolMetaBaseVO>> getToolMetaListFromCache();
 
 
 
     @ApiOperation("通过流水线ID获取任务信息")
     @Path("/taskInfo/{pipelineId}")
     @GET
-    Result<TaskDetailVO> getPipelineTask(
+    CodeCCResult<TaskDetailVO> getPipelineTask(
             @ApiParam(value = "流水线ID", required = true)
             @PathParam(value = "pipelineId")
                     String pipelineId

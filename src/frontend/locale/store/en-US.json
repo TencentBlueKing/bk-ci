@@ -1,5 +1,7 @@
 {
     "store": "Store",
+    "复制成功": "Copy successful",
+    "镜像地址": "Image Address",
     "点击查看YAML片段": "Click to view YAML fragment",
     "YAML片段": "YAML fragment",
     "点击申请成为协作者": "Click Apply to become a collaborator",
@@ -100,7 +102,7 @@
     "必填项": "Required field",
     "同意协作后，协作者将成为插件开发人员，可以：": "After collaboration is approved, the collaborators will become plugin developers who can:",
     "3、提交版本升级插件": "3、submit version upgrade plugin",
-    "1、修改插件代码": "'1、edit plugin code",
+    "1、修改插件代码": "1、edit plugin code",
     "2、修改插件私有配置": "2、Modify private configuration of plugin",
     "4、在协作者自己的调试项目下使用测试版本": "4、Use the test version within the collaborator's own debugging project",
     "审批成功": "Approval successful",

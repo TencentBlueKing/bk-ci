@@ -140,8 +140,7 @@
 
         methods: {
             initStatus () {
-                setTimeout(() => {
-                    console.log(this.$route.name)
+                this.$nextTick(() => {
                     this.scrollEle = document.querySelector(this.scrollClass)
                     document.addEventListener('mousemove', this.mapMove)
                     document.addEventListener('mouseup', this.moveEnd)
@@ -154,7 +153,7 @@
                     this.canvasCtx.lineWidth = pipelineStyle.lineWidth
                     this.canvasCtx.textBaseline = 'top'
                     this.drawMiniMap()
-                }, 0)
+                })
             },
 
             drawMiniMap () {
@@ -179,7 +178,7 @@
             },
 
             drawStages () {
-                this.stages.forEach((stage, index) => {
+                (this.stages || []).forEach((stage, index) => {
                     const startX = (index * (pipelineStyle.itemWidth + pipelineStyle.stageMarginRight) - (pipelineStyle.stageWidth - pipelineStyle.itemWidth) / 2) * this.rate
                     const startY = 0
                     if (startX >= 0) {

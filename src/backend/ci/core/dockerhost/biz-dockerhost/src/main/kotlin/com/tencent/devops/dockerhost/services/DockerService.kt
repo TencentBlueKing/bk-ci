@@ -180,6 +180,10 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
             )
     }
 
+    fun getContainerStatus(containerId: String): Boolean {
+        return dockerHostBuildService.isContainerRunning(containerId)
+    }
+
     private fun getStatus(vmSeqId: String, buildId: String): Pair<Status, String> {
         val future = buildTask[getKey(vmSeqId, buildId)]
         return when {
