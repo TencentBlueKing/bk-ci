@@ -48,13 +48,15 @@
                         { docsLink
                             && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
                         }
+                        { label.trim() && desc.trim() && <bk-popover placement="top" class="form-field-icon">
+                            <i class="bk-icon icon-info-circle"></i>
+                            <div slot="content" style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
+                                <div> {desc} { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>} </div>
+                            </div>
+                        </bk-popover>
+                    }
                     </label> }
-                    { label.trim() && desc.trim() && <bk-popover placement="top" class="form-field-icon">
-                        <i class="bk-icon icon-info-circle"></i>
-                        <div slot="content" style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
-                            <div> {desc} { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>} </div>
-                        </div>
-                    </bk-popover> }
+
                     <div class='bk-form-content'>
                         {$slots.default}
                         {isError ? $slots.errorTip || <span class='bk-form-help is-danger'>{errorMsg}</span> : null}
@@ -65,7 +67,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .icon-info-circle, .icon-question-circle {
         color: #C3CDD7;
         font-size: 14px;
@@ -75,11 +77,13 @@
         position: relative;
     }
     .form-field-icon {
-        position: relative;
-        left: -20px;
-        top: 6px;
+        position: absolute;
+        right:  -4px;
+        top: 0;
+        font-size: 0;
     }
-    .bk-sideslider-wrapper .bk-form-item.is-required .bk-label, .bk-form-inline-item.is-required .bk-label {
+    .bk-form-item.is-required .bk-label,
+    .bk-form-inline-item.is-required .bk-label {
         margin-right: 10px
     }
     .desc-link {
