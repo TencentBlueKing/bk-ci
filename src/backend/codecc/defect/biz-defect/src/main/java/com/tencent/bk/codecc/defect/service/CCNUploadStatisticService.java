@@ -26,7 +26,7 @@
 package com.tencent.bk.codecc.defect.service;
 
 import com.tencent.bk.codecc.defect.vo.CCNUploadStatisticVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 
 /**
  * 上报圈复杂度分析的结果统计数据接口
@@ -41,5 +41,5 @@ public interface CCNUploadStatisticService
      * @param uploadStatisticVO
      * @return
      */
-    Result uploadStatistic(CCNUploadStatisticVO uploadStatisticVO);
+    CodeCCResult uploadStatistic(CCNUploadStatisticVO uploadStatisticVO);
 }

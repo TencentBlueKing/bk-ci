@@ -45,6 +45,7 @@ import com.tencent.devops.dispatch.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.dao.PipelineDockerEnableDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
+import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.utils.CommonUtils
@@ -308,6 +309,34 @@ class DockerHostDebugService @Autowired constructor(
         return Result(0, "success")
     }
 
+    fun checkContainerStatus(
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        dockerIp: String,
+        containerId: String
+    ): Boolean {
+        val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/container/$containerId/status", dockerIp)
+        val request = Request.Builder().url(proxyUrl)
+            .get()
+            .addHeader("Accept", "application/json; charset=utf-8")
+            .addHeader("Content-Type", "application/json; charset=utf-8")
+            .build()
+
+        OkhttpUtils.doHttp(request).use { resp ->
+            val responseBody = resp.body()!!.string()
+            logger.info("[$projectId|$pipelineId|$vmSeqId] Get container status $dockerIp $containerId responseBody: $responseBody")
+            val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
+            if (response["status"] == 0) {
+                return response["data"] as Boolean
+            } else {
+                val msg = response["message"] as String
+                logger.error("[$projectId|$pipelineId|$vmSeqId] Get container status $dockerIp $containerId failed, msg: $msg")
+                throw DockerServiceException("Get container status $dockerIp $containerId failed, msg: $msg")
+            }
+        }
+    }
+
     fun getDebugStatus(pipelineId: String, vmSeqId: String): Result<ContainerInfo> {
         val debugTask = pipelineDockerDebugDao.getDebug(dslContext, pipelineId, vmSeqId)
         if (null == debugTask) {
@@ -321,6 +350,26 @@ class DockerHostDebugService @Autowired constructor(
                     ""
                 }
             )
+        }
+
+        try {
+            val containerStatusRunning = checkContainerStatus(
+                projectId = debugTask.projectId,
+                pipelineId = debugTask.pipelineId,
+                vmSeqId = debugTask.vmSeqId,
+                dockerIp = debugTask.hostTag,
+                containerId = debugTask.containerId
+            )
+
+            if (!containerStatusRunning) {
+                pipelineDockerDebugDao.deleteDebug(dslContext, debugTask.id)
+                return Result(
+                    status = 1,
+                    message = "登录调试失败，调试容器异常关闭，请重试。"
+                )
+            }
+        } catch (e: Exception) {
+            logger.warn("get containerStatus error, ignore.")
         }
 
         return Result(

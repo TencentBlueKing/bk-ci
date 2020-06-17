@@ -27,7 +27,7 @@
 package com.tencent.devops.common.web.handler
 
 import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.CodeCCResult
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.slf4j.LoggerFactory
@@ -50,6 +50,6 @@ class MissingKotlinParameterExceptionMapper : ExceptionMapper<MissingKotlinParam
         } else {
             "请求体内容参数错误，请联系人工客服"
         }
-        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE).entity(Result<Void>(status.statusCode, message)).build()
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE).entity(CodeCCResult<Void>(status.statusCode, message)).build()
     }
 }

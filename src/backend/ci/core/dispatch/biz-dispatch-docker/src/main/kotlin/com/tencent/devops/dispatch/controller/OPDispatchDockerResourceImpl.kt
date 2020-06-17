@@ -38,6 +38,10 @@ class OPDispatchDockerResourceImpl constructor(
         return Result(dispatchDockerService.delete(userId, dockerIp))
     }
 
+    override fun removeDockerBuildBinding(userId: String, pipelineId: String, vmSeqId: String): Result<Boolean> {
+        return Result(dispatchDockerService.removeDockerBuildBinding(userId, pipelineId, vmSeqId))
+    }
+
     override fun createDockerHostLoadConfig(
         userId: String,
         dockerHostLoadConfigMap: Map<String, DockerHostLoadConfig>
