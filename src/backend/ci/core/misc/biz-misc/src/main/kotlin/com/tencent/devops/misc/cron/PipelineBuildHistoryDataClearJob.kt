@@ -29,18 +29,21 @@ package com.tencent.devops.misc.cron
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.misc.config.MiscBuildDataClearConfig
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.lang.StringBuilder
 import java.util.Date
 
 @Component
 class PipelineBuildHistoryDataClearJob @Autowired constructor(
     private val dslContext: DSLContext,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val miscBuildDataClearConfig: MiscBuildDataClearConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildHistoryDataClearJob::class.java)
@@ -72,38 +75,73 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         private const val QUALITY_HIS_ORIGIN_METADATA_TABLE_NAME = "T_QUALITY_HIS_ORIGIN_METADATA"
         private const val ARTIFACETORY_INFO_TABLE_NAME = "T_TIPELINE_ARTIFACETORY_INFO"
         private const val PIPELINE_BUILD_HISTORY_PAGE_SIZE = 100
-        private const val PIPELINE_BUILD_HISTORY_CLEAR_PROJECT_ID = "pipeline:build:history:clear:project:id"
+        private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY =
+            "pipeline:build:history:data:clear:project:id"
+        private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_KEY =
+            "pipeline:build:history:data:clear:project:list"
+        private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_PAGE_KEY =
+            "pipeline:build:history:data:clear:project:list:page"
     }
 
     @Scheduled(initialDelay = 10000, fixedDelay = 3000)
     fun pipelineBuildHistoryDataClear() {
+        if (!miscBuildDataClearConfig.switch.toBoolean()) {
+            // 如果清理构建历史数据开关关闭，则不清理
+            return
+        }
         logger.info("pipelineBuildHistoryDataClear start")
-        val lock = RedisLock(redisOperation, LOCK_KEY, 80)
+        val lock = RedisLock(redisOperation, LOCK_KEY, 100)
         try {
             if (!lock.tryLock()) {
                 logger.info("get lock failed, skip")
                 return
             }
-            // 查询t_project表中的项目数据处理,每次最多处理5个项目
-            var handleProjectPrimaryId = redisOperation.get(PIPELINE_BUILD_HISTORY_CLEAR_PROJECT_ID)?.toLong()
+            // 查询t_project表中的项目数据处理
+            val projectListConfig = redisOperation.get(PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_KEY)
+            // 组装查询项目的条件
+            val projectConditionSqlBuilder = StringBuilder("1=1")
+            if (!projectListConfig.isNullOrBlank()) {
+                projectConditionSqlBuilder.append(" and english_name in (")
+                val projectList = projectListConfig!!.split(",")
+                projectList.forEach {
+                    projectConditionSqlBuilder.append("'$it',")
+                }
+                // 删除最后一个逗号
+                projectConditionSqlBuilder.deleteCharAt(projectConditionSqlBuilder.length - 1)
+                projectConditionSqlBuilder.append(")")
+            }
+            var handleProjectPrimaryId = redisOperation.get(PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY)?.toLong()
             if (handleProjectPrimaryId == null) {
                 handleProjectPrimaryId =
                     dslContext.select(DSL.field("min(id)")).from("$PROJECT_DATA_BASE_NAME.$PROJECT_TABLE_NAME")
+                        .where(projectConditionSqlBuilder.toString())
                         .fetchOne(0, Long::class.java) ?: 0L
             } else {
                 val maxProjectPrimaryId =
                     dslContext.select(DSL.field("max(id)")).from("$PROJECT_DATA_BASE_NAME.$PROJECT_TABLE_NAME")
+                        .where(projectConditionSqlBuilder.toString())
                         .fetchOne(0, Long::class.java)
                 if (handleProjectPrimaryId >= maxProjectPrimaryId) {
                     // 已经清理完全部项目的流水线的过期构建记录，再重新开始清理
-                    redisOperation.delete(PIPELINE_BUILD_HISTORY_CLEAR_PROJECT_ID)
+                    redisOperation.delete(PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY)
+                    if (!projectListConfig.isNullOrBlank()) {
+                        redisOperation.delete(PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_PAGE_KEY)
+                    }
                     logger.info("pipelineBuildHistoryDataClear reStart")
                     return
                 }
             }
-            val projectInfoRecords =
-                dslContext.select().from("$PROJECT_DATA_BASE_NAME.$PROJECT_TABLE_NAME")
-                    .where("id >=$handleProjectPrimaryId and id<=${handleProjectPrimaryId + 4}").fetch()
+            val maxEveryProjectHandleNum = miscBuildDataClearConfig.maxEveryProjectHandleNum.toInt()
+            val projectBaseQueryStep = dslContext.select().from("$PROJECT_DATA_BASE_NAME.$PROJECT_TABLE_NAME")
+            if (projectListConfig.isNullOrBlank()) {
+                projectConditionSqlBuilder.append(" and (id >=$handleProjectPrimaryId and id<=${handleProjectPrimaryId + maxEveryProjectHandleNum - 1})")
+                projectBaseQueryStep.where(projectConditionSqlBuilder.toString())
+            } else {
+                val page = redisOperation.get(PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_PAGE_KEY)?.toInt() ?: 1
+                projectBaseQueryStep.where(projectConditionSqlBuilder.toString()).orderBy(DSL.field("id").asc())
+                    .limit((page - 1) * maxEveryProjectHandleNum, maxEveryProjectHandleNum)
+            }
+            val projectInfoRecords = projectBaseQueryStep.fetch()
             // 根据项目依次查询T_PIPELINE_INFO表中的流水线数据处理
             var maxHandleProjectPrimaryId = handleProjectPrimaryId ?: 0L
             projectInfoRecords.forEach { projectInfo ->
@@ -119,8 +157,9 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     // 根据流水线ID依次查询T_PIPELINE_BUILD_HISTORY表中二个月前的构建记录
                     val pipelineId = pipelineInfo["PIPELINE_ID"] as String
                     val currentDate = DateTimeUtil.formatDate(Date())
+                    val monthRange = miscBuildDataClearConfig.monthRange
                     val pastConditionSql =
-                        "PIPELINE_ID='$pipelineId'  AND START_TIME < SUBDATE('$currentDate', INTERVAL 2 MONTH)"
+                        "PIPELINE_ID='$pipelineId' AND START_TIME < SUBDATE('$currentDate', INTERVAL $monthRange MONTH)"
                     logger.info("pipelineBuildHistoryPastDataClear start..............")
                     cleanBuildHistoryData(pipelineId, pastConditionSql, projectId)
                     // 判断最近二个月的构建记录是否超过系统展示的最大数量，如果超过则需清理超过的数据
@@ -128,9 +167,10 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                         .from("$PROCESS_DATA_BASE_NAME.$PIPELINE_BUILD_HISTORY_TABLE_NAME")
                         .where("PROJECT_ID='$projectId' AND PIPELINE_ID='$pipelineId'")
                         .fetchOne(0, Long::class.java)
-                    if (maxPipelineBuildNum > 10000) {
+                    val maxKeepNum = miscBuildDataClearConfig.maxKeepNum.toInt()
+                    if (maxPipelineBuildNum > maxKeepNum) {
                         val recentConditionSql =
-                            "PIPELINE_ID='$pipelineId' AND START_TIME >= SUBDATE('$currentDate', INTERVAL 2 MONTH) AND BUILD_NUM < ${maxPipelineBuildNum - 10000}"
+                            "PIPELINE_ID='$pipelineId' AND START_TIME >= SUBDATE('$currentDate', INTERVAL $monthRange MONTH) AND BUILD_NUM < ${maxPipelineBuildNum - maxKeepNum}"
                         logger.info("pipelineBuildHistoryRecentDataClear start.............")
                         cleanBuildHistoryData(pipelineId, recentConditionSql, projectId)
                     }
@@ -138,10 +178,19 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             }
             // 将当前已处理完的最大项目Id存入redis
             redisOperation.set(
-                key = PIPELINE_BUILD_HISTORY_CLEAR_PROJECT_ID,
+                key = PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY,
                 value = maxHandleProjectPrimaryId.toString(),
                 expired = false
             )
+            if (!projectListConfig.isNullOrBlank()) {
+                // 如果是指定项目，需把处理项目列表的页码放入redis
+                val page = redisOperation.get(PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_PAGE_KEY)?.toInt() ?: 1
+                redisOperation.set(
+                    key = PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_PAGE_KEY,
+                    value = (page + 1).toString(),
+                    expired = false
+                )
+            }
         } catch (t: Throwable) {
             logger.warn("pipelineBuildHistoryDataClear failed", t)
         } finally {
