@@ -663,6 +663,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = BuildStatus.PAUSE.name
+                    stage.reviewStatus = BuildStatus.REVIEWING.name
                     stage.startEpoch = System.currentTimeMillis()
                     pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.RUNNING, BuildStatus.STAGE_SUCCESS)
                     // 被暂停的流水线不占构建队列，在执行数-1
@@ -688,6 +689,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = ""
+                    stage.reviewStatus = BuildStatus.REVIEW_ABORT.name
                     pipelineBuildDao.updateStageCancelStatus(dslContext, buildId)
                     updateHistoryStage(buildId, model)
                     return Traverse.BREAK
@@ -710,6 +712,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = BuildStatus.QUEUE.name
+                    stage.reviewStatus = BuildStatus.REVIEW_PROCESSED.name
                     pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.STAGE_SUCCESS, BuildStatus.RUNNING)
                     pipelineStageService.updatePipelineRunningCount(pipelineId, buildId, 1)
                     updateHistoryStage(buildId, model)
