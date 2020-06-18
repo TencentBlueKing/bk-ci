@@ -45,15 +45,6 @@ class PipelineTemplateDao {
         }
     }
 
-    fun getSrcTemplateCodes(dslContext: DSLContext, projectCode: String): List<String> {
-        return with(TPipelineTemplate.T_PIPELINE_TEMPLATE) {
-            dslContext.select(SRC_TEMPLATE_ID).from(this)
-                .where(PROJECT_CODE.eq(projectCode))
-                .or(PUBLIC_FLAG.eq(true))
-                .fetch(SRC_TEMPLATE_ID, String::class.java)
-        }
-    }
-
     fun listAllTemplates(dslContext: DSLContext): Result<TPipelineTemplateRecord> {
         return with(TPipelineTemplate.T_PIPELINE_TEMPLATE) {
             dslContext.selectFrom(this)

@@ -50,8 +50,6 @@ data class Model(
     var pipelineCreator: String? = null,
     @ApiModelProperty("源模版ID", required = false)
     var srcTemplateId: String? = null,
-    @ApiModelProperty("源模版的版本ID", required = false)
-    var srcTemplateVersion: Long? = null,
     @ApiModelProperty("模板ID", required = false)
     var templateId: String? = null,
     @ApiModelProperty("构建错误类型", required = false)
@@ -154,7 +152,6 @@ data class Model(
             instanceFromTemplate = instanceFromTemplate,
             pipelineCreator = pipelineCreator,
             srcTemplateId = null,
-            srcTemplateVersion = null,
             templateId = templateId
         )
     }
