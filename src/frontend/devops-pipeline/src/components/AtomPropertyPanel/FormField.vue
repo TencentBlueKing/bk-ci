@@ -82,9 +82,14 @@
         top: 0;
         font-size: 0;
     }
+    .bk-form-item,
+    .bk-form-inline-item {
+        .bk-label {
+            position: relative;
+        }
+    }
     .bk-form-item.is-required .bk-label,
     .bk-form-inline-item.is-required .bk-label {
-        position: relative;
         margin-right: 10px;
     }
     .desc-link {
