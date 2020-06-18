@@ -145,17 +145,6 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
         )
     }
 
-    override fun installAtom(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        channelCode: ChannelCode?,
-        installAtomReq: InstallAtomReq
-    ): Result<Boolean> {
-        logger.info("install Atom: userId[$userId] channelCode[$channelCode] installAtomReq[$installAtomReq]")
-        return client.get(ServiceMarketAtomResource::class).installAtom(userId, channelCode, installAtomReq)
-    }
-
     override fun rename(
         appCode: String?,
         apigwType: String?,
