@@ -29,18 +29,20 @@ package com.tencent.devops.artifactory.service.artifactory
 import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.service.ReportService
 import com.tencent.devops.artifactory.util.JFrogUtil
+import com.tencent.devops.common.archive.util.MimeUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.util.FileCopyUtils
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @Service
 class ArtifactoryReportService @Autowired constructor(
     private val jFrogService: JFrogService
 ) : ReportService {
-    override fun get(projectId: String, pipelineId: String, buildId: String, elementId: String, path: String): Response {
+    override fun get(projectId: String, pipelineId: String, buildId: String, elementId: String, path: String) {
         logger.info("report get ($projectId, $pipelineId, $buildId, $elementId, $path)")
 
         val normalizePath = JFrogUtil.normalize(path)
@@ -50,8 +52,10 @@ class ArtifactoryReportService @Autowired constructor(
             throw NotFoundException("文件($path)不存在")
         }
 
-        val response = jFrogService.get(realPath)
-        return Response.ok(response.first, MediaType.valueOf(response.second.toString())).build()
+        val fileContent = jFrogService.get(realPath)
+        val response = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).response!!
+        response.contentType = MimeUtil.mediaType(path)
+        FileCopyUtils.copy(fileContent.first.inputStream(), response.outputStream)
     }
 
     companion object {
