@@ -26,20 +26,40 @@
 
 package com.tencent.devops.common.api.util
 
-import com.vdurmont.emoji.EmojiManager
-import com.vdurmont.emoji.EmojiParser
+import org.junit.Assert
+import org.junit.Test
 
-object EmojiUtil {
+class EmojiUtilTest {
 
-    fun removeAllEmoji(str: String): String {
-        return EmojiParser.removeAllEmojis(str)
+    @Test
+    fun removeAllEmoji() {
+        val str = "This is a happy emoji 😊, this is a crying emoji 😭"
+        val expected = "This is a happy emoji , this is a crying emoji "
+        Assert.assertEquals(expected, EmojiUtil.removeAllEmoji(str))
     }
 
-    fun isEmoji(str: String): Boolean {
-        return EmojiManager.isEmoji(str)
+    @Test
+    fun removeEmptyStr() {
+        val str = ""
+        Assert.assertEquals("", EmojiUtil.removeAllEmoji(str))
     }
 
-    fun containsEmoji(str: String): Boolean {
-        return EmojiManager.containsEmoji(str)
+    @Test
+    fun removeNotEmojiStr() {
+        val str = "This is a happy emoji"
+        val expected = "This is a happy emoji"
+        Assert.assertEquals(expected, EmojiUtil.removeAllEmoji(str))
+    }
+
+    @Test
+    fun isEmoji() {
+        val str = "This is a happy emoji 😊"
+        Assert.assertFalse(EmojiUtil.isEmoji(str))
+    }
+
+    @Test
+    fun containsEmoji() {
+        val str = "This is a happy emoji 😊"
+        Assert.assertTrue(EmojiUtil.containsEmoji(str))
     }
 }
