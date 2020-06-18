@@ -37,6 +37,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -86,6 +87,31 @@ class PipelineStageService @Autowired constructor(
             }
         }
         return result
+    }
+
+    fun skipStage(
+        buildId: String,
+        stageId: String
+    ) {
+        updateStageStatus(buildId, stageId, BuildStatus.SKIP)
+        SpringContextUtil.getBean(PipelineBuildDetailService::class.java).stageSkip(buildId, stageId)
+    }
+
+    fun pauseStage(
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        controlOption: PipelineBuildStageControlOption
+    ) {
+        logger.info("[$buildId]|pauseStage|stageId=$stageId|controlOption=$controlOption")
+        pipelineBuildStageDao.updateStatus(
+            dslContext = dslContext,
+            buildId = buildId,
+            stageId = stageId,
+            buildStatus = BuildStatus.PAUSE,
+            controlOption = controlOption
+        )
+        SpringContextUtil.getBean(PipelineBuildDetailService::class.java).stagePause(pipelineId, buildId, stageId)
     }
 
     fun startStage(
