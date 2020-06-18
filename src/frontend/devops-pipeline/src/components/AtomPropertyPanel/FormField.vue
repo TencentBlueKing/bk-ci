@@ -84,7 +84,8 @@
     }
     .bk-form-item.is-required .bk-label,
     .bk-form-inline-item.is-required .bk-label {
-        margin-right: 10px
+        position: relative;
+        margin-right: 10px;
     }
     .desc-link {
         color: #3c96ff;
