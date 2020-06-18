@@ -1198,7 +1198,6 @@ class TemplateService @Autowired constructor(
                             instanceFromTemplate = true
                         )
                     instanceModel.templateId = templateId
-                    instanceModel.srcTemplateVersion = version
                     val pipelineId = pipelineService.createPipeline(
                         userId = userId,
                         projectId = projectId,
@@ -1208,7 +1207,8 @@ class TemplateService @Autowired constructor(
                         fixPipelineId = null,
                         instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
                         buildNo = buildNo,
-                        param = param
+                        param = param,
+                        tempalteVersion = version
                     )
                     if (useTemplateSettings) {
                         val setting = copySetting(
