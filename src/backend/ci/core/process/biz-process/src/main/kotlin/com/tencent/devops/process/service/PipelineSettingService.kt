@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -41,6 +43,7 @@ import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineInfoVersionDao
+import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
@@ -53,6 +56,7 @@ import com.tencent.devops.process.util.DateTimeUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 class PipelineSettingService @Autowired constructor(
@@ -65,10 +69,17 @@ class PipelineSettingService @Autowired constructor(
     private val pipelineGroupVersionService: PipelineGroupVersionService,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineInfoVersionDao: PipelineInfoVersionDao,
+    private val pipelineResDao: PipelineResDao,
     private val client: Client
 ) {
+
+    private val executors = Executors.newFixedThreadPool(5)
+
     fun saveSetting(userId: String, setting: PipelineSetting, checkPermission: Boolean = true): String {
         with(setting) {
+            if (maxPipelineResNum < 1) {
+                throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("maxPipelineResNum"))
+            }
             checkEditPermission(
                 userId,
                 projectId,
@@ -96,6 +107,10 @@ class PipelineSettingService @Autowired constructor(
                 userId = userId
             )
         )
+        // 异步进行删除最近maxPipelineResNum个编排之外的编排
+        executors.submit {
+            pipelineResDao.deleteEarlyVersion(dslContext, setting.pipelineId, setting.maxPipelineResNum)
+        }
         return id
     }
 
@@ -119,12 +134,12 @@ class PipelineSettingService @Autowired constructor(
                     val failType = it.get(FAIL_TYPE).split(",").filter { i -> i.isNotBlank() }
                         .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
                     PipelineSetting(
-                        projectId,
-                        pipelineId,
-                        it.get(NAME),
-                        it.get(DESC),
-                        PipelineRunLockType.valueOf(it.get(RUN_LOCK_TYPE)),
-                        Subscription(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        pipelineName = it.get(NAME),
+                        desc = it.get(DESC),
+                        runLockType = PipelineRunLockType.valueOf(it.get(RUN_LOCK_TYPE)),
+                        successSubscription = Subscription(
                             successType,
                             it.get(SUCCESS_GROUP).split(",").toSet(),
                             it.get(SUCCESS_RECEIVER),
@@ -134,7 +149,7 @@ class PipelineSettingService @Autowired constructor(
                             it.get(SUCCESS_DETAIL_FLAG),
                             it.get(SUCCESS_CONTENT) ?: ""
                         ),
-                        Subscription(
+                        failSubscription = Subscription(
                             failType,
                             it.get(FAIL_GROUP).split(",").toSet(),
                             it.get(FAIL_RECEIVER),
@@ -144,9 +159,10 @@ class PipelineSettingService @Autowired constructor(
                             it.get(FAIL_DETAIL_FLAG),
                             it.get(FAIL_CONTENT) ?: ""
                         ),
-                        labels,
-                        DateTimeUtils.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
-                        it.get(MAX_QUEUE_SIZE)
+                        labels = labels,
+                        waitQueueTimeMinute = DateTimeUtils.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
+                        maxQueueSize = it.get(MAX_QUEUE_SIZE),
+                        maxPipelineResNum = it.get(MAX_PIPELINE_RES_NUM)
                     )
                 }
             }
@@ -155,14 +171,14 @@ class PipelineSettingService @Autowired constructor(
             val name = model?.name ?: "unknown pipeline name"
             val desc = model?.desc ?: ""
             PipelineSetting(
-                projectId,
-                pipelineId,
-                name,
-                desc,
-                PipelineRunLockType.MULTIPLE,
-                Subscription(),
-                Subscription(),
-                labels
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineName = name,
+                desc = desc,
+                runLockType = PipelineRunLockType.MULTIPLE,
+                successSubscription = Subscription(),
+                failSubscription = Subscription(),
+                labels = labels
             )
         }
     }

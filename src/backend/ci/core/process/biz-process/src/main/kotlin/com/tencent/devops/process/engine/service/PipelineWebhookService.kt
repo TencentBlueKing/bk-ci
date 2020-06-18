@@ -166,7 +166,7 @@ class PipelineWebhookService @Autowired constructor(
                         .get(it.projectId, repositoryConfig.getURLEncodeRepositoryId(), repositoryConfig.repositoryType)
                         .data
                     if (repo == null) {
-                        logger.error("repo[${it.repoHashId}] does not exist")
+                        logger.warn("repo[${it.repoHashId}] does not exist")
                         return@forEach
                     }
                     val projectName = getProjectName(repo.projectName)

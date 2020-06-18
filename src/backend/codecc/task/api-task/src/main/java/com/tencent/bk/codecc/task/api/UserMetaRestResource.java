@@ -29,7 +29,7 @@ package com.tencent.bk.codecc.task.api;
 import com.tencent.bk.codecc.task.vo.MetadataVO;
 import com.tencent.bk.codecc.task.vo.ToolMetaBaseVO;
 import com.tencent.bk.codecc.task.vo.ToolMetaDetailVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -54,7 +54,7 @@ public interface UserMetaRestResource
     @ApiOperation("查询工具列表")
     @Path("/toolList")
     @GET
-    Result<List<ToolMetaBaseVO>> toolList(
+    CodeCCResult<List<ToolMetaBaseVO>> toolList(
             @ApiParam(value = "是否查询详细信息")
             @QueryParam("isDetail")
                     Boolean isDetail);
@@ -62,7 +62,7 @@ public interface UserMetaRestResource
     @ApiOperation("查询工具详情")
     @Path("/toolDetail")
     @GET
-    Result<ToolMetaDetailVO> toolDetail(
+    CodeCCResult<ToolMetaDetailVO> toolDetail(
             @ApiParam(value = "工具名（唯一标志）", required = true)
             @QueryParam("toolName")
                     String toolName);
@@ -70,7 +70,7 @@ public interface UserMetaRestResource
     @ApiOperation("查询元数据")
     @Path("/metadatas")
     @GET
-    Result<Map<String, List<MetadataVO>>> metadatas(
+    CodeCCResult<Map<String, List<MetadataVO>>> metadatas(
             @ApiParam(value = "元数据类型", required = true)
             @QueryParam("metadataType")
                     String metadataType);

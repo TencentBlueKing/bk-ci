@@ -63,6 +63,7 @@ import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
+import com.tencent.devops.dockerhost.utils.RandomUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.apache.commons.lang3.StringUtils
@@ -273,7 +274,9 @@ class DockerHostBuildService(
             // docker run
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
+            val containerName = "dispatch-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
             val container = dockerCli.createContainerCmd(imageName)
+                .withName(containerName)
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
                 .withEnv(DockerEnvLoader.loadEnv(dockerBuildInfo))
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
@@ -514,13 +517,16 @@ class DockerHostBuildService(
             // docker run
             val env = mutableListOf<String>()
             env.addAll(DockerEnvLoader.loadEnv(dockerBuildInfo))
+            env.add("bk_devops_start_source=dockerRun") // dockerRun启动标识
             dockerRunParam.env?.forEach {
                 env.add("${it.key}=${it.value ?: ""}")
             }
             logger.info("env is $env")
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
+            val containerName = "dockerRun-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
             val container = dockerCli.createContainerCmd(imageName)
+                .withName(containerName)
                 .withCmd(dockerRunParam.command)
                 .withEnv(env)
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
@@ -616,6 +622,23 @@ class DockerHostBuildService(
         }
     }
 
+    fun clearDockerRunTimeoutContainers() {
+        val containerInfo = dockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
+        for (container in containerInfo) {
+            try {
+                val startTime = dockerCli.inspectContainerCmd(container.id).exec().state.startedAt
+                val envs = dockerCli.inspectContainerCmd(container.id).exec().config.env
+                // 是否是dockerRun启动的并且已运行超过8小时
+                if (envs != null && envs.contains("bk_devops_start_source=dockerRun") && checkStartTime(startTime)) {
+                    logger.info("Clear dockerRun timeout container, containerId: ${container.id}")
+                    dockerCli.stopContainerCmd(container.id).withTimeout(15).exec()
+                }
+            } catch (e: Exception) {
+                logger.error("Clear dockerRun timeout container failed, containerId: ${container.id}", e)
+            }
+        }
+    }
+
     @PostConstruct
     fun loadLocalImages() {
         try {
@@ -672,8 +695,13 @@ class DockerHostBuildService(
     }
 
     fun isContainerRunning(containerId: String): Boolean {
-        val inspectContainerResponse = dockerCli.inspectContainerCmd(containerId).exec() ?: return false
-        return inspectContainerResponse.state.running ?: false
+        try {
+            val inspectContainerResponse = dockerCli.inspectContainerCmd(containerId).exec() ?: return false
+            return inspectContainerResponse.state.running ?: false
+        } catch (e: Exception) {
+            logger.error("check container: $containerId status failed.", e)
+            return false
+        }
     }
 
     fun log(buildId: String, message: String, tag: String?, containerHashId: String?) {
@@ -690,7 +718,7 @@ class DockerHostBuildService(
                 tag = tag,
                 jobId = containerHashId
             )
-        } catch (e: Exception) {
+        } catch (t: Throwable) {
             logger.info("write log to dispatch failed")
         }
     }
@@ -749,6 +777,22 @@ class DockerHostBuildService(
         }
 
         return true
+    }
+
+    private fun checkStartTime(utcTime: String?): Boolean {
+        if (utcTime != null && utcTime.isNotEmpty()) {
+            val array = utcTime.split(".")
+            val utcTimeLocal = array[0] + "Z"
+            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+            sdf.timeZone = TimeZone.getTimeZone("UTC")
+
+            val date = sdf.parse(utcTimeLocal)
+            val startTimestamp = date.time
+            val nowTimestamp = System.currentTimeMillis()
+            return (nowTimestamp - startTimestamp) > (8 * 3600 * 1000)
+        }
+
+        return false
     }
 
     inner class MyBuildImageResultCallback internal constructor(

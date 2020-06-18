@@ -52,7 +52,7 @@
                 div.innerHTML = ajax.responseText
                 document.body.insertBefore(div, document.body.childNodes[0]);
             }
-        </script>
+    </script>
     <div id="devops-root">
         <div class="bk-loading" style="position: absolute;">
             <div class="bk-loading-wrapper">
@@ -213,7 +213,8 @@
                 var xhr = new XMLHttpRequest()
                 xhr.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
-                        resolve(JSON.parse(xhr.responseText).data)
+                        var res = JSON.parse(xhr.responseText)
+                        resolve(res && res.data ? res.data : res )
                     }  else if (this.status == 401) {
                         // 无登录，这里处理跳转逻辑
                         window.location.href = window.getLoginUrl()
@@ -236,6 +237,10 @@
             return asyncGet(GW_URL_PREFIX + '/project/api/user/services/', pathPid)
         }
 
+        function fetchAssetsJSON () {
+            return asyncGet('/assets_bundle.json?t=' + Math.random())
+        }
+
         function fetchAllProjects () {
             return asyncGet(GW_URL_PREFIX + '/project/api/user/projects/')
         }
@@ -244,8 +249,15 @@
             return asyncGet(GW_URL_PREFIX + '/project/api/user/users')
         }
 
+        function joinUrl (urlArr) {
+            if (Array.isArray(urlArr)) {
+                return urlArr.join('/').replace(/([^:]\/)\/+/g, '$1')
+            }
+            return ''
+        }
 
-        function getServiceObject (serviceList) {
+
+        function getServiceObject (serviceList, assetsJSON) {
             var serviceMap = {}
             var iframeRoutes = []
             for (var i = 0; i < serviceList.length; i++) {
@@ -253,13 +265,15 @@
                 for (var j = 0; j < children.length; j++) {
                     var mod = children[j].link_new.replace(/^\/?(\w+)\S*/, '$1')
                     var serviceTitle = children[j].name.replace(/\(\S+?\)/, '')
+                    var assetMod = assetsJSON[mod]
                     if (children[j].inject_type === 'amd') {
-                        children[j].js_url = [WEBSITE_URL, children[j].js_url].join('/').replace(/([^:]\/)\/+/g, '$1')
-                        children[j].css_url = [WEBSITE_URL, children[j].css_url].join('/').replace(/([^:]\/)\/+/g, '$1')
+                        var jsUrl = assetMod ? joinUrl([ mod, assetMod.js ]) : children[j].js_url
+                        var cssUrl = assetMod ? joinUrl([ mod, assetMod.css ]) : children[j].css_url
+                        children[j].js_url = joinUrl([ WEBSITE_URL, jsUrl ])
+                        children[j].css_url = joinUrl([ WEBSITE_URL, mod, cssUrl ])
                     } else {
-                        children[j].iframe_url = [WEBSITE_URL, children[j].iframe_url].join('/').replace(/([^:]\/)\/+/g, '$1')
+                        children[j].iframe_url = joinUrl([ WEBSITE_URL, children[j].iframe_url ])
                     }
-                    
                     serviceMap[mod] = children[j]
                     if (children[j].inject_type === 'iframe') {
                         iframeRoutes.push({
@@ -302,11 +316,11 @@
 
         }
 
-        function init (projectList, allServices, userInfo) {
+        function init (projectList, allServices, userInfo, assetsJSON) {
             var path = location.pathname.replace('/console', '')
             var headTag = document.head || document.getElementsByTagName('head')[0]
             var pathReg = /^\/(\w+)\/?/
-            var serviceObject = getServiceObject(allServices)
+            var serviceObject = getServiceObject(allServices, assetsJSON)
             var serviceMap = serviceObject.serviceMap
             var serviceMatchResult = path.match(pathReg)
             var subServiceId = serviceMatchResult ? serviceMatchResult[1] : null
@@ -369,8 +383,10 @@
             return Promise.all([
                 fetchAllProjects(),
                 fetchAllServices(),
-                requestUser()
+                requestUser(),
+                fetchAssetsJSON()
             ]).then(response => {
+                console.log(response)
                 var cahceArray = [ 'projectList', 'allServices', 'userInfo' ]
                 var actionArray = [ 'setProjectList', 'setServices', 'setUserInfo' ]
                 for(var i = 0; i < cahceArray.length; i++) {

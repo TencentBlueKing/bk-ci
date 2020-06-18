@@ -41,10 +41,10 @@ jobs:
         with:
           go-version: 1.12
       - uses: actions/checkout@v2
-      - run: ./build_linux.sh
+      - run: make clean build_linux
         working-directory: src/agent/
         if: matrix.os == 'ubuntu-latest'
-      - run: ./build_macos.sh
+      - run: make clean build_macos
         working-directory: src/agent/
         if: matrix.os == 'macos-latest'
       - run: build_windows.bat
@@ -83,7 +83,7 @@ jobs:
         with:
           gradle-version: 4.8.1
           build-root-directory: src/backend/ci/core
-          arguments: -x test clean build -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"
+          arguments: clean test build -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"
       
       - name: Create artifact - Step1:init
         run: |

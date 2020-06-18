@@ -75,7 +75,10 @@ interface ApigwBuildResourceV3 {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam("启动参数", required = true)
-        values: Map<String, String>
+        values: Map<String, String>,
+        @ApiParam("手动指定构建版本参数", required = false)
+        @QueryParam("buildNo")
+        buildNo: Int? = null
     ): Result<BuildId>
 
     @ApiOperation("停止构建")
@@ -197,4 +200,34 @@ interface ApigwBuildResourceV3 {
         @PathParam("buildId")
         buildId: String
     ): Result<ModelDetail>
+
+    @ApiOperation("手动审核启动阶段")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stages/{stageId}/manualStart")
+    fun manualStartStage(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("阶段ID", required = true)
+        @PathParam("stageId")
+        stageId: String,
+        @ApiParam("取消执行", required = false)
+        @QueryParam("cancel")
+        cancel: Boolean?
+    ): Result<Boolean>
 }
