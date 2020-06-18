@@ -3,19 +3,13 @@ echo "Start installing the agent..."
 t=`date +"%Y-%m-%d_%H-%M-%S"`
 workspace=`pwd`
 user=${USER}
-agent_id='##agentId##'
-
-function getServiceName()
-{
-  echo "devops_agent_"${agent_id}
-}
 
 function unzip_jre()
 {
-  echo "start unzipping the jre package"
+  echo "Unzipping the jre package"
   if [[ -d "jre" ]]; then
-    echo "jre already exists, skip unzip"
-    return
+    echo "Cleaning jre folder"
+    rm -rf jre
   fi
   unzip -q -o jre.zip -d jre
 }
@@ -27,21 +21,21 @@ exists()
 
 function download_agent()
 {
-  echo "start download agent install package"
-  if [[ -f "agent.zip" ]]; then
-    echo "agent.zip already exist, skip download"
+  echo "Trying to download the agent install package"
+  if [[ -f  "agent.zip" ]]; then
+    echo "agent.zip aleady exist, skip download"
     return
   fi
   if exists curl; then
     curl -H "X-DEVOPS-PROJECT-ID: ##projectId##" -o agent.zip '##agent_url##'
     if [[ $? -ne 0 ]]; then
-      echo "fail to use curl to download the agent, use wget"
+      echo "Fail to use curl to download the agent, use wget"
       wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip '##agent_url##'
     fi
   elif exists wget; then
     wget --header="X-DEVOPS-PROJECT-ID: ##projectId##" -O agent.zip '##agent_url##'
   else
-    echo "curl & wget command don't exist, download fail"
+    echo "Curl & wget command don't exist, download fail"
     exit 1
   fi
 }
@@ -49,13 +43,13 @@ function download_agent()
 function addRunAtLoad()
 {
   mkdir -p ~/Library/LaunchAgents
-  cat > ~/Library/LaunchAgents/$(getServiceName).plist <<EOF
+  cat > ~/Library/LaunchAgents/landun_devops_agent.plist <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
-        <string>$(getServiceName)</string>
+        <string>landun_devops_agent</string>
 
     <key>Program</key>
         <string>${workspace}/devopsDaemon</string>
@@ -75,9 +69,9 @@ EOF
 
 function uninstallAgentService()
 {
-  if [[ "$user" != "root"  && -f ~/Library/LaunchAgents/$(getServiceName).plist ]]; then
+  if [[ "$user" != "root" ]]; then
     echo "remove run at load"
-    rm -f ~/Library/LaunchAgents/$(getServiceName).plist
+    rm -f ~/Library/LaunchAgents/landun_devops_agent.plist
   fi
 
   cd ${workspace}
@@ -97,33 +91,19 @@ function installAgentService()
   ${workspace}/start.sh
 }
 
-function writeSSHConfig()
-{
-}
-
-# if [[ "${workspace}" = ~ ]]; then
-#   echo 'agent should not install in root of user home directory'
-#   echo 'please run install script in an empty directory with full permission'
-#   exit 1
-# fi
-
 cd ${workspace}
 
 download_agent
+
 unzip -o agent.zip
 unzip_jre
 
 os=`uname`
 echo "OS: $os"
 
-echo "check java version"
+echo "Check the java version"
 jre/Contents/Home/bin/java -version
-
-echo "check and write ssh config"
-writeSSHConfig
 
 uninstallAgentService
 installAgentService
-
-
 

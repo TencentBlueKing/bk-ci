@@ -1,25 +1,19 @@
 #!/bin/bash
-echo "start uninstalling the agent..."
+echo "Start uninstalling the agent..."
 t=`date +"%Y-%m-%d_%H-%M-%S"`
 workspace=`pwd`
 user=${USER}
-agent_id='##agentId##'
 
-function getServiceName()
+function uninstall()
 {
-  echo "devops_agent_"${agent_id}
-}
-
-function uninstallAgentService()
-{
-  if [[ "$user" != "root"  && -f ~/Library/LaunchAgents/$(getServiceName).plist ]]; then
+  if [[ "$user" != "root" && -f ~/Library/LaunchAgents/landun_devops_agent.plist ]]; then
     echo "remove run at load"
-    rm -f ~/Library/LaunchAgents/$(getServiceName).plist
+    rm -f ~/Library/LaunchAgents/landun_devops_agent.plist
   fi
 
   cd ${workspace}
-  chmod +x *.sh
+  chmod +x ${workspace}/*.sh
   ${workspace}/stop.sh
 }
 
-uninstallAgentService
+uninstall
