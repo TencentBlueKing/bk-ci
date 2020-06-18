@@ -1,0 +1,196 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.misc.cron
+
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
+import java.util.Date
+
+@Component
+class PipelineBuildHistoryDataClearJob @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation
+) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineBuildHistoryDataClearJob::class.java)
+        private const val LOCK_KEY = "pipelineBuildHistoryDataClear"
+        private const val PROJECT_DATA_BASE_NAME = "devops_project"
+        private const val PROCESS_DATA_BASE_NAME = "devops_process"
+        private const val REPOSITORY_DATA_BASE_NAME = "devops_repository"
+        private const val DISPATCH_DATA_BASE_NAME = "devops_dispatch"
+        private const val PLUGIN_DATA_BASE_NAME = "devops_plugin"
+        private const val QUALITY_DATA_BASE_NAME = "devops_quality"
+        private const val ARTIFACTORY_DATA_BASE_NAME = "devops_artifactory"
+        private const val PROJECT_TABLE_NAME = "t_project"
+        private const val PIPELINE_INFO_TABLE_NAME = "T_PIPELINE_INFO"
+        private const val PIPELINE_BUILD_HISTORY_TABLE_NAME = "T_PIPELINE_BUILD_HISTORY"
+        private const val PIPELINE_BUILD_DETAIL_TABLE_NAME = "T_PIPELINE_BUILD_DETAIL"
+        private const val PIPELINE_BUILD_TASK_TABLE_NAME = "T_PIPELINE_BUILD_TASK"
+        private const val PIPELINE_BUILD_VAR_TABLE_NAME = "T_PIPELINE_BUILD_VAR"
+        private const val PIPELINE_BUILD_CONTAINER_TABLE_NAME = "T_PIPELINE_BUILD_CONTAINER"
+        private const val PIPELINE_BUILD_STAGE_TABLE_NAME = "T_PIPELINE_BUILD_STAGE"
+        private const val REPORT_TABLE_NAME = "T_REPORT"
+        private const val REPOSITORY_COMMIT_TABLE_NAME = "T_REPOSITORY_COMMIT"
+        private const val DISPATCH_PIPELINE_BUILD_TABLE_NAME = "T_DISPATCH_PIPELINE_BUILD"
+        private const val DISPATCH_PIPELINE_DOCKER_BUILD_TABLE_NAME = "T_DISPATCH_PIPELINE_DOCKER_BUILD"
+        private const val DISPATCH_THIRDPARTY_AGENT_BUILD_TABLE_NAME = "T_DISPATCH_THIRDPARTY_AGENT_BUILD"
+        private const val PLUGIN_CODECC_TABLE_NAME = "T_PLUGIN_CODECC"
+        private const val PLUGIN_JINGANG_TABLE_NAME = "T_PLUGIN_JINGANG"
+        private const val PLUGIN_JINGANG_RESULT_TABLE_NAME = "T_PLUGIN_JINGANG_RESULT"
+        private const val QUALITY_HIS_DETAIL_METADATA_TABLE_NAME = "T_QUALITY_HIS_DETAIL_METADATA"
+        private const val QUALITY_HIS_ORIGIN_METADATA_TABLE_NAME = "T_QUALITY_HIS_ORIGIN_METADATA"
+        private const val ARTIFACETORY_INFO_TABLE_NAME = "T_TIPELINE_ARTIFACETORY_INFO"
+        private const val PIPELINE_BUILD_HISTORY_PAGE_SIZE = 100
+        private const val PIPELINE_BUILD_HISTORY_CLEAR_PROJECT_ID = "pipeline:build:history:clear:project:id"
+    }
+
+    @Scheduled(initialDelay = 10000, fixedDelay = 3000)
+    fun pipelineBuildHistoryDataClear() {
+        logger.info("pipelineBuildHistoryDataClear start")
+        val lock = RedisLock(redisOperation, LOCK_KEY, 80)
+        try {
+            if (!lock.tryLock()) {
+                logger.info("get lock failed, skip")
+                return
+            }
+            // 查询t_project表中的项目数据处理,每次最多处理5个项目
+            var handleProjectPrimaryId = redisOperation.get(PIPELINE_BUILD_HISTORY_CLEAR_PROJECT_ID)?.toLong()
+            if (handleProjectPrimaryId == null) {
+                handleProjectPrimaryId =
+                    dslContext.select(DSL.field("min(id)")).from("$PROJECT_DATA_BASE_NAME.$PROJECT_TABLE_NAME")
+                        .fetchOne(0, Long::class.java) ?: 0L
+            } else {
+                val maxProjectPrimaryId =
+                    dslContext.select(DSL.field("max(id)")).from("$PROJECT_DATA_BASE_NAME.$PROJECT_TABLE_NAME")
+                        .fetchOne(0, Long::class.java)
+                if (handleProjectPrimaryId >= maxProjectPrimaryId) {
+                    // 已经清理完全部项目的流水线的过期构建记录，再重新开始清理
+                    redisOperation.delete(PIPELINE_BUILD_HISTORY_CLEAR_PROJECT_ID)
+                    logger.info("pipelineBuildHistoryDataClear reStart")
+                    return
+                }
+            }
+            val projectInfoRecords =
+                dslContext.select().from("$PROJECT_DATA_BASE_NAME.$PROJECT_TABLE_NAME")
+                    .where("id >=$handleProjectPrimaryId and id<=${handleProjectPrimaryId + 4}").fetch()
+            // 根据项目依次查询T_PIPELINE_INFO表中的流水线数据处理
+            var maxHandleProjectPrimaryId = handleProjectPrimaryId ?: 0L
+            projectInfoRecords.forEach { projectInfo ->
+                val projectPrimaryId = projectInfo["id"] as Long
+                if (projectPrimaryId > maxHandleProjectPrimaryId) {
+                    maxHandleProjectPrimaryId = projectPrimaryId
+                }
+                val projectId = projectInfo["english_name"] as String
+                val pipelineInfoRecords =
+                    dslContext.select().from("$PROCESS_DATA_BASE_NAME.$PIPELINE_INFO_TABLE_NAME")
+                        .where("PROJECT_ID='$projectId'").fetch()
+                pipelineInfoRecords.forEach { pipelineInfo ->
+                    // 根据流水线ID依次查询T_PIPELINE_BUILD_HISTORY表中二个月前的构建记录
+                    val pipelineId = pipelineInfo["PIPELINE_ID"] as String
+                    val currentDate = DateTimeUtil.formatDate(Date())
+                    val pastConditionSql =
+                        "PIPELINE_ID='$pipelineId'  AND START_TIME < SUBDATE('$currentDate', INTERVAL 2 MONTH)"
+                    logger.info("pipelineBuildHistoryPastDataClear start..............")
+                    cleanBuildHistoryData(pipelineId, pastConditionSql, projectId)
+                    // 判断最近二个月的构建记录是否超过系统展示的最大数量，如果超过则需清理超过的数据
+                    val maxPipelineBuildNum = dslContext.select(DSL.field("MAX(BUILD_NUM)"))
+                        .from("$PROCESS_DATA_BASE_NAME.$PIPELINE_BUILD_HISTORY_TABLE_NAME")
+                        .where("PROJECT_ID='$projectId' AND PIPELINE_ID='$pipelineId'")
+                        .fetchOne(0, Long::class.java)
+                    if (maxPipelineBuildNum > 10000) {
+                        val recentConditionSql =
+                            "PIPELINE_ID='$pipelineId' AND START_TIME >= SUBDATE('$currentDate', INTERVAL 2 MONTH) AND BUILD_NUM < ${maxPipelineBuildNum - 10000}"
+                        logger.info("pipelineBuildHistoryRecentDataClear start.............")
+                        cleanBuildHistoryData(pipelineId, recentConditionSql, projectId)
+                    }
+                }
+            }
+            // 将当前已处理完的最大项目Id存入redis
+            redisOperation.set(
+                key = PIPELINE_BUILD_HISTORY_CLEAR_PROJECT_ID,
+                value = maxHandleProjectPrimaryId.toString(),
+                expired = false
+            )
+        } catch (t: Throwable) {
+            logger.warn("pipelineBuildHistoryDataClear failed", t)
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    private fun cleanBuildHistoryData(
+        pipelineId: String,
+        conditionSql: String,
+        projectId: String
+    ) {
+        val totalBuildCount =
+            dslContext.selectCount().from("$PROCESS_DATA_BASE_NAME.$PIPELINE_BUILD_HISTORY_TABLE_NAME")
+                .where(conditionSql)
+                .fetchOne(0, Long::class.java)
+        logger.info("pipelineBuildHistoryDataClear pipelineId:$pipelineId,totalBuildCount:$totalBuildCount")
+        var totalHandleNum = 0
+        while (totalHandleNum < totalBuildCount) {
+            logger.info("pipelineBuildHistoryDataClear pipelineId:$pipelineId,totalBuildCount:$totalBuildCount,totalHandleNum:$totalHandleNum")
+            val pipelineHistoryBuildIds =
+                dslContext.select(DSL.field("BUILD_ID"))
+                    .from("$PROCESS_DATA_BASE_NAME.$PIPELINE_BUILD_HISTORY_TABLE_NAME")
+                    .where(conditionSql).limit(PIPELINE_BUILD_HISTORY_PAGE_SIZE).fetch()
+            pipelineHistoryBuildIds.forEach {
+                val buildId = it.value1().toString()
+                // 依次删除process表中的相关构建记录(T_PIPELINE_BUILD_HISTORY做为基准表，为了保证构建流水记录删干净，T_PIPELINE_BUILD_HISTORY记录要最后删)
+                val batchSqlList = listOf(
+                    dslContext.query("DELETE FROM $PROCESS_DATA_BASE_NAME.$PIPELINE_BUILD_DETAIL_TABLE_NAME WHERE BUILD_ID='$buildId'"),
+                    dslContext.query("DELETE FROM $PROCESS_DATA_BASE_NAME.$PIPELINE_BUILD_TASK_TABLE_NAME WHERE BUILD_ID='$buildId'"),
+                    dslContext.query("DELETE FROM $PROCESS_DATA_BASE_NAME.$PIPELINE_BUILD_VAR_TABLE_NAME WHERE BUILD_ID='$buildId'"),
+                    dslContext.query("DELETE FROM $PROCESS_DATA_BASE_NAME.$PIPELINE_BUILD_CONTAINER_TABLE_NAME WHERE BUILD_ID='$buildId'"),
+                    dslContext.query("DELETE FROM $PROCESS_DATA_BASE_NAME.$PIPELINE_BUILD_STAGE_TABLE_NAME WHERE BUILD_ID='$buildId'"),
+                    dslContext.query("DELETE FROM $PROCESS_DATA_BASE_NAME.$REPORT_TABLE_NAME WHERE PROJECT_ID='$projectId' AND PIPELINE_ID='$pipelineId' AND BUILD_ID='$buildId'"),
+                    dslContext.query("DELETE FROM $REPOSITORY_DATA_BASE_NAME.$REPOSITORY_COMMIT_TABLE_NAME WHERE BUILD_ID='$buildId'"),
+                    dslContext.query("DELETE FROM $DISPATCH_DATA_BASE_NAME.$DISPATCH_PIPELINE_BUILD_TABLE_NAME WHERE BUILD_ID='$buildId'"),
+                    dslContext.query("DELETE FROM $DISPATCH_DATA_BASE_NAME.$DISPATCH_PIPELINE_DOCKER_BUILD_TABLE_NAME WHERE BUILD_ID='$buildId'"),
+                    dslContext.query("DELETE FROM $DISPATCH_DATA_BASE_NAME.$DISPATCH_THIRDPARTY_AGENT_BUILD_TABLE_NAME WHERE BUILD_ID='$buildId'"),
+                    dslContext.query("DELETE FROM $PLUGIN_DATA_BASE_NAME.$PLUGIN_CODECC_TABLE_NAME WHERE BUILD_ID='$buildId'"),
+                    dslContext.query("DELETE FROM $PLUGIN_DATA_BASE_NAME.$PLUGIN_JINGANG_TABLE_NAME WHERE BUILD_ID='$buildId'"),
+                    dslContext.query("DELETE FROM $PLUGIN_DATA_BASE_NAME.$PLUGIN_JINGANG_RESULT_TABLE_NAME WHERE BUILD_ID='$buildId'"),
+                    dslContext.query("DELETE FROM $QUALITY_DATA_BASE_NAME.$QUALITY_HIS_DETAIL_METADATA_TABLE_NAME WHERE BUILD_ID='$buildId'"),
+                    dslContext.query("DELETE FROM $QUALITY_DATA_BASE_NAME.$QUALITY_HIS_ORIGIN_METADATA_TABLE_NAME WHERE BUILD_ID='$buildId'"),
+                    dslContext.query("DELETE FROM $ARTIFACTORY_DATA_BASE_NAME.$ARTIFACETORY_INFO_TABLE_NAME WHERE BUILD_ID='$buildId'"),
+                    dslContext.query("DELETE FROM $PROCESS_DATA_BASE_NAME.$PIPELINE_BUILD_HISTORY_TABLE_NAME WHERE BUILD_ID='$buildId'")
+                )
+                dslContext.batch(batchSqlList).execute()
+            }
+            totalHandleNum += pipelineHistoryBuildIds.size
+        }
+    }
+}
