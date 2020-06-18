@@ -55,14 +55,14 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_PIPELINE_V3"], description = "OPENAPI-流水线资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwPipelineResourceV3 {
 
     @ApiOperation("新建流水线编排")
     @POST
-    @Path("/projects/{projectId}/pipelines")
+    @Path("")
     fun create(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -82,7 +82,7 @@ interface ApigwPipelineResourceV3 {
 
     @ApiOperation("编辑流水线编排")
     @PUT
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/")
+    @Path("/{pipelineId}/")
     fun edit(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -105,7 +105,7 @@ interface ApigwPipelineResourceV3 {
 
     @ApiOperation("获取流水线编排")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/")
+    @Path("/{pipelineId}/")
     fun get(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -126,7 +126,7 @@ interface ApigwPipelineResourceV3 {
 
     @ApiOperation("删除流水线编排")
     @DELETE
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/")
+    @Path("/{pipelineId}/")
     fun delete(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -147,7 +147,7 @@ interface ApigwPipelineResourceV3 {
 
     @ApiOperation("获取项目的流水线列表")
     @GET
-    @Path("/projects/{projectId}/pipelines")
+    @Path("")
     fun getListByUser(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -171,7 +171,7 @@ interface ApigwPipelineResourceV3 {
 
     @ApiOperation("获取流水线状态")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/status")
+    @Path("/{pipelineId}/status")
     fun status(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -190,29 +190,9 @@ interface ApigwPipelineResourceV3 {
         pipelineId: String
     ): Result<Pipeline?>
 
-    @ApiOperation("安装插件到项目")
-    @POST
-    @Path("/atom/install")
-    fun installAtom(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("渠道类型", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode? = ChannelCode.BS,
-        @ApiParam("安装插件到项目请求报文体", required = true)
-        installAtomReq: InstallAtomReq
-    ): Result<Boolean>
-
     @ApiOperation("流水线重命名")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/rename")
+    @Path("/{pipelineId}/rename")
     fun rename(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -235,7 +215,7 @@ interface ApigwPipelineResourceV3 {
 
     @ApiOperation("还原流水线编排")
     @PUT
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/restore")
+    @Path("/{pipelineId}/restore")
     fun restore(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
