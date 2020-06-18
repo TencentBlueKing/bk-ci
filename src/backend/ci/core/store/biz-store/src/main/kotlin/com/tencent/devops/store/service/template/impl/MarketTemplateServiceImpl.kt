@@ -40,7 +40,6 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
-import com.tencent.devops.process.api.service.ServicePipelineTemplateResource
 import com.tencent.devops.process.api.template.ServiceTemplateResource
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.project.api.service.ServiceProjectResource
