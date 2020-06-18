@@ -1198,6 +1198,7 @@ class TemplateService @Autowired constructor(
                             instanceFromTemplate = true
                         )
                     instanceModel.templateId = templateId
+                    instanceModel.srcTemplateVersion = version
                     val pipelineId = pipelineService.createPipeline(
                         userId = userId,
                         projectId = projectId,
