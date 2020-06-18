@@ -26,15 +26,18 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
+import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
@@ -113,7 +116,7 @@ class StageControl @Autowired constructor(
                     pipelineStageService.updateStageStatus(buildId, s.stageId, buildStatus)
                 }
                 allContainers.forEach { c ->
-                    if (BuildStatus.isRunning(c.status))
+                    if (BuildStatus.isRunning(c.status)) {
                         pipelineRuntimeService.updateContainerStatus(
                             buildId = buildId,
                             stageId = c.stageId,
@@ -121,12 +124,13 @@ class StageControl @Autowired constructor(
                             endTime = LocalDateTime.now(),
                             buildStatus = buildStatus
                         )
+                    }
                 }
 
                 // 如果是因fastKill强制终止，流水线状态标记为失败
                 if (fastKill) buildStatus = BuildStatus.FAILED
 
-                // 如果是因审核超时终止构建，流水线状态
+                // 如果是因审核超时终止构建，流水线状态保持
                 pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
                 return sendTerminateEvent(javaClass.simpleName, buildStatus)
             }
@@ -139,17 +143,31 @@ class StageControl @Autowired constructor(
                     // 执行条件不满足或未启用该Stage
                     logger.info("[$buildId]|[${buildInfo.status}]|STAGE_SKIP|stage=$stageId|action=$actionType")
 
-                    pipelineStageService.updateStageStatus(buildId, stageId, BuildStatus.SKIP)
-                    pipelineBuildDetailService.stageSkip(buildId, stageId)
-
+                    pipelineStageService.skipStage(buildId, stageId)
                     actionType = ActionType.SKIP
                 } else if (needPause) {
                     // 进入暂停状态等待手动触发
                     logger.info("[$buildId]|[${buildInfo.status}]|STAGE_PAUSE|stage=$stageId|action=$actionType")
 
-                    pipelineStageService.updateStageStatus(buildId, stageId, BuildStatus.PAUSE)
-                    pipelineBuildDetailService.stagePause(pipelineId, buildId, stageId)
-
+                    val triggerUsers = stage.controlOption?.stageControlOption?.triggerUsers?.joinToString(",") ?: ""
+                    val option = stage.controlOption!!
+                    pipelineStageService.pauseStage(
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        stageId = stageId,
+                        controlOption = PipelineBuildStageControlOption(
+                            stageControlOption = StageControlOption(
+                                enable = option.stageControlOption.enable,
+                                runCondition = option.stageControlOption.runCondition,
+                                manualTrigger = option.stageControlOption.manualTrigger,
+                                triggerUsers = EnvUtils.parseEnv(triggerUsers, variables).split(",").toList(),
+                                timeout = option.stageControlOption.timeout,
+                                customVariables = option.stageControlOption.customVariables,
+                                customCondition = option.stageControlOption.customCondition
+                            ),
+                            fastKill = option.fastKill
+                        )
+                    )
                     return
                 }
             }
