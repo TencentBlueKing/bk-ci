@@ -192,7 +192,6 @@ object QualityUtils {
                 instanceFromTemplate = instanceFromTemplate,
                 pipelineCreator = pipelineCreator,
                 srcTemplateId = null,
-                srcTemplateVersion = null,
                 templateId = templateId
             )
         }
