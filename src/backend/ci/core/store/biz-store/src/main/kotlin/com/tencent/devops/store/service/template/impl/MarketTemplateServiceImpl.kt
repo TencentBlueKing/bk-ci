@@ -213,7 +213,13 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 val statistic = templateStatisticData?.get(code)
                 val members = memberData?.get(code)
                 val publicFlag = it["PUBLIC_FLAG"] as Boolean
-                val canInstall = generateInstallFlag(publicFlag, members, userId, visibleList, userDeptList)
+                val canInstall = generateInstallFlag(
+                    defaultFlag = publicFlag,
+                    members = members,
+                    userId = userId,
+                    visibleList = visibleList,
+                    userDeptList = userDeptList
+                )
                 val installed = installedTemplateCodes?.contains(code)
                 val classifyId = it["CLASSIFY_ID"] as String
                 val marketItem = MarketItem(
