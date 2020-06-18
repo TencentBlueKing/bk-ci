@@ -37,8 +37,6 @@ import org.springframework.util.FileCopyUtils
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @Service
 class ArtifactoryReportService @Autowired constructor(
@@ -56,7 +54,7 @@ class ArtifactoryReportService @Autowired constructor(
 
         val fileContent = jFrogService.get(realPath)
         val response = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).response!!
-        response.contentType =  MimeUtil.mediaType(path)
+        response.contentType = MimeUtil.mediaType(path)
         FileCopyUtils.copy(fileContent.first.inputStream(), response.outputStream)
     }
 
