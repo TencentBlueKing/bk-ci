@@ -40,8 +40,7 @@ import com.tencent.bk.codecc.defect.model.TransferAuthorEntity;
 import com.tencent.bk.codecc.defect.service.AbstractUploadDefectBizService;
 import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
 import com.tencent.bk.codecc.defect.vo.UploadDefectVO;
-import com.tencent.bk.codecc.task.vo.TaskBaseVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.util.JsonUtil;
 import org.apache.commons.collections.CollectionUtils;
@@ -110,7 +109,7 @@ public class LintUploadDefectBizServiceImpl extends AbstractUploadDefectBizServi
     }
 
     @Override
-    public Result processBiz(UploadDefectVO uploadDefectVO)
+    public CodeCCResult processBiz(UploadDefectVO uploadDefectVO)
     {
         String defectListJson = decompressDefects(uploadDefectVO.getDefectsCompress());
         List<LintDefectEntity> defectList = JsonUtil.INSTANCE.to(defectListJson, new TypeReference<List<LintDefectEntity>>()
@@ -123,7 +122,7 @@ public class LintUploadDefectBizServiceImpl extends AbstractUploadDefectBizServi
         if (CollectionUtils.isEmpty(defectList))
         {
             logger.error("File does not contain valid checker!");
-            return new Result(CommonMessageCode.SUCCESS, "File does not contain valid checker!");
+            return new CodeCCResult(CommonMessageCode.SUCCESS, "File does not contain valid checker!");
         }
 
         // 调用task模块的接口获取任务信息
@@ -144,7 +143,7 @@ public class LintUploadDefectBizServiceImpl extends AbstractUploadDefectBizServi
             procExistFile(fileEntity, uploadDefectVO, defectList);
         }
 
-        return new Result(CommonMessageCode.SUCCESS, "upload defect ok");
+        return new CodeCCResult(CommonMessageCode.SUCCESS, "upload defect ok");
     }
 
     /**

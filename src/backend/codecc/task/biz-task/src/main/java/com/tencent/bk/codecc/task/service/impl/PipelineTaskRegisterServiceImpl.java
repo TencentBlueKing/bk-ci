@@ -46,7 +46,7 @@ import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigParamJsonVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.exception.StreamException;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.auth.api.external.BkAuthExRegisterApi;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
@@ -565,7 +565,7 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
         ToolConfigInfoVO toolConfigInfoVO = new ToolConfigInfoVO();
         toolConfigInfoVO.setToolName(ComConstants.Tool.ESLINT.name());
         toolConfigInfoVO.setParamJson(paramJson);
-        Result<List<CheckerDetailVO>> allEslintChecker = client.get(ServiceCheckerRestResource.class).queryAllChecker(toolConfigInfoVO);
+        CodeCCResult<List<CheckerDetailVO>> allEslintChecker = client.get(ServiceCheckerRestResource.class).queryAllChecker(toolConfigInfoVO);
         if (allEslintChecker.isNotOk() || CollectionUtils.isEmpty(allEslintChecker.getData()))
         {
             logger.error("query all eslint checker fail!");
@@ -584,7 +584,7 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
         ToolConfigInfoVO oldToolCofigInfoVO = new ToolConfigInfoVO();
         oldToolCofigInfoVO.setToolName(ComConstants.Tool.ESLINT.name());
         oldToolCofigInfoVO.setParamJson(oldParamJson);
-        Result<List<CheckerDetailVO>> oldEslintChecker = client.get(ServiceCheckerRestResource.class).queryAllChecker(oldToolCofigInfoVO);
+        CodeCCResult<List<CheckerDetailVO>> oldEslintChecker = client.get(ServiceCheckerRestResource.class).queryAllChecker(oldToolCofigInfoVO);
         if (oldEslintChecker.isNotOk() || CollectionUtils.isEmpty(oldEslintChecker.getData()))
         {
             logger.error("query all eslint checker fail!");
@@ -600,7 +600,7 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
 
         defaultCloseKeys.removeAll(oldDefaultCloseKeys);
 
-        Result<Boolean> ignoreCheckerResult = client.get(ServiceCheckerRestResource.class).mergeIgnoreChecker(taskId, toolName, defaultCloseKeys);
+        CodeCCResult<Boolean> ignoreCheckerResult = client.get(ServiceCheckerRestResource.class).mergeIgnoreChecker(taskId, toolName, defaultCloseKeys);
         if (ignoreCheckerResult.isNotOk() || null == ignoreCheckerResult.getData() || !ignoreCheckerResult.getData())
         {
             logger.error("no ignore checker found!");

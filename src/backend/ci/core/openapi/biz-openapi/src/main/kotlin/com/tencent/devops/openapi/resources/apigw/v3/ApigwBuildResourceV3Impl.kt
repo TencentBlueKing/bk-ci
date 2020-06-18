@@ -104,7 +104,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        values: Map<String, String>
+        values: Map<String, String>,
+        buildNo: Int?
     ): Result<BuildId> {
         logger.info("Start the pipeline($pipelineId) of project($projectId) with param($values) by user($userId)")
         return client.get(ServiceBuildResource::class).manualStartup(
@@ -112,6 +113,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             values = values,
+            buildNo = buildNo,
             channelCode = ChannelCode.BS
         )
     }
