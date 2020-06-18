@@ -170,7 +170,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     val maxKeepNum = miscBuildDataClearConfig.maxKeepNum.toInt()
                     if (maxPipelineBuildNum > maxKeepNum) {
                         val recentConditionSql =
-                            "PIPELINE_ID='$pipelineId' AND START_TIME >= SUBDATE('$currentDate', INTERVAL $monthRange MONTH) AND BUILD_NUM < ${maxPipelineBuildNum - maxKeepNum}"
+                            "PIPELINE_ID='$pipelineId' AND BUILD_NUM < ${maxPipelineBuildNum - maxKeepNum}"
                         logger.info("pipelineBuildHistoryRecentDataClear start.............")
                         cleanBuildHistoryData(pipelineId, recentConditionSql, projectId)
                     }
