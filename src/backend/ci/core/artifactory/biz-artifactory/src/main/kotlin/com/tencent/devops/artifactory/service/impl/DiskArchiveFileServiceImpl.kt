@@ -82,7 +82,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
             return
         }
         val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
-        response.contentType =  MimeUtil.mediaType(filePath)
+        response.contentType = MimeUtil.mediaType(filePath)
         FileCopyUtils.copy(FileInputStream(file), response.outputStream)
     }
 
@@ -126,7 +126,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
         fileChannelType: FileChannelTypeEnum
     ): Result<GetFileDownloadUrlsResponse?> {
         logger.info("[$buildId]|getFileDownloadUrls|fileChannelType=$fileChannelType|userId=$userId|projectId=$projectId|pipelineId=$pipelineId" +
-        "|artifactoryType=$artifactoryType|customFilePath=$customFilePath")
+            "|artifactoryType=$artifactoryType|customFilePath=$customFilePath")
         val fileType = if (artifactoryType == ArtifactoryType.PIPELINE) FileTypeEnum.BK_ARCHIVE else FileTypeEnum.BK_CUSTOM
         val result = generateDestPath(
             fileType = fileType,
