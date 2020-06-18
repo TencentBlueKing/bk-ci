@@ -51,7 +51,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_ATOM_V3"], description = "OPENAPI-插件资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/atoms/")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/atoms")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwAtomResourceV3 {
