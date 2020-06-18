@@ -45,7 +45,7 @@ class OperationExceptionMapper : ExceptionMapper<OperationException> {
     }
 
     override fun toResponse(exception: OperationException): Response {
-        logger.error("Failed with operation exception", exception)
+        logger.warn("Failed with operation exception", exception)
         return Response.status(OperationException.statusCode).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(Result<Void>(OperationException.statusCode, exception.message)).build()
     }

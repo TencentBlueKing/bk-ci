@@ -33,6 +33,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
+import com.tencent.devops.process.plugin.trigger.util.CronExpressionUtils
 import org.quartz.CronExpression
 import org.slf4j.LoggerFactory
 
@@ -73,6 +74,13 @@ class TimerTriggerElementBizPlugin constructor(
                     throw ErrorCodeException(
                         defaultMessage = "定时触发器的定时参数[$cron]不合法",
                         errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB,
+                        params = arrayOf(cron)
+                    )
+                }
+                if (!CronExpressionUtils.isValidTimeInterval(cron)) {
+                    throw ErrorCodeException(
+                        defaultMessage = "定时触发器的定时参数[$cron]不能秒级触发",
+                        errorCode = ProcessMessageCode.ILLEGAL_TIMER_INTERVAL_CRONTAB,
                         params = arrayOf(cron)
                     )
                 }

@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.defect.api;
 
 import com.tencent.bk.codecc.defect.vo.common.CommonDataReportRspVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -53,7 +53,7 @@ public interface UserReportRestResource
     @ApiOperation("数据报表")
     @Path("/toolName/{toolName}")
     @GET
-    Result<CommonDataReportRspVO> dataReport(
+    CodeCCResult<CommonDataReportRspVO> dataReport(
             @ApiParam("任务Id")
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,

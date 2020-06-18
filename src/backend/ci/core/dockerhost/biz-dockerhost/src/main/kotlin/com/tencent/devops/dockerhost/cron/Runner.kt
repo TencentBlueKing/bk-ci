@@ -46,8 +46,8 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
     fun clearDockerRunTimeoutContainers() {
         try {
             dockerHostBuildService.clearDockerRunTimeoutContainers()
-        } catch (e: Exception) {
-            logger.error("clear dockerRun timeout containers unknown exception", e)
+        } catch (t: Throwable) {
+            logger.error("clear dockerRun timeout containers unknown exception", t)
         }
     }
 
@@ -62,8 +62,8 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
     fun refreshDockerIpStatus() {
         try {
             dockerHostBuildService.refreshDockerIpStatus()
-        } catch (e: Exception) {
-            logger.error("refresh docker status error.", e)
+        } catch (t: Throwable) {
+            logger.error("refresh docker status error.", t)
         }
     }
 }

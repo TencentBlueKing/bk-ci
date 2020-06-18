@@ -27,7 +27,7 @@
 package com.tencent.devops.common.web.handler
 
 import com.tencent.devops.common.api.exception.UnauthorizedException
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.CodeCCResult
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.slf4j.LoggerFactory
@@ -53,6 +53,6 @@ class UnauthorizedExceptionMapper : ExceptionMapper<UnauthorizedException> {
         } else {
             "未授权访问的资源"
         }
-        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE).entity(Result<Void>(status.statusCode, message)).build()
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE).entity(CodeCCResult<Void>(status.statusCode, message)).build()
     }
 }

@@ -548,8 +548,8 @@
                     ]
                 },
                 customRuleId: {
-                    getMessage: field => '开头必须是英文字母，中间可以包含英文，数字',
-                    validate: value => /^[a-zA-Z]([a-z|A-Z|0-9]+)*$/.test(value)
+                    getMessage: field => '开头必须是英文字母，中间可以包含英文，数字，中划线',
+                    validate: value => /^[a-zA-Z]([a-z|A-Z|0-9|-]+)*$/.test(value)
                 }
             }
         },
