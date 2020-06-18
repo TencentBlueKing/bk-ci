@@ -26,7 +26,7 @@
 
 package com.tencent.devops.common.service;
 
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 
 /**
  * 处理器接口
@@ -42,5 +42,5 @@ public interface IBizService<T>
      * @param arg
      * @return
      */
-    Result processBiz(T arg);
+    CodeCCResult processBiz(T arg);
 }

@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.task.api;
 
 import com.tencent.bk.codecc.task.vo.*;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -54,7 +54,7 @@ public interface UserTaskRestResource
     @ApiOperation("获取任务清单")
     @Path("/")
     @GET
-    Result<TaskListVO> getTaskList(
+    CodeCCResult<TaskListVO> getTaskList(
             @ApiParam(value = "项目ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
                     String projectId,
@@ -66,7 +66,7 @@ public interface UserTaskRestResource
     @ApiOperation("获取任务基本信息清单")
     @Path("/base")
     @GET
-    Result<TaskListVO> getTaskBaseList(
+    CodeCCResult<TaskListVO> getTaskBaseList(
             @ApiParam(value = "项目ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
                     String projectId,
@@ -78,13 +78,13 @@ public interface UserTaskRestResource
     @ApiOperation("获取任务信息")
     @Path("/taskInfo")
     @GET
-    Result<TaskBaseVO> getTaskInfo();
+    CodeCCResult<TaskBaseVO> getTaskInfo();
 
 
     @ApiOperation("获取任务信息")
     @Path("/taskId/{taskId}")
     @GET
-    Result<TaskDetailVO> getTask(
+    CodeCCResult<TaskDetailVO> getTask(
             @ApiParam(value = "任务ID", required = true)
             @PathParam(value = "taskId")
                     Long taskId
@@ -93,7 +93,7 @@ public interface UserTaskRestResource
     @ApiOperation("获取任务信息概览")
     @Path("/overview/{taskId}")
     @GET
-    Result<TaskOverviewVO> getTaskOverview(
+    CodeCCResult<TaskOverviewVO> getTaskOverview(
             @ApiParam(value = "任务ID", required = true)
             @PathParam(value = "taskId")
                     Long taskId);
@@ -101,7 +101,7 @@ public interface UserTaskRestResource
     @ApiOperation("从持续集成平台注册新任务")
     @Path("/")
     @POST
-    Result<TaskIdVO> registerDevopsTask(
+    CodeCCResult<TaskIdVO> registerDevopsTask(
             @ApiParam(value = "任务信息", required = true)
             @Valid
                     TaskDetailVO taskDetailVO,
@@ -116,7 +116,7 @@ public interface UserTaskRestResource
     @ApiOperation("校验任务英文名是否重复")
     @Path("/duplicate/streamName/{nameEn}")
     @GET
-    Result<Boolean> checkDuplicateStream(
+    CodeCCResult<Boolean> checkDuplicateStream(
             @ApiParam(value = "任务英文名", required = true)
             @PathParam("nameEn")
                     String streamName);
@@ -125,7 +125,7 @@ public interface UserTaskRestResource
     @ApiOperation("修改定时任务信息")
     @Path("/timing")
     @PUT
-    Result<Boolean> modifyTimeAnalysisTask(
+    CodeCCResult<Boolean> modifyTimeAnalysisTask(
             @ApiParam(value = "定时分析信息", required = true)
                     TimeAnalysisReqVO timeAnalysisReqVO,
             @ApiParam(value = "任务id", required = true)
@@ -139,7 +139,7 @@ public interface UserTaskRestResource
     @ApiOperation("修改任务")
     @Path("/")
     @PUT
-    Result<Boolean> updateTask(
+    CodeCCResult<Boolean> updateTask(
             //@Valid
             @ApiParam(value = "任务更新信息", required = true)
                     TaskUpdateVO taskUpdateVO,
@@ -158,7 +158,7 @@ public interface UserTaskRestResource
     @ApiOperation("添加路径屏蔽")
     @Path("/filter/path")
     @POST
-    Result<Boolean> addFilterPath(
+    CodeCCResult<Boolean> addFilterPath(
             @ApiParam(value = "任务信息", required = true)
             @Valid
                     FilterPathInputVO filterPathInput,
@@ -171,7 +171,7 @@ public interface UserTaskRestResource
     @ApiOperation("删除路径屏蔽")
     @Path("/filter/path")
     @DELETE
-    Result<Boolean> deleteFilterPath(
+    CodeCCResult<Boolean> deleteFilterPath(
             @ApiParam(value = "删除路径", required = true)
             @QueryParam("path")
                     String path,
@@ -190,7 +190,7 @@ public interface UserTaskRestResource
     @ApiOperation("路径屏蔽列表")
     @Path("/filter/path/{taskId}")
     @GET
-    Result<FilterPathOutVO> filterPath(
+    CodeCCResult<FilterPathOutVO> filterPath(
             @ApiParam(value = "任务ID", required = true)
             @PathParam("taskId")
                     Long taskId
@@ -200,7 +200,7 @@ public interface UserTaskRestResource
     @ApiOperation("路径屏蔽树")
     @Path("/filter/path/tree")
     @GET
-    Result<TreeNodeTaskVO> filterPathTree(
+    CodeCCResult<TreeNodeTaskVO> filterPathTree(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId
@@ -210,7 +210,7 @@ public interface UserTaskRestResource
     @ApiOperation("启用任务")
     @Path("/start")
     @PUT
-    Result<Boolean> startTask(
+    CodeCCResult<Boolean> startTask(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
@@ -223,7 +223,7 @@ public interface UserTaskRestResource
     @ApiOperation("获得任务状态")
     @Path("/status")
     @GET
-    Result<TaskStatusVO> getTaskStatus(
+    CodeCCResult<TaskStatusVO> getTaskStatus(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
             Long taskId);
@@ -232,7 +232,7 @@ public interface UserTaskRestResource
     @ApiOperation("停用任务")
     @Path("/stop")
     @PUT
-    Result<Boolean> stopTask(
+    CodeCCResult<Boolean> stopTask(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
@@ -247,7 +247,7 @@ public interface UserTaskRestResource
     @ApiOperation("获取代码库配置信息")
     @Path("/code/lib")
     @GET
-    Result<TaskCodeLibraryVO> getCodeLibrary(
+    CodeCCResult<TaskCodeLibraryVO> getCodeLibrary(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId
@@ -257,7 +257,7 @@ public interface UserTaskRestResource
     @ApiOperation("更新代码库配置信息")
     @Path("/code/lib")
     @PUT
-    Result<Boolean> updateCodeLibrary(
+    CodeCCResult<Boolean> updateCodeLibrary(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
@@ -273,7 +273,7 @@ public interface UserTaskRestResource
     @ApiOperation("触发立即分析")
     @Path("/execute")
     @POST
-    Result<Boolean> executeTask(
+    CodeCCResult<Boolean> executeTask(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
@@ -287,7 +287,7 @@ public interface UserTaskRestResource
     @ApiOperation("获取任务成员清单")
     @Path("/memberList")
     @GET
-    Result<TaskMemberVO> getTaskMemberAndAdmin(
+    CodeCCResult<TaskMemberVO> getTaskMemberAndAdmin(
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,

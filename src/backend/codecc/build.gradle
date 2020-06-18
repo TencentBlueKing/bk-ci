@@ -46,6 +46,7 @@ buildscript {
         commonsIOVersion = "2.5"
         xmlrpcVersion = "3.1.3"
         commonsHttpclientVersion = "3.1"
+        ci_version = "2.3.6"
     }
 
     repositories {
