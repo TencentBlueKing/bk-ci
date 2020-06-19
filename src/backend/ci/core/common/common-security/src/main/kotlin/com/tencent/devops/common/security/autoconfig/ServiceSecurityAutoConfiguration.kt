@@ -48,7 +48,6 @@ import org.springframework.scheduling.annotation.EnableScheduling
 // @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @EnableConfigurationProperties(ServiceSecurityProperties::class)
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-@DependsOn("environmentUtil")
 class ServiceSecurityAutoConfiguration {
     @Value("\${bkci.security.public-key:#{null}}")
     private val publicKey: String? = null
@@ -63,6 +62,7 @@ class ServiceSecurityAutoConfiguration {
     ) = EnvironmentUtil(environment)
 
     @Bean
+    @DependsOn("environmentUtil")
     fun jwtManager(
         serviceSecurityProperties: ServiceSecurityProperties
     ) = JwtManager(privateKey, publicKey, enable)

@@ -26,6 +26,7 @@
 package com.tencent.devops.common.security.jwt
 
 import com.google.common.cache.CacheBuilder
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.security.pojo.SecurityJwtInfo
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import io.jsonwebtoken.ExpiredJwtException
@@ -73,8 +74,8 @@ class JwtManager(
     private fun generateToken(): String? {
         // token 超时10min
         val expireAt = System.currentTimeMillis() + 1000 * 60 * 10
-//        val json = JsonUtil.toJson(securityJwtInfo)
-        token = Jwts.builder().setSubject("X-DEVOPS-JWT AUTH").setExpiration(Date(expireAt))
+        val json = if(securityJwtInfo == null) "X-DEVOPS-JWT AUTH" else JsonUtil.toJson(securityJwtInfo)
+        token = Jwts.builder().setSubject(json).setExpiration(Date(expireAt))
             .signWith(SignatureAlgorithm.RS512, privateKey).compact()
         return token
     }
