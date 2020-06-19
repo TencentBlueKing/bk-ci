@@ -133,7 +133,7 @@ interface ServiceProjectResource {
     ): Result<ProjectVO?>
 
     @POST
-    @Path("/")
+    @Path("/create")
     @ApiOperation("创建项目")
     fun create(
         @ApiParam("userId", required = true)
