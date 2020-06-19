@@ -165,23 +165,12 @@ class StageControl @Autowired constructor(
                     logger.info("[$buildId]|[${buildInfo.status}]|STAGE_PAUSE|stage=$stageId|action=$actionType")
 
                     val triggerUsers = stage.controlOption?.stageControlOption?.triggerUsers?.joinToString(",") ?: ""
-                    val option = stage.controlOption!!
+                    stage.controlOption!!.stageControlOption.triggerUsers = EnvUtils.parseEnv(triggerUsers, variables).split(",").toList()
                     pipelineStageService.pauseStage(
                         pipelineId = pipelineId,
                         buildId = buildId,
                         stageId = stageId,
-                        controlOption = PipelineBuildStageControlOption(
-                            stageControlOption = StageControlOption(
-                                enable = option.stageControlOption.enable,
-                                runCondition = option.stageControlOption.runCondition,
-                                manualTrigger = option.stageControlOption.manualTrigger,
-                                triggerUsers = EnvUtils.parseEnv(triggerUsers, variables).split(",").toList(),
-                                timeout = option.stageControlOption.timeout,
-                                customVariables = option.stageControlOption.customVariables,
-                                customCondition = option.stageControlOption.customCondition
-                            ),
-                            fastKill = option.fastKill
-                        )
+                        controlOption = stage.controlOption!!
                     )
                     return
                 }

@@ -111,7 +111,12 @@ class PipelineStageService @Autowired constructor(
             buildStatus = BuildStatus.PAUSE,
             controlOption = controlOption
         )
-        SpringContextUtil.getBean(PipelineBuildDetailService::class.java).stagePause(pipelineId, buildId, stageId)
+        SpringContextUtil.getBean(PipelineBuildDetailService::class.java).stagePause(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            controlOption = controlOption
+        )
     }
 
     fun startStage(
