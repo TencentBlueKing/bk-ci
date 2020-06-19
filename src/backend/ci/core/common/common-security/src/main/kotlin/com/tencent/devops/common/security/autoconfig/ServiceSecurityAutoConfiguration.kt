@@ -34,6 +34,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.DependsOn
 import org.springframework.core.Ordered
 import org.springframework.core.env.Environment
 import org.springframework.scheduling.annotation.EnableScheduling
@@ -47,6 +48,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 // @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @EnableConfigurationProperties(ServiceSecurityProperties::class)
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+@DependsOn("environmentUtil")
 class ServiceSecurityAutoConfiguration {
     @Value("\${bkci.security.public-key:#{null}}")
     private val publicKey: String? = null
