@@ -247,7 +247,7 @@ class StorePipelineServiceImpl : StorePipelineService {
                 "version" to storeInfo["version"],
                 "script" to StringEscapeUtils.escapeJava(storeInfo["script"] as String),
                 "repositoryHashId" to storeInfo["repositoryHashId"],
-                "repositoryPath" to storeInfo["repositoryPath"]
+                "repositoryPath" to (storeInfo["repositoryPath"] ?: "")
             )
             // 将流水线模型中的变量替换成具体的值
             var convertModel = if (checkGrayFlag) {
