@@ -113,7 +113,7 @@ interface ApigwProjectResourceV3 {
         @ApiParam("access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
-    ): com.tencent.devops.project.pojo.Result<ProjectVO>
+    ): com.tencent.devops.project.pojo.Result<ProjectVO?>
 
     @GET
     @Path("/")
