@@ -24,20 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.common.archive.util
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-redis")
-    compile "org.springframework.boot:spring-boot-starter-actuator"
-    compile "org.springframework.boot:spring-boot-starter-log4j2"
-    compile "org.springframework.cloud:spring-cloud-starter-consul-discovery"
-    compile "io.github.openfeign:feign-okhttp"
-    compile group: 'org.apache.skywalking', name: 'apm-toolkit-log4j-2.x', version: '6.6.0'
-    compile "org.jolokia:jolokia-core"
-    compile "javax.servlet:javax.servlet-api"
+import org.springframework.boot.context.embedded.MimeMappings
 
-    testCompile "org.springframework.boot:spring-boot-starter-test"
+object MimeUtil {
+    const val YAML_MIME_TYPE = "application/x-yaml"
+    const val TGZ_MIME_TYPE = "application/x-tar"
+    const val ICO_MIME_TYPE = "image/x-icon"
+    const val STREAM_MIME_TYPE = "application/octet-stream"
+
+    private val mimeMappings = MimeMappings(MimeMappings.DEFAULT).apply {
+        add("yaml", YAML_MIME_TYPE)
+        add("tgz", TGZ_MIME_TYPE)
+        add("ico", ICO_MIME_TYPE)
+    }
+
+    fun mediaType(fileName: String): String {
+        val ext = fileName.trim().substring(fileName.lastIndexOf(".") + 1)
+        return mimeMappings.get(ext) ?: STREAM_MIME_TYPE
+    }
 }
-
-

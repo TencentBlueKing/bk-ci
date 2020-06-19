@@ -21,7 +21,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 --- 获取Cookie中bk_token
 local bk_token, err = cookieUtil:get_cookie("bk_token")
 if not bk_token then
-  ngx.log(ngx.ERR, "failed to read user request bk_token: ", err)
+  ngx.log(ngx.STDERR, "failed to read user request bk_token: ", err)
   ngx.exit(401)
   return
 end
