@@ -42,7 +42,7 @@ import com.tencent.bk.codecc.task.api.ServiceToolRestResource;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.GlobalMessage;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.utils.GlobalMessageUtil;
@@ -342,7 +342,7 @@ public class LintConfigCheckerPkgBizServiceImpl implements IConfigCheckerPkgBizS
     private Map<String, List<CheckerDetailVO>> getToolCheckerPkg(Long taskId, String toolName)
     {
         Map<String, GlobalMessage> globalMessageMap = globalMessageUtil.getGlobalMessageMap(GLOBAL_CHECKER_DESC);
-        Result<ToolConfigInfoVO> toolConfigInfoVOResult = client.get(ServiceToolRestResource.class).getToolByTaskIdAndName(taskId, toolName);
+        CodeCCResult<ToolConfigInfoVO> toolConfigInfoVOResult = client.get(ServiceToolRestResource.class).getToolByTaskIdAndName(taskId, toolName);
         if(toolConfigInfoVOResult.isNotOk() || null == toolConfigInfoVOResult.getData())
         {
             logger.error("tool info is empty! task id: {}, tool name: {}", taskId, toolName);

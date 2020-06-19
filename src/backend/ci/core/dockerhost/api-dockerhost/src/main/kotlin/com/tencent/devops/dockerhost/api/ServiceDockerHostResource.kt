@@ -199,4 +199,13 @@ interface ServiceDockerHostResource {
     @GET
     @Path("/host/load")
     fun getDockerHostLoad(): Result<DockerHostLoad>
+
+    @ApiOperation("查询容器状态")
+    @GET
+    @Path("/container/{containerId}/status")
+    fun getContainerStatus(
+        @ApiParam("容器ID", required = true)
+        @PathParam("containerId")
+        containerId: String
+    ): Result<Boolean>
 }

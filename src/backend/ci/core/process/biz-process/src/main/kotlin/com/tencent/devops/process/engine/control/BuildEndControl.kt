@@ -46,12 +46,8 @@ import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.engine.service.PipelineBuildTaskService
-import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
-import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -133,10 +129,6 @@ class BuildEndControl @Autowired constructor(
             errorCode = buildInfo.errorCode,
             errorMsg = buildInfo.errorMsg
         )
-
-        if (BuildStatus.isFailure(status)) {
-            addFailElementVar(buildId, projectId, pipelineId)
-        }
 
         // 设置状态
         pipelineBuildDetailService.buildEnd(
@@ -249,46 +241,5 @@ class BuildEndControl @Autowired constructor(
                 actionType = ActionType.START
             )
         )
-    }
-
-    private fun addFailElementVar(buildId: String, projectId: String, pipelineId: String) {
-        val taskRecords = pipelineBuildTaskService.getAllBuildTask(buildId)
-        var errorElements = ""
-        var errorElementsName = ""
-        val model = pipelineBuildDetailService.getBuildModel(buildId)
-        taskRecords.forEach {
-            if (it.status == BuildStatus.FAILED || it.status == BuildStatus.QUEUE_TIMEOUT || it.status == BuildStatus.EXEC_TIMEOUT || it.status == BuildStatus.QUALITY_CHECK_FAIL) {
-                val errorElement = findElementMsg(model, it)
-                errorElements += errorElement.first
-                errorElementsName += errorElement.second
-            }
-        }
-        logger.info("pipeline build fail, add $BK_CI_BUILD_FAIL_TASKS, value[$errorElements]")
-        val valueMap = mutableMapOf<String, Any>()
-        valueMap[BK_CI_BUILD_FAIL_TASKS] = errorElements ?: ""
-        valueMap[BK_CI_BUILD_FAIL_TASKNAMES] = errorElementsName.substringBeforeLast(",") ?: ""
-        buildVariableService.batchSetVariable(
-            buildId = buildId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            variables = valueMap
-        )
-    }
-
-    private fun findElementMsg(model: Model?, taskRecord: PipelineBuildTaskInfo): Pair<String, String> {
-        var containerName = ""
-        model?.stages?.forEach { stage ->
-            if (stage.id == taskRecord.stageId) {
-                stage.containers.forEach nextContainer@{ container ->
-                    if (container.id == taskRecord.containerId) {
-                        containerName = container.name
-                        return@forEach
-                    }
-                }
-            }
-        }
-        val failTask = "[${taskRecord.stageId}][$containerName]${taskRecord.taskName} \n"
-        val failTaskName = "${taskRecord.taskName},"
-        return Pair(failTask, failTaskName)
     }
 }

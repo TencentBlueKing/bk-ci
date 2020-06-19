@@ -112,7 +112,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val file = files[0]
         if (!ArchiveUtils.isFileLegal(file.name)) throw ExecuteException("not allow to archive ${file.name} file")
         uploadAtom(file, destPath, buildVariables)
-        return ShaUtils.sha1(file.readBytes())
+        return file.inputStream().use { ShaUtils.sha1InputStream(it) }
     }
 
     override fun uploadAtom(file: File, destPath: String, buildVariables: BuildVariables) {

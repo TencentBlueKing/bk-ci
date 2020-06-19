@@ -89,33 +89,43 @@ class UserDockerHostResourceImpl @Autowired constructor(
 
         val dockerIp: String
         val poolNo: Int
-        if (dockerBuildHistoryList.size > 0) {
+        if (dockerBuildHistoryList.size > 0 && dockerBuildHistoryList[0].dockerIp.isNotEmpty()) {
             val dockerBuildHistory = dockerBuildHistoryList[0]
             // running状态且容器已创建，则复用
             if (dockerBuildHistory.status == PipelineTaskStatus.RUNNING.status &&
                 dockerBuildHistory.containerId.isNotEmpty()
             ) {
-                pipelineDockerDebugDao.insertDebug(
-                    dslContext = dslContext,
+                val containerStatusRunning = dockerHostDebugService.checkContainerStatus(
                     projectId = debugStartParam.projectId,
                     pipelineId = debugStartParam.pipelineId,
                     vmSeqId = debugStartParam.vmSeqId,
-                    poolNo = dockerBuildHistory.poolNo,
-                    status = PipelineTaskStatus.RUNNING,
-                    token = "",
-                    imageName = "",
-                    hostTag = dockerBuildHistory.dockerIp,
-                    containerId = dockerBuildHistory.containerId,
-                    buildEnv = "",
-                    registryUser = "",
-                    registryPwd = "",
-                    imageType = "",
-                    imagePublicFlag = false,
-                    imageRDType = null
+                    dockerIp = dockerBuildHistory.dockerIp,
+                    containerId = dockerBuildHistory.containerId
                 )
 
-                logger.info("${debugStartParam.pipelineId}|${debugStartParam.vmSeqId}| start debug. Container already running, ContainerInfo: ${dockerBuildHistory.containerId}")
-                return Result(true)
+                if (containerStatusRunning) {
+                    pipelineDockerDebugDao.insertDebug(
+                        dslContext = dslContext,
+                        projectId = debugStartParam.projectId,
+                        pipelineId = debugStartParam.pipelineId,
+                        vmSeqId = debugStartParam.vmSeqId,
+                        poolNo = dockerBuildHistory.poolNo,
+                        status = PipelineTaskStatus.RUNNING,
+                        token = "",
+                        imageName = "",
+                        hostTag = dockerBuildHistory.dockerIp,
+                        containerId = dockerBuildHistory.containerId,
+                        buildEnv = "",
+                        registryUser = "",
+                        registryPwd = "",
+                        imageType = "",
+                        imagePublicFlag = false,
+                        imageRDType = null
+                    )
+
+                    logger.info("${debugStartParam.pipelineId}|${debugStartParam.vmSeqId}| start debug. Container already running, ContainerInfo: ${dockerBuildHistory.containerId}")
+                    return Result(true)
+                }
             }
 
             dockerIp = dockerBuildHistory.dockerIp

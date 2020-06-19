@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.dao
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.util.JooqUtils
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -38,6 +39,7 @@ import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import org.jooq.DSLContext
+import org.jooq.DatePart
 import org.jooq.InsertOnDuplicateSetMoreStep
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -208,7 +210,13 @@ class PipelineBuildStageDao {
             // 根据状态来设置字段
             if (BuildStatus.isFinish(buildStatus) || buildStatus.name == BuildStatus.STAGE_SUCCESS.name) {
                 update.set(END_TIME, LocalDateTime.now())
-                update.set(COST, COST + END_TIME - START_TIME)
+                update.set(
+                    COST, COST + JooqUtils.timestampDiff(
+                        DatePart.SECOND,
+                        START_TIME.cast(java.sql.Timestamp::class.java),
+                        END_TIME.cast(java.sql.Timestamp::class.java)
+                    )
+                )
             } else if (BuildStatus.isRunning(buildStatus)) {
                 update.set(START_TIME, LocalDateTime.now())
             }
@@ -230,7 +238,14 @@ class PipelineBuildStageDao {
                 .set(STATUS, buildStatus.ordinal)
                 .set(START_TIME, startTime)
                 .set(END_TIME, endTime)
-                .set(COST, COST + END_TIME - START_TIME)
+                .set(
+                    COST,
+                    COST + JooqUtils.timestampDiff(
+                        DatePart.SECOND,
+                        START_TIME.cast(java.sql.Timestamp::class.java),
+                        END_TIME.cast(java.sql.Timestamp::class.java)
+                    )
+                )
                 .where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).execute()
         }
     }

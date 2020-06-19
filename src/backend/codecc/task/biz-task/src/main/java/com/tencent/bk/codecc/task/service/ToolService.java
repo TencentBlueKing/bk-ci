@@ -30,7 +30,7 @@ import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.vo.BatchRegisterVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigBaseVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 
 import java.util.List;
 
@@ -50,7 +50,7 @@ public interface ToolService
      * @param userName
      * @return
      */
-    Result<Boolean> registerTools(BatchRegisterVO batchRegisterVO, String userName);
+    CodeCCResult<Boolean> registerTools(BatchRegisterVO batchRegisterVO, String userName);
 
     /**
      * 注册工具

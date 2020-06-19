@@ -42,7 +42,7 @@ import com.tencent.bk.codecc.task.vo.TaskOverviewVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigBaseVO;
 import com.tencent.devops.common.api.BaseLastAnalysisResultVO;
 import com.tencent.devops.common.api.ToolLastAnalysisResultVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
@@ -88,7 +88,7 @@ public abstract class AbstractAnalyzeTaskBizService implements IBizService<Uploa
     private TaskLogService taskLogService;
 
     @Override
-    public Result processBiz(UploadTaskLogStepVO uploadTaskLogStepVO)
+    public CodeCCResult processBiz(UploadTaskLogStepVO uploadTaskLogStepVO)
     {
         if (uploadTaskLogStepVO.getStartTime() != ComConstants.COMMON_NUM_0L)
         {
@@ -166,7 +166,7 @@ public abstract class AbstractAnalyzeTaskBizService implements IBizService<Uploa
             sendWebSocketMsg(toolConfigBaseVO, uploadTaskLogStepVO, lastTaskLogEntity, taskId, toolName);
         }
 
-        return new Result(CommonMessageCode.SUCCESS, "upload taskLog ok");
+        return new CodeCCResult(CommonMessageCode.SUCCESS, "upload taskLog ok");
     }
 
 
