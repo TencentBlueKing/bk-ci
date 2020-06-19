@@ -3,9 +3,11 @@ package com.tencent.devops.common.web.filter
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.security.jwt.JwtManager
+import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.constant.SecurityErrorCode
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.DependsOn
 import javax.servlet.http.HttpServletRequest
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
@@ -16,6 +18,7 @@ import javax.ws.rs.ext.Provider
 @Provider
 @PreMatching
 @RequestFilter
+@DependsOn("environmentUtil")
 class ServiceSecurityFilter(
     private val jwtManager: JwtManager
 ) : ContainerRequestFilter {
@@ -51,7 +54,7 @@ class ServiceSecurityFilter(
     private fun shouldFilter(requestContext: ContainerRequestContext): Boolean {
         val uri = requestContext.uriInfo.requestUri.path
         logger.info("HttpServletRequest.requestURI=$uri")
-        if (!jwtManager.isEnable()) {
+        if (!jwtManager.isEnable() || !EnvironmentUtil.isProdProfileActive()) {
             return false
         }
 //        // dev环境需要支持swagger，请求无需认证
