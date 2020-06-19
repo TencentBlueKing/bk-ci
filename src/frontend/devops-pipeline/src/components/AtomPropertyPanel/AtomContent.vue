@@ -3,17 +3,19 @@
         <div class="atom-main-content" v-bkloading="{ isLoading: fetchingAtmoModal }">
             <div class="atom-type-selector bk-form-row bk-form bk-form-vertical">
                 <div :class="{ 'form-field': true, 'bk-form-inline-item': true, 'is-danger': errors.has('@type') }">
-                    <label :title="$t('atom')" class="bk-label">{{ $t('atom') }}：</label>
-                    <bk-popover placement="right" theme="light" class="form-field-icon atom-name-field" v-if="atom && (atom.summary || atom.docsLink)">
-                        <i class="bk-icon icon-info-circle"></i>
-                        <div slot="content" style="font-size: 12px; width: 350px; min-height: 100px;">
-                            <div class="atom-desc-content">
-                                <p v-if="atom.summary">{{ $t('desc') }}：{{ atom.summary }}</p>
-                                <p v-else>{{ $t('editPage.noDesc') }}</p>
-                                <a v-if="atom.docsLink" target="_blank" class="atom-link" :href="atom.docsLink">{{ $t('atom') }}</a>
+                    <label :title="$t('atom')" class="bk-label">
+                        {{ $t('atom') }}：
+                        <bk-popover placement="right" theme="light" class="form-field-icon atom-name-field" v-if="atom && (atom.summary || atom.docsLink)">
+                            <i class="bk-icon icon-info-circle"></i>
+                            <div slot="content" style="font-size: 12px; width: 350px; min-height: 100px;">
+                                <div class="atom-desc-content">
+                                    <p v-if="atom.summary">{{ $t('desc') }}：{{ atom.summary }}</p>
+                                    <p v-else>{{ $t('editPage.noDesc') }}</p>
+                                    <a v-if="atom.docsLink" target="_blank" class="atom-link" :href="atom.docsLink">{{ $t('atom') }}</a>
+                                </div>
                             </div>
-                        </div>
-                    </bk-popover>
+                        </bk-popover>
+                    </label>
                     <div class="bk-form-content">
                         <div class="atom-select-entry">
                             <template v-if="atom">
