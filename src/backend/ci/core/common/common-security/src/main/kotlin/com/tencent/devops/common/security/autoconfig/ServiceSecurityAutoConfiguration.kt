@@ -45,7 +45,6 @@ import org.springframework.scheduling.annotation.EnableScheduling
  */
 @EnableScheduling
 @Configuration
-// @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @EnableConfigurationProperties(ServiceSecurityProperties::class)
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class ServiceSecurityAutoConfiguration {
@@ -58,8 +57,7 @@ class ServiceSecurityAutoConfiguration {
 
     @Bean
     fun environmentUtil(
-        @Autowired environment: Environment
-    ) = EnvironmentUtil(environment)
+    ) = EnvironmentUtil()
 
     @Bean
     @DependsOn("environmentUtil")
