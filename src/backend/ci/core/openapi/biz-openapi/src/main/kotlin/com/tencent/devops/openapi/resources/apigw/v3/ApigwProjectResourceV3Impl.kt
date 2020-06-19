@@ -51,8 +51,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
         logger.info("create project projectCreateInfo($projectCreateInfo) by user $userId")
         return client.get(ServiceProjectResource::class).create(
             userId = userId,
-            projectCreateInfo = projectCreateInfo,
-            accessToken = accessToken
+            projectCreateInfo = projectCreateInfo
         )
     }
 
@@ -68,8 +67,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
         return client.get(ServiceProjectResource::class).update(
             userId = userId,
             projectId = projectId,
-            projectUpdateInfo = projectUpdateInfo,
-            accessToken = accessToken
+            projectUpdateInfo = projectUpdateInfo
         )
     }
 
@@ -89,7 +87,8 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
     override fun list(
         appCode: String?,
         apigwType: String?,
-        userId: String
+        userId: String,
+        accessToken: String?
     ): com.tencent.devops.project.pojo.Result<List<ProjectVO>> {
         logger.info("list project by user $userId")
         return client.get(ServiceProjectResource::class).list(
