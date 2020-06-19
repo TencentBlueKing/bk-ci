@@ -144,14 +144,14 @@ interface ServiceProjectResource {
     ): Result<Boolean>
 
     @PUT
-    @Path("/{project_id}")
+    @Path("/{projectId}")
     @ApiOperation("修改项目")
     fun update(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
-        @PathParam("project_id")
+        @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "项目信息", required = true)
         projectUpdateInfo: ProjectUpdateInfo
