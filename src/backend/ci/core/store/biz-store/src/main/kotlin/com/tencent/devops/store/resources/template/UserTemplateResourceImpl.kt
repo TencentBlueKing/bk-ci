@@ -75,24 +75,20 @@ class UserTemplateResourceImpl @Autowired constructor(
         score: Int?,
         rdType: TemplateRdTypeEnum?,
         sortType: MarketTemplateSortTypeEnum?,
-        projectCode: String?,
         page: Int?,
         pageSize: Int?
     ): Result<MarketTemplateResp> {
-        return Result(
-            marketTemplateService.list(
-                userId = userId.trim(),
-                name = templateName?.trim(),
-                classifyCode = classifyCode?.trim(),
-                category = categoryCode?.trim(),
-                labelCode = labelCode?.trim(),
-                score = score,
-                rdType = rdType,
-                sortType = sortType,
-                projectCode = projectCode,
-                page = page,
-                pageSize = pageSize
-            )
+        return Result(marketTemplateService.list(
+            userId.trim(),
+            templateName?.trim(),
+            classifyCode?.trim(),
+            categoryCode?.trim(),
+            labelCode?.trim(),
+            score,
+            rdType,
+            sortType,
+            page,
+            pageSize)
         )
     }
 

@@ -155,7 +155,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         score: Int?,
         rdType: TemplateRdTypeEnum?,
         sortType: MarketTemplateSortTypeEnum?,
-        projectCode: String?,
         desc: Boolean?,
         page: Int?,
         pageSize: Int?
@@ -323,7 +322,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         score: Int?,
         rdType: TemplateRdTypeEnum?,
         sortType: MarketTemplateSortTypeEnum?,
-        projectCode: String?,
         page: Int?,
         pageSize: Int?
     ): MarketTemplateResp {
@@ -341,7 +339,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             score = score,
             rdType = rdType,
             sortType = sortType,
-            projectCode = projectCode,
             desc = true,
             page = page,
             pageSize = pageSize
