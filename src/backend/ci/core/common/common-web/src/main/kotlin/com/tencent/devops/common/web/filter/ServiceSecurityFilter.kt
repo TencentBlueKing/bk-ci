@@ -54,7 +54,7 @@ class ServiceSecurityFilter(
     private fun shouldFilter(requestContext: ContainerRequestContext): Boolean {
         val uri = requestContext.uriInfo.requestUri.path
         logger.info("HttpServletRequest.requestURI=$uri")
-        if (!jwtManager.isEnable() || !EnvironmentUtil.isProdProfileActive()) {
+        if (!jwtManager.isAuthEnable() || !EnvironmentUtil.isProdProfileActive()) {
             return false
         }
 //        // dev环境需要支持swagger，请求无需认证

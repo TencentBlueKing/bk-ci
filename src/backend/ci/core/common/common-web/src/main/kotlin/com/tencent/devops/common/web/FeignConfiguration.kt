@@ -62,8 +62,10 @@ class FeignConfiguration {
             }
             // 增加X-DEVOPS-JWT验证头部
             if (!requestTemplate.headers().containsKey(AUTH_HEADER_DEVOPS_JWT)) {
-                val token = jwtManager.getToken()
-                requestTemplate.header(AUTH_HEADER_DEVOPS_JWT, token)
+                // 只有jwt验证发送启动的时候才设置头部
+                if(jwtManager.isSendEnable()) {
+                    requestTemplate.header(AUTH_HEADER_DEVOPS_JWT, jwtManager.getToken())
+                }
             }
             jwtManager.getToken()
         }

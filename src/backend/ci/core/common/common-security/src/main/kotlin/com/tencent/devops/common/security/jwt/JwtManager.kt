@@ -26,12 +26,15 @@
 package com.tencent.devops.common.security.jwt
 
 import com.google.common.cache.CacheBuilder
+import com.tencent.devops.common.security.pojo.SecurityJwtInfo
+import com.tencent.devops.common.security.util.EnvironmentUtil
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import org.jolokia.util.Base64Util
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
+import java.net.InetAddress
 import java.security.KeyFactory
 import java.security.PrivateKey
 import java.security.PublicKey
@@ -50,6 +53,7 @@ class JwtManager(
     private val publicKey: PublicKey?
     private val privateKey: PrivateKey?
     private val authEnable: Boolean
+    private val securityJwtInfo: SecurityJwtInfo?
 
     //    private val securityJwtInfo: SecurityJwtInfo
     private val tokenCache = CacheBuilder.newBuilder()
@@ -120,9 +124,14 @@ class JwtManager(
         generateToken()
     }
 
-    fun isEnable(): Boolean {
+    fun isAuthEnable(): Boolean {
         // 只有authEnable=true，且privateKeyString、publicKeyString不为空的时候，才会验证
         return authEnable && !privateKeyString.isNullOrBlank() && !publicKeyString.isNullOrBlank()
+    }
+
+    fun isSendEnable(): Boolean {
+        // 只有authEnable=true，且privateKeyString、publicKeyString不为空的时候，才会验证
+        return !privateKeyString.isNullOrBlank() && !publicKeyString.isNullOrBlank()
     }
 
     init {
@@ -136,12 +145,12 @@ class JwtManager(
             publicKey = keyFactory.generatePublic(X509EncodedKeySpec(Base64Util.decode(publicKeyString)))
             authEnable = enable
         }
-//        securityJwtInfo = SecurityJwtInfo(
-//            ip = InetAddress.getLocalHost().hostAddress,
-//            applicationName = EnvironmentUtil.getApplicationName(),
-//            activeProfile = EnvironmentUtil.getApplicationName(),
-//            serverPort = EnvironmentUtil.getServerPort()
-//        )
+        securityJwtInfo = SecurityJwtInfo(
+            ip = InetAddress.getLocalHost().hostAddress,
+            applicationName = EnvironmentUtil.getApplicationName(),
+            activeProfile = EnvironmentUtil.getApplicationName(),
+            serverPort = EnvironmentUtil.getServerPort()
+        )
         logger.info("Init JwtManager successfully!")
     }
 
