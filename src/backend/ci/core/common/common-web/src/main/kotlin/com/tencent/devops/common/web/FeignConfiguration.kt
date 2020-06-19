@@ -26,7 +26,7 @@
 
 package com.tencent.devops.common.web
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
 import com.tencent.devops.common.security.jwt.JwtManager
 import feign.RequestInterceptor
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,10 +61,10 @@ class FeignConfiguration {
                 requestTemplate.header("Cookie", cookieBuilder.toString()) // 设置cookie信息
             }
             // 增加X-DEVOPS-JWT验证头部
-            if (!requestTemplate.headers().containsKey(AUTH_HEADER_DEVOPS_JWT)) {
+            if (!requestTemplate.headers().containsKey(AUTH_HEADER_DEVOPS_JWT_TOKEN)) {
                 // 只有jwt验证发送启动的时候才设置头部
                 if (jwtManager.isSendEnable()) {
-                    requestTemplate.header(AUTH_HEADER_DEVOPS_JWT, jwtManager.getToken() ?: "")
+                    requestTemplate.header(AUTH_HEADER_DEVOPS_JWT_TOKEN, jwtManager.getToken() ?: "")
                 }
             }
         }

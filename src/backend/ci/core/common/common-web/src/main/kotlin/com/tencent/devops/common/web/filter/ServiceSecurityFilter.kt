@@ -1,6 +1,6 @@
 package com.tencent.devops.common.web.filter
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.security.jwt.JwtManager
 import com.tencent.devops.common.security.util.EnvironmentUtil
@@ -28,7 +28,7 @@ class ServiceSecurityFilter(
 
     override fun filter(requestContext: ContainerRequestContext?) {
         if (shouldFilter(requestContext!!)) {
-            val jwt = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_JWT)
+            val jwt = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_JWT_TOKEN)
             if (jwt.isNullOrBlank()) {
                 logger.warn("Invalid request, jwt is empty!")
                 throw ErrorCodeException(
