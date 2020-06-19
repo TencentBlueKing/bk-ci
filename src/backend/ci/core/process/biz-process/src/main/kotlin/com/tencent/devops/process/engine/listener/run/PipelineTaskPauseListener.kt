@@ -14,7 +14,6 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -104,6 +103,8 @@ class PipelineTaskPauseListener @Autowired constructor(
             containerId = containerId
         )
 
+        findDiffValue(element, buildId, taskId)
+
         val params = mutableMapOf<String, Any>()
         buildVariableService.batchSetVariable(projectId, pipelineId, buildId, params)
         // 修改插件运行设置
@@ -113,6 +114,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         // 修改详情model
         buildDetailService.updateElementWhenPauseContinue(buildId, stageId, containerId, taskId, element)
         logger.info("update detail element success | $buildId| $taskId | $element")
+
 
         // 触发引擎container事件，继续后续流程
         pipelineEventDispatcher.dispatch(
@@ -266,6 +268,11 @@ class PipelineTaskPauseListener @Autowired constructor(
             endTime = null,
             buildStatus = BuildStatus.QUEUE
         )
+    }
+
+    fun findDiffValue(newElement: Element, buildId: String, taskId: String) {
+        val oldElement = pipelineBuildTaskDao.get(dslContext, buildId, taskId)
+        logger.info("pause task new element|$newElement| oldElement|$oldElement")
     }
 
     companion object {
