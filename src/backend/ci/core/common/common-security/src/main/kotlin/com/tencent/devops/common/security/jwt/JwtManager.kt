@@ -74,7 +74,7 @@ class JwtManager(
     private fun generateToken(): String? {
         // token 超时10min
         val expireAt = System.currentTimeMillis() + 1000 * 60 * 10
-        val json = if (securityJwtInfo == null) "X-DEVOPS-JWT AUTH" else JsonUtil.toJson(securityJwtInfo)
+        val json = if (securityJwtInfo == null) "X-DEVOPS-JWT-TOKEN AUTH" else JsonUtil.toJson(securityJwtInfo)
         token = Jwts.builder().setSubject(json).setExpiration(Date(expireAt))
             .signWith(SignatureAlgorithm.RS512, privateKey).compact()
         return token
