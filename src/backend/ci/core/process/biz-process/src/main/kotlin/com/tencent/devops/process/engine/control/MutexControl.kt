@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -318,8 +319,10 @@ class MutexControl @Autowired constructor(
         val tagName = "${container.stageId}-[${container.containerId}]"
         LogUtils.addYellowLine(
             rabbitTemplate = rabbitTemplate,
-            buildId = container.buildId, message = message,
-            tag = tagName, jobId = null,
+            buildId = container.buildId,
+            message = message,
+            tag = VMUtils.genStartVMTaskId(container.containerId),
+            jobId = null,
             executeCount = container.executeCount
         )
     }
