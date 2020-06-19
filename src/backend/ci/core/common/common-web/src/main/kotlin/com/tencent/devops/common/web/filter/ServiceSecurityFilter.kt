@@ -20,7 +20,8 @@ import javax.ws.rs.ext.Provider
 @RequestFilter
 @DependsOn("environmentUtil")
 class ServiceSecurityFilter(
-    private val jwtManager: JwtManager
+    private val jwtManager: JwtManager,
+    private val servletRequest: HttpServletRequest
 ) : ContainerRequestFilter {
 
     companion object {
@@ -28,15 +29,11 @@ class ServiceSecurityFilter(
         private val logger = LoggerFactory.getLogger((ServiceSecurityFilter::class.java))
     }
 
-    @Context
-    private val servletRequest: HttpServletRequest? = null
-
     override fun filter(requestContext: ContainerRequestContext?) {
         if (shouldFilter(requestContext!!)) {
             val jwt = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_JWT)
             if (jwt.isNullOrBlank()) {
-                val clientIp = if(servletRequest == null) "" else "client ip:${servletRequest.remoteAddr}"
-                logger.warn("Invalid request, jwt is empty!$clientIp")
+                logger.warn("Invalid request, jwt is empty!client ip:${servletRequest.remoteAddr}")
                 throw ErrorCodeException(
                     statusCode = 401,
                     errorCode = SecurityErrorCode.ERROR_SERVICE_NO_AUTH,
