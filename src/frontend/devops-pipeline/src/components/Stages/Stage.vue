@@ -330,13 +330,14 @@
                         isShow: true,
                         reviewInfo: this.stage
                     })
+                } else {
+                    this.toggleStageReviewPanel({
+                        isShow: true,
+                        editingElementPos: {
+                            stageIndex: this.stageIndex
+                        }
+                    })
                 }
-                !this.isStagePause && this.toggleStageReviewPanel({
-                    isShow: true,
-                    editingElementPos: {
-                        stageIndex: this.stageIndex
-                    }
-                })
             },
             updateHeight () {
                 const parentEle = this.$refs.stageRef
