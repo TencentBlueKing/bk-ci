@@ -28,11 +28,15 @@ class ServiceSecurityFilter(
         private val logger = LoggerFactory.getLogger((ServiceSecurityFilter::class.java))
     }
 
+    @Context
+    private val servletRequest: HttpServletRequest? = null
+
     override fun filter(requestContext: ContainerRequestContext?) {
         if (shouldFilter(requestContext!!)) {
             val jwt = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_JWT)
             if (jwt.isNullOrBlank()) {
-                logger.warn("Invalid request, jwt is empty!")
+                val clientIp = if(servletRequest == null) "" else "client ip:${servletRequest.remoteAddr}"
+                logger.warn("Invalid request, jwt is empty!$clientIp")
                 throw ErrorCodeException(
                     statusCode = 401,
                     errorCode = SecurityErrorCode.ERROR_SERVICE_NO_AUTH,
