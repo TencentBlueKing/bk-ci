@@ -20,8 +20,7 @@ import javax.ws.rs.ext.Provider
 @RequestFilter
 @DependsOn("environmentUtil")
 class ServiceSecurityFilter(
-    private val jwtManager: JwtManager,
-    private val servletRequest: HttpServletRequest
+    private val jwtManager: JwtManager
 ) : ContainerRequestFilter {
 
     companion object {
@@ -33,11 +32,11 @@ class ServiceSecurityFilter(
         if (shouldFilter(requestContext!!)) {
             val jwt = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_JWT)
             if (jwt.isNullOrBlank()) {
-                logger.warn("Invalid request, jwt is empty!client ip:${servletRequest.remoteAddr}")
+                logger.warn("Invalid request, jwt is empty!")
                 throw ErrorCodeException(
                     statusCode = 401,
                     errorCode = SecurityErrorCode.ERROR_SERVICE_NO_AUTH,
-                    defaultMessage = "禁止访问微服务:devops api jwt it empty."
+                    defaultMessage = "Unauthorized:devops api jwt it empty."
                 )
             }
             val checkResult: Boolean = jwtManager.verifyJwt(jwt)
@@ -46,7 +45,7 @@ class ServiceSecurityFilter(
                 throw ErrorCodeException(
                     statusCode = 401,
                     errorCode = SecurityErrorCode.ERROR_SERVICE_NO_AUTH,
-                    defaultMessage = "禁止访问微服务:devops api jwt it invalid or expired."
+                    defaultMessage = "Unauthorized:devops api jwt it invalid or expired."
                 )
             }
         }
