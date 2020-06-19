@@ -100,7 +100,7 @@ class JwtManager(
                 .setSigningKey(publicKey)
                 .parseClaimsJws(token)
                 .body
-            logger.info("Verify jwt sub:", claims["sub"])
+            logger.info("Verify jwt sub:${claims["sub"]}")
             val expireAt = claims.get("exp", Date::class.java)
             if (expireAt != null) {
                 tokenCache.put(token, expireAt.time)
