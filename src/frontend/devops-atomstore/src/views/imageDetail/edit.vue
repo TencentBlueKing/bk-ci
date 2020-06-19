@@ -6,10 +6,24 @@
 
         <main class="edit-main">
             <bk-form ref="editForm" class="edit-image" label-width="125" :model="form">
-                <bk-form-item class="wt660" :label="$t('store.镜像名称')" :required="true" property="imageName" :rules="[requireRule]" ref="imageName">
+                <bk-form-item class="wt660"
+                    :label="$t('store.镜像名称')"
+                    :required="true"
+                    property="imageName"
+                    :rules="[requireRule]"
+                    ref="imageName"
+                    error-display-type="normal"
+                >
                     <bk-input v-model="form.imageName" :placeholder="$t('store.请输入镜像名称')"></bk-input>
                 </bk-form-item>
-                <bk-form-item class="wt660" :label="$t('store.分类')" :required="true" property="classifyCode" :rules="[requireRule]" ref="classifyCode">
+                <bk-form-item class="wt660"
+                    :label="$t('store.分类')"
+                    :required="true"
+                    property="classifyCode"
+                    :rules="[requireRule]"
+                    ref="classifyCode"
+                    error-display-type="normal"
+                >
                     <bk-select v-model="form.classifyCode" searchable>
                         <bk-option v-for="(option, index) in classifys"
                             :key="index"
@@ -32,7 +46,13 @@
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.范畴')" property="category" :required="true" :rules="[requireRule]" ref="category">
+                <bk-form-item :label="$t('store.范畴')"
+                    property="category"
+                    :required="true"
+                    :rules="[requireRule]"
+                    ref="category"
+                    error-display-type="normal"
+                >
                     <bk-select v-model="form.category" searchable>
                         <bk-option v-for="(option, index) in categoryList"
                             :key="index"
@@ -43,7 +63,13 @@
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.简介')" property="summary" :required="true" :rules="[requireRule]" ref="summary">
+                <bk-form-item :label="$t('store.简介')"
+                    property="summary"
+                    :required="true"
+                    :rules="[requireRule]"
+                    ref="summary"
+                    error-display-type="normal"
+                >
                     <bk-input v-model="form.summary" :placeholder="$t('store.请输入简介')"></bk-input>
                 </bk-form-item>
                 <bk-form-item :label="$t('store.描述')" property="description">
@@ -64,7 +90,13 @@
                     <p class="form-title"> {{ $t('store.版本信息') }} </p>
                     <hr class="cut-line">
                 </div>
-                <bk-form-item :label="$t('store.发布者')" :required="true" property="publisher" :rules="[requireRule]" ref="publisher">
+                <bk-form-item :label="$t('store.发布者')"
+                    :required="true"
+                    property="publisher"
+                    :rules="[requireRule]"
+                    ref="publisher"
+                    error-display-type="normal"
+                >
                     <bk-input v-model="form.publisher" :placeholder="$t('store.请输入发布者')"></bk-input>
                 </bk-form-item>
                 <bk-form-item>

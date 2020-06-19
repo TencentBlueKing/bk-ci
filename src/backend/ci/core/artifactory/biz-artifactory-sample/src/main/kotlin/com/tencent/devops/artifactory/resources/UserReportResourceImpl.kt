@@ -24,20 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.artifactory.resources
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-redis")
-    compile "org.springframework.boot:spring-boot-starter-actuator"
-    compile "org.springframework.boot:spring-boot-starter-log4j2"
-    compile "org.springframework.cloud:spring-cloud-starter-consul-discovery"
-    compile "io.github.openfeign:feign-okhttp"
-    compile group: 'org.apache.skywalking', name: 'apm-toolkit-log4j-2.x', version: '6.6.0'
-    compile "org.jolokia:jolokia-core"
-    compile "javax.servlet:javax.servlet-api"
+import com.tencent.devops.artifactory.api.user.UserReportResource
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
-    testCompile "org.springframework.boot:spring-boot-starter-test"
+@RestResource
+class UserReportResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService)
+    : UserReportResource {
+    override fun get(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, path: String) {
+        val filePath = "${FileTypeEnum.BK_REPORT.fileType}/$projectId/$pipelineId/$buildId/$elementId/$path"
+        val response = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).response!!
+        archiveFileService.downloadFile(filePath, response)
+    }
 }
-
-
