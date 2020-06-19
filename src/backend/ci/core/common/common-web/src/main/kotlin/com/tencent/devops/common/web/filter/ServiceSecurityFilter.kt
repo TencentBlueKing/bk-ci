@@ -8,11 +8,9 @@ import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.constant.SecurityErrorCode
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.DependsOn
-import javax.servlet.http.HttpServletRequest
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
 import javax.ws.rs.container.PreMatching
-import javax.ws.rs.core.Context
 import javax.ws.rs.ext.Provider
 
 @Provider
@@ -62,13 +60,13 @@ class ServiceSecurityFilter(
 //            return false
 //        }
         // 不拦截的接口
-        excludeVeritfyPath.forEach{
-            if(uri.startsWith(it)) {
+        excludeVeritfyPath.forEach {
+            if (uri.startsWith(it)) {
                 return false
             }
         }
         // 拦截api接口
-        if(uri.startsWith("/api/")) {
+        if (uri.startsWith("/api/")) {
             return true
         }
         // 默认不拦截
