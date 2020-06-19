@@ -17,33 +17,20 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-string = require("string")
-math = require("math")
-json = require("cjson.safe")
-uuid = require("resty.jit-uuid")
-resolver = require("resty.dns.resolver")
-ck = require("resty.cookie")
-http = require("resty.http")
-jwt = require("resty.jwt")
-stringUtil = require("util.string_util")
-ipUtil = require("util.ip_util")
-consulUtil = require("util.consul_util")
-logUtil = require("util.log_util")
-redisUtil = require("util.redis_util")
-oauthUtil = require("util.oauth_util")
-md5 = require("resty.md5")
-arrayUtil = require("util.array_util")
-cookieUtil = require("util.cookie_util")
-grayUtil = require("util.gray_util")
-urlUtil = require("util.url_util")
-
-math.randomseed(os.time())
-uuid.seed()
-
-local ok_table = {
-  status = 0,
-  data = true
-}
-
-response_ok = json.encode(ok_table)
-
+if ngx.var.http_x_devops_jwt_token == nil then
+  local jwt_token_cache = ngx.shared.gray_project_store
+  local jwt_token_cache_value = jwt_token_cache:get("X-DEVOPS-JWT-TOKEN")
+  if jwt_token_cache_value == nil then
+    local table_of_jwt = {
+      "header": {"typ": "JWT", "alg": "RS512"},
+      "payload": {"sub": "Gateway" .. ngx. , "exp": ngx.now() + 60 * 10}
+    }
+    local jwt_token = jwt.sign(config.jwtPublicKey, table_of_jwt)
+    jwt_token_cache.set("X-DEVOPS-JWT-TOKEN", jwt_token, 300)
+    return jwt_token
+  else
+    return jwt_token_cache_value
+  end
+else
+  return ngx.var.http_x_devops_jwt_token
+end

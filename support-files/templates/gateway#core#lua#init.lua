@@ -114,7 +114,8 @@ config = {
   },
   bkrepo = {
     domain = "__BKREPO_HOST__"
-  }
+  },
+  jwtPublicKey = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4uHyAmMyhLZt5WaEj4Of\nyKMd9UC2IFWGW2jhIM72b44pf3au6jygZWyLCXOvBQPu0JKcPeeyY9UvQHTYtgot\n8h8tT88lXCdaiyq0RlYwQ9WaSiT/Vh/UOy/BWWcZG7gJtRQxyDMuOr9R5T1nNyK+\nwIvCdLV/LY57h0blp7+8v0aOmNTCfyuslNckDi2BUjmZ1oU4DOk1Ge4eCyXXmdCg\nNwcWFDbRFPUPFxRhNoZ2+SJCB3k5N4F05vGNV3avQm2Xvoze3VrUdLhP+pgMe9V9\nKkNm8GtJb0ffN6HJuJ6EJYUTnSJ3menMbNLu20Vvs9BQAwJje/A99z7q/PcEBZog\nawIDAQAB\n-----END PUBLIC KEY-----" 
 }
   
 require("init_common")
