@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.defect.service;
 
 import com.tencent.bk.codecc.defect.vo.UploadDUPCStatisticVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 
 /**
  * 上报重复率分析的结果统计数据接口
@@ -42,5 +42,5 @@ public interface DUPCUploadStatisticService
      * @param uploadStatisticVO
      * @return
      */
-    Result uploadStatistic(UploadDUPCStatisticVO uploadStatisticVO);
+    CodeCCResult uploadStatistic(UploadDUPCStatisticVO uploadStatisticVO);
 }

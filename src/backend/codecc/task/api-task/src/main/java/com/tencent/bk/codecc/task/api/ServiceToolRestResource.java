@@ -29,7 +29,7 @@ package com.tencent.bk.codecc.task.api;
 import com.tencent.bk.codecc.task.vo.DefectConfigInfoVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigBaseVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -54,7 +54,7 @@ public interface ServiceToolRestResource
     @ApiOperation("更新工具分析步骤及状态")
     @Path("/")
     @PUT
-    Result updateToolStepStatus(
+    CodeCCResult updateToolStepStatus(
             @ApiParam(value = "需要更新的工具基本信息", required = true)
                     ToolConfigBaseVO toolConfigBaseVO
     );
@@ -63,7 +63,7 @@ public interface ServiceToolRestResource
     @ApiOperation("获取配置信息")
     @Path("/config/streamName/{streamName}/toolType/{multiToolType}")
     @GET
-    Result<DefectConfigInfoVO> getDefectConfig(
+    CodeCCResult<DefectConfigInfoVO> getDefectConfig(
             @ApiParam(value = "任务英文名", required = true)
             @PathParam("streamName")
                     String streamName,
@@ -75,7 +75,7 @@ public interface ServiceToolRestResource
     @ApiOperation("根据任务id获取工具信息")
     @Path("/tool/{toolName}")
     @GET
-    Result<ToolConfigInfoVO> getToolByTaskIdAndName(
+    CodeCCResult<ToolConfigInfoVO> getToolByTaskIdAndName(
             @ApiParam(value = "任务id", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
@@ -87,7 +87,7 @@ public interface ServiceToolRestResource
     @ApiOperation("根据任务id获取带名称的工具信息")
     @Path("/tool/name/{toolName}")
     @GET
-    Result<ToolConfigInfoVO> getToolWithNameByTaskIdAndName(
+    CodeCCResult<ToolConfigInfoVO> getToolWithNameByTaskIdAndName(
             @ApiParam(value = "任务id", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
@@ -100,6 +100,6 @@ public interface ServiceToolRestResource
     @ApiOperation("获取工具顺序")
     @Path("/order")
     @GET
-    Result<String> findToolOrder();
+    CodeCCResult<String> findToolOrder();
 
 }

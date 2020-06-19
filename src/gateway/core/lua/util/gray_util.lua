@@ -47,30 +47,19 @@ function _M:get_gray()
         get_from = "get devops_project from cookies: "
     end
 
-    -- ngx.log(ngx.ERR, "devops_project: ", devops_project)
     local gray_flag = false
     if (devops_project ~= nil and devops_project ~= "") then
-        -- ngx.log(ngx.ERR, get_from, devops_project)
         --- 先判断是否在
         local project_cache = ngx.shared.gray_project_store
         local project_cache_value = project_cache:get(devops_project)
         if project_cache_value == nil then
-            -- ngx.log(ngx.ERR, "gray redis ")
             --- 查询redis的灰度情况
             local red = redisUtil:new()
             if not red then
                 ngx.log(ngx.ERR, "gray failed to new redis ", err)
             else
                 --- 获取对应的buildId
-                -- local redRes, err = red:getset("project:setting:gray")
-                -- local redRes, err = red:getset("project:setting:gray:" .. devops_project)
-
-                -- ngx.log(ngx.ERR, "project:setting:gray:" .. devops_project)
-
-                -- local redRes, err = red:smembers("project_setting_gray_" .. devops_project)
-                -- local redRes, err = red:getset("project_setting_gray_" .. devops_project)
-                local redRes, err = red:sismember("project:setting:gray",devops_project)
-                -- ngx.log(ngx.ERR, "project:setting:gray")
+                local redRes, err = red:sismember("project:setting:gray:v2",devops_project)
                 --- 将redis连接放回pool中
                 local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
                 if not ok then
@@ -83,10 +72,8 @@ function _M:get_gray()
                         project_cache:set(devops_project,false,30)
                 else
                     if redRes == ngx.null then
-                        -- ngx.log(ngx.ERR, "gray redis result is null")
                         project_cache:set(devops_project,false,30)
                     else
-                        -- ngx.log(ngx.ERR, "gray redRes ", redRes)
                         if redRes == 1 then
                             project_cache:set(devops_project,true,30)
                             gray_flag = true
