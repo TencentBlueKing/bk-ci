@@ -149,7 +149,7 @@ class JwtManager(
         securityJwtInfo = SecurityJwtInfo(
             ip = InetAddress.getLocalHost().hostAddress,
             applicationName = EnvironmentUtil.getApplicationName(),
-            activeProfile = EnvironmentUtil.getApplicationName(),
+            activeProfile = EnvironmentUtil.getActiveProfile(),
             serverPort = EnvironmentUtil.getServerPort()
         )
         logger.info("Init JwtManager successfully!")

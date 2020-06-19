@@ -8,9 +8,7 @@ import org.springframework.core.env.Environment
 import org.springframework.stereotype.Component
 
 @Component
-class EnvironmentUtil constructor(
-    private val environment: Environment
-) : ApplicationContextAware {
+class EnvironmentUtil : ApplicationContextAware {
 
     /**
      * 实现ApplicationContextAware接口的回调方法，设置上下文环境
@@ -18,14 +16,11 @@ class EnvironmentUtil constructor(
     @Throws(BeansException::class)
     override fun setApplicationContext(applicationContext: ApplicationContext?) {
         EnvironmentUtil.applicationContext = applicationContext
-        EnvironmentUtil.environment = environment
     }
 
     companion object {
         // Spring应用上下文环境
         private var applicationContext: ApplicationContext? = null
-        // 环境应用上下文环境
-        private var environment: Environment? = null
         // 正式环境
         private var isProdProfileActive: Boolean? = null
 
@@ -42,7 +37,7 @@ class EnvironmentUtil constructor(
          * @return String
          */
         fun getApplicationName(): String {
-            return applicationContext!!.applicationName
+            return applicationContext!!.environment.getProperty("spring.application.name")
         }
 
         /**
@@ -50,7 +45,7 @@ class EnvironmentUtil constructor(
          * @return Int
          */
         fun getServerPort(): Int {
-            return environment!!.getProperty("local.server.port").toInt()
+            return applicationContext!!.environment.getProperty("server.port").toInt()
         }
 
         /**
