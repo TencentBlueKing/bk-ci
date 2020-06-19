@@ -36,7 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserPipelineTemplateResourceImpl @Autowired constructor(
     private val pipelineTemplateService: PipelineTemplateService
-) : UserPipelineTemplateResource {
+) :
+    UserPipelineTemplateResource {
 
     override fun listTemplate(projectCode: String): Result<Map<String, PipelineTemplate>> {
         return Result(pipelineTemplateService.listTemplate(projectCode))
