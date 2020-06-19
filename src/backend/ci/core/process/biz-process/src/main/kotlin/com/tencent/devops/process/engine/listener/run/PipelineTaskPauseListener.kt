@@ -271,8 +271,9 @@ class PipelineTaskPauseListener @Autowired constructor(
     }
 
     fun findDiffValue(newElement: Element, buildId: String, taskId: String) {
-        val oldElement = pipelineBuildTaskDao.get(dslContext, buildId, taskId)
-        logger.info("pause task new element|${objectMapper.writeValueAsString(newElement)}| oldElement|${objectMapper.writeValueAsString(oldElement)}")
+        logger.info("start find diff new element|${objectMapper.writeValueAsString(newElement)}")
+        val oldElement = pipelineBuildTaskDao.getByBuildId(dslContext, buildId).filter { it.taskId == taskId }
+        logger.info("end pause task new element|${objectMapper.writeValueAsString(newElement)}| oldElement|${objectMapper.writeValueAsString(oldElement[0])}")
     }
 
     companion object {
