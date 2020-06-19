@@ -67,7 +67,7 @@
     }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
     .icon-info-circle, .icon-question-circle {
         color: #C3CDD7;
         font-size: 14px;
@@ -78,7 +78,7 @@
     }
     .form-field-icon {
         position: absolute;
-        right:  -4px;
+        right:  14px;
         top: 0;
         font-size: 0;
     }
@@ -91,6 +91,9 @@
     .bk-form-item.is-required .bk-label,
     .bk-form-inline-item.is-required .bk-label {
         margin-right: 10px;
+        .form-field-icon {
+            right:  -4px;
+        }
     }
     .desc-link {
         color: #3c96ff;

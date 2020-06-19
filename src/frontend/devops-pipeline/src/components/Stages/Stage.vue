@@ -175,7 +175,7 @@
             },
             isStagePause () {
                 try {
-                    return this.stage.reviewStatus === 'PAUSE'
+                    return this.stage.reviewStatus === 'REVIEWING'
                 } catch (error) {
                     return false
                 }
@@ -212,7 +212,7 @@
             },
             reviewStatausIcon () {
                 switch (this.stage.reviewStatus) {
-                    case 'PAUSE':
+                    case 'REVIEWING':
                         return 'reviewing'
                     case 'QUEUE':
                         return 'review-waiting'
@@ -420,8 +420,7 @@
                 border-color: #D0D8EA;
                 color: black;
 
-                .skip-icon,
-                .icon-play-circle-shape {
+                .skip-icon {
                     vertical-align: middle;
                 }
 
@@ -435,17 +434,10 @@
                     border-color: #D4E8FF;
                     color: $primaryColor;
                 }
-                &.PAUSE {
+                &.REVIEWING {
                     background-color: #F3F3F3;
                     border-color: #D0D8EA;
                     color: black;
-
-                    .icon-play-circle-shape {
-                        color: $primaryColor;
-                        font-size: 20px;
-                        width: 20px;
-                        height: 20px;
-                    }
                 }
 
                 &.FAILED {
