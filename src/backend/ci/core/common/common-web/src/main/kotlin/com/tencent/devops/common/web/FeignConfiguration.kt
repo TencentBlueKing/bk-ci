@@ -67,7 +67,6 @@ class FeignConfiguration {
                     requestTemplate.header(AUTH_HEADER_DEVOPS_JWT, jwtManager.getToken())
                 }
             }
-            jwtManager.getToken()
         }
     }
 }
