@@ -120,8 +120,9 @@ class JwtManager(
         generateToken()
     }
 
-    fun isAuth(): Boolean {
-        return authEnable
+    fun isEnable(): Boolean {
+        // 只有authEnable=true，且privateKeyString、publicKeyString不为空的时候，才会验证
+        return authEnable && !privateKeyString.isNullOrBlank() && !publicKeyString.isNullOrBlank()
     }
 
     init {
