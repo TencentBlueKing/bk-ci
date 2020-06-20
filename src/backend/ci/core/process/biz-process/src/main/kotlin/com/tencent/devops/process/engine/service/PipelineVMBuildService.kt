@@ -416,7 +416,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             }.filter {
                 !it.first.startsWith("@type")
             }.toMap(),
-            buildVariable = buildVariable
+            buildVariable = buildVariable,
+            containerType = task.containerType
         )
 
         logger.info("[$buildId]|Claim the task - ($buildTask)")
