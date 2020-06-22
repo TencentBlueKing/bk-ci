@@ -70,9 +70,9 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
 
     private final val toolNameEn = "tool_name_en"
 
-    private final val totalNewSerious = "total_new_serious"
+    private final val totalSerious = "total_serious"
 
-    private final val totalNewNormal = "total_new_normal"
+    private final val totalNormal = "total_normal"
 
     private final val codeCalScoreStyle = "codeCalScoreStyle"
 
@@ -103,18 +103,18 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
             val codeccToolNameEn = codeccItemMap[toolNameEn]
             when {
                 codeccToolNameEn == "COVERITY" -> {
-                    totalCoveritySeriousWaringCount = codeccItemMap[totalNewSerious] as Int
-                    totalCoverityNormalWaringCount = codeccItemMap[totalNewNormal] as Int
+                    totalCoveritySeriousWaringCount = codeccItemMap[totalSerious] as Int
+                    totalCoverityNormalWaringCount = codeccItemMap[totalNormal] as Int
                 }
-                codeccToolNameEn == "CCN" -> totalCcnExceedNum = codeccItemMap["ccn_beyond_threshold"].toString().toDouble()
+                codeccToolNameEn == "CCN" -> totalCcnExceedNum = codeccItemMap["ccn_beyond_threshold_sum"].toString().toDouble()
                 codeccToolNameEn == "WOODPECKER_SENSITIVE" -> {
-                    totalSeriousRiskCount = codeccItemMap[totalNewSerious] as Int
-                    totalNormalRiskCount = codeccItemMap[totalNewNormal] as Int
+                    totalSeriousRiskCount = codeccItemMap[totalSerious] as Int
+                    totalNormalRiskCount = codeccItemMap[totalNormal] as Int
                 }
                 codeccToolNameEn == "CLOC" -> totalLine = codeccItemMap["total_lines"] as Int
                 codeStyleToolNameEnList.contains(codeccToolNameEn) -> {
-                    totalSeriousWaringCount = codeccItemMap[totalNewSerious] as Int
-                    totalNormalWaringCount = codeccItemMap[totalNewNormal] as Int
+                    totalSeriousWaringCount = codeccItemMap[totalSerious] as Int
+                    totalNormalWaringCount = codeccItemMap[totalNormal] as Int
                 }
             }
         }

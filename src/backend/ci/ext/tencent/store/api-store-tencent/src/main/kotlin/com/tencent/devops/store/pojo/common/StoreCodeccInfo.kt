@@ -26,7 +26,6 @@
  *
  */
 
-
 package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
