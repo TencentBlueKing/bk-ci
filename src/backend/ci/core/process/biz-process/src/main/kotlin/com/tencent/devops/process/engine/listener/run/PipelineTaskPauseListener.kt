@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import kotlin.math.log
 
 @Component
 class PipelineTaskPauseListener @Autowired constructor(
@@ -295,7 +294,7 @@ class PipelineTaskPauseListener @Autowired constructor(
                     buildId = buildId,
                     message = "$userId 继续暂停插件且修改入参，修改前参数：$oldInput",
                     tag = taskId,
-                    jobId = oldElement.containerId,
+                    jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
                     executeCount = 1
                 )
             }
@@ -305,7 +304,7 @@ class PipelineTaskPauseListener @Autowired constructor(
                     buildId = buildId,
                     message = "$userId 继续暂停插件且修改入参，修改后参数：$newInput",
                     tag = taskId,
-                    jobId = oldElement.containerId,
+                    jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
                     executeCount = 1
                 )
             }
