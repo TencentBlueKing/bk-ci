@@ -298,7 +298,7 @@ class BuildMonitorControl @Autowired constructor(
             )
         } else {
             // 判断当前监控的排队构建是否可以尝试启动(仅当前是在队列中排第1位的构建可以)
-            if (pipelineRuntimeExtService.queueCanPend2Start(event.pipelineId, buildInfo.buildId)) {
+            if (pipelineRuntimeExtService.queueCanPend2Start(projectId = event.projectId, pipelineId = event.pipelineId, buildId = buildInfo.buildId)) {
                 logger.info("[${event.buildId}]|monitor| still queue, to start it!")
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStartEvent(
