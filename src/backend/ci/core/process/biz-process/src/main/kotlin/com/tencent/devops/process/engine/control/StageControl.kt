@@ -38,6 +38,7 @@ import com.tencent.devops.process.engine.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.control.lock.StageIdLock
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
@@ -50,6 +51,7 @@ import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -62,6 +64,7 @@ import java.time.LocalDateTime
 class StageControl @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
+    private val rabbitTemplate: RabbitTemplate,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
@@ -159,6 +162,17 @@ class StageControl @Autowired constructor(
                             containerId = c.containerId,
                             endTime = LocalDateTime.now(),
                             buildStatus = buildStatus
+                        )
+                    }
+
+                    if(fastKill) {
+                        LogUtils.addRedLine(
+                            rabbitTemplate = rabbitTemplate,
+                            buildId = c.buildId,
+                            message = "job${c.containerId}因fastKill终止。",
+                            tag = VMUtils.genStartVMTaskId(c.containerId),
+                            jobId = null,
+                            executeCount = c.executeCount ?: 1
                         )
                     }
                 }
