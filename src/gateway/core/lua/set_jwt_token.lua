@@ -26,7 +26,7 @@ if ngx.var.http_x_devops_jwt_token == nil then
         payload={sub = "Gateway", exp = ngx.time() + 60 * 10}
     }
     local jwt_token, err = jwt:sign(
-        config.jwtPublicKey,
+        config.jwtPrivateKey,
         table_of_jwt
     )
     ngx.log(ngx.ERR, "jwt_token:", jwt_token) 
