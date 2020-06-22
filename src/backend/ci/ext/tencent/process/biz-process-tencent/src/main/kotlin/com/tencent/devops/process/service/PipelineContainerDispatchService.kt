@@ -82,7 +82,8 @@ class PipelineContainerDispatchService @Autowired constructor(
     fun saveContainerDispatch(pipelineId: String, projectId: String) {
         logger.info("saveContainerDispatch|$pipelineId,$projectId")
         // 查出最新的pipelineVersion
-        val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId) ?: throw PipelineNotExistException("pipelineId=$pipelineId")
+        val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId)
+            ?: throw PipelineNotExistException("pipelineId=$pipelineId")
         val pipelineVersion = pipelineInfo.version
         // 首先根据事件信息查出Model
         val modelStr = pipelineResDao.getVersionModelString(dslContext, pipelineId, pipelineVersion)
@@ -186,32 +187,29 @@ class PipelineContainerDispatchService @Autowired constructor(
         logger.info("listPipelinesByDispatch|$dispatchBuildType,$dispatchValue,$page,$pageSize,$channelCode")
         var pipelines: List<Pipeline> = mutableListOf()
         var totalCount = 0
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            // 查出符合条件的记录总量
-            totalCount = pipelineContainerDispatchDao.getPipelineNum(
-                dslContext = context,
-                dispatchBuildType = dispatchBuildType,
-                dispatchValue = dispatchValue
-            )
-            // 查出使用指定构建资源的流水线与对应版本
-            val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-            val records = pipelineContainerDispatchDao.listPipelineIds(
-                dslContext = context,
-                dispatchBuildType = dispatchBuildType,
-                dispatchValue = dispatchValue,
-                limit = sqlLimit.limit,
-                offset = sqlLimit.offset
-            )
-            val pipelineIds = records!!.map {
-                it.value1()
-            }
-            val pipelineIdsStr = pipelineIds.fold("") { s1, s2 -> "$s1:$s2" }
-            logger.info("Inner:pipelineIds=[$pipelineIdsStr]")
-
-            // 查所有途径创建的流水线中使用某镜像的流水线
-            pipelines = pipelineService.listPipelinesByIds(null, pipelineIds.toSet())
+        // 查出符合条件的记录总量
+        totalCount = pipelineContainerDispatchDao.getPipelineNum(
+            dslContext = dslContext,
+            dispatchBuildType = dispatchBuildType,
+            dispatchValue = dispatchValue
+        )
+        // 查出使用指定构建资源的流水线与对应版本
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val records = pipelineContainerDispatchDao.listPipelineIds(
+            dslContext = dslContext,
+            dispatchBuildType = dispatchBuildType,
+            dispatchValue = dispatchValue,
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
+        )
+        val pipelineIds = records!!.map {
+            it.value1()
         }
+        val pipelineIdsStr = pipelineIds.fold("") { s1, s2 -> "$s1:$s2" }
+        logger.info("Inner:pipelineIds=[$pipelineIdsStr]")
+
+        // 查所有途径创建的流水线中使用某镜像的流水线
+        pipelines = pipelineService.listPipelinesByIds(null, pipelineIds.toSet())
         // 排序
         val watch = StopWatch()
         watch.start("s_r_list_b_ps_sort")
@@ -224,58 +222,6 @@ class PipelineContainerDispatchService @Autowired constructor(
             count = totalCount.toLong(),
             records = pipelines
         )
-    }
-
-    fun extractDispatchTypeByProjectId(
-        userId: String,
-        projectId: String,
-        interfaceName: String? = "Anon interface"
-    ): String {
-        logger.info("extractDispatchTypeByProjectId|$userId,$projectId,$interfaceName")
-        val pipelineInfoRecords = pipelineInfoDao.listPipelineInfoByProject(dslContext, projectId)
-        val pipelineIds = pipelineInfoRecords?.map { it.pipelineId }?.toSet() ?: mutableSetOf()
-        val pipelineResRecords = pipelineResDao.listModelResource(dslContext, pipelineIds)
-        val mapper = jacksonObjectMapper()
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        pipelineResRecords.forEach { record ->
-            var flag = false
-            val pipelineId = record.pipelineId
-            val pipelineVersion = record.version
-            // 日志粒度：正常情况下一个pipeline+version一条日志，异常情况下打上下文
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-                // 如果当前没有已拆分的dispatch数据才进行迁移
-                if (!pipelineContainerDispatchDao.exists(context, pipelineId, pipelineVersion)) {
-                    var model: Model
-                    var log: String
-                    try {
-                        model = mapper.readValue(record.model)
-                        saveModel(
-                            dslContext = context,
-                            pipelineId = pipelineId,
-                            pipelineVersion = pipelineVersion,
-                            model = model,
-                            projectId = projectId,
-                            interfaceName = interfaceName
-                        )
-                        flag = true
-                        log = "ok"
-                    } catch (e: JsonMappingException) {
-                        log = "old,skip"
-                    } catch (e: OldModelNotSupported) {
-                        log = "old,skip"
-                    }
-                    logger.info("$interfaceName:$projectId:$pipelineId:$pipelineVersion:$log")
-                    if (flag) {
-                        // 迁移完一条休息5ms
-                        Thread.sleep(5)
-                    }
-                } else {
-                    logger.info("$interfaceName:$projectId:$pipelineId:$pipelineVersion:DataExists:skip")
-                }
-            }
-        }
-        return "success"
     }
 
     fun saveModel(

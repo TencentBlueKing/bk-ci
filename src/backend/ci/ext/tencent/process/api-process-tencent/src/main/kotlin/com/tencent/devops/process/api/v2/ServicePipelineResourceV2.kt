@@ -74,16 +74,4 @@ interface ServicePipelineResourceV2 {
         @QueryParam("channelCode")
         channelCode: ChannelCode? = ChannelCode.BS
     ): Result<Page<Pipeline>>
-
-    @ApiOperation("根据projectId迁移数据")
-    @PUT
-    @Path("/dispatchTypeExtract")
-    fun extractDispatchTypeByProjectId(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = false)
-        @QueryParam("projectId")
-        projectId: String
-    ): Result<String>
 }
