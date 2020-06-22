@@ -27,13 +27,12 @@
 apply plugin: "maven"
 
 dependencies {
-    compile project(":core:common:common-api")
-    implementation 'commons-codec:commons-codec'
-    implementation 'com.google.guava:guava'
+    compile project(":core:common:common-util")
+    compile project(":core:common:common-service")
     implementation 'io.jsonwebtoken:jjwt'
-    implementation 'org.jolokia:jolokia-core'
-    compile 'org.apache.commons:commons-lang3'
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation "org.junit.jupiter:junit-jupiter"
+    implementation 'com.google.guava:guava'
+    compile (group: 'org.springframework.boot', name: 'spring-boot')
+    compile (group: 'org.springframework.boot', name: 'spring-boot-autoconfigure')
+    implementation 'org.springframework:spring-context'
+    compile (group: 'org.springframework.boot', name: 'spring-boot-configuration-processor')
 }

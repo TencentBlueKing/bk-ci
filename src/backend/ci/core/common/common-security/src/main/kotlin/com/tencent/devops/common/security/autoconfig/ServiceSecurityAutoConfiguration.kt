@@ -24,16 +24,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.common.security.autoconfig
 
-dependencies {
-    compile project(":core:common:common-api")
-    implementation 'commons-codec:commons-codec'
-    implementation 'com.google.guava:guava'
-    implementation 'io.jsonwebtoken:jjwt'
-    implementation 'org.jolokia:jolokia-core'
-    compile 'org.apache.commons:commons-lang3'
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation "org.junit.jupiter:junit-jupiter"
+import com.tencent.devops.common.security.jwt.JwtManager
+import com.tencent.devops.common.security.util.EnvironmentUtil
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.DependsOn
+import org.springframework.core.Ordered
+import org.springframework.scheduling.annotation.EnableScheduling
+
+/**
+ *
+ * Powered By Tencent
+ */
+@EnableScheduling
+@Configuration
+@EnableConfigurationProperties(ServiceSecurityProperties::class)
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class ServiceSecurityAutoConfiguration {
+    @Value("\${bkci.security.public-key:#{null}}")
+    private val publicKey: String? = null
+    @Value("\${bkci.security.private-key:#{null}}")
+    private val privateKey: String? = null
+    @Value("\${bkci.security.enable:#{false}}")
+    private val enable: Boolean = false
+
+    @Bean
+    fun environmentUtil() = EnvironmentUtil()
+
+    @Bean
+    @DependsOn("environmentUtil")
+    fun jwtManager(
+        serviceSecurityProperties: ServiceSecurityProperties
+    ) = JwtManager(privateKey, publicKey, enable)
 }

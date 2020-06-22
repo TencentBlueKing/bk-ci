@@ -24,16 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.common.security.pojo
 
-dependencies {
-    compile project(":core:common:common-api")
-    implementation 'commons-codec:commons-codec'
-    implementation 'com.google.guava:guava'
-    implementation 'io.jsonwebtoken:jjwt'
-    implementation 'org.jolokia:jolokia-core'
-    compile 'org.apache.commons:commons-lang3'
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation "org.junit.jupiter:junit-jupiter"
-}
+data class SecurityJwtInfo(
+    val ip: String,
+    val applicationName: String,
+    val activeProfile: String,
+    val serverPort: Int
+)

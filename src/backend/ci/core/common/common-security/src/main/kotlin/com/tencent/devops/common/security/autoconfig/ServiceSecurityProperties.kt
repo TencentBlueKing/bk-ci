@@ -24,16 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.common.security.autoconfig
 
-dependencies {
-    compile project(":core:common:common-api")
-    implementation 'commons-codec:commons-codec'
-    implementation 'com.google.guava:guava'
-    implementation 'io.jsonwebtoken:jjwt'
-    implementation 'org.jolokia:jolokia-core'
-    compile 'org.apache.commons:commons-lang3'
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation "org.junit.jupiter:junit-jupiter"
-}
+import org.springframework.boot.context.properties.ConfigurationProperties
+
+/**
+ *
+ * Powered By Tencent
+ */
+@ConfigurationProperties(prefix = "bkci.security")
+data class ServiceSecurityProperties(
+    val publicKey: String = "",
+    val privateKey: String = "",
+    val enable: Boolean = false
+)
