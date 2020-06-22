@@ -1,6 +1,7 @@
 package com.tencent.devops.process.engine.listener.run
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import kotlin.math.log
 
 @Component
 class PipelineTaskPauseListener @Autowired constructor(
@@ -103,7 +105,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             containerId = containerId
         )
 
-        findDiffValue(element, buildId, taskId)
+        findDiffValue(element, buildId, taskId, userId)
 
         val params = mutableMapOf<String, Any>()
         buildVariableService.batchSetVariable(projectId, pipelineId, buildId, params)
@@ -114,7 +116,6 @@ class PipelineTaskPauseListener @Autowired constructor(
         // 修改详情model
         buildDetailService.updateElementWhenPauseContinue(buildId, stageId, containerId, taskId, element)
         logger.info("update detail element success | $buildId| $taskId | $element")
-
 
         // 触发引擎container事件，继续后续流程
         pipelineEventDispatcher.dispatch(
@@ -270,10 +271,45 @@ class PipelineTaskPauseListener @Autowired constructor(
         )
     }
 
-    fun findDiffValue(newElement: Element, buildId: String, taskId: String) {
+    fun findDiffValue(newElement: Element, buildId: String, taskId: String, userId: String) {
         logger.info("start find diff new element|${objectMapper.writeValueAsString(newElement)}")
-        val oldElement = pipelineBuildTaskDao.getByBuildId(dslContext, buildId).filter { it.taskId == taskId }
-        logger.info("end pause task new element|${objectMapper.writeValueAsString(newElement)}| oldElement|${objectMapper.writeValueAsString(oldElement[0])}")
+        val newJson = JsonUtil.toMap(newElement)
+        val data = newJson["data"]
+        val newInput = JsonUtil.toMap(data!!)
+        val inputKeys = newInput.keys
+        logger.info("inputKeys $inputKeys")
+        val oldElement = pipelineRuntimeService.getBuildTask(buildId, taskId)
+        logger.info(
+            "end pause task new element|${objectMapper.writeValueAsString(newElement)}| oldElement|${objectMapper.writeValueAsString(
+                oldElement
+            )}"
+        )
+        val oldJson = oldElement?.taskParams
+        val oldData = oldJson?.get("data")
+        val oldInput = JsonUtil.toMap(oldData!!)
+        inputKeys.forEach {
+            logger.info("continue pause task, oldInput:${oldInput}, newInput:${newInput}")
+            if (oldInput[it] != (newInput[it])) {
+                LogUtils.addYellowLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "$userId 继续暂停插件且修改入参，修改前参数：$oldInput",
+                    tag = taskId,
+                    jobId = oldElement.containerId,
+                    executeCount = 1
+                )
+            }
+            if (oldInput[it] != (newInput[it])) {
+                LogUtils.addYellowLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "$userId 继续暂停插件且修改入参，修改后参数：$newInput",
+                    tag = taskId,
+                    jobId = oldElement.containerId,
+                    executeCount = 1
+                )
+            }
+        }
     }
 
     companion object {
