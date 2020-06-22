@@ -30,7 +30,7 @@ if ngx.var.http_x_devops_jwt_token == nil then
         table_of_jwt
     )
     ngx.log(ngx.ERR, "jwt_token:", jwt_token) 
-    jwt_token_cache.set("X-DEVOPS-JWT-TOKEN", jwt_token, 300)
+    jwt_token_cache:set("X-DEVOPS-JWT-TOKEN", jwt_token, 300)
     return jwt_token
   else
     return jwt_token_cache_value
