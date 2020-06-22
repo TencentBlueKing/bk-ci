@@ -1,11 +1,11 @@
 package com.tencent.devops.common.web.filter
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.security.jwt.JwtManager
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.web.RequestFilter
-import com.tencent.devops.common.web.constant.SecurityErrorCode
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.DependsOn
 import javax.ws.rs.container.ContainerRequestContext
@@ -33,7 +33,7 @@ class ServiceSecurityFilter(
                 logger.warn("Invalid request, jwt is empty!")
                 throw ErrorCodeException(
                     statusCode = 401,
-                    errorCode = SecurityErrorCode.ERROR_SERVICE_NO_AUTH,
+                    errorCode = CommonMessageCode.ERROR_SERVICE_NO_AUTH,
                     defaultMessage = "Unauthorized:devops api jwt it empty."
                 )
             }
@@ -42,7 +42,7 @@ class ServiceSecurityFilter(
                 logger.warn("Invalid request, jwt is invalid or expired!")
                 throw ErrorCodeException(
                     statusCode = 401,
-                    errorCode = SecurityErrorCode.ERROR_SERVICE_NO_AUTH,
+                    errorCode = CommonMessageCode.ERROR_SERVICE_NO_AUTH,
                     defaultMessage = "Unauthorized:devops api jwt it invalid or expired."
                 )
             }
