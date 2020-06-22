@@ -1,22 +1,6 @@
 USE devops_ci_process;
 SET NAMES utf8mb4;
 
--- ----------------------------
--- Table structure for T_PIPELINE_STAGE_TAG
--- ----------------------------
-
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_STAGE_TAG` (
-  `ID` varchar(32) NOT NULL DEFAULT '' COMMENT '主键',
-  `STAGE_TAG_NAME` varchar(45) NOT NULL DEFAULT '' COMMENT '阶段标签名称',
-  `WEIGHT` int(11) NOT NULL DEFAULT '0' COMMENT '阶段标签权值',
-  `CREATOR` varchar(50) NOT NULL DEFAULT 'system' COMMENT '创建人',
-  `MODIFIER` varchar(50) NOT NULL DEFAULT 'system' COMMENT '最近修改人',
-  `CREATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-
 DROP PROCEDURE IF EXISTS ci_process_schema_update;
 
 DELIMITER <CI_UBF>
