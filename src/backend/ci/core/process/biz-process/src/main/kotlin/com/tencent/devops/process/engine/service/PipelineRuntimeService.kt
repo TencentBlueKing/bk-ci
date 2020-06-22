@@ -61,8 +61,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
@@ -162,8 +160,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildStageDao: PipelineBuildStageDao,
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
-    private val buildVariableService: BuildVariableService,
-    private val redisOperation: RedisOperation
+    private val buildVariableService: BuildVariableService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -1734,19 +1731,6 @@ class PipelineRuntimeService @Autowired constructor(
             executeTime += it.totalTime ?: 0
         }
         return executeTime
-    }
-
-    @Deprecated(message = "replace by PipelineRuntimeExtService")
-    fun getNextQueueBuildInfo(pipelineId: String): BuildInfo? {
-        val redisLock = RedisLock(redisOperation, "pipelineNextQueue:concurrency:$pipelineId", 30L)
-        val historyRecord: TPipelineBuildHistoryRecord?
-        try {
-            redisLock.lock()
-            historyRecord = pipelineBuildDao.getOneQueueBuild(dslContext, pipelineId)
-        } finally {
-            redisLock.unlock()
-        }
-        return pipelineBuildDao.convert(historyRecord)
     }
 
     fun getLastTimeBuild(projectId: String, pipelineId: String): BuildInfo? {
