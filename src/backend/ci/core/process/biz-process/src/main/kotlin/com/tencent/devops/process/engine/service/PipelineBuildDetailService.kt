@@ -888,12 +888,13 @@ class PipelineBuildDetailService @Autowired constructor(
             stopWatch.stop()
             message = "update done"
         } catch (ignored: Throwable) {
+            if (stopWatch.isRunning) {
+                stopWatch.stop()
+            }
             message = "${ignored.message}"
             logger.warn("[$buildId]| Fail to update the build detail: ${ignored.message}", ignored)
         } finally {
-            stopWatch.start("unlock")
             lock.unlock()
-            stopWatch.stop()
             logger.info("[$buildId|$buildStatus]|update_detail_model| $message| watch=$stopWatch")
         }
     }
