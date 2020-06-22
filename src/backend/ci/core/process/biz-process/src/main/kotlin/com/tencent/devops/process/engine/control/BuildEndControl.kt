@@ -222,7 +222,7 @@ class BuildEndControl @Autowired constructor(
     private fun PipelineBuildFinishEvent.popNextBuild() {
 
         // 获取下一个排队的
-        val nextQueueBuildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(pipelineId)
+        val nextQueueBuildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(projectId = projectId, pipelineId = pipelineId)
         if (nextQueueBuildInfo == null) {
             logger.info("[$buildId]|FETCH_QUEUE|$pipelineId no queue build!")
             return

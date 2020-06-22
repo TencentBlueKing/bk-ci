@@ -245,10 +245,11 @@ class PipelineBuildDao {
         }
     }
 
-    fun getOneQueueBuild(dslContext: DSLContext, pipelineId: String): TPipelineBuildHistoryRecord? {
+    fun getOneQueueBuild(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
                 .and(STATUS.eq(BuildStatus.QUEUE.ordinal))
                 .orderBy(BUILD_NUM.asc()).limit(1)
             select.fetchAny()
