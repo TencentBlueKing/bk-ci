@@ -73,15 +73,15 @@ jooq {
         }
 
         generator {
-            name = 'org.jooq.util.DefaultGenerator'
+            name = 'org.jooq.codegen.DefaultGenerator'
 
             database {
-                name = 'org.jooq.util.mysql.MySQLDatabase'
+                name = 'org.jooq.meta.mysql.MySQLDatabase'
                 inputSchema = "${databaseName}"
             }
 
             strategy {
-                name = 'org.jooq.util.DefaultGeneratorStrategy'
+                name = 'org.jooq.codegen.DefaultGeneratorStrategy'
             }
 
             generate {
