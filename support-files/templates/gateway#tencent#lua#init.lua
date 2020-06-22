@@ -135,7 +135,7 @@ config = {
   wechatWorkHost = "__BKCI_WECHART_WORK_HOST__",
   docsUrl = "__BKCI_DOCS_URL__",
   apigwUrl = "__BKCI_APIGW_URL__",
-  jwtPublicKey = "__BKCI_RSA_PRRIVATE_KEY__"
+  jwtPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n__BKCI_RSA_PRIVATE_KEY__\n-----END RSA PRIVATE KEY-----" 
 }
   
 require("init_common")
