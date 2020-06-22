@@ -18,7 +18,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ]]
 
 if ngx.var.http_x_devops_jwt_token == nil then
-  local jwt_token_cache = ngx.shared.gray_project_store
+  local jwt_token_cache = ngx.shared.jwt_token_store
   local jwt_token_cache_value = jwt_token_cache:get("X-DEVOPS-JWT-TOKEN")
   if jwt_token_cache_value == nil then
     local table_of_jwt = {
