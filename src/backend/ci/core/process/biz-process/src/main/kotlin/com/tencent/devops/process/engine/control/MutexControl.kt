@@ -331,13 +331,5 @@ class MutexControl @Autowired constructor(
             jobId = null,
             executeCount = container.executeCount
         )
-        LogUtils.addYellowLine(
-            rabbitTemplate = rabbitTemplate,
-            buildId = container.buildId,
-            message = message,
-            tag = VMUtils.genStartVMTaskId(container.containerId),
-            jobId = null,
-            executeCount = container.executeCount
-        )
     }
 }
