@@ -83,7 +83,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             "pipeline:build:history:data:clear:project:list:page"
     }
 
-    @Scheduled(initialDelay = 10000, fixedDelay = 3000)
+    @Scheduled(initialDelay = 10000, fixedDelay = 12000)
     fun pipelineBuildHistoryDataClear() {
         if (!miscBuildDataClearConfig.switch.toBoolean()) {
             // 如果清理构建历史数据开关关闭，则不清理
