@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import com.tencent.devops.process.engine.service.PipelineBuildService
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
@@ -45,7 +46,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class AppPipelineBuildResourceImpl @Autowired constructor(
     private val appBuildService: AppBuildService,
     private val buildService: PipelineBuildService,
-    private val pipelineBuildQualityService: PipelineBuildQualityService
+    private val pipelineBuildQualityService: PipelineBuildQualityService,
+    private val pipelineRuntimeService: PipelineRuntimeService
 ) : AppPipelineBuildResource {
 
     override fun manualQualityGateReview(
@@ -217,7 +219,28 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(appBuildService.getBuildDetail(userId, projectId, pipelineId, buildId, ChannelCode.BS))
+        // 对特殊的buildid进行处理。
+        var buildIdReal = when (buildId) {
+            "latest" -> {
+                pipelineRuntimeService.getLatestBuildId(projectId, pipelineId)
+            }
+            "latestSucceeded" -> {
+                pipelineRuntimeService.getLatestSucceededBuildId(projectId, pipelineId)
+            }
+            "latestFailed" -> {
+                pipelineRuntimeService.getLatestFailedBuildId(projectId, pipelineId)
+            }
+            "latestFinished" -> {
+                pipelineRuntimeService.getLatestFinishedBuildId(projectId, pipelineId)
+            }
+            else -> {
+                buildId
+            }
+        }
+        if (buildIdReal == null) {
+            buildIdReal = buildId
+        }
+        return Result(appBuildService.getBuildDetail(userId, projectId, pipelineId, buildIdReal, ChannelCode.BS))
     }
 
     private fun checkParam(userId: String, projectId: String, pipelineId: String) {

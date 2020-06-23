@@ -28,7 +28,7 @@ package com.tencent.bk.codecc.defect.api;
 
 import com.tencent.bk.codecc.defect.vo.QueryTaskLogVO;
 import com.tencent.bk.codecc.task.vo.QueryLogRepVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -52,7 +52,7 @@ public interface UserTaskLogRestResource
     @ApiOperation("获取分析记录")
     @Path("/")
     @GET
-    Result<QueryTaskLogVO> getTaskLogs(
+    CodeCCResult<QueryTaskLogVO> getTaskLogs(
             @ApiParam(value = "工具名称", required = true)
             @QueryParam("toolName")
                     String toolName,
@@ -68,7 +68,7 @@ public interface UserTaskLogRestResource
     @ApiOperation("获取分析记录日志")
     @Path("/analysis/logs/{projectId}/{pipelineId}/{buildId}")
     @GET
-    Result<QueryLogRepVO> getAnalysisLogs(
+    CodeCCResult<QueryLogRepVO> getAnalysisLogs(
             @ApiParam(value = "项目ID", required = true)
             @PathParam("projectId")
                     String projectId,
@@ -90,7 +90,7 @@ public interface UserTaskLogRestResource
     @ApiOperation("获取更多日志")
     @GET
     @Path("/analysis/logs/{projectId}/{pipelineId}/{buildId}/more")
-    Result<QueryLogRepVO> getMoreLogs(
+    CodeCCResult<QueryLogRepVO> getMoreLogs(
             @ApiParam(value = "项目ID", required = true)
             @PathParam("projectId")
                     String projectId,
@@ -147,7 +147,7 @@ public interface UserTaskLogRestResource
     @ApiOperation("获取某行后的日志")
     @GET
     @Path("/analysis/logs/{projectId}/{pipelineId}/{buildId}/after")
-    Result<QueryLogRepVO> getAfterLogs(
+    CodeCCResult<QueryLogRepVO> getAfterLogs(
             @ApiParam(value = "项目ID", required = true)
             @PathParam("projectId")
                     String projectId,

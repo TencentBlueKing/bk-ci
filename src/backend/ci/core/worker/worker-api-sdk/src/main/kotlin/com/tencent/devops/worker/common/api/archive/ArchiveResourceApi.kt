@@ -51,7 +51,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         customFilePath: String?
     ): List<String> {
         val purePath = if (customFilePath != null) {
-            purePath(customFilePath).toString()
+            purePath(customFilePath)
         } else {
             customFilePath
         }
@@ -80,7 +80,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
     override fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
         // 过滤掉用../尝试遍历上层目录的操作
-        val purePath = purePath(destPath).toString()
+        val purePath = purePath(destPath)
         val path = purePath + "/" + file.name
         LoggerService.addNormalLine("upload file >>> $path")
 

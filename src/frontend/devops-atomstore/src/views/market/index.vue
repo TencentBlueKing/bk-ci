@@ -197,8 +197,8 @@
             initData () {
                 const { searchStr, classifyKey, classifyValue = 'all', features, score, sortType, pipeType = 'atom' } = this.$route.query
                 Object.assign(this.filterData, { searchStr, classifyKey, classifyValue, score, sortType, pipeType })
+                this.filterData.features = []
                 if (features) {
-                    this.filterData.features = []
                     const featuresArray = features.split(',')
                     featuresArray.forEach((feature) => {
                         feature = feature.split('-')

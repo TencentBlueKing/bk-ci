@@ -31,7 +31,7 @@ import com.tencent.bk.codecc.task.service.MetaService;
 import com.tencent.bk.codecc.task.vo.MetadataVO;
 import com.tencent.bk.codecc.task.vo.ToolMetaBaseVO;
 import com.tencent.bk.codecc.task.vo.ToolMetaDetailVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -51,20 +51,20 @@ public class UserMetaRestResourceImpl implements UserMetaRestResource
     private MetaService metaService;
 
     @Override
-    public Result<List<ToolMetaBaseVO>> toolList(Boolean isDetail)
+    public CodeCCResult<List<ToolMetaBaseVO>> toolList(Boolean isDetail)
     {
-        return new Result<>(metaService.toolList(isDetail));
+        return new CodeCCResult<>(metaService.toolList(isDetail));
     }
 
     @Override
-    public Result<ToolMetaDetailVO> toolDetail(String toolName)
+    public CodeCCResult<ToolMetaDetailVO> toolDetail(String toolName)
     {
-        return new Result<>(metaService.queryToolDetail(toolName));
+        return new CodeCCResult<>(metaService.queryToolDetail(toolName));
     }
 
     @Override
-    public Result<Map<String, List<MetadataVO>>> metadatas(String metadataType)
+    public CodeCCResult<Map<String, List<MetadataVO>>> metadatas(String metadataType)
     {
-        return new Result<>(metaService.queryMetadatas(metadataType));
+        return new CodeCCResult<>(metaService.queryMetadatas(metadataType));
     }
 }

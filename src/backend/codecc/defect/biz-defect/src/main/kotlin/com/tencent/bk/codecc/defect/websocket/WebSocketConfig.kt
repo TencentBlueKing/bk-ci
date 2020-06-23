@@ -26,9 +26,7 @@
 
 package com.tencent.bk.codecc.defect.websocket
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_TASK_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.auth.api.external.BkAuthExPermissionApi
 import com.tencent.devops.common.auth.api.pojo.external.BkAuthExAction
 import org.slf4j.LoggerFactory
@@ -70,9 +68,9 @@ open class WebSocketConfig @Autowired constructor(
 
                 override fun beforeHandshake(request: ServerHttpRequest, response: ServerHttpResponse, wsHandler: WebSocketHandler, attributes: MutableMap<String, Any>): Boolean {
                     val req = request as ServletServerHttpRequest
-                    val user = req.servletRequest.getHeader(AUTH_HEADER_DEVOPS_USER_ID)
+                    val user = req.servletRequest.getHeader("X-DEVOPS-UID")
                     val taskId = req.servletRequest.getParameter(AUTH_HEADER_DEVOPS_TASK_ID)
-                    val projectId = req.servletRequest.getParameter(AUTH_HEADER_DEVOPS_PROJECT_ID)
+                    val projectId = req.servletRequest.getParameter("X-DEVOPS-PROJECT-ID")
                     logger.info("before hand shake, end point establishing start! user: {}, task id: {}", user, taskId)
                     if (user.isNullOrBlank() || taskId.isNullOrBlank() || projectId.isNullOrBlank()) {
                         logger.error("insufficient param info! user: $user, taskId: $taskId, projectId: $projectId")

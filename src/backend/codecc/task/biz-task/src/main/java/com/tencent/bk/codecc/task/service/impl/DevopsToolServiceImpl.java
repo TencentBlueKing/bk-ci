@@ -41,6 +41,7 @@ import com.tencent.bk.codecc.task.vo.BatchRegisterVO;
 import com.tencent.bk.codecc.task.vo.TaskUpdateVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.auth.api.external.BkAuthExRegisterApi;
 import com.tencent.devops.common.constant.ComConstants;
@@ -49,7 +50,7 @@ import com.tencent.devops.common.pipeline.Model;
 import com.tencent.devops.common.pipeline.enums.ChannelCode;
 import com.tencent.devops.common.pipeline.pojo.element.Element;
 import com.tencent.devops.common.web.aop.annotation.OperationHistory;
-import com.tencent.devops.process.api.ServicePipelineResource;
+import com.tencent.devops.process.api.service.ServicePipelineResource;
 import com.tencent.devops.process.pojo.PipelineId;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -97,9 +98,9 @@ public class DevopsToolServiceImpl extends AbstractToolService
 
     @Override
     @OperationHistory(funcId = FUNC_REGISTER_TOOL, operType = REGISTER_TOOL)
-    public Result<Boolean> registerTools(BatchRegisterVO batchRegisterVO, String userName)
+    public CodeCCResult<Boolean> registerTools(BatchRegisterVO batchRegisterVO, String userName)
     {
-        Result<Boolean> registerResult;
+        CodeCCResult<Boolean> registerResult;
         long taskId = batchRegisterVO.getTaskId();
         TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
         if (null == taskInfoEntity)
@@ -143,12 +144,12 @@ public class DevopsToolServiceImpl extends AbstractToolService
         //全部工具添加失败
         if (failTools.size() == batchRegisterVO.getTools().size())
         {
-            registerResult = new Result<>(0, TaskMessageCode.ADD_TOOL_FAIL, "所有工具添加失败", false);
+            registerResult = new CodeCCResult<>(0, TaskMessageCode.ADD_TOOL_FAIL, "所有工具添加失败", false);
         }
         //全部工具添加成功
         else if (successTools.size() == batchRegisterVO.getTools().size())
         {
-            registerResult = new Result<>(true);
+            registerResult = new CodeCCResult<>(true);
         }
         else
         {
@@ -157,7 +158,7 @@ public class DevopsToolServiceImpl extends AbstractToolService
             buffer.append("添加成功；\n");
             formatToolNames(failTools, buffer);
             buffer.append("添加失败");
-            registerResult = new Result<>(0, TaskMessageCode.ADD_TOOL_PARTIALLY_SUCCESS, buffer.toString(), false);
+            registerResult = new CodeCCResult<>(0, TaskMessageCode.ADD_TOOL_PARTIALLY_SUCCESS, buffer.toString(), false);
         }
 
         if (CollectionUtils.isNotEmpty(successTools))

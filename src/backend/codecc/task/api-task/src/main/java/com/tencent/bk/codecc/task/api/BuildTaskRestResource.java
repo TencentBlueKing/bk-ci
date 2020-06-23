@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.task.api;
 
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -51,7 +51,7 @@ public interface BuildTaskRestResource
     @ApiOperation("获取任务信息")
     @Path("/taskId/{taskId}")
     @GET
-    Result<TaskDetailVO> getTaskInfoById(
+    CodeCCResult<TaskDetailVO> getTaskInfoById(
             @ApiParam(value = "任务ID", required = true)
             @PathParam(value = "taskId")
                     Long taskId
