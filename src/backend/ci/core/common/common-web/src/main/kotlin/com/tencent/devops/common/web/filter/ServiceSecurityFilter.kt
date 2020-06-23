@@ -8,6 +8,7 @@ import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.web.RequestFilter
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.DependsOn
+import javax.servlet.http.HttpServletRequest
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
 import javax.ws.rs.container.PreMatching
@@ -18,7 +19,8 @@ import javax.ws.rs.ext.Provider
 @RequestFilter
 @DependsOn("environmentUtil")
 class ServiceSecurityFilter(
-    private val jwtManager: JwtManager
+    private val jwtManager: JwtManager,
+    private val servletRequest: HttpServletRequest
 ) : ContainerRequestFilter {
 
     companion object {
@@ -28,9 +30,11 @@ class ServiceSecurityFilter(
 
     override fun filter(requestContext: ContainerRequestContext?) {
         if (shouldFilter(requestContext!!)) {
+            val clientIp = servletRequest?.remoteAddr
+
             val jwt = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_JWT_TOKEN)
             if (jwt.isNullOrBlank()) {
-                logger.warn("Invalid request, jwt is empty!")
+                logger.warn("Invalid request, jwt is empty!ClientIp:$clientIp")
                 throw ErrorCodeException(
                     statusCode = 401,
                     errorCode = CommonMessageCode.ERROR_SERVICE_NO_AUTH,
@@ -39,7 +43,7 @@ class ServiceSecurityFilter(
             }
             val checkResult: Boolean = jwtManager.verifyJwt(jwt)
             if (!checkResult) {
-                logger.warn("Invalid request, jwt is invalid or expired!")
+                logger.warn("Invalid request, jwt is invalid or expired!ClientIp:$clientIp")
                 throw ErrorCodeException(
                     statusCode = 401,
                     errorCode = CommonMessageCode.ERROR_SERVICE_NO_AUTH,
