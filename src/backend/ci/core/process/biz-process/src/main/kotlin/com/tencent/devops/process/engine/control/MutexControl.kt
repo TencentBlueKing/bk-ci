@@ -367,10 +367,9 @@ class MutexControl @Autowired constructor(
             // container结束的时候，删除lock key
             if (buildId.isNotBlank() && containerId.isNotBlank() && isContainerFinished(buildId, containerId)) {
                 logger.warn("[mutex] CLEAN LOCK KEY|buildId=$buildId|container=$containerId|projectId=$projectId")
-                redisOperation.delete(lockKey)
+                val containerMutexLock = RedisLockByValue(redisOperation, lockKey, mutexId, 86400)
+                containerMutexLock.unlock()
             }
-        }else {
-            redisOperation.delete(lockKey)
         }
     }
 
