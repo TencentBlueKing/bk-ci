@@ -50,7 +50,10 @@ class TxPipelineHistoryDataClearServiceImpl @Autowired constructor() : PipelineH
 
     override fun getSpecTableInfo(): Map<String, String> {
         return mapOf(
-                projectTableKey to "t_project"
+                projectTableKey to "t_project",
+                pluginJingangTableKey to "T_PLUGIN_JINGANG",
+                pluginJingangResultTableKey to "T_PLUGIN_JINGANG_RESULT",
+                artifactoryDbKey to "T_TIPELINE_ARTIFACETORY_INFO"
         )
     }
 
