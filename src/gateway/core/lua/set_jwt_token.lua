@@ -21,16 +21,19 @@ if ngx.var.http_x_devops_jwt_token == nil then
   local jwt_token_cache = ngx.shared.jwt_token_store
   local jwt_token_cache_value = jwt_token_cache:get("X-DEVOPS-JWT-TOKEN")
   if jwt_token_cache_value == nil then
-    local table_of_jwt = {
-        header={typ="JWT", alg="RS256"},
-        payload={sub = "Gateway", exp = ngx.time() + 60 * 10}
-    }
-    local jwt_token, err = jwt:sign(
-        config.jwtPrivateKey,
-        table_of_jwt
-    )
-    ngx.log(ngx.STDERR, "generate jwt_token:", jwt_token) 
-    jwt_token_cache:set("X-DEVOPS-JWT-TOKEN", jwt_token, 300)
+    local jwt_token = ""
+    if config.jwtPrivateKey ~= nil and config.jwtPrivateKey ~= "" then
+      local table_of_jwt = {
+          header={typ="JWT", alg="RS256"},
+          payload={sub = "Gateway", exp = ngx.time() + 60 * 10}
+      }
+      jwt_token = jwt:sign(
+          config.jwtPrivateKey,
+          table_of_jwt
+      )
+      ngx.log(ngx.STDERR, "generate jwt_token:", jwt_token) 
+      jwt_token_cache:set("X-DEVOPS-JWT-TOKEN", jwt_token, 300)
+    end
     return jwt_token
   else
     ngx.log(ngx.STDERR, "cache jwt_token:", jwt_token_cache_value)
