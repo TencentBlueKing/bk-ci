@@ -157,6 +157,7 @@ class PipelineBuildService @Autowired constructor(
             val taskParamMap = JsonUtil.toMap(task.taskParams)
 
             if (taskAtom == "dispatchVMShutdownTaskAtom") {
+                Thread.sleep(3000)
                 val buildContainer = buildContainerDao.getContainer(
                     dslContext = dslContext,
                     buildId = task.buildId,
