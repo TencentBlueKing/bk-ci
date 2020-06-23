@@ -158,7 +158,7 @@ class BuildMonitorControl @Autowired constructor(
     companion object {
         val MAX_MINUTES = TimeUnit.DAYS.toMinutes(7L) // 7 * 24 * 60 = 10080 分钟 = 执行最多超时7天
         val CONTAINER_MAX_MILLS = TimeUnit.MINUTES.toMillis(MAX_MINUTES).toInt() + 1 // 毫秒+1
-        val MAX_HOURS = TimeUnit.DAYS.toHours(30) // 30 * 24 = 720 小时 = 审核最多超时30天
+        val MAX_HOURS = TimeUnit.DAYS.toHours(60) // 60 * 24 = 1440 小时 = 审核最多超时60天
         val STAGE_MAX_MILLS = TimeUnit.HOURS.toMillis(MAX_HOURS) + 1 // 毫秒+1
     }
 
