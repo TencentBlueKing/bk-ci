@@ -61,8 +61,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
@@ -162,8 +160,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildStageDao: PipelineBuildStageDao,
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
-    private val buildVariableService: BuildVariableService,
-    private val redisOperation: RedisOperation
+    private val buildVariableService: BuildVariableService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -1736,21 +1733,8 @@ class PipelineRuntimeService @Autowired constructor(
         return executeTime
     }
 
-    @Deprecated(message = "replace by PipelineRuntimeExtService")
-    fun getNextQueueBuildInfo(pipelineId: String): BuildInfo? {
-        val redisLock = RedisLock(redisOperation, "pipelineNextQueue:concurrency:$pipelineId", 30L)
-        val historyRecord: TPipelineBuildHistoryRecord?
-        try {
-            redisLock.lock()
-            historyRecord = pipelineBuildDao.getOneQueueBuild(dslContext, pipelineId)
-        } finally {
-            redisLock.unlock()
-        }
-        return pipelineBuildDao.convert(historyRecord)
-    }
-
-    fun getLastTimeBuild(pipelineId: String): BuildInfo? {
-        return pipelineBuildDao.convert(pipelineBuildDao.getLatestBuild(dslContext, pipelineId))
+    fun getLastTimeBuild(projectId: String, pipelineId: String): BuildInfo? {
+        return pipelineBuildDao.convert(pipelineBuildDao.getLatestBuild(dslContext, projectId, pipelineId))
     }
 
     fun updateTaskSubBuildId(buildId: String, taskId: String, subBuildId: String) {
@@ -1890,8 +1874,23 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     // 获取流水线最后的构建号
-    fun getLatestFinishedBuildId(pipelineId: String): String? {
-        return pipelineBuildDao.getLatestFinishedBuild(dslContext, pipelineId)?.buildId
+    fun getLatestBuildId(projectId: String, pipelineId: String): String? {
+        return pipelineBuildDao.getLatestBuild(dslContext, projectId, pipelineId)?.buildId
+    }
+
+    // 获取流水线最后完成的构建号
+    fun getLatestFinishedBuildId(projectId: String, pipelineId: String): String? {
+        return pipelineBuildDao.getLatestFinishedBuild(dslContext, projectId, pipelineId)?.buildId
+    }
+
+    // 获取流水线最后成功的构建号
+    fun getLatestSucceededBuildId(projectId: String, pipelineId: String): String? {
+        return pipelineBuildDao.getLatestSuccessedBuild(dslContext, projectId, pipelineId)?.buildId
+    }
+
+    // 获取流水线最后失败的构建号
+    fun getLatestFailedBuildId(projectId: String, pipelineId: String): String? {
+        return pipelineBuildDao.getLatestFailedBuild(dslContext, projectId, pipelineId)?.buildId
     }
 
     fun getBuildIdbyBuildNo(projectId: String, pipelineId: String, buildNo: Int): String? {

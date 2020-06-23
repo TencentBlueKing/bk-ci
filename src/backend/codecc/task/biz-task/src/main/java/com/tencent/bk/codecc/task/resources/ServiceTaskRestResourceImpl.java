@@ -30,7 +30,7 @@ import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.service.TaskRegisterService;
 import com.tencent.bk.codecc.task.service.TaskService;
 import com.tencent.bk.codecc.task.vo.*;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -54,58 +54,58 @@ public class ServiceTaskRestResourceImpl implements ServiceTaskRestResource
     private TaskRegisterService taskRegisterService;
 
     @Override
-    public Result<TaskBaseVO> getTaskInfo(String nameEn)
+    public CodeCCResult<TaskBaseVO> getTaskInfo(String nameEn)
     {
-        return new Result<>(taskService.getTaskInfo(nameEn));
+        return new CodeCCResult<>(taskService.getTaskInfo(nameEn));
     }
 
     @Override
-    public Result<TaskBaseVO> getTaskToolList(long taskId)
+    public CodeCCResult<TaskBaseVO> getTaskToolList(long taskId)
     {
-        return new Result<>(taskService.getTaskToolList(taskId));
+        return new CodeCCResult<>(taskService.getTaskToolList(taskId));
     }
 
     @Override
-    public Result<TaskDetailVO> getTaskInfoById(Long taskId)
+    public CodeCCResult<TaskDetailVO> getTaskInfoById(Long taskId)
     {
-        return new Result<>(taskService.getTaskInfoById(taskId));
+        return new CodeCCResult<>(taskService.getTaskInfoById(taskId));
     }
 
     @Override
-    public Result<Boolean> updateTask(TaskDetailVO taskDetailVO, String userName)
+    public CodeCCResult<Boolean> updateTask(TaskDetailVO taskDetailVO, String userName)
     {
-        return new Result<>(taskRegisterService.updateTaskFromPipeline(taskDetailVO, userName));
+        return new CodeCCResult<>(taskRegisterService.updateTaskFromPipeline(taskDetailVO, userName));
     }
 
     @Override
-    public Result<TaskIdVO> registerPipelineTask(TaskDetailVO taskDetailVO, String projectId, String userName)
+    public CodeCCResult<TaskIdVO> registerPipelineTask(TaskDetailVO taskDetailVO, String projectId, String userName)
     {
         taskDetailVO.setProjectId(projectId);
-        return new Result<>(taskRegisterService.registerTask(taskDetailVO, userName));
+        return new CodeCCResult<>(taskRegisterService.registerTask(taskDetailVO, userName));
     }
 
     @Override
-    public Result<Boolean> stopTask(Long taskId, String disabledReason, String userName)
+    public CodeCCResult<Boolean> stopTask(Long taskId, String disabledReason, String userName)
     {
-        return new Result<>(taskService.stopTask(taskId, disabledReason, userName));
+        return new CodeCCResult<>(taskService.stopTask(taskId, disabledReason, userName));
     }
 
     @Override
-    public Result<Boolean> checkTaskExists(Long taskId)
+    public CodeCCResult<Boolean> checkTaskExists(Long taskId)
     {
-        return new Result<>(taskService.checkTaskExists(taskId));
+        return new CodeCCResult<>(taskService.checkTaskExists(taskId));
     }
 
     @Override
-    public Result<Map<String, ToolMetaBaseVO>> getToolMetaListFromCache()
+    public CodeCCResult<Map<String, ToolMetaBaseVO>> getToolMetaListFromCache()
     {
-        return new Result<>(taskService.getToolMetaListFromCache());
+        return new CodeCCResult<>(taskService.getToolMetaListFromCache());
     }
 
     @Override
-    public Result<TaskDetailVO> getPipelineTask(String pipelineId)
+    public CodeCCResult<TaskDetailVO> getPipelineTask(String pipelineId)
     {
-        return new Result<>(taskService.getTaskInfoByPipelineId(pipelineId));
+        return new CodeCCResult<>(taskService.getTaskInfoByPipelineId(pipelineId));
     }
 
 

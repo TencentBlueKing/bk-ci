@@ -46,7 +46,7 @@ class IllegalArgumentExceptionMapper : ExceptionMapper<IllegalArgumentException>
     }
 
     override fun toResponse(exception: IllegalArgumentException): Response {
-        logger.error("Failed with illegal argument exception", exception)
+        logger.warn("Failed with illegal argument exception", exception)
         val status = Response.Status.BAD_REQUEST
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message

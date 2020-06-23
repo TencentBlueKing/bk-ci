@@ -47,7 +47,7 @@ class UnauthorizedExceptionMapper : ExceptionMapper<UnauthorizedException> {
     }
 
     override fun toResponse(exception: UnauthorizedException): Response {
-        logger.error("未授权错误:", exception)
+        logger.warn("未授权错误:", exception)
         val status = Response.Status.UNAUTHORIZED
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message

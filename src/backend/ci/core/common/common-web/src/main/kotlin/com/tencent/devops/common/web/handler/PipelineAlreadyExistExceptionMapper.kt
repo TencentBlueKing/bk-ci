@@ -41,7 +41,7 @@ class PipelineAlreadyExistExceptionMapper : ExceptionMapper<PipelineAlreadyExist
     }
 
     override fun toResponse(exception: PipelineAlreadyExistException): Response {
-        logger.error("Failed with pipeline already exist exception", exception)
+        logger.warn("Failed with pipeline already exist exception", exception)
         val status = Response.Status.CONFLICT
         val message = "流水线名称已被他人使用"
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)

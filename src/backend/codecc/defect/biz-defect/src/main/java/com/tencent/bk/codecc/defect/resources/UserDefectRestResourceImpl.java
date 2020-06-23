@@ -30,7 +30,7 @@ import com.tencent.bk.codecc.defect.api.UserDefectRestResource;
 import com.tencent.bk.codecc.defect.service.IQueryWarningBizService;
 import com.tencent.bk.codecc.defect.vo.GetFileContentSegmentReqVO;
 import com.tencent.bk.codecc.defect.vo.common.*;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.auth.api.pojo.external.BkAuthExAction;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
@@ -51,51 +51,51 @@ public class UserDefectRestResourceImpl implements UserDefectRestResource
     private BizServiceFactory<IQueryWarningBizService> fileAndDefectQueryFactory;
 
     @Override
-    public Result<QueryWarningPageInitRspVO> queryCheckersAndAuthors(Long taskId, String toolName)
+    public CodeCCResult<QueryWarningPageInitRspVO> queryCheckersAndAuthors(Long taskId, String toolName)
     {
         IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(toolName,
                 ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
-        return new Result<>(queryWarningBizService.processQueryWarningPageInitRequest(taskId, toolName));
+        return new CodeCCResult<>(queryWarningBizService.processQueryWarningPageInitRequest(taskId, toolName));
     }
 
     @Override
-    public Result<CommonFileQueryRspVO> queryFileList(Long taskId,
-                                                      CommonFileQueryReqVO commonFileQueryReqVO,
-                                                      Integer pageNum,
-                                                      Integer pageSize,
-                                                      String sortField,
-                                                      Sort.Direction sortType)
-    {
-        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(commonFileQueryReqVO.getToolName(),
-                ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
-        return new Result<>(queryWarningBizService.processQueryWarningRequest(taskId, commonFileQueryReqVO, pageNum, pageSize, sortField, sortType));
-    }
-
-    @Override
-    public Result<CommonDefectQueryRspVO> queryDefectDetail(Long taskId,
-                                                            CommonDefectQueryReqVO commonDefectQueryReqVO,
+    public CodeCCResult<CommonFileQueryRspVO> queryFileList(Long taskId,
+                                                            CommonFileQueryReqVO commonFileQueryReqVO,
+                                                            Integer pageNum,
+                                                            Integer pageSize,
                                                             String sortField,
                                                             Sort.Direction sortType)
     {
-        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(commonDefectQueryReqVO.getToolName(),
+        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(commonFileQueryReqVO.getToolName(),
                 ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
-        return new Result<>(queryWarningBizService.processQueryWarningDetailRequest(taskId, commonDefectQueryReqVO, sortField, sortType));
+        return new CodeCCResult<>(queryWarningBizService.processQueryWarningRequest(taskId, commonFileQueryReqVO, pageNum, pageSize, sortField, sortType));
     }
 
     @Override
-    public Result<CommonDefectQueryRspVO> getFileContentSegment(Long taskId, GetFileContentSegmentReqVO getFileContentSegmentReqVO)
+    public CodeCCResult<CommonDefectQueryRspVO> queryDefectDetail(Long taskId,
+                                                                  CommonDefectQueryReqVO commonDefectQueryReqVO,
+                                                                  String sortField,
+                                                                  Sort.Direction sortType)
+    {
+        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(commonDefectQueryReqVO.getToolName(),
+                ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
+        return new CodeCCResult<>(queryWarningBizService.processQueryWarningDetailRequest(taskId, commonDefectQueryReqVO, sortField, sortType));
+    }
+
+    @Override
+    public CodeCCResult<CommonDefectQueryRspVO> getFileContentSegment(Long taskId, GetFileContentSegmentReqVO getFileContentSegmentReqVO)
     {
         IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(getFileContentSegmentReqVO.getToolName(),
                 ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
-        return new Result<>(queryWarningBizService.processGetFileContentSegmentRequest(taskId, getFileContentSegmentReqVO));
+        return new CodeCCResult<>(queryWarningBizService.processGetFileContentSegmentRequest(taskId, getFileContentSegmentReqVO));
     }
 
     @Override
-    public Result<Boolean> authorTransfer(Long taskId, CommonAuthorTransVO commonAuthorTransVO)
+    public CodeCCResult<Boolean> authorTransfer(Long taskId, CommonAuthorTransVO commonAuthorTransVO)
     {
         IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(commonAuthorTransVO.getToolName(),
                 ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
-        return new Result<>(queryWarningBizService.authorTransfer(taskId, commonAuthorTransVO));
+        return new CodeCCResult<>(queryWarningBizService.authorTransfer(taskId, commonAuthorTransVO));
     }
 
 

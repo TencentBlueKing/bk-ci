@@ -38,7 +38,7 @@ import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
 import com.tencent.bk.codecc.defect.vo.DUPCScanSummaryVO;
 import com.tencent.bk.codecc.defect.vo.UploadDUPCStatisticVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import org.apache.commons.collections.CollectionUtils;
@@ -74,7 +74,7 @@ public class DUPCUploadStatisticServiceImpl implements DUPCUploadStatisticServic
     private ThirdPartySystemCaller thirdPartySystemCaller;
 
     @Override
-    public Result uploadStatistic(UploadDUPCStatisticVO uploadStatisticVO)
+    public CodeCCResult uploadStatistic(UploadDUPCStatisticVO uploadStatisticVO)
     {
         // 调用task模块的接口获取任务信息
         Long taskId = uploadStatisticVO.getTaskId();
@@ -85,7 +85,7 @@ public class DUPCUploadStatisticServiceImpl implements DUPCUploadStatisticServic
 
         // 保存本次上报文件的告警数据统计数据
         saveStatisticResult(taskId, currentAnalysisVersion, existCount, uploadStatisticVO.getScanSummary());
-        return new Result(CommonMessageCode.SUCCESS, "upload DUPC analysis statistic ok");
+        return new CodeCCResult(CommonMessageCode.SUCCESS, "upload DUPC analysis statistic ok");
     }
 
     /**
