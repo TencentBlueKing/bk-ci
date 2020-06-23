@@ -28,6 +28,7 @@ package com.tencent.devops.common.api.util
 
 import org.junit.Assert
 import org.junit.Test
+import java.nio.file.Files
 import java.util.concurrent.ThreadLocalRandom
 
 /**
@@ -37,6 +38,20 @@ class ShaUtilsTest {
 
     private var byteArray: ByteArray = byteArrayOf(1, 2, 3, 99, -12, -23, 69, 21, 112, -99)
     private val expectSha1 = "ec6a2bdb3c5dd567da1899216eab87358059520e"
+
+    @Test
+    fun sha1InputStream() {
+        val tempFile = Files.createTempFile("hello", "${System.currentTimeMillis()}").toFile()
+        tempFile.deleteOnExit()
+        val text = "hello world"
+        tempFile.writeText(text)
+        val sha11 = ShaUtils.sha1(tempFile.readBytes())
+        tempFile.inputStream().use {
+            val sha1 = ShaUtils.sha1InputStream(it)
+            println("sha1=$sha1")
+            Assert.assertEquals(sha11, sha1)
+        }
+    }
 
     @Test
     fun sha1() {

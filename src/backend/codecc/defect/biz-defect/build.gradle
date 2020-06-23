@@ -13,12 +13,11 @@ dependencies {
     compile group: 'javax.websocket', name: 'javax.websocket-api', version: '1.1'
     compile "io.undertow:undertow-servlet"
     compile "io.undertow:undertow-websockets-jsr"
-    compile group: 'com.tencent.bk.devops', name: 'api-log', version: '0.0.3', changing: true
-    compile group: 'com.tencent.bk.devops', name: 'api-quality', version: '0.0.2', changing: true
-    compile group: 'com.tencent.bk.devops', name: 'api-process', version: '0.0.3', changing: true
-    compile group: 'com.tencent.bk.devops', name: 'api-repository', version: '0.0.3', changing: true
-    compile group: 'com.tencent.bk.devops', name: 'api-codecc', version: '0.0.2', changing: true
-//    compile group: 'com.tencent.bk.devops', name: 'common-license', version: '0.0.2', changing: true
+    compile group: 'com.tencent.bk.devops.ci.log', name: 'api-log', version: "$ci_version", changing: true
+    compile group: 'com.tencent.bk.devops.ci.quality', name: 'api-quality', version: "$ci_version", changing: true
+    compile group: 'com.tencent.bk.devops.ci.process', name: 'api-process', version: "$ci_version", changing: true
+    compile group: 'com.tencent.bk.devops.ci.repository', name: 'api-repository', version: "$ci_version", changing: true
+    compile group: 'com.tencent.bk.devops.ci.plugin', name: 'api-codecc', version: "$ci_version", changing: true
 }
 
 version = null

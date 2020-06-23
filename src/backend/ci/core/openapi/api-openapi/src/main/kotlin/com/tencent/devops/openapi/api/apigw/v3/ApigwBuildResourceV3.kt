@@ -75,7 +75,10 @@ interface ApigwBuildResourceV3 {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam("启动参数", required = true)
-        values: Map<String, String>
+        values: Map<String, String>,
+        @ApiParam("手动指定构建版本参数", required = false)
+        @QueryParam("buildNo")
+        buildNo: Int? = null
     ): Result<BuildId>
 
     @ApiOperation("停止构建")

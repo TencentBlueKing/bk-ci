@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLLimit
@@ -33,10 +35,13 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineResource
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.engine.utils.PipelineUtils
@@ -64,6 +69,7 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
 class UserPipelineResourceImpl @Autowired constructor(
@@ -268,6 +274,21 @@ class UserPipelineResourceImpl @Autowired constructor(
     override fun restore(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
+        // 判断用户是否为项目管理员
+        val permission = BkAuthGroup.MANAGER
+        if (!pipelinePermissionService.isProjectUser(userId, projectId, permission)) {
+            val defaultMessage = "管理员"
+            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${permission.value}",
+                defaultMessage = defaultMessage
+            )
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                defaultMessage = defaultMessage,
+                params = arrayOf(permissionMsg)
+            )
+        }
         pipelineService.restorePipeline(userId, projectId, pipelineId, ChannelCode.BS)
         return Result(true)
     }

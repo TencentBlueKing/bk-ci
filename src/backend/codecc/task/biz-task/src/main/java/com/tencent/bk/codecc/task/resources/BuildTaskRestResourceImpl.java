@@ -29,7 +29,7 @@ package com.tencent.bk.codecc.task.resources;
 import com.tencent.bk.codecc.task.api.BuildTaskRestResource;
 import com.tencent.bk.codecc.task.service.TaskService;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -47,8 +47,8 @@ public class BuildTaskRestResourceImpl implements BuildTaskRestResource
     private TaskService taskService;
 
     @Override
-    public Result<TaskDetailVO> getTaskInfoById(Long taskId)
+    public CodeCCResult<TaskDetailVO> getTaskInfoById(Long taskId)
     {
-        return new Result<>(taskService.getTaskInfoById(taskId));
+        return new CodeCCResult<>(taskService.getTaskInfoById(taskId));
     }
 }
