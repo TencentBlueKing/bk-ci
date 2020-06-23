@@ -33,7 +33,7 @@
                 </bk-row>
             </bk-col>
             <bk-col :span="3">
-                <img :src="detail.logoUrl" class="progress-image">
+                <img v-if="detail.logoUrl" :src="detail.logoUrl" class="progress-image">
             </bk-col>
         </bk-row>
         <bk-row>

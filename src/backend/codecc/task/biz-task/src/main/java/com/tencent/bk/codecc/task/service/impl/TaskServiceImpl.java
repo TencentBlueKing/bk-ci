@@ -49,7 +49,7 @@ import com.tencent.devops.common.api.ToolLastAnalysisResultVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.exception.StreamException;
 import com.tencent.devops.common.api.exception.UnauthorizedException;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.auth.api.external.BkAuthExPermissionApi;
 import com.tencent.devops.common.auth.api.external.BkAuthExRegisterApi;
 import com.tencent.devops.common.auth.api.pojo.external.BkAuthExAction;
@@ -153,7 +153,7 @@ public class TaskServiceImpl implements TaskService
                 }).
                 collect(Collectors.toList());
 
-        Result<Map<String, List<ToolLastAnalysisResultVO>>> taskAndTaskLogResult = client.get(ServiceTaskLogRestResource.class).
+        CodeCCResult<Map<String, List<ToolLastAnalysisResultVO>>> taskAndTaskLogResult = client.get(ServiceTaskLogRestResource.class).
                 getBatchTaskLatestTaskLog(taskDetailVOList);
         Map<String, List<ToolLastAnalysisResultVO>> taskAndTaskLogMap;
         if (taskAndTaskLogResult.isOk() &&
@@ -510,7 +510,7 @@ public class TaskServiceImpl implements TaskService
             GetLastAnalysisResultsVO getLastAnalysisResultsVO = new GetLastAnalysisResultsVO();
             getLastAnalysisResultsVO.setTaskId(taskId);
             getLastAnalysisResultsVO.setToolSet(toolLastAnalysisMap.keySet());
-            Result<List<ToolLastAnalysisResultVO>> result = client.get(ServiceTaskLogRestResource.class).getLastAnalysisResults(getLastAnalysisResultsVO);
+            CodeCCResult<List<ToolLastAnalysisResultVO>> result = client.get(ServiceTaskLogRestResource.class).getLastAnalysisResults(getLastAnalysisResultsVO);
             if (result.isNotOk() || null == result.getData())
             {
                 logger.error("get last analysis results fail! taskId is: {}, msg: {}", taskId, result.getMessage());
@@ -904,7 +904,7 @@ public class TaskServiceImpl implements TaskService
         if (CollectionUtils.isNotEmpty(toolSet))
         {
             //停止原有正在运行的流水线
-            Result<Boolean> stopResult = client.get(ServiceTaskLogRestResource.class).stopRunningTask(taskInfoEntity.getPipelineId(), taskInfoEntity.getNameEn(),
+            CodeCCResult<Boolean> stopResult = client.get(ServiceTaskLogRestResource.class).stopRunningTask(taskInfoEntity.getPipelineId(), taskInfoEntity.getNameEn(),
                     toolSet, taskInfoEntity.getProjectId(), taskId, userName);
             if (stopResult.isNotOk() || null == stopResult.getData() || !stopResult.getData())
             {

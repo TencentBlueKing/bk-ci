@@ -27,13 +27,9 @@
 package upgrade
 
 import (
-	"errors"
-	"github.com/astaxie/beego/logs"
-	"pkg/config"
-	"pkg/util/command"
-	"pkg/util/systemutil"
 	"testing"
-	"time"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 )
 
 func Test_startUpgrader_01(t *testing.T) {

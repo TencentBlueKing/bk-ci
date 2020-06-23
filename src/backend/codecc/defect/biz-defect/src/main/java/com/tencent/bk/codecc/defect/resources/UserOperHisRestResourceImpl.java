@@ -29,7 +29,7 @@ package com.tencent.bk.codecc.defect.resources;
 import com.tencent.bk.codecc.defect.api.UserOperHisRestResource;
 import com.tencent.bk.codecc.defect.service.OperationHistoryService;
 import com.tencent.bk.codecc.defect.vo.OperationHistoryVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.auth.api.pojo.external.BkAuthExAction;
 import com.tencent.devops.common.web.RestResource;
 import com.tencent.devops.common.web.security.AuthMethod;
@@ -51,8 +51,8 @@ public class UserOperHisRestResourceImpl implements UserOperHisRestResource
 
     @Override
     @AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<List<OperationHistoryVO>> getOperHisRecord(Long taskId, String toolName, List<String> funcId)
+    public CodeCCResult<List<OperationHistoryVO>> getOperHisRecord(Long taskId, String toolName, List<String> funcId)
     {
-        return new Result<>(operationHistoryService.getOperHisByTaskIdAndFuncId(taskId, toolName, funcId));
+        return new CodeCCResult<>(operationHistoryService.getOperHisByTaskIdAndFuncId(taskId, toolName, funcId));
     }
 }

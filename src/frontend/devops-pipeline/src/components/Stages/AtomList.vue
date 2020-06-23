@@ -1,12 +1,12 @@
 <template>
     <section>
         <draggable class="container-atom-list" :class="{ 'trigger-container': isTriggerContainer(container), 'readonly': !editable }" :data-baseos="container.baseOS || container.classType" v-model="atomList" v-bind="dragOptions" :move="checkMove">
-            <li v-for="(atom, index) in atomList" :key="atom.name" :class="{ 'atom-item': true,
-                                                                             [atom.status]: atom.status,
-                                                                             'quality-item': (atom['@type'] === 'qualityGateOutTask') || (atom['@type'] === 'qualityGateInTask'),
-                                                                             'last-quality-item': (atom['@type'] === 'qualityGateOutTask' && index === atomList.length - 1),
-                                                                             'arrival-atom': atom.status,
-                                                                             'qualitt-next-atom': handlePreviousAtomCheck(atomList, index)
+            <li v-for="(atom, index) in atomList" :key="atom.id" :class="{ 'atom-item': true,
+                                                                           [atom.status]: atom.status,
+                                                                           'quality-item': (atom['@type'] === 'qualityGateOutTask') || (atom['@type'] === 'qualityGateInTask'),
+                                                                           'last-quality-item': (atom['@type'] === 'qualityGateOutTask' && index === atomList.length - 1),
+                                                                           'arrival-atom': atom.status,
+                                                                           'qualitt-next-atom': handlePreviousAtomCheck(atomList, index)
             }"
                 @click.stop="showPropertyPanel(index)"
             >
@@ -36,7 +36,7 @@
                         </template>
                     </bk-popover>
                     <a href="javascript: void(0);" class="atom-single-retry" v-if="atom.status !== 'SKIP' && atom.canRetry" @click.stop="singleRetry(atom.id)">{{ $t('retry') }}</a>
-                    <bk-popover placement="top" v-else-if="atom.status !== 'SKIP'">
+                    <bk-popover placement="top" v-else-if="atom.status !== 'SKIP'" :disabled="!atom.elapsed">
                         <span :class="atom.status === 'SUCCEED' ? 'atom-success-timer' : (atom.status === 'REVIEW_ABORT' ? 'atom-warning-timer' : 'atom-fail-timer')">
                             <span v-if="atom.elapsed && atom.elapsed >= 36e5">&gt;</span>{{ atom.elapsed ? atom.elapsed > 36e5 ? '1h' : localTime(atom.elapsed) : '' }}
                         </span>
@@ -80,7 +80,7 @@
 <script>
     import StatusIcon from './StatusIcon'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import { coverTimer } from '@/utils/util'
+    import { coverTimer, hashID } from '@/utils/util'
     import draggable from 'vuedraggable'
     import Logo from '@/components/Logo'
     import CheckAtomDialog from './CheckAtomDialog'
@@ -275,7 +275,10 @@
             copyAtom (atomIndex) {
                 try {
                     const { id, ...element } = this.container.elements[atomIndex]
-                    this.container.elements.splice(atomIndex + 1, 0, JSON.parse(JSON.stringify(element)))
+                    this.container.elements.splice(atomIndex + 1, 0, JSON.parse(JSON.stringify({
+                        ...element,
+                        id: `e-${hashID(32)}`
+                    })))
                     this.setPipelineEditing(true)
                 } catch (e) {
                     console.error(e)
@@ -807,6 +810,6 @@
         opacity: 0.5;
     }
     .sortable-chosen-atom {
-        transform: scale(1.1);
+        transform: scale(1.0);
     }
 </style>

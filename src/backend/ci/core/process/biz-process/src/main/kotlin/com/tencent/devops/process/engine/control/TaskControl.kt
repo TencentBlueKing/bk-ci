@@ -144,15 +144,37 @@ class TaskControl @Autowired constructor(
                     ActionType.RETRY
                 } else if (ControlUtils.continueWhenFailure(buildTask.additionalOptions)) { // 如果配置了失败继续，则继续下去
                     logger.info("[$buildId]|ATOM|stageId=$stageId|container=$containerId|taskId=$taskId|vm atom will continue, even the task is failure")
+                    // 记录失败原子
+                    pipelineTaskService.createFailElementVar(
+                        buildId = buildId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        taskId = taskId
+                    )
+
                     if (ActionType.isEnd(actionType)) ActionType.START
                     else actionType
                 } else { // 如果当前动作不是结束动作并且当前状态失败了就要结束当前容器构建
+                    // 记录失败原子
+                    pipelineTaskService.createFailElementVar(
+                        buildId = buildId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        taskId = taskId
+                    )
                     if (!ActionType.isEnd(actionType)) ActionType.END
                     else actionType // 如果是结束动作，继承它
                 }
             } else {
                 // 清除该原子内的重试记录
                 pipelineTaskService.removeRetryCache(buildId, taskId)
+                // 清理插件错误信息（重试插件成功的情况下）
+                pipelineTaskService.removeFailVarWhenSuccess(
+                    buildId = buildId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    taskId = taskId
+                )
                 // 当前原子成功结束后，继续继承动作，发消息请求执行
                 actionType
             }
