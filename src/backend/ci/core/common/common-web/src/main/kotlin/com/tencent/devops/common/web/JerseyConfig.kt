@@ -96,14 +96,6 @@ open class JerseyConfig : ResourceConfig(), ApplicationContextAware, Initializin
             logger.info("RequestFilter: $it")
             register(it)
         }
-
         logger.info("JerseyConfig-RequestFilter-register-end")
-        logger.info("JerseyConfig-Interceptor-register-start")
-        val requestInterceptor = applicationContext.getBeansWithAnnotation(RequestInterceptor::class.java)
-        requestInterceptor.values.forEach {
-            logger.info("requestInterceptor: $it")
-            register(it)
-        }
-        logger.info("JerseyConfig-Interceptor-register-end")
     }
 }
