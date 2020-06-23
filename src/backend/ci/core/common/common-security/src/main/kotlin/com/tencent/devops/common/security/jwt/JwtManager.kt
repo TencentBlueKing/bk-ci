@@ -113,7 +113,7 @@ class JwtManager(
             return false
         } finally {
             val cost = System.currentTimeMillis() - start
-            if (cost > 5) {
+            if (cost > 100) {
                 logger.warn("Verify jwt cost too much, cost:{}", cost)
             }
         }
