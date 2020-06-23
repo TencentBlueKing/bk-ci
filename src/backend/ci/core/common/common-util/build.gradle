@@ -35,5 +35,4 @@ dependencies {
     compile 'org.apache.commons:commons-lang3'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
-//    testImplementation "org.junit.jupiter:junit-jupiter"
 }

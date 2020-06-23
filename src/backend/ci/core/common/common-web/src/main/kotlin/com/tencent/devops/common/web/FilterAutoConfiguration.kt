@@ -46,5 +46,5 @@ class FilterAutoConfiguration(
 ) {
 
     @Bean
-    fun serviceAuthFilter() = ServiceSecurityFilter(jwtManager, servletRequest)
+    fun serviceSecurityFilter() = ServiceSecurityFilter(jwtManager, servletRequest)
 }
