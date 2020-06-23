@@ -26,13 +26,16 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
+import com.tencent.devops.process.engine.control.lock.StageIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
@@ -54,6 +57,7 @@ import java.time.LocalDateTime
  */
 @Service
 class StageControl @Autowired constructor(
+    private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
@@ -65,7 +69,19 @@ class StageControl @Autowired constructor(
 
     fun handle(event: PipelineBuildStageEvent) {
         with(event) {
+            val stageIdLock = StageIdLock(redisOperation, buildId, stageId)
+            try {
+                stageIdLock.lock()
+                execute()
+            } finally {
+                stageIdLock.unlock()
+            }
+        }
+    }
 
+    private fun PipelineBuildStageEvent.execute() {
+
+        with(this) {
             val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
                 ?: run {
                     logger.info("[$buildId]|STAGE_$actionType| have not build detail!")
@@ -75,7 +91,7 @@ class StageControl @Autowired constructor(
             // 当前构建整体的状态，可能是运行中，也可能已经失败
             // 已经结束的构建，不再受理，抛弃消息
             if (BuildStatus.isFinish(buildInfo.status)) {
-                logger.info("[$buildId]|[${buildInfo.status}]|STAGE_REPEAT_EVENT|event=$event")
+                logger.info("[$buildId]|[${buildInfo.status}]|STAGE_REPEAT_EVENT|event=$this")
                 return
             }
 
@@ -87,6 +103,12 @@ class StageControl @Autowired constructor(
                 stagesWithId.first()
             } else {
                 logger.warn("[$buildId]|[${buildInfo.status}]|bad stage|stage=$stageId")
+                return
+            }
+
+            // 当前Stage的状态如果已经结束，不再受理做执行判断，抛弃消息
+            if (BuildStatus.isFinish(stage.status)) {
+                logger.info("[$buildId]|[${stage.status}]|STAGE_ALREADY_FINISHED|event=$this")
                 return
             }
 
@@ -102,7 +124,7 @@ class StageControl @Autowired constructor(
 
             val fastKill = stage.controlOption?.fastKill == true && source == "$BS_CONTAINER_END_SOURCE_PREIX${BuildStatus.FAILED}"
 
-            logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$event|stage=$stage|needPause=$needPause|fastKill=$fastKill")
+            logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$this|stage=$stage|needPause=$needPause|fastKill=$fastKill")
 
             // [终止事件]或[满足FastKill]或[等待审核超时] 直接结束流水线，不需要判断各个Stage的状态，可直接停止
             if (ActionType.isTerminate(actionType) || fastKill) {
@@ -113,7 +135,7 @@ class StageControl @Autowired constructor(
                     pipelineStageService.updateStageStatus(buildId, s.stageId, buildStatus)
                 }
                 allContainers.forEach { c ->
-                    if (BuildStatus.isRunning(c.status))
+                    if (BuildStatus.isRunning(c.status)) {
                         pipelineRuntimeService.updateContainerStatus(
                             buildId = buildId,
                             stageId = c.stageId,
@@ -121,12 +143,13 @@ class StageControl @Autowired constructor(
                             endTime = LocalDateTime.now(),
                             buildStatus = buildStatus
                         )
+                    }
                 }
 
                 // 如果是因fastKill强制终止，流水线状态标记为失败
                 if (fastKill) buildStatus = BuildStatus.FAILED
 
-                // 如果是因审核超时终止构建，流水线状态
+                // 如果是因审核超时终止构建，流水线状态保持
                 pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
                 return sendTerminateEvent(javaClass.simpleName, buildStatus)
             }
@@ -139,17 +162,20 @@ class StageControl @Autowired constructor(
                     // 执行条件不满足或未启用该Stage
                     logger.info("[$buildId]|[${buildInfo.status}]|STAGE_SKIP|stage=$stageId|action=$actionType")
 
-                    pipelineStageService.updateStageStatus(buildId, stageId, BuildStatus.SKIP)
-                    pipelineBuildDetailService.stageSkip(buildId, stageId)
-
+                    pipelineStageService.skipStage(buildId, stageId)
                     actionType = ActionType.SKIP
                 } else if (needPause) {
                     // 进入暂停状态等待手动触发
                     logger.info("[$buildId]|[${buildInfo.status}]|STAGE_PAUSE|stage=$stageId|action=$actionType")
 
-                    pipelineStageService.updateStageStatus(buildId, stageId, BuildStatus.PAUSE)
-                    pipelineBuildDetailService.stagePause(pipelineId, buildId, stageId)
-
+                    val triggerUsers = stage.controlOption?.stageControlOption?.triggerUsers?.joinToString(",") ?: ""
+                    stage.controlOption!!.stageControlOption.triggerUsers = EnvUtils.parseEnv(triggerUsers, variables).split(",").toList()
+                    pipelineStageService.pauseStage(
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        stageId = stageId,
+                        controlOption = stage.controlOption!!
+                    )
                     return
                 }
             }
@@ -163,7 +189,7 @@ class StageControl @Autowired constructor(
                         logger.info("[$buildId]|[${buildInfo.status}]|STAGE_DONE|stageId=${s.stageId}|status=$buildStatus|action=$actionType|stages=$stages|index=$index")
 
                         // 如果当前Stage[还未结束]或者[执行失败]或[已经是最后一个]，则不尝试下一Stage
-                        if (BuildStatus.isRunning(buildStatus) || BuildStatus.isFailure(buildStatus) || index == stages.size - 1) {
+                        if (BuildStatus.isRunning(buildStatus) || BuildStatus.isFailure(buildStatus) || index == stages.lastIndex) {
                             return@outer
                         }
                         // 直接发送执行下一个Stage的消息
@@ -173,15 +199,15 @@ class StageControl @Autowired constructor(
             }
             if (BuildStatus.isFinish(buildStatus)) { // 构建状态结束了
                 logger.info("[$buildId]|[${buildInfo.status}]|STAGE_FINALLY|stageId=$stageId|status=$buildStatus|action=$actionType")
-                // 如果最后一个stage被跳过，流水线最终设为成功
-                if (buildStatus == BuildStatus.SKIP) {
-                    buildStatus = BuildStatus.SUCCEED
-                }
                 pipelineBuildDetailService.updateStageStatus(
                     buildId = buildId,
                     stageId = stageId,
                     buildStatus = buildStatus
                 )
+                // 如果最后一个stage被跳过，流水线最终设为成功
+                if (buildStatus == BuildStatus.SKIP) {
+                    buildStatus = BuildStatus.SUCCEED
+                }
                 sendFinishEvent("FINALLY", buildStatus)
             }
         }
@@ -208,34 +234,39 @@ class StageControl @Autowired constructor(
             if (actionType == ActionType.REFRESH) { // 对未启动的Stage要变成开始指令
                 newActionType = ActionType.START
             }
-            // 要启动Stage，初始化状态
-            if (ActionType.isStart(newActionType)) {
-                buildStatus = BuildStatus.RUNNING
-                pipelineStageService.updateStageStatus(buildId, stageId, buildStatus)
-                pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
-                logger.info("[$buildId]|STAGE_INIT|stageId=$stageId|action=$newActionType")
-            }
-            // 若为终止命令，直接设置为取消
-            else if (ActionType.isEnd(newActionType)) {
-                buildStatus = BuildStatus.CANCELED
-                val now = LocalDateTime.now()
-                pipelineStageService.updateStageStatus(
-                    buildId = buildId,
-                    stageId = stageId,
-                    buildStatus = buildStatus
-                )
-                logger.info("[$buildId]|STAGE_$actionType|stageId=$stageId|action=$newActionType")
-                return buildStatus
-            } else if (actionType == ActionType.SKIP) {
-                buildStatus = BuildStatus.SKIP
-                val now = LocalDateTime.now()
-                pipelineStageService.updateStageStatus(
-                    buildId = buildId,
-                    stageId = stageId,
-                    buildStatus = buildStatus
-                )
-                logger.info("[$buildId]|STAGE_$actionType|stageId=$stageId|action=$newActionType")
-                return buildStatus
+
+            when {
+                // 要启动Stage，初始化状态
+                ActionType.isStart(newActionType) -> {
+                    buildStatus = BuildStatus.RUNNING
+                    pipelineStageService.updateStageStatus(buildId, stageId, buildStatus)
+                    pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
+                    logger.info("[$buildId]|STAGE_INIT|stageId=$stageId|action=$newActionType")
+                }
+
+                // 若为终止命令，直接设置为取消
+                ActionType.isEnd(newActionType) -> {
+                    buildStatus = BuildStatus.CANCELED
+                    pipelineStageService.updateStageStatus(
+                        buildId = buildId,
+                        stageId = stageId,
+                        buildStatus = buildStatus
+                    )
+                    logger.info("[$buildId]|STAGE_$actionType|stageId=$stageId|action=$newActionType")
+                    return buildStatus
+                }
+
+                // 要跳过Stage
+                newActionType == ActionType.SKIP -> {
+                    buildStatus = BuildStatus.SKIP
+                    pipelineStageService.updateStageStatus(
+                        buildId = buildId,
+                        stageId = stageId,
+                        buildStatus = buildStatus
+                    )
+                    logger.info("[$buildId]|STAGE_$actionType|stageId=$stageId|action=$newActionType")
+                    return buildStatus
+                }
             }
         } else if (status == BuildStatus.PAUSE && ActionType.isEnd(newActionType)) {
             buildStatus = BuildStatus.STAGE_SUCCESS
@@ -425,19 +456,6 @@ class StageControl @Autowired constructor(
                 buildId = buildId,
                 stageId = stageId,
                 actionType = ActionType.START
-            )
-        )
-    }
-
-    private fun PipelineBuildStageEvent.sendStageSuccessEvent(stageId: String) {
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildFinishEvent(
-                source = "stage_success_$stageId",
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                buildId = buildId,
-                status = BuildStatus.STAGE_SUCCESS
             )
         )
     }
