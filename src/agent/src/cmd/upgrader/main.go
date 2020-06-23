@@ -29,12 +29,13 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"github.com/astaxie/beego/logs"
 	"os"
-	"pkg/config"
-	"pkg/upgrader"
-	"pkg/util/systemutil"
 	"runtime"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/upgrader"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/astaxie/beego/logs"
 )
 
 const (

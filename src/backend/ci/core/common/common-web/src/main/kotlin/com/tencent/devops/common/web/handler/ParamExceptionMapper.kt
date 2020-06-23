@@ -47,7 +47,7 @@ class ParamExceptionMapper : ExceptionMapper<ParamException> {
     }
 
     override fun toResponse(exception: ParamException): Response {
-        logger.error("Failed with param type cast exception", exception)
+        logger.warn("Failed with param type cast exception", exception)
         val status = Response.Status.BAD_REQUEST
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message

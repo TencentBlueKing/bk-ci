@@ -113,13 +113,20 @@ ext {
 
 allprojects {
     group "com.tencent.bk.devops.ci"
-    version "2.3"
+    version "2.3.6"
     // 修改为通过JVM启动构建时系统变量，或者从gradle.properties配置文件中读取
     // 1. try read ci_version in jvm -Dci_version
     def devops_version = System.getProperty("ci_version")
     // 2. try read [CI_VERSION_IN_GRADLE_PROPERTIES] in gradle.properties
     if (devops_version != null) {
         version = devops_version
+    }
+
+    def snapshot = System.getProperty("snapshot")
+    if (snapshot == "true") {
+        version = version + "-SNAPSHOT"
+    } else {
+        version = version + "-RELEASE"
     }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
@@ -166,18 +173,21 @@ subprojects {
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
         kotlinOptions {
             jvmTarget = "1.8"
+            javaParameters = true
         }
     }
 
     tasks.withType(JavaCompile).all {
         options.encoding = "UTF-8"
+        options.compilerArgs.add '-parameters'
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     jar.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
     uploadArchives.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
-    install.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
+    // boot-xxx biz-xxx model-xxxx do not install
+    install.onlyIf { !sourceSets.main.allSource.files.isEmpty()  && !name.startsWith("model-") && !name.startsWith("boot-") && !name.startsWith("biz-") }
 
     configurations {
         ktlint
