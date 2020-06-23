@@ -1046,6 +1046,10 @@ class PipelineRuntimeService @Autowired constructor(
                 if (stage.tag == null) stage.tag = listOf(defaultStageTagId)
             }
 
+            if (stageOption?.stageControlOption?.manualTrigger == true) {
+                stage.reviewStatus = BuildStatus.QUEUE.name
+            }
+
             if (lastTimeBuildStageRecords.isNotEmpty()) {
                 if (needUpdateStage) {
                     run findHistoryStage@{
