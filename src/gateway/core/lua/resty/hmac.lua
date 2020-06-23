@@ -1,3 +1,8 @@
+--- lua-resty-hmac
+-- lua-resty-hmac - HMAC functions for ngx_lua and LuaJIT
+-- @module lua-resty-hmac
+-- @author Copyright (C) 2012-2020, Thought Foundry Inc.
+-- @license BSD
 local str_util = require "resty.string"
 local to_hex = str_util.to_hex
 local ffi = require "ffi"

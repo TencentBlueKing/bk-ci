@@ -1,3 +1,8 @@
+--- lua-resty-jwt
+-- lua-resty-jwt - JWT for ngx_lua and LuaJIT
+-- @module lua-resty-jwt
+-- @releas 0.1.10
+-- forked by https://github.com/SkyLothar/lua-resty-jwt/blob/master/lib/resty/jwt.lua
 local cjson = require "cjson.safe"
 
 local aes = require "resty.aes"
