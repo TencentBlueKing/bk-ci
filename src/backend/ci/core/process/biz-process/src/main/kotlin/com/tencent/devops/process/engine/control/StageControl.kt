@@ -108,7 +108,7 @@ class StageControl @Autowired constructor(
 
             val fastKill = stage.controlOption?.fastKill == true && source == "$BS_CONTAINER_END_SOURCE_PREIX${BuildStatus.FAILED}"
 
-            logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$event|stage=$stage|needPause=$needPausetKill=$fastKill")
+            logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$event|stage=$stage|needPause=$needPause|fastKill=$fastKill")
 
             // [终止事件]或[满足FastKill]或[等待审核超时] 直接结束流水线，不需要判断各个Stage的状态，可直接停止
             if (ActionType.isTerminate(actionType) || fastKill) {
