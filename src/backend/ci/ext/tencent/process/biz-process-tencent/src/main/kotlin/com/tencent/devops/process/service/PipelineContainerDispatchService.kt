@@ -56,7 +56,6 @@ import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.util.exception.OldModelNotSupported
 import com.tencent.devops.process.util.exception.UnknownContainerException
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
