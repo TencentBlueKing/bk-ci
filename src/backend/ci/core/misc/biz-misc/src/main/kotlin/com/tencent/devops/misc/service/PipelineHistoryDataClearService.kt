@@ -59,7 +59,7 @@ abstract class PipelineHistoryDataClearService {
     abstract fun getDataBaseInfo(): Map<String, String>
 
     fun getTableInfo(): Map<String, String> {
-        val tableInfoMap = mutableMapOf(
+        var tableInfoMap = mapOf(
             pipelineInfoTableKey to "T_PIPELINE_INFO",
             pipelineBuildHistoryTableKey to "T_PIPELINE_BUILD_HISTORY",
             pipelineBuildDetailTableKey to "T_PIPELINE_BUILD_DETAIL",
@@ -77,7 +77,7 @@ abstract class PipelineHistoryDataClearService {
             qualityHisDetailMetadataTableKey to "T_QUALITY_HIS_DETAIL_METADATA",
             qualityHisOriginMetadataTableKey to "T_QUALITY_HIS_ORIGIN_METADATA"
         )
-        tableInfoMap.plus(getSpecTableInfo())
+        tableInfoMap = tableInfoMap.plus(getSpecTableInfo())
         return tableInfoMap
     }
 
@@ -92,7 +92,7 @@ abstract class PipelineHistoryDataClearService {
         pipelineId: String,
         buildId: String
     ): List<Query> {
-        val batchSqlList = mutableListOf(
+        val batchSqlList = mutableListOf<Query>(
             dslContext.query("DELETE FROM $processDbKey.$pipelineBuildDetailTableKey WHERE BUILD_ID='$buildId'"),
             dslContext.query("DELETE FROM $processDbKey.$pipelineBuildTaskTableKey WHERE BUILD_ID='$buildId'"),
             dslContext.query("DELETE FROM $processDbKey.$pipelineBuildVarTableKey WHERE BUILD_ID='$buildId'"),
