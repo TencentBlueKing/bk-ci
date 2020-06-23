@@ -104,7 +104,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         values: Map<String, String>,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        buildNo: Int?
     ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
@@ -117,13 +118,21 @@ class ServiceBuildResourceImpl @Autowired constructor(
                     pipelineId = pipelineId,
                     values = values,
                     channelCode = channelCode,
+                    buildNo = buildNo,
                     checkPermission = ChannelCode.isNeedAuth(channelCode)
                 )
             )
         )
     }
 
-    override fun retry(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String?, channelCode: ChannelCode): Result<BuildId> {
+    override fun retry(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String?,
+        channelCode: ChannelCode
+    ): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         if (buildId.isBlank()) {

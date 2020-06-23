@@ -24,10 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:worker:worker-common")
-    compile project(":core:common:common-archive")
-    compile project(":core:dockerhost:api-dockerhost")
-}
+package com.tencent.devops.common.web.annotation
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.common.web.validation.BkFieldValidator
+import javax.validation.Constraint
+import javax.validation.Payload
+import kotlin.reflect.KClass
+
+@Target(AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
+@kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
+@Constraint(validatedBy = [BkFieldValidator::class])
+annotation class BkField(
+    val patternStyle: BkStyleEnum = BkStyleEnum.COMMON_STYLE, // 字段对应的正则表达式
+    val required: Boolean = true, // 是否必须
+    val message: String = "{0} parameter is not valid", // 默认错误提示信息
+    val groups: Array<KClass<*>> = [], // 约束注解在验证时所属的组别
+    val payload: Array<KClass<out Payload>> = [] // 给约束条件指定严重级别
+)

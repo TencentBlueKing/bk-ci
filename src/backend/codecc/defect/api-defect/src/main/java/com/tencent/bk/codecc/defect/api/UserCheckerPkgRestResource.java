@@ -28,7 +28,7 @@ package com.tencent.bk.codecc.defect.api;
 
 import com.tencent.bk.codecc.defect.vo.CheckerPkgRspVO;
 import com.tencent.bk.codecc.defect.vo.ConfigCheckersPkgReqVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -55,7 +55,7 @@ public interface UserCheckerPkgRestResource
     @ApiOperation("获取配置规则包")
     @Path("/toolName/{toolName}")
     @GET
-    Result<List<CheckerPkgRspVO>> checkerPkg(
+    CodeCCResult<List<CheckerPkgRspVO>> checkerPkg(
             @ApiParam(value = "任务Id", required = true)
             @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
@@ -68,7 +68,7 @@ public interface UserCheckerPkgRestResource
     @ApiOperation("打开或者关闭配置规则包")
     @Path("/config/package")
     @POST
-    Result<Boolean> configCheckerPkg(
+    CodeCCResult<Boolean> configCheckerPkg(
             @ApiParam("配置规则包参数")
                     ConfigCheckersPkgReqVO packageVo,
             @ApiParam(value = "任务Id", required = true)

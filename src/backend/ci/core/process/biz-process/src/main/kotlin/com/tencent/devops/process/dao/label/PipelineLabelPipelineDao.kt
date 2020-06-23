@@ -26,9 +26,12 @@
 
 package com.tencent.devops.process.dao.label
 
+import com.tencent.devops.model.process.tables.TPipelineGroup
+import com.tencent.devops.model.process.tables.TPipelineLabel
 import com.tencent.devops.model.process.tables.TPipelineLabelPipeline
 import com.tencent.devops.model.process.tables.records.TPipelineLabelPipelineRecord
 import org.jooq.DSLContext
+import org.jooq.Record3
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -163,6 +166,46 @@ class PipelineLabelPipelineDao {
                 .where(PIPELINE_ID.eq(pipelineId))
                 .fetch()
         }
+    }
+
+    /**
+     * 获取Pipelines的group与label
+     */
+    fun listPipelinesGroupsAndLabels(
+        dslContext: DSLContext,
+        pipelineIds: List<String>
+    ): Result<Record3<String, String, String>> {
+        val labelPipelineTable = TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE.`as`("t1")
+        val labelTable = TPipelineLabel.T_PIPELINE_LABEL.`as`("t2")
+        val groupTable = TPipelineGroup.T_PIPELINE_GROUP.`as`("t3")
+        // 排除标签和分组为空的情况
+        return dslContext.select(
+            labelPipelineTable.PIPELINE_ID.`as`("PIPELINE_ID"),
+            groupTable.NAME.`as`("GROUP_NAME"),
+            labelTable.NAME.`as`("LABEL_NAME")
+        ).from(labelPipelineTable)
+            .leftJoin(labelTable)
+            .on(labelPipelineTable.LABEL_ID.eq(labelTable.ID))
+            .leftJoin(groupTable)
+            .on(labelTable.GROUP_ID.eq(groupTable.ID))
+            .where(labelPipelineTable.PIPELINE_ID.`in`(pipelineIds))
+            .and(labelTable.NAME.notEqual(""))
+            .and(labelTable.NAME.isNotNull)
+            .and(groupTable.NAME.notEqual(""))
+            .and(groupTable.NAME.isNotNull)
+            .and(labelPipelineTable.PIPELINE_ID.notEqual(""))
+            .and(labelPipelineTable.PIPELINE_ID.isNotNull)
+            .fetch()
+    }
+
+    /**
+     * 获取Pipeline的group与label
+     */
+    fun listPipelineGroupsAndLabels(
+        dslContext: DSLContext,
+        pipelineId: String
+    ): Result<Record3<String, String, String>> {
+        return listPipelinesGroupsAndLabels(dslContext, listOf(pipelineId))
     }
 
     companion object {

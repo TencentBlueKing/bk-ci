@@ -234,7 +234,7 @@ object QualityUtils {
         val elementId = task.taskId
 
         if (interceptTask == null) {
-            logger.error("Fail to find quality gate intercept element")
+            logger.warn("Fail to find quality gate intercept element")
             throw TaskExecuteException(
                 errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                 errorType = ErrorType.USER,

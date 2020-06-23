@@ -9,7 +9,6 @@ dependencies {
     compile project(":job:api-job")
     compile project(":defect:api-defect")
     compile project(":defect:model-defect")
-//    compile group: 'com.tencent.bk.devops', name: 'common-license', version: '0.0.2', changing: true
 }
 
 version = null

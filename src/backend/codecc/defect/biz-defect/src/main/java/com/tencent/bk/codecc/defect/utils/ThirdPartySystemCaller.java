@@ -32,7 +32,7 @@ import com.tencent.bk.codecc.task.vo.BaseDataVO;
 import com.tencent.bk.codecc.task.vo.TaskBaseVO;
 import com.tencent.bk.codecc.task.vo.ToolMetaBaseVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
@@ -69,7 +69,7 @@ public class ThirdPartySystemCaller
     @NotNull
     public TaskBaseVO getTaskInfo(String streamName)
     {
-        Result<TaskBaseVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfo(streamName);
+        CodeCCResult<TaskBaseVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfo(streamName);
         if (taskInfoResult.isNotOk() || null == taskInfoResult.getData())
         {
             logger.error("mongorepository task info fail! stream name is: {}, msg: {}", streamName, taskInfoResult.getMessage());
@@ -88,7 +88,7 @@ public class ThirdPartySystemCaller
     public Map<String, String> getRiskFactorConfig(String toolName)
     {
         //获取风险系数值
-        Result<List<BaseDataVO>> baseDataResult = client.get(ServiceBaseDataResource.class)
+        CodeCCResult<List<BaseDataVO>> baseDataResult = client.get(ServiceBaseDataResource.class)
                 .getInfoByTypeAndCode(ComConstants.PREFIX_RISK_FACTOR_CONFIG, toolName);
 
         if (baseDataResult.isNotOk() || null == baseDataResult.getData())
@@ -109,7 +109,7 @@ public class ThirdPartySystemCaller
      */
     public Map<String, ToolMetaBaseVO> getToolMeta()
     {
-        Result<Map<String, ToolMetaBaseVO>> toolMetaListFromCache = client.get(ServiceTaskRestResource.class).getToolMetaListFromCache();
+        CodeCCResult<Map<String, ToolMetaBaseVO>> toolMetaListFromCache = client.get(ServiceTaskRestResource.class).getToolMetaListFromCache();
         if (toolMetaListFromCache.isNotOk() || null == toolMetaListFromCache.getData())
         {
             logger.error("get tool meta data fail! message: {}", toolMetaListFromCache.getMessage());
