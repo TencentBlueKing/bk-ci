@@ -92,7 +92,7 @@ class StageControl @Autowired constructor(
 
             // 当前Stage的状态如果已经结束，不再受理做执行判断，抛弃消息
             if (BuildStatus.isFinish(buildInfo.status)) {
-                logger.info("[$buildId]|[${stage.status}]|STAGE_ALREADY_FINISHED|event=$event")
+                logger.info("[$buildId]|[${stage.status}]|STAGE_ALREADY_FINISHED")
                 return
             }
 
