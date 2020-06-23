@@ -24,12 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:misc:biz-misc-sample")
-    // 无对接权限中心，根据common.yml配置文件项auth.idProvider=samle启用，会忽略下面蓝鲸权限中心实现
-    compile project(":core:common:common-auth:common-auth-mock")
-    // 对接蓝鲸的权限中心实现, 根据common.yml配置项auth.idProvider=bk_login值来决定加载
-    compile project(":core:common:common-auth:common-auth-blueking")
-}
+package com.tencent.devops.misc
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.misc.service.SamplePipelineHistoryDataClearServiceImpl
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+class SampleServiceConfig {
+
+    @Bean
+    fun pipelineHistoryDataClearService() = SamplePipelineHistoryDataClearServiceImpl()
+}
