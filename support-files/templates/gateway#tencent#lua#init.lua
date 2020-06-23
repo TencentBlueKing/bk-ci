@@ -134,7 +134,8 @@ config = {
   buglyQcloudHost = "__BKCI_BULGY_QCLOUD_HOST__",
   wechatWorkHost = "__BKCI_WECHART_WORK_HOST__",
   docsUrl = "__BKCI_DOCS_URL__",
-  apigwUrl = "__BKCI_APIGW_URL__"
+  apigwUrl = "__BKCI_APIGW_URL__",
+  jwtPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n__BKCI_RSA_PRIVATE_KEY__\n-----END RSA PRIVATE KEY-----" 
 }
   
 require("init_common")

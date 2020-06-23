@@ -24,19 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.common.security.autoconfig
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-security")
-    compile "org.springframework.boot:spring-boot-starter-jersey"
-    compile "org.springframework.boot:spring-boot-starter-undertow"
-    compile "org.springframework.boot:spring-boot-starter-web"
-    compile "io.swagger:swagger-jersey2-jaxrs"
-    compile "com.github.ulisesbocchio:jasypt-spring-boot-starter"
-    compile "org.springframework.boot:spring-boot-starter-amqp"
-    compile('org.springframework.cloud:spring-cloud-starter-config')
-}
+import org.springframework.boot.context.properties.ConfigurationProperties
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+/**
+ *
+ * Powered By Tencent
+ */
+@ConfigurationProperties(prefix = "bkci.security")
+data class ServiceSecurityProperties(
+    val publicKey: String = "",
+    val privateKey: String = "",
+    val enable: Boolean = false
+)
