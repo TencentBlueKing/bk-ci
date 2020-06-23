@@ -100,7 +100,7 @@ class MutexControl @Autowired constructor(
 
         val lockResult = tryToLockMutex(projectId, buildId, stageId, containerId, mutexGroup, container)
         return if (lockResult) {
-            logger.warn("[$buildId]|LOCK_SUCCESS|stage=$stageId|container=$containerId|projectId=$projectId")
+            logger.warn("[mutex] LOCK_SUCCESS |buildId=$buildId|stage=$stageId|container=$containerId|projectId=$projectId")
             // 抢到锁则可以继续运行，并退出队列
             quitMutexQueue(
                 projectId = projectId,
@@ -137,7 +137,7 @@ class MutexControl @Autowired constructor(
         containerId: String,
         mutexGroup: MutexGroup?
     ) {
-        logger.warn("[$buildId]|RELEASE_MUTEX_LOCK|stage=$stageId|container=$containerId|projectId=$projectId")
+        logger.warn("[mutex] RELEASE_MUTEX_LOCK |buildId=$buildId|stage=$stageId|container=$containerId|projectId=$projectId")
         if (mutexGroup != null) {
             unlockMutex(
                 projectId = projectId,
@@ -166,7 +166,7 @@ class MutexControl @Autowired constructor(
 
         if (lockedContainerMutexId != null) {
             // 当前锁不为null的时候
-            logger.warn("[$buildId]|RELEASE_LOCK|stage=$stageId|container=$containerId|projectId=$projectId")
+            logger.warn("[mutex] RELEASE_LOCK |buildId=$buildId|stage=$stageId|container=$containerId|projectId=$projectId")
             return lockedContainerMutexId == containerMutexId
         }
         // 获取队列中的开始时间，为空的时候则为当前时间
@@ -360,14 +360,17 @@ class MutexControl @Autowired constructor(
             return
         }
         val mutexId = redisOperation.get(lockKey)
-        if (mutexId != null) {
+        if (mutexId != null && mutexId.isNotBlank()) {
             val mutexIdList = mutexId.split("_")
             val buildId = mutexIdList[0]
             val containerId = mutexIdList[1]
             // container结束的时候，删除lock key
             if (buildId.isNotBlank() && containerId.isNotBlank() && isContainerFinished(buildId, containerId)) {
+                logger.warn("[mutex] CLEAN LOCK KEY|buildId=$buildId|container=$containerId|projectId=$projectId")
                 redisOperation.delete(lockKey)
             }
+        }else {
+            redisOperation.delete(lockKey)
         }
     }
 
@@ -386,6 +389,7 @@ class MutexControl @Autowired constructor(
                 val containerId = mutexIdList[1]
                 // container结束的时候，删除queue中的key
                 if (buildId.isNotBlank() && containerId.isNotBlank() && isContainerFinished(buildId, containerId)) {
+                    logger.warn("[mutex] CLEAN QUEUE KEY |mutexId=$mutexId|buildId=$buildId|container=$containerId|projectId=$projectId")
                     redisOperation.hdelete(queueKey, mutexId)
                 }
             }
