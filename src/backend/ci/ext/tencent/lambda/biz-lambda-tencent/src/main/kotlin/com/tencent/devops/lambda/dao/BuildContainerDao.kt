@@ -26,9 +26,7 @@
 package com.tencent.devops.lambda.dao
 
 import com.tencent.devops.model.process.tables.TPipelineBuildContainer
-import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
-import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
