@@ -29,12 +29,14 @@ class ServiceSecurityFilter(
     }
 
     override fun filter(requestContext: ContainerRequestContext?) {
-        if (shouldFilter(requestContext!!)) {
+        val uri = requestContext!!.uriInfo.requestUri.path
+        if (shouldFilter(uri)) {
+
             val clientIp = servletRequest?.remoteAddr
 
             val jwt = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_JWT_TOKEN)
             if (jwt.isNullOrBlank()) {
-                logger.warn("Invalid request, jwt is empty!ClientIp:$clientIp")
+                logger.warn("Invalid request, jwt is empty!Client ip:$clientIp,uri:$uri")
                 throw ErrorCodeException(
                     statusCode = 401,
                     errorCode = CommonMessageCode.ERROR_SERVICE_NO_AUTH,
@@ -43,7 +45,7 @@ class ServiceSecurityFilter(
             }
             val checkResult: Boolean = jwtManager.verifyJwt(jwt)
             if (!checkResult) {
-                logger.warn("Invalid request, jwt is invalid or expired!ClientIp:$clientIp")
+                logger.warn("Invalid request, jwt is invalid or expired!Client ip:$clientIp,uri:$uri")
                 throw ErrorCodeException(
                     statusCode = 401,
                     errorCode = CommonMessageCode.ERROR_SERVICE_NO_AUTH,
@@ -53,9 +55,7 @@ class ServiceSecurityFilter(
         }
     }
 
-    private fun shouldFilter(requestContext: ContainerRequestContext): Boolean {
-        val uri = requestContext.uriInfo.requestUri.path
-        logger.info("HttpServletRequest.requestURI=$uri")
+    private fun shouldFilter(uri: String): Boolean {
         if (!jwtManager.isAuthEnable() || !EnvironmentUtil.isProdProfileActive()) {
             return false
         }
