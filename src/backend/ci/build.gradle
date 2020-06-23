@@ -30,7 +30,8 @@ buildscript {
     ext {
         kotlinVersion = "1.2.10"
         gradleShadowVersion = "2.0.2"
-        gradleJooqVersion = "2.0.7"
+        jooqVersion = "3.12.3"
+        gradleJooqVersion = "3.0.3"
         gradleDependencyVersion = "1.0.4.RELEASE"
         springBootVersion = "1.5.11.RELEASE"
         springBootRedisVersion = "1.5.11.RELEASE"
@@ -113,7 +114,7 @@ ext {
 
 allprojects {
     group "com.tencent.bk.devops.ci"
-    version "2.3.6"
+    version "2.3.7"
     // 修改为通过JVM启动构建时系统变量，或者从gradle.properties配置文件中读取
     // 1. try read ci_version in jvm -Dci_version
     def devops_version = System.getProperty("ci_version")
@@ -250,6 +251,7 @@ subprojects {
             dependency "com.github.ulisesbocchio:jasypt-spring-boot-starter:$jasyptVersion"
             dependency "org.jolokia:jolokia-core:$jolokiaVersion"
             dependency("org.apache.commons:commons-lang3:${commonLang3Version}")
+            dependency("org.jooq:jooq:$jooqVersion")
 
             dependencySet(group: "org.springframework.cloud", version: "$springConsulVersion") {
                 entry "spring-cloud-starter-consul-discovery"

@@ -19,7 +19,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 --- 是否在白名单里面
 if (ngx.var.whitelist_deny and ngx.var.whitelist_deny ~= "") then
-  ngx.log(ngx.ERR, "owner_uin is not in whitelist!")
+  ngx.log(ngx.STDERR, "owner_uin is not in whitelist!")
   ngx.exit(423)
   return
 end
@@ -27,7 +27,7 @@ end
 
 --- 根据service_code和resource_type来确定存储路径
 if (ngx.var.service_code == nil or ngx.var.resource_type == nil ) then
-  ngx.log(ngx.ERR, "service_code or resource_type is nil")
+  ngx.log(ngx.STDERR, "service_code or resource_type is nil")
   ngx.exit(403)
   return
 end
@@ -49,7 +49,7 @@ end
 if access_util then 
   local access_result,err = access_util:isAccess()
   if not access_result then
-    ngx.log(ngx.ERR, "request excess!")
+    ngx.log(ngx.STDERR, "request excess!")
     ngx.exit(503)
     return
   end

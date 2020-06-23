@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -91,7 +92,7 @@ class BuildVariableService @Autowired constructor(
         PipelineVarUtil.replaceOldByNewVar(vars)
 
         val pipelineBuildParameters = mutableListOf<BuildParameters>()
-        vars.forEach { (t, u) -> pipelineBuildParameters.add(BuildParameters(key = t, value = u)) }
+        vars.forEach { (t, u) -> pipelineBuildParameters.add(BuildParameters(key = t, value = EmojiUtil.removeAllEmoji(u))) }
 
         pipelineBuildVarDao.batchSave(
             dslContext = dslContext,
