@@ -151,7 +151,7 @@ class PipelineBuildService @Autowired constructor(
             val startTime = task.startTime?.timestampmilli() ?: 0
             val endTime = task.endTime?.timestampmilli() ?: 0
             val taskParamMap = JsonUtil.toMap(task.taskParams)
-            val atomCode = if (taskParamMap["@type"] == "marketBuild") {
+            val atomCode = if (taskParamMap["@type"] != "marketBuild") {
                 taskParamMap["atomCode"].toString()
             } else {
                 task.taskAtom
