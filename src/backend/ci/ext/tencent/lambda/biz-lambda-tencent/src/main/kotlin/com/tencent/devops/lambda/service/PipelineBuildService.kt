@@ -164,7 +164,7 @@ class PipelineBuildService @Autowired constructor(
                     containerId = task.containerId
                 )
                 if (buildContainer != null) {
-                    val dispatchType = JsonUtil.toMap(taskParamMap["dispatchType"].toString())
+                    val dispatchType = taskParamMap["dispatchType"] as Map<String, Any>
                     val dataPlatJobDetail = DataPlatJobDetail(
                         pipelineId = task.pipelineId,
                         buildId = task.buildId,
