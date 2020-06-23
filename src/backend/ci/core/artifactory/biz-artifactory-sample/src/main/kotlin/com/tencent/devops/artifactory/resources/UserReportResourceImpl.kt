@@ -24,31 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.artifactory.resources
 
-dependencies {
-    compile "javax.ws.rs:javax.ws.rs-api"
-    compile "io.swagger:swagger-annotations"
-    compile "org.hashids:hashids"
-    compile "com.fasterxml.jackson.module:jackson-module-kotlin"
-    compile "com.fasterxml.jackson.core:jackson-databind"
-    compile "com.fasterxml.jackson.core:jackson-core"
-    compile "com.fasterxml.jackson.core:jackson-annotations"
-    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
-    compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
-    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base"
-    compile "org.bouncycastle:bcprov-jdk16"
-    compile("com.github.fge:json-schema-validator") {
-        exclude group: 'javax.mail', module: 'mailapi'
-        exclude group: 'com.google.guava', module: 'guava'
+import com.tencent.devops.artifactory.api.user.UserReportResource
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
+
+@RestResource
+class UserReportResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService)
+    : UserReportResource {
+    override fun get(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, path: String) {
+        val filePath = "${FileTypeEnum.BK_REPORT.fileType}/$projectId/$pipelineId/$buildId/$elementId/$path"
+        val response = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).response!!
+        archiveFileService.downloadFile(filePath, response)
     }
-    compile("com.google.guava:guava:${guavaVersion}")
-    compile "com.squareup.okhttp3:okhttp"
-    compile "commons-codec:commons-codec:1.9"
-    compile "org.springframework.boot:spring-boot-starter-data-redis"
-    compile "org.apache.commons:commons-compress:$compressVersion"
-    compile "org.apache.commons:commons-exec"
-    compile "javax.servlet:javax.servlet-api"
-    compile "javax.validation:validation-api"
-    compile 'com.vdurmont:emoji-java:5.1.1'
 }
