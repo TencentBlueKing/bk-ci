@@ -35,5 +35,4 @@ import org.springframework.cloud.netflix.rx.RxJavaAutoConfiguration
  * Powered By Tencent
  */
 @SpringBootApplication(exclude = [(ArchaiusAutoConfiguration::class), (RxJavaAutoConfiguration::class)])
-// @ComponentScan(basePackages = ["com.tencent.devops"])
 annotation class MicroService
