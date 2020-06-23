@@ -30,5 +30,5 @@ data class Pool(
     val container: String?,
     val credential: Credential?,
     val macOS: MacOS?,
-    val isThird: Boolean
+    val isThird: Boolean?
 )
