@@ -215,7 +215,7 @@ class MarketTemplateDao {
                 baseStep.where(conditions).orderBy(realSortType.asc())
             }
         } else {
-            baseStep.where(conditions)
+            baseStep.where(conditions).orderBy(tt.field(MarketTemplateSortTypeEnum.getSortType(MarketTemplateSortTypeEnum.NAME.name)))
         }
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()

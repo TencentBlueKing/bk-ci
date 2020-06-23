@@ -24,45 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.template
+package com.tencent.devops.process.template.impl
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.template.ServiceTemplateResource
-import com.tencent.devops.store.pojo.template.InstallTemplateReq
-import com.tencent.devops.store.pojo.template.MarketTemplateResp
-import com.tencent.devops.store.service.template.MarketTemplateService
+import com.tencent.devops.process.api.user.UserPipelineTemplateResource
+import com.tencent.devops.process.pojo.PipelineTemplate
+import com.tencent.devops.process.template.service.PipelineTemplateService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceTemplateResourceImpl @Autowired constructor(
-    private val marketTemplateService: MarketTemplateService
-) : ServiceTemplateResource {
-    override fun installTemplate(userId: String, installTemplateReq: InstallTemplateReq): Result<Boolean> {
-        // 可见与可安装鉴权在marketTemplateService中实现
-        return marketTemplateService.installTemplate(
-            userId = userId,
-            channelCode = ChannelCode.BS,
-            installTemplateReq = installTemplateReq
-        )
-    }
+class UserPipelineTemplateResourceImpl @Autowired constructor(
+    private val pipelineTemplateService: PipelineTemplateService
+) : UserPipelineTemplateResource {
 
-    override fun list(userId: String): Result<MarketTemplateResp> {
-        return Result(
-            marketTemplateService.list(
-                userId = userId.trim(),
-                name = null,
-                classifyCode = null,
-                category = null,
-                labelCode = null,
-                score = null,
-                rdType = null,
-                sortType = null,
-                projectCode = null,
-                page = null,
-                pageSize = 1
-            )
-        )
+    override fun listTemplate(projectCode: String): Result<Map<String, PipelineTemplate>> {
+        return Result(pipelineTemplateService.listTemplate(projectCode))
     }
 }
