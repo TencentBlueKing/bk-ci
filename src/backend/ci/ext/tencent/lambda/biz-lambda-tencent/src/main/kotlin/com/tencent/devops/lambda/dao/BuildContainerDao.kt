@@ -23,25 +23,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.lambda.dao
 
-package com.tencent.devops.common.kafka
+import com.tencent.devops.model.process.tables.TPipelineBuildContainer
+import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-object KafkaTopic {
-    const val LANGUAGE_CODE_TOPIC = "tendata-bkdevops-296-topic-language-code"
-    const val TASK_DETAIL_TOPIC = "tendata-bkdevops-296-topic-taskdetail"
-    const val STATISTIC_TOPIC = "tendata-bkdevops-296-topic-statistic"
-    const val GONGFENG_PROJECT_TOPIC = "tendata-bkdevops-296-topic-gongfeng-project"
-    const val LINT_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-lint-statistic"
-    const val CNN_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-cnn-statistic"
-    const val DUPC_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-dupc-statistic"
+@Repository
+class BuildContainerDao {
 
-    const val ACTIVE_GONGFENG_PROJECT_TOPIC = "tendata-bkdevops-296-topic-active-gongfeng-project"
-    const val SINGLE_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-statistic"
-    const val SINGLE_LINT_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-lint-statistic"
-    const val SINGLE_CCN_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-ccn-statistic"
-    const val SINGLE_DUPC_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-dupc-statistic"
-
-    const val LANDUN_GIT_TASK_TOPIC = "tendata-bkdevops-296-topic-landun-git-task"
-    const val LANDUN_TASK_DETAIL_TOPIC = "tendata-bkdevops-296-topic-landun-task-detail"
-    const val LANDUN_JOB_DETAIL_TOPIC = "tendata-bkdevops-296-topic-landun-job-detail"
+    fun getContainer(
+        dslContext: DSLContext,
+        buildId: String,
+        stageId: String,
+        containerId: String
+    ): TPipelineBuildContainerRecord? {
+        with(TPipelineBuildContainer.T_PIPELINE_BUILD_CONTAINER) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(STAGE_ID.eq(stageId))
+                .and(CONTAINER_ID.eq(containerId))
+                .fetchOne()
+        }
+    }
 }
