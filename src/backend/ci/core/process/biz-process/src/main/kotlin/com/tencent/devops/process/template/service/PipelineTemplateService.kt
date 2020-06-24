@@ -32,11 +32,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.pojo.PipelineTemplate
 import com.tencent.devops.process.pojo.template.TemplateDetailInfo
 import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.template.dao.PTemplateDao
 import com.tencent.devops.process.template.dao.PipelineTemplateDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -47,7 +47,7 @@ import org.springframework.stereotype.Service
 class PipelineTemplateService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineTemplateDao: PipelineTemplateDao,
-    private val templateDao: PTemplateDao,
+    private val templateDao: TemplateDao,
     private val objectMapper: ObjectMapper
 ) {
     @Suppress("UNCHECKED_CAST")

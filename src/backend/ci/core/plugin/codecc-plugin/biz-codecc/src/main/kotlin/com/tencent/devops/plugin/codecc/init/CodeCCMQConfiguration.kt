@@ -114,6 +114,16 @@ class CodeCCMQConfiguration {
     private val modelAnalysisConcurrency: Int? = null
 
     /**
+     * 流水线扩展行为订阅广播
+     */
+    @Bean
+    fun pipelineExtendsFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_EXTENDS_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    /**
      * 监控队列--- 并发可小
      */
     @Bean
@@ -122,9 +132,9 @@ class CodeCCMQConfiguration {
     @Bean
     fun pipelineModelAnalysisQueueBind(
         @Autowired pipelineModelAnalysisQueue: Queue,
-        @Autowired pipelineFanoutExchange: FanoutExchange
+        @Autowired pipelineExtendsFanoutExchange: FanoutExchange
     ): Binding {
-        return BindingBuilder.bind(pipelineModelAnalysisQueue).to(pipelineFanoutExchange)
+        return BindingBuilder.bind(pipelineModelAnalysisQueue).to(pipelineExtendsFanoutExchange)
     }
 
     @Bean
