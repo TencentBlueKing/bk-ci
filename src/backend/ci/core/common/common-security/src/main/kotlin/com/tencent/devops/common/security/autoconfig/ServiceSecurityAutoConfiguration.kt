@@ -30,7 +30,6 @@ import com.tencent.devops.common.security.jwt.JwtManager
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.DependsOn
@@ -43,13 +42,14 @@ import org.springframework.scheduling.annotation.EnableScheduling
  */
 @EnableScheduling
 @Configuration
-@EnableConfigurationProperties(ServiceSecurityProperties::class)
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class ServiceSecurityAutoConfiguration {
     @Value("\${bkci.security.public-key:#{null}}")
     private val publicKey: String? = null
+
     @Value("\${bkci.security.private-key:#{null}}")
     private val privateKey: String? = null
+
     @Value("\${bkci.security.enable:#{false}}")
     private val enable: Boolean = false
 
@@ -58,7 +58,5 @@ class ServiceSecurityAutoConfiguration {
 
     @Bean
     @DependsOn("environmentUtil")
-    fun jwtManager(
-        serviceSecurityProperties: ServiceSecurityProperties
-    ) = JwtManager(privateKey, publicKey, enable)
+    fun jwtManager() = JwtManager(privateKey, publicKey, enable)
 }

@@ -1,3 +1,8 @@
+--- lua-resty-jwt
+-- lua-resty-jwt - JWT for ngx_lua and LuaJIT
+-- @module lua-resty-jwt
+-- @releas 0.1.10
+-- forked by https://github.com/SkyLothar/lua-resty-jwt/blob/master/lib/resty/evp.lua
 -- Copyright (C) by Daniel Hiltgen (daniel.hiltgen@docker.com)
 
 
