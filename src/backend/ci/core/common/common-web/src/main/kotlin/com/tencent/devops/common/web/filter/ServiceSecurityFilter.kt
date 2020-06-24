@@ -59,10 +59,6 @@ class ServiceSecurityFilter(
         if (!jwtManager.isAuthEnable() || !EnvironmentUtil.isProdProfileActive()) {
             return false
         }
-//        // dev环境需要支持swagger，请求无需认证
-//        if (!EnvironmentUtil.isProdProfileActive()) {
-//            return false
-//        }
         // 不拦截的接口
         excludeVeritfyPath.forEach {
             if (uri.startsWith(it)) {
