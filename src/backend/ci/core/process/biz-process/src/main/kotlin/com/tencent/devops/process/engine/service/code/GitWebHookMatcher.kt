@@ -220,14 +220,14 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
                 return ScmWebhookMatcher.MatchResult(false)
             }
 
-            val matchBranch = doIncludeBranchMatch(branchName, eventBranch, pipelineId)
-            if (matchBranch == null) {
-                logger.warn("Do push event match fail for include branch not match for pipeline: $pipelineId")
+            if (doExcludeMsgMatch(commitMsg, pipelineId)) {
+                logger.warn("Do push event match fail for exclude message match for pipeline: $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)
             }
 
-            if (doExcludeMsgMatch(commitMsg, pipelineId)) {
-                logger.warn("Do push event match fail for exclude message match for pipeline: $pipelineId")
+            val matchBranch = doIncludeBranchMatch(branchName, eventBranch, pipelineId)
+            if (matchBranch == null) {
+                logger.warn("Do push event match fail for include branch not match for pipeline: $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)
             }
 
