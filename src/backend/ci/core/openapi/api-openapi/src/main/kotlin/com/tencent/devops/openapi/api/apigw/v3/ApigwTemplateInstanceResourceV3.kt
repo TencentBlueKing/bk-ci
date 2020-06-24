@@ -51,13 +51,13 @@ import javax.ws.rs.PUT
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_PROJECT_TEMPLATE_V3"], description = "OPENAPI-项目模板资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/templates")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwTemplateInstanceResourceV3 {
     @ApiOperation("批量实例化流水线模板")
     @POST
-    @Path("/projects/{projectId}/templates/{templateId}/templateInstances")
+    @Path("/{templateId}/templateInstances")
     fun createTemplateInstances(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -86,7 +86,7 @@ interface ApigwTemplateInstanceResourceV3 {
 
     @ApiOperation("批量更新流水线模板实例")
     @PUT
-    @Path("/projects/{projectId}/templates/{templateId}/templateInstances")
+    @Path("/{templateId}/templateInstances")
     fun updateTemplateInstances(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -115,7 +115,7 @@ interface ApigwTemplateInstanceResourceV3 {
 
     @ApiOperation("获取流水线模板的实例列表")
     @GET
-    @Path("/projects/{projectId}/templates/{templateId}/templateInstances")
+    @Path("/{templateId}/templateInstances")
     fun listTemplateInstances(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
