@@ -20,6 +20,7 @@ class EnvironmentUtil : ApplicationContextAware {
     companion object {
         // Spring应用上下文环境
         private var applicationContext: ApplicationContext? = null
+
         // 正式环境
         private var isProdProfileActive: Boolean? = null
 
@@ -28,7 +29,7 @@ class EnvironmentUtil : ApplicationContextAware {
          * @return String
          */
         fun getActiveProfile(): String {
-            return StringUtils.join(applicationContext!!.environment.activeProfiles, ",")
+            return StringUtils.join(applicationContext?.environment?.activeProfiles ?: arrayOf<String>(), ",")
         }
 
         /**
@@ -36,7 +37,7 @@ class EnvironmentUtil : ApplicationContextAware {
          * @return String
          */
         fun getApplicationName(): String {
-            return applicationContext!!.environment.getProperty("spring.application.name")
+            return applicationContext?.environment?.getProperty("spring.application.name") ?: ""
         }
 
         /**
@@ -44,7 +45,7 @@ class EnvironmentUtil : ApplicationContextAware {
          * @return Int
          */
         fun getServerPort(): Int {
-            return applicationContext!!.environment.getProperty("server.port").toInt()
+            return applicationContext?.environment?.getProperty("server.port")?.toInt() ?: 0
         }
 
         /**
@@ -65,11 +66,13 @@ class EnvironmentUtil : ApplicationContextAware {
          * @return Boolean
          */
         private fun isProfileActive(profile: String): Boolean {
-            val activeProfiles: Array<String> =
-                applicationContext!!.environment.activeProfiles
-            for (activeProfile in activeProfiles) {
-                if (activeProfile == profile) {
-                    return true
+            val activeProfiles: Array<String>? =
+                applicationContext?.environment?.activeProfiles
+            if (activeProfiles != null && activeProfiles.isNotEmpty()) {
+                for (activeProfile in activeProfiles) {
+                    if (activeProfile == profile) {
+                        return true
+                    }
                 }
             }
             return false
