@@ -51,6 +51,7 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         private val matcher = AntPathMatcher()
         const val MATCH_BRANCH = "matchBranch"
         const val MATCH_PATHS = "matchPaths"
+        const val EXCLUDE_MSG = "[skip ci]"
     }
 
     override fun isMatch(
@@ -201,10 +202,12 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         with(webHookParams) {
             val commits = (event as GitPushEvent).commits
             val eventPaths = mutableSetOf<String>()
+            val commitMsg = mutableListOf<String>()
             commits.forEach { commit ->
                 eventPaths.addAll(commit.added ?: listOf())
                 eventPaths.addAll(commit.removed ?: listOf())
                 eventPaths.addAll(commit.modified ?: listOf())
+                commitMsg.add(commit.message)
             }
 
             if (doExcludeBranchMatch(excludeBranchName, eventBranch, pipelineId)) {
@@ -220,6 +223,11 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
             val matchBranch = doIncludeBranchMatch(branchName, eventBranch, pipelineId)
             if (matchBranch == null) {
                 logger.warn("Do push event match fail for include branch not match for pipeline: $pipelineId")
+                return ScmWebhookMatcher.MatchResult(false)
+            }
+
+            if (doExcludeMsgMatch(commitMsg, pipelineId)) {
+                logger.warn("Do push event match fail for exclude message match for pipeline: $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)
             }
 
@@ -389,6 +397,17 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
             is GitMergeRequestEvent -> event.object_attributes.target_branch
             else -> ""
         }
+    }
+
+    private fun doExcludeMsgMatch(commitMsgs: List<String>, pipelineId: String): Boolean {
+        logger.info("Do exclude msg match for pipeline: $pipelineId, $commitMsgs")
+        commitMsgs.forEach { msg ->
+            if (msg.contains(EXCLUDE_MSG)) {
+                logger.warn("Do exclude msg match success for pipeline: $pipelineId")
+                return true
+            }
+        }
+        return false
     }
 
     override fun getUsername(): String {
