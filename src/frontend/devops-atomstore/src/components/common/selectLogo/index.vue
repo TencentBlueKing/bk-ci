@@ -27,7 +27,7 @@
                     <h3 class="choose-upload">
                         <input type="file" name="file" class="input-file" id="inputfile" accept="image/png, image/jpeg" @change="fileChange">
                         <bk-button theme="primary"> {{ $t('store.自定义') }} </bk-button>
-                        <p class="upload-info"> {{ $t('store.只允许上传png、jpg，尺寸为512*512，大小不超过2M') }} </p>
+                        <p class="upload-info"> {{ $t('store.只允许上传png、jpg，尺寸为大于200*200的正方形，大小不超过2M') }} </p>
                     </h3>
                     <h3 class="sys-title"> {{ $t('store.系统自带') }} </h3>
                     <hgroup class="choose-sys">
@@ -100,16 +100,14 @@
             fileChange (e) {
                 const file = e.target.files[0]
                 if (file) {
-                    if (!(file.type === 'image/jpeg' || file.type === 'image/png')) {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: this.$t('store.请上传png、jpg格式的图片')
-                        })
-                    } else if (file.size > (2 * 1024 * 1024)) {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: this.$t('store.请上传大小不超过2M的图片')
-                        })
+                    let message = ''
+
+                    if (!['image/jpeg', 'image/png'].includes(file.type)) message = this.$t('store.请上传png、jpg格式的图片')
+
+                    if (file.size > (2 * 1024 * 1024)) message = this.$t('store.请上传大小不超过2M的图片')
+
+                    if (message) {
+                        this.$bkMessage({ theme: 'error', message })
                     } else {
                         const reader = new FileReader()
                         reader.readAsDataURL(file)
@@ -117,12 +115,12 @@
                             const img = new Image()
                             img.src = evts.target.result
                             img.onload = evt => {
-                                if (img.width === 512 && img.height === 512) {
+                                if (img.width === img.height && img.height >= 200) {
                                     this.uploadHandle(file)
                                 } else {
                                     this.$bkMessage({
                                         theme: 'error',
-                                        message: this.$t('store.请上传尺寸为512*512的图片')
+                                        message: this.$t('store.请上传宽高大于等于200的正方形图片')
                                     })
                                 }
                             }
@@ -279,7 +277,6 @@
                 height: 32px;
                 padding-bottom: 19px;
                 box-sizing: content-box;
-                border-bottom: 1px dotted $lightColor;
                 .input-file {
                     position: absolute;
                     left: 0;

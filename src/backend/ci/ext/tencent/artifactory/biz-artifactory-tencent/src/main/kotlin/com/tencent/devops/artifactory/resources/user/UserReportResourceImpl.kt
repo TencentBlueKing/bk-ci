@@ -34,7 +34,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @RestResource
 class UserReportResourceImpl @Autowired constructor(
@@ -43,7 +42,7 @@ class UserReportResourceImpl @Autowired constructor(
     val redisOperation: RedisOperation,
     val repoGray: RepoGray
 ) : UserReportResource {
-    override fun get(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, path: String): Response {
+    override fun get(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, path: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
@@ -62,7 +61,7 @@ class UserReportResourceImpl @Autowired constructor(
         if (path.isBlank()) {
             throw ParamBlankException("Invalid path")
         }
-        return if (repoGray.isGray(projectId, redisOperation)) {
+        if (repoGray.isGray(projectId, redisOperation)) {
             bkRepoReportService.get(projectId, pipelineId, buildId, elementId, path)
         } else {
             artifactoryReportService.get(projectId, pipelineId, buildId, elementId, path)

@@ -23,43 +23,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.lambda.dao
 
-package com.tencent.devops.artifactory.api.external
+import com.tencent.devops.model.process.tables.TPipelineBuildContainer
+import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+@Repository
+class BuildContainerDao {
 
-@Api(tags = ["EXTERNAL_REPORT"], description = "版本仓库-报告目录")
-@Path("/external/reports")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ExternalReportResource {
-    @ApiOperation("获取有权限目录列表")
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/paths/{path: .*}")
-    @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/{path: .*}")
-    @GET
-    fun get(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
+    fun getContainer(
+        dslContext: DSLContext,
         buildId: String,
-        @ApiParam("原子ID", required = true)
-        @PathParam("elementId")
-        elementId: String,
-        @ApiParam("相对路径", required = true)
-        @PathParam("path")
-        path: String
-    )
+        stageId: String,
+        containerId: String
+    ): TPipelineBuildContainerRecord? {
+        with(TPipelineBuildContainer.T_PIPELINE_BUILD_CONTAINER) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(STAGE_ID.eq(stageId))
+                .and(CONTAINER_ID.eq(containerId))
+                .fetchOne()
+        }
+    }
 }

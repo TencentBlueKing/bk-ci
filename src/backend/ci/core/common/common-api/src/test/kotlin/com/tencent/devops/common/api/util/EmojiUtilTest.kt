@@ -24,42 +24,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.api.external
+package com.tencent.devops.common.api.util
 
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import org.junit.Assert
+import org.junit.Test
 
-@Api(tags = ["EXTERNAL_REPORT"], description = "版本仓库-报告目录")
-@Path("/external/reports")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ExternalReportResource {
-    @ApiOperation("获取有权限目录列表")
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/paths/{path: .*}")
-    @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/{path: .*}")
-    @GET
-    fun get(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam("原子ID", required = true)
-        @PathParam("elementId")
-        elementId: String,
-        @ApiParam("相对路径", required = true)
-        @PathParam("path")
-        path: String
-    )
+class EmojiUtilTest {
+
+    @Test
+    fun removeAllEmoji() {
+        val str = "This is a happy emoji 😊, this is a crying emoji 😭"
+        val expected = "This is a happy emoji , this is a crying emoji "
+        Assert.assertEquals(expected, EmojiUtil.removeAllEmoji(str))
+    }
+
+    @Test
+    fun removeEmptyStr() {
+        val str = ""
+        Assert.assertEquals("", EmojiUtil.removeAllEmoji(str))
+    }
+
+    @Test
+    fun removeNotEmojiStr() {
+        val str = "This is a happy emoji"
+        val expected = "This is a happy emoji"
+        Assert.assertEquals(expected, EmojiUtil.removeAllEmoji(str))
+    }
+
+    @Test
+    fun isEmoji() {
+        val str = "This is a happy emoji 😊"
+        Assert.assertFalse(EmojiUtil.isEmoji(str))
+    }
+
+    @Test
+    fun containsEmoji() {
+        val str = "This is a happy emoji 😊"
+        Assert.assertTrue(EmojiUtil.containsEmoji(str))
+    }
 }

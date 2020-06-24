@@ -24,22 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.template.resources
+package com.tencent.devops.process.engine.control.lock
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.user.UserPipelineTemplateResource
-import com.tencent.devops.process.pojo.PipelineTemplate
-import com.tencent.devops.process.template.service.PipelineTemplateService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-@RestResource
-class UserPipelineTemplateResourceImpl @Autowired constructor(
-    private val pipelineTemplateService: PipelineTemplateService
-) :
-    UserPipelineTemplateResource {
-
-    override fun listTemplate(projectCode: String): Result<Map<String, PipelineTemplate>> {
-        return Result(pipelineTemplateService.listTemplate(projectCode))
-    }
-}
+class StageIdLock(redisOperation: RedisOperation, buildId: String, stageId: String) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "lock:build:$buildId:stage:$stageId",
+        expiredTimeInSeconds = 60
+    )

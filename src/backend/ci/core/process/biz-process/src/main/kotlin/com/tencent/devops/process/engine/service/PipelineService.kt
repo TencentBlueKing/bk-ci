@@ -157,7 +157,8 @@ class PipelineService @Autowired constructor(
         fixPipelineId: String? = null,
         instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type,
         buildNo: BuildNo? = null,
-        param: List<BuildFormProperty>? = null
+        param: List<BuildFormProperty>? = null,
+        tempalteVersion: Long? = null
     ): String {
         logger.info("createPipeline: $userId|$projectId|$channelCode|$checkPermission|$fixPipelineId|$instanceType")
         val apiStartEpoch = System.currentTimeMillis()
@@ -218,6 +219,24 @@ class PipelineService @Autowired constructor(
                         channelCode = channelCode,
                         create = true
                     )
+
+                // 先进行模板关联操作
+                logger.info("instanceType: $instanceType")
+                if (model.templateId != null) {
+                    val templateId = model.templateId as String
+                    logger.info("templateId: $templateId")
+                    createRelationBtwTemplate(
+                        userId = userId,
+                        templateId = templateId,
+                        pipelineId = pipelineId,
+                        instanceType = instanceType!!,
+                        buildNo = buildNo,
+                        param = param,
+                        tempalteVersion = tempalteVersion
+                    )
+                }
+
+                // 模板关联操作成功后再创建流水线相关资源
                 if (checkPermission) {
                     logger.info("[$pipelineId]|start to create auth")
                     try {
@@ -235,20 +254,18 @@ class PipelineService @Autowired constructor(
                 }
                 pipelineGroupService.addPipelineLabel(userId = userId, pipelineId = pipelineId, labelIds = model.labels)
                 pipelineUserService.create(pipelineId, userId)
-                logger.info("instanceType: $instanceType")
-                if (model.templateId != null) {
-                    val templateId = model.templateId as String
-                    logger.info("templateId: $templateId")
-                    createRelationBtwTemplate(userId, templateId, pipelineId, instanceType!!, buildNo, param)
-                }
+
                 success = true
                 return pipelineId
             } catch (duplicateKeyException: DuplicateKeyException) {
                 logger.info("duplicateKeyException: ${duplicateKeyException.message}")
+                if (pipelineId != null) {
+                    pipelineRepositoryService.deletePipeline(projectId, pipelineId, userId, channelCode, true)
+                }
                 throw ErrorCodeException(
                     statusCode = Response.Status.CONFLICT.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_EXISTS,
-                    defaultMessage = "流水线已经存在"
+                    defaultMessage = "流水线已经存在或未找到对应模板"
                 )
             } catch (ignored: Throwable) {
                 if (pipelineId != null) {
@@ -275,16 +292,23 @@ class PipelineService @Autowired constructor(
         pipelineId: String,
         instanceType: String,
         buildNo: BuildNo? = null,
-        param: List<BuildFormProperty>? = null
+        param: List<BuildFormProperty>? = null,
+        tempalteVersion: Long? = null
     ): Boolean {
         logger.info("start createRelationBtwTemplate: $userId|$templateId|$pipelineId|$instanceType")
-        val template = templateDao.getLatestTemplate(dslContext, templateId)
+        val latestTemplate = templateDao.getLatestTemplate(dslContext, templateId)
         var rootTemplateId = templateId
-        var templateVersion = template.version
-        var versionName = template.versionName
-        if (template.type == TemplateType.CONSTRAINT.name) {
-            logger.info("template[$templateId] is from store, srcTemplateId is ${template.srcTemplateId}")
-            val rootTemplate = templateDao.getLatestTemplate(dslContext, template.srcTemplateId)
+        var templateVersion = latestTemplate.version
+        var versionName = latestTemplate.versionName
+
+        if (tempalteVersion != null) {
+            templateVersion = tempalteVersion
+            versionName = templateDao.getTemplate(dslContext, tempalteVersion).versionName
+        }
+
+        if (latestTemplate.type == TemplateType.CONSTRAINT.name) {
+            logger.info("template[$templateId] is from store, srcTemplateId is ${latestTemplate.srcTemplateId}")
+            val rootTemplate = templateDao.getLatestTemplate(dslContext, latestTemplate.srcTemplateId)
             rootTemplateId = rootTemplate.id
             templateVersion = rootTemplate.version
             versionName = rootTemplate.versionName

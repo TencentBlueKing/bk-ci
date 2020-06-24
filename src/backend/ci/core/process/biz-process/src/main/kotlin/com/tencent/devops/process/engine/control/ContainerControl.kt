@@ -137,8 +137,8 @@ class ContainerControl @Autowired constructor(
                     rabbitTemplate = rabbitTemplate,
                     buildId = buildId,
                     message = "Project has no quota to run the job...(max quota: ${quotaPair.second})",
-                    tag = "",
-                    jobId = containerId,
+                    tag = VMUtils.genStartVMTaskId(containerId),
+                    jobId = null,
                     executeCount = 1
                 )
                 skipContainer(
@@ -156,8 +156,7 @@ class ContainerControl @Autowired constructor(
                 rabbitTemplate = rabbitTemplate,
                 buildId = buildId,
                 message = "Container control inc project used quota",
-                tag = "",
-                jobId = containerId,
+                tag = VMUtils.genStartVMTaskId(containerId),
                 executeCount = 1
             )
             pipelineQuotaService.incQuotaByProject(projectId, buildId, containerId)

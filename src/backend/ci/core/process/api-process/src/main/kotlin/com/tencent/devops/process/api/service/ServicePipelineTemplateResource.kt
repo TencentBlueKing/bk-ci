@@ -45,7 +45,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServicePipelineTemplateResource {
 
-    @ApiOperation("列举流水线模板")
+    @ApiOperation("列举项目已有流水线模板")
     @GET
     @Path("/projects/{projectCode}")
     fun listTemplate(
