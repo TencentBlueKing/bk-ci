@@ -349,7 +349,7 @@ class MutexControl @Autowired constructor(
         }
         val mutexId = redisOperation.get(lockKey)
         if (mutexId != null && mutexId.isNotBlank()) {
-            logger.info("[mutex] CHECK LOCK KEY |mutexId=$mutexId|projectId=$projectId")
+//            logger.info("[mutex] CHECK LOCK KEY |mutexId=$mutexId|projectId=$projectId")
             val mutexIdList = mutexId.split("_")
             val buildId = mutexIdList[0]
             val containerId = mutexIdList[1]
@@ -372,7 +372,7 @@ class MutexControl @Autowired constructor(
         val queueMutexIdList = redisOperation.hkeys(queueKey)
         if (queueMutexIdList != null && queueMutexIdList.isNotEmpty()) {
             queueMutexIdList.forEach { mutexId ->
-                logger.info("[mutex] CHECK QUEUE KEY |mutexId=$mutexId|projectId=$projectId")
+//                logger.info("[mutex] CHECK QUEUE KEY |mutexId=$mutexId|projectId=$projectId")
                 val mutexIdList = mutexId.split("_")
                 val buildId = mutexIdList[0]
                 val containerId = mutexIdList[1]
