@@ -200,7 +200,7 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
             val matchSourceBranch = doIncludeSourceBranchMatch(includeSourceBranchName, eventSourceBranch, pipelineId)
             if (matchSourceBranch == null) {
-                logger.warn("Do mr match fail for include branch not match for pipeline: $pipelineId")
+                logger.warn("Do mr match fail for include source branch not match for pipeline: $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)
             }
 
@@ -439,7 +439,7 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
     private fun doIncludeSourceBranchMatch(sourceBranchName: String?, eventSourceBranch: String, pipelineId: String): String? {
         logger.info("Do include source branch match for pipeline: $pipelineId, $eventSourceBranch")
-        if (sourceBranchName.isNullOrBlank()) return null
+        if (sourceBranchName.isNullOrBlank()) return ""
 
         val includeSourceBranchNameSet = regex.split(sourceBranchName)
         logger.info("Include source branch set for pipeline: $pipelineId, ${includeSourceBranchNameSet.map { it }}")
