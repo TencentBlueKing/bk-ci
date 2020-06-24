@@ -53,7 +53,7 @@ class TxPipelineHistoryDataClearServiceImpl @Autowired constructor() : PipelineH
                 projectTableKey to "t_project",
                 pluginJingangTableKey to "T_PLUGIN_JINGANG",
                 pluginJingangResultTableKey to "T_PLUGIN_JINGANG_RESULT",
-                artifactoryDbKey to "T_TIPELINE_ARTIFACETORY_INFO"
+                artifacetoryInfoTableKey to "T_TIPELINE_ARTIFACETORY_INFO"
         )
     }
 
