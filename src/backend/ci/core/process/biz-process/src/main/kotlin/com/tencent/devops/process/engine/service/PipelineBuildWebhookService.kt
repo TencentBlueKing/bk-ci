@@ -473,6 +473,8 @@ class PipelineBuildWebhookService @Autowired constructor(
                 params.codeType = CodeType.GIT
                 params.tagName = EnvUtils.parseEnv(element.tagName ?: "", variables)
                 params.excludeTagName = EnvUtils.parseEnv(element.excludeTagName ?: "", variables)
+                params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)
+                params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
             }
             is CodeGithubWebHookTriggerElement -> {
                 params = WebHookParams(
