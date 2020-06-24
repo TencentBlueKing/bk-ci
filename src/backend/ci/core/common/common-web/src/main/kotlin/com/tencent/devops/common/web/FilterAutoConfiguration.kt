@@ -24,17 +24,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.common.web
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-security")
-    compile "org.springframework.boot:spring-boot-starter-jersey"
-    compile "org.springframework.boot:spring-boot-starter-undertow"
-    compile "org.springframework.boot:spring-boot-starter-web"
-    compile "io.swagger:swagger-jersey2-jaxrs"
-    compile "com.github.ulisesbocchio:jasypt-spring-boot-starter"
-    compile "org.springframework.boot:spring-boot-starter-amqp"
-    compile('org.springframework.cloud:spring-cloud-starter-config')
+import com.tencent.devops.common.security.jwt.JwtManager
+import com.tencent.devops.common.web.filter.ServiceSecurityFilter
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+import javax.servlet.http.HttpServletRequest
+
+/**
+ *
+ * Powered By Tencent
+ */
+@Configuration
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
+class FilterAutoConfiguration(
+    private val jwtManager: JwtManager,
+    private val servletRequest: HttpServletRequest
+) {
+
+    @Bean
+    fun serviceSecurityFilter() = ServiceSecurityFilter(jwtManager, servletRequest)
 }
