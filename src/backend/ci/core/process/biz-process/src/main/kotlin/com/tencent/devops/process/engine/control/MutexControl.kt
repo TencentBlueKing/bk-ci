@@ -100,7 +100,7 @@ class MutexControl @Autowired constructor(
 
         val lockResult = tryToLockMutex(projectId, buildId, stageId, containerId, mutexGroup, container)
         return if (lockResult) {
-            logger.warn("[mutex] LOCK_SUCCESS |buildId=$buildId|stage=$stageId|container=$containerId|projectId=$projectId")
+            logger.info("[mutex] LOCK_SUCCESS |buildId=$buildId|stage=$stageId|container=$containerId|projectId=$projectId")
             // 抢到锁则可以继续运行，并退出队列
             quitMutexQueue(
                 projectId = projectId,
@@ -137,7 +137,7 @@ class MutexControl @Autowired constructor(
         containerId: String,
         mutexGroup: MutexGroup?
     ) {
-        logger.warn("[mutex] RELEASE_MUTEX_LOCK |buildId=$buildId|stage=$stageId|container=$containerId|projectId=$projectId")
+        logger.info("[mutex] RELEASE_MUTEX_LOCK |buildId=$buildId|stage=$stageId|container=$containerId|projectId=$projectId")
         if (mutexGroup != null) {
             unlockMutex(
                 projectId = projectId,
@@ -166,7 +166,7 @@ class MutexControl @Autowired constructor(
 
         if (lockedContainerMutexId != null) {
             // 当前锁不为null的时候
-            logger.warn("[mutex] RELEASE_LOCK |buildId=$buildId|stage=$stageId|container=$containerId|projectId=$projectId")
+            logger.info("[mutex] RELEASE_LOCK |buildId=$buildId|stage=$stageId|container=$containerId|projectId=$projectId")
             return lockedContainerMutexId == containerMutexId
         }
         // 获取队列中的开始时间，为空的时候则为当前时间
@@ -361,6 +361,7 @@ class MutexControl @Autowired constructor(
         }
         val mutexId = redisOperation.get(lockKey)
         if (mutexId != null && mutexId.isNotBlank()) {
+            logger.info("[mutex] CHECK LOCK KEY |mutexId=$mutexId|projectId=$projectId")
             val mutexIdList = mutexId.split("_")
             val buildId = mutexIdList[0]
             val containerId = mutexIdList[1]
@@ -383,6 +384,7 @@ class MutexControl @Autowired constructor(
         val queueMutexIdList = redisOperation.hkeys(queueKey)
         if (queueMutexIdList != null && queueMutexIdList.isNotEmpty()) {
             queueMutexIdList.forEach { mutexId ->
+                logger.info("[mutex] CHECK QUEUE KEY |mutexId=$mutexId|projectId=$projectId")
                 val mutexIdList = mutexId.split("_")
                 val buildId = mutexIdList[0]
                 val containerId = mutexIdList[1]
