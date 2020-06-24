@@ -55,6 +55,7 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
  */
 data class PublicDevCloudDispathcType(
     @JsonProperty("value") var image: String?,
+    var performanceConfigId: String?,
     override var imageType: ImageType? = ImageType.BKDEVOPS,
     override var credentialId: String? = "",
     override var credentialProject: String? = "",

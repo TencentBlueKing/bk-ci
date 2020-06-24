@@ -57,7 +57,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                         dispatchType.dockerBuildVersion = dispatchType.value.removePrefix("paas/")
                     } else if (dispatchType is PublicDevCloudDispathcType) {
                         // 在商店发布的蓝盾源镜像，无需凭证
-                        val pool = Pool(dispatchType.value.removePrefix("/"), null, null, false)
+                        val pool = Pool(dispatchType.value.removePrefix("/"), null, null, false, dispatchType.performanceConfigId)
                         dispatchType.image = JsonUtil.toJson(pool)
                     } else if (dispatchType is IDCDispatchType) {
                         dispatchType.image = dispatchType.value.removePrefix("paas/")
@@ -84,7 +84,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                 // DevCloud镜像历史数据特殊处理
                 if (dispatchType is PublicDevCloudDispathcType) {
                     if (dispatchType.image != null) {
-                        val pool = Pool("devcloud/" + dispatchType.image!!.removePrefix("/"), null, null, false)
+                        val pool = Pool("devcloud/" + dispatchType.image!!.removePrefix("/"), null, null, false, dispatchType.performanceConfigId)
                         dispatchType.image = JsonUtil.toJson(pool)
                     } else {
                         logger.error("dispatchType.image==null,buildId=$buildId,dispatchType=${JsonUtil.toJson(dispatchType)}")
@@ -121,7 +121,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
             password = ticketsMap["v2"] as String
         }
         val credential = Credential(user, password)
-        val pool = Pool(dispatchType.value, credential, null, true)
+        val pool = Pool(dispatchType.value, credential, null, true, dispatchType.performanceConfigId)
         dispatchType.image = JsonUtil.toJson(pool)
     }
 }
