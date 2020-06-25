@@ -22,7 +22,8 @@ import {
     TOGGLE_MODULE_LOADING,
     UPDATE_CURRENT_PAGE,
     SET_SERVICES,
-    TOGGLE_PERMISSION_DIALOG
+    TOGGLE_PERMISSION_DIALOG,
+    SET_CURRENT_NOTICE
 } from './constants'
 
 const actions: ActionTree<RootState, any> = {
@@ -119,6 +120,9 @@ const actions: ActionTree<RootState, any> = {
     },
     getAnnouncement () {
         return Request.get(`${SUPPORT_API_URL_PREFIX}/user/notice/valid`)
+    },
+    setAnnouncement ({ commit }, payload) {
+        commit(SET_CURRENT_NOTICE, payload)
     }
 }
 
