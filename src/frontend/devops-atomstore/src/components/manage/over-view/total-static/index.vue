@@ -49,7 +49,7 @@
                 }).then((res) => {
                     this.statisticList = [
                         { name: 'install-num', label: this.$t('store.安装量'), value: res.downloads },
-                        { name: 'pipelineCnt', label: this.$t('store.流水线个数'), value: res.pipelineCnt },
+                        { name: 'pipeline-count', label: this.$t('store.流水线个数'), value: res.pipelineCnt },
                         { name: 'comment-num', label: this.$t('store.评论数'), value: res.commentCnt },
                         { name: 'rate', label: this.$t('store.评分'), value: res.score }
                     ]
