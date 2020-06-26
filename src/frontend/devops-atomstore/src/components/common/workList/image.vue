@@ -284,11 +284,12 @@
                 }).catch(() => this.$bkMessage({ message: this.$t('store.校验失败，请修改再试'), theme: 'error' }))
             },
 
-            goToImageDetail (imageCode) {
+            goToImageDetail (code) {
                 this.$router.push({
-                    name: 'imageOverview',
+                    name: 'show',
                     params: {
-                        imageCode
+                        code,
+                        type: 'image'
                     }
                 })
             },

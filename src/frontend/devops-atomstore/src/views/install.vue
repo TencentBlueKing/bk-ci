@@ -135,14 +135,14 @@
             },
 
             getAtomDetail () {
-                return this.$store.dispatch('store/requestAtom', { atomCode: this.code }).then((res) => {
+                return this.$store.dispatch('store/requestAtom', this.code).then((res) => {
                     this.name = res.name
                     this.id = res.atomId
                 })
             },
 
             getTemplateDetail () {
-                return this.$store.dispatch('store/requestTemplate', { templateCode: this.code }).then((res) => {
+                return this.$store.dispatch('store/requestTemplate', this.code).then((res) => {
                     this.name = res.templateName
                     this.id = res.templateId
                 })

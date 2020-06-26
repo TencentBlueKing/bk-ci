@@ -459,11 +459,12 @@
                 this.templateErrors.tplError = false
             },
 
-            routerAtoms (templateCode) {
+            routerAtoms (code) {
                 this.$router.push({
-                    name: 'tplOverview',
+                    name: 'setting',
                     params: {
-                        templateCode
+                        code,
+                        type: 'template'
                     }
                 })
             },

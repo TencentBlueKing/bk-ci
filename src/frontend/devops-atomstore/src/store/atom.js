@@ -17,8 +17,6 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { UPDATE_CURRENT_ATOM } from './constants'
-
 const prefix = 'store/api'
 const repositoryPrefix = 'repository/api'
 const projectPrefix = 'project/api'
@@ -196,7 +194,7 @@ export const actions = {
     /**
      * 流水线插件详情
      */
-    requestAtom ({ commit }, { atomCode }) {
+    requestAtom ({ commit }, atomCode) {
         return vue.$ajax.get(`${prefix}/user/market/atom/${atomCode}`)
     },
 
@@ -382,35 +380,8 @@ export const actions = {
         return vue.$ajax.get(`${projectPrefix}/user/users/projects/${projectCode}/list`)
     },
 
-    updateCurrentaAtom ({ commit }, { res }) {
-        commit(UPDATE_CURRENT_ATOM, res)
-    },
-
-    updateUserInfo ({ commit }, res) {
-        commit('updateUserInfo', res)
-    },
-
     // 获取开发语言
     getDevelopLanguage () {
         return vue.$ajax.get(`${prefix}/user/market/desk/atom/language`)
-    }
-}
-
-export const getters = {
-    getCurrentAtom: state => Object.assign({}, state.currentAtom),
-    getUserInfo: state => state.userInfo
-}
-
-export const state = {
-    currentAtom: {},
-    userInfo: {}
-}
-
-export const mutations = {
-    [UPDATE_CURRENT_ATOM]: (state, res) => {
-        Vue.set(state, 'currentAtom', res)
-    },
-    updateUserInfo: (state, res) => {
-        Vue.set(state, 'userInfo', res)
     }
 }

@@ -133,7 +133,7 @@
                 const atomCode = this.detailCode
 
                 return Promise.all([
-                    this.requestAtom({ atomCode }),
+                    this.requestAtom(atomCode),
                     this.requestAtomStatistic({ atomCode }),
                     this.getUserApprovalInfo(atomCode),
                     this.getAtomYaml({ atomCode })
