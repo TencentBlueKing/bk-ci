@@ -24,33 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.api.pojo
+package com.tencent.devops.common.auth.api
 
-/**
- * 项目角色组
- */
-enum class BkAuthGroup(val value: String) {
-    CIADMIN("ciAdmin"), // CI管理员
-    MANAGER("manager"), // 管理员
-    DEVELOPER("developer"), // 开发人员
-    MAINTAINER("maintainer"), // 运维人员
-    TESTER("tester"), // 测试人员
-    PM("pm"), // 产品人员
-    QC("qc"); // 质量管理员
+import com.tencent.devops.common.auth.code.AuthServiceCode
 
-    companion object {
-        fun get(value: String): BkAuthGroup {
-            values().forEach {
-                if (value == it.value) return it
-            }
-            throw IllegalArgumentException("No enum for constant $value")
-        }
+class BluekingV3AuthTokenApi : AuthTokenApi {
 
-        fun contains(value: String): Boolean {
-            values().forEach {
-                if (value == it.value) return true
-            }
-            return false
-        }
+    override fun refreshAccessToken(serviceCode: AuthServiceCode): String {
+        return refreshAccessToken()
+    }
+
+    private fun refreshAccessToken(): String {
+        return "auth_token_mock"
+    }
+
+    override fun getAccessToken(serviceCode: AuthServiceCode): String {
+        return getAccessToken()
+    }
+
+    private fun getAccessToken(): String {
+        return refreshAccessToken()
     }
 }

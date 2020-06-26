@@ -1,0 +1,14 @@
+plugins {
+    id 'java'
+}
+
+group 'com.tencent.bk.devops.ci'
+version '2.3.6-RELEASE'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
