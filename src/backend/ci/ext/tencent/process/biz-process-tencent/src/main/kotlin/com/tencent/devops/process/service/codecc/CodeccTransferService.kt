@@ -355,10 +355,10 @@ class CodeccTransferService @Autowired constructor(
             }
         }
 
-        var endTimeEndTimeTemp = endTimeEndTime
+        var endTimeStartTimeTemp = endTimeStartTime
         if (endTimeStartTime != null && endTimeStartTime > 0 && endTimeEndTime != null && endTimeEndTime > 0) {
             if (endTimeEndTime - endTimeStartTime > dayTimeMillis) { // 做下保护，不超过一天
-                endTimeEndTimeTemp = endTimeEndTime - dayTimeMillis
+                endTimeStartTimeTemp = endTimeEndTime - dayTimeMillis
             }
         }
 
@@ -370,7 +370,7 @@ class CodeccTransferService @Autowired constructor(
             queueTimeEndTime,
             startTimeStartTimeTemp,
             startTimeEndTime,
-            endTimeEndTimeTemp,
+            endTimeStartTimeTemp,
             endTimeEndTime
         )
         val result = mutableListOf<BuildBasicInfo>()
