@@ -50,7 +50,6 @@ class PipelineUtilsTest {
         PipelineUtils.checkPipelineDescLength(desc)
     }
 
-
     @Test(expected = ErrorCodeException::class)
     fun checkPipelineDescLength101() {
         val desc = "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901"
