@@ -95,8 +95,7 @@ object LogUtils {
         tag: String,
         jobId: String? = null,
         executeCount: Int
-    ) =
-        addLine(rabbitTemplate, buildId, Ansi().bold().fgYellow().a(message).reset().toString(), tag, jobId, executeCount)
+    ) = addLine(rabbitTemplate, buildId, Ansi().bold().fgYellow().a(message).reset().toString(), tag, jobId, executeCount)
 
     fun addRedLine(
         rabbitTemplate: RabbitTemplate,
@@ -105,8 +104,7 @@ object LogUtils {
         tag: String,
         jobId: String?,
         executeCount: Int
-    ) =
-        addLine(rabbitTemplate, buildId, Ansi().bold().fgRed().a(message).reset().toString(), tag, jobId, executeCount)
+    ) = addLine(rabbitTemplate, buildId, Ansi().bold().fgRed().a(message).reset().toString(), tag, jobId, executeCount)
 
     fun updateLogStatus(
         rabbitTemplate: RabbitTemplate,
