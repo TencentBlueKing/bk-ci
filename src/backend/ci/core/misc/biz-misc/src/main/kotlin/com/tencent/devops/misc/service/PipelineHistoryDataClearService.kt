@@ -90,7 +90,8 @@ abstract class PipelineHistoryDataClearService {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        buildId: String
+        buildId: String,
+        isCompletelyDelete: Boolean
     ): List<Query> {
         val dataBaseInfo = getDataBaseInfo()
         val tableInfo = getTableInfo()
@@ -100,24 +101,29 @@ abstract class PipelineHistoryDataClearService {
         val pluginDbName = dataBaseInfo[pluginDbKey]
         val qualityDbName = dataBaseInfo[qualityDbKey]
         val batchSqlList = mutableListOf<Query>(
-            dslContext.query("DELETE FROM $processDbName.${tableInfo[pipelineBuildDetailTableKey]} WHERE BUILD_ID='$buildId'"),
             dslContext.query("DELETE FROM $processDbName.${tableInfo[pipelineBuildTaskTableKey]} WHERE BUILD_ID='$buildId'"),
             dslContext.query("DELETE FROM $processDbName.${tableInfo[pipelineBuildVarTableKey]} WHERE BUILD_ID='$buildId'"),
             dslContext.query("DELETE FROM $processDbName.${tableInfo[pipelineBuildContainerTableKey]} WHERE BUILD_ID='$buildId'"),
-            dslContext.query("DELETE FROM $processDbName.${tableInfo[pipelineBuildStageTableKey]} WHERE BUILD_ID='$buildId'"),
-            dslContext.query("DELETE FROM $processDbName.${tableInfo[reportTableKey]} WHERE PROJECT_ID='$projectId' AND PIPELINE_ID='$pipelineId' AND BUILD_ID='$buildId'"),
-            dslContext.query("DELETE FROM $repositoryDbName.${tableInfo[repositoryCommitTableKey]} WHERE BUILD_ID='$buildId'"),
-            dslContext.query("DELETE FROM $dispatchDbName.${tableInfo[dispatchPipelineBuildTableKey]} WHERE BUILD_ID='$buildId'"),
-            dslContext.query("DELETE FROM $dispatchDbName.${tableInfo[dispatchPipelineDockerBuildTableKey]} WHERE BUILD_ID='$buildId'"),
-            dslContext.query("DELETE FROM $dispatchDbName.${tableInfo[dispatchThirdpartyAgentBuildTableKey]} WHERE BUILD_ID='$buildId'"),
-            dslContext.query("DELETE FROM $pluginDbName.${tableInfo[pluginCodeccTableKey]} WHERE BUILD_ID='$buildId'"),
-            dslContext.query("DELETE FROM $qualityDbName.${tableInfo[qualityHisDetailMetadataTableKey]} WHERE BUILD_ID='$buildId'"),
-            dslContext.query("DELETE FROM $qualityDbName.${tableInfo[qualityHisOriginMetadataTableKey]} WHERE BUILD_ID='$buildId'")
+            dslContext.query("DELETE FROM $processDbName.${tableInfo[pipelineBuildStageTableKey]} WHERE BUILD_ID='$buildId'")
         )
-        batchSqlList.addAll(getSpecClearSqlList(dslContext, projectId, pipelineId, buildId))
-        // 添加删除记录，用“REPLACE INTO”方式插入实现幂等
-        batchSqlList.add(dslContext.query("REPLACE INTO $processDbName.${tableInfo[pipelineBuildHisDataClearTableKey]}(BUILD_ID,PIPELINE_ID,PROJECT_ID) VALUES ('$buildId','$pipelineId','$projectId')"))
-        batchSqlList.add(dslContext.query("DELETE FROM $processDbName.${tableInfo[pipelineBuildHistoryTableKey]} WHERE BUILD_ID='$buildId'"))
+        if (isCompletelyDelete) {
+            val dataSqlList = mutableListOf<Query>(
+                dslContext.query("DELETE FROM $processDbName.${tableInfo[pipelineBuildDetailTableKey]} WHERE BUILD_ID='$buildId'"),
+                dslContext.query("DELETE FROM $processDbName.${tableInfo[reportTableKey]} WHERE PROJECT_ID='$projectId' AND PIPELINE_ID='$pipelineId' AND BUILD_ID='$buildId'"),
+                dslContext.query("DELETE FROM $repositoryDbName.${tableInfo[repositoryCommitTableKey]} WHERE BUILD_ID='$buildId'"),
+                dslContext.query("DELETE FROM $dispatchDbName.${tableInfo[dispatchPipelineBuildTableKey]} WHERE BUILD_ID='$buildId'"),
+                dslContext.query("DELETE FROM $dispatchDbName.${tableInfo[dispatchPipelineDockerBuildTableKey]} WHERE BUILD_ID='$buildId'"),
+                dslContext.query("DELETE FROM $dispatchDbName.${tableInfo[dispatchThirdpartyAgentBuildTableKey]} WHERE BUILD_ID='$buildId'"),
+                dslContext.query("DELETE FROM $pluginDbName.${tableInfo[pluginCodeccTableKey]} WHERE BUILD_ID='$buildId'"),
+                dslContext.query("DELETE FROM $qualityDbName.${tableInfo[qualityHisDetailMetadataTableKey]} WHERE BUILD_ID='$buildId'"),
+                dslContext.query("DELETE FROM $qualityDbName.${tableInfo[qualityHisOriginMetadataTableKey]} WHERE BUILD_ID='$buildId'")
+            )
+            batchSqlList.addAll(dataSqlList)
+            batchSqlList.addAll(getSpecClearSqlList(dslContext, projectId, pipelineId, buildId))
+            // 添加删除记录，用“REPLACE INTO”方式插入实现幂等
+            batchSqlList.add(dslContext.query("REPLACE INTO $processDbName.${tableInfo[pipelineBuildHisDataClearTableKey]}(BUILD_ID,PIPELINE_ID,PROJECT_ID) VALUES ('$buildId','$pipelineId','$projectId')"))
+            batchSqlList.add(dslContext.query("DELETE FROM $processDbName.${tableInfo[pipelineBuildHistoryTableKey]} WHERE BUILD_ID='$buildId'"))
+        }
         return batchSqlList
     }
 
