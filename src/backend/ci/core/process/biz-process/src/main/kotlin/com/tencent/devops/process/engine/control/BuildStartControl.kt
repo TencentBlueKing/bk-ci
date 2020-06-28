@@ -96,7 +96,7 @@ class BuildStartControl @Autowired constructor(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)!!
 
-    private val tag = "buildStartControl"
+    private val tag = "startVM-0"
 
     fun handle(event: PipelineBuildStartEvent) {
         with(event) {
@@ -119,7 +119,7 @@ class BuildStartControl @Autowired constructor(
             buildId = buildId,
             message = "Enter BuildStartControl",
             tag = tag,
-            jobId = "",
+            jobId = "0",
             executeCount = 1
         )
 
@@ -142,7 +142,7 @@ class BuildStartControl @Autowired constructor(
             buildId = buildId,
             message = "Async fetch latest commit/revision, please wait...",
             tag = tag,
-            jobId = "",
+            jobId = "0",
             executeCount = 1
         )
         buildModel(this, model)
@@ -151,7 +151,7 @@ class BuildStartControl @Autowired constructor(
             buildId = buildId,
             message = "Async fetch latest commit/revision is finish.",
             tag = tag,
-            jobId = "",
+            jobId = "0",
             executeCount = 1
         )
 
@@ -208,7 +208,7 @@ class BuildStartControl @Autowired constructor(
             buildId = buildId,
             message = "BuildStartControl End",
             tag = tag,
-            jobId = "",
+            jobId = "0",
             executeCount = 1
         )
     }
