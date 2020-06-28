@@ -18,13 +18,13 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_REPOSITORY_V3"], description = "OPENAPI-代码提交资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/repositoryCommit")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwRepositoryCommitResourceV3 {
 
     @ApiOperation("获取代码提交记录")
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/repositoryCommit")
+    @Path("")
     @GET
     fun getRepositoryCommit(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
