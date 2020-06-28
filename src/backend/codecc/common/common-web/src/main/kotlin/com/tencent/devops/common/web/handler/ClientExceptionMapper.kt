@@ -27,7 +27,7 @@
 package com.tencent.devops.common.web.handler
 
 import com.netflix.client.ClientException
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.CodeCCResult
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.slf4j.LoggerFactory
@@ -54,6 +54,6 @@ class ClientExceptionMapper : ExceptionMapper<ClientException> {
         } else {
             "内部依赖服务异常"
         }
-        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE).entity(Result<Void>(status.statusCode, message)).build()
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE).entity(CodeCCResult<Void>(status.statusCode, message)).build()
     }
 }

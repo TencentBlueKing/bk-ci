@@ -41,11 +41,11 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCas
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.engine.utils.ContainerUtils
@@ -259,55 +259,10 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         }
     }
 
-    private fun checkCustomVariableSkip(
-        buildId: String,
-        additionalOptions: ElementAdditionalOptions?,
-        variables: Map<String, String>
-    ): Boolean {
-        // 自定义变量全部满足时不运行
-        if (skipWhenCustomVarMatch(additionalOptions)) {
-            for (names in additionalOptions?.customVariables!!) {
-                val key = names.key
-                val value = names.value
-                val existValue = variables[key]
-                if (value != existValue) {
-                    logger.info("buildId=[$buildId]|CUSTOM_VARIABLE_MATCH_NOT_RUN|exists=$existValue|expect=$value")
-                    return false
-                }
-            }
-            // 所有自定义条件都满足，则跳过
-            return true
-        }
-
-        // 自定义变量全部满足时运行
-        if (notSkipWhenCustomVarMatch(additionalOptions)) {
-            for (names in additionalOptions?.customVariables!!) {
-                val key = names.key
-                val value = names.value
-                val existValue = variables[key]
-                if (value != existValue) {
-                    logger.info("buildId=[$buildId]|CUSTOM_VARIABLE_MATCH|exists=$existValue|expect=$value")
-                    return true
-                }
-            }
-            // 所有自定义条件都满足，则不能跳过
-            return false
-        }
-        return false
-    }
-
-    private fun notSkipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
-        additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH &&
-            additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
-
-    private fun skipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
-        additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN &&
-            additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
-
     private fun buildClaim(buildId: String, vmSeqId: String, vmName: String): BuildTask {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
             ?: run {
-                logger.error("[$buildId]| buildInfo not found, End")
+                logger.warn("[$buildId]| buildInfo not found, End")
                 return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
         val allTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
@@ -333,10 +288,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                                 (taskBehind.additionalOptions!!.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
                                     taskBehind.additionalOptions!!.runCondition == RunCondition.PRE_TASK_FAILED_ONLY)
                             ) {
-                                logger.info(
-                                    "[$buildId]|containerId=$vmSeqId|name=${taskBehind.taskName}|" +
-                                        "taskId=${taskBehind.taskId}|vm=$vmName| will run when pre task failed"
-                                )
+                                logger.info("[$buildId]|containerId=$vmSeqId|name=${taskBehind.taskName}|taskId=${taskBehind.taskId}|vm=$vmName| will run when pre task failed")
                                 continueWhenPreTaskFailed = true
                             }
                         }
@@ -367,7 +319,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                             (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY &&
                                 hasFailedTaskInInSuccessContainer)
                         ) {
-                            if (!checkCustomVariableSkip(buildId, additionalOptions, allVariable)) {
+                            if (!ControlUtils.checkCustomVariableSkip(buildId = buildId, additionalOptions = additionalOptions, variables = allVariable)) {
                                 queueTasks.add(task)
                             } else {
                                 pipelineBuildDetailService.taskSkip(buildId, task.taskId)
@@ -380,10 +332,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         }
 
         if (runningTasks.size > 0) { // 已经有运行中的任务，禁止再认领，同一个容器不允许并行
-            logger.info(
-                "[$buildId]|containerId=$vmSeqId|runningTasks=${runningTasks.size}" +
-                    "|vm=$vmName| wait for running task finish!"
-            )
+            logger.info("[$buildId]|containerId=$vmSeqId|runningTasks=${runningTasks.size}|vm=$vmName| wait for running task finish!")
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
         }
 
@@ -608,11 +557,11 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             .filter { it.taskId == "end-${it.taskSeq}" }
 
         if (tasks.isEmpty()) {
-            logger.error("[$buildId]|name=$vmName|containerId=$vmSeqId|There are no stopVM tasks!")
+            logger.warn("[$buildId]|name=$vmName|containerId=$vmSeqId|There are no stopVM tasks!")
             return false
         }
         if (tasks.size > 1) {
-            logger.error("[$buildId]|name=$vmName|containerId=$vmSeqId|There are multiple stopVM tasks!")
+            logger.warn("[$buildId]|name=$vmName|containerId=$vmSeqId|There are multiple stopVM tasks!")
             return false
         }
         redisOperation.delete(HeartBeatUtils.genHeartBeatKey(buildId, vmSeqId))
@@ -660,7 +609,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 userId = task.starter
             )
         } catch (t: Throwable) {
-            logger.warn("Fail to send the element data", t)
+            logger.warn("[$buildId]| Fail to send the measure element data", t)
         }
     }
 

@@ -26,7 +26,7 @@
 
 package com.tencent.devops.common.web.handler
 
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.CodeCCResult
 import com.tencent.devops.common.constant.CommonMessageCode
 import org.slf4j.LoggerFactory
 import javax.validation.ConstraintViolationException
@@ -51,7 +51,7 @@ class ValidationExceptionMapper : ExceptionMapper<ValidationException> {
             val message = exception.constraintViolations.map { constraintViolation ->
                 constraintViolation.message
             }.reduce { acc, s -> "$acc|$s" }
-            response.entity(Result<Void>(
+            response.entity(CodeCCResult<Void>(
                     status = status.statusCode,
                     errCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     message = message))

@@ -32,6 +32,7 @@ import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.exception.ClientException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.ms.MicroServiceTarget
 import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.service.config.CommonConfig
@@ -52,8 +53,13 @@ import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.context.annotation.DependsOn
 import org.springframework.core.annotation.AnnotationUtils
 import org.springframework.stereotype.Component
+import java.security.cert.CertificateException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSocketFactory
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 import kotlin.reflect.KClass
 
 /**
@@ -83,10 +89,38 @@ class Client @Autowired constructor(
         })
 
     private val interfaces = ConcurrentHashMap<KClass<*>, String>()
+
+    private val trustAllCerts: Array<TrustManager> = arrayOf(object :
+        X509TrustManager {
+        @Throws(CertificateException::class)
+        override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
+        }
+
+        @Throws(CertificateException::class)
+        override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
+        }
+
+        override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
+            return arrayOf()
+        }
+    })
+
+    private fun sslSocketFactory(): SSLSocketFactory {
+        try {
+            val sslContext = SSLContext.getInstance("SSL")
+            sslContext.init(null, trustAllCerts, java.security.SecureRandom())
+            return sslContext.socketFactory
+        } catch (ingored: Exception) {
+            throw RemoteServiceException(ingored.message!!)
+        }
+    }
+
     private val okHttpClient = okhttp3.OkHttpClient.Builder()
         .connectTimeout(connectTimeoutSeconds, TimeUnit.SECONDS)
         .readTimeout(readWriteTimeoutSeconds, TimeUnit.SECONDS)
         .writeTimeout(readWriteTimeoutSeconds, TimeUnit.SECONDS)
+        .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+        .hostnameVerifier { _, _ -> true }
         .build()
 
     private val longRunClient = OkHttpClient(
@@ -94,6 +128,8 @@ class Client @Autowired constructor(
             .connectTimeout(10L, TimeUnit.SECONDS)
             .readTimeout(30L, TimeUnit.MINUTES)
             .writeTimeout(30L, TimeUnit.MINUTES)
+            .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+            .hostnameVerifier { _, _ -> true }
             .build()
     )
 
@@ -173,7 +209,8 @@ class Client @Autowired constructor(
      *
      */
     fun <T : Any> getGateway(clz: KClass<T>, gatewayType: GatewayType = GatewayType.IDC): T {
-        val serviceName = findServiceName(clz)
+        // 从网关访问去掉后缀，否则会变成 /process-devops/api/service/piplines 导致访问失败
+        val serviceName = findServiceName(clz).removeSuffix(serviceSuffix ?: "")
         val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
         return Feign.builder()
             .client(feignClient)
