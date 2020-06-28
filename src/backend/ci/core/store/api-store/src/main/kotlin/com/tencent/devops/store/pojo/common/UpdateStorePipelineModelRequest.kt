@@ -36,5 +36,7 @@ data class UpdateStorePipelineModelRequest(
     @ApiModelProperty("组件类型", required = true)
     val storeType: String,
     @ApiModelProperty("组件代码集合(scopeType为SPEC才需要传)", required = false)
-    val storeCodeList: List<String>?
+    val storeCodeList: List<String>? = null,
+    @ApiModelProperty("流水线模型", required = false)
+    val pipelineModel: String? = null
 )

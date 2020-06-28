@@ -51,6 +51,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StorePipelineService
 import org.apache.commons.lang.StringEscapeUtils
+import org.apache.commons.lang.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -100,14 +101,22 @@ class StorePipelineServiceImpl : StorePipelineService {
         val scopeType = updateStorePipelineModelRequest.scopeType
         val storeType = updateStorePipelineModelRequest.storeType
         val storeCodeList = updateStorePipelineModelRequest.storeCodeList
-        val pipelineModelConfig =
-            businessConfigDao.get(dslContext, storeType, featureName, "PIPELINE_MODEL")
-                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-        val grayPipelineModelConfig =
-            businessConfigDao.get(dslContext, storeType, featureName, "GRAY_PIPELINE_MODEL")
-                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-        val pipelineModel = pipelineModelConfig.configValue
-        val grayPipelineModel = grayPipelineModelConfig.configValue
+        val updatePipelineModel = updateStorePipelineModelRequest.pipelineModel
+        var pipelineModel = StringUtils.EMPTY
+        var grayPipelineModel = StringUtils.EMPTY
+        if (updatePipelineModel == null) {
+            val pipelineModelConfig =
+                businessConfigDao.get(dslContext, storeType, featureName, "PIPELINE_MODEL")
+                    ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            val grayPipelineModelConfig =
+                businessConfigDao.get(dslContext, storeType, featureName, "GRAY_PIPELINE_MODEL")
+                    ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            pipelineModel = pipelineModelConfig.configValue
+            grayPipelineModel = grayPipelineModelConfig.configValue
+        } else {
+            pipelineModel = updatePipelineModel
+            grayPipelineModel = updatePipelineModel
+        }
         when (scopeType) {
             ScopeTypeEnum.ALL.name -> {
                 handleStorePipelineModel(
