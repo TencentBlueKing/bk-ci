@@ -27,11 +27,14 @@
 package com.tencent.devops.process.dao
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.model.process.Tables
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.sql.Timestamp
 
 @Repository
 class TencentPipelineBuildDao {
@@ -46,6 +49,48 @@ class TencentPipelineBuildDao {
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(STATUS.eq(BuildStatus.SUCCEED.ordinal))
                 .and(BUILD_NUM.gt(buildNum))
+                .fetch()
+        }
+    }
+
+    fun listScanPipelineBuildList(
+        dslContext: DSLContext,
+        status: List<BuildStatus>?,
+        trigger: List<StartType>?,
+        queueTimeStartTime: Long?,
+        queueTimeEndTime: Long?,
+        startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?
+    ): Collection<TPipelineBuildHistoryRecord> {
+        return with(Tables.T_PIPELINE_BUILD_HISTORY) {
+            val where = dslContext.selectFrom(this).where(CHANNEL.eq("GONGFENGSCAN"))
+            if (status != null && status.isNotEmpty()) { // filterNotNull不能删
+                where.and(STATUS.`in`(status.map { it.ordinal }))
+            }
+            if (trigger != null && trigger.isNotEmpty()) { // filterNotNull不能删
+                where.and(TRIGGER.`in`(trigger.map { it.name }))
+            }
+            if (queueTimeStartTime != null && queueTimeStartTime > 0) {
+                where.and(QUEUE_TIME.ge(Timestamp(queueTimeStartTime).toLocalDateTime()))
+            }
+            if (queueTimeEndTime != null && queueTimeEndTime > 0) {
+                where.and(QUEUE_TIME.le(Timestamp(queueTimeEndTime).toLocalDateTime()))
+            }
+            if (startTimeStartTime != null && startTimeStartTime > 0) {
+                where.and(START_TIME.ge(Timestamp(startTimeStartTime).toLocalDateTime()))
+            }
+            if (startTimeEndTime != null && startTimeEndTime > 0) {
+                where.and(START_TIME.le(Timestamp(startTimeEndTime).toLocalDateTime()))
+            }
+            if (endTimeStartTime != null && endTimeStartTime > 0) {
+                where.and(END_TIME.ge(Timestamp(endTimeStartTime).toLocalDateTime()))
+            }
+            if (endTimeEndTime != null && endTimeEndTime > 0) {
+                where.and(END_TIME.le(Timestamp(endTimeEndTime).toLocalDateTime()))
+            }
+            where.orderBy(END_TIME.desc())
                 .fetch()
         }
     }
