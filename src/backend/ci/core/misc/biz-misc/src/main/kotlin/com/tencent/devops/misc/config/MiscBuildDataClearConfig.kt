@@ -24,12 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:misc:biz-misc-sample")
-    // 无对接权限中心，根据common.yml配置文件项auth.idProvider=samle启用，会忽略下面蓝鲸权限中心实现
-    compile project(":core:common:common-auth:common-auth-mock")
-    // 对接蓝鲸的权限中心实现, 根据common.yml配置项auth.idProvider=bk_login值来决定加载
-    compile project(":core:common:common-auth:common-auth-blueking")
-}
+package com.tencent.devops.misc.config
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+
+@Component
+class MiscBuildDataClearConfig {
+
+    @Value("\${build.data.clear.switch:false}")
+    val switch: String = "false"
+
+    @Value("\${build.data.clear.maxEveryProjectHandleNum:5}")
+    val maxEveryProjectHandleNum: String = "5"
+
+    @Value("\${build.data.clear.monthRange:2}")
+    val monthRange: String = "2"
+
+    @Value("\${build.data.clear.maxKeepNum:10000}")
+    val maxKeepNum: String = "10000"
+}
