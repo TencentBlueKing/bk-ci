@@ -34,16 +34,11 @@ import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import org.jooq.DSLContext
 import org.jooq.Result
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 
 @Repository
 class TencentPipelineBuildDao {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(TencentPipelineBuildDao::class.java)
-    }
 
     fun listSuccessBuild(
         dslContext: DSLContext,
@@ -96,8 +91,6 @@ class TencentPipelineBuildDao {
             if (endTimeEndTime != null && endTimeEndTime > 0) {
                 where.and(END_TIME.le(Timestamp(endTimeEndTime).toLocalDateTime()))
             }
-            logger.info("sql is: ${where.sql}")
-
             where.orderBy(END_TIME.desc())
                 .fetch()
         }
