@@ -7,6 +7,7 @@
             :editable="editable"
             :stage="stage"
             :is-preview="isPreview"
+            :is-exec-detail="isExecDetail"
             :can-skip-element="canSkipElement"
             :stage-index="index"
             :stage-length="computedStage.length"
@@ -29,6 +30,10 @@
                 default: true
             },
             isPreview: {
+                type: Boolean,
+                default: false
+            },
+            isExecDetail: {
                 type: Boolean,
                 default: false
             },

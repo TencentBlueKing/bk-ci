@@ -13,7 +13,7 @@
                 {{ containerSerialNum }}
             </status-icon>
             <p class="container-name">
-                <span :title="container.name">{{ container.status === 'PREPARE_ENV' ? $t('editPage.prepareEnv') : container.name }}</span>
+                <span :class="{ 'skip-name': containerDisabled }" :title="container.name">{{ container.status === 'PREPARE_ENV' ? $t('editPage.prepareEnv') : container.name }}</span>
             </p>
             <container-type :class="showCopyJob ? 'hover-hide' : ''" :container="container" v-if="!showCheckedToatal"></container-type>
             <span :title="$t('editPage.copyJob')" v-if="showCopyJob && !container.isError" class="devops-icon copyJob" @click.stop="copyContainer">
@@ -268,6 +268,11 @@
 
             .atom-canskip-checkbox {
                 margin-right: 6px;
+                &.is-disabled .bk-checkbox {
+                    background-color: transparent;
+                    border-color: #979BA4;
+                }
+
             }
             input[type=checkbox] {
                 border-radius: 3px;

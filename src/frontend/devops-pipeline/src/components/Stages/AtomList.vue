@@ -414,13 +414,6 @@
             .atom-icon.skip-icon {
                 color: #c4cdd6;
             }
-            .atom-name span.skip-name {
-                text-decoration: line-through;
-                color: #c4cdd6;
-                &:hover {
-                    color: #c4cdd6;
-                }
-            }
 
             &.is-error {
                 border-color: $dangerColor;
