@@ -46,6 +46,23 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElem
 object ModelUtils {
 
     /**
+     *  获取Model中的启动参数，并根据input的值赋值替换默认值
+     *  @param container
+     */
+    fun getModelParamsByInput(container: TriggerContainer, input: Map<String, String>) : MutableMap<String, String> {
+        val params = mutableMapOf<String, String>()
+        // 解析变量
+        container.params.forEach { param ->
+            if (input[param.id] != null) {
+                params[param.id] = input[param.id].toString()
+            } else {
+                params[param.id] = param.defaultValue.toString()
+            }
+        }
+        return params
+    }
+
+    /**
      * 初始化旧的数据
      */
     fun initContainerOldData(c: Container) {
