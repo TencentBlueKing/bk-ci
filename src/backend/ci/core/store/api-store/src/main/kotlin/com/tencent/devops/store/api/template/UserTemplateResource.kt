@@ -101,6 +101,9 @@ interface UserTemplateResource {
         @ApiParam("排序", required = false)
         @QueryParam("sortType")
         sortType: MarketTemplateSortTypeEnum ? = MarketTemplateSortTypeEnum.CREATE_TIME,
+        @ApiParam("项目ID", required = false)
+        @QueryParam("projectCode")
+        projectCode: String?,
         @ApiParam("页码", required = false)
         @QueryParam("page")
         page: Int?,
