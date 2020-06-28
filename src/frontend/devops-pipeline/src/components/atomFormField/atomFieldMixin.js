@@ -62,9 +62,22 @@ const atomFieldMixin = {
             default: false
         }
     },
+    data () {
+        return {
+            title: '',
+            readOnly: false
+        }
+    },
     watch: {
         value (value, oldValue) {
             value !== oldValue && this.$emit('input', value)
+        }
+    },
+    mounted () {
+        const ele = document.querySelector('.atom-form-box')
+        if ((ele && ele.classList.contains('readonly')) || this.disabled) {
+            this.title = this.value
+            this.readOnly = true
         }
     }
 }

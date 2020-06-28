@@ -64,3 +64,5 @@ const val JAVA = "java" // java
 const val PYTHON = "python" // python
 const val NODEJS = "nodejs" // nodejs
 const val GOLANG = "golang" // golang
+const val PATTERN_STYLE = "patternStyle" // 正则表达式规则
+const val MESSAGE = "message" // 提示信息

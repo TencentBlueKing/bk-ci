@@ -2,7 +2,6 @@ echo off
 cd /d %~dp0
 
 set WORK_DIR=%CD%
-set GOPATH=%WORK_DIR%
 
 set GOARCH=386
 set GOOS=windows
@@ -11,13 +10,11 @@ cd /D %WORK_DIR%
 md %WORK_DIR%\bin
 del /q %WORK_DIR%\bin\*
 
-cd %WORK_DIR%\src\cmd\daemon
-go build -o %WORK_DIR%\bin\devopsDaemon.exe
+set GO111MODULE=on
 
-cd %WORK_DIR%\src\cmd\agent
-go build -o %WORK_DIR%\bin\devopsAgent.exe
+go build -o %WORK_DIR%\bin\devopsDaemon.exe %WORK_DIR%\src\cmd\daemon
 
-cd %WORK_DIR%\src\cmd\upgrader
-go build -o %WORK_DIR%\bin\upgrader.exe
+go build -o %WORK_DIR%\bin\devopsAgent.exe %WORK_DIR%\src\cmd\agent
 
-cd /D %WORK_DIR%
+go build -o %WORK_DIR%\bin\upgrader.exe %WORK_DIR%\src\cmd\upgrader
+

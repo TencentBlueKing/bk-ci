@@ -27,6 +27,33 @@ BEGIN
         ALTER TABLE T_NOTIFY_EMAIL
             CHANGE `BODY` `BODY` mediumtext NOT NULL;
     END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_EMAILS_NOTIFY_MESSAGE_TEMPLATE'
+                    AND COLUMN_NAME = 'SENDER') THEN
+        ALTER TABLE `T_EMAILS_NOTIFY_MESSAGE_TEMPLATE`
+            ADD COLUMN `SENDER` VARCHAR(128) NOT NULL DEFAULT 'DevOps';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_RTX_NOTIFY_MESSAGE_TEMPLATE'
+                    AND COLUMN_NAME = 'SENDER') THEN
+        ALTER TABLE `T_RTX_NOTIFY_MESSAGE_TEMPLATE`
+            ADD COLUMN `SENDER` VARCHAR(128) NOT NULL DEFAULT 'DevOps';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_WECHAT_NOTIFY_MESSAGE_TEMPLATE'
+                    AND COLUMN_NAME = 'SENDER') THEN
+        ALTER TABLE `T_WECHAT_NOTIFY_MESSAGE_TEMPLATE`
+            ADD COLUMN `SENDER` VARCHAR(128) NOT NULL DEFAULT 'DevOps';
+    END IF;
     
     COMMIT;
 END <CI_UBF>
