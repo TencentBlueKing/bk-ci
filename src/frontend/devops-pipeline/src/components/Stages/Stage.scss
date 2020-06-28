@@ -172,6 +172,14 @@ $borderColor: #addaff;
     cursor: pointer;
 }
 
+span.skip-name {
+    text-decoration: line-through;
+    color: #c4cdd6;
+    &:hover {
+        color: #c4cdd6;
+    }
+}
+
 .add-plus-icon {
     @include add-plus-icon($primaryColor, $borderColor, white, 18px, true);
     @include add-plus-icon-active($primaryColor, $primaryColor, white);

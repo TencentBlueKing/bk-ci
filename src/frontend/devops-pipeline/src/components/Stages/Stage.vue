@@ -1,12 +1,12 @@
 <template>
     <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'readonly': !editable || stageDisabled }, 'pipeline-stage']" ref="stageRef">
         <span :class="{ 'stage-review-logo': true, 'pointer': true }" v-bk-tooltips.top="reviewTooltip" @click.stop="startNextStage">
-            <logo v-if="!isTriggerStage" color="#999" :name="reviewStatausIcon" size="28" />
+            <logo v-if="!isTriggerStage" :name="reviewStatausIcon" size="28" />
         </span>
         <bk-button :class="['pipeline-stage-entry', [stageStatusCls], { 'editable-stage-entry': editable, 'stage-disabled': stageDisabled }]" @click.stop="showStagePanel">
             <logo v-if="stage.status === 'SKIP'" v-bk-tooltips="$t('skipStageDesc')" class="skip-icon redo-arrow" name="redo-arrow" size="16"></logo>
             <i v-else-if="stageStatusIcon" :class="`stage-status-icon bk-icon icon-${stageStatusIcon}`"></i>
-            <span class="stage-entry-name">{{ stageTitle }}</span>
+            <span :class="{ 'stage-entry-name': true, 'skip-name': stageDisabled }">{{ stageTitle }}</span>
             <i v-if="isStageError" class="bk-icon icon-exclamation-triangle-shape stage-entry-error-icon" />
             <span @click.stop v-if="showCheckedToatal && canSkipElement" class="check-total-stage">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="stage.runStage" :disabled="stageDisabled"></bk-checkbox>
@@ -90,6 +90,10 @@
                 type: Boolean,
                 default: true
             },
+            isExecDetail: {
+                type: Boolean,
+                default: false
+            },
             isPreview: {
                 type: Boolean,
                 default: false
@@ -115,7 +119,7 @@
             ]),
             isStageError () {
                 try {
-                    return this.stage.isError || this.stage.stageControlOption.isError
+                    return this.stage.isError
                 } catch (e) {
                     console.warn(e)
                     return false
@@ -190,8 +194,11 @@
                         return 'add-plus-icon'
                 }
             },
+            stageStatusCls () {
+                return this.stage && this.stage.status ? this.stage.status : ''
+            },
             stageStatusIcon () {
-                switch (this.stage.status) {
+                switch (this.stageStatusCls) {
                     case 'SUCCEED':
                         return 'check-circle'
                     case 'FAILED':
@@ -204,24 +211,32 @@
                         return ''
                 }
             },
-            stageStatusCls () {
-                return this.stage && this.stage.status ? this.stage.status : ''
-            },
             enableReview () {
                 return this.stage.stageControlOption && this.stage.stageControlOption.manualTrigger
             },
             reviewStatausIcon () {
-                switch (this.stage.reviewStatus) {
-                    case 'REVIEWING':
-                        return 'reviewing'
-                    case 'QUEUE':
-                        return 'review-waiting'
-                    case 'REVIEW_PROCESSED':
-                        return 'reviewed'
-                    case 'REVIEW_ABORT':
-                        return 'review-abort'
-                    default:
-                        return this.enableReview ? 'review-enable' : 'review-disable'
+                try {
+                    if (this.stage.stageControlOption && this.stage.stageControlOption.isReviewError) return 'review-error'
+                    switch (true) {
+                        case this.stage.reviewStatus === 'REVIEWING':
+                            return 'reviewing'
+                        case this.stage.reviewStatus === 'QUEUE':
+                            return 'review-waiting'
+                        case this.stage.reviewStatus === 'REVIEW_PROCESSED':
+                            return 'reviewed'
+                        case this.stage.reviewStatus === 'REVIEW_ABORT':
+                            return 'review-abort'
+                        case this.stageStatusCls === 'SKIP':
+                        case !this.stageStatusCls && this.isExecDetail:
+                            return this.enableReview ? 'review-waiting' : 'review-auto-gray'
+                        case !!this.stageStatusCls:
+                            return 'review-auto-pass'
+                        default:
+                            return this.enableReview ? 'review-enable' : 'review-auto'
+                    }
+                } catch (e) {
+                    console.warn('get review icon error: ', e)
+                    return 'review-auto'
                 }
             },
             reviewTooltip () {

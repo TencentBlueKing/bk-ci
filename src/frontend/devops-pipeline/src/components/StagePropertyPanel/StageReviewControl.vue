@@ -87,19 +87,19 @@
         watch: {
             manualTrigger (val) {
                 !val && this.handleUpdateStageControl('triggerUsers', [])
-                this.handleUpdateStageControl('isError', !this.validateStageControl())
+                this.handleUpdateStageControl('isReviewError', !this.validateStageControl())
             },
             hasTriggerMember (hasTriggerMember) {
-                this.handleUpdateStageControl('isError', !this.validateStageControl())
+                this.handleUpdateStageControl('isReviewError', !this.validateStageControl())
             },
             validTimeout (valid) {
-                this.handleUpdateStageControl('isError', !this.validateStageControl())
+                this.handleUpdateStageControl('isReviewError', !this.validateStageControl())
             }
         },
         mounted () {
             if (!this.disabled) {
                 this.initStageReview()
-                this.handleUpdateStageControl('isError', !this.validateStageControl())
+                this.handleUpdateStageControl('isReviewError', !this.validateStageControl())
             }
         },
         methods: {

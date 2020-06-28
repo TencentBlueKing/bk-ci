@@ -170,6 +170,7 @@
                     className: 'exec-pipeline',
                     bindData: {
                         editable: false,
+                        isExecDetail: true,
                         stages: this.execDetail && this.execDetail.model && this.execDetail.model.stages
                     }
                 }, {
