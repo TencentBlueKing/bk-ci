@@ -64,6 +64,7 @@ import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
 import com.tencent.devops.process.utils.PIPELINE_ID
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_TIME_START
 import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
 import com.tencent.devops.process.utils.PROJECT_NAME
@@ -114,13 +115,15 @@ class BuildStartControl @Autowired constructor(
 
     fun PipelineBuildStartEvent.execute() {
 
+        val executeCount = 1 + (buildVariableService.getVariable(buildId, PIPELINE_RETRY_COUNT)?.toInt() ?: 1)
+
         LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
             buildId = buildId,
             message = "Enter BuildStartControl",
             tag = tag,
             jobId = "0",
-            executeCount = 1
+            executeCount = executeCount
         )
 
         val buildInfo = pickUpReadyBuild() ?: return
@@ -143,7 +146,7 @@ class BuildStartControl @Autowired constructor(
             message = "Async fetch latest commit/revision, please wait...",
             tag = tag,
             jobId = "0",
-            executeCount = 1
+            executeCount = executeCount
         )
         buildModel(this, model)
         LogUtils.addLine(
@@ -152,7 +155,7 @@ class BuildStartControl @Autowired constructor(
             message = "Async fetch latest commit/revision is finish.",
             tag = tag,
             jobId = "0",
-            executeCount = 1
+            executeCount = executeCount
         )
 
         if (BuildStatus.isReadyToRun(buildInfo.status)) {
@@ -209,7 +212,15 @@ class BuildStartControl @Autowired constructor(
             message = "BuildStartControl End",
             tag = tag,
             jobId = "0",
-            executeCount = 1
+            executeCount = executeCount
+        )
+
+        LogUtils.stopLog(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            tag = tag,
+            jobId = "0",
+            executeCount = executeCount
         )
     }
 
