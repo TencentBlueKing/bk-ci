@@ -35,7 +35,6 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 
-
 @Repository
 class NoticeDao {
 
