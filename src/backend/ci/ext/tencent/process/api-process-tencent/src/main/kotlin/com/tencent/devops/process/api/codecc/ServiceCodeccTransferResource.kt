@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
-import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.BuildBasicInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -100,5 +100,5 @@ interface ServiceCodeccTransferResource {
         @ApiParam("结束于-结束时间(时间戳形式)", required = false)
         @QueryParam("endTimeEndTime")
         endTimeEndTime: Long?
-    ): Result<List<BuildHistory>>
+    ): Result<List<BuildBasicInfo>>
 }

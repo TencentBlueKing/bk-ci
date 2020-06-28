@@ -31,7 +31,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
-import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.service.codecc.CodeccTransferService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -61,7 +61,7 @@ class ServiceCodeccTransferResourceImpl @Autowired constructor(
         startTimeEndTime: Long?,
         endTimeStartTime: Long?,
         endTimeEndTime: Long?
-    ): Result<List<BuildHistory>> {
+    ): Result<List<BuildBasicInfo>> {
         return Result(codeccTransferService.getHistoryBuildScan(
             status,
             trigger,

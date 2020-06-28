@@ -27,16 +27,10 @@
 package com.tencent.devops.process.service.codecc
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.artifactory.pojo.FileInfo
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
@@ -48,15 +42,12 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineService
-import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.process.pojo.BuildStageStatus
-import com.tencent.devops.process.pojo.PipelineBuildMaterial
+import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.service.PipelineTaskService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
 
 @Service
 class CodeccTransferService @Autowired constructor(
@@ -348,7 +339,7 @@ class CodeccTransferService @Autowired constructor(
         startTimeEndTime: Long?,
         endTimeStartTime: Long?,
         endTimeEndTime: Long?
-    ): List<BuildHistory> {
+    ): List<BuildBasicInfo> {
         var queueTimeStartTimeTemp = queueTimeStartTime
         val dayTimeMillis = 24 * 60 * 60 * 1000
         if (queueTimeStartTime != null && queueTimeStartTime > 0 && queueTimeEndTime != null && queueTimeEndTime > 0) {
@@ -382,72 +373,22 @@ class CodeccTransferService @Autowired constructor(
             endTimeEndTimeTemp,
             endTimeEndTime
         )
-        val result = mutableListOf<BuildHistory>()
-        val buildStatus = BuildStatus.values()
+        val result = mutableListOf<BuildBasicInfo>()
         list.forEach {
-            result.add(genBuildHistory(it, buildStatus, System.currentTimeMillis()))
+            result.add(genBuildBaseInfo(it))
         }
         return result
     }
 
-    private fun genBuildHistory(
-        tPipelineBuildHistoryRecord: TPipelineBuildHistoryRecord,
-        buildStatus: Array<BuildStatus>,
-        currentTimestamp: Long
-    ): BuildHistory {
+    private fun genBuildBaseInfo(
+        tPipelineBuildHistoryRecord: TPipelineBuildHistoryRecord
+    ): BuildBasicInfo {
         return with(tPipelineBuildHistoryRecord) {
-            val totalTime = if (startTime == null || endTime == null) {
-                0
-            } else {
-                Duration.between(startTime, endTime).toMillis()
-            }
-            BuildHistory(
-                id = buildId,
-                userId = triggerUser ?: startUser,
-                trigger = StartType.toReadableString(trigger, ChannelCode.valueOf(channel)),
-                buildNum = buildNum,
-                pipelineVersion = version,
-                startTime = startTime?.timestampmilli() ?: 0L,
-                endTime = endTime?.timestampmilli(),
-                status = buildStatus[status].name,
-                stageStatus = if (stageStatus != null) {
-                    JsonUtil.getObjectMapper().readValue(stageStatus) as List<BuildStageStatus>
-                } else {
-                    null
-                },
-                deleteReason = "",
-                currentTimestamp = currentTimestamp,
-                material = if (material != null) {
-                    JsonUtil.getObjectMapper().readValue(material) as List<PipelineBuildMaterial>
-                } else {
-                    null
-                },
-                queueTime = queueTime?.timestampmilli(),
-                artifactList = if (artifactInfo != null) {
-                    JsonUtil.getObjectMapper().readValue(artifactInfo) as List<FileInfo>
-                } else {
-                    null
-                },
-                remark = remark,
-                totalTime = totalTime,
-                executeTime = if (executeTime == null || executeTime == 0L) {
-                    if (BuildStatus.isFinish(buildStatus[status])) {
-                        totalTime
-                    } else 0L
-                } else {
-                    executeTime
-                },
-                buildParameters = if (buildParameters != null) {
-                    JsonUtil.getObjectMapper().readValue(buildParameters) as List<BuildParameters>
-                } else {
-                    null
-                },
-                webHookType = webhookType,
-                startType = trigger,
-                recommendVersion = recommendVersion,
-                errorType = if (errorType != null) ErrorType.values()[errorType].name else null,
-                errorCode = errorCode,
-                errorMsg = errorMsg
+            BuildBasicInfo(
+                buildId = buildId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineVersion = version
             )
         }
     }

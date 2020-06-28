@@ -27,17 +27,23 @@
 package com.tencent.devops.process.dao
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.model.process.Tables
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 
 @Repository
 class TencentPipelineBuildDao {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TencentPipelineBuildDao::class.java)
+    }
 
     fun listSuccessBuild(
         dslContext: DSLContext,
@@ -65,7 +71,7 @@ class TencentPipelineBuildDao {
         endTimeEndTime: Long?
     ): Collection<TPipelineBuildHistoryRecord> {
         return with(Tables.T_PIPELINE_BUILD_HISTORY) {
-            val where = dslContext.selectFrom(this).where(CHANNEL.eq("GONGFENGSCAN"))
+            val where = dslContext.selectFrom(this).where(CHANNEL.eq(ChannelCode.GONGFENGSCAN.name))
             if (status != null && status.isNotEmpty()) { // filterNotNull不能删
                 where.and(STATUS.`in`(status.map { it.ordinal }))
             }
@@ -90,6 +96,8 @@ class TencentPipelineBuildDao {
             if (endTimeEndTime != null && endTimeEndTime > 0) {
                 where.and(END_TIME.le(Timestamp(endTimeEndTime).toLocalDateTime()))
             }
+            logger.info("sql is: ${where.sql}")
+
             where.orderBy(END_TIME.desc())
                 .fetch()
         }
