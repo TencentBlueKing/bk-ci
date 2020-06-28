@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.support.api.user
+package com.tencent.devops.project.api.user
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.pojo.Notice

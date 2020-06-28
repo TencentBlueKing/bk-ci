@@ -28,7 +28,7 @@ package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.support.api.user.UserNoticeResource
+import com.tencent.devops.project.api.user.UserNoticeResource
 import com.tencent.devops.project.pojo.Notice
 import com.tencent.devops.project.service.NoticeService
 import org.springframework.beans.factory.annotation.Autowired
