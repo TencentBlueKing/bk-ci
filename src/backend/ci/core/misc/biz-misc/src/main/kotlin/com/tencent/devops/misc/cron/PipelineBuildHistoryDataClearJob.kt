@@ -156,7 +156,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                         projectId = projectId,
                         isCompletelyDelete = false
                     )
-                    // 判断最近二个月的构建记录是否超过系统展示的最大数量，如果超过则需清理超量的数据
+                    // 判断构建记录是否超过系统展示的最大数量，如果超过则需清理超量的数据
                     val maxPipelineBuildNum = dslContext.select(DSL.field("MAX(BUILD_NUM)"))
                         .from("$PROCESS_DATA_BASE_NAME.$PIPELINE_BUILD_HISTORY_TABLE_NAME")
                         .where("PROJECT_ID='$projectId' AND PIPELINE_ID='$pipelineId'")
@@ -164,7 +164,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                     val maxKeepNum = miscBuildDataClearConfig.maxKeepNum.toInt()
                     if (maxPipelineBuildNum > maxKeepNum) {
                         val recentConditionSql =
-                            "PIPELINE_ID='$pipelineId' AND BUILD_NUM < ${maxPipelineBuildNum - maxKeepNum}"
+                            "PIPELINE_ID='$pipelineId' AND BUILD_NUM <= ${maxPipelineBuildNum - maxKeepNum}"
                         logger.info("pipelineBuildHistoryRecentDataClear start.............")
                         cleanBuildHistoryData(
                             pipelineId = pipelineId,
