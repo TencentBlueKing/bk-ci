@@ -232,7 +232,7 @@ class GitCIBuildService @Autowired constructor(
                             password = job.job.pool!!.credential?.password ?: ""
                         ),
                         macOS = null,
-                        isThird = null
+                        third = null
                     )
                 }
 
@@ -246,7 +246,7 @@ class GitCIBuildService @Autowired constructor(
                             systemVersion = job.job.pool!!.macOS?.systemVersion ?: "",
                             xcodeVersion = job.job.pool!!.macOS?.xcodeVersion ?: ""
                         ),
-                        isThird = null
+                        third = null
                     )
                 }
 
