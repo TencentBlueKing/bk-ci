@@ -13,7 +13,6 @@ import {
     BACKEND_API_URL_PREFIX,
     PROCESS_API_URL_PREFIX,
     PROJECT_API_URL_PREFIX,
-    SUPPORT_API_URL_PREFIX,
     EMPTY_PROJECT,
     RESET_NEW_PROJECT,
     SET_POPUP_SHOW,
@@ -119,7 +118,7 @@ const actions: ActionTree<RootState, any> = {
         commit(CLOSE_PREVIEW_TIPS)
     },
     getAnnouncement () {
-        return Request.get(`${SUPPORT_API_URL_PREFIX}/user/notice/valid`)
+        return Request.get(`${PROJECT_API_URL_PREFIX}/user/notice/valid`)
     },
     setAnnouncement ({ commit }, payload) {
         commit(SET_CURRENT_NOTICE, payload)
