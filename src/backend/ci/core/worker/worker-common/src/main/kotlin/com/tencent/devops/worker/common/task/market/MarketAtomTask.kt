@@ -27,19 +27,21 @@
 package com.tencent.devops.worker.common.task.market
 
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
+import com.tencent.devops.worker.common.JAVA_PATH_ENV
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
@@ -47,8 +49,6 @@ import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
-import com.tencent.devops.common.api.exception.TaskExecuteException
-import com.tencent.devops.worker.common.JAVA_PATH_ENV
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
@@ -608,7 +608,7 @@ open class MarketAtomTask : ITask() {
     }
 
     private fun checkSha1(file: File, sha1: String) {
-        val fileSha1 = ShaUtils.sha1(file.readBytes())
+        val fileSha1 = file.inputStream().use { ShaUtils.sha1InputStream(it) }
         if (fileSha1 != sha1) {
             throw TaskExecuteException(
                 errorMsg = "Plugin File Sha1 is wrong! wrong sha1: $fileSha1",

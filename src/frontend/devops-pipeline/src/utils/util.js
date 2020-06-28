@@ -17,6 +17,8 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import { v4 as uuidv4 } from 'uuid'
+
 export function isVNode (node) {
     return typeof node === 'object' && node.hasOwnProperty('componentOptions')
 }
@@ -447,15 +449,9 @@ export const deepCopy = obj => {
     return JSON.parse(JSON.stringify(obj))
 }
 
-export const hashID = (length = 8) => {
-    let pos = 0
-    let result = ''
-    while (pos < length) {
-        const n = Math.round(Math.random() * 126) + 33
-        result += String.fromCharCode(n)
-        pos++
-    }
-    return result
+export const hashID = () => {
+    const uuid = uuidv4().replace(/-/g, '')
+    return uuid
 }
 
 export function getServiceLogoByPath (link) {

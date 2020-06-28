@@ -1,6 +1,8 @@
 .idea/
 .gradle/
 build/
+!com/tencent/devops/common/pipeline/pojo/element/build/
+!/element/build/
 target/
 out/
 release/
@@ -12,3 +14,5 @@ gradle/
 gradlew
 gradlew.bat
 version.txt
+META-INF/
+classes/

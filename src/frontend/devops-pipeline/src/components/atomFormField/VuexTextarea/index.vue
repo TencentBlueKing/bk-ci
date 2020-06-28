@@ -18,9 +18,9 @@
             }
         },
         render (h) {
-            const { value, disabled, handleInput, name, handleBlur } = this
+            const { value, readOnly, handleInput, name, handleBlur, title } = this
             return (
-                <textarea onBlur={handleBlur} onInput={handleInput} class='bk-form-textarea' name={name} disabled={disabled} value={value} />
+                <textarea title={title} onBlur={handleBlur} onInput={handleInput} class='bk-form-textarea pointer-events-auto' name={name} disabled={readOnly} value={value} />
             )
         }
     }

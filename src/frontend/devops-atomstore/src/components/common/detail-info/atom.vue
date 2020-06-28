@@ -290,7 +290,7 @@
     .detail-info-group {
         flex: 1;
         margin: 0 32px;
-        
+        max-width: calc(100% - 314px);
         h3 {
             font-size: 22px;
             line-height: 29px;
