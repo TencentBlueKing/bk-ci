@@ -24,12 +24,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:misc:biz-misc-sample")
-    // 无对接权限中心，根据common.yml配置文件项auth.idProvider=samle启用，会忽略下面蓝鲸权限中心实现
-    compile project(":core:common:common-auth:common-auth-mock")
-    // 对接蓝鲸的权限中心实现, 根据common.yml配置项auth.idProvider=bk_login值来决定加载
-    compile project(":core:common:common-auth:common-auth-blueking")
-}
+package com.tencent.devops.misc.service
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import org.jooq.DSLContext
+import org.jooq.Query
+import org.springframework.beans.factory.annotation.Autowired
+
+class SamplePipelineHistoryDataClearServiceImpl @Autowired constructor() : PipelineHistoryDataClearService() {
+
+    override fun getDataBaseInfo(): Map<String, String> {
+        return mapOf(
+            projectDbKey to "devops_ci_project",
+            processDbKey to "devops_ci_process",
+            repositoryDbKey to "devops_ci_repository",
+            dispatchDbKey to "devops_ci_dispatch",
+            pluginDbKey to "devops_ci_plugin",
+            qualityDbKey to "devops_ci_quality",
+            artifactoryDbKey to "devops_ci_artifactory"
+        )
+    }
+
+    override fun getSpecTableInfo(): Map<String, String> {
+        return mapOf(
+            projectTableKey to "T_PROJECT"
+        )
+    }
+
+    override fun getSpecClearSqlList(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): List<Query> {
+        return listOf()
+    }
+}
