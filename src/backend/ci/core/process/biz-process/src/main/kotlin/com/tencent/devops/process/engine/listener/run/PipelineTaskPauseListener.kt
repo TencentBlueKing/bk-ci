@@ -274,8 +274,9 @@ class PipelineTaskPauseListener @Autowired constructor(
         logger.info("start find diff new element|${objectMapper.writeValueAsString(newElement)}")
         val newJson = JsonUtil.toMap(newElement)
         val data = newJson["data"]
-        val newInput = JsonUtil.toMap(data!!)
-        val inputKeys = newInput.keys
+        val newInput = JsonUtil.toMap(data!!)["input"]
+        val newInputData = newInput?.let { JsonUtil.toMap(it) }
+        val inputKeys = newInputData?.keys ?: mutableSetOf()
         logger.info("inputKeys $inputKeys")
         val oldElement = pipelineRuntimeService.getBuildTask(buildId, taskId)
         logger.info(
@@ -285,28 +286,37 @@ class PipelineTaskPauseListener @Autowired constructor(
         )
         val oldJson = oldElement?.taskParams
         val oldData = oldJson?.get("data")
-        val oldInput = JsonUtil.toMap(oldData!!)
+        val oldInput = JsonUtil.toMap(oldData!!)["input"]
+        val oldInputData = oldInput?.let { JsonUtil.toMap(it) }
         inputKeys.forEach {
             logger.info("continue pause task, oldInput:${oldInput}, newInput:${newInput}")
-            if (oldInput[it] != (newInput[it])) {
-                LogUtils.addYellowLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = buildId,
-                    message = "$userId 继续暂停插件且修改入参，修改前参数：$oldInput",
-                    tag = taskId,
-                    jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
-                    executeCount = 1
-                )
-            }
-            if (oldInput[it] != (newInput[it])) {
-                LogUtils.addYellowLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = buildId,
-                    message = "$userId 继续暂停插件且修改入参，修改后参数：$newInput",
-                    tag = taskId,
-                    jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
-                    executeCount = 1
-                )
+            if(oldInputData != null && newInputData != null) {
+                if (oldInputData!![it] != (newInputData!![it])) {
+                    LogUtils.addYellowLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "当前插件${oldElement.taskName}执行参数已变更",
+                        tag = taskId,
+                        jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
+                        executeCount = 1
+                    )
+                    LogUtils.addYellowLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "变更前：$oldInputData",
+                        tag = taskId,
+                        jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
+                        executeCount = 1
+                    )
+                    LogUtils.addYellowLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "变更后：$newInputData",
+                        tag = taskId,
+                        jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
+                        executeCount = 1
+                    )
+                }
             }
         }
     }

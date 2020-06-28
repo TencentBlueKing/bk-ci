@@ -166,12 +166,12 @@ class StageControl @Autowired constructor(
                     }
 
                     if(fastKill) {
-                        LogUtils.addRedLine(
+                        LogUtils.addYellowLine(
                             rabbitTemplate = rabbitTemplate,
                             buildId = c.buildId,
                             message = "job${c.containerId}因fastKill终止。",
                             tag = VMUtils.genStartVMTaskId(c.containerId),
-                            jobId = null,
+                            jobId = VMUtils.genStartVMTaskId(c.containerId),
                             executeCount = c.executeCount ?: 1
                         )
                     }
