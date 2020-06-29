@@ -26,7 +26,7 @@
 
         <main v-bkloading="{ isLoading }" class="manage-main">
             <transition :name="transitionName">
-                <router-view v-if="Object.keys(detail).length > 0 && !isLoading" class="manage-route"></router-view>
+                <router-view v-if="Object.keys(detail).length > 0 && !isLoading" class="manage-route" v-bind="routekey"></router-view>
             </transition>
         </main>
     </article>
@@ -62,7 +62,7 @@
                 panels: [],
                 isLoading: true,
                 type: '',
-                transitionName: 'fade',
+                transitionName: '',
                 panelMap: {
                     atom: [
                         { label: this.$t('store.概览'), name: 'overView' },
@@ -98,7 +98,13 @@
         computed: {
             ...mapGetters('store', {
                 'detail': 'getDetail'
-            })
+            }),
+
+            routekey () {
+                const res = {}
+                if (this.activeChildTab) res.key = this.activeChildTab
+                return res
+            }
         },
 
         watch: {
@@ -117,7 +123,7 @@
                     return +res
                 }
                 const diff = calcIndex(val) - calcIndex(oldVal)
-                this.transitionName = diff > 0 ? 'g-slide-right' : diff === 0 ? 'fade' : 'g-slide-left'
+                this.transitionName = diff > 0 ? 'g-slide-left' : diff === 0 ? 'atom-fade' : 'g-slide-right'
                 this.calcActiveTab()
             }
         },

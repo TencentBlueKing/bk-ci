@@ -1,20 +1,23 @@
 <template>
-    <article class="manage-detail" v-bkloading="{ isLoading }">
+    <article class="manage-detail">
         <header class="manage-detail-header">
             <router-link :to="showEdit ? { name: 'edit' } : ''"
                 :class="{ disable: !showEdit }"
                 :title="!showEdit && $t('store.只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息')"
             >{{ $t('store.编辑') }}</router-link>
         </header>
-        <component :is="`${$route.params.type}Show`"
-            v-if="!isLoading"
-            class="detail-show"
-            :detail="detail"
-            :version-list="versionList"
-            :pagination="pagination"
-            @pageChanged="pageChanged"
-            @pageLimitChanged="pageLimitChanged"
-        ></component>
+
+        <main v-bkloading="{ isLoading }" class="detail-main">
+            <component :is="`${$route.params.type}Show`"
+                v-if="!isLoading"
+                class="detail-show"
+                :detail="detail"
+                :version-list="versionList"
+                :pagination="pagination"
+                @pageChanged="pageChanged"
+                @pageLimitChanged="pageLimitChanged"
+            ></component>
+        </main>
     </article>
 </template>
 
@@ -125,6 +128,9 @@
                 cursor: not-allowed;
                 color: #999;
             }
+        }
+        .detail-main {
+            height: 100%;
         }
         .detail-show {
             padding: 32px;
