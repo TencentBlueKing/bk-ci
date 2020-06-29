@@ -11,6 +11,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import org.junit.Assert
 import org.junit.Test
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -20,6 +21,7 @@ class ContainerControlTest {
 
     private val rabbitTemplate: RabbitTemplate = mock()
     private val redisOperation: RedisOperation = RedisOperation(mock())
+    private val pipelineRuntimeService: PipelineRuntimeService = mock()
 
     private val containerControl = ContainerControl(
         rabbitTemplate = rabbitTemplate,
@@ -29,7 +31,7 @@ class ContainerControlTest {
         pipelineQuotaService = mock(),
         pipelineRuntimeService = mock(),
         buildVariableService = mock(),
-        mutexControl = MutexControl(rabbitTemplate = rabbitTemplate, redisOperation = redisOperation)
+        mutexControl = MutexControl(rabbitTemplate = rabbitTemplate, redisOperation = redisOperation, pipelineRuntimeService = pipelineRuntimeService)
     )
 
     private val projectId = "devops1"
