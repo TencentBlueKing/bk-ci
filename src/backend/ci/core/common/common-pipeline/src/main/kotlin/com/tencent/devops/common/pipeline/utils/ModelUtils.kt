@@ -28,12 +28,12 @@ package com.tencent.devops.common.pipeline.utils
 
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
+import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
@@ -44,23 +44,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElem
  * @version 1.0
  */
 object ModelUtils {
-
-    /**
-     *  获取Model中的启动参数，并根据input的值赋值替换默认值
-     *  @param container
-     */
-    fun getModelParamsByInput(container: TriggerContainer, input: Map<String, String>) : MutableMap<String, String> {
-        val params = mutableMapOf<String, String>()
-        // 解析变量
-        container.params.forEach { param ->
-            if (input[param.id] != null) {
-                params[param.id] = input[param.id].toString()
-            } else {
-                params[param.id] = param.defaultValue.toString()
-            }
-        }
-        return params
-    }
 
     /**
      * 初始化旧的数据
