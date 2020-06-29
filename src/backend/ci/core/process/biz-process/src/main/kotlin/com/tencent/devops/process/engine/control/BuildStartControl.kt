@@ -177,12 +177,12 @@ class BuildStartControl @Autowired constructor(
 
         if (BuildStatus.isReadyToRun(buildInfo.status)) {
             stopWatch.start("updateModel")
-            updateModel(model, pipelineId, buildId, taskId)
+            updateModel(model = model, buildInfo = buildInfo, taskId = taskId)
             stopWatch.stop()
 
             stopWatch.start("writeStartParam")
             // 写入启动参数
-            pipelineRuntimeService.writeStartParam(projectId, pipelineId, buildId, model)
+            pipelineRuntimeService.writeStartParam(projectId = projectId, pipelineId = pipelineId, buildId = buildId, model = model)
             stopWatch.stop()
 
             stopWatch.start("getProjectName")
@@ -316,7 +316,7 @@ class BuildStartControl @Autowired constructor(
         return buildInfo
     }
 
-    private fun updateModel(model: Model, pipelineId: String, buildId: String, taskId: String) {
+    private fun updateModel(model: Model, buildInfo: BuildInfo, taskId: String) {
         val now = LocalDateTime.now()
         val stage = model.stages[0]
         val container = stage.containers[0]
@@ -324,7 +324,7 @@ class BuildStartControl @Autowired constructor(
             container.elements.forEach {
                 if (it.id == taskId) {
                     pipelineRuntimeService.updateContainerStatus(
-                        buildId = buildId,
+                        buildId = buildInfo.buildId,
                         stageId = stage.id!!,
                         containerId = container.id!!,
                         startTime = now,
@@ -338,18 +338,19 @@ class BuildStartControl @Autowired constructor(
         }
 
         pipelineStageService.updateStageStatus(
-            buildId = buildId,
+            buildId = buildInfo.buildId,
             stageId = stage.id!!,
             buildStatus = BuildStatus.SUCCEED
         )
 
         stage.status = BuildStatus.SUCCEED.name
-        stage.elapsed = 0
+        stage.elapsed = System.currentTimeMillis() - buildInfo.queueTime
         container.status = BuildStatus.SUCCEED.name
-        container.systemElapsed = 0
+        container.systemElapsed = System.currentTimeMillis() - buildInfo.queueTime
         container.elementElapsed = 0
+        container.startVMStatus = BuildStatus.SUCCEED.name
 
-        buildDetailService.updateModel(buildId, model)
+        buildDetailService.updateModel(buildId = buildInfo.buildId, model = model)
     }
 
     private fun supplementModel(
