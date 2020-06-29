@@ -118,7 +118,7 @@
                 this.$refs.validateForm.validate().then((validator) => {
                     const { approveId, approveMsg, approveStatus } = this.approveRes
                     this.isApproving = true
-                    this.$store.dispatch('store/approval', { type: 'ATOM', code: this.atomCode, approveId, approveMsg, approveStatus }).then((res) => {
+                    this.$store.dispatch('store/approval', { type: 'ATOM', code: this.detail.atomCode, approveId, approveMsg, approveStatus }).then((res) => {
                         if (res) {
                             const currentData = this.approveList.find(item => item.approveId === this.approveRes.approveId) || {}
                             currentData.approveStatus = approveStatus

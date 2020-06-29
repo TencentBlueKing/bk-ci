@@ -455,7 +455,7 @@
      transition: transform 200ms;
  }
  .g-slide-left-enter {
-     transform: translateX(100px);
+     transform: translateX(80px);
  }
  .g-slide-left-leave-active {
      display: none;
@@ -467,7 +467,7 @@
      transition: transform 200ms;
  }
  .g-slide-right-enter {
-     transform: translateX(-100px);
+     transform: translateX(-80px);
  }
  .g-slide-right-leave-active {
      display: none;

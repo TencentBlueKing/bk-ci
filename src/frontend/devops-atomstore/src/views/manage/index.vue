@@ -117,7 +117,7 @@
                     return +res
                 }
                 const diff = calcIndex(val) - calcIndex(oldVal)
-                this.transitionName = diff > 0 ? 'g-slide-left' : diff === 0 ? 'fade' : 'g-slide-right'
+                this.transitionName = diff > 0 ? 'g-slide-right' : diff === 0 ? 'fade' : 'g-slide-left'
                 this.calcActiveTab()
             }
         },
