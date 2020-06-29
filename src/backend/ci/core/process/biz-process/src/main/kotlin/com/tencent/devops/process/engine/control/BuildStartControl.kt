@@ -69,6 +69,7 @@ import com.tencent.devops.process.utils.PIPELINE_TIME_START
 import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
+import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -115,8 +116,8 @@ class BuildStartControl @Autowired constructor(
 
     fun PipelineBuildStartEvent.execute() {
 
-        val executeCount = 1 + (buildVariableService.getVariable(buildId, PIPELINE_RETRY_COUNT)?.toInt() ?: 1)
-
+        val retryCount = buildVariableService.getVariable(buildId, PIPELINE_RETRY_COUNT)
+        val executeCount = if (NumberUtils.isParsable(retryCount)) 1 + retryCount!!.toInt() else 1
         LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
             buildId = buildId,
