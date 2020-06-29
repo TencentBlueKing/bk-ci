@@ -58,7 +58,6 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.ProjectOauthTokenService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
@@ -74,6 +73,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.util.StopWatch
 import java.time.LocalDateTime
 
 /**
@@ -92,7 +92,6 @@ class BuildStartControl @Autowired constructor(
     private val projectOauthTokenService: ProjectOauthTokenService,
     private val buildDetailService: PipelineBuildDetailService,
     private val buildVariableService: BuildVariableService,
-    private val pipelineUserService: PipelineUserService,
     private val scmProxyService: ScmProxyService,
     private val rabbitTemplate: RabbitTemplate
 ) {
@@ -101,11 +100,12 @@ class BuildStartControl @Autowired constructor(
     private val tag = "startVM-0"
 
     fun handle(event: PipelineBuildStartEvent) {
+        val stopWatch = StopWatch("BuildStart")
         with(event) {
             val pipelineBuildLock = PipelineBuildStartLock(redisOperation, pipelineId)
             try {
                 if (pipelineBuildLock.tryLock()) {
-                    execute()
+                    execute(stopWatch)
                 } else {
                     retry() // 进行重试
                 }
@@ -113,15 +113,20 @@ class BuildStartControl @Autowired constructor(
                 logger.error("[$buildId]|[$pipelineId]|$source| start fail $e", e)
             } finally {
                 pipelineBuildLock.unlock()
+                if (stopWatch.isRunning) {
+                    stopWatch.stop()
+                }
+                logger.info("[$buildId]|[$pipelineId]|$source| watch=$stopWatch")
             }
         }
     }
 
     private fun PipelineBuildStartEvent.retry() {
+        logger.info("[$buildId]|[$pipelineId]|$source|RETRY_TO_LOCK")
         pipelineEventDispatcher.dispatch(this)
     }
 
-    fun PipelineBuildStartEvent.execute() {
+    fun PipelineBuildStartEvent.execute(stopWatch: StopWatch) {
 
         val retryCount = buildVariableService.getVariable(buildId, PIPELINE_RETRY_COUNT)
         val executeCount = if (NumberUtils.isParsable(retryCount)) 1 + retryCount!!.toInt() else 1
@@ -134,7 +139,9 @@ class BuildStartControl @Autowired constructor(
             executeCount = executeCount
         )
 
+        stopWatch.start("pickUpReadyBuild")
         val buildInfo = pickUpReadyBuild() ?: return
+        stopWatch.stop()
 
         val model = buildDetailService.getBuildModel(buildId) ?: run {
             logger.warn("[$pipelineId]|BUILD_START_BAD_MODEL|$source|not exist build detail")
@@ -156,7 +163,9 @@ class BuildStartControl @Autowired constructor(
             jobId = "0",
             executeCount = executeCount
         )
+        stopWatch.start("buildModel")
         buildModel(this, model)
+        stopWatch.stop()
         LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
             buildId = buildId,
@@ -167,24 +176,35 @@ class BuildStartControl @Autowired constructor(
         )
 
         if (BuildStatus.isReadyToRun(buildInfo.status)) {
-
+            stopWatch.start("updateModel")
             updateModel(model, pipelineId, buildId, taskId)
+            stopWatch.stop()
+
+            stopWatch.start("writeStartParam")
             // 写入启动参数
             pipelineRuntimeService.writeStartParam(projectId, pipelineId, buildId, model)
+            stopWatch.stop()
 
+            stopWatch.start("getProjectName")
             val projectName = projectOauthTokenService.getProjectName(projectId) ?: ""
-            val pipelineUserInfo = pipelineUserService.get(pipelineId)!!
+            stopWatch.stop()
+
+            stopWatch.start("getPipelineInfo")
+            val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)!!
             val map = mapOf(
                 PIPELINE_BUILD_ID to buildId,
                 PROJECT_NAME to projectId,
                 PROJECT_NAME_CHINESE to projectName,
                 PIPELINE_TIME_START to System.currentTimeMillis().toString(),
                 PIPELINE_ID to pipelineId,
-                PIPELINE_CREATE_USER to pipelineUserInfo.creator,
-                PIPELINE_UPDATE_USER to pipelineUserInfo.modifier
+                PIPELINE_CREATE_USER to pipelineInfo.creator,
+                PIPELINE_UPDATE_USER to pipelineInfo.lastModifyUser
             )
+            stopWatch.stop()
 
+            stopWatch.start("batchSetVariable")
             buildVariableService.batchSetVariable(projectId, pipelineId, buildId, map)
+            stopWatch.stop()
         }
         // 空节点
         if (model.stages.size == 1) {
@@ -297,7 +317,6 @@ class BuildStartControl @Autowired constructor(
     }
 
     private fun updateModel(model: Model, pipelineId: String, buildId: String, taskId: String) {
-        var find = false
         val now = LocalDateTime.now()
         val stage = model.stages[0]
         val container = stage.containers[0]
@@ -313,7 +332,6 @@ class BuildStartControl @Autowired constructor(
                         buildStatus = BuildStatus.SUCCEED
                     )
                     it.status = BuildStatus.SUCCEED.name
-                    find = true
                     return@lit
                 }
             }
@@ -325,17 +343,13 @@ class BuildStartControl @Autowired constructor(
             buildStatus = BuildStatus.SUCCEED
         )
 
-        if (!find) {
-            logger.warn("[$buildId]|[$pipelineId]| Fail to find the startTask $taskId")
-        } else {
-            stage.status = BuildStatus.SUCCEED.name
-            stage.elapsed = 0
-            container.status = BuildStatus.SUCCEED.name
-            container.systemElapsed = 0
-            container.elementElapsed = 0
+        stage.status = BuildStatus.SUCCEED.name
+        stage.elapsed = 0
+        container.status = BuildStatus.SUCCEED.name
+        container.systemElapsed = 0
+        container.elementElapsed = 0
 
-            buildDetailService.updateModel(buildId, model)
-        }
+        buildDetailService.updateModel(buildId, model)
     }
 
     private fun supplementModel(

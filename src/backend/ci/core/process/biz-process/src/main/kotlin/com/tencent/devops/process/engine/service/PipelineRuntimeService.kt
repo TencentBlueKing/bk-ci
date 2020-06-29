@@ -1947,6 +1947,9 @@ class PipelineRuntimeService @Autowired constructor(
         ) == 1
     }
 
+    /**
+     * 如果是重试，不应该更新启动参数, 直接返回
+     */
     fun writeStartParam(projectId: String, pipelineId: String, buildId: String, model: Model) {
         val allVariable = buildVariableService.getAllVariable(buildId)
         if (allVariable[PIPELINE_RETRY_COUNT] != null) return
