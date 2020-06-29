@@ -15,9 +15,8 @@ class ServiceGroupResourceImpl @Autowired constructor(
     override fun createGroup(
         userId: String,
         projectCode: String,
-        addCreateUser: Boolean?,
         groupInfo: GroupDTO
     ): Result<String> {
-        TODO("Not yet implemented")
+        return groupService.createGroup(userId, projectCode, groupInfo)
     }
 }

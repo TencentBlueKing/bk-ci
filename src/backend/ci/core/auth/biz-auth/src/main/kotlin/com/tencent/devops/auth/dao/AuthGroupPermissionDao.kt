@@ -1,8 +1,11 @@
 package com.tencent.devops.auth.dao
 
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.auth.tables.TAuthGroupPerssion
 import com.tencent.devops.model.auth.tables.TAuthGroupUser
+import com.tencent.devops.model.auth.tables.records.TAuthGroupPerssionRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import java.util.UUID
@@ -22,7 +25,7 @@ class AuthGroupPermissionDao {
                 UPDATE_USER,
                 UPDATE_TIME
             ).values(
-                UUID.randomUUID().toString(),
+                UUIDUtil.generate(),
                 groupCode,
                 authAction,
                 userId,
@@ -59,5 +62,11 @@ class AuthGroupPermissionDao {
                 )
             }
         }).execute()
+    }
+
+    fun getByGroupCode(dslContext: DSLContext, groupCode:String): Result<TAuthGroupPerssionRecord>? {
+        with(TAuthGroupPerssion.T_AUTH_GROUP_PERSSION) {
+            return dslContext.selectFrom(this).where(GROUP_CODE.eq(groupCode)).fetch()
+        }
     }
 }

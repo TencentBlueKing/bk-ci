@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.entity.GroupCreateInfo
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.auth.tables.TAuthGroup
 import com.tencent.devops.model.auth.tables.records.TAuthGroupRecord
 import org.jooq.DSLContext
@@ -13,7 +14,7 @@ import java.util.UUID
 class AuthGroupDao {
 
     fun createGroup(dslContext: DSLContext, groupCreateInfo: GroupCreateInfo): String {
-        val id = UUID.randomUUID()
+        val id = UUIDUtil.generate()
         with(TAuthGroup.T_AUTH_GROUP) {
            dslContext.insertInto(
                 TAuthGroup.T_AUTH_GROUP,
@@ -34,7 +35,7 @@ class AuthGroupDao {
                LocalDateTime.now(),
                null,
                null
-           )
+           ).execute()
         }
         return id.toString()
     }
@@ -43,6 +44,13 @@ class AuthGroupDao {
         with(TAuthGroup.T_AUTH_GROUP) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode).and(GROUP_CODE.eq(groupCode))).fetchOne()
+        }
+    }
+
+    fun getGroupById(dslContext: DSLContext, groupId: String) : TAuthGroupRecord? {
+        with(TAuthGroup.T_AUTH_GROUP) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(groupId)).fetchOne()
         }
     }
 }

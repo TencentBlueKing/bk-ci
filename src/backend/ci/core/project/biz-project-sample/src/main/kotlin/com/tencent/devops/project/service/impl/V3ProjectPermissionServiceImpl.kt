@@ -2,15 +2,18 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.auth.api.ServiceGroupResource
 import com.tencent.devops.auth.pojo.dto.GroupDTO
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
 
 class V3ProjectPermissionServiceImpl @Autowired constructor(
     val client: Client
-): ProjectPermissionService {
+) : ProjectPermissionService {
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
         TODO("Not yet implemented")
@@ -34,12 +37,11 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
                 authPermissionList = emptyList()
             )
         )
-        if(initProjectGroup.isNotOk()) {
+        if (initProjectGroup.isNotOk()) {
             // 添加用户组失败抛异常
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
         }
-        // 调用权限中心分配默认权限
-
-        // 记录权限关系
+        return ""
     }
 
     override fun deleteResource(projectCode: String) {

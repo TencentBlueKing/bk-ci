@@ -7,6 +7,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -25,14 +26,11 @@ interface ServiceGroupResource {
     @ApiOperation("项目下添加指定组")
     fun createGroup(
         @ApiParam(name = "用户名", required = true)
-        @PathParam(AUTH_HEADER_USER_ID)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam(name = "是否添加创建人到该分组", required = false)
-        @QueryParam("addCreateUser")
-        addCreateUser: Boolean?,
         @ApiParam("用户组信息", required = true)
         groupInfo: GroupDTO
     ): Result<String>

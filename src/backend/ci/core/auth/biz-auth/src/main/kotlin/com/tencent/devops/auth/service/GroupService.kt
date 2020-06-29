@@ -1,11 +1,15 @@
 package com.tencent.devops.auth.service
 
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthGroupDao
 import com.tencent.devops.auth.dao.AuthGroupPermissionDao
 import com.tencent.devops.auth.dao.AuthGroupUserDao
 import com.tencent.devops.auth.entity.GroupCreateInfo
 import com.tencent.devops.auth.pojo.dto.GroupDTO
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.auth.tables.records.TAuthGroupRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,16 +20,14 @@ import java.lang.RuntimeException
 class GroupService @Autowired constructor(
     val dslContext: DSLContext,
     val groupDao: AuthGroupDao,
-    val groupUserDao: AuthGroupUserDao,
     val groupPermissionDao: AuthGroupPermissionDao
 ) {
     fun createGroup(
         userId: String,
         projectCode: String,
-        addCreateUser: Boolean?,
         groupInfo: GroupDTO
     ): Result<String> {
-        logger.info("createGroup |$userId|$projectCode|$addCreateUser|$groupInfo")
+        logger.info("createGroup |$userId|$projectCode||$groupInfo")
         val groupRecord = groupDao.getGroup(
             dslContext = dslContext,
             projectCode = projectCode,
@@ -33,6 +35,8 @@ class GroupService @Autowired constructor(
         )
         if(groupRecord != null) {
             // 项目下分组已存在,不能重复创建
+            logger.warn("createGroup |$userId| $projectCode| $groupInfo is exsit")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GROUP_EXIST))
         }
         val groupCreateInfo = GroupCreateInfo(
             groupCode = groupInfo.groupCode,
@@ -46,8 +50,9 @@ class GroupService @Autowired constructor(
         // 若新建分组不是内置分组，需建立分组与权限关系
         if(groupInfo.groupType == 1) {
             if(groupInfo.authPermissionList == null || groupInfo.authPermissionList!!.isEmpty()) {
+                logger.warn("createGroup group is not bind permission| $userId| $projectCode| $groupInfo")
                 // 自定义分组未选权限,抛异常
-                throw RuntimeException()
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GROUP_NOT_BIND_PERSSION))
             }
             // 建立用户组与权限关系
             groupPermissionDao.batchCreateAction(
@@ -56,15 +61,13 @@ class GroupService @Autowired constructor(
                 userId = userId,
                 authActions = groupInfo.authPermissionList!!
             )
-
-        }
-
-        // 若需要添加创建人到该分组
-        if(addCreateUser != null && addCreateUser) {
-            groupUserDao.create(dslContext, userId, groupInfo.groupCode)
         }
 
         return Result(groupId)
+    }
+
+    fun getGroupCode(groupId: String) : TAuthGroupRecord? {
+        return groupDao.getGroupById(dslContext, groupId)
     }
 
     companion object{
