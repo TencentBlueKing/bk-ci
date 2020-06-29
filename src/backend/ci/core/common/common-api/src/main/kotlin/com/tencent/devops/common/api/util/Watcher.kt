@@ -10,7 +10,6 @@ class Watcher(id: String = "") : StopWatch(id) {
 
     private var createTime: Long = System.currentTimeMillis()
 
-
     fun elapsed() = System.currentTimeMillis() - createTime
 
     override fun start() {
