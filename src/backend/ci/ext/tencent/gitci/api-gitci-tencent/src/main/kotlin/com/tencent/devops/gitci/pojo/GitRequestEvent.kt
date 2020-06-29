@@ -63,5 +63,7 @@ data class GitRequestEvent(
     @ApiModelProperty("DESCRIPTION")
     var description: String?,
     @ApiModelProperty("MR_TITLE")
-    var mrTitle: String?
+    var mrTitle: String?,
+    @ApiModelProperty("MR_URL")
+    var mrUrl: String?
 )

@@ -76,6 +76,7 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import org.jooq.DSLContext
@@ -139,8 +140,20 @@ class GitCIBuildService @Autowired constructor(
 
         logger.info("pipelineId: $pipelineId")
 
+        // 增加指定的构建全局变量
+        val values = mutableMapOf<String, String>()
+        if (event.mrUrl != null) {
+            values[BK_REPO_GIT_WEBHOOK_MR_URL] = event.mrUrl ?: ""
+        }
+
         // 启动构建
-        val buildId = client.get(ServiceBuildResource::class).manualStartup(event.userId, gitProjectConf.projectCode!!, pipelineId, mapOf(), channelCode).data!!.id
+        val buildId = client.get(ServiceBuildResource::class).manualStartup(
+            userId = event.userId,
+            projectId = gitProjectConf.projectCode!!,
+            pipelineId = pipelineId,
+            values = values.toMap(),
+            channelCode = channelCode
+        ).data!!.id
         gitRequestEventBuildDao.update(dslContext, event.id!!, pipelineId, buildId)
         logger.info("buildId: $buildId")
 
