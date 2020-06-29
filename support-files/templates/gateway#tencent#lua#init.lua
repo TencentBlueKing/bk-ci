@@ -101,7 +101,11 @@ config = {
     host = "__BKCI_GATEWAY_IP0__",
     domain = "__JFROG_FQDN__",
     user = "__JFROG_USERNAME__",
-    password = "__JFROG_PASSWORD__"
+    password = "__JFROG_PASSWORD__",
+    userToken = "__JFROG_USERNAME_TOKEN__",
+    passwordToken = "__JFROG_PASSWORD_TOKEN__",
+    userAnonym = "__JFROG_USERNAME_ANONYM__",
+    passwordAnonym = "__JFROG_PASSWORD_ANONYM__"
   },
   influxdb = {
     ip = "__INFLUXDB_IP0__",
