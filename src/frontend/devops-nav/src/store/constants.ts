@@ -15,6 +15,7 @@ export const CLOSE_PREVIEW_TIPS: string = 'CLOSE_PREVIEW_TIPS'
 export const TOGGLE_MODULE_LOADING: string = 'TOGGLE_MODULE_LOADING'
 export const UPDATE_CURRENT_PAGE: string = 'UPDATE_CURRENT_PAGE'
 export const TOGGLE_PERMISSION_DIALOG: string = 'TOGGLE_PERMISSION_DIALOG'
+export const SET_CURRENT_NOTICE: string = 'SET_CURRENT_NOTICE'
 
 // 服务列表
 const serviceList = [

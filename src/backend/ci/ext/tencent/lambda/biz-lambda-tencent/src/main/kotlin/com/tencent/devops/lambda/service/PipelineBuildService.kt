@@ -329,6 +329,7 @@ class PipelineBuildService @Autowired constructor(
                 trigger = t.trigger,
                 status = BuildStatus.values()[t.status],
                 startUser = t.startUser,
+                queueTime = t.queueTime?.timestampmilli() ?: 0L,
                 startTime = t.startTime?.timestampmilli() ?: 0L,
                 endTime = t.endTime?.timestampmilli() ?: 0L,
                 taskCount = t.taskCount,
