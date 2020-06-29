@@ -1,11 +1,12 @@
 <template>
     <article class="manage-approve">
-        <section class="version-content" v-bkloading="{ isLoading }">
-            <template v-if="!isLoading">
-                <div class="version-info-header">
-                    <span class="info-title"> {{ $t('store.协作申请列表') }} </span>
-                </div>
+        <section class="version-content">
+            <div class="version-info-header">
+                <span class="info-title"> {{ $t('store.协作申请列表') }} </span>
+            </div>
+            <section v-bkloading="{ isLoading }" class="approval-table-contain">
                 <bk-table class="approval-table"
+                    v-if="!isLoading"
                     :data="approveList"
                     :empty-text="$t('store.暂无申请者')"
                     :pagination="pagination"
@@ -35,7 +36,7 @@
                         </template>
                     </bk-table-column>
                 </bk-table>
-            </template>
+            </section>
         </section>
 
         <bk-sideslider :is-show.sync="approveRes.show" @hidden="clearFormData" :quick-close="true" :title="$t('store.审批')" width="565">
@@ -59,14 +60,14 @@
                             <bk-radio value="REFUSE"> {{ $t('store.拒绝') }} </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
-                    <bk-form-item :label="$t('store.审批原因')" :required="true" :rules="[{ required: true, message: $t('store.必填项') , trigger: 'change' }]" property="approveMsg">
+                    <bk-form-item :label="$t('store.审批原因')" :required="true" :rules="[{ required: true, message: $t('store.必填项') , trigger: 'change' }]" property="approveMsg" error-display-type="normal">
                         <bk-input type="textarea" v-model="approveRes.approveMsg" :placeholder="$t('store.请输入审批原因')"></bk-input>
                     </bk-form-item>
                 </bk-form>
                 <form-tips :prompt-list="[$t('store.同意协作后，协作者将成为插件开发人员，可以：'), $t('store.1、修改插件代码'), $t('store.2、修改插件私有配置'), $t('store.3、提交版本升级插件'), $t('store.4、在协作者自己的调试项目下使用测试版本')]"></form-tips>
                 <div class="approve-button">
-                    <bk-button @click="clearFormData"> {{ $t('store.取消') }} </bk-button>
-                    <bk-button theme="primary" @click="confirmApprove"> {{ $t('store.确认') }} </bk-button>
+                    <bk-button theme="primary" @click="confirmApprove" :loading="isApproving"> {{ $t('store.确认') }} </bk-button>
+                    <bk-button @click="clearFormData" :disabled="isApproving"> {{ $t('store.取消') }} </bk-button>
                 </div>
             </section>
         </bk-sideslider>
@@ -87,6 +88,7 @@
             return {
                 approveList: [],
                 isLoading: false,
+                isApproving: false,
                 approveRes: {
                     show: false,
                     approveStatus: 'PASS',
@@ -115,7 +117,8 @@
             confirmApprove () {
                 this.$refs.validateForm.validate().then((validator) => {
                     const { approveId, approveMsg, approveStatus } = this.approveRes
-                    this.$store.dispatch('store/approval', { atomCode: this.detail.atomCode, approveId, approveMsg, approveStatus }).then((res) => {
+                    this.isApproving = true
+                    this.$store.dispatch('store/approval', { type: 'ATOM', code: this.atomCode, approveId, approveMsg, approveStatus }).then((res) => {
                         if (res) {
                             const currentData = this.approveList.find(item => item.approveId === this.approveRes.approveId) || {}
                             currentData.approveStatus = approveStatus
@@ -123,8 +126,12 @@
                             this.$bkMessage({ message: this.$t('store.审批成功'), theme: 'success' })
                             this.requestApproveList()
                         }
-                    }).catch(err => this.$bkMessage({ message: (err.message || err), theme: 'error' }))
-                }, () => {})
+                    }).catch(err => this.$bkMessage({ message: (err.message || err), theme: 'error' })).finally(() => {
+                        this.isApproving = false
+                    })
+                }, (validator) => {
+                    this.$bkMessage({ message: validator.content || validator, theme: 'error' })
+                })
             },
 
             clearFormData () {
@@ -142,7 +149,7 @@
 
             requestApproveList () {
                 this.isLoading = true
-                const data = Object.assign({}, this.pagination, { atomCode: this.detail.atomCode })
+                const data = Object.assign({}, this.pagination, { type: 'ATOM', code: this.detail.atomCode })
                 this.$store.dispatch('store/getApprovalList', data).then((res) => {
                     this.approveList = res.records || []
                     this.pagination.count = res.count
@@ -190,13 +197,18 @@
     }
     .version-content {
         padding: 32px;
+        height: 100%;
         .version-info-header {
             line-height: 20px;
         }
+        .approval-table-contain {
+            height: calc(100% - 52px);
+        }
         .approval-table {
-            margin-top: 15px;
+            margin-top: 32px;
+            height: 100%;
             /deep/ .bk-table-body-wrapper {
-                max-height: calc(100vh - 291px);
+                max-height: calc(100% - 43px);
                 overflow-y: auto;
             }
         }
@@ -210,9 +222,6 @@
                 margin-left: 20px;
             }
         }
-    }
-    /deep/ .bk-form .bk-label {
-        line-height: 1.5;
     }
     /deep/ .bk-form-radio {
         margin-left: 10px;

@@ -5,7 +5,7 @@
             <span>{{ $t('store.目前有') }} <span>{{ memberCount }}</span> {{ $t('store.名成员') }}</span>
         </h5>
 
-        <section v-bkloading="{ isLoading }">
+        <section v-bkloading="{ isLoading }" class="g-setting-table">
             <bk-table :data="memberList" :outer-border="false" :header-border="false" :header-cell-style="{ background: '#fff' }" v-if="!isLoading">
                 <bk-table-column :label="$t('store.成员')" prop="userName"></bk-table-column>
                 <bk-table-column :label="$t('store.调试项目')" prop="projectName"></bk-table-column>
@@ -38,6 +38,15 @@
                 </bk-form>
             </bk-sideslider>
         </section>
+
+        <bk-dialog v-model="deleteObj.show"
+            :loading="deleteObj.loading"
+            @confirm="requestDeleteMember"
+            @cancel="deleteObj.show = false"
+            :title="$t('store.删除')"
+        >
+            {{`${$t('store.确定删除成员')}(${deleteObj.user})？`}}
+        </bk-dialog>
     </article>
 </template>
 
@@ -81,7 +90,13 @@
                     }
                 },
                 isLoading: true,
-                isSaving: false
+                isSaving: false,
+                deleteObj: {
+                    show: false,
+                    loading: false,
+                    user: '',
+                    id: ''
+                }
             }
         },
 
@@ -173,36 +188,27 @@
 
             handleDelete (row) {
                 if (!this.userInfo.isProjectAdmin) return
-                const h = this.$createElement
-                const subHeader = h('p', {
-                    style: {
-                        textAlign: 'center'
-                    }
-                }, `${this.$t('store.确定删除成员')}(${row.userName})？`)
-
-                this.$bkInfo({
-                    title: this.$t('store.删除'),
-                    subHeader,
-                    confirmFn: async () => {
-                        this.requestDeleteMember(row.id)
-                    }
-                })
+                this.deleteObj.show = true
+                this.deleteObj.user = row.userName
+                this.deleteObj.id = row.id
             },
 
-            requestDeleteMember (id) {
+            requestDeleteMember () {
+                const id = this.deleteObj.id
                 const methodMap = {
                     atom: () => this.$store.dispatch('store/requestDeleteMember', { atomCode: this.detail.atomCode, id }),
                     image: () => this.$store.dispatch('store/requestDeleteImageMem', { imageCode: this.detail.imageCode, id })
                 }
 
                 const type = this.$route.params.type
-                this.isLoading = true
+                this.deleteObj.loading = true
                 methodMap[type]().then(() => {
                     this.memberCount--
                     const index = this.memberList.findIndex(x => x.id === id)
                     this.memberList.splice(index, 1)
                 }).catch(err => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
-                    this.isLoading = false
+                    this.deleteObj.loading = false
+                    this.deleteObj.show = false
                 })
             }
         }

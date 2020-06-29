@@ -58,9 +58,8 @@
 
 <style lang="scss" scoped>
     .manage-over-view {
-        display: flex;
-        align-items: stretch;
         height: 100%;
+        box-shadow: none !important;
         .manage-gap {
             min-height: 2.3%;
             width: 100%;
@@ -80,6 +79,8 @@
         .view-left {
             width: 10.54rem;
             margin-right: .24rem;
+            float: left;
+            height: 100%;
             .total-static {
                 height: 22.4%;
             }
@@ -91,6 +92,7 @@
             width: 3.81rem;
             display: flex;
             flex-direction: column;
+            height: 100%;
             .view-news {
                 flex: 1;
                 padding: 16px 0;

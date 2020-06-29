@@ -175,9 +175,10 @@
         methods: {
             toTemplateDetail () {
                 this.$router.push({
-                    name: 'tplOverview',
+                    name: 'setting',
                     params: {
-                        templateCode: this.templateDetail.templateCode
+                        code: this.templateDetail.templateCode,
+                        type: 'template'
                     }
                 })
             },

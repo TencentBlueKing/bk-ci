@@ -11,6 +11,7 @@
             class="detail-show"
             :detail="detail"
             :version-list="versionList"
+            :pagination="pagination"
             @pageChanged="pageChanged"
             @pageLimitChanged="pageLimitChanged"
         ></component>

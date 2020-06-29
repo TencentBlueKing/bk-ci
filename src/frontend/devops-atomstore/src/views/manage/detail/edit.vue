@@ -41,7 +41,8 @@
                 this.$bkInfo({
                     title: this.$t('store.确定离开？'),
                     subTitle: this.$t('store.有修改的数据未保存，是否离开当前页面'),
-                    confirmFn: () => next()
+                    confirmFn: () => next(),
+                    onClose: () => next(false)
                 })
             } else {
                 next()

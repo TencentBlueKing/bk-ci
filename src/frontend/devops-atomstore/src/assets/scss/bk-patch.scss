@@ -22,6 +22,17 @@
 @charset 'utf-8';
 @import './conf';
 @import './mixins/scroller.scss';
+.g-setting-table {
+	height: calc(100% - 64px);
+	.bk-table {
+		height: 100%;
+		.bk-table-body-wrapper {
+			max-height: calc(100% - 43px);
+			overflow-y: auto;
+		}
+	}
+}
+
 .bk-table {
 	.toggle-btn {
 		font-size: 17px;

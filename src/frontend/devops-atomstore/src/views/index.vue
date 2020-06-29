@@ -75,5 +75,16 @@
             flex: 1;
             overflow: auto;
         }
+        ::-webkit-scrollbar-thumb {
+            background-color: #c4c6cc !important;
+            border-radius: 3px !important;
+            &:hover {
+                background-color: #979ba5 !important;
+            }
+        }
+        ::-webkit-scrollbar {
+            width: 6px !important;
+            height: 6px !important;
+        }
     }
 </style>

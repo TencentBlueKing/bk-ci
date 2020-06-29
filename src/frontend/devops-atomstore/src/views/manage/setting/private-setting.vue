@@ -4,7 +4,7 @@
             <bk-button theme="primary" @click="showAdd = true">{{ $t('store.新增配置') }}</bk-button>
         </h5>
 
-        <section v-bkloading="{ isLoading }">
+        <section v-bkloading="{ isLoading }" class="g-setting-table">
             <bk-table :data="privateList" :outer-border="false" :header-border="false" :header-cell-style="{ background: '#fff' }" v-if="!isLoading">
                 <bk-table-column :label="$t('store.名称')" prop="fieldName" width="180"></bk-table-column>
                 <bk-table-column :label="$t('store.描述')" prop="fieldDesc"></bk-table-column>
@@ -36,6 +36,15 @@
                 </bk-form>
             </bk-sideslider>
         </section>
+
+        <bk-dialog v-model="deleteObj.show"
+            :loading="deleteObj.loading"
+            @confirm="requestDelete"
+            @cancel="deleteObj.show = false"
+            :title="$t('store.删除')"
+        >
+            {{`${$t('store.确定删除')}(${deleteObj.name})？`}}
+        </bk-dialog>
     </article>
 </template>
 
@@ -55,6 +64,13 @@
                     fieldName: '',
                     fieldValue: '',
                     fieldDesc: ''
+                },
+                deleteObj: {
+                    show: false,
+                    loading: false,
+                    name: '',
+                    id: '',
+                    index: ''
                 }
             }
         },
@@ -140,25 +156,24 @@
             },
 
             handleDelete ({ fieldId, fieldName }, index) {
-                const h = this.$createElement
-                const subHeader = h('p', {
-                    style: {
-                        textAlign: 'center'
-                    }
-                }, `${this.$t('store.确定删除')}${fieldName}？`)
+                this.deleteObj.show = true
+                this.deleteObj.name = fieldName
+                this.deleteObj.id = fieldId
+                this.deleteObj.index = index
+            },
 
-                this.$bkInfo({
-                    title: this.$t('store.删除'),
-                    subHeader,
-                    confirmFn: () => {
-                        const data = { atomCode: this.$route.params.atomCode, id: fieldId }
-                        this.deleteSensitiveConf(data).then(() => {
-                            this.privateList.splice(index, 1)
-                            this.$bkMessage({ message: this.$t('store.删除成功'), theme: 'success' })
-                        }).catch((err) => {
-                            this.$bkMessage({ message: (err.message || err), theme: 'error' })
-                        })
-                    }
+            requestDelete () {
+                const id = this.deleteObj.id
+                this.deleteObj.loading = true
+                const data = { atomCode: this.detail.atomCode, id }
+                this.deleteSensitiveConf(data).then(() => {
+                    this.privateList.splice(this.deleteObj.index, 1)
+                    this.$bkMessage({ message: this.$t('store.删除成功'), theme: 'success' })
+                }).catch((err) => {
+                    this.$bkMessage({ message: (err.message || err), theme: 'error' })
+                }).finally(() => {
+                    this.deleteObj.loading = false
+                    this.deleteObj.show = false
                 })
             }
         }

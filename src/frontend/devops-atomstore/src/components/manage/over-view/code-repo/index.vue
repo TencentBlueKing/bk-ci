@@ -26,8 +26,13 @@
             }
         },
 
-        created () {
-            this.initData()
+        watch: {
+            detail: {
+                handler () {
+                    this.initData()
+                },
+                immediate: true
+            }
         },
 
         methods: {
@@ -78,6 +83,9 @@
             .item-link {
                 color: #1592ff;
                 cursor: pointer;
+            }
+            .icon-info-circle {
+                margin-left: 5px;
             }
         }
     }

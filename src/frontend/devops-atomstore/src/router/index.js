@@ -34,8 +34,8 @@ const edit = () => import(/* webpackChunkName: 'edit' */ '@/views/manage/detail/
 const overView = () => import(/* webpackChunkName: 'overView' */ '@/views/manage/over-view.vue') // 研发商店管理页面
 const approval = () => import(/* webpackChunkName: 'approval' */ '@/views/manage/approval.vue') // 研发商店管理页面
 const setting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/index.vue') // 研发商店管理页面
-const memberSetting = () => import(/* webpackChunkName: 'approval' */ '@/views/manage/setting/member-setting.vue') // 研发商店管理页面
-const privateSetting = () => import(/* webpackChunkName: 'approval' */ '@/views/manage/setting/private-setting.vue') // 研发商店管理页面
+const memberSetting = () => import(/* webpackChunkName: 'memberSetting' */ '@/views/manage/setting/member-setting.vue') // 研发商店管理页面
+const privateSetting = () => import(/* webpackChunkName: 'privateSetting' */ '@/views/manage/setting/private-setting.vue') // 研发商店管理页面
 
 const editAtom = () => import(/* webpackChunkName: 'editAtom' */ '@/views/edit_atom.vue') // 上架/升级流水线插件
 const releaseProgress = () => import(/* webpackChunkName: 'releaseProgress' */ '@/views/release_progress.vue') // 发布进度

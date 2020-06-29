@@ -449,3 +449,27 @@
      transform: translateX(100px);
      opacity: 0;
  }
+
+ .g-slide-left-enter-active,
+ .g-slide-left-leave-active {
+     transition: transform 200ms;
+ }
+ .g-slide-left-enter {
+     transform: translateX(100px);
+ }
+ .g-slide-left-leave-active {
+     display: none;
+     opacity: 0;
+ }
+
+ .g-slide-right-enter-active,
+ .g-slide-right-leave-active {
+     transition: transform 200ms;
+ }
+ .g-slide-right-enter {
+     transform: translateX(-100px);
+ }
+ .g-slide-right-leave-active {
+     display: none;
+     opacity: 0;
+ }

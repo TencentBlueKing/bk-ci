@@ -251,9 +251,10 @@
         methods: {
             toAtomDetail () {
                 this.$router.push({
-                    name: 'overview',
+                    name: 'overView',
                     params: {
-                        atomCode: this.versionDetail.atomCode
+                        code: this.versionDetail.atomCode,
+                        type: 'atom'
                     }
                 })
             },
