@@ -81,7 +81,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         return RetryUtils.execute(object : RetryUtils.Action<Result<RevisionInfo>> {
 
             override fun execute(): Result<RevisionInfo> {
-                return getLatestRevision(projectId, repositoryConfig, branchName, null, variables)
+                return getLatestRevision(projectId = projectId, repositoryConfig = repositoryConfig, branchName = branchName, additionalPath = null, variables = variables)
             }
 
             override fun fail(e: Throwable): Result<RevisionInfo> {
