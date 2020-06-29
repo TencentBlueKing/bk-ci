@@ -104,14 +104,21 @@ class BuildStartControl @Autowired constructor(
         with(event) {
             val pipelineBuildLock = PipelineBuildStartLock(redisOperation, pipelineId)
             try {
-                pipelineBuildLock.lock()
-                execute()
+                if (pipelineBuildLock.tryLock()) {
+                    execute()
+                } else {
+                    retry() // 进行重试
+                }
             } catch (e: Throwable) {
                 logger.error("[$buildId]|[$pipelineId]|$source| start fail $e", e)
             } finally {
                 pipelineBuildLock.unlock()
             }
         }
+    }
+
+    private fun PipelineBuildStartEvent.retry() {
+        pipelineEventDispatcher.dispatch(this)
     }
 
     fun PipelineBuildStartEvent.execute() {
