@@ -440,12 +440,12 @@ class BuildStartControl @Autowired constructor(
                     if (callScm) {
                         logger.info("[$pipelineId-${ele.id}] is start,get revision by scmService")
                         val latestRevision =
-                            scmProxyService.recursiveFetchLatestRevision(
-                                projectId,
-                                pipelineId,
-                                repositoryConfig,
-                                branchName,
-                                variables
+                            scmProxyService.getLatestRevision(
+                                projectId = projectId,
+                                additionalPath = null,
+                                repositoryConfig = repositoryConfig,
+                                branchName = branchName,
+                                variables = variables
                             )
                         if (latestRevision.isOk() && latestRevision.data != null) {
                             when (ele) {
