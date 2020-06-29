@@ -69,7 +69,6 @@ class ModelUtilsTest {
         // 无任何手动触发器插件时
         assertFalse(ModelUtils.canManualStartup(triggerContainer))
 
-
         val defaultTriggerElement = ManualTriggerElement()
         elements.clear()
         elements.add(defaultTriggerElement)
@@ -94,7 +93,6 @@ class ModelUtilsTest {
 
         // 无任何远程触发器插件时
         assertFalse(ModelUtils.canRemoteStartup(triggerContainer))
-
 
         val defaultTriggerElement = RemoteTriggerElement()
         elements.clear()
@@ -160,8 +158,6 @@ class ModelUtilsTest {
         ModelUtils.refreshCanRetry(model = model, canRetry = true, status = BuildStatus.FAILED)
         assertFalse(retryElement.canRetry!!)
         assertFalse(preTaskFailedRun.canRetry!!)
-
-
     }
 
     private fun elementAdditionalOptions(
