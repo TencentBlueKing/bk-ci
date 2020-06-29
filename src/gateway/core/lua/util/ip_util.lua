@@ -56,12 +56,12 @@ function _M:isInWhiteList(whiteList)
     return true
   end
   -- 判断X_FORWARDED_FOR是否在名单中（多IP，逗号分隔）
-  clientIp = stringUtil:split(headers["X_FORWARDED_FOR"] or "",",")
-  for k,v in ipairs(clientIp) do
-    if arrayUtil:isInArray(v,whiteList) then
-      return true
-    end
-  end
+  -- clientIp = stringUtil:split(headers["X_FORWARDED_FOR"] or "",",")
+  -- for k,v in ipairs(clientIp) do
+  --   if arrayUtil:isInArray(v,whiteList) then
+  --     return true
+  --   end
+  -- end
   return result
 end
 
