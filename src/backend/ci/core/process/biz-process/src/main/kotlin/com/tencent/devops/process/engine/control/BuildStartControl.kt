@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
@@ -73,7 +74,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.util.StopWatch
 import java.time.LocalDateTime
 
 /**
@@ -100,12 +100,12 @@ class BuildStartControl @Autowired constructor(
     private val tag = "startVM-0"
 
     fun handle(event: PipelineBuildStartEvent) {
-        val stopWatch = StopWatch("BuildStart")
+        val watcher = Watcher("BuildStart")
         with(event) {
             val pipelineBuildLock = PipelineBuildStartLock(redisOperation, pipelineId)
             try {
                 if (pipelineBuildLock.tryLock()) {
-                    execute(stopWatch)
+                    execute(watcher)
                 } else {
                     retry() // 进行重试
                 }
@@ -113,10 +113,7 @@ class BuildStartControl @Autowired constructor(
                 logger.error("[$buildId]|[$pipelineId]|$source| start fail $e", e)
             } finally {
                 pipelineBuildLock.unlock()
-                if (stopWatch.isRunning) {
-                    stopWatch.stop()
-                }
-                logger.info("[$buildId]|[$pipelineId]|$source| watch=$stopWatch")
+                logger.info("[$buildId]|[$pipelineId]|$source| watch=$watcher")
             }
         }
     }
@@ -126,7 +123,7 @@ class BuildStartControl @Autowired constructor(
         pipelineEventDispatcher.dispatch(this)
     }
 
-    fun PipelineBuildStartEvent.execute(stopWatch: StopWatch) {
+    fun PipelineBuildStartEvent.execute(watcher: Watcher) {
 
         val retryCount = buildVariableService.getVariable(buildId, PIPELINE_RETRY_COUNT)
         val executeCount = if (NumberUtils.isParsable(retryCount)) 1 + retryCount!!.toInt() else 1
@@ -139,9 +136,9 @@ class BuildStartControl @Autowired constructor(
             executeCount = executeCount
         )
 
-        stopWatch.start("pickUpReadyBuild")
+        watcher.start("pickUpReadyBuild")
         val buildInfo = pickUpReadyBuild() ?: return
-        stopWatch.stop()
+        watcher.stop()
 
         val model = buildDetailService.getBuildModel(buildId) ?: run {
             logger.warn("[$pipelineId]|BUILD_START_BAD_MODEL|$source|not exist build detail")
@@ -163,9 +160,9 @@ class BuildStartControl @Autowired constructor(
             jobId = "0",
             executeCount = executeCount
         )
-        stopWatch.start("buildModel")
+        watcher.start("buildModel")
         buildModel(this, model)
-        stopWatch.stop()
+        watcher.stop()
         LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
             buildId = buildId,
@@ -176,20 +173,17 @@ class BuildStartControl @Autowired constructor(
         )
 
         if (BuildStatus.isReadyToRun(buildInfo.status)) {
-            stopWatch.start("updateModel")
+            watcher.start("updateModel")
             updateModel(model = model, buildInfo = buildInfo, taskId = taskId)
-            stopWatch.stop()
 
-            stopWatch.start("writeStartParam")
             // 写入启动参数
+            watcher.start("writeStartParam")
             pipelineRuntimeService.writeStartParam(projectId = projectId, pipelineId = pipelineId, buildId = buildId, model = model)
-            stopWatch.stop()
 
-            stopWatch.start("getProjectName")
+            watcher.start("getProjectName")
             val projectName = projectOauthTokenService.getProjectName(projectId) ?: ""
-            stopWatch.stop()
 
-            stopWatch.start("getPipelineInfo")
+            watcher.start("getPipelineInfo")
             val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)!!
             val map = mapOf(
                 PIPELINE_BUILD_ID to buildId,
@@ -200,11 +194,10 @@ class BuildStartControl @Autowired constructor(
                 PIPELINE_CREATE_USER to pipelineInfo.creator,
                 PIPELINE_UPDATE_USER to pipelineInfo.lastModifyUser
             )
-            stopWatch.stop()
 
-            stopWatch.start("batchSetVariable")
+            watcher.start("batchSetVariable")
             buildVariableService.batchSetVariable(projectId, pipelineId, buildId, map)
-            stopWatch.stop()
+            watcher.stop()
         }
         // 空节点
         if (model.stages.size == 1) {
