@@ -44,7 +44,7 @@ class CodeccDockerEnvGenerator @Autowired constructor(private val dockerHostConf
         return listOf(
             Env(
                 key = ENV_LOG_SAVE_MODE,
-                value = if ("codecc_build" == dockerHostConfig.dockerhostMode) "LOCAL" else "UPLOAD"
+                value = if ("codecc_build" == dockerHostConfig.dockerhostMode && (dockerHostConfig.dockerRunLog == null || !dockerHostConfig.dockerRunLog!!)) "LOCAL" else "UPLOAD"
             )
         )
     }
