@@ -34,21 +34,14 @@
 <script>
     import mixins from '../mixins'
     import scrollMixins from '../SelectInput/scrollMixins'
+    import selectorMixins from '../selectorMixins'
     import { debounce, isObject } from '@/utils/util'
 
     export default {
         name: 'devops-select',
-        mixins: [mixins, scrollMixins],
+        mixins: [mixins, scrollMixins, selectorMixins],
         props: {
-            isLoading: Boolean,
-            options: {
-                type: Array,
-                default: []
-            },
-            optionsConf: {
-                type: Object,
-                default: () => ({})
-            }
+            isLoading: Boolean
         },
         data () {
             return {
@@ -62,41 +55,12 @@
             }
         },
         computed: {
-            mergedOptionsConf () {
-                return Object.assign({}, {
-                    url: '',
-                    paramId: 'id',
-                    paramName: 'name'
-                }, this.optionsConf)
-            },
             restProps () {
                 const { options, optionsConf, atomvalue, container, ...restProps } = this.$props
                 return restProps
             },
-            hasUrl () {
-                return this.mergedOptionsConf && this.mergedOptionsConf.url && typeof this.mergedOptionsConf.url === 'string'
-            },
             hasGroup () {
                 return this.mergedOptionsConf && this.mergedOptionsConf.hasGroup
-            },
-            urlParamKeys () {
-                if (this.hasUrl) {
-                    const paramKey = this.mergedOptionsConf.url.match(/\{(.*?)\}/g)
-                    return paramKey ? paramKey.map(key => key.replace(/\{(.*?)\}/, '$1')) : []
-                }
-                return []
-            },
-            queryParams () {
-                const { atomValue = {}, $route: { params = {} } } = this
-                return {
-                    ...params,
-                    ...atomValue
-                }
-            },
-            isLackParam () {
-                return this.urlParamKeys.some(key => {
-                    return this.queryParams.hasOwnProperty(key) && (typeof this.queryParams[key] === 'undefined' || this.queryParams[key] === null || this.queryParams[key] === '')
-                })
             },
             filteredList () {
                 const { displayName, optionList } = this
@@ -137,11 +101,6 @@
             this.handleBlur()
         },
         methods: {
-            urlParse (originUrl, query) {
-                /* eslint-disable */
-                return new Function('ctx', `return '${originUrl.replace(/\{(.*?)\}/g, '\'\+ ctx.$1 \+\'')}'`)(query)
-                /* eslint-enable */
-            },
             handleInput (e) {
                 // const { name, value } = e.target
                 this.optionListVisible = true
