@@ -28,16 +28,21 @@ package com.tencent.devops.process.service.codecc
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
+import com.tencent.devops.process.dao.TencentPipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.service.PipelineTaskService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -50,6 +55,7 @@ class CodeccTransferService @Autowired constructor(
     private val pipelineService: PipelineService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineInfoDao: PipelineInfoDao,
+    private val tencentPipelineBuildDao: TencentPipelineBuildDao,
     private val codeccApi: CodeccApi,
     private val dslContext: DSLContext
 ) {
@@ -322,6 +328,69 @@ class CodeccTransferService @Autowired constructor(
             }
             ruleName to ruleSetIdList.toList()
         }.toMap()
+    }
+
+    fun getHistoryBuildScan(
+        status: List<BuildStatus>?,
+        trigger: List<StartType>?,
+        queueTimeStartTime: Long?,
+        queueTimeEndTime: Long?,
+        startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?
+    ): List<BuildBasicInfo> {
+        var queueTimeStartTimeTemp = queueTimeStartTime
+        val dayTimeMillis = 24 * 60 * 60 * 1000
+        if (queueTimeStartTime != null && queueTimeStartTime > 0 && queueTimeEndTime != null && queueTimeEndTime > 0) {
+            if (queueTimeEndTime - queueTimeStartTime > dayTimeMillis) { // 做下保护，不超过一天
+                queueTimeStartTimeTemp = queueTimeEndTime - dayTimeMillis
+            }
+        }
+
+        var startTimeStartTimeTemp = startTimeStartTime
+        if (startTimeStartTime != null && startTimeStartTime > 0 && startTimeEndTime != null && startTimeEndTime > 0) {
+            if (startTimeEndTime - startTimeStartTime > dayTimeMillis) { // 做下保护，不超过一天
+                startTimeStartTimeTemp = startTimeEndTime - dayTimeMillis
+            }
+        }
+
+        var endTimeStartTimeTemp = endTimeStartTime
+        if (endTimeStartTime != null && endTimeStartTime > 0 && endTimeEndTime != null && endTimeEndTime > 0) {
+            if (endTimeEndTime - endTimeStartTime > dayTimeMillis) { // 做下保护，不超过一天
+                endTimeStartTimeTemp = endTimeEndTime - dayTimeMillis
+            }
+        }
+
+        val list = tencentPipelineBuildDao.listScanPipelineBuildList(
+            dslContext,
+            status,
+            trigger,
+            queueTimeStartTimeTemp,
+            queueTimeEndTime,
+            startTimeStartTimeTemp,
+            startTimeEndTime,
+            endTimeStartTimeTemp,
+            endTimeEndTime
+        )
+        val result = mutableListOf<BuildBasicInfo>()
+        list.forEach {
+            result.add(genBuildBaseInfo(it))
+        }
+        return result
+    }
+
+    private fun genBuildBaseInfo(
+        tPipelineBuildHistoryRecord: TPipelineBuildHistoryRecord
+    ): BuildBasicInfo {
+        return with(tPipelineBuildHistoryRecord) {
+            BuildBasicInfo(
+                buildId = buildId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineVersion = version
+            )
+        }
     }
 
     //  [ "COVERITY", "KLOCWORK", "PINPOINT", "CPPLINT", "CHECKSTYLE", "ESLINT", "STYLECOP", "PHPCS", "PYLINT", "GOML", "DETEKT", "OCCHECK", "SENSITIVE", "HORUSPY", "WOODPECKER_SENSITIVE", "RIPS", "CCN", "DUPC" ]
