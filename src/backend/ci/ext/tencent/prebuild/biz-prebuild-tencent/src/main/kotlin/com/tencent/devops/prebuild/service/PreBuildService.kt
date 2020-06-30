@@ -228,8 +228,15 @@ class PreBuildService @Autowired constructor(
     private fun createVMBuildContainer(job: Job, startUpReq: StartUpReq, agentInfo: ThirdPartyAgentStaticInfo, jobIndex: Int): VMBuildContainer {
         val elementList = mutableListOf<Element>()
         job.job.steps.forEach {
-            if (it is CodeCCScanInContainerTask && startUpReq.extraParam != null && !(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
-                it.inputs.path = listOf(startUpReq.extraParam!!.codeccScanPath!!)
+            if (it is CodeCCScanInContainerTask && startUpReq.extraParam != null) {
+                val whitePath = mutableListOf<String>()
+                if (!(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
+                    whitePath.add(startUpReq.extraParam!!.codeccScanPath!!)
+                }
+                if (startUpReq.extraParam!!.incrementFileList != null && startUpReq.extraParam!!.incrementFileList!!.isNotEmpty()) {
+                    whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
+                }
+                it.inputs.path = whitePath
             }
             val element = it.covertToElement(getCiBuildConf(preBuildConfig))
             elementList.add(element)
