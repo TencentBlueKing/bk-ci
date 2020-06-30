@@ -86,8 +86,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
 
             override fun fail(e: Throwable): Result<RevisionInfo> {
                 AlertUtils.doAlert(
-                    "SCM", AlertLevel.MEDIUM, "拉取最新版本号出现异常,重试${retry}次失败",
-                    "拉取最新版本号出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
+                    module = "SCM", level = AlertLevel.MEDIUM, title = "拉取最新版本号出现异常,重试${retry}次失败",
+                    message = "拉取最新版本号出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
                 )
                 return Result(ERROR_RETRY_3_FAILED.toInt())
             }
