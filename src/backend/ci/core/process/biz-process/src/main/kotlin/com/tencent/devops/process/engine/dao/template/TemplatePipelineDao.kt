@@ -41,10 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-/**
- * deng
- * 2019-01-07
- */
 @Repository
 class TemplatePipelineDao @Autowired constructor(private val objectMapper: ObjectMapper) {
 

@@ -61,8 +61,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
@@ -162,8 +160,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildStageDao: PipelineBuildStageDao,
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
-    private val buildVariableService: BuildVariableService,
-    private val redisOperation: RedisOperation
+    private val buildVariableService: BuildVariableService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -1049,6 +1046,10 @@ class PipelineRuntimeService @Autowired constructor(
                 if (stage.tag == null) stage.tag = listOf(defaultStageTagId)
             }
 
+            if (stageOption?.stageControlOption?.manualTrigger == true) {
+                stage.reviewStatus = BuildStatus.QUEUE.name
+            }
+
             if (lastTimeBuildStageRecords.isNotEmpty()) {
                 if (needUpdateStage) {
                     run findHistoryStage@{
@@ -1736,19 +1737,6 @@ class PipelineRuntimeService @Autowired constructor(
         return executeTime
     }
 
-    @Deprecated(message = "replace by PipelineRuntimeExtService")
-    fun getNextQueueBuildInfo(pipelineId: String): BuildInfo? {
-        val redisLock = RedisLock(redisOperation, "pipelineNextQueue:concurrency:$pipelineId", 30L)
-        val historyRecord: TPipelineBuildHistoryRecord?
-        try {
-            redisLock.lock()
-            historyRecord = pipelineBuildDao.getOneQueueBuild(dslContext, pipelineId)
-        } finally {
-            redisLock.unlock()
-        }
-        return pipelineBuildDao.convert(historyRecord)
-    }
-
     fun getLastTimeBuild(projectId: String, pipelineId: String): BuildInfo? {
         return pipelineBuildDao.convert(pipelineBuildDao.getLatestBuild(dslContext, projectId, pipelineId))
     }
@@ -1959,6 +1947,9 @@ class PipelineRuntimeService @Autowired constructor(
         ) == 1
     }
 
+    /**
+     * 如果是重试，不应该更新启动参数, 直接返回
+     */
     fun writeStartParam(projectId: String, pipelineId: String, buildId: String, model: Model) {
         val allVariable = buildVariableService.getAllVariable(buildId)
         if (allVariable[PIPELINE_RETRY_COUNT] != null) return

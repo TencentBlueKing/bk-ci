@@ -160,4 +160,7 @@ class DockerHostConfig {
 
     @Value("\${dockerhost.mode:#{null}}")
     var dockerhostMode: String? = null
+
+    @Value("\${codecc.dockerRun.log:false}")
+    var dockerRunLog: Boolean? = false
 }

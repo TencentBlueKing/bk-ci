@@ -58,21 +58,22 @@ data class VMBuildContainer(
     @Deprecated(message = "@see JobControlOption.timeout")
     val maxRunningMinutes: Int = 480,
     @ApiModelProperty("构建机环境变量", required = false)
-    val buildEnv: Map<String, String>?,
+    val buildEnv: Map<String, String>? = null,
     @ApiModelProperty("用户自定义环境变量", required = false)
-    val customBuildEnv: Map<String, String>?,
+    val customBuildEnv: Map<String, String>? = null,
     @ApiModelProperty("第三方构建Hash ID", required = false)
-    val thirdPartyAgentId: String?,
+    val thirdPartyAgentId: String? = null,
     @ApiModelProperty("第三方构建环境ID", required = false)
-    val thirdPartyAgentEnvId: String?,
+    val thirdPartyAgentEnvId: String? = null,
     @ApiModelProperty("第三方构建环境工作空间", required = false)
-    val thirdPartyWorkspace: String?,
+    val thirdPartyWorkspace: String? = null,
     @ApiModelProperty("Docker构建机", required = false)
-    val dockerBuildVersion: String?,
+    val dockerBuildVersion: String? = null,
     @ApiModelProperty("TStackHashId", required = false)
-    val tstackAgentId: String?,
+    @Deprecated("do not used")
+    val tstackAgentId: String? = null,
     @ApiModelProperty("新的选择构建机环境", required = false)
-    val dispatchType: DispatchType?,
+    val dispatchType: DispatchType? = null,
     @ApiModelProperty("是否显示构建资源信息", required = false)
     var showBuildResource: Boolean? = false,
     @ApiModelProperty("是否可重试", required = false, hidden = true)
