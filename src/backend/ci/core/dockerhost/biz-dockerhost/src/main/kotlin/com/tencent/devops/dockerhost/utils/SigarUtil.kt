@@ -230,7 +230,7 @@ object SigarUtil {
         val commandStr = runCommand("iostat -d -x -k 1 8")
         val stringArray = commandStr!!.split("\n")
         stringArray.forEach {
-            if (it.isNotEmpty() && !it.contains("Device:") && !it.contains("Linux")) {
+            if (it.isNotEmpty() && !it.contains("Device") && !it.contains("Linux")) {
                 val strArr = it.split(" ")
                 val ioUtil = (strArr[strArr.size - 1].toDouble() * 100).roundToInt()
                 // logger.info("====: $it || $ioUtil")
