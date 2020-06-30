@@ -5,7 +5,7 @@
             <span>{{ $t('store.目前有') }} <span>{{ memberCount }}</span> {{ $t('store.名成员') }}</span>
         </h5>
 
-        <section v-bkloading="{ isLoading }" class="g-setting-table">
+        <section v-bkloading="{ isLoading }" class="g-scroll-table">
             <bk-table :data="memberList" :outer-border="false" :header-border="false" :header-cell-style="{ background: '#fff' }" v-if="!isLoading">
                 <bk-table-column :label="$t('store.成员')" prop="userName"></bk-table-column>
                 <bk-table-column :label="$t('store.调试项目')" prop="projectName"></bk-table-column>

@@ -380,10 +380,7 @@
         methods: {
             toAtomList () {
                 this.$router.push({
-                    name: 'workList',
-                    params: {
-                        type: 'atom'
-                    }
+                    name: 'atomWork'
                 })
             },
             toPublishProgress (type, id) {

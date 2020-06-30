@@ -9,7 +9,7 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des">{{detail.name}}</span>
             </p>
-            <router-link :to="{ name: 'workList' }" class="title-work"> {{ $t('store.工作台') }} </router-link>
+            <router-link :to="{ name: 'atomWork' }" class="title-work"> {{ $t('store.工作台') }} </router-link>
         </h3>
 
         <main class="store-main" v-if="!isLoading">

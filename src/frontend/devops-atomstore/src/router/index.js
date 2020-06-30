@@ -24,7 +24,10 @@ const marketHome = () => import(/* webpackChunkName: 'atomHome' */ '@/views/mark
 const marketList = () => import(/* webpackChunkName: 'atomStore' */ '@/views/market/list.vue') // 流水线插件市场列表
 const marketDetail = () => import(/* webpackChunkName: 'atomDetails' */ '@/views/market/detail.vue') // 流水线插件信息
 
-const workList = () => import(/* webpackChunkName: 'workList' */ '@/views/atom_list.vue') // 工作台
+const workList = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/index.vue') // 工作台
+const atomWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/atom.vue') // 工作台
+const templateWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/template.vue') // 工作台
+const imageWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/image.vue') // 工作台
 
 const install = () => import(/* webpackChunkName: 'install' */ '@/views/install.vue') // 研发商店安装页面
 const manage = () => import(/* webpackChunkName: 'manage' */ '@/views/manage/index.vue') // 研发商店管理页面
@@ -107,15 +110,26 @@ const routes = [
                 }
             },
             {
-                path: 'workList/:type',
+                path: 'workList',
                 name: 'workList',
                 component: workList,
-                meta: {
-                    title: 'workList',
-                    logo: 'store',
-                    header: 'store',
-                    to: 'atomHome'
-                }
+                children: [
+                    {
+                        path: 'atom',
+                        name: 'atomWork',
+                        component: atomWork
+                    },
+                    {
+                        path: 'template',
+                        name: 'templateWork',
+                        component: templateWork
+                    },
+                    {
+                        path: 'image',
+                        name: 'imageWork',
+                        component: imageWork
+                    }
+                ]
             },
             {
                 path: 'manage/:type/:code',

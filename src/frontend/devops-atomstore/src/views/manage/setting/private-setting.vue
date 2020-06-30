@@ -4,7 +4,7 @@
             <bk-button theme="primary" @click="showAdd = true">{{ $t('store.新增配置') }}</bk-button>
         </h5>
 
-        <section v-bkloading="{ isLoading }" class="g-setting-table">
+        <section v-bkloading="{ isLoading }" class="g-scroll-table">
             <bk-table :data="privateList" :outer-border="false" :header-border="false" :header-cell-style="{ background: '#fff' }" v-if="!isLoading">
                 <bk-table-column :label="$t('store.名称')" prop="fieldName" width="180"></bk-table-column>
                 <bk-table-column :label="$t('store.描述')" prop="fieldDesc"></bk-table-column>

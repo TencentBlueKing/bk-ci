@@ -190,11 +190,9 @@
             },
 
             backConsole () {
+                const name = `${this.type}Work`
                 this.$router.push({
-                    name: 'workList',
-                    params: {
-                        type: this.type
-                    }
+                    name
                 })
             },
 

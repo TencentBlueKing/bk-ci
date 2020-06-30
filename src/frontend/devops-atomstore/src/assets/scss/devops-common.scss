@@ -35,6 +35,49 @@
     }
 }
 
+.g-store-main {
+    background-color: #f1f2f3;
+    height: 100vh;
+    color: #222;
+    display: flex;
+    max-height: 100vh;
+    padding-bottom: 40px;
+    flex-direction: column;
+    overflow: hidden;
+    .g-store-title {
+        height: 56px;
+        line-height: 56px;
+        display: flex;
+        align-items: center;
+        padding-left: .32rem;
+        margin-bottom: 32px;
+        background-color: #fff;
+        color: #999;
+        .right-arrow {
+            height: 56px;
+            &::after {
+                margin-top: -2.5px;
+                border-color: #252935;
+            }
+        }
+        .quick-route {
+            color: #222;
+            cursor: pointer;
+        }
+    }
+    .g-store-body {
+        width: 14.6rem;
+        margin: 16px auto 0;
+        position: relative;
+        flex: 1;
+        height: 0;
+    }
+    .g-store-route {
+        height: 100%;
+        box-shadow: 1px 2px 3px 0 rgba(0,0,0,0.05);
+    }
+}
+
 // 文字超出隐藏
 .text-overflow {
     overflow: hidden;

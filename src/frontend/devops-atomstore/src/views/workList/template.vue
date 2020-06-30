@@ -12,70 +12,76 @@
                 <i class="devops-icon icon-close-circle-shape clear-icon" v-else @click="clearSearch"></i>
             </section>
         </div>
-        <bk-table style="margin-top: 15px;" :empty-text="$t('store.暂时没有模板')"
-            :data="renderList"
-            :pagination="pagination"
-            @page-change="pageChanged"
-            @page-limit-change="pageCountChanged"
-            v-bkloading="{ isLoading }"
-        >
-            <bk-table-column :label="$t('store.模板名称')">
-                <template slot-scope="props">
-                    <span class="atom-name" :title="props.row.templateName" @click="routerAtoms(props.row.templateCode)">{{ props.row.templateName }}</span>
-                </template>
-            </bk-table-column>
-            <bk-table-column :label="$t('store.所属项目')" prop="projectName"></bk-table-column>
-            <bk-table-column :label="$t('store.状态')">
-                <template slot-scope="props">
-                    <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
-                        v-if="props.row.templateStatus === 'AUDITING'">
-                        <div class="rotate rotate1"></div>
-                        <div class="rotate rotate2"></div>
-                        <div class="rotate rotate3"></div>
-                        <div class="rotate rotate4"></div>
-                        <div class="rotate rotate5"></div>
-                        <div class="rotate rotate6"></div>
-                        <div class="rotate rotate7"></div>
-                        <div class="rotate rotate8"></div>
-                    </div>
-                    <span class="atom-status-icon success" v-if="props.row.templateStatus === 'RELEASED'"></span>
-                    <span class="atom-status-icon fail" v-if="props.row.templateStatus === 'GROUNDING_SUSPENSION'"></span>
-                    <span class="atom-status-icon obtained" v-if="props.row.templateStatus === 'AUDIT_REJECT' || props.row.templateStatus === 'UNDERCARRIAGED'"></span>
-                    <span class="atom-status-icon devops-icon icon-initialize" v-if="props.row.templateStatus === 'INIT'"></span>
-                    <span>{{ $t(templateStatusMap[props.row.templateStatus]) }}</span>
-                </template>
-            </bk-table-column>
-            <bk-table-column :label="$t('store.修改人')" prop="modifier"></bk-table-column>
-            <bk-table-column :label="$t('store.修改时间')" prop="updateTime" width="150" :formatter="timeFormatter"></bk-table-column>
-            <bk-table-column :label="$t('store.操作')" width="250" class-name="handler-btn">
-                <template slot-scope="props">
-                    <span class="shelf-btn"
-                        v-if="props.row.templateStatus === 'INIT' || props.row.templateStatus === 'UNDERCARRIAGED'
-                            || props.row.templateStatus === 'GROUNDING_SUSPENSION' || props.row.templateStatus === 'AUDIT_REJECT'"
-                        @click="editHandle(props.row.templateId)"> {{ $t('store.上架') }} </span>
-                    <span class="shelf-btn"
-                        v-if="props.row.templateStatus === 'RELEASED'"
-                        @click="editHandle(props.row.templateId)"> {{ $t('store.升级') }} </span>
-                    <span class="shelf-btn"
-                        v-if="props.row.templateStatus === 'RELEASED'"
-                        @click="installAHandle(props.row.templateCode)"> {{ $t('store.安装') }} </span>
-                    <span class="schedule-btn"
-                        v-if="props.row.templateStatus === 'AUDITING'"
-                        @click="toTemplateProgress(props.row.templateId)"> {{ $t('store.进度') }} </span>
-                    <span class="obtained-btn"
-                        v-if="props.row.templateStatus === 'AUDIT_REJECT' || props.row.templateStatus === 'RELEASED' || (props.row.templateStatus === 'GROUNDING_SUSPENSION' && props.row.releaseFlag)"
-                        @click="offline(props.row)"
-                    > {{ $t('store.下架') }} </span>
-                    <span @click="deleteTemplate(props.row)" v-if="['INIT', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(props.row.templateStatus)"> {{ $t('store.移除') }} </span>
-                    <span style="margin-right:0">
-                        <a target="_blank"
-                            style="color:#3c96ff;"
-                            :href="`/console/pipeline/${props.row.projectCode}/template/${props.row.templateCode}/edit`"
-                        > {{ $t('store.源模板') }} </a>
-                    </span>
-                </template>
-            </bk-table-column>
-        </bk-table>
+        <main class="g-scroll-pagination-table">
+            <bk-table style="margin-top: 15px;"
+                :empty-text="$t('store.暂时没有模板')"
+                :outer-border="false"
+                :header-border="false"
+                :header-cell-style="{ background: '#fff' }"
+                :data="renderList"
+                :pagination="pagination"
+                @page-change="pageChanged"
+                @page-limit-change="pageCountChanged"
+                v-bkloading="{ isLoading }"
+            >
+                <bk-table-column :label="$t('store.模板名称')">
+                    <template slot-scope="props">
+                        <span class="atom-name" :title="props.row.templateName" @click="routerAtoms(props.row.templateCode)">{{ props.row.templateName }}</span>
+                    </template>
+                </bk-table-column>
+                <bk-table-column :label="$t('store.所属项目')" prop="projectName"></bk-table-column>
+                <bk-table-column :label="$t('store.状态')">
+                    <template slot-scope="props">
+                        <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
+                            v-if="props.row.templateStatus === 'AUDITING'">
+                            <div class="rotate rotate1"></div>
+                            <div class="rotate rotate2"></div>
+                            <div class="rotate rotate3"></div>
+                            <div class="rotate rotate4"></div>
+                            <div class="rotate rotate5"></div>
+                            <div class="rotate rotate6"></div>
+                            <div class="rotate rotate7"></div>
+                            <div class="rotate rotate8"></div>
+                        </div>
+                        <span class="atom-status-icon success" v-if="props.row.templateStatus === 'RELEASED'"></span>
+                        <span class="atom-status-icon fail" v-if="props.row.templateStatus === 'GROUNDING_SUSPENSION'"></span>
+                        <span class="atom-status-icon obtained" v-if="props.row.templateStatus === 'AUDIT_REJECT' || props.row.templateStatus === 'UNDERCARRIAGED'"></span>
+                        <span class="atom-status-icon devops-icon icon-initialize" v-if="props.row.templateStatus === 'INIT'"></span>
+                        <span>{{ $t(templateStatusMap[props.row.templateStatus]) }}</span>
+                    </template>
+                </bk-table-column>
+                <bk-table-column :label="$t('store.修改人')" prop="modifier"></bk-table-column>
+                <bk-table-column :label="$t('store.修改时间')" prop="updateTime" width="150" :formatter="timeFormatter"></bk-table-column>
+                <bk-table-column :label="$t('store.操作')" width="250" class-name="handler-btn">
+                    <template slot-scope="props">
+                        <span class="shelf-btn"
+                            v-if="props.row.templateStatus === 'INIT' || props.row.templateStatus === 'UNDERCARRIAGED'
+                                || props.row.templateStatus === 'GROUNDING_SUSPENSION' || props.row.templateStatus === 'AUDIT_REJECT'"
+                            @click="editHandle(props.row.templateId)"> {{ $t('store.上架') }} </span>
+                        <span class="shelf-btn"
+                            v-if="props.row.templateStatus === 'RELEASED'"
+                            @click="editHandle(props.row.templateId)"> {{ $t('store.升级') }} </span>
+                        <span class="shelf-btn"
+                            v-if="props.row.templateStatus === 'RELEASED'"
+                            @click="installAHandle(props.row.templateCode)"> {{ $t('store.安装') }} </span>
+                        <span class="schedule-btn"
+                            v-if="props.row.templateStatus === 'AUDITING'"
+                            @click="toTemplateProgress(props.row.templateId)"> {{ $t('store.进度') }} </span>
+                        <span class="obtained-btn"
+                            v-if="props.row.templateStatus === 'AUDIT_REJECT' || props.row.templateStatus === 'RELEASED' || (props.row.templateStatus === 'GROUNDING_SUSPENSION' && props.row.releaseFlag)"
+                            @click="offline(props.row)"
+                        > {{ $t('store.下架') }} </span>
+                        <span @click="deleteTemplate(props.row)" v-if="['INIT', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(props.row.templateStatus)"> {{ $t('store.移除') }} </span>
+                        <span style="margin-right:0">
+                            <a target="_blank"
+                                style="color:#3c96ff;"
+                                :href="`/console/pipeline/${props.row.projectCode}/template/${props.row.templateCode}/edit`"
+                            > {{ $t('store.源模板') }} </a>
+                        </span>
+                    </template>
+                </bk-table-column>
+            </bk-table>
+        </main>
 
         <template v-if="templatesideConfig.show">
             <bk-sideslider
@@ -493,7 +499,7 @@
                     query: {
                         code,
                         type: 'template',
-                        from: 'workList'
+                        from: 'templateWork'
                     }
                 })
             },

@@ -22,12 +22,23 @@
 @charset 'utf-8';
 @import './conf';
 @import './mixins/scroller.scss';
-.g-setting-table {
+.g-scroll-table {
 	height: calc(100% - 64px);
 	.bk-table {
 		height: 100%;
 		.bk-table-body-wrapper {
 			max-height: calc(100% - 43px);
+			overflow-y: auto;
+		}
+	}
+}
+
+.g-scroll-pagination-table {
+	height: calc(100% - 64px);
+	.bk-table {
+		height: 100%;
+		.bk-table-body-wrapper {
+			max-height: calc(100% - 105px);
 			overflow-y: auto;
 		}
 	}

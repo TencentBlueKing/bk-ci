@@ -354,10 +354,7 @@
             
             toAtomList () {
                 this.$router.push({
-                    name: 'workList',
-                    params: {
-                        type: 'template'
-                    }
+                    name: 'templateWork'
                 })
             },
             toAtomStore () {
