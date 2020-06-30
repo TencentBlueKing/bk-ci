@@ -231,7 +231,8 @@ class GitCIBuildService @Autowired constructor(
                             user = job.job.pool!!.credential?.user ?: "",
                             password = job.job.pool!!.credential?.password ?: ""
                         ),
-                        macOS = null
+                        macOS = null,
+                        third = null
                     )
                 }
 
@@ -244,13 +245,14 @@ class GitCIBuildService @Autowired constructor(
                         macOS = MacOS(
                             systemVersion = job.job.pool!!.macOS?.systemVersion ?: "",
                             xcodeVersion = job.job.pool!!.macOS?.xcodeVersion ?: ""
-                        )
+                        ),
+                        third = null
                     )
                 }
 
                 // 假设都没有配置，使用默认镜像
                 else -> {
-                    Pool(buildConfig.registryImage, Credential("", ""), null)
+                    Pool(buildConfig.registryImage, Credential("", ""), null, null)
                 }
             }
 

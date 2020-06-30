@@ -56,14 +56,17 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     if (dispatchType is DockerDispatchType) {
                         dispatchType.dockerBuildVersion = dispatchType.value.removePrefix("paas/")
                     } else if (dispatchType is PublicDevCloudDispathcType) {
-                        dispatchType.image = dispatchType.value.removePrefix("/")
+                        // 在商店发布的蓝盾源镜像，无需凭证
+                        val pool = Pool(dispatchType.value.removePrefix("/"), null, null, false, dispatchType.performanceConfigId)
+                        dispatchType.image = JsonUtil.toJson(pool)
                     } else if (dispatchType is IDCDispatchType) {
                         dispatchType.image = dispatchType.value.removePrefix("paas/")
                     }
                 } else {
                     // 第三方镜像
                     if (dispatchType is PublicDevCloudDispathcType) {
-                        genDevCloudDispatchMessage(dispatchType, projectId)
+                        // 在商店发布的第三方源镜像，带凭证
+                        genThirdDevCloudDispatchMessage(dispatchType, projectId)
                     } else if (dispatchType is IDCDispatchType) {
                         dispatchType.image = dispatchType.value
                     } else {
@@ -81,13 +84,16 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                 // DevCloud镜像历史数据特殊处理
                 if (dispatchType is PublicDevCloudDispathcType) {
                     if (dispatchType.image != null) {
-                        dispatchType.image = "devcloud/" + dispatchType.image!!.removePrefix("/")
+                        val pool = Pool("devcloud/" + dispatchType.image!!.removePrefix("/"), null, null, false, dispatchType.performanceConfigId)
+                        dispatchType.image = JsonUtil.toJson(pool)
+                    } else {
+                        logger.error("dispatchType.image==null,buildId=$buildId,dispatchType=${JsonUtil.toJson(dispatchType)}")
                     }
                 }
             } else {
                 // 第三方镜像 DevCloud
                 if (dispatchType is PublicDevCloudDispathcType) {
-                    genDevCloudDispatchMessage(dispatchType, projectId)
+                    genThirdDevCloudDispatchMessage(dispatchType, projectId)
                 }
             }
             logger.info("DispatchTypeParserTxImpl:AfterTransfer:dispatchType=(${JsonUtil.toJson(dispatchType)})")
@@ -96,7 +102,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         }
     }
 
-    private fun genDevCloudDispatchMessage(dispatchType: PublicDevCloudDispathcType, projectId: String) {
+    private fun genThirdDevCloudDispatchMessage(dispatchType: PublicDevCloudDispathcType, projectId: String) {
         var user = ""
         var password = ""
         var credentialProject = projectId
@@ -115,7 +121,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
             password = ticketsMap["v2"] as String
         }
         val credential = Credential(user, password)
-        val pool = Pool(dispatchType.value, credential, null)
+        val pool = Pool(dispatchType.value, credential, null, true, dispatchType.performanceConfigId)
         dispatchType.image = JsonUtil.toJson(pool)
     }
 }
