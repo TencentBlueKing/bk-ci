@@ -5,7 +5,6 @@
         :placeholder="isLoading ? $t('editPage.loadingData') : placeholder"
         :value="value"
         :disabled="disabled || isLoading"
-        @edit="edit"
         @selected="handleSelect"
         @toggle="toggleVisible"
         @clear="handleClear"
@@ -31,26 +30,18 @@
 
 <script>
     import mixins from '../mixins'
+    import selectorMixins from '../selectorMixins'
     export default {
-        mixins: [mixins],
+        mixins: [mixins, selectorMixins],
         props: {
             placeholder: {
                 type: String
-            },
-            options: {
-                type: Array,
-                default: []
-            },
-            optionsConf: {
-                type: Object,
-                default: () => ({})
             }
         },
         data () {
             return {
                 isLoading: false,
-                list: this.options,
-                webUrl: WEB_URL_PIRFIX
+                list: this.options
             }
         },
         computed: {
@@ -65,58 +56,13 @@
                     }
                 }
             },
-            projectId () {
-                return this.$route.params.projectId
-            },
-            mergedOptionsConf () {
-                return Object.assign({}, {
-                    hasAddItem: false,
-                    itemText: this.$t('template.relatedCodelib'),
-                    itemTargetUrl: `/codelib/{projectId}/`,
-                    url: '',
-                    paramId: 'id',
-                    paramName: 'name',
-                    searchable: false,
-                    clearable: false,
-                    multiple: false
-                }, this.optionsConf)
-            },
-            hasUrl () {
-                return this.mergedOptionsConf && this.mergedOptionsConf.url && typeof this.mergedOptionsConf.url === 'string'
-            },
-            urlParamKeys () {
-                if (this.hasUrl) {
-                    const paramKey = this.mergedOptionsConf.url.match(/\{(.*?)\}/g)
-                    return paramKey ? paramKey.map(key => key.replace(/\{(.*?)\}/, '$1')) : []
-                }
-                return []
-            },
-            queryParams () {
-                const { atomValue = {}, $route: { params = {} } } = this
-                return {
-                    ...params,
-                    ...atomValue
-                }
-            },
-            isLackParam () {
-                return this.urlParamKeys.some(key => {
-                    return this.queryParams.hasOwnProperty(key) && (typeof this.queryParams[key] === 'undefined' || this.queryParams[key] === null || this.queryParams[key] === '')
-                })
-            },
             dropdownConf () {
-                const { searchable, tools, multiple, clearable } = this.mergedOptionsConf
+                const { searchable, multiple, clearable } = this.mergedOptionsConf
                 return {
-                    tools,
                     searchable,
                     multiple,
                     clearable
                 }
-            },
-            addItemUrl () {
-                const { webUrl, urlParse, mergedOptionsConf: { itemTargetUrl }, $route: { params } } = this
-                const originUrl = /^(http|https):\/\//.test(itemTargetUrl) ? itemTargetUrl : webUrl + itemTargetUrl
-
-                return urlParse(originUrl, params)
             }
         },
         watch: {
@@ -143,32 +89,8 @@
 
                 this.handleChange(this.name, val)
             },
-            edit (index) {
-                const hashId = this.list[index].repositoryHashId || ''
-                const type = this.list[index].type || ''
-                const groupId = this.list[index].groupHashId || ''
-                if (hashId) {
-                    const href = `${WEB_URL_PIRFIX}/codelib/${this.projectId}/${hashId}/${type}`
-                    window.open(href, '_blank')
-                } else if (groupId) {
-                    const groupHref = `${WEB_URL_PIRFIX}/experience/${this.projectId}/setting/?groupId=${groupId}`
-                    window.open(groupHref, '_blank')
-                }
-            },
             toggleVisible (open) {
                 open && this.hasUrl && this.freshList()
-            },
-            urlParse (originUrl, query) {
-                /* eslint-disable */
-                return new Function('ctx', `return '${originUrl.replace(/\{(.*?)\}/g, '\'\+ ctx.$1 \+\'')}'`)(query)
-                /* eslint-enable */
-            },
-            getUrlParamKey (url) {
-                if (this.hasUrl) {
-                    const paramKey = url.match(/\{(.*?)\}/g)
-                    return paramKey || []
-                }
-                return []
             },
             transformList (res) {
                 const list = this.getResponseData(res, this.mergedOptionsConf.dataPath)
