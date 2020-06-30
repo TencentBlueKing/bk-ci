@@ -74,7 +74,8 @@ class GitRequestEventDao {
                 event.event,
                 LocalDateTime.now(),
                 event.description,
-                event.mrTitle
+                event.mrTitle,
+                event.mrUrl
             ).returning(ID)
                 .fetchOne()
             return record.id
