@@ -72,6 +72,7 @@
         color: #C3CDD7;
         font-size: 14px;
         vertical-align: middle;
+        pointer-events: auto;
     }
     .form-field.bk-form-item {
         position: relative;
