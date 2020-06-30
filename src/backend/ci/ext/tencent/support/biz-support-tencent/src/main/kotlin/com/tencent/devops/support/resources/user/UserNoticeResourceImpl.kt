@@ -30,7 +30,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.support.api.user.UserNoticeResource
 import com.tencent.devops.support.model.app.pojo.Notice
-import com.tencent.devops.support.services.NoticeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

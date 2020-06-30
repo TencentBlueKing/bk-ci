@@ -24,14 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.support.resources.op
+package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.support.api.op.OpNoticeResource
-import com.tencent.devops.support.model.app.NoticeRequest
-import com.tencent.devops.support.model.app.pojo.Notice
-import com.tencent.devops.support.services.NoticeService
+import com.tencent.devops.project.api.op.OpNoticeResource
+import com.tencent.devops.project.pojo.Notice
+import com.tencent.devops.project.pojo.NoticeRequest
+import com.tencent.devops.project.service.NoticeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
