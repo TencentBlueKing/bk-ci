@@ -107,6 +107,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             .withName(dateConfigName)
             .withMountPath(dateConfigPath)
             .endVolumeMount()
+            .withEnv(appDeployment.envVarList)
             .endContainer()
             .addNewImagePullSecret()
             .withName(appDeployment.pullImageSecretName)

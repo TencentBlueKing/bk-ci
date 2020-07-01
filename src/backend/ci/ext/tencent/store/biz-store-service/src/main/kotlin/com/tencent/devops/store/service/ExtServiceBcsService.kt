@@ -27,6 +27,7 @@
 package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -46,6 +47,8 @@ import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StoreEnvVarService
+import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -89,7 +92,11 @@ class ExtServiceBcsService {
     @Autowired
     private lateinit var extServiceFeatureDao: ExtServiceFeatureDao
 
+    @Autowired
+    private lateinit var storeEnvVarService: StoreEnvVarService
+
     fun generateDeployApp(
+        userId: String,
         namespaceName: String,
         serviceCode: String,
         version: String
@@ -97,6 +104,22 @@ class ExtServiceBcsService {
         val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
         val grayFlag = namespaceName == extServiceBcsNameSpaceConfig.grayNamespaceName
         val host = if (grayFlag) extServiceIngressConfig.grayHost else extServiceIngressConfig.host
+        val storeEnvVarInfoListResult = storeEnvVarService.getLatestEnvVarList(
+            userId = userId,
+            storeType = StoreTypeEnum.SERVICE.name,
+            storeCode = serviceCode
+        )
+        if (storeEnvVarInfoListResult.isNotOk()) {
+            throw ErrorCodeException(errorCode = storeEnvVarInfoListResult.status.toString())
+        }
+        val storeEnvVarInfoList = storeEnvVarInfoListResult.data
+        var envVarList: List<EnvVar>? = null
+        if (storeEnvVarInfoList != null) {
+            envVarList = mutableListOf()
+            storeEnvVarInfoList.forEach {
+                envVarList.add(EnvVar(it.varName, it.varValue, null))
+            }
+        }
         return DeployApp(
             bcsUrl = extServiceBcsConfig.masterUrl,
             token = extServiceBcsConfig.token,
@@ -106,7 +129,8 @@ class ExtServiceBcsService {
                 replicas = if (grayFlag) extServiceDeploymentConfig.grayReplicas.toInt() else extServiceDeploymentConfig.replicas.toInt(),
                 image = "${extServiceImageSecretConfig.repoRegistryUrl}/$imageName:$version",
                 pullImageSecretName = if (grayFlag) extServiceDeploymentConfig.grayPullImageSecretName else extServiceDeploymentConfig.pullImageSecretName,
-                containerPort = extServiceDeploymentConfig.containerPort.toInt()
+                containerPort = extServiceDeploymentConfig.containerPort.toInt(),
+                envVarList = envVarList
             ),
             appService = AppService(
                 servicePort = extServiceServiceConfig.servicePort.toInt()
@@ -144,7 +168,7 @@ class ExtServiceBcsService {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val namespaceName = if (!grayFlag) extServiceBcsNameSpaceConfig.namespaceName else extServiceBcsNameSpaceConfig.grayNamespaceName
-        val deployApp = generateDeployApp(namespaceName, serviceCode, version)
+        val deployApp = generateDeployApp(userId, namespaceName, serviceCode, version)
         val bcsDeployAppResult = client.get(ServiceBcsResource::class).bcsDeployApp(
             userId = userId,
             deployApp = deployApp

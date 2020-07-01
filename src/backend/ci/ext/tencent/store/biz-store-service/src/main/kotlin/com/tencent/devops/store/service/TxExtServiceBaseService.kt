@@ -184,6 +184,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         )
         // 未正式发布的扩展服务先部署到bcs灰度环境
         val deployApp = extServiceBcsService.generateDeployApp(
+            userId = userId,
             namespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName,
             serviceCode = serviceCode,
             version = version
