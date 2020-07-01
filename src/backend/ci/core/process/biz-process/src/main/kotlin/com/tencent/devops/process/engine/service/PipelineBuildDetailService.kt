@@ -51,6 +51,7 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.service.BuildVariableService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -654,7 +655,12 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.RUNNING)
     }
 
-    fun stagePause(pipelineId: String, buildId: String, stageId: String) {
+    fun stagePause(
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        controlOption: PipelineBuildStageControlOption
+    ) {
         logger.info("[$buildId]|stage_pause|stageId=$stageId")
         update(buildId, object : ModelInterface {
             var update = false
@@ -663,6 +669,8 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = BuildStatus.PAUSE.name
+                    stage.reviewStatus = BuildStatus.REVIEWING.name
+                    stage.stageControlOption!!.triggerUsers = controlOption.stageControlOption.triggerUsers
                     stage.startEpoch = System.currentTimeMillis()
                     pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.RUNNING, BuildStatus.STAGE_SUCCESS)
                     // 被暂停的流水线不占构建队列，在执行数-1
@@ -688,6 +696,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = ""
+                    stage.reviewStatus = BuildStatus.REVIEW_ABORT.name
                     pipelineBuildDao.updateStageCancelStatus(dslContext, buildId)
                     updateHistoryStage(buildId, model)
                     return Traverse.BREAK
@@ -710,6 +719,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = BuildStatus.QUEUE.name
+                    stage.reviewStatus = BuildStatus.REVIEW_PROCESSED.name
                     pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.STAGE_SUCCESS, BuildStatus.RUNNING)
                     pipelineStageService.updatePipelineRunningCount(pipelineId, buildId, 1)
                     updateHistoryStage(buildId, model)
@@ -888,12 +898,13 @@ class PipelineBuildDetailService @Autowired constructor(
             stopWatch.stop()
             message = "update done"
         } catch (ignored: Throwable) {
+            if (stopWatch.isRunning) {
+                stopWatch.stop()
+            }
             message = "${ignored.message}"
             logger.warn("[$buildId]| Fail to update the build detail: ${ignored.message}", ignored)
         } finally {
-            stopWatch.start("unlock")
             lock.unlock()
-            stopWatch.stop()
             logger.info("[$buildId|$buildStatus]|update_detail_model| $message| watch=$stopWatch")
         }
     }

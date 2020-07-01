@@ -58,6 +58,10 @@ class DBAutoConfiguration {
     private val datasourceUsername: String? = null
     @Value("\${spring.datasource.password:#{null}}")
     private val datasourcePassword: String? = null
+    @Value("\${spring.datasource.initSql:#{null}}")
+    private val datasourceInitSql: String? = null
+    @Value("\${spring.datasource.leakDetectionThreshold:#{0}}")
+    private val datasouceLeakDetectionThreshold: Long = 0
 
     @Bean
     @Primary
@@ -74,6 +78,8 @@ class DBAutoConfiguration {
             minimumIdle = 10
             maximumPoolSize = 50
             idleTimeout = 60000
+            connectionInitSql = datasourceInitSql
+            leakDetectionThreshold = datasouceLeakDetectionThreshold
         }
     }
 }

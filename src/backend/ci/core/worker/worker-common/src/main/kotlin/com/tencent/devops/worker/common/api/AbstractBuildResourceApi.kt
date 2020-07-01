@@ -51,7 +51,6 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URLEncoder
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
@@ -304,12 +303,12 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             .replace("=", "%5C=")
     }
 
-    fun purePath(destPath: String): Path {
+    fun purePath(destPath: String): String {
         return Paths.get(
             destPath.removeSuffix("/")
                 .replace("./", "/")
                 .replace("../", "/")
                 .replace("//", "/")
-        )!!
+        ).toString().replace("\\", "/") // 保证win/Unix平台兼容性统一转为/分隔文件路径
     }
 }

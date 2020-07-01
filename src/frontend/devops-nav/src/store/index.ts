@@ -40,6 +40,7 @@ export default new Store<RootState>({
         headerConfig: {
             showProjectList: false,
             showNav: true
-        }
+        },
+        currentNotice: {}
     }
 })
