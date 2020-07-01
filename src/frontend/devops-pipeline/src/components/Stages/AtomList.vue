@@ -62,8 +62,8 @@
                     <span class="atom-title">{{ $t('details.quality.quality') }}</span>
                     <span class="handler-list" :class="{ 'disabled-review': atom.isReviewing && !isCurrentUser(atom.computedReviewers) }"
                         v-if="atom.isReviewing && !reviewLoading">
-                        <span class="revire-btn continue-excude" @click.stop="reviewExcude(atom, 'PROCESS', atom.computedReviewers)">{{ $t('resume') }}</span>
-                        <span class="review-btn stop-excude" @click.stop="reviewExcude(atom, 'ABORT', atom.computedReviewers)">{{ $t('terminate') }}</span>
+                        <span class="revire-btn continue-excude" @click.stop="reviewExcute(atom, 'PROCESS', atom.computedReviewers)">{{ $t('resume') }}</span>
+                        <span class="review-btn stop-excude" @click.stop="reviewExcute(atom, 'ABORT', atom.computedReviewers)">{{ $t('terminate') }}</span>
                     </span>
                     <i class="devops-icon icon-circle-2-1 executing-job" v-if="atom.isReviewing && reviewLoading"></i>
                 </section>
@@ -186,12 +186,11 @@
         },
         methods: {
             ...mapActions('soda', [
-                'reviewExcudeAtom',
+                'reviewExcuteAtom',
                 'requestAuditUserList'
             ]),
             ...mapActions('atom', [
                 'updateContainer',
-                'requestPipelineExecDetail',
                 'togglePropertyPanel',
                 'addAtom',
                 'deleteAtom',
@@ -287,7 +286,7 @@
                     })
                 }
             },
-            async reviewExcude (atom, action, reviewer) {
+            async reviewExcute (atom, action, reviewer) {
                 if (this.isCurrentUser(reviewer)) {
                     this.reviewLoading = true
                     try {
@@ -298,13 +297,12 @@
                             elementId: atom.id,
                             action
                         }
-                        const res = await this.reviewExcudeAtom(data)
+                        const res = await this.reviewExcuteAtom(data)
                         if (res === true) {
                             this.$showTips({
                                 message: this.$t('editPage.operateSuc'),
                                 theme: 'success'
                             })
-                            this.requestPipelineExecDetail(this.routerParams)
                         }
                     } catch (err) {
                         this.$showTips({
@@ -339,14 +337,6 @@
                     if (res.id) {
                         message = this.$t('subpage.retrySuc')
                         theme = 'success'
-
-                        this.$router.push({
-                            name: 'pipelinesDetail',
-                            params: {
-                                buildNo: res.id
-                            }
-                        })
-                        this.requestPipelineExecDetail(this.routerParams)
                     } else {
                         message = this.$t('subpage.retryFail')
                         theme = 'error'

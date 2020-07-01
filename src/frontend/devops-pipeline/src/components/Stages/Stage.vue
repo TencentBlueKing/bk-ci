@@ -11,7 +11,7 @@
             <span @click.stop v-if="showCheckedToatal && canSkipElement" class="check-total-stage">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="stage.runStage" :disabled="stageDisabled"></bk-checkbox>
             </span>
-            <a href="javascript: void(0);" class="atom-single-retry" v-if="canStageRetry" @click.stop="singleRetry(stage.id)">{{ $t('retry') }}</a>
+            <span class="stage-single-retry" v-if="canStageRetry" @click.stop="singleRetry(stage.id)">{{ $t('retry') }}</span>
             <span v-if="showCopyStage" class="stage-entry-btns">
                 <span :title="$t('editPage.copyStage')" v-if="!stage.isError" class="bk-icon copy-stage" @click.stop="copyStage">
                     <Logo name="copy" size="16"></Logo>
@@ -287,8 +287,7 @@
                 'updateStage',
                 'deleteStage',
                 'toggleReviewDialog',
-                'toggleStageReviewPanel',
-                'requestPipelineExecDetail'
+                'toggleStageReviewPanel'
             ]),
             async singleRetry (stageId) {
                 let message, theme
@@ -302,15 +301,6 @@
                     })
                     if (res.id) {
                         message = this.$t('subpage.retrySuc')
-                        theme = 'success'
-
-                        this.$router.push({
-                            name: 'pipelinesDetail',
-                            params: {
-                                buildNo: res.id
-                            }
-                        })
-                        this.requestPipelineExecDetail(this.$route.params)
                     } else {
                         message = this.$t('subpage.retryFail')
                         theme = 'error'
@@ -539,7 +529,8 @@
                 }
             }
 
-            .atom-single-retry {
+            .stage-single-retry {
+                cursor: pointer;
                 position: absolute;
                 right: 6%;
                 color: $primaryColor;
