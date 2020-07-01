@@ -104,10 +104,12 @@ class ExtServiceBcsService {
         val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
         val grayFlag = namespaceName == extServiceBcsNameSpaceConfig.grayNamespaceName
         val host = if (grayFlag) extServiceIngressConfig.grayHost else extServiceIngressConfig.host
+        val scopes = "ALL," + if (grayFlag) "TEST" else "PRD"
         val storeEnvVarInfoListResult = storeEnvVarService.getLatestEnvVarList(
             userId = userId,
             storeType = StoreTypeEnum.SERVICE.name,
-            storeCode = serviceCode
+            storeCode = serviceCode,
+            scopes = scopes
         )
         if (storeEnvVarInfoListResult.isNotOk()) {
             throw ErrorCodeException(errorCode = storeEnvVarInfoListResult.status.toString())
