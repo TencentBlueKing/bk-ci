@@ -60,7 +60,7 @@ interface StoreEnvVarService {
         storeCode: String,
         scope: String? = null,
         varName: String? = null,
-        isDecrypt: Boolean = true
+        isDecrypt: Boolean = false
     ): Result<List<StoreEnvVarInfo>?>
 
     /**
