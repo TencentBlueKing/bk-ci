@@ -24,24 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.kafka
+package com.tencent.devops.artifactory.resources
 
-object KafkaTopic {
-    const val LANGUAGE_CODE_TOPIC = "tendata-bkdevops-296-topic-language-code"
-    const val TASK_DETAIL_TOPIC = "tendata-bkdevops-296-topic-taskdetail"
-    const val STATISTIC_TOPIC = "tendata-bkdevops-296-topic-statistic"
-    const val GONGFENG_PROJECT_TOPIC = "tendata-bkdevops-296-topic-gongfeng-project"
-    const val LINT_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-lint-statistic"
-    const val CNN_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-cnn-statistic"
-    const val DUPC_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-dupc-statistic"
+import com.tencent.devops.artifactory.api.user.UserReportResource
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
-    const val ACTIVE_GONGFENG_PROJECT_TOPIC = "tendata-bkdevops-296-topic-active-gongfeng-project"
-    const val SINGLE_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-statistic"
-    const val SINGLE_LINT_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-lint-statistic"
-    const val SINGLE_CCN_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-ccn-statistic"
-    const val SINGLE_DUPC_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-dupc-statistic"
-
-    const val LANDUN_GIT_TASK_TOPIC = "tendata-bkdevops-296-topic-landun-git-task"
-    const val LANDUN_TASK_DETAIL_TOPIC = "tendata-bkdevops-296-topic-landun-task-detail"
-    const val LANDUN_JOB_DETAIL_TOPIC = "tendata-bkdevops-296-topic-landun-job-detail"
+@RestResource
+class UserReportResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService)
+    : UserReportResource {
+    override fun get(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, path: String) {
+        val filePath = "${FileTypeEnum.BK_REPORT.fileType}/$projectId/$pipelineId/$buildId/$elementId/$path"
+        val response = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).response!!
+        archiveFileService.downloadFile(filePath, response)
+    }
 }

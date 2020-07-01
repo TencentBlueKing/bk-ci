@@ -40,11 +40,13 @@ import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
+import com.tencent.devops.lambda.dao.BuildContainerDao
 import com.tencent.devops.lambda.dao.BuildTaskDao
 import com.tencent.devops.lambda.dao.LambdaPipelineBuildDao
 import com.tencent.devops.lambda.dao.PipelineResDao
 import com.tencent.devops.lambda.dao.PipelineTemplateDao
 import com.tencent.devops.lambda.pojo.BuildData
+import com.tencent.devops.lambda.pojo.DataPlatJobDetail
 import com.tencent.devops.lambda.pojo.DataPlatTaskDetail
 import com.tencent.devops.lambda.pojo.ElementData
 import com.tencent.devops.lambda.pojo.ProjectOrganize
@@ -71,6 +73,7 @@ class PipelineBuildService @Autowired constructor(
     private val pipelineResDao: PipelineResDao,
     private val pipelineTemplateDao: PipelineTemplateDao,
     private val buildTaskDao: BuildTaskDao,
+    private val buildContainerDao: BuildContainerDao,
     private val esService: ESService,
     private val kafkaClient: KafkaClient
 ) {
@@ -150,41 +153,72 @@ class PipelineBuildService @Autowired constructor(
             val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             val startTime = task.startTime?.timestampmilli() ?: 0
             val endTime = task.endTime?.timestampmilli() ?: 0
+            val taskAtom = task.taskAtom
             val taskParamMap = JsonUtil.toMap(task.taskParams)
-            val atomCode = if (taskParamMap["@type"] != "marketBuild") {
-                taskParamMap["atomCode"].toString()
-            } else {
-                task.taskAtom
-            }
 
-            val taskParams = if (taskParamMap["@type"] != "marketBuild" || taskParamMap["@type"] != "marketBuildLess") {
-                val inputMap = mutableMapOf("key" to "value")
-                val dataMap = mutableMapOf("input" to inputMap)
-                val taskParamMap1 = mutableMapOf("data" to dataMap)
-                JSONObject(taskParamMap1)
-            } else {
-                JSONObject(JsonUtil.toMap(task.taskParams))
-            }
-            val dataPlatTaskDetail = DataPlatTaskDetail(
-                pipelineId = task.pipelineId,
-                buildId = task.buildId,
-                projectEnglishName = task.projectId,
-                type = "task",
-                itemId = task.taskId,
-                atomCode = atomCode,
-                taskParams = taskParams,
-                status = BuildStatus.values()[task.status].statusName,
-                errorCode = task.errorCode,
-                errorMsg = task.errorMsg,
-                startTime = task.startTime?.format(dateTimeFormatter),
-                endTime = task.endTime?.format(dateTimeFormatter),
-                costTime = endTime - startTime,
-                starter = task.starter,
-                washTime = LocalDateTime.now().format(dateTimeFormatter)
-            )
+            if (taskAtom == "dispatchVMShutdownTaskAtom") {
+                Thread.sleep(3000)
+                val buildContainer = buildContainerDao.getContainer(
+                    dslContext = dslContext,
+                    buildId = task.buildId,
+                    stageId = task.stageId,
+                    containerId = task.containerId
+                )
+                if (buildContainer != null) {
+                    val dispatchType = taskParamMap["dispatchType"] as Map<String, Any>
+                    val dataPlatJobDetail = DataPlatJobDetail(
+                        pipelineId = task.pipelineId,
+                        buildId = task.buildId,
+                        containerType = dispatchType["buildType"].toString(),
+                        projectEnglishName = task.projectId,
+                        stageId = task.stageId,
+                        containerId = task.containerId,
+                        jobParams = JSONObject(JsonUtil.toMap(task.taskParams)),
+                        status = buildContainer.status.toString(),
+                        seq = buildContainer.seq.toString(),
+                        startTime = buildContainer.startTime.format(dateTimeFormatter),
+                        endTime = buildContainer.endTime.format(dateTimeFormatter),
+                        costTime = buildContainer.cost.toLong(),
+                        executeCount = buildContainer.executeCount,
+                        conditions = JSONObject(JsonUtil.toMap(buildContainer.conditions)),
+                        washTime = LocalDateTime.now().format(dateTimeFormatter)
+                    )
 
-            logger.info("pushTaskDetail: ${JsonUtil.toJson(dataPlatTaskDetail)}")
-            kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
+                    logger.info("pushJobDetail: ${JsonUtil.toJson(dataPlatJobDetail)}")
+                    kafkaClient.send(KafkaTopic.LANDUN_JOB_DETAIL_TOPIC, JsonUtil.toJson(dataPlatJobDetail))
+                }
+            } else {
+                val atomCode = taskParamMap["atomCode"].toString()
+
+                val taskParams = if (taskParamMap["@type"] != "marketBuild" || taskParamMap["@type"] != "marketBuildLess") {
+                    val inputMap = mutableMapOf("key" to "value")
+                    val dataMap = mutableMapOf("input" to inputMap)
+                    val taskParamMap1 = mutableMapOf("data" to dataMap)
+                    JSONObject(taskParamMap1)
+                } else {
+                    JSONObject(JsonUtil.toMap(task.taskParams))
+                }
+                val dataPlatTaskDetail = DataPlatTaskDetail(
+                    pipelineId = task.pipelineId,
+                    buildId = task.buildId,
+                    projectEnglishName = task.projectId,
+                    type = "task",
+                    itemId = task.taskId,
+                    atomCode = atomCode,
+                    taskParams = taskParams,
+                    status = BuildStatus.values()[task.status].statusName,
+                    errorCode = task.errorCode,
+                    errorMsg = task.errorMsg,
+                    startTime = task.startTime?.format(dateTimeFormatter),
+                    endTime = task.endTime?.format(dateTimeFormatter),
+                    costTime = if ((endTime - startTime) < 0) 0 else (endTime - startTime),
+                    starter = task.starter,
+                    washTime = LocalDateTime.now().format(dateTimeFormatter)
+                )
+
+                logger.info("pushTaskDetail: ${JsonUtil.toJson(dataPlatTaskDetail)}")
+                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
+            }
         } catch (e: Exception) {
             logger.error("Push task detail to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
         }
