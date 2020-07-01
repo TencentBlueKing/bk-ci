@@ -448,7 +448,7 @@
     @import './../../scss/pipelineStatus';
     .pipeline-detail-wrapper {
         height: 100%;
-        padding: 7px 0 0 25px;
+        padding: 7px 25px 0 25px;
 
         .pipeline-detail-tab-card {
             height: 100%;
