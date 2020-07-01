@@ -60,7 +60,7 @@ class UserStoreEnvVarResourceImpl @Autowired constructor(
             storeCode = storeCode,
             scope = scope,
             varName = varName,
-            isDecrypt = true
+            isDecrypt = false
         )
     }
 
