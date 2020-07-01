@@ -89,6 +89,15 @@ interface ServiceTemplateResource {
         publicFlag: Boolean
     ): Result<TemplateDetailInfo?>
 
+    @ApiOperation("查询模板详情")
+    @GET
+    @Path("/store/projects/{projectId}/srcTemplates")
+    fun getSrcTemplateCodes(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<String>>
+
     @ApiOperation("更新模版是否已关联市场标识")
     @PUT
     @Path("/{templateId}/store/storeFlag")

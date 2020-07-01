@@ -55,6 +55,7 @@ class QueueInterceptor @Autowired constructor(
 ) : PipelineInterceptor {
 
     override fun execute(task: InterceptData): Response<BuildStatus> {
+        val projectId = task.pipelineInfo.projectId
         val pipelineId = task.pipelineInfo.pipelineId
         val setting = pipelineRepositoryService.getSetting(pipelineId)
         val runLockType = setting?.runLockType ?: return Response(BuildStatus.RUNNING)
@@ -73,7 +74,7 @@ class QueueInterceptor @Autowired constructor(
                 // 排队数量超过最大限制
                 logger.info("[$pipelineId] MaxQueue=$maxQueue| currentQueue=${buildSummaryRecord.queueCount}")
                 // 排队数量已满，将该流水线最靠前的排队记录，置为"取消构建"，取消人为本次新构建的触发人
-                val buildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(pipelineId)
+                val buildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(projectId, pipelineId)
                 if (buildInfo != null) {
                     LogUtils.addRedLine(
                         rabbitTemplate = rabbitTemplate,
