@@ -49,6 +49,7 @@ import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.pojo.tof.StaffInfoRequest
 import com.tencent.devops.project.pojo.tof.StaffInfoResponse
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.utils.CostUtils
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -65,282 +66,274 @@ import java.util.concurrent.TimeUnit
 @Service
 class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) {
 
-    @Value("\${tof.host:#{null}}")
-    private val tofHost: String? = null
+	@Value("\${tof.host:#{null}}")
+	private val tofHost: String? = null
 
-    @Value("\${tof.appCode:#{null}}")
-    private val tofAppCode: String? = null
+	@Value("\${tof.appCode:#{null}}")
+	private val tofAppCode: String? = null
 
-    @Value("\${tof.appSecret:#{null}}")
-    private val tofAppSecret: String? = null
+	@Value("\${tof.appSecret:#{null}}")
+	private val tofAppSecret: String? = null
 
-    init {
-        logger.info("Get the tof host($tofHost), code($tofAppCode) and secret($tofAppSecret)")
-    }
+	init {
+		logger.info("Get the tof host($tofHost), code($tofAppCode) and secret($tofAppSecret)")
+	}
 
-    private val userInfoCache = CacheBuilder.newBuilder()
-        .maximumSize(10000)
-        .expireAfterWrite(1, TimeUnit.HOURS)
-        .build<String/*userId*/, StaffInfoResponse>()
+	private val userInfoCache = CacheBuilder.newBuilder()
+			.maximumSize(50000)
+			.expireAfterWrite(12, TimeUnit.HOURS)
+			.build<String/*userId*/, StaffInfoResponse>()
 
-    private val userDeptCache = CacheBuilder.newBuilder()
-        .maximumSize(10000)
-        .expireAfterWrite(1, TimeUnit.HOURS)
-        .build<String/*userId*/, UserDeptDetail>()
+	private val userDeptCache = CacheBuilder.newBuilder()
+			.maximumSize(50000)
+			.expireAfterWrite(12, TimeUnit.HOURS)
+			.build<String/*userId*/, UserDeptDetail>()
 
-    fun getUserDeptDetail(operator: String?, userId: String, bk_ticket: String): UserDeptDetail {
-        validate()
-        var detail = userDeptCache.getIfPresent(userId)
-        if (detail == null) {
-            synchronized(this) {
-                detail = userDeptCache.getIfPresent(userId)
-                if (detail == null) {
-                    logger.info("[$operator}|$userId|$bk_ticket] Start to get the staff info")
-                    val staffInfo = getStaffInfo(operator, userId, bk_ticket)
-                    // 通过用户组查询父部门信息　(由于tof系统接口查询结构是从当前机构往上推查询，如果创建者机构层级大于4就查不完整1到3级的机构，所以查询级数设置为10)
-                    val deptInfos = getParentDeptInfo(staffInfo.GroupId, 10) // 一共三级，从事业群->部门->中心
-                    var bgName = ""
-                    var bgId = "0"
-                    var deptName = ""
-                    var deptId = "0"
-                    var centerName = ""
-                    var centerId = "0"
-                    val groupId = staffInfo.GroupId
-                    val groupName = staffInfo.GroupName
-                    for (deptInfo in deptInfos) {
-                        val level = deptInfo.level
-                        val name = deptInfo.name
-                        when (level) {
-                            "1" -> {
-                                bgName = name
-                                bgId = deptInfo.id
-                            }
-                            "2" -> {
-                                deptName = name
-                                deptId = deptInfo.id
-                            }
-                            "3" -> {
-                                centerName = name
-                                centerId = deptInfo.id
-                            }
-                        }
-                    }
-                    detail = UserDeptDetail(
-                        bgName,
-                        bgId,
-                        deptName,
-                        deptId,
-                        centerName,
-                        centerId,
-                        groupId,
-                        groupName
-                    )
-                    userDeptCache.put(userId, detail!!)
-                }
-            }
-        }
+	fun getUserDeptDetail(operator: String?, userId: String, bk_ticket: String): UserDeptDetail {
+		validate()
+		var detail = userDeptCache.getIfPresent(userId)
+		if (detail == null) {
+			logger.info("[$operator}|$userId|$bk_ticket] Start to get the staff info")
+			val staffInfo = getStaffInfo(operator, userId, bk_ticket)
+			// 通过用户组查询父部门信息　(由于tof系统接口查询结构是从当前机构往上推查询，如果创建者机构层级大于4就查不完整1到3级的机构，所以查询级数设置为10)
+			val deptInfos = getParentDeptInfo(staffInfo.GroupId, 10) // 一共三级，从事业群->部门->中心
+			var bgName = ""
+			var bgId = "0"
+			var deptName = ""
+			var deptId = "0"
+			var centerName = ""
+			var centerId = "0"
+			val groupId = staffInfo.GroupId
+			val groupName = staffInfo.GroupName
+			for (deptInfo in deptInfos) {
+				val level = deptInfo.level
+				val name = deptInfo.name
+				when (level) {
+					"1" -> {
+						bgName = name
+						bgId = deptInfo.id
+					}
+					"2" -> {
+						deptName = name
+						deptId = deptInfo.id
+					}
+					"3" -> {
+						centerName = name
+						centerId = deptInfo.id
+					}
+				}
+			}
+			detail = UserDeptDetail(
+					bgName,
+					bgId,
+					deptName,
+					deptId,
+					centerName,
+					centerId,
+					groupId,
+					groupName
+			)
+			userDeptCache.put(userId, detail!!)
+		}
 
-        return detail!!
-    }
+		return detail!!
+	}
 
-    fun getUserDeptDetail(userId: String): UserDeptDetail {
-        return getUserDeptDetail(userId, "")
-    }
+	fun getUserDeptDetail(userId: String): UserDeptDetail {
+		return getUserDeptDetail(userId, "")
+	}
 
-    fun getUserDeptDetail(userId: String, bk_ticket: String): UserDeptDetail {
-        return getUserDeptDetail(null, userId, bk_ticket)
-    }
+	fun getUserDeptDetail(userId: String, bk_ticket: String): UserDeptDetail {
+		return getUserDeptDetail(null, userId, bk_ticket)
+	}
 
-    fun getOrganizationInfo(
-        userId: String,
-        type: OrganizationType,
-        id: Int
-    ): List<OrganizationInfo> {
-        validate()
-        return getChildDeptInfos(userId, type, id).map {
-            OrganizationInfo(it.ID, it.Name)
-        }
-    }
+	fun getOrganizationInfo(
+			userId: String,
+			type: OrganizationType,
+			id: Int
+	): List<OrganizationInfo> {
+		validate()
+		return getChildDeptInfos(userId, type, id).map {
+			OrganizationInfo(it.ID, it.Name)
+		}
+	}
 
-    fun getDeptInfo(userId: String, id: Int): DeptInfo {
-        try {
-            val path = "get_dept_info"
-            val responseContent = request(
-                    path, DeptInfoRequest(
-                    tofAppCode!!,
-                    tofAppSecret!!,
-                    id.toString()
-            ), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_DEPARTMENT_FAIL)
-            )
-            val response: Response<DeptInfoResponse> =
-                    objectMapper.readValue(responseContent)
-            if (response.data == null) {
-                logger.warn("Fail to get the dept info of id $id with response $responseContent")
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_DEPARTMENT_FAIL))
-            }
-            val deptInfoResp = response.data
-            return DeptInfo(deptInfoResp!!.TypeId, deptInfoResp.LeaderId, deptInfoResp.Name, deptInfoResp.Level, deptInfoResp.Enabled, deptInfoResp.ParentId, deptInfoResp.ID)
-        } catch (t: Throwable) {
-            logger.warn("Fail to get the organization info of id $id", t)
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_DEPARTMENT_FAIL))
-        }
-    }
+	fun getDeptInfo(userId: String, id: Int): DeptInfo {
+		try {
+			val path = "get_dept_info"
+			val responseContent = request(
+					path, DeptInfoRequest(
+					tofAppCode!!,
+					tofAppSecret!!,
+					id.toString()
+			), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_DEPARTMENT_FAIL)
+			)
+			val response: Response<DeptInfoResponse> =
+					objectMapper.readValue(responseContent)
+			if (response.data == null) {
+				logger.warn("Fail to get the dept info of id $id with response $responseContent")
+				throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_DEPARTMENT_FAIL))
+			}
+			val deptInfoResp = response.data
+			return DeptInfo(deptInfoResp!!.TypeId, deptInfoResp.LeaderId, deptInfoResp.Name, deptInfoResp.Level, deptInfoResp.Enabled, deptInfoResp.ParentId, deptInfoResp.ID)
+		} catch (t: Throwable) {
+			logger.warn("Fail to get the organization info of id $id", t)
+			throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_DEPARTMENT_FAIL))
+		}
+	}
 
-    /**
-     * 通过 app ID 获取 app Name
-     */
-    fun getCCAppName(ccAppId: Long): String {
-        try {
-            val path = "get_query_info"
-            val responseContent = request(
-                path,
-                CCAppNameRequest(
-                    tofAppCode!!,
-                    tofAppSecret!!,
-                    CCAppNameApplicationID(ccAppId)
-                ), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_CC_NAME_FAIL), APIModule.cc
-            )
-            val response: Response<List<CCAppNameResponse>> = objectMapper.readValue(responseContent)
-            if (response.data == null || response.data!!.isEmpty()) {
-                logger.warn("Fail to get cc app name of $ccAppId with response $responseContent")
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_CC_NAME_FAIL))
-            }
-            return response.data!![0].DisplayName
-        } catch (t: Throwable) {
-            logger.warn("Fail to get cc app name of $ccAppId", t)
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_CC_NAME_FAIL))
-        }
-    }
+	/**
+	 * 通过 app ID 获取 app Name
+	 */
+	fun getCCAppName(ccAppId: Long): String {
+		try {
+			val path = "get_query_info"
+			val responseContent = request(
+					path,
+					CCAppNameRequest(
+							tofAppCode!!,
+							tofAppSecret!!,
+							CCAppNameApplicationID(ccAppId)
+					), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_CC_NAME_FAIL), APIModule.cc
+			)
+			val response: Response<List<CCAppNameResponse>> = objectMapper.readValue(responseContent)
+			if (response.data == null || response.data!!.isEmpty()) {
+				logger.warn("Fail to get cc app name of $ccAppId with response $responseContent")
+				throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_CC_NAME_FAIL))
+			}
+			return response.data!![0].DisplayName
+		} catch (t: Throwable) {
+			logger.warn("Fail to get cc app name of $ccAppId", t)
+			throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_CC_NAME_FAIL))
+		}
+	}
 
-    private fun getChildDeptInfos(userId: String, type: OrganizationType, id: Int): List<ChildDeptResponse> {
-        try {
-            val path = "get_child_dept_infos"
-            val responseContent = request(
-                path, ChildDeptRequest(
-                    tofAppCode!!,
-                    tofAppSecret!!,
-                    getParentDeptIdByOrganizationType(type, id),
-                    1
-                ), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL)
-            )
-            val response: Response<List<ChildDeptResponse>> =
-                objectMapper.readValue(responseContent)
-            if (response.data == null) {
-                logger.warn("Fail o get the child dept info of type $type and id $id with response $responseContent")
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL))
-            }
-            return response.data!!
-        } catch (t: Throwable) {
-            logger.warn("Fail to get the organization info of type $type and id $id", t)
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL))
-        }
-    }
+	private fun getChildDeptInfos(userId: String, type: OrganizationType, id: Int): List<ChildDeptResponse> {
+		try {
+			val path = "get_child_dept_infos"
+			val responseContent = request(
+					path, ChildDeptRequest(
+					tofAppCode!!,
+					tofAppSecret!!,
+					getParentDeptIdByOrganizationType(type, id),
+					1
+			), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL)
+			)
+			val response: Response<List<ChildDeptResponse>> =
+					objectMapper.readValue(responseContent)
+			if (response.data == null) {
+				logger.warn("Fail o get the child dept info of type $type and id $id with response $responseContent")
+				throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL))
+			}
+			return response.data!!
+		} catch (t: Throwable) {
+			logger.warn("Fail to get the organization info of type $type and id $id", t)
+			throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL))
+		}
+	}
 
-    private fun getParentDeptIdByOrganizationType(type: OrganizationType, id: Int): Int {
-        return when (type) {
-            OrganizationType.bg -> 0
-            else -> id
-        }
-    }
+	private fun getParentDeptIdByOrganizationType(type: OrganizationType, id: Int): Int {
+		return when (type) {
+			OrganizationType.bg -> 0
+			else -> id
+		}
+	}
 
-    fun getStaffInfo(operator: String?, userId: String, bk_ticket: String): StaffInfoResponse {
-        try {
-            var info = userInfoCache.getIfPresent(userId)
-            if (info == null) {
-                synchronized(this) {
-                    info = userInfoCache.getIfPresent(userId)
-                    if (info == null) {
-                        logger.info("[$operator|$userId|$bk_ticket] Start to get the staff info")
-                        val path = "get_staff_info"
-                        val responseContent = request(
-                            path, StaffInfoRequest(
-                                tofAppCode!!,
-                                tofAppSecret!!, operator, userId, bk_ticket
-                            ), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL)
-                        )
-                        val response: Response<StaffInfoResponse> = objectMapper.readValue(responseContent)
-                        if (response.data == null) {
-                            logger.warn("Fail to get the staff info of user $userId with bk_ticket $bk_ticket and response $responseContent")
-                            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
-                        }
-                        info = response.data
-                        userInfoCache.put(userId, info!!)
-                    }
-                }
-            }
-            return info!!
-        } catch (t: Throwable) {
-            logger.warn("Fail to get the staff info of userId $userId with ticket $bk_ticket", t)
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
-        }
-    }
+	fun getStaffInfo(operator: String?, userId: String, bk_ticket: String): StaffInfoResponse {
+		try {
+			var info = userInfoCache.getIfPresent(userId)
+			if (info == null) {
+				logger.info("[$operator|$userId|$bk_ticket] Start to get the staff info")
+				val path = "get_staff_info"
+				val responseContent = request(
+						path, StaffInfoRequest(
+						tofAppCode!!,
+						tofAppSecret!!, operator, userId, bk_ticket
+				), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL)
+				)
+				val response: Response<StaffInfoResponse> = objectMapper.readValue(responseContent)
+				if (response.data == null) {
+					logger.warn("Fail to get the staff info of user $userId with bk_ticket $bk_ticket and response $responseContent")
+					throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
+				}
+				info = response.data
+				userInfoCache.put(userId, info!!)
+			}
+			return info!!
+		} catch (t: Throwable) {
+			logger.warn("Fail to get the staff info of userId $userId with ticket $bk_ticket", t)
+			throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
+		}
+	}
 
-    fun getStaffInfo(userId: String, bk_ticket: String): StaffInfoResponse {
-        return getStaffInfo(null, userId, bk_ticket)
-    }
+	fun getStaffInfo(userId: String, bk_ticket: String): StaffInfoResponse {
+		return getStaffInfo(null, userId, bk_ticket)
+	}
 
-    fun getStaffInfo(userId: String): StaffInfoResponse {
-        return getStaffInfo(null, userId, "")
-    }
+	fun getStaffInfo(userId: String): StaffInfoResponse {
+		return getStaffInfo(null, userId, "")
+	}
 
-    fun getParentDeptInfo(groupId: String, level: Int): List<DeptInfo> {
-        try {
-            val path = "get_parent_dept_infos"
-            val responseContent = request(
-                path,
-                ParentDeptInfoRequest(tofAppCode!!, tofAppSecret!!, groupId, level), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_ORG_FAIL)
-            )
-            val response: Response<List<DeptInfo>> = objectMapper.readValue(responseContent)
-            if (response.data == null) {
-                logger.warn("Fail to get the parent dept info of group $groupId and level $level with response $responseContent")
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_ORG_FAIL))
-            }
-            return response.data!!
-        } catch (t: Throwable) {
-            logger.warn("Fail to get the parent dept info of group $groupId and level $level", t)
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_PAR_DEPARTMENT_FAIL))
-        }
-    }
+	fun getParentDeptInfo(groupId: String, level: Int): List<DeptInfo> {
+		try {
+			val path = "get_parent_dept_infos"
+			val responseContent = request(
+					path,
+					ParentDeptInfoRequest(tofAppCode!!, tofAppSecret!!, groupId, level), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_ORG_FAIL)
+			)
+			val response: Response<List<DeptInfo>> = objectMapper.readValue(responseContent)
+			if (response.data == null) {
+				logger.warn("Fail to get the parent dept info of group $groupId and level $level with response $responseContent")
+				throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_ORG_FAIL))
+			}
+			return response.data!!
+		} catch (t: Throwable) {
+			logger.warn("Fail to get the parent dept info of group $groupId and level $level", t)
+			throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_PAR_DEPARTMENT_FAIL))
+		}
+	}
 
-    private fun request(path: String, body: Any, errorMessage: String, apiModule: APIModule = APIModule.tof): String {
-        val url = "http://$tofHost/component/compapi/${apiModule.name}/$path"
-        val requestContent = objectMapper.writeValueAsString(body)
-        logger.info("Start to request $url with body $requestContent")
-        val requestBody = Request.Builder()
-            .url(url)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestContent))
-            .build()
-        val response = request(requestBody, errorMessage)
-        logger.info("Get the response $response of request $url")
-        return response
-    }
+	private fun request(path: String, body: Any, errorMessage: String, apiModule: APIModule = APIModule.tof): String {
+		val url = "http://$tofHost/component/compapi/${apiModule.name}/$path"
+		val requestContent = objectMapper.writeValueAsString(body)
+		logger.info("Start to request $url with body $requestContent")
+		val startTime = System.currentTimeMillis()
+		val requestBody = Request.Builder()
+				.url(url)
+				.post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestContent))
+				.build()
+		val response = request(requestBody, errorMessage)
+		logger.info("Get the response $response of request $url")
+		CostUtils.costTime(startTime, url, logger)
+		return response
+	}
 
-    private fun request(request: Request, errorMessage: String): String {
+	private fun request(request: Request, errorMessage: String): String {
 //        val httpClient = HttpUtil.getHttpClient()
 //        httpClient.newCall(request).execute().use { response ->
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
-            if (!response.isSuccessful) {
-                logger.warn("Fail to request $request with code ${response.code()}, message ${response.message()} and body $responseContent")
-                throw RuntimeException(errorMessage)
-            }
-            return responseContent
-        }
-    }
+		OkhttpUtils.doHttp(request).use { response ->
+			val responseContent = response.body()!!.string()
+			if (!response.isSuccessful) {
+				logger.warn("Fail to request $request with code ${response.code()}, message ${response.message()} and body $responseContent")
+				throw RuntimeException(errorMessage)
+			}
+			return responseContent
+		}
+	}
 
-    private fun validate() {
-        if (tofHost.isNullOrBlank()) {
-            throw RuntimeException("TOF HOST is empty")
-        }
-        if (tofAppCode.isNullOrBlank()) {
-            throw RuntimeException("TOF app code is empty")
-        }
-        if (tofAppSecret.isNullOrBlank()) {
-            throw RuntimeException("TOF app secret is empty")
-        }
-    }
+	private fun validate() {
+		if (tofHost.isNullOrBlank()) {
+			throw RuntimeException("TOF HOST is empty")
+		}
+		if (tofAppCode.isNullOrBlank()) {
+			throw RuntimeException("TOF app code is empty")
+		}
+		if (tofAppSecret.isNullOrBlank()) {
+			throw RuntimeException("TOF app secret is empty")
+		}
+	}
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(TOFService::class.java)
-    }
+	companion object {
+		private val logger = LoggerFactory.getLogger(TOFService::class.java)
+	}
 }
