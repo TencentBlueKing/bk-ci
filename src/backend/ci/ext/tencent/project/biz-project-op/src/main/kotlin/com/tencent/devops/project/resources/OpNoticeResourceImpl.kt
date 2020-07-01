@@ -24,12 +24,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.image
+package com.tencent.devops.project.resources
 
-data class Pool(
-    val container: String?,
-    val credential: Credential?,
-    val macOS: MacOS?,
-    val third: Boolean?,
-    val performanceConfigId: String? = "0"
-)
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.op.OpNoticeResource
+import com.tencent.devops.project.pojo.Notice
+import com.tencent.devops.project.pojo.NoticeRequest
+import com.tencent.devops.project.service.NoticeService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpNoticeResourceImpl @Autowired constructor(private val noticeService: NoticeService) : OpNoticeResource {
+    override fun updateNotice(id: Long, noticeRequest: NoticeRequest): Result<Int> {
+        return Result(data = noticeService.handleNotice(id, noticeRequest))
+    }
+
+    override fun addNotice(noticeRequest: NoticeRequest): Result<Int> {
+        return Result(data = noticeService.handleNotice(null, noticeRequest))
+    }
+
+    override fun getNotice(id: Long): Result<Notice?> {
+        return Result(data = noticeService.getNotice(id))
+    }
+
+    override fun getAllNotice(): Result<List<Notice>> {
+        return Result(data = noticeService.getAllNotice())
+    }
+
+    override fun deleteNotice(id: Long): Result<Int> {
+        return Result(data = noticeService.deleteNotice(id))
+    }
+}

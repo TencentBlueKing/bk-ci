@@ -24,14 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.support.services
+package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.model.support.tables.records.TNoticeRecord
-import com.tencent.devops.support.dao.NoticeDao
-import com.tencent.devops.support.model.app.NoticeRequest
-import com.tencent.devops.support.model.app.pojo.Notice
+import com.tencent.devops.model.project.tables.records.TNoticeRecord
+import com.tencent.devops.project.dao.NoticeDao
+import com.tencent.devops.project.pojo.Notice
+import com.tencent.devops.project.pojo.NoticeRequest
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -57,16 +57,17 @@ class NoticeService @Autowired constructor(
     private fun handleNoticeList(notices: Result<TNoticeRecord>?, noticeList: MutableList<Notice>) {
         notices?.forEach {
             noticeList.add(
-                    Notice(
-                            it.id,
-                            it.noticeTitle,
-                            it.effectDate.timestampmilli(),
-                            it.invalidDate.timestampmilli(),
-                            it.createDate.timestampmilli(),
-                            it.updateDate.timestampmilli(),
-                            it.noticeContent,
-                            it.redirectUrl
-                    )
+                Notice(
+                    id = it.id,
+                    noticeTitle = it.noticeTitle,
+                    effectDate = it.effectDate.timestampmilli(),
+                    invalidDate = it.invalidDate.timestampmilli(),
+                    createDate = it.createDate.timestampmilli(),
+                    updateDate = it.updateDate.timestampmilli(),
+                    noticeContent = it.noticeContent,
+                    redirectUrl = it.redirectUrl,
+                    noticeType = it.noticeType.toInt()
+                )
             )
         }
     }
@@ -98,14 +99,15 @@ class NoticeService @Autowired constructor(
 
     fun convertNotice(noticeRecord: TNoticeRecord): Notice {
         return Notice(
-                noticeRecord.id,
-                noticeRecord.noticeTitle,
-                noticeRecord.effectDate.timestampmilli(),
-                noticeRecord.invalidDate.timestampmilli(),
-                noticeRecord.createDate.timestampmilli(),
-                noticeRecord.updateDate.timestampmilli(),
-                noticeRecord.noticeContent,
-                noticeRecord.redirectUrl
+            id = noticeRecord.id,
+            noticeTitle = noticeRecord.noticeTitle,
+            effectDate = noticeRecord.effectDate.timestampmilli(),
+            invalidDate = noticeRecord.invalidDate.timestampmilli(),
+            createDate = noticeRecord.createDate.timestampmilli(),
+            updateDate = noticeRecord.updateDate.timestampmilli(),
+            noticeContent = noticeRecord.noticeContent,
+            redirectUrl = noticeRecord.redirectUrl,
+            noticeType = noticeRecord.noticeType.toInt()
         )
     }
 }

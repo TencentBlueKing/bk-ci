@@ -24,15 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.support.api.op
+package com.tencent.devops.project.api.op
 
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.core.MediaType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.support.model.app.NoticeRequest
-import com.tencent.devops.support.model.app.pojo.Notice
+import com.tencent.devops.project.pojo.Notice
+import com.tencent.devops.project.pojo.NoticeRequest
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET

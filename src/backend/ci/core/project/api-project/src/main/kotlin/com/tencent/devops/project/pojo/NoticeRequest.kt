@@ -23,13 +23,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.common.ci.image
-
-data class Pool(
-    val container: String?,
-    val credential: Credential?,
-    val macOS: MacOS?,
-    val third: Boolean?,
-    val performanceConfigId: String? = "0"
+package com.tencent.devops.project.pojo
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+@ApiModel("公告请求报文体")
+data class NoticeRequest(
+    @ApiModelProperty("公告标题")
+    val noticeTitle: String = "",
+    @ApiModelProperty("生效日期")
+    val effectDate: Long = 0,
+    @ApiModelProperty("失效日期")
+    val invalidDate: Long = 0,
+    @ApiModelProperty("公告内容")
+    val noticeContent: String = "",
+    @ApiModelProperty("跳转地址")
+    val redirectUrl: String = "",
+    @ApiModelProperty("公告类型：0 弹框 1跑马灯")
+    val noticeType: Int = 0
 )

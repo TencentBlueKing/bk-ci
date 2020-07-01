@@ -23,23 +23,27 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.support.resources.user
-
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.support.api.user.UserNoticeResource
-import com.tencent.devops.support.model.app.pojo.Notice
-import com.tencent.devops.support.services.NoticeService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class UserNoticeResourceImpl @Autowired constructor(private val noticeService: NoticeService) : UserNoticeResource {
-    override fun getValidNotice(): Result<Notice?> {
-        return Result(data = noticeService.getValidNotice())
-    }
-
-    override fun getAllNotice(): Result<List<Notice>> {
-        return Result(data = noticeService.getAllNotice())
-    }
-}
+package com.tencent.devops.project.pojo
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+@ApiModel("公告")
+data class Notice(
+    @ApiModelProperty("ID")
+    val id: Long = 0,
+    @ApiModelProperty("公告标题")
+    val noticeTitle: String = "",
+    @ApiModelProperty("生效日期")
+    val effectDate: Long = 0,
+    @ApiModelProperty("失效日期")
+    val invalidDate: Long = 0,
+    @ApiModelProperty("创建日期")
+    val createDate: Long = 0,
+    @ApiModelProperty("更新日期")
+    val updateDate: Long = 0,
+    @ApiModelProperty("公告内容")
+    val noticeContent: String = "",
+    @ApiModelProperty("跳转地址")
+    val redirectUrl: String = "",
+    @ApiModelProperty("公告类型：0 弹框 1跑马灯")
+    val noticeType: Int = 0
+)

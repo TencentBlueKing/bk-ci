@@ -190,7 +190,7 @@ class PipelineBuildService @Autowired constructor(
             } else {
                 val atomCode = taskParamMap["atomCode"].toString()
 
-                val taskParams = if (taskParamMap["@type"] != "marketBuild") {
+                val taskParams = if (taskParamMap["@type"] != "marketBuild" || taskParamMap["@type"] != "marketBuildLess") {
                     val inputMap = mutableMapOf("key" to "value")
                     val dataMap = mutableMapOf("input" to inputMap)
                     val taskParamMap1 = mutableMapOf("data" to dataMap)

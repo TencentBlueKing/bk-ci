@@ -24,16 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.support.dao
+package com.tencent.devops.project.dao
 
-import com.tencent.devops.model.support.tables.TNotice
-import com.tencent.devops.model.support.tables.records.TNoticeRecord
-import com.tencent.devops.support.model.app.NoticeRequest
+import com.tencent.devops.model.project.tables.TNotice
+import com.tencent.devops.model.project.tables.records.TNoticeRecord
+import com.tencent.devops.project.pojo.NoticeRequest
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import sun.misc.MessageUtils.where
 import java.sql.Timestamp
 
 @Repository

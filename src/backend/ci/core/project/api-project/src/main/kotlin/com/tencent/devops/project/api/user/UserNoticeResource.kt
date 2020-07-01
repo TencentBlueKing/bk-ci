@@ -24,35 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.support.resources.op
+package com.tencent.devops.project.api.user
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.support.api.op.OpNoticeResource
-import com.tencent.devops.support.model.app.NoticeRequest
-import com.tencent.devops.support.model.app.pojo.Notice
-import com.tencent.devops.support.services.NoticeService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.project.pojo.Notice
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class OpNoticeResourceImpl @Autowired constructor(private val noticeService: NoticeService) : OpNoticeResource {
-    override fun updateNotice(id: Long, noticeRequest: NoticeRequest): Result<Int> {
-        return Result(data = noticeService.handleNotice(id, noticeRequest))
-    }
+@Api(tags = ["NOTICE"], description = "公告")
+@Path("/user/notice")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserNoticeResource {
 
-    override fun addNotice(noticeRequest: NoticeRequest): Result<Int> {
-        return Result(data = noticeService.handleNotice(null, noticeRequest))
-    }
+    @ApiOperation("获取有效期内的公告")
+    @GET
+    @Path("/valid")
+    fun getValidNotice(): Result<Notice?>
 
-    override fun getNotice(id: Long): Result<Notice?> {
-        return Result(data = noticeService.getNotice(id))
-    }
-
-    override fun getAllNotice(): Result<List<Notice>> {
-        return Result(data = noticeService.getAllNotice())
-    }
-
-    override fun deleteNotice(id: Long): Result<Int> {
-        return Result(data = noticeService.deleteNotice(id))
-    }
+    @ApiOperation("获取所有的公告")
+    @GET
+    @Path("/")
+    fun getAllNotice(): Result<List<Notice>>
 }
