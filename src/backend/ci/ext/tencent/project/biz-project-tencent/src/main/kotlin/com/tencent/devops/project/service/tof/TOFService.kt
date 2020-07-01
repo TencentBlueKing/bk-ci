@@ -93,47 +93,47 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
         validate()
         var detail = userDeptCache.getIfPresent(userId)
         if (detail == null) {
-	        logger.info("[$operator}|$userId|$bk_ticket] Start to get the staff info")
-	        val staffInfo = getStaffInfo(operator, userId, bk_ticket)
-	        // 通过用户组查询父部门信息　(由于tof系统接口查询结构是从当前机构往上推查询，如果创建者机构层级大于4就查不完整1到3级的机构，所以查询级数设置为10)
-	        val deptInfos = getParentDeptInfo(staffInfo.GroupId, 10) // 一共三级，从事业群->部门->中心
-	        var bgName = ""
-	        var bgId = "0"
-	        var deptName = ""
-	        var deptId = "0"
-	        var centerName = ""
-	        var centerId = "0"
-	        val groupId = staffInfo.GroupId
-	        val groupName = staffInfo.GroupName
-	        for (deptInfo in deptInfos) {
-		        val level = deptInfo.level
-		        val name = deptInfo.name
-		        when (level) {
-			        "1" -> {
-				        bgName = name
-				        bgId = deptInfo.id
-			        }
-			        "2" -> {
-				        deptName = name
-				        deptId = deptInfo.id
-			        }
-			        "3" -> {
-				        centerName = name
-				        centerId = deptInfo.id
-			        }
-		        }
-	        }
-	        detail = UserDeptDetail(
-			        bgName,
-			        bgId,
-			        deptName,
-			        deptId,
-			        centerName,
-			        centerId,
-			        groupId,
-			        groupName
-	        )
-	        userDeptCache.put(userId, detail!!)
+            logger.info("[$operator}|$userId|$bk_ticket] Start to get the staff info")
+            val staffInfo = getStaffInfo(operator, userId, bk_ticket)
+            // 通过用户组查询父部门信息　(由于tof系统接口查询结构是从当前机构往上推查询，如果创建者机构层级大于4就查不完整1到3级的机构，所以查询级数设置为10)
+            val deptInfos = getParentDeptInfo(staffInfo.GroupId, 10) // 一共三级，从事业群->部门->中心
+            var bgName = ""
+            var bgId = "0"
+            var deptName = ""
+            var deptId = "0"
+            var centerName = ""
+            var centerId = "0"
+            val groupId = staffInfo.GroupId
+            val groupName = staffInfo.GroupName
+            for (deptInfo in deptInfos) {
+                val level = deptInfo.level
+                val name = deptInfo.name
+                when (level) {
+                    "1" -> {
+                        bgName = name
+                        bgId = deptInfo.id
+                    }
+                    "2" -> {
+                        deptName = name
+                        deptId = deptInfo.id
+                    }
+                    "3" -> {
+                        centerName = name
+                        centerId = deptInfo.id
+                    }
+                }
+            }
+            detail = UserDeptDetail(
+                    bgName,
+                    bgId,
+                    deptName,
+                    deptId,
+                    centerName,
+                    centerId,
+                    groupId,
+                    groupName
+            )
+            userDeptCache.put(userId, detail!!)
         }
 
         return detail!!
@@ -243,21 +243,21 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
         try {
             var info = userInfoCache.getIfPresent(userId)
             if (info == null) {
-	            logger.info("[$operator|$userId|$bk_ticket] Start to get the staff info")
-	            val path = "get_staff_info"
-	            val responseContent = request(
-			            path, StaffInfoRequest(
-			            tofAppCode!!,
-			            tofAppSecret!!, operator, userId, bk_ticket
-	            ), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL)
-	            )
-	            val response: Response<StaffInfoResponse> = objectMapper.readValue(responseContent)
-	            if (response.data == null) {
-		            logger.warn("Fail to get the staff info of user $userId with bk_ticket $bk_ticket and response $responseContent")
-		            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
-	            }
-	            info = response.data
-	            userInfoCache.put(userId, info!!)
+                logger.info("[$operator|$userId|$bk_ticket] Start to get the staff info")
+                val path = "get_staff_info"
+                val responseContent = request(
+                        path, StaffInfoRequest(
+                        tofAppCode!!,
+                        tofAppSecret!!, operator, userId, bk_ticket
+                ), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL)
+                )
+                val response: Response<StaffInfoResponse> = objectMapper.readValue(responseContent)
+                if (response.data == null) {
+                    logger.warn("Fail to get the staff info of user $userId with bk_ticket $bk_ticket and response $responseContent")
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
+                }
+                info = response.data
+                userInfoCache.put(userId, info!!)
             }
             return info!!
         } catch (t: Throwable) {
@@ -296,7 +296,7 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
     private fun request(path: String, body: Any, errorMessage: String, apiModule: APIModule = APIModule.tof): String {
         val url = "http://$tofHost/component/compapi/${apiModule.name}/$path"
         val requestContent = objectMapper.writeValueAsString(body)
-	    val startTime = System.currentTimeMillis()
+        val startTime = System.currentTimeMillis()
         logger.info("Start to request $url with body $requestContent")
         val requestBody = Request.Builder()
             .url(url)
@@ -304,11 +304,11 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
             .build()
         val response = request(requestBody, errorMessage)
         logger.info("Get the response $response of request $url")
-	    CostUtils.costTime(
-			    startTime = startTime,
-			    url = url,
-			    logger = logger
-	    )
+        CostUtils.costTime(
+                startTime = startTime,
+                url = url,
+                logger = logger
+        )
         return response
     }
 
