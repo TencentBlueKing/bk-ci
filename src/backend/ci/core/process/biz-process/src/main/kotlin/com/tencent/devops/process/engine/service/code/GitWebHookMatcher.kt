@@ -232,7 +232,7 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
                 return ScmWebhookMatcher.MatchResult(false)
             }
 
-            if (doExcludeMsgMatch(commitMsg, pipelineId)) {
+            if (doExcludeMsgMatch(commitMsg[0], pipelineId)) {
                 logger.warn("Do push event match fail for exclude message match for pipeline: $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)
             }
@@ -411,13 +411,11 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         }
     }
 
-    private fun doExcludeMsgMatch(commitMsgs: List<String>, pipelineId: String): Boolean {
-        logger.info("Do exclude msg match for pipeline: $pipelineId, $commitMsgs")
-        commitMsgs.forEach { msg ->
-            if (msg.contains(EXCLUDE_MSG)) {
-                logger.warn("Do exclude msg match success for pipeline: $pipelineId")
-                return true
-            }
+    private fun doExcludeMsgMatch(commitMsg: String, pipelineId: String): Boolean {
+        logger.info("Do exclude msg match for pipeline: $pipelineId, $commitMsg")
+        if (commitMsg.contains(EXCLUDE_MSG)) {
+            logger.warn("Do exclude msg match success for pipeline: $pipelineId")
+            return true
         }
         return false
     }
