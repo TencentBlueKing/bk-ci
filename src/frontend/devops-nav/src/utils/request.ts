@@ -1,6 +1,5 @@
 import axios from 'axios'
 import Vue from 'vue'
-import eventBus from './eventBus'
 
 const request = axios.create({
     baseURL: GW_URL_PREFIX,
