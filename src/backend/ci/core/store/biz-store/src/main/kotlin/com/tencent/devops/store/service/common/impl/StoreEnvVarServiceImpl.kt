@@ -38,9 +38,10 @@ import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_ENCRYPT_FLAG
 import com.tencent.devops.store.pojo.common.KEY_ID
-import com.tencent.devops.store.pojo.common.KEY_LABEL_TYPE
+import com.tencent.devops.store.pojo.common.KEY_MODIFIER
 import com.tencent.devops.store.pojo.common.KEY_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
+import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_VAR_DESC
 import com.tencent.devops.store.pojo.common.KEY_VAR_NAME
@@ -162,7 +163,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                     StoreEnvVarInfo(
                         id = it[KEY_ID] as String,
                         storeCode = it[KEY_STORE_CODE] as String,
-                        storeType = StoreTypeEnum.getStoreType((it[KEY_LABEL_TYPE] as Byte).toInt()),
+                        storeType = StoreTypeEnum.getStoreType((it[KEY_STORE_TYPE] as Byte).toInt()),
                         varName = it[KEY_VAR_NAME] as String,
                         varValue = varValue,
                         varDesc = it[KEY_VAR_DESC] as? String,
@@ -170,7 +171,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                         scope = it[KEY_SCOPE] as String,
                         version = it[KEY_VERSION] as Int,
                         creator = it[KEY_CREATOR] as String,
-                        modifier = it[KEY_VAR_VALUE] as String,
+                        modifier = it[KEY_MODIFIER] as String,
                         createTime = DateTimeUtil.toDateTime(it[KEY_CREATE_TIME] as LocalDateTime),
                         updateTime = DateTimeUtil.toDateTime(it[KEY_UPDATE_TIME] as LocalDateTime)
                     )

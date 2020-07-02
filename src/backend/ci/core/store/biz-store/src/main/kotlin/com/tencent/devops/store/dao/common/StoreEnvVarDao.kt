@@ -154,8 +154,9 @@ class StoreEnvVarDao {
             val t = dslContext.select(
                 STORE_CODE.`as`(KEY_STORE_CODE),
                 STORE_TYPE.`as`(KEY_STORE_TYPE),
+                VAR_NAME.`as`(KEY_VAR_NAME),
                 VERSION.max().`as`(KEY_VERSION)
-            ).from(this).groupBy(STORE_CODE, STORE_TYPE)
+            ).from(this).groupBy(STORE_CODE, STORE_TYPE, VAR_NAME)
             val conditions = mutableListOf<Condition>()
             conditions.add(STORE_CODE.eq(storeCode))
             conditions.add(STORE_TYPE.eq(storeType))
@@ -184,6 +185,7 @@ class StoreEnvVarDao {
                 .on(
                     STORE_CODE.eq(t.field(KEY_STORE_CODE, String::class.java))
                         .and(STORE_TYPE.eq(t.field(KEY_STORE_TYPE, Byte::class.java)))
+                        .and(VAR_NAME.eq(t.field(KEY_VAR_NAME, String::class.java)))
                         .and(VERSION.eq(t.field(KEY_VERSION, Int::class.java)))
                 )
                 .where(conditions)
