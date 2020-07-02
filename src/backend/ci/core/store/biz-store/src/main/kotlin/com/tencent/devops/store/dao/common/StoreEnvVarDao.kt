@@ -122,7 +122,7 @@ class StoreEnvVarDao {
         varName: String
     ): Int? {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
-            return dslContext.select(VERSION.max())
+            return dslContext.select(VERSION.max()).from(this)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)).and(VAR_NAME.eq(varName)))
                 .fetchOne(0, Int::class.java)
         }

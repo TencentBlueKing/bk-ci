@@ -84,25 +84,24 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         val lockKey = "$storeCode:$storeType:${storeEnvVarRequest.varName}"
         val lock = RedisLock(redisOperation, lockKey, 60)
         try {
-            if (!lock.tryLock()) {
-                logger.info("get lock failed, skip")
-                return Result(false)
+            if (lock.tryLock()) {
+                // 查询该环境变量在数据库中最大的版本
+                val maxVersion = storeEnvVarDao.getEnvVarMaxVersion(
+                    dslContext = dslContext,
+                    storeType = storeType,
+                    storeCode = storeCode,
+                    varName = storeEnvVarRequest.varName
+                ) ?: 0
+                storeEnvVarDao.create(
+                    dslContext = dslContext,
+                    userId = userId,
+                    version = maxVersion + 1,
+                    storeEnvVarRequest = storeEnvVarRequest
+                )
             }
-            // 查询该环境变量在数据库中最大的版本
-            val maxVersion = storeEnvVarDao.getEnvVarMaxVersion(
-                dslContext = dslContext,
-                storeType = storeType,
-                storeCode = storeCode,
-                varName = storeEnvVarRequest.varName
-            ) ?: 0
-            storeEnvVarDao.create(
-                dslContext = dslContext,
-                userId = userId,
-                version = maxVersion + 1,
-                storeEnvVarRequest = storeEnvVarRequest
-            )
         } catch (t: Throwable) {
-            logger.warn("storeEnvVar create failed", t)
+            logger.error("storeEnvVar create failed", t)
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         } finally {
             lock.unlock()
         }
@@ -117,10 +116,10 @@ class StoreEnvVarServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("storeEnvVar delete userId:$userId,storeType:$storeType,storeCode:$storeCode,ids:$ids")
         if (!storeMemberDao.isStoreMember(
-                dslContext,
-                userId,
-                storeCode,
-                StoreTypeEnum.valueOf(storeType).type.toByte()
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = storeCode,
+                storeType = StoreTypeEnum.valueOf(storeType).type.toByte()
             )
         ) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
