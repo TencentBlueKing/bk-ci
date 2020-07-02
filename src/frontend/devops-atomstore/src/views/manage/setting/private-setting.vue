@@ -18,13 +18,13 @@
                 </bk-table-column>
             </bk-table>
 
-            <bk-sideslider :is-show.sync="showAdd" :quick-close="true" :title="$t('store.新增成员')" :width="640" @hidden="closeAddPrivate">
+            <bk-sideslider :is-show.sync="showAdd" :quick-close="true" :title="$t('store.新增配置')" :width="640" @hidden="closeAddPrivate">
                 <bk-form :label-width="80" :model="privateObj" slot="content" class="add-private" ref="privateForm">
-                    <bk-form-item :label="$t('store.字段名')" :required="true" :rules="[requireRule($t('store.字段名'))]" property="fieldName" error-display-type="normal">
+                    <bk-form-item :label="$t('store.字段名')" :required="true" :rules="[requireRule($t('store.字段名')), nameRule]" property="fieldName" error-display-type="normal">
                         <bk-input v-model="privateObj.fieldName"></bk-input>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.字段值')" :rules="[requireRule($t('store.字段值'))]" :required="true" property="fieldValue" error-display-type="normal">
-                        <bk-input v-model="privateObj.fieldValue" type="password" @focus="handlePrivateFocus"></bk-input>
+                        <bk-input type="textarea" :rows="3" v-model="privateObj.fieldValue" @focus="handlePrivateFocus"></bk-input>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.描述')" property="fieldDesc">
                         <bk-input type="textarea" :rows="3" v-model="privateObj.fieldDesc"></bk-input>
@@ -71,6 +71,11 @@
                     name: '',
                     id: '',
                     index: ''
+                },
+                nameRule: {
+                    validator: (val) => (/^[a-zA-Z][a-zA-Z0-9-_]{2,29}$/.test(val)),
+                    message: this.$t('store.以英文字母开头，由英文字母、数字、连接符(-)或下划线(_)组成，长度大于3小于30个字符'),
+                    trigger: 'blur'
                 }
             }
         },

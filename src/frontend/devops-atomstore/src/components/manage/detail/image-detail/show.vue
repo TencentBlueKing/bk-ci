@@ -125,7 +125,7 @@
                         <bk-form-item :label="$t('store.镜像版本')" property="version">
                             <span class="lh30">{{offlineImageData.form.version}}</span>
                         </bk-form-item>
-                        <bk-form-item :label="$t('store.下架原因')" :required="true" property="reason" :rules="[requireRule]">
+                        <bk-form-item :label="$t('store.下架原因')" :required="true" property="reason" :rules="[requireRule($t('store.下架原因'))]">
                             <bk-input type="textarea" v-model="offlineImageData.form.reason" :placeholder="$t('store.请输入下架原因')"></bk-input>
                         </bk-form-item>
                         <bk-form-item>
@@ -214,6 +214,14 @@
         },
 
         methods: {
+            requireRule (name) {
+                return {
+                    required: true,
+                    message: this.$t('store.validateMessage', [name, this.$t('store.必填项')]),
+                    trigger: 'blur'
+                }
+            },
+
             submitOfflineImage (row) {
                 this.$refs.offlineForm.validate().then(() => {
                     const postData = {

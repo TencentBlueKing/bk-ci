@@ -1,7 +1,7 @@
 <template>
     <article class="member-setting">
         <h5 class="member-header">
-            <bk-button theme="primary" @click="openAddMember">{{ $t('store.新增成员') }}</bk-button>
+            <bk-button theme="primary" @click="openAddMember" :disabled="!userInfo.isProjectAdmin">{{ $t('store.新增成员') }}</bk-button>
             <span>{{ $t('store.目前有') }} <span>{{ memberCount }}</span> {{ $t('store.名成员') }}</span>
         </h5>
 
