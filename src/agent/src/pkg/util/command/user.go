@@ -31,12 +31,13 @@ package command
 import (
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego/logs"
 	"os/exec"
 	"os/user"
-	"pkg/util/systemutil"
 	"strconv"
 	"syscall"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/astaxie/beego/logs"
 )
 
 func setUser(cmd *exec.Cmd, runUser string) error {

@@ -44,5 +44,3 @@ dependencies {
     compile project(":core:notify:api-notify")
     compile project(":ext:tencent:project:api-project-tencent")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

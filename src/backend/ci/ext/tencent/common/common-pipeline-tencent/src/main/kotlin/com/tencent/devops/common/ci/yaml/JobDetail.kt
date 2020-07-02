@@ -26,6 +26,7 @@
 
 package com.tencent.devops.common.ci.yaml
 
+import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.task.AbstractTask
 
 data class JobDetail(

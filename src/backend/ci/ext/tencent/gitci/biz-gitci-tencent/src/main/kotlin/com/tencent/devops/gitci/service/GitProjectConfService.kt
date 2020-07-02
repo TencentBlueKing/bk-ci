@@ -84,12 +84,4 @@ class GitProjectConfService @Autowired constructor(
     fun count(gitProjectId: Long?, name: String?, url: String?): Int {
         return gitProjectConfDao.count(dslContext, gitProjectId, name, url)
     }
-
-    fun isEnable(gitProjectId: Long): Boolean {
-        val record = gitProjectConfDao.get(dslContext, gitProjectId)
-        if (null != record && record.enable) {
-            return true
-        }
-        return false
-    }
 }

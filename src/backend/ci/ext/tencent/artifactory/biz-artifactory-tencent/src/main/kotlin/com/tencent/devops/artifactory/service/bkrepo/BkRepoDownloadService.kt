@@ -203,7 +203,7 @@ class BkRepoDownloadService @Autowired constructor(
             title,
             userId,
             days,
-            listOf(FileShareInfo(fileName, "", projectName, downloadUrl))
+            listOf(FileShareInfo(fileName, fileDetail.nodeInfo.md5 ?: "", projectName, downloadUrl))
         )
         val receivers = downloadUsers.split(",").toSet()
         receivers.forEach {

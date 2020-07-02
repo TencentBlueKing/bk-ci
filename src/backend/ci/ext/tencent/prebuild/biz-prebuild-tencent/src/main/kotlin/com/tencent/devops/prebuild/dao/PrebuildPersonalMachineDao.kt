@@ -103,6 +103,7 @@ class PrebuildPersonalMachineDao {
                     .set(HOST_NAME, hostName)
                     .where(OWNER.eq(userId))
                     .and(IP.eq(ip))
+                    .and(HOST_NAME.eq(hostName))
                     .execute()
         }
     }

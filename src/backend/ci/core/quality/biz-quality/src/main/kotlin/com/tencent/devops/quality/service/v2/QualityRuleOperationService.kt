@@ -26,9 +26,9 @@
 
 package com.tencent.devops.quality.service.v2
 
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.model.quality.tables.records.TQualityRuleOperationRecord
 import com.tencent.devops.quality.dao.v2.QualityRuleOperationDao
-import com.tencent.devops.quality.pojo.enum.NotifyType
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

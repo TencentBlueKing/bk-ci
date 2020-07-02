@@ -26,7 +26,7 @@
 
 dependencies {
     compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:openapi:model-openapi")
+    compile project(":core:openapi:biz-openapi")
     compile project(":ext:tencent:openapi:api-openapi-tencent")
     compile project(":ext:tencent:common:common-pipeline-tencent")
     compile project(":ext:tencent:process:biz-process-tencent")
@@ -36,5 +36,3 @@ dependencies {
     compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
     compile "org.springframework.boot:spring-boot-starter-aop"
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

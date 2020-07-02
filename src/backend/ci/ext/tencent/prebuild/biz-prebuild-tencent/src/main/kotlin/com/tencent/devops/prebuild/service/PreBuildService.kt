@@ -26,21 +26,23 @@
 
 package com.tencent.devops.prebuild.service
 
+import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.ci.CiBuildConfig
-import com.tencent.devops.common.ci.task.AbstractTask
-import com.tencent.devops.common.ci.task.CodeCCScanClientTask
+import com.tencent.devops.common.ci.NORMAL_JOB
+import com.tencent.devops.common.ci.VM_JOB
+import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
+import com.tencent.devops.common.ci.yaml.Job
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.element.SendRTXNotifyElement
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -51,6 +53,8 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchTy
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.gitci.api.TriggerBuildResource
+import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.log.model.pojo.LogLine
 import com.tencent.devops.log.model.pojo.QueryLogs
@@ -60,6 +64,7 @@ import com.tencent.devops.prebuild.dao.PrebuildPersonalMachineDao
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
 import com.tencent.devops.prebuild.pojo.HistoryResponse
 import com.tencent.devops.prebuild.pojo.PreProject
+import com.tencent.devops.prebuild.pojo.StartUpReq
 import com.tencent.devops.prebuild.pojo.UserProject
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -67,6 +72,8 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -97,21 +104,20 @@ class PreBuildService @Autowired constructor(
     fun startBuild(
         userId: String,
         preProjectId: String,
-        workspace: String,
-        yamlStr: String,
+        startUpReq: StartUpReq,
         yaml: CIBuildYaml,
         agentId: ThirdPartyAgentStaticInfo
     ): BuildId {
         val userProject = getUserProjectId(userId)
         val pipeline = getPipelineByName(userId, preProjectId)
-        val model = createPipelineModel(userId, preProjectId, workspace, yaml, agentId)
+        val model = createPipelineModel(userId, preProjectId, startUpReq, yaml, agentId)
         val pipelineId = if (null == pipeline) {
             client.get(ServicePipelineResource::class).create(userId, userProject, model, channelCode).data!!.id
         } else {
             client.get(ServicePipelineResource::class).edit(userId, userProject, pipeline.pipelineId, model, channelCode)
             pipeline.pipelineId
         }
-        prebuildProjectDao.createOrUpdate(dslContext, preProjectId, userProject, userId, yamlStr.trim(), pipelineId, workspace)
+        prebuildProjectDao.createOrUpdate(dslContext, preProjectId, userProject, userId, startUpReq.yaml.trim(), pipelineId, startUpReq.workspace)
 
         logger.info("pipelineId: $pipelineId")
 
@@ -149,7 +155,7 @@ class PreBuildService @Autowired constructor(
         return client.get(ServiceBuildResource::class).manualShutdown(userId, projectId, preProjectRecord.pipelineId, buildId, channelCode).data!!
     }
 
-    private fun createPipelineModel(userId: String, preProjectId: String, workspace: String, prebuild: CIBuildYaml, agentInfo: ThirdPartyAgentStaticInfo): Model {
+    private fun createPipelineModel(userId: String, preProjectId: String, startUpReq: StartUpReq, prebuild: CIBuildYaml, agentInfo: ThirdPartyAgentStaticInfo): Model {
         val stageList = mutableListOf<Stage>()
 
         // 第一个stage，触发类
@@ -162,76 +168,110 @@ class PreBuildService @Autowired constructor(
         prebuild.stages!!.forEachIndexed { stageIndex, stage ->
             val containerList = mutableListOf<Container>()
             stage.stage.forEachIndexed { jobIndex, job ->
-                val elementList = mutableListOf<Element>()
-                job.job.steps.forEach {
-                    val element = it.covertToElement(getCiBuildConf(preBuildConfig))
-                    elementList.add(element)
-                    if (element is MarketBuildAtomElement) {
-                        logger.info("install market atom: ${element.getAtomCode()}")
-//                        installMarketAtom(getUserProjectId(userId), userId, element.getAtomCode())
-                    }
-
-                    addAssociateElement(it, elementList, userId, preProjectId)
+                if (job.job.type == null || job.job.type == VM_JOB) {
+                    val vmContainer = createVMBuildContainer(job, startUpReq, agentInfo, jobIndex)
+                    containerList.add(vmContainer)
+                } else if (job.job.type == NORMAL_JOB) {
+                    val normalContainer = createNormalContainer(job, userId)
+                    containerList.add(normalContainer)
+                } else {
+                    logger.error("Invalid job type: ${job.job.type}")
                 }
-                val dispatchType = ThirdPartyAgentIDDispatchType(
-                    displayName = agentInfo.agentId,
-                    workspace = workspace,
-                    agentType = AgentType.ID
-                )
-
-                val vmContainer = VMBuildContainer(
-                    id = null,
-                    name = job.job.name ?: "stage${stageIndex + 2}-${jobIndex + 1}",
-                    elements = elementList,
-                    status = null,
-                    startEpoch = null,
-                    systemElapsed = null,
-                    elementElapsed = null,
-                    baseOS = VMBaseOS.valueOf(agentInfo.os),
-                    vmNames = setOf(),
-                    maxQueueMinutes = 60,
-                    maxRunningMinutes = 900,
-                    buildEnv = null,
-                    customBuildEnv = null,
-                    thirdPartyAgentId = null,
-                    thirdPartyAgentEnvId = null,
-                    thirdPartyWorkspace = null,
-                    dockerBuildVersion = null,
-                    tstackAgentId = null,
-                    dispatchType = dispatchType
-                )
-                containerList.add(vmContainer)
             }
             stageList.add(Stage(containerList, "stage-${stageIndex + 3}"))
         }
         return Model(preProjectId, "", stageList, emptyList(), false, userId)
     }
 
-    private fun addAssociateElement(it: AbstractTask, elementList: MutableList<Element>, userId: String, preProjectId: String) {
-        if (it.getTaskType() == CodeCCScanClientTask.taskType) { // 如果yaml里面写的是codecc检查任务，则需要增加一个归档报告的插件
-            elementList.add(ReportArchiveElement(
-                "reportArchive",
-                null,
-                null,
-                "/tmp/codecc_$preProjectId/",
-                "index.html",
-                "PreBuild Report",
-                true,
-                setOf(userId),
-                "【\${pipeline.name}】 #\${pipeline.build.num} PreBuild报告已归档"
-            ))
-            elementList.add(SendRTXNotifyElement(
-                "sendRTXNotify",
-                null,
-                null,
-                setOf(userId),
-                "PreBuild流水线【\${pipeline.name}】 #\${pipeline.build.num} 构建完成通知",
-                "PreBuild流水线【\${pipeline.name}】 #\${pipeline.build.num} 构建完成\n",
-                false,
-                null,
-                true
-            ))
+    private fun createNormalContainer(job: Job, userId: String): NormalContainer {
+        val elementList = mutableListOf<Element>()
+        job.job.steps.forEach {
+            val element = it.covertToElement(getCiBuildConf(preBuildConfig))
+            elementList.add(element)
+            if (element is MarketBuildAtomElement) {
+                logger.info("install market atom: ${element.getAtomCode()}")
+                installMarketAtom(userId, element.getAtomCode())
+            }
         }
+
+        return NormalContainer(
+                containerId = null,
+                id = null,
+                name = "无编译环境",
+                elements = elementList,
+                status = null,
+                startEpoch = null,
+                systemElapsed = null,
+                elementElapsed = null,
+                enableSkip = false,
+                conditions = null,
+                canRetry = false,
+                jobControlOption = null,
+                mutexGroup = null
+        )
+    }
+
+    private fun installMarketAtom(userId: String, atomCode: String) {
+        val projectCodes = ArrayList<String>()
+        projectCodes.add(getUserProjectId(userId))
+        try {
+            client.get(ServiceMarketAtomResource::class).installAtom(
+                    userId,
+                    channelCode,
+                    InstallAtomReq(projectCodes, atomCode))
+        } catch (e: Throwable) {
+            logger.error("install atom($atomCode) failed, exception:", e)
+            // 可能之前安装过，继续执行不退出
+        }
+    }
+
+    private fun createVMBuildContainer(job: Job, startUpReq: StartUpReq, agentInfo: ThirdPartyAgentStaticInfo, jobIndex: Int): VMBuildContainer {
+        val elementList = mutableListOf<Element>()
+        job.job.steps.forEach {
+            if (it is CodeCCScanInContainerTask && startUpReq.extraParam != null) {
+                val whitePath = mutableListOf<String>()
+                if (!(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
+                    whitePath.add(startUpReq.extraParam!!.codeccScanPath!!)
+                }
+                if (startUpReq.extraParam!!.incrementFileList != null && startUpReq.extraParam!!.incrementFileList!!.isNotEmpty()) {
+                    whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
+                }
+                it.inputs.path = whitePath
+            }
+            val element = it.covertToElement(getCiBuildConf(preBuildConfig))
+            elementList.add(element)
+            if (element is MarketBuildAtomElement) {
+                logger.info("install market atom: ${element.getAtomCode()}")
+//              installMarketAtom(getUserProjectId(userId), userId, element.getAtomCode())
+            }
+        }
+        val dispatchType = ThirdPartyAgentIDDispatchType(
+                displayName = agentInfo.agentId,
+                workspace = startUpReq.workspace,
+                agentType = AgentType.ID
+        )
+
+        return VMBuildContainer(
+                id = null,
+                name = "Job_${jobIndex + 1} " + (job.job.name ?: ""),
+                elements = elementList,
+                status = null,
+                startEpoch = null,
+                systemElapsed = null,
+                elementElapsed = null,
+                baseOS = VMBaseOS.valueOf(agentInfo.os),
+                vmNames = setOf(),
+                maxQueueMinutes = 60,
+                maxRunningMinutes = 900,
+                buildEnv = null,
+                customBuildEnv = null,
+                thirdPartyAgentId = null,
+                thirdPartyAgentEnvId = null,
+                thirdPartyWorkspace = null,
+                dockerBuildVersion = null,
+                tstackAgentId = null,
+                dispatchType = dispatchType
+        )
     }
 
     fun getBuildDetail(userId: String, preProjectId: String, buildId: String): Result<ModelDetail> {
@@ -245,7 +285,7 @@ class PreBuildService @Autowired constructor(
             false, null, null, null, null).data!!
         val cleanLogs = mutableListOf<LogLine>()
         cleanLogs.addAll(originLog.logs.filterNot { it.message.contains("soda_fold") })
-        return QueryLogs(originLog.buildId, originLog.finished, null, cleanLogs, originLog.timeUsed, originLog.status)
+        return QueryLogs(originLog.buildId, originLog.finished, originLog.hasMore, cleanLogs, originLog.timeUsed, originLog.status)
     }
 
     fun getAfterLogs(userId: String, preProjectId: String, buildId: String, start: Long): QueryLogs {
@@ -253,7 +293,7 @@ class PreBuildService @Autowired constructor(
         val originLog = client.get(UserLogResource::class).getAfterLogs(userId, prebuildProjRecord.projectId, prebuildProjRecord.pipelineId, buildId, start, false, null, null, null, null).data!!
         val cleanLogs = mutableListOf<LogLine>()
         cleanLogs.addAll(originLog.logs.filterNot { it.message.contains("soda_fold") })
-        return QueryLogs(originLog.buildId, originLog.finished, null, cleanLogs, originLog.timeUsed, originLog.status)
+        return QueryLogs(originLog.buildId, originLog.finished, originLog.hasMore, cleanLogs, originLog.timeUsed, originLog.status)
     }
 
     private fun getPreProjectInfo(preProjectId: String, userId: String): TPrebuildProjectRecord {
@@ -353,6 +393,7 @@ class PreBuildService @Autowired constructor(
             if (it.hostName == hostName) {
                 logger.info("Get user personal vm, hostName: $hostName")
                 if (it.ip != ip) { // IP 有变更
+                    logger.info("Update ip, ip: $ip")
                     prebuildPersonalMachineDao.updateIp(dslContext, userId, hostName, ip)
                 }
 
@@ -363,6 +404,7 @@ class PreBuildService @Autowired constructor(
             if (it.ip == ip) {
                 logger.info("Get user personal vm, ip: $ip")
                 if (it.hostName != hostName) { // hostname 有变更
+                    logger.info("Update hostName, hostName: $hostName")
                     prebuildPersonalMachineDao.updateHostname(dslContext, userId, hostName, ip)
                 }
                 return it
@@ -389,5 +431,18 @@ class PreBuildService @Autowired constructor(
             buildConf.devCloudToken,
             buildConf.devCloudUrl
         )
+    }
+
+    fun getAgentStatus(userId: String, os: OS, ip: String, hostName: String): AgentStatus {
+        val agent = getAgent(userId, os, ip, hostName)
+        if (agent?.status == null) {
+            logger.info("Agent not exists. need to install.")
+            return AgentStatus.IMPORT_EXCEPTION
+        }
+        return AgentStatus.fromStatus(agent.status!!)
+    }
+
+    fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
+        return client.get(TriggerBuildResource::class).checkYaml(userId, yaml)
     }
 }

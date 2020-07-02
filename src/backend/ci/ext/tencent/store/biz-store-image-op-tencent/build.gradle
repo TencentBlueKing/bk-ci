@@ -32,5 +32,3 @@ dependencies {
     compile project(":ext:tencent:store:api-store-image-op-tencent")
     compile project(":core:repository:api-repository")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

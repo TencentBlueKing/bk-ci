@@ -30,8 +30,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.notify.api.service.ServiceNotifyResource
+import com.tencent.devops.notify.PIPELINE_QUALITY_END_NOTIFY_TEMPLATE
+import com.tencent.devops.notify.PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.plugin.api.ServiceCodeccElementResource
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -47,14 +51,10 @@ import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import com.tencent.devops.quality.pojo.RuleCheckResult
 import com.tencent.devops.quality.pojo.RuleCheckSingleResult
-import com.tencent.devops.quality.pojo.enum.NotifyType
 import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.service.GroupService
-import com.tencent.devops.quality.util.EmailUtil
-import com.tencent.devops.quality.util.RtxUtil
 import com.tencent.devops.quality.util.ThresholdOperationUtil
-import com.tencent.devops.quality.util.WechatUtil
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -123,11 +123,11 @@ class QualityRuleCheckService @Autowired constructor(
                     // 获取阈值列表
                     taskThresholdList.addAll(it.indicators.map { indicator ->
                         QualityRuleMatchTask.RuleThreshold(
-                                indicator.hashId,
-                                indicator.cnName,
-                                indicator.metadataList.map { it.name },
-                                indicator.operation,
-                                indicator.threshold
+                            indicator.hashId,
+                            indicator.cnName,
+                            indicator.metadataList.map { it.name },
+                            indicator.operation,
+                            indicator.threshold
                         )
                     })
 
@@ -140,7 +140,7 @@ class QualityRuleCheckService @Autowired constructor(
                 }
                 // 生成结果
                 matchTaskList.add(QualityRuleMatchTask(controlPoint.name, controlPoint.cnName, position,
-                        taskRuleList, taskThresholdList, taskAuditUserList))
+                    taskRuleList, taskThresholdList, taskAuditUserList))
             }
         }
         return matchTaskList
@@ -199,12 +199,15 @@ class QualityRuleCheckService @Autowired constructor(
             // 异步后续的处理
             executors.execute { checkPostHandle(buildCheckParams, ruleInterceptList, resultList) }
 
+            // 记录结果
+            recordHistory(buildCheckParams, ruleInterceptList)
+
             // generate result
             val failRule = ruleInterceptList.filter { !it.second }.map { it.first }
             val allPass = failRule.isEmpty()
             val allEnd = allPass || (!allPass && !failRule.any { it.operation == RuleOperation.AUDIT })
             val auditTimeOutMinutes = if (!allPass) Collections.min(failRule.map { it.auditTimeoutMinutes ?: DEFAULT_TIMEOUT_MINUTES })
-                                            else DEFAULT_TIMEOUT_MINUTES
+            else DEFAULT_TIMEOUT_MINUTES
             logger.info("check result allPass($allPass) allEnd($allEnd) auditTimeoutMinutes($auditTimeOutMinutes)")
             logger.info("end check pipeline($pipelineId) build($buildId) task(${buildCheckParams.taskId})")
             return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60, resultList)
@@ -224,16 +227,19 @@ class QualityRuleCheckService @Autowired constructor(
             val createTime = LocalDateTime.now()
 
             with(buildCheckParams) {
-                recordHistory(projectId, ruleId, pipelineId, buildId, interceptResult, interceptRecordList, createTime)
+                ruleService.plusExecuteCount(ruleId)
+
                 if (!interceptResult) {
+                    ruleService.plusInterceptTimes(ruleId)
+
                     try {
                         if (rule.operation == RuleOperation.END) {
                             sendEndNotification(projectId, pipelineId, buildId, buildNo, createTime, interceptRecordList,
-                                    rule.notifyTypeList ?: listOf(), rule.notifyGroupList ?: listOf(), rule.notifyUserList
-                                    ?: listOf())
+                                rule.notifyTypeList ?: listOf(), rule.notifyGroupList ?: listOf(), rule.notifyUserList
+                                ?: listOf())
                         } else {
                             sendAuditNotification(projectId, pipelineId, buildId, buildNo, createTime, resultList, rule.auditUserList
-                                    ?: listOf())
+                                ?: listOf())
                         }
                     } catch (t: Throwable) {
                         logger.error("send notification fail", t)
@@ -265,7 +271,7 @@ class QualityRuleCheckService @Autowired constructor(
             // 遍历所有基础数据
             var elementDetail = ""
             val result: String? = when (thresholdType) {
-            // int类型把所有基础数据累加
+                // int类型把所有基础数据累加
                 QualityDataType.INT -> {
                     var result: Int? = null
                     for (it in filterMetadataList) {
@@ -288,7 +294,7 @@ class QualityRuleCheckService @Autowired constructor(
                     }
                     result?.toString()
                 }
-            // float类型把所有基础数据累加
+                // float类型把所有基础数据累加
                 QualityDataType.FLOAT -> {
                     var result: BigDecimal? = null
                     for (it in filterMetadataList) {
@@ -313,7 +319,7 @@ class QualityRuleCheckService @Autowired constructor(
                     }
                     result?.toString()
                 }
-            // 布尔类型把所有基础数据求与
+                // 布尔类型把所有基础数据求与
                 QualityDataType.BOOLEAN -> {
                     logger.info("is boolean...")
                     var result: Boolean? = null
@@ -351,8 +357,8 @@ class QualityRuleCheckService @Autowired constructor(
             }
             with(indicator) {
                 interceptList.add(
-                        QualityRuleInterceptRecord(hashId, cnName, elementType, operation, threshold,
-                                result, rule.controlPoint.name, checkResult, elementDetail, logPrompt)
+                    QualityRuleInterceptRecord(hashId, cnName, elementType, operation, threshold,
+                        result, rule.controlPoint.name, checkResult, elementDetail, logPrompt)
                 )
             }
         }
@@ -407,15 +413,27 @@ class QualityRuleCheckService @Autowired constructor(
     /**
      * 记录拦截历史
      */
-    private fun recordHistory(projectId: String, ruleId: Long, pipelineId: String, buildId: String, pass: Boolean, interceptRecordList: List<QualityRuleInterceptRecord>, time: LocalDateTime) {
-        val interceptList = objectMapper.writeValueAsString(interceptRecordList)
-        if (pass) {
-            historyService.serviceCreate(projectId, ruleId, pipelineId, buildId, RuleInterceptResult.PASS.name, interceptList, time, time)
-        } else {
-            historyService.serviceCreate(projectId, ruleId, pipelineId, buildId, RuleInterceptResult.FAIL.name, interceptList, time, time)
-            ruleService.plusInterceptTimes(ruleId)
+    private fun recordHistory(
+        buildCheckParams: BuildCheckParams,
+        result: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>
+    ) {
+        val time = LocalDateTime.now()
+
+        with(buildCheckParams) {
+            result.forEach {
+                val rule = it.first
+                val ruleId = HashUtil.decodeIdToLong(rule.hashId)
+                val pass = it.second
+                val interceptRecordList = it.third
+
+                val interceptList = objectMapper.writeValueAsString(interceptRecordList)
+                if (pass) {
+                    historyService.serviceCreate(projectId, ruleId, pipelineId, buildId, RuleInterceptResult.PASS.name, interceptList, time, time)
+                } else {
+                    historyService.serviceCreate(projectId, ruleId, pipelineId, buildId, RuleInterceptResult.FAIL.name, interceptList, time, time)
+                }
+            }
         }
-        ruleService.plusExecuteCount(ruleId)
     }
 
     private fun sendAuditNotification(
@@ -433,18 +451,49 @@ class QualityRuleCheckService @Autowired constructor(
         val time = createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
 
         // 获取通知用户集合
-        val notifyUserSet = auditNotifyUserList.toSet()
+        val notifyUserSet = auditNotifyUserList.toMutableSet()
 
         // 获取拦截列表
         // val interceptList = getInterceptList(interceptRecordList)
 
+        val messageResult = StringBuilder()
+        val emailResult = StringBuilder()
+        resultList.forEach { r ->
+            messageResult.append("拦截规则：${r.ruleName}\n")
+            messageResult.append("拦截指标：\n")
+            emailResult.append("拦截规则：${r.ruleName}<br>")
+            emailResult.append("拦截指标：<br>")
+            r.messagePairs.forEach {
+                messageResult.append(it.first + "\n")
+                emailResult.append(it.first + "<br>")
+            }
+            emailResult.append("<br>")
+        }
+
         // 推送消息
-        val rtxMessage = RtxUtil.makeAuditMessage(projectName, pipelineName, buildNo, time, resultList, url, notifyUserSet)
-        client.get(ServiceNotifyResource::class).sendRtxNotify(rtxMessage)
-        val wechatMessage = WechatUtil.makeAuditMessage(projectName, pipelineName, buildNo, time, resultList, url, notifyUserSet)
-        client.get(ServiceNotifyResource::class).sendWechatNotify(wechatMessage)
-        val emailMessage = EmailUtil.makeAuditMessage(projectName, pipelineName, buildNo, time, resultList, url, notifyUserSet)
-        client.get(ServiceNotifyResource::class).sendEmailNotify(emailMessage)
+        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+            templateCode = PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE,
+            receivers = notifyUserSet,
+            cc = notifyUserSet,
+            titleParams = mapOf(
+                "projectName" to projectName,
+                "pipelineName" to pipelineName,
+                "buildNo" to buildNo
+            ),
+            bodyParams = mapOf(
+                "title" to "【质量红线拦截通知】你有一个流水线被拦截",
+                "projectName" to projectName,
+                "pipelineName" to pipelineName,
+                "buildNo" to buildNo,
+                "time" to time,
+                "result" to messageResult.toString(),
+                "emailResult" to emailResult.toString(),
+                "url" to url
+            )
+        )
+        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+        logger.info("[$buildNo]|sendAuditNotification|QualityRuleCheckService|result=$sendNotifyResult")
     }
 
     /**
@@ -475,22 +524,24 @@ class QualityRuleCheckService @Autowired constructor(
         // 获取拦截列表
         val interceptList = getInterceptList(interceptRecordList)
 
-        endNotifyTypeList.forEach {
-            when (it) {
-                NotifyType.RTX -> {
-                    val message = RtxUtil.makeEndMessage(projectName, pipelineName, buildNo, time, interceptList, url, notifyUserSet)
-                    client.get(ServiceNotifyResource::class).sendRtxNotify(message)
-                }
-                NotifyType.WECHAT -> {
-                    val message = WechatUtil.makeEndMessage(projectName, pipelineName, buildNo, time, interceptList, url, notifyUserSet)
-                    client.get(ServiceNotifyResource::class).sendWechatNotify(message)
-                }
-                NotifyType.EMAIL -> {
-                    val message = EmailUtil.makeEndMessage(projectName, pipelineName, buildNo, time, interceptList, url, notifyUserSet)
-                    client.get(ServiceNotifyResource::class).sendEmailNotify(message)
-                }
-            }
-        }
+        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+            templateCode = PIPELINE_QUALITY_END_NOTIFY_TEMPLATE,
+            receivers = notifyUserSet,
+            notifyType = endNotifyTypeList.map { it.name }.toMutableSet(),
+            titleParams = mapOf(),
+            bodyParams = mapOf(
+                "title" to "【质量红线拦截通知】你有一个流水线被拦截",
+                "projectName" to projectName,
+                "pipelineName" to pipelineName,
+                "buildNo" to buildNo,
+                "time" to time,
+                "thresholdListString" to interceptList.joinToString("；"),
+                "url" to url
+            )
+        )
+        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+        logger.info("[$buildNo]|sendAuditNotification|sendNotifyMessageTemplateRequest=$sendNotifyMessageTemplateRequest|result=$sendNotifyResult")
     }
 
     private fun getInterceptList(interceptRecordList: List<QualityRuleInterceptRecord>): List<String> {

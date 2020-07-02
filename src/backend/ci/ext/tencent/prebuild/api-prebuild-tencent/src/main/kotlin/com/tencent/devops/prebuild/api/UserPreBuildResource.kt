@@ -29,9 +29,11 @@ package com.tencent.devops.prebuild.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.log.model.pojo.QueryLogs
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.prebuild.pojo.HistoryResponse
@@ -88,6 +90,24 @@ interface UserPreBuildResource {
         @PathParam("hostName")
         hostName: String
     ): Result<ThirdPartyAgentStaticInfo>
+
+    @ApiOperation("获取agent状态")
+    @GET
+    @Path("/agent/status/{os}/{ip}/{hostName}")
+    fun getAgentStatus(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("操作系统类型", required = true)
+        @PathParam("os")
+        os: OS,
+        @ApiParam("IP", required = true)
+        @PathParam("ip")
+        ip: String,
+        @ApiParam("hostName", required = true)
+        @PathParam("hostName")
+        hostName: String
+    ): Result<AgentStatus>
 
     @ApiOperation("查询所有PreBuild项目")
     @GET
@@ -234,4 +254,15 @@ interface UserPreBuildResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<HistoryResponse>>
+
+    @ApiOperation("校验yaml格式")
+    @POST
+    @Path("/checkYaml")
+    fun checkYaml(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("yaml内容", required = true)
+        yaml: GitYamlString
+    ): Result<String>
 }

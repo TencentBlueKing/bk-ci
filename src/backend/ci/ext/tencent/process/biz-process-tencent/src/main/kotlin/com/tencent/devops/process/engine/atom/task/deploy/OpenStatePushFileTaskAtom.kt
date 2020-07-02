@@ -429,7 +429,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
             }
             val noExistsEnvIds = envSet.envHashIds.subtract(envIdList)
             if (noExistsEnvIds.isNotEmpty()) {
-                logger.error("The envIds not exists, id:$noExistsEnvIds")
+                logger.warn("The envIds not exists, id:$noExistsEnvIds")
                 LogUtils.addRedLine(
                     rabbitTemplate = rabbitTemplate,
                     buildId = buildId,
@@ -454,7 +454,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
             }
             val noExistsNodeIds = envSet.nodeHashIds.subtract(nodeIdList)
             if (noExistsNodeIds.isNotEmpty()) {
-                logger.error("The nodeIds not exists, id:$noExistsNodeIds")
+                logger.warn("The nodeIds not exists, id:$noExistsNodeIds")
                 LogUtils.addRedLine(
                     rabbitTemplate = rabbitTemplate,
                     buildId = buildId,

@@ -26,8 +26,11 @@
 
 package com.tencent.devops.common.redis
 
+import org.springframework.data.redis.core.Cursor
 import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.data.redis.core.ScanOptions
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 class RedisOperation(private val redisTemplate: RedisTemplate<String, String>) {
@@ -114,6 +117,47 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>) {
 
     fun hvalues(key: String): MutableList<String>? {
         return redisTemplate.opsForHash<String, String>().values(key)
+    }
+
+    fun hkeys(key: String): MutableSet<String>? {
+        return redisTemplate.opsForHash<String, String>().keys(key)
+    }
+
+    fun hentries(key: String): MutableMap<String, String>? {
+        return redisTemplate.opsForHash<String, String>().entries(key)
+    }
+
+    fun sadd(key: String, values: String): Long? {
+        return redisTemplate.opsForSet().add(key, values)
+    }
+
+    fun sremove(key: String, values: String): Long? {
+        return redisTemplate.opsForSet().remove(key, values)
+    }
+
+    fun sscan(key: String, pattern: String, count: Long = 1000L): Cursor<String>? {
+        val options = ScanOptions.scanOptions().match(pattern).count(count).build()
+        return redisTemplate.opsForSet().scan(key, options)
+    }
+
+    fun zadd(key: String, values: String, score: Double): Boolean? {
+        return redisTemplate.opsForZSet().add(key, values, score)
+    }
+
+    fun zremove(key: String, values: String): Long {
+        return redisTemplate.opsForZSet().remove(key, values)
+    }
+
+    fun zsize(key: String, min: Double, max: Double): Long {
+        return redisTemplate.opsForZSet().count(key, min, max)
+    }
+
+    fun zremoveRangeByScore(key: String, min: Double, max: Double): Long? {
+        return redisTemplate.opsForZSet().removeRangeByScore(key, min, max)
+    }
+
+    fun expireAt(key: String, date: Date): Boolean {
+        return redisTemplate.expireAt(key, date)
     }
 
     fun <T> execute(action: RedisCallback<T>): T {

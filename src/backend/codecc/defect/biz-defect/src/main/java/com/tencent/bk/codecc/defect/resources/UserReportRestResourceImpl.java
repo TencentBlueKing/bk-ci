@@ -29,7 +29,7 @@ package com.tencent.bk.codecc.defect.resources;
 import com.tencent.bk.codecc.defect.api.UserReportRestResource;
 import com.tencent.bk.codecc.defect.service.IDataReportBizService;
 import com.tencent.bk.codecc.defect.vo.common.CommonDataReportRspVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.web.RestResource;
@@ -51,10 +51,10 @@ public class UserReportRestResourceImpl implements UserReportRestResource
 
     @Override
     //@AuthMethod(permission = {BkAuthExAction.TASK_MEMBER, BkAuthExAction.TASK_OWNER, BkAuthExAction.ADMIN_MEMBER})
-    public Result<CommonDataReportRspVO> dataReport(Long taskId, String toolName)
+    public CodeCCResult<CommonDataReportRspVO> dataReport(Long taskId, String toolName)
     {
         IDataReportBizService bizService = dataReportBizService.createBizService(toolName,
                 ComConstants.BusinessType.DATA_REPORT.value(), IDataReportBizService.class);
-        return new Result<>(bizService.getDataReport(taskId, toolName));
+        return new CodeCCResult<>(bizService.getDataReport(taskId, toolName));
     }
 }

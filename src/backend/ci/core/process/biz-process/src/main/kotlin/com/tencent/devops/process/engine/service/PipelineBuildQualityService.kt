@@ -122,7 +122,6 @@ class PipelineBuildQualityService(
         }
 
         if (!find) {
-            logger.error("[$buildId]| The quality Task($elementId) of pipeline($pipelineId) is not exist")
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.ERROR_QUALITY_TASK_NOT_FOUND,
@@ -192,8 +191,8 @@ class PipelineBuildQualityService(
             val convertList = ruleMatchList.map {
                 val gatewayIds = it.ruleList.filter { !it.gatewayId.isNullOrBlank() }.map { it.gatewayId!! }
                 mapOf("position" to it.controlStage.name,
-                        "taskId" to it.taskId,
-                        "gatewayIds" to gatewayIds)
+                    "taskId" to it.taskId,
+                    "gatewayIds" to gatewayIds)
             }
             QualityUtils.fillInOutElement(cleaningModel, startParams, convertList)
         }
@@ -217,22 +216,17 @@ class PipelineBuildQualityService(
     }
 
     fun getAuditUserList(projectId: String, pipelineId: String, buildId: String, taskId: String): Set<String> {
-        try {
-            for (i in 1..5) {
-                val auditUsers = client.get(ServiceQualityRuleResource::class).getAuditUserList(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    taskId
-                ).data ?: setOf()
-                if (auditUsers.isNotEmpty()) return auditUsers
-                Thread.sleep(i * 2 * 1000L)
-            }
+        return try {
+            client.get(ServiceQualityRuleResource::class).getAuditUserList(
+                projectId,
+                pipelineId,
+                buildId,
+                taskId
+            ).data ?: setOf()
         } catch (e: Exception) {
             logger.error("quality get audit user list fail: ${e.message}", e)
-            return setOf()
+            setOf()
         }
-        return emptySet()
     }
 
     fun check(buildCheckParams: BuildCheckParams, position: String): RuleCheckResult {

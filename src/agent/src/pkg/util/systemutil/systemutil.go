@@ -28,14 +28,15 @@ package systemutil
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/gofrs/flock"
 	"net"
 	"os"
 	"os/user"
-	"pkg/util/fileutil"
 	"runtime"
 	"strings"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/astaxie/beego/logs"
+	"github.com/gofrs/flock"
 )
 
 var GExecutableDir string

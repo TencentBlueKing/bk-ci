@@ -166,7 +166,7 @@ class PipelineWebhookService @Autowired constructor(
                         .get(it.projectId, repositoryConfig.getURLEncodeRepositoryId(), repositoryConfig.repositoryType)
                         .data
                     if (repo == null) {
-                        logger.error("repo[${it.repoHashId}] does not exist")
+                        logger.warn("repo[${it.repoHashId}] does not exist")
                         return@forEach
                     }
                     val projectName = getProjectName(repo.projectName)
@@ -201,7 +201,7 @@ class PipelineWebhookService @Autowired constructor(
     }
 
     fun getModel(pipelineId: String, version: Int? = null): Model? {
-        val modelString = pipelineResDao.getVersionModelString(dslContext, pipelineId, version)
+        val modelString = pipelineResDao.getVersionModelString(dslContext, pipelineId, version) ?: return null
         return try {
             objectMapper.readValue(modelString, Model::class.java)
         } catch (e: Exception) {

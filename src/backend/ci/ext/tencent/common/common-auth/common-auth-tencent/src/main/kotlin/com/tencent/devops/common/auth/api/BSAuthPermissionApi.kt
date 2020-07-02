@@ -151,7 +151,7 @@ class BSAuthPermissionApi @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("Fail to validate user permission. $responseContent")
+                    logger.warn("Fail to validate user permission. $responseContent")
                     throw RemoteServiceException("Fail to validate user permission")
                 }
 
@@ -161,7 +161,7 @@ class BSAuthPermissionApi @Autowired constructor(
                     if (responseObject.code == 403) {
                         bsAuthTokenApi.refreshAccessToken(serviceCode)
                     }
-                    logger.error("Fail to validate user permission. $responseContent")
+                    logger.warn("Fail to validate user permission. $responseContent")
                     throw RemoteServiceException("Fail to validate user permission")
                 }
                 val result = responseObject.code == 0
@@ -198,7 +198,7 @@ class BSAuthPermissionApi @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("Fail to get user resource by permission. $responseContent")
+                    logger.warn("Fail to get user resource by permission. $responseContent")
                     throw RemoteServiceException("Fail to get user resource by permission")
                 }
 
@@ -208,7 +208,7 @@ class BSAuthPermissionApi @Autowired constructor(
                     if (responseObject.code == 403) {
                         bsAuthTokenApi.refreshAccessToken(serviceCode)
                     }
-                    logger.error("Fail to get user resource by permission. $responseContent")
+                    logger.warn("Fail to get user resource by permission. $responseContent")
                     throw RemoteServiceException("Fail to get user resource by permission")
                 }
                 return responseObject.data ?: emptyList()
@@ -254,7 +254,7 @@ class BSAuthPermissionApi @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("Fail to get user resources by permissions. $responseContent")
+                    logger.warn("Fail to get user resources by permissions. $responseContent")
                     throw RemoteServiceException("Fail to get user resources by permissions")
                 }
 
@@ -265,7 +265,7 @@ class BSAuthPermissionApi @Autowired constructor(
                     if (responseObject.code == 403) {
                         bsAuthTokenApi.refreshAccessToken(serviceCode)
                     }
-                    logger.error("Fail to get user resources by permissions. $responseContent")
+                    logger.warn("Fail to get user resources by permissions. $responseContent")
                     throw RemoteServiceException("Fail to get user resources by permissions")
                 }
 
@@ -315,7 +315,7 @@ class BSAuthPermissionApi @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("Fail to get user resources by permissions. $responseContent")
+                    logger.warn("Fail to get user resources by permissions. $responseContent")
                     throw RemoteServiceException("Fail to get user resources by permissions")
                 }
 
@@ -326,7 +326,7 @@ class BSAuthPermissionApi @Autowired constructor(
                     if (responseObject.code == 403) {
                         bsAuthTokenApi.refreshAccessToken(systemId)
                     }
-                    logger.error("Fail to get user resources by permissions. $responseContent")
+                    logger.warn("Fail to get user resources by permissions. $responseContent")
                     throw RemoteServiceException("Fail to get user resources by permissions")
                 }
 
@@ -374,14 +374,14 @@ class BSAuthPermissionApi @Autowired constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.error("createUserPermissions fail : user[$userId], projectCode[$projectCode]")
+                logger.warn("createUserPermissions fail : user[$userId], projectCode[$projectCode]")
                 throw RemoteServiceException("add Resource Permission remote fail")
             }
             val responseObject =
                 objectMapper.readValue<BkAuthResponse<String>>(responseContent)
-            logger.info("addResourcePermissionForUsers responseObject[$responseObject]")
+            logger.warn("addResourcePermissionForUsers responseObject[$responseObject]")
             if (responseObject.code != 0) {
-                logger.error("createUserPermissions fail : user[$userId], projectCode[$projectCode], message:$responseObject")
+                logger.warn("createUserPermissions fail : user[$userId], projectCode[$projectCode], message:$responseObject")
                 throw RemoteServiceException("add Resource Permission remote fail,message:$responseObject")
             }
             result = true

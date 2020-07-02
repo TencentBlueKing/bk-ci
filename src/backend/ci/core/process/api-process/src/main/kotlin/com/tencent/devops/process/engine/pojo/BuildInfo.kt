@@ -38,6 +38,7 @@ data class BuildInfo(
     val buildNum: Int,
     val trigger: String,
     val status: BuildStatus,
+    val queueTime: Long,
     val startUser: String,
     val startTime: Long?,
     val endTime: Long?,
@@ -66,4 +67,6 @@ data class BuildInfo(
     fun isCancel() = BuildStatus.isCancel(status)
 
     fun isStageSuccess() = status == BuildStatus.STAGE_SUCCESS
+
+    fun isReadyToRun() = BuildStatus.isReadyToRun(status)
 }

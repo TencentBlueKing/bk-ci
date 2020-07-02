@@ -40,10 +40,6 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
-/**
- * deng
- * 2019-01-07
- */
 @Repository
 class TemplateDao {
 
@@ -190,6 +186,19 @@ class TemplateDao {
         }
     }
 
+    fun deleteVersion(
+        dslContext: DSLContext,
+        templateId: String,
+        version: Long
+    ): Int {
+        with(TTemplate.T_TEMPLATE) {
+            return dslContext.deleteFrom(this)
+                .where(ID.eq(templateId))
+                .and(VERSION.eq(version))
+                .execute()
+        }
+    }
+
     /**
      * 同一个版本名字可能对应多个版本
      */
@@ -233,7 +242,10 @@ class TemplateDao {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.selectFrom(this)
                 .where(VERSION.eq(version))
-                .fetchOne() ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS, defaultMessage = "模板不存在")
+                .fetchOne() ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
+                defaultMessage = "模板不存在"
+            )
         }
     }
 
@@ -248,6 +260,15 @@ class TemplateDao {
                 .and(PROJECT_ID.eq(projectId))
                 .orderBy(VERSION.desc())
                 .fetch()
+        }
+    }
+
+    fun getSrcTemplateCodes(dslContext: DSLContext, projectId: String): List<String> {
+        return with(TTemplate.T_TEMPLATE) {
+            dslContext.select(SRC_TEMPLATE_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(STORE_FLAG.eq(true))
+                .fetch(SRC_TEMPLATE_ID, String::class.java)
         }
     }
 
@@ -456,7 +477,7 @@ class TemplateDao {
      */
     fun listLatestTemplateByIds(
         dslContext: DSLContext,
-        templateList: Collection<String>
+        templateList: List<String>
     ): Result<out Record> {
         val a = TTemplate.T_TEMPLATE.`as`("a")
         val b = dslContext.select(

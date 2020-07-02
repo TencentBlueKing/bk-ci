@@ -575,9 +575,9 @@ class DockerHostBuildService @Autowired constructor(
         }
     }
 
-    /**
+/*    *//**
      * 每30分钟执行一次，清理大于两天的任务
-     */
+     *//*
     @Scheduled(initialDelay = 30 * 1000, fixedDelay = 1800 * 1000)
     @Deprecated("this function is deprecated!")
     fun clearTimeoutTask() {
@@ -595,7 +595,7 @@ class DockerHostBuildService @Autowired constructor(
                 for (i in timeoutTask.indices) {
                     logger.info("clear pipelineId:(${timeoutTask[i].pipelineId}), vmSeqId:(${timeoutTask[i].vmSeqId}), containerId:(${timeoutTask[i].containerId})")
                 }
-                pipelineDockerTaskDao.updateTimeOutTask(dslContext)
+                pipelineDockerTaskDao.deleteTimeOutTask(dslContext)
                 message = "timeoutTask.size=${timeoutTask.size}"
             }
             stopWatch.stop()
@@ -605,12 +605,12 @@ class DockerHostBuildService @Autowired constructor(
             stopWatch.stop()
             logger.info("[$grayFlag]|clearTimeoutTask| $message| watch=$stopWatch")
         }
-    }
+    }*/
 
     /**
      * 每120分钟执行一次，更新大于两天状态还是running的pool，以及大于两天状态还是running的build history，并主动关机
      */
-    @Scheduled(initialDelay = 120 * 1000, fixedDelay = 1800 * 1000)
+    @Scheduled(initialDelay = 120 * 1000, fixedDelay = 3600 * 2 * 1000)
     @Deprecated("this function is deprecated!")
     fun updateTimeoutPoolTask() {
         var message = ""
@@ -663,9 +663,9 @@ class DockerHostBuildService @Autowired constructor(
         }
     }
 
-    /**
+/*    *//**
      * 每20秒执行一次，清理固定构建机的任务IP，以让其他构建机可以认领
-     */
+     *//*
     @Scheduled(initialDelay = 60 * 1000, fixedDelay = 20 * 1000)
     @Deprecated("this function is deprecated!")
     fun resetHostTag() {
@@ -710,11 +710,11 @@ class DockerHostBuildService @Autowired constructor(
             stopWatch.stop()
             logger.info("[$grayFlag]|resetHostTag| $message| watch=$stopWatch")
         }
-    }
+    }*/
 
-    /**
+/*    *//**
      * 每40秒执行一次，重置长时间未认领的固定区域的任务，重置为深圳区域
-     */
+     *//*
     @Scheduled(initialDelay = 90 * 1000, fixedDelay = 40 * 1000)
     @Deprecated("this function is deprecated!")
     fun resetTaskZone() {
@@ -749,7 +749,7 @@ class DockerHostBuildService @Autowired constructor(
             stopWatch.stop()
             logger.info("[$grayFlag]|resetTaskZone| $message| watch=$stopWatch")
         }
-    }
+    }*/
 
     fun getContainerInfo(buildId: String, vmSeqId: Int): Result<ContainerInfo> {
         logger.info("get containerId, buildId:$buildId, vmSeqId:$vmSeqId")

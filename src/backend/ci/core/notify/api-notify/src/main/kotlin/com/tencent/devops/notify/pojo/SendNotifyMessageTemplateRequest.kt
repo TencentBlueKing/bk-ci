@@ -32,10 +32,10 @@ import io.swagger.annotations.ApiModelProperty
 data class SendNotifyMessageTemplateRequest(
     @ApiModelProperty("通知模板代码", required = true)
     val templateCode: String,
-    @ApiModelProperty("发送者", required = true)
-    val sender: String,
     @ApiModelProperty("通知接收者", required = true)
     val receivers: MutableSet<String> = mutableSetOf(),
+    @ApiModelProperty("指定消息类型", required = false)
+    val notifyType: MutableSet<String>? = null, // 枚举保护：使用NotifyType.name传值
     @ApiModelProperty("标题动态参数", required = false)
     val titleParams: Map<String, String>? = null,
     @ApiModelProperty("内容动态参数", required = false)

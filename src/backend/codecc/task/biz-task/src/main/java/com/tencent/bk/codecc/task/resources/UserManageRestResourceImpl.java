@@ -28,15 +28,12 @@ package com.tencent.bk.codecc.task.resources;
 
 import com.tencent.bk.codecc.task.api.UserManageRestResource;
 import com.tencent.bk.codecc.task.service.UserManageService;
-import com.tencent.bk.codecc.task.vo.DevopsProjectVO;
 import com.tencent.bk.codecc.task.vo.UserVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.web.RestResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 /**
  * 用户管理接口的实现类
@@ -53,7 +50,7 @@ public class UserManageRestResourceImpl implements UserManageRestResource
     private UserManageService userManageService;
 
     @Override
-    public Result<UserVO> getInfo()
+    public CodeCCResult<UserVO> getInfo()
     {
         return userManageService.getInfo();
     }
