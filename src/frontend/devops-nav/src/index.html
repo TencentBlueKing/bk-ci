@@ -267,10 +267,10 @@
                     var serviceTitle = children[j].name.replace(/\(\S+?\)/, '')
                     var assetMod = assetsJSON[mod]
                     if (children[j].inject_type === 'amd') {
-                        var jsUrl = assetMod ? joinUrl([ mod, assetMod.js ]) : children[j].js_url
-                        var cssUrl = assetMod ? joinUrl([ mod, assetMod.css ]) : children[j].css_url
-                        children[j].js_url = joinUrl([ WEBSITE_URL, jsUrl ])
-                        children[j].css_url = joinUrl([ WEBSITE_URL, mod, cssUrl ])
+                        var jsUrl = assetMod ? joinUrl([ WEBSITE_URL, mod, assetMod.js ]) : children[j].js_url
+                        var cssUrl = assetMod ? joinUrl([ WEBSITE_URL, mod, assetMod.css ]) : children[j].css_url
+                        children[j].js_url = jsUrl
+                        children[j].css_url = cssUrl
                     } else {
                         children[j].iframe_url = joinUrl([ WEBSITE_URL, children[j].iframe_url ])
                     }
@@ -423,11 +423,11 @@
             init(...response)
         }).catch(function (e) {
             console.log(e)
-            printError(e.status, e.message)
+            printError(e.status)
         })  
         
 
-        function printError (status, msg) {
+        function printError (status) {
             const locale = getCookie('blueking_language')
             const msg = locale === 'en' ? 'Oops! Looks like something went wrong' : '后端服务异常，请稍后重试'
             document.writeln(
