@@ -170,6 +170,30 @@ interface ServiceBuildResource {
         buildNo: Int? = null
     ): Result<BuildId>
 
+    @ApiOperation("内部服务调用启动手动启动流水线")
+    @POST
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/start")
+    @Path("/{projectId}/{pipelineId}/innerStartup")
+    fun innerStartup(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("启动参数", required = true)
+        values: Map<String, String>,
+        @ApiParam("渠道号，默认为DS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode,
+        @ApiParam("手动指定构建版本参数", required = false)
+        @QueryParam("buildNo")
+        buildNo: Int? = null
+    ): Result<BuildId>
+
     @ApiOperation("重试流水线")
     @POST
     @Path("/{projectId}/{pipelineId}/{buildId}/retry")

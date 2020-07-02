@@ -113,12 +113,37 @@ class ServiceBuildResourceImpl @Autowired constructor(
             BuildId(
                 buildService.buildManualStartup(
                     userId = userId,
-                    startType = StartType.SERVICE,
+                    startType = StartType.MANUAL,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     values = values,
                     channelCode = channelCode,
                     buildNo = buildNo,
+                    checkPermission = ChannelCode.isNeedAuth(channelCode)
+                )
+            )
+        )
+    }
+
+    override fun innerStartup(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        values: Map<String, String>,
+        channelCode: ChannelCode,
+        buildNo: Int?
+    ): Result<BuildId> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        return Result(
+            BuildId(
+                buildService.buildInnerStartup(
+                    userId = userId,
+                    startType = StartType.SERVICE,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    startParams = values,
+                    channelCode = channelCode,
                     checkPermission = ChannelCode.isNeedAuth(channelCode)
                 )
             )

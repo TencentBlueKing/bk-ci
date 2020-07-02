@@ -81,6 +81,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamService
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -508,6 +509,64 @@ class PipelineBuildService(
             )
         } finally {
             logger.info("[$pipelineId]|$userId|It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline")
+        }
+    }
+
+    fun buildInnerStartup(
+        userId: String,
+        startType: StartType,
+        projectId: String,
+        pipelineId: String,
+        startParams: Map<String, String>,
+        channelCode: ChannelCode,
+        checkPermission: Boolean = true
+    ): String {
+
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+            ?: throw RuntimeException("Pipeline($pipelineId) not found")
+
+        val model = pipelineRepositoryService.getModel(pipelineId)
+        if (model == null) {
+            logger.warn("[$pipelineId]| Fail to get the model")
+            return ""
+        }
+
+        // 添加质量红线原子
+        val fullModel = pipelineBuildQualityService.fillingRuleInOutElement(projectId, pipelineId, startParams, model)
+
+        // 兼容从旧v1版本下发过来的请求携带旧的变量命名
+        val params = mutableMapOf<String, Any>()
+        val startParamsWithType = mutableListOf<BuildParameters>()
+        startParams.forEach {
+            // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
+            val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
+            if (newVarName == null) { // 为空表示该变量是新的，或者不需要兼容，直接加入，能会覆盖旧变量转换而来的新变量
+                params[it.key] = it.value
+                startParamsWithType.add(BuildParameters(it.key, it.value))
+            } else if (!params.contains(newVarName)) { // 新变量还不存在，加入
+                params[newVarName] = it.value
+                startParamsWithType.add(BuildParameters(newVarName, it.value))
+            }
+        }
+
+        try {
+            val buildId = startPipeline(
+                userId = userId,
+                readyToBuildPipelineInfo = pipelineInfo,
+                startType = StartType.WEB_HOOK,
+                startParamsWithType = startParamsWithType,
+                channelCode = pipelineInfo.channelCode,
+                isMobile = false,
+                model = fullModel,
+                signPipelineVersion = pipelineInfo.version,
+                frequencyLimit = false
+            )
+
+            logger.info("[$pipelineId]| inner service trigger of startType($startType)) build [$buildId]")
+            return buildId
+        } catch (e: Exception) {
+            logger.warn("[$pipelineId]| inner service trigger fail to start startType($startType): ${e.message}", e)
+            return ""
         }
     }
 
