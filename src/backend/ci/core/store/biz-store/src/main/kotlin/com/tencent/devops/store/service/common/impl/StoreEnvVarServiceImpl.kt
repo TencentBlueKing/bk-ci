@@ -207,7 +207,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
             storeCode = storeCode,
             varName = varName
         )
-        return if (storeEnvVarRecords != null && storeEnvVarRecords.size > 2) {
+        return if (storeEnvVarRecords != null && storeEnvVarRecords.size > 1) {
             val storeEnvChangeLogList = mutableListOf<StoreEnvChangeLogInfo>()
             for (i in storeEnvVarRecords.indices) {
                 if (i < storeEnvVarRecords.size - 1) {
