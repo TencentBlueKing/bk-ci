@@ -48,7 +48,7 @@ interface StoreEnvVarService {
         userId: String,
         storeType: String,
         storeCode: String,
-        ids: String
+        varNames: String
     ): Result<Boolean>
 
     /**

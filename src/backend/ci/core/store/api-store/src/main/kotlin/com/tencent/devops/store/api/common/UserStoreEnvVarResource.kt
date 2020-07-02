@@ -81,10 +81,10 @@ interface UserStoreEnvVarResource {
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
-        @ApiParam("环境变量ID集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
-        @QueryParam("ids")
+        @ApiParam("环境变量名称集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
+        @QueryParam("varNames")
         @BkField(patternStyle = BkStyleEnum.COMMON_STYLE)
-        ids: String
+        varNames: String
     ): Result<Boolean>
 
     @ApiOperation("获取最新的环境变量列表")
