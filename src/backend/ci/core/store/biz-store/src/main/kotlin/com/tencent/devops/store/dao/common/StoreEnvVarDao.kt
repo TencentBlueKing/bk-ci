@@ -107,10 +107,15 @@ class StoreEnvVarDao {
         }
     }
 
-    fun batchDelete(dslContext: DSLContext, envVarIdList: List<String>) {
+    fun batchDelete(
+        dslContext: DSLContext,
+        storeType: Byte,
+        storeCode: String,
+        varNameList: List<String>
+    ) {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
             dslContext.deleteFrom(this)
-                .where(ID.`in`(envVarIdList))
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)).and(VAR_NAME.`in`(varNameList)))
                 .execute()
         }
     }

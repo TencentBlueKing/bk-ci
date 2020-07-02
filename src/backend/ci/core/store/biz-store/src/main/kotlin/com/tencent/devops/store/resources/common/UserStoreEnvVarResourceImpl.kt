@@ -43,8 +43,13 @@ class UserStoreEnvVarResourceImpl @Autowired constructor(
         return storeEnvVarService.create(userId, storeEnvVarRequest)
     }
 
-    override fun delete(userId: String, storeType: String, storeCode: String, ids: String): Result<Boolean> {
-        return storeEnvVarService.delete(userId = userId, storeType = storeType, storeCode = storeCode, ids = ids)
+    override fun delete(userId: String, storeType: String, storeCode: String, varNames: String): Result<Boolean> {
+        return storeEnvVarService.delete(
+            userId = userId,
+            storeType = storeType,
+            storeCode = storeCode,
+            varNames = varNames
+        )
     }
 
     override fun getLatestEnvVarList(

@@ -113,19 +113,25 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         userId: String,
         storeType: String,
         storeCode: String,
-        ids: String
+        varNames: String
     ): Result<Boolean> {
-        logger.info("storeEnvVar delete userId:$userId,storeType:$storeType,storeCode:$storeCode,ids:$ids")
+        logger.info("storeEnvVar delete userId:$userId,storeType:$storeType,storeCode:$storeCode,varNames:$varNames")
+        val storeTypeObj = StoreTypeEnum.valueOf(storeType)
         if (!storeMemberDao.isStoreMember(
                 dslContext = dslContext,
                 userId = userId,
                 storeCode = storeCode,
-                storeType = StoreTypeEnum.valueOf(storeType).type.toByte()
+                storeType = storeTypeObj.type.toByte()
             )
         ) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
-        storeEnvVarDao.batchDelete(dslContext, ids.split(","))
+        storeEnvVarDao.batchDelete(
+            dslContext = dslContext,
+            storeType = storeTypeObj.type.toByte(),
+            storeCode = storeCode,
+            varNameList = varNames.split(",")
+        )
         return Result(true)
     }
 
