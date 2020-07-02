@@ -78,6 +78,8 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
 
     private final val scoreFormat = "%.2f"
 
+    private final val codecc = "codecc"
+
     @Value("\${codecc.detailUrl}")
     private lateinit var codeccDetailUrl: String
 
@@ -97,14 +99,14 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         var totalNormalRiskCount = 0
         var totalSeriousWaringCount = 0
         var totalNormalWaringCount = 0
-        val codeStyleToolsConfig = businessConfigDao.get(dslContext, storeType.name, "codecc", "codeStyleTools")
+        val codeStyleToolsConfig = businessConfigDao.get(dslContext, storeType.name, codecc, "codeStyleTools")
         val codeStyleToolNameEnList = codeStyleToolsConfig!!.configValue.split(",")
         codeccCallback.toolSnapshotList.forEach { codeccItemMap ->
             val codeccToolNameEn = codeccItemMap[toolNameEn]
             when {
                 codeccToolNameEn == "COVERITY" -> {
-                    totalCoveritySeriousWaringCount = codeccItemMap[totalSerious] as Int
-                    totalCoverityNormalWaringCount = codeccItemMap[totalNormal] as Int
+                    totalCoveritySeriousWaringCount = codeccItemMap["total_new_serious"] as Int
+                    totalCoverityNormalWaringCount = codeccItemMap["total_new_normal"] as Int
                 }
                 codeccToolNameEn == "CCN" -> totalCcnExceedNum = codeccItemMap["ccn_beyond_threshold_sum"].toString().toDouble()
                 codeccToolNameEn == "WOODPECKER_SENSITIVE" -> {
@@ -157,7 +159,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
             )
         )
         // 获取合格分数配置
-        val qualifiedScoreConfig = businessConfigDao.get(dslContext, storeType.name, "codecc", "qualifiedScore")
+        val qualifiedScoreConfig = businessConfigDao.get(dslContext, storeType.name, codecc, "qualifiedScore")
         val qualifiedScore = (qualifiedScoreConfig?.configValue ?: "90").toDouble()
         val notifyTemplateCode = storeType.name + if (codeStyleScore >= qualifiedScore && codeSecurityScore >= qualifiedScore && codeMeasureScore >= qualifiedScore) {
             STORE_CODECC_QUALIFIED_TEMPLATE_SUFFIX
