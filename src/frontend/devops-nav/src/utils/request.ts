@@ -23,8 +23,7 @@ function errorHandler (error: object) {
 request.interceptors.response.use(response => {
     const { data: { code, data, message, status }, status: httpStatus } = response
     if (httpStatus === 401) {
-        eventBus.$emit('toggle-login-dialog', true)
-        return Promise.reject(response.data)
+        location.href = window.getLoginUrl()
     } else if (httpStatus === 503) {
         return Promise.reject({ // eslint-disable-line
             status: httpStatus,
