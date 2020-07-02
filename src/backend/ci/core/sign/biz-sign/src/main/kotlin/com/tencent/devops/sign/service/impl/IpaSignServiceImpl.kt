@@ -1,23 +1,20 @@
 package com.tencent.devops.sign.service.impl
 
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.sign.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.IpaSignService
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.io.File
 import java.io.InputStream
-import java.nio.charset.Charset
-import java.nio.file.Files
 
 @Service
 class IpaSignServiceImpl : IpaSignService {
 
     override fun resignIpaPackage(
-        userId: String,
-        ipaSignInfo: String?,
-        inputStream: InputStream
+            userId: String,
+            ipaSignInfo: IpaSignInfo?,
+            ipaPackage: File
     ): Result<String?> {
         logger.info("the upload file info is:$ipaSignInfo")
 //        val index = fileName.lastIndexOf(".")
@@ -36,6 +33,10 @@ class IpaSignServiceImpl : IpaSignService {
 //        }
 
         return Result("")
+    }
+
+    override fun resignApp(appPath: File, bundleId: String?, mobileprovision: String?, entitlement: String?): Result<Boolean> {
+        TODO("Not yet implemented")
     }
 
     companion object {

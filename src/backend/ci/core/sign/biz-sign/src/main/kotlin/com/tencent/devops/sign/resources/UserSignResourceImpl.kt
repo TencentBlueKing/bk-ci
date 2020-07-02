@@ -27,10 +27,12 @@
 package com.tencent.devops.sign.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.sign.api.user.UserSignResource
+import com.tencent.devops.sign.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.IpaSignService
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.jolokia.util.Base64Util
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 import javax.servlet.http.HttpServletResponse
@@ -45,12 +47,19 @@ class UserSignResourceImpl @Autowired constructor(
             ipaSignInfo: String?,
             ipaInputStream: InputStream
     ): Result<String?> {
+        val ipaSignInfoObject = if (ipaSignInfo == null) {
+            IpaSignInfo()
+        } else {
+            JsonUtil.getObjectMapper().readValue(Base64Util.decode(ipaSignInfo), IpaSignInfo::class.java)
+        }
         return ipaSignService.resignIpaPackage(
                 userId = userId,
-                ipaSignInfo = ipaSignInfo,
+                ipaSignInfo = ipaSignInfoObject,
                 inputStream = ipaInputStream
         )
     }
+
+    private fun
 
     override fun downloadIpa(userId: String, filePath: String, response: HttpServletResponse) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
