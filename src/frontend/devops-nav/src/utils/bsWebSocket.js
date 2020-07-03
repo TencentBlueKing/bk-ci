@@ -45,7 +45,7 @@ class BlueShieldWebSocket {
         }, (err) => {
             if (this.connectErrTime <= 8) {
                 this.connectErrTime++
-                const time = Math.random() * 10000
+                const time = Math.random() * 60000
                 setTimeout(() => this.connect(), time)
             } else {
                 this.isConnecting = false
