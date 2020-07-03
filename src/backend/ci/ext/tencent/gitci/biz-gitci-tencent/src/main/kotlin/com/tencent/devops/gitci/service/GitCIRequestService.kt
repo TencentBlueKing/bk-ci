@@ -408,8 +408,7 @@ class GitCIRequestService @Autowired constructor(
             mergeRequestId = null,
             event = e,
             description = "",
-            mrTitle = null,
-            mrUrl = null
+            mrTitle = null
         )
     }
 
@@ -431,8 +430,7 @@ class GitCIRequestService @Autowired constructor(
             mergeRequestId = null,
             event = e,
             description = "",
-            mrTitle = null,
-            mrUrl = null
+            mrTitle = null
         )
     }
 
@@ -454,8 +452,7 @@ class GitCIRequestService @Autowired constructor(
             mergeRequestId = gitMrEvent.object_attributes.iid,
             event = e,
             description = "",
-            mrTitle = gitMrEvent.object_attributes.title,
-            mrUrl = gitMrEvent.object_attributes.url
+            mrTitle = gitMrEvent.object_attributes.title
         )
     }
 
@@ -476,8 +473,7 @@ class GitCIRequestService @Autowired constructor(
             mergeRequestId = null,
             event = "",
             description = triggerBuildReq.description,
-            mrTitle = "",
-            mrUrl = null
+            mrTitle = ""
         )
     }
 
