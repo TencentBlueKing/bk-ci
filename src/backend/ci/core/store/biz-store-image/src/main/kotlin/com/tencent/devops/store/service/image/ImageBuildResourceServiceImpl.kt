@@ -69,6 +69,9 @@ class ImageBuildResourceServiceImpl @Autowired constructor(
                     if (baseImageInfo.imageType == null) {
                         baseImageInfo.imageType = ImageType.BKSTORE.name
                     }
+                    if (baseImageInfo.imageType.equals(ImageType.BKSTORE.name)) {
+                        baseImageInfo.value = baseImageInfo.code
+                    }
                     return baseImageInfo
                 } catch (e: Exception) {
                     logger.error("defaultBuildResource value wrong format, plz config in op:${record.configValue}")
