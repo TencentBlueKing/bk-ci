@@ -28,7 +28,6 @@ package com.tencent.devops.store.service.image
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.DataConsistencyException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Page
@@ -567,16 +566,7 @@ abstract class ImageService @Autowired constructor() {
         )
         myImageRecords?.forEach {
             val imageCode = it.get(KEY_IMAGE_CODE) as String
-            val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-                dslContext = dslContext,
-                storeCode = imageCode,
-                storeType = StoreTypeEnum.IMAGE.type.toByte()
-            )
-                ?: throw DataConsistencyException(
-                    "storeCode=$imageCode,storeType=${StoreTypeEnum.IMAGE.name}",
-                    "T_STORE_PROJECT_REL.projectCode",
-                    "Data does not exist"
-                )
+            val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(dslContext, userId, imageCode, StoreTypeEnum.IMAGE) ?: ""
             myImageCodeList.add(imageCode)
             projectCodeList.add(projectCode)
         }
@@ -886,13 +876,7 @@ abstract class ImageService @Autowired constructor() {
             storeType = StoreTypeEnum.IMAGE
         )
         // 查关联镜像时的调试项目
-        val projectCode =
-            storeProjectRelDao.getInitProjectCodeByStoreCode(dslContext, imageCode, StoreTypeEnum.IMAGE.type.toByte())
-                ?: throw DataConsistencyException(
-                    "imageCode:$imageCode",
-                    "projectCode of Table StoreProjectRel",
-                    "No initial projectCode"
-                )
+        val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(dslContext, userId, imageCode, StoreTypeEnum.IMAGE)
         val (imageSizeNum, imageSize) = getImageSizeInfoByStr(imageRecord.imageSize as String)
         val agentTypeScope = if (ImageStatusEnum.getInprocessStatusSet().contains(imageRecord.imageStatus.toInt())) {
             // 非终止态镜像应采用当前版本范畴与适用机器类型
@@ -920,7 +904,7 @@ abstract class ImageService @Autowired constructor() {
             icon = icon ?: "",
             summary = imageRecord.summary ?: "",
             docsLink = baseImageDocsLink + imageCode,
-            projectCode = projectCode,
+            projectCode = projectCode ?: "",
             score = storeStatisticRecord?.value3()?.toDouble() ?: 0.0,
             downloads = storeStatisticRecord?.value1()?.toInt() ?: 0,
             classifyId = classifyRecord?.id ?: "",

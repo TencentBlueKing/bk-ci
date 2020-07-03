@@ -86,7 +86,7 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
         logger.info("approveStoreSpecifyBusInfo atomApproveRecord is :$atomApproveRecord")
         if (storeApproveRequest.approveStatus == ApproveStatusEnum.PASS) {
             // 为用户添加插件代码库的权限和插件开发人员的权限
-            val storeMemberReq = StoreMemberReq(listOf(atomApproveRecord!!.applicant), StoreMemberTypeEnum.DEVELOPER, storeCode)
+            val storeMemberReq = StoreMemberReq(listOf(atomApproveRecord!!.applicant), StoreMemberTypeEnum.DEVELOPER, storeCode, storeType)
             val addAtomMemberResult = atomMemberService.add(userId, storeMemberReq, storeType, true)
             logger.info("approveStoreSpecifyBusInfo addAtomMemberResult is :$addAtomMemberResult")
             if (addAtomMemberResult.isNotOk()) {

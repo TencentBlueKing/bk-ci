@@ -73,10 +73,10 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         logger.info("the initProjectCode is :$initProjectCode")
         var atomStatusList: List<Byte>? = null
         if (version.contains("*")) {
-            val flag = storeProjectRelDao.isInitTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
+            val flag = storeProjectRelDao.isTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
             logger.info("the isInitTestProjectCode flag is :$flag")
             atomStatusList = if (flag) {
-                // 原生项目或者调试项目有权查处于测试中、审核中、已发布、下架中和已下架（需要兼容那些还在使用已下架插件插件的项目）的插件
+                // 调试项目有权查处于测试中、审核中、已发布、下架中和已下架（需要兼容那些还在使用已下架插件插件的项目）的插件
                 listOf(
                     AtomStatusEnum.TESTING.status.toByte(),
                     AtomStatusEnum.AUDITING.status.toByte(),
