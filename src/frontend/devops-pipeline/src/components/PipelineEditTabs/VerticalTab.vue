@@ -81,7 +81,10 @@
         > aside {
             width: 240px;
             border-right: 1px solid $borderWeightColor;
+            height: 100%;
             .bkdevops-vertical-tab-list {
+                height: 100%;
+                overflow-y: auto;
                 > li {
                     cursor: pointer;
                     height: 44px;
