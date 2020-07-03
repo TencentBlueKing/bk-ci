@@ -72,8 +72,8 @@
             <bk-form :model="dialogConfig.formData" form-type="vertical" style="padding: 0 10px">
                 <bk-form-item v-for="item in dialogConfig.formConfig" :label="item.label" :required="item.required" :rules="item.rules" :property="item.name" :key="item.name">
                     <bk-radio-group v-if="item.component === 'enum-input'" v-model="dialogConfig.formData[item.name]">
-                        <bk-radio class="bkdevops-radio" :value="true">{{ $t('true') }}</bk-radio>
-                        <bk-radio class="bkdevops-radio" :value="false">{{ $t('false') }}</bk-radio>
+                        <bk-radio style="margin-right: 10px;" :value="true">{{ $t('true') }}</bk-radio>
+                        <bk-radio :value="false">{{ $t('false') }}</bk-radio>
                     </bk-radio-group>
                     <component v-else :is="item.component" v-model="dialogConfig.formData[item.name]" v-bind="item.bindData"></component>
                 </bk-form-item>
