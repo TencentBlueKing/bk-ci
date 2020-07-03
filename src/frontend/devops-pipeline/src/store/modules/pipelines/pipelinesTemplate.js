@@ -73,8 +73,8 @@ const actions = {
             return response.data
         })
     },
-    updateTemplateInstance (_, { projectId, templateId, versionId, params }) {
-        return ajax.put(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}?version=${versionId}`, params).then(response => {
+    updateTemplateInstance (_, { projectId, templateId, versionId, useTemplateSettings, params }) {
+        return ajax.put(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}?version=${versionId}&useTemplateSettings=${useTemplateSettings}`, params).then(response => {
             return response.data
         })
     },
