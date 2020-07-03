@@ -29,6 +29,7 @@ package com.tencent.devops.gitci.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
@@ -110,7 +111,6 @@ import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_TYPE
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
-import com.tencent.devops.process.util.DateTimeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -500,6 +500,7 @@ class GitCIBuildService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("Fail to parse the git web hook commit event, errMsg: ${e.message}")
         }
+
         when (originEvent) {
             is GitPushEvent -> {
                 startParams[BK_REPO_GIT_WEBHOOK_PUSH_USERNAME] = originEvent.user_name
@@ -520,10 +521,10 @@ class GitCIBuildService @Autowired constructor(
                 startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = originEvent.object_attributes.source_branch
                 startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = originEvent.object_attributes.created_at
                 startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] =
-                    DateTimeUtils.zoneDateToTimestamp(originEvent.object_attributes.created_at)
+                    DateTimeUtil.zoneDateToTimestamp(originEvent.object_attributes.created_at).toString()
                 startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = originEvent.object_attributes.updated_at
                 startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] =
-                    DateTimeUtils.zoneDateToTimestamp(originEvent.object_attributes.updated_at)
+                    DateTimeUtil.zoneDateToTimestamp(originEvent.object_attributes.updated_at).toString()
                 startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = originEvent.object_attributes.iid.toString()
                 startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = originEvent.object_attributes.title
                 startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = originEvent.object_attributes.url
