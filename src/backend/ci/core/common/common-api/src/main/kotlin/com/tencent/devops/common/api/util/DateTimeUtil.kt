@@ -70,7 +70,6 @@ object DateTimeUtil {
         return seconds / 60
     }
 
-
     /**
      * 获取从当前开始一定单位时间间隔的日期
      * @param unit 单位 Calendar.SECONDS
