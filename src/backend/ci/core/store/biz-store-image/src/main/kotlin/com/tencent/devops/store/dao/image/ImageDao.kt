@@ -851,7 +851,7 @@ class ImageDao {
         conditions.add(tImage.IMAGE_STATUS.`in`(imageStatusSet))
         // 镜像
         conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
-        // 调试项目信息
+        // 初始化项目信息
         conditions.add(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
         val baseStep = dslContext.select(
             tImage.ID.`as`(KEY_IMAGE_ID),
