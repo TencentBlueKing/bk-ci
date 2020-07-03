@@ -16,7 +16,7 @@
                 </bk-select>
             </div>
         </form-field>
-        <stage-control ref="stageControl" :stage-control="stageControl" :disabled="!editable" :handle-stage-change="handleStageChange"></stage-control>
+        <stage-control v-if="stageIndex > 0" ref="stageControl" :stage-control="stageControl" :disabled="!editable" :handle-stage-change="handleStageChange"></stage-control>
     </section>
 </template>
 
@@ -67,8 +67,7 @@
             errors: {
                 deep: true,
                 handler: function (errors, old) {
-                    const validStageControl = !this.$refs.stageControl || (this.$refs.stageControl && this.$refs.stageControl.validateStageControl())
-                    const isError = errors.any() || !validStageControl
+                    const isError = errors.any()
                     this.handleStageChange('isError', isError)
                 }
             }
