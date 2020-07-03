@@ -23,10 +23,10 @@
                     <p class="atom-name">
                         <span :title="atom.name" :class="{ 'skip-name': useSkipStyle(atom) }">{{ atom.atomCode ? atom.name : $t('editPage.pendingAtom') }}</span>
                     </p>
-                    <bk-popover placement="top" v-if="atom.status === 'REVIEWING'">
-                        <span @click.stop="checkAtom(atom)" :class="{ 'atom-reviewing-tips': userInfo && isCurrentUser(getReviewUser(atom)), 'atom-review-diasbled-tips': !(userInfo && isCurrentUser(getReviewUser(atom))) }">{{ $t('editPage.toCheck') }}</span>
+                    <bk-popover placement="top" v-if="atom.isReviewing">
+                        <span @click.stop="checkAtom(atom)" :class="isCurrentUser(atom.computedReviewers) ? 'atom-reviewing-tips' : 'atom-review-diasbled-tips'">{{ $t('editPage.toCheck') }}</span>
                         <template slot="content">
-                            <p>{{ $t('editPage.checkUser') }}{{ getReviewUser(atom).join(';') }}</p>
+                            <p>{{ $t('editPage.checkUser') }}{{ atom.computedReviewers.join(';') }}</p>
                         </template>
                     </bk-popover>
                     <bk-popover placement="top" v-if="atom.status === 'REVIEW_ABORT'">
@@ -55,17 +55,17 @@
                 </section>
 
                 <section class="atom-section quality-atom"
-                    :class="{ 'is-review': (atom.status === 'REVIEWING'),
+                    :class="{ 'is-review': atom.isReviewing,
                               'is-success': (atom.status === 'SUCCEED' || atom.status === 'REVIEW_PROCESSED'),
                               'is-fail': (atom.status === 'QUALITY_CHECK_FAIL' || atom.status === 'REVIEW_ABORT') }"
                     v-if="atom['@type'] === 'qualityGateInTask' || atom['@type'] === 'qualityGateOutTask'">
                     <span class="atom-title">{{ $t('details.quality.quality') }}</span>
-                    <span class="handler-list" :class="{ 'disabled-review': atom.status === 'REVIEWING' && userInfo && !isCurrentUser(atom.reviewUsers) }"
-                        v-if="atom.status === 'REVIEWING' && !reviewLoading">
-                        <span class="revire-btn continue-excude" @click.stop="reviewExcude(atom, 'PROCESS', atom.reviewUsers)">{{ $t('resume') }}</span>
-                        <span class="review-btn stop-excude" @click.stop="reviewExcude(atom, 'ABORT', atom.reviewUsers)">{{ $t('terminate') }}</span>
+                    <span class="handler-list" :class="{ 'disabled-review': atom.isReviewing && !isCurrentUser(atom.computedReviewers) }"
+                        v-if="atom.isReviewing && !reviewLoading">
+                        <span class="revire-btn continue-excude" @click.stop="reviewExcute(atom, 'PROCESS', atom.computedReviewers)">{{ $t('resume') }}</span>
+                        <span class="review-btn stop-excude" @click.stop="reviewExcute(atom, 'ABORT', atom.computedReviewers)">{{ $t('terminate') }}</span>
                     </span>
-                    <i class="devops-icon icon-circle-2-1 executing-job" v-if="atom.status === 'REVIEWING' && reviewLoading"></i>
+                    <i class="devops-icon icon-circle-2-1 executing-job" v-if="atom.isReviewing && reviewLoading"></i>
                 </section>
             </li>
             <span v-if="editable" :class="{ 'add-atom-entry': true, 'block-add-entry': atomList.length === 0 }" @click="editAtom(atomList.length - 1, true)">
@@ -136,9 +136,6 @@
             isWaiting () {
                 return this.containerStatus === 'PREPARE_ENV'
             },
-            userInfo () {
-                return this.$userInfo
-            },
             routerParams () {
                 return this.$route.params
             },
@@ -154,10 +151,15 @@
                     atoms.forEach(atom => {
                         if (this.curMatchRules.some(rule => rule.taskId === atom.atomCode
                             && (rule.ruleList.every(val => !val.gatewayId)
-                            || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
+                                || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
                             atom.isQualityCheck = true
                         } else {
                             atom.isQualityCheck = false
+                        }
+                        atom.isReviewing = atom.status === 'REVIEWING'
+                        if (atom.isReviewing) {
+                            const atomReviewer = this.getReviewUser(atom)
+                            atom.computedReviewers = atomReviewer
                         }
                     })
                     return atoms
@@ -182,21 +184,18 @@
                 }
             }
         },
-
         methods: {
             ...mapActions('soda', [
-                'reviewExcudeAtom',
+                'reviewExcuteAtom',
                 'requestAuditUserList'
             ]),
             ...mapActions('atom', [
                 'updateContainer',
-                'requestPipelineExecDetail',
                 'togglePropertyPanel',
                 'addAtom',
                 'deleteAtom',
                 'setPipelineEditing'
             ]),
-
             toggleCheckDialog (isShow = false) {
                 this.isShowCheckDialog = isShow
                 if (!isShow) {
@@ -204,7 +203,7 @@
                 }
             },
             checkAtom (atom) {
-                if (!(this.userInfo && this.isCurrentUser(this.getReviewUser(atom)))) return
+                if (!this.isCurrentUser(atom.computedReviewers)) return
                 this.currentAtom = atom
                 this.toggleCheckDialog(true)
             },
@@ -241,14 +240,13 @@
                 return coverTimer(time)
             },
             isCurrentUser (users = []) {
-                return this.userInfo && users.indexOf(this.userInfo.username) > -1
+                return this.$userInfo && users.includes(this.$userInfo.username)
             },
             getReviewUser (atom) {
                 const list = atom.reviewUsers || (atom.data && atom.data.input && atom.data.input.reviewers)
                 const reviewUsers = list.map(user => user.split(';').map(val => val.trim())).reduce((prev, curr) => {
                     return prev.concat(curr)
                 })
-
                 return reviewUsers
             },
             showPropertyPanel (elementIndex) {
@@ -288,7 +286,7 @@
                     })
                 }
             },
-            async reviewExcude (atom, action, reviewer) {
+            async reviewExcute (atom, action, reviewer) {
                 if (this.isCurrentUser(reviewer)) {
                     this.reviewLoading = true
                     try {
@@ -299,13 +297,12 @@
                             elementId: atom.id,
                             action
                         }
-                        const res = await this.reviewExcudeAtom(data)
+                        const res = await this.reviewExcuteAtom(data)
                         if (res === true) {
                             this.$showTips({
                                 message: this.$t('editPage.operateSuc'),
                                 theme: 'success'
                             })
-                            this.requestPipelineExecDetail(this.routerParams)
                         }
                     } catch (err) {
                         this.$showTips({
@@ -340,14 +337,6 @@
                     if (res.id) {
                         message = this.$t('subpage.retrySuc')
                         theme = 'success'
-
-                        this.$router.push({
-                            name: 'pipelinesDetail',
-                            params: {
-                                buildNo: res.id
-                            }
-                        })
-                        this.requestPipelineExecDetail(this.routerParams)
                     } else {
                         message = this.$t('subpage.retryFail')
                         theme = 'error'
@@ -414,13 +403,6 @@
             }
             .atom-icon.skip-icon {
                 color: #c4cdd6;
-            }
-            .atom-name span.skip-name {
-                text-decoration: line-through;
-                color: #c4cdd6;
-                &:hover {
-                    color: #c4cdd6;
-                }
             }
 
             &.is-error {
