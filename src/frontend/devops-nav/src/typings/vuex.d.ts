@@ -14,6 +14,7 @@ interface RootState {
     isShowPreviewTips: boolean
     fetchError: object
     headerConfig: object,
+    currentNotice: object,
     moduleLoading: boolean,
     isPermissionDialogShow: boolean
 }

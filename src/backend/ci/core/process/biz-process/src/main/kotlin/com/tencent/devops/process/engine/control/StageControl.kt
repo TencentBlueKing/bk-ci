@@ -106,12 +106,6 @@ class StageControl @Autowired constructor(
                 return
             }
 
-            // 当前Stage的状态如果已经结束，不再受理做执行判断，抛弃消息
-            if (BuildStatus.isFinish(stage.status)) {
-                logger.info("[$buildId]|[${stage.status}]|STAGE_ALREADY_FINISHED|event=$this")
-                return
-            }
-
             val variables = buildVariableService.getAllVariable(buildId)
 
             val allContainers = pipelineRuntimeService.listContainers(buildId)

@@ -40,7 +40,7 @@ function iframeUtil (router: any) {
     }
 
     utilMap.toggleLoginDialog = function () {
-        window.location.href = window.getLoginUrl()
+        location.href = window.getLoginUrl()
     }
 
     utilMap.popProjectDialog = function (project: Project): void {

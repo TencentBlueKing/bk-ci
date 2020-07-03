@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
@@ -45,10 +46,6 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.process.engine.service.PipelineBuildTaskService
-import com.tencent.devops.process.service.BuildVariableService
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -64,10 +61,7 @@ class BuildEndControl @Autowired constructor(
     private val pipelineBuildService: PipelineBuildService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val pipelineBuildTaskService: PipelineBuildTaskService,
-    private val pipelineRuntimeExtService: PipelineRuntimeExtService,
-    private val buildVariableService: BuildVariableService,
-    private val dslContext: DSLContext
+    private val pipelineRuntimeExtService: PipelineRuntimeExtService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!

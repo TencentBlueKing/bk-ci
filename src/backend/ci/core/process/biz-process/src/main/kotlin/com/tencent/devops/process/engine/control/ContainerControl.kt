@@ -51,6 +51,8 @@ import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineQuotaService
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -101,6 +103,7 @@ class ContainerControl @Autowired constructor(
         // Container互斥组的判断
         // 并初始化互斥组的值
         val variables = buildVariableService.getAllVariable(buildId)
+        val executeCount = if (NumberUtils.isParsable(variables[PIPELINE_RETRY_COUNT])) 1 + variables.getValue(PIPELINE_RETRY_COUNT).toInt() else 1
         val mutexGroup = mutexControl.initMutexGroup(
             mutexGroup = container.controlOption?.mutexGroup,
             variables = variables
@@ -138,8 +141,8 @@ class ContainerControl @Autowired constructor(
                     buildId = buildId,
                     message = "Project has no quota to run the job...(max quota: ${quotaPair.second})",
                     tag = VMUtils.genStartVMTaskId(containerId),
-                    jobId = null,
-                    executeCount = 1
+                    jobId = containerId,
+                    executeCount = executeCount
                 )
                 skipContainer(
                     event = this,
@@ -157,7 +160,8 @@ class ContainerControl @Autowired constructor(
                 buildId = buildId,
                 message = "Container control inc project used quota",
                 tag = VMUtils.genStartVMTaskId(containerId),
-                executeCount = 1
+                jobId = containerId,
+                executeCount = executeCount
             )
             pipelineQuotaService.incQuotaByProject(projectId, buildId, containerId)
         }
@@ -194,9 +198,9 @@ class ContainerControl @Autowired constructor(
                         rabbitTemplate = rabbitTemplate,
                         buildId = buildId,
                         message = "Container finish and dec the quota for project: $projectId",
-                        tag = "",
+                        tag = VMUtils.genStartVMTaskId(containerId),
                         jobId = containerId,
-                        executeCount = 1
+                        executeCount = executeCount
                     )
                     pipelineQuotaService.decQuotaByProject(projectId, buildId, containerId)
 
@@ -243,9 +247,9 @@ class ContainerControl @Autowired constructor(
                         rabbitTemplate = rabbitTemplate,
                         buildId = buildId,
                         message = "Container finish and dec the quota for project: $projectId",
-                        tag = "",
+                        tag = VMUtils.genStartVMTaskId(containerId),
                         jobId = containerId,
-                        executeCount = 1
+                        executeCount = executeCount
                     )
                     pipelineQuotaService.decQuotaByProject(projectId, buildId, containerId)
 
@@ -338,9 +342,9 @@ class ContainerControl @Autowired constructor(
                 rabbitTemplate = rabbitTemplate,
                 buildId = buildId,
                 message = "Container finish and dec the quota for project: $projectId",
-                tag = "",
+                tag = VMUtils.genStartVMTaskId(containerId),
                 jobId = containerId,
-                executeCount = 1
+                executeCount = executeCount
             )
             pipelineQuotaService.decQuotaByProject(projectId, buildId, containerId)
 

@@ -24,30 +24,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.notify.utils
+package com.tencent.devops.common.web
 
-object DateTimeUtil {
+import com.tencent.devops.common.security.jwt.JwtManager
+import com.tencent.devops.common.web.filter.ServiceSecurityFilter
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+import javax.servlet.http.HttpServletRequest
 
-    fun formatMillSecond(mss: Long): String {
-        if (mss == 0L) return "0秒"
+/**
+ *
+ * Powered By Tencent
+ */
+@Configuration
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
+class FilterAutoConfiguration(
+    private val jwtManager: JwtManager,
+    private val servletRequest: HttpServletRequest
+) {
 
-        val days = mss / (1000 * 60 * 60 * 24)
-        val hours = mss % (1000 * 60 * 60 * 24) / (1000 * 60 * 60)
-        val minutes = mss % (1000 * 60 * 60) / (1000 * 60)
-        val seconds = mss % (1000 * 60) / 1000
-        val sb = StringBuilder()
-        if (days != 0L) {
-            sb.append(days.toString() + "天")
-        }
-        if (hours != 0L) {
-            sb.append(hours.toString() + "时")
-        }
-        if (minutes != 0L) {
-            sb.append(minutes.toString() + "分")
-        }
-        if (seconds != 0L) {
-            sb.append(seconds.toString() + "秒")
-        }
-        return sb.toString()
-    }
+    @Bean
+    fun serviceSecurityFilter() = ServiceSecurityFilter(jwtManager, servletRequest)
 }

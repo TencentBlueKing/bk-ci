@@ -24,43 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.util
+package com.tencent.devops.project.api.user
 
-import org.slf4j.LoggerFactory
-import java.text.SimpleDateFormat
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.pojo.Notice
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-object DateTimeUtils {
+@Api(tags = ["NOTICE"], description = "公告")
+@Path("/user/notice")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserNoticeResource {
 
-    private val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+    @ApiOperation("获取有效期内的公告")
+    @GET
+    @Path("/valid")
+    fun getValidNotice(): Result<Notice?>
 
-    private val logger = LoggerFactory.getLogger(DateTimeUtils::class.java)
-
-    /**
-     * 单位转换，分钟转换秒
-     */
-    fun minuteToSecond(minutes: Int): Int {
-        return minutes * 60
-    }
-
-    /**
-     * 单位转化，秒转换分钟
-     * 以Int为计算单位，有余数将省去
-     */
-    fun secondToMinute(seconds: Int): Int {
-        return seconds / 60
-    }
-
-    /**
-     * 单位转化，秒转换时间戳
-     * 2019-09-02T08:58:46+0000 -> xxxxx
-     */
-    fun zoneDateToTimestamp(timeStr: String?): Long {
-        try {
-            if (timeStr.isNullOrBlank()) return 0L
-            return formatter.parse(timeStr).time
-        } catch (e: Exception) {
-            logger.error("fail to parse time string: $timeStr", e)
-        }
-        return 0L
-    }
+    @ApiOperation("获取所有的公告")
+    @GET
+    @Path("/")
+    fun getAllNotice(): Result<List<Notice>>
 }
