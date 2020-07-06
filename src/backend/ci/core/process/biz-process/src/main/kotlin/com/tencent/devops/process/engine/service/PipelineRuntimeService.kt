@@ -855,8 +855,7 @@ class PipelineRuntimeService @Autowired constructor(
 
                         if (lastTimeBuildTaskRecords.isNotEmpty()) {
                             // 判断是否 stage 重试
-                            if (!retryStartTaskId.isNullOrBlank() &&
-                                !retryStage) {
+                            if (!retryStartTaskId.isNullOrBlank() && !retryStage) {
                                 if (retryStartTaskId == atomElement.id) {
                                     // 重试判断是否存在原子重试，其他保持不变
                                     val taskRecord = retryDetailModelStatus(
