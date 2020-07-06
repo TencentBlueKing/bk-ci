@@ -296,7 +296,7 @@ class PipelineTaskPauseListener @Autowired constructor(
                     LogUtils.addYellowLine(
                         rabbitTemplate = rabbitTemplate,
                         buildId = buildId,
-                        message = "当前插件${oldElement.taskName}执行参数已变更",
+                        message = "当前插件${oldElement.taskName}执行参数 $it 已变更",
                         tag = taskId,
                         jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
                         executeCount = 1
@@ -304,7 +304,7 @@ class PipelineTaskPauseListener @Autowired constructor(
                     LogUtils.addYellowLine(
                         rabbitTemplate = rabbitTemplate,
                         buildId = buildId,
-                        message = "变更前：$oldInputData",
+                        message = "变更前：${oldInputData[it]}",
                         tag = taskId,
                         jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
                         executeCount = 1
@@ -312,7 +312,7 @@ class PipelineTaskPauseListener @Autowired constructor(
                     LogUtils.addYellowLine(
                         rabbitTemplate = rabbitTemplate,
                         buildId = buildId,
-                        message = "变更后：$newInputData",
+                        message = "变更后：${newInputData[it]}",
                         tag = taskId,
                         jobId = VMUtils.genStartVMTaskId(oldElement.containerId),
                         executeCount = 1
