@@ -28,6 +28,10 @@
             <h5 class="detail-info">
                 <span> {{ $t('store.热度：') }} </span><span>{{detail.downloads || 0}}</span>
             </h5>
+            <h5 class="detail-info detail-maxwidth" :title="`${detail.imageRepoUrl}${detail.imageRepoUrl ? '/' : ''}${detail.imageRepoName}:${detail.imageTag}`">
+                <span> {{ $t('store.镜像地址') }}： </span><span class="detail-image-address">{{detail.imageRepoUrl}}{{detail.imageRepoUrl ? '/' : ''}}{{detail.imageRepoName}}:{{detail.imageTag}}</span>
+                <i class="bk-icon icon-clipboard" :title="$t('store.复制')" @click="copyImagePath(`${detail.imageRepoUrl}${detail.imageRepoUrl ? '/' : ''}${detail.imageRepoName}:${detail.imageTag}`)"></i>
+            </h5>
             <h5 class="detail-info detail-label">
                 <span> {{ $t('store.功能标签：') }} </span>
                 <span v-for="(label, index) in detail.labelList" :key="index" class="info-label">{{label.labelName}}</span>
@@ -102,6 +106,18 @@
         },
 
         methods: {
+            copyImagePath (val) {
+                const input = document.createElement('input')
+                document.body.appendChild(input)
+                input.setAttribute('value', val)
+                input.select()
+                if (document.execCommand('copy')) {
+                    document.execCommand('copy')
+                    this.$bkMessage({ theme: 'success', message: this.$t('store.复制成功') })
+                }
+                document.body.removeChild(input)
+            },
+
             goToInstall () {
                 this.$router.push({
                     name: 'install',
@@ -122,8 +138,11 @@
     .detail-title {
         display: flex;
         align-items: center;
-        margin: 47px auto 30px;
-        width: 1200px;
+        margin: 26px auto 0;
+        width: 95vw;
+        background: $white;
+        box-shadow: 1px 2px 3px 0px rgba(0,0,0,0.05);
+        padding: 32px;
         .detail-pic {
             width: 130px;
         }
@@ -131,15 +150,17 @@
             height: 160px;
             width: 160px;
         }
+        button {
+            border-radius: 4px;
+            width: 120px;
+            height: 40px;
+        }
         .detail-install {
-            width: 89px;
-            height: 36px;
             background: $primaryColor;
-            border-radius: 2px;
             border: none;
             font-size: 14px;
             color: $white;
-            line-height: 36px;
+            line-height: 40px;
             text-align: center;
             &.opicity-hidden {
                 opacity: 0;
@@ -149,13 +170,11 @@
                 transform: scale(.97)
             }
         }
-        .bk-tooltip button {
-            width: 89px;
-        }
     }
     .detail-info-group {
-        width: 829px;
-        margin: 0 76px;
+        width: 996px;
+        margin: 0 32px;
+        max-width: calc(100% - 314px);
         
         h3 {
             font-size: 22px;
@@ -167,6 +186,7 @@
             align-items: center;
             .score-group {
                 position: relative;
+                margin-top: -2px;
                 .score-real {
                     position: absolute;
                     overflow: hidden;
@@ -180,7 +200,6 @@
                 }
             }
             .rate-num {
-                margin-top: 2px;
                 margin-left: 6px;
                 color: $fontWeightColor;
             }
@@ -192,12 +211,13 @@
             width: 33.33%;
             font-size: 14px;
             font-weight: normal;
-            line-height: 19px;
+            line-height: 20px;
             color: $fontBlack;
             span:nth-child(1) {
                 color: $fontWeightColor;
                 display: inline-block;
-                width: 70px;
+                width: 90px;
+                padding-right: 10px;
                 text-align: right;
             }
             span:nth-child(2) {
@@ -205,7 +225,7 @@
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 display: inline-block;
-                width: calc(100% - 70px);
+                width: calc(100% - 90px);
             }
         }
         .not-recommend {
@@ -233,13 +253,14 @@
             }
         }
         .detail-info.detail-label {
-            width: 829px;
-            padding-left: 70px;
+            width: 994px;
+            padding-left: 90px;
+            padding-top: 0;
             display: inline-block;
             position: relative;
             span {
                 overflow: inherit;
-                margin-bottom: 7px;
+                margin-top: 7px;
             }
             span:first-child {
                 position: absolute;
@@ -248,12 +269,12 @@
             span.info-label {
                 display: inline-block;
                 width: auto;
-                height: 19px;
+                height: 20px;
                 padding: 0 7px;
                 border: 1px solid $laberColor;
                 border-radius: 20px;
                 margin-right: 8px;
-                line-height: 17px;
+                line-height: 18px;
                 text-align: center;
                 font-size: 12px;
                 color: $laberColor;
@@ -263,7 +284,18 @@
         .detail-maxwidth {
             max-width: 100%;
             width: auto;
-            padding-top: 0;
+            .icon-clipboard {
+                cursor: pointer;
+                opacity: 0;
+                align-self: center;
+                margin-left: 7px;
+            }
+            span.detail-image-address {
+                width: calc(100% - 107px);
+            }
+            &:hover .icon-clipboard{
+                opacity: 1;
+            }
         }
     }
 </style>

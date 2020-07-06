@@ -8,7 +8,7 @@
                 <span class="bk-option-name">{{ name }}</span>
                 <i
                     v-if="multiple && isSelected"
-                    class="bk-option-icon bk-icon icon-check-1"
+                    class="bk-option-icon devops-icon icon-check-1"
                 />
             </div>
         </slot>

@@ -12,7 +12,7 @@
                 v-bkloading="{
                     isLoading: instanceMessageConfig.loading
                 }">
-                <i class="bk-icon icon-close" @click="cancel()"></i>
+                <i class="devops-icon icon-close" @click="cancel()"></i>
                 <div class="message-title">{{ message }}</div>
                 <div class="fail-pipeline-content">
                     <span>{{ $t('template.instantiationFailMsg') }}：</span>

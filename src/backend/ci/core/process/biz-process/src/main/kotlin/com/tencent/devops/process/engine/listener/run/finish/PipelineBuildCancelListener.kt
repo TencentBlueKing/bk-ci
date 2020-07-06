@@ -41,8 +41,10 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
+import com.tencent.devops.process.service.BuildVariableService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
@@ -53,13 +55,16 @@ import java.time.LocalDateTime
  * @version 1.0
  */
 @Component
-class PipelineBuildCancelListener @Autowired constructor(
+class PipelineBuildCancelListener @Autowired(required = false) constructor(
     private val redisOperation: RedisOperation,
     private val pipelineMQEventDispatcher: PipelineEventDispatcher,
     private val buildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    pipelineEventDispatcher: PipelineEventDispatcher
+    private val buildVariableService: BuildVariableService,
+    pipelineEventDispatcher: PipelineEventDispatcher,
+    @Autowired(required = false)
+    private val measureService: MeasureService?
 ) : BaseListener<PipelineBuildCancelEvent>(pipelineEventDispatcher) {
 
     companion object {
@@ -171,6 +176,8 @@ class PipelineBuildCancelListener @Autowired constructor(
             )
         )
 
+        measureService?.postCancelData(projectId = projectId, pipelineId = pipelineId, buildId = buildId, userId = event.userId)
+
         return true
     }
 
@@ -198,7 +205,7 @@ class PipelineBuildCancelListener @Autowired constructor(
         val mutexGroupName = if (mutexGroup.mutexGroupName.isNullOrBlank()) {
             ""
         } else {
-            val variables = pipelineRuntimeService.getAllVariable(buildId)
+            val variables = buildVariableService.getAllVariable(buildId)
             EnvUtils.parseEnv(mutexGroup.mutexGroupName!!, variables)
         }
         val mutexEnable = mutexGroup.enable

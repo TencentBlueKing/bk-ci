@@ -37,6 +37,6 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
  */
 data class InterceptData(
     val pipelineInfo: PipelineInfo,
-    val model: Model,
+    val model: Model?,
     val startType: StartType
 )

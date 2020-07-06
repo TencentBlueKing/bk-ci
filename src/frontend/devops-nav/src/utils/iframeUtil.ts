@@ -39,8 +39,8 @@ function iframeUtil (router: any) {
         eventBus.$showAskPermissionDialog(params)
     }
 
-    utilMap.toggleLoginDialog = function (isShow) {
-        eventBus.$emit('toggle-login-dialog', isShow)
+    utilMap.toggleLoginDialog = function () {
+        window.location.href = window.getLoginUrl()
     }
 
     utilMap.popProjectDialog = function (project: Project): void {
@@ -67,7 +67,6 @@ function iframeUtil (router: any) {
         })
     }
  
-
     utilMap.syncLocale = function (target: object, locale: string) {
         send(target, 'syncLocale', locale)
     }

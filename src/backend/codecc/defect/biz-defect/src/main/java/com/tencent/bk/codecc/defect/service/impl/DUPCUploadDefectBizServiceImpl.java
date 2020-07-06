@@ -35,9 +35,8 @@ import com.tencent.bk.codecc.defect.dao.redis.TaskAnalysisDao;
 import com.tencent.bk.codecc.defect.model.CodeBlockEntity;
 import com.tencent.bk.codecc.defect.model.DUPCDefectEntity;
 import com.tencent.bk.codecc.defect.service.AbstractUploadDefectBizService;
-import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
 import com.tencent.bk.codecc.defect.vo.UploadDefectVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.util.JsonUtil;
@@ -72,7 +71,7 @@ public class DUPCUploadDefectBizServiceImpl extends AbstractUploadDefectBizServi
     private ObjectMapper objectMapper;
 
     @Override
-    public Result processBiz(UploadDefectVO uploadDefectVO)
+    public CodeCCResult processBiz(UploadDefectVO uploadDefectVO)
     {
         String defectListJson = decompressDefects(uploadDefectVO.getDefectsCompress());
         DUPCDefectEntity dupcDefectEntity = JsonUtil.INSTANCE.to(defectListJson, new TypeReference<DUPCDefectEntity>()
@@ -83,7 +82,7 @@ public class DUPCUploadDefectBizServiceImpl extends AbstractUploadDefectBizServi
         if (dupcDefectEntity == null)
         {
             logger.error("File does not contain dupc defect.");
-            return new Result(CommonMessageCode.SUCCESS, "File does not contain dupc defect.");
+            return new CodeCCResult(CommonMessageCode.SUCCESS, "File does not contain dupc defect.");
         }
 
         // 调用task模块的接口获取任务信息
@@ -97,7 +96,7 @@ public class DUPCUploadDefectBizServiceImpl extends AbstractUploadDefectBizServi
         handDefectFileInfo(dupcDefectEntity, uploadDefectVO);
 
 
-        return new Result(CommonMessageCode.SUCCESS, "upload defect ok");
+        return new CodeCCResult(CommonMessageCode.SUCCESS, "upload defect ok");
     }
 
     /**

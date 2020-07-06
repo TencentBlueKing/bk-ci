@@ -12,7 +12,7 @@
             <accordion v-else show-checkbox :show-content="group.isExpanded" :key="groupKey">
                 <header class="var-header" slot="header">
                     <span>{{ group.label }}</span>
-                    <i class="bk-icon icon-angle-down" style="display: block"></i>
+                    <i class="devops-icon icon-angle-down" style="display: block"></i>
                 </header>
                 <div slot="content">
                     <template v-for="(obj, key) in group.props">
@@ -27,7 +27,7 @@
         <accordion v-if="outputProps && Object.keys(outputProps).length > 0" show-checkbox show-content>
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.atomOutput') }}</span>
-                <i class="bk-icon icon-angle-down" style="display: block"></i>
+                <i class="devops-icon icon-angle-down" style="display: block"></i>
             </header>
             <div slot="content">
                 <form-field class="output-namespace" :desc="outputNamespaceDesc" :label="$t('editPage.outputNamespace')" :is-error="errors.has(&quot;namespace&quot;)" :error-msg="errors.first(&quot;namespace&quot;)">
@@ -60,11 +60,11 @@
     import CcAppId from '@/components/AtomFormComponent/CcAppId'
     import AppId from '@/components/AtomFormComponent/AppId'
     import Accordion from '@/components/atomFormField/Accordion'
-    import SelectInput from '@/components/AtomFormComponent/SelectInput'
     import TimePicker from '@/components/AtomFormComponent/TimePicker'
     import Parameter from '@/components/AtomFormComponent/Parameter'
     import Tips from '@/components/AtomFormComponent/Tips'
-
+    import DynamicParameter from '@/components/AtomFormComponent/DynamicParameter'
+    import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
     export default {
         name: 'normal-atom-v2',
         components: {
@@ -72,10 +72,10 @@
             Accordion,
             CcAppId,
             AppId,
-            SelectInput,
             TimePicker,
             Parameter,
-            Tips
+            Tips,
+            DynamicParameter
         },
         mixins: [atomMixin, validMixins],
         computed: {
@@ -170,9 +170,16 @@
             },
             atomValue () {
                 try {
-                    return {
-                        ...this.element.data.input
-                    }
+                    const atomDefaultValue = getAtomDefaultValue(this.atomPropsModel.input)
+                    // 新增字段，已添加插件读取默认值
+                    const atomValue = Object.keys(this.element.data.input).reduce((res, key) => {
+                        if (atomDefaultValue.hasOwnProperty(key)) {
+                            res[key] = this.element.data.input[key]
+                        }
+                        return res
+                    }, atomDefaultValue)
+                    this.handleUpdateWholeAtomInput(atomValue)
+                    return atomValue
                 } catch (e) {
                     console.warn('getAtomInput error', e)
                     return {}

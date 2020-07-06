@@ -50,7 +50,7 @@
                         }
                     </label> }
                     { label.trim() && desc.trim() && <bk-popover placement="top" class="form-field-icon">
-                        <i class="bk-icon icon-info-circle "></i>
+                        <i class="bk-icon icon-info-circle"></i>
                         <div slot="content" style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
                             <div> {desc} { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>} </div>
                         </div>
@@ -77,17 +77,12 @@
     .form-field-icon {
         position: relative;
         left: -20px;
-        top: 4px;
+        top: 6px;
     }
     .bk-sideslider-wrapper .bk-form-item.is-required .bk-label, .bk-form-inline-item.is-required .bk-label {
         margin-right: 10px
     }
     .desc-link {
         color: #3c96ff;
-    }
-    .atom-form-label {
-        height: 36px;
-        line-height: 36px;
-        font-size: 12px;
     }
 </style>

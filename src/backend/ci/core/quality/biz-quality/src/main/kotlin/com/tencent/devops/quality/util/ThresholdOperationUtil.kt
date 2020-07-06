@@ -93,4 +93,9 @@ object ThresholdOperationUtil {
             }
         }
     }
+
+    fun validBoolean(actualValue: String?, boundaryValue: String, operation: QualityOperation): Boolean {
+        if (actualValue == null) return false
+        return actualValue == boundaryValue
+    }
 }

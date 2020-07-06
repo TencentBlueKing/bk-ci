@@ -133,13 +133,13 @@ class PipelineJobBean(
 
         if (gray.isGray()) {
             // 灰度环境只加载灰度项目的流水线
-            if (!gray.isGrayMatchProject(pipelineTimer.projectId, redisOperation)) {
+            if (!gray.isGrayProject(pipelineTimer.projectId, redisOperation)) {
                 logger.info("[$comboKey]|PIPELINE_TIMER_GRAY|${pipelineTimer.projectId} is prod, discard it from queue!")
                 return
             }
         } else {
             // 生产环境只加载生产项目的流水线
-            if (gray.isGrayMatchProject(pipelineTimer.projectId, redisOperation)) {
+            if (gray.isGrayProject(pipelineTimer.projectId, redisOperation)) {
                 logger.info("[$comboKey]|PIPELINE_TIMER_PROD|${pipelineTimer.projectId} is gray, discard it from queue!")
                 return
             }

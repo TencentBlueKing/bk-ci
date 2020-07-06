@@ -30,17 +30,18 @@ package main
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/gofrs/flock"
 	"os"
 	"os/exec"
-	"pkg/util/fileutil"
-	"pkg/util/systemutil"
 	"runtime"
 	"time"
 
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/astaxie/beego/logs"
+	"github.com/gofrs/flock"
+
 	"encoding/json"
-	"pkg/config"
 )
 
 const (

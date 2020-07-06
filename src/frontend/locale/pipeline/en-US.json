@@ -2,6 +2,7 @@
     "pipeline": "Pipeline",
     "pipelineName": "Name",
     "labelManage": "Labels",
+    "label": "Label",
     "viewManage": "Views",
     "templateManage": "Templates",
     "pluginManage": "Installed plugins",
@@ -76,6 +77,31 @@
     "loadingTips": "Data is Loading, Please wait",
     "metaData": "Meta Data",
     "download": "Download",
+    "enableStage": "Enable Stage",
+    "stageFastKill": "Enable FastKill",
+    "stageFastKillDesc": "Fast kill Stage when Job error",
+    "enableStageReview": "Enable Stage Review",
+    "stageReviewDesc": "30-day unreviewed automatically ends the pipeline and marks it as STAGE_SUCCESS",
+    "stageTimeoutLabel": "Stage Timeout",
+    "stageTimeoutError": "Stage timeout field error",
+    "stageTimeoutDesc": "All the integers between 1 and 720",
+    "stageUserTriggers": "Trigger Users",
+    "stageOptionLabel": "Run this Stage",
+    "stageTriggerDesc": "Multiple people separated by commas",
+    "skipStageDesc": "SKIPED",
+    "pipelinesHistory": "Builds",
+    "pipelinesEdit": "Edit",
+    "pipelinesPreview": "Preview",
+    "pipelinesDetail": "Details",
+    "execDetail": {
+        "log": "Log",
+        "setting": "Configuration",
+        "execTime": "Number of retries",
+        "showTime": "Show timestamp",
+        "hideTime": "Hide timestamp",
+        "downLoadLog": "Download log",
+        "emptyLog": "The log content is empty"
+    },
     "timeMap": {
         "days": "days ",
         "hours": "h ",
@@ -126,6 +152,16 @@
         "typeTips": "Project views can only be added, edited or deleted by administrators",
         "conditionEmpty": "View conditions must be filled",
         "deleteViewTips": "Delete ( {0} ) ? "
+    },
+    "restore": {
+        "recycleBin": "Recycle bin",
+        "restore": "Restore pipeline",
+        "title": "Pipelines can be restored",
+        "deleteTime": "Delete time",
+        "createTime": "Create time",
+        "restoreSuc": "Restored successfully",
+        "emptyTitle": "No pipeline can be restored",
+        "emptyDesc": "You can restore the pipeline deleted in last a month"
     },
     "atomManage": {
         "installedAtom": "Installed plugins",
@@ -339,7 +375,11 @@
         "stopFail": "cancel failed"
     },
     "history": {
-        "execHistory": "Builds",
+        "logEmpty": "Log is empty",
+        "logClear": "Log is cleared",
+        "logClose": "Log is closed",
+        "logErr": "Other exceptions",
+        "stageStatus": "Stage",
         "trendData": "Artifacts size trending",
         "chooseDateRange": "Please select a date range",
         "noPackages": " No artifacts found in this period",
@@ -397,7 +437,8 @@
         "selectNone": "Select none",
         "majorVersion": "Major version",
         "minorVersion": "Feature version",
-        "fixVersion": "Fix version"
+        "fixVersion": "Fix version",
+        "paramsInvalidMsg": "Params Invalid"
     },
     "details": {
         "executeDetail": "Build detail",
@@ -425,6 +466,10 @@
         "noMetaData": "No meta data at the moment",
         "viewDetail": "Details",
         "artifactory": "Artifactory",
+        "checkDesc": "Review countdown",
+        "checkDescInfo": "The review function will end on {0}, and overdue will be automatically identified as Stage success status",
+        "abort": "Cancel (immediately mark Stage success status)",
+        "agree": "Continue execution",
         "statusMap": {
             "RUNNING": "Building",
             "PREPARE_ENV": "Preparing build-resource",
@@ -446,7 +491,8 @@
             "CALL_WAITING": "Call Waiting",
             "TRY_FINALLY": "Try Finally",
             "QUEUE_CACHE": "Queue cache",
-            "UNKNOWN": "Unknow"
+            "UNKNOWN": "Unknow",
+            "STAGE_SUCCESS": "STAGE_SUCCESS"
         },
         "toArtifactory": "locate",
         "saveToCustom": " Copy to custom artifactory",
@@ -480,7 +526,7 @@
         "image": "image",
         "provideInfo": "Provided by {0}, modified {1} on {2}",
         "officialCertification": "Official Certification",
-        "thirdImageHolder": "Please Input Image, eg: Java:11.0.5",
+        "thirdImageHolder": "Please enter the full image path, such as csighub.tencentyun.com/tceforqci_arm/python3_frame_base",
         "by": "by",
         "devnet": "Devnet VM",
         "onlySupport": "Only supported",
@@ -513,6 +559,9 @@
         "prepareEnv": " Preparing build resource",
         "copyJob": "Duplicate job",
         "copyJobFail": "Duplicate job failed",
+        "copyStage": "Duplicate stage",
+        "copyStageFail": "Duplicate stage failed",
+        "stageManualTriggerUserNoEmptyTips": "Manual Trigger Stage User Field can not be empty",
         "triggerTooltips": " Click builds to trigger the configurable recommended version and pipeline variables",
         "userTime": "User time",
         "systemTime": "System time",
@@ -524,7 +573,8 @@
         "customVar": "Custom variables",
         "abortSuc": "Abort successfully",
         "agreeSuc": "Approval successfully",
-        "toCheck": "To Review",
+        "toCheck": "Review",
+        "noAuthToCheck": "No Access",
         "abortTips": "Review has not passed",
         "checkUser": "Reviewer",
         "aborted": "Aborted",
@@ -561,7 +611,7 @@
         "defaultValueDesc": "If value is the version number, then it should not contain symbols, such as \"\" ; \n if the type of parameters can be selected in the check box, when selecting serval values, they will be sent to pipelines in a (a,b) way.",
         "defaultValueTips": " Please enter default values",
         "selectOptions": "Drop-down options",
-        "optionsDesc": "Separate options with line breaks and there should not be an English comma contained in the options. Only one option will be shown if there are serval same options at the same time ",
+        "optionsDesc": "Separate options with line breaks and there should not be an English comma contained in the options. Only one option will be shown if there are serval same options at the same time, format \"{id}={name} | {id} \"",
         "optionTips": " Please break your lines if there are serval things to be recorded",
         "svnParams": " Please select svn code repository",
         "relativePath": "Relative path to code repository",
@@ -687,7 +737,8 @@
             "serviceId": "Service ID",
             "templateDownload": "Download",
             "otherChoice": "Other Choice"
-        }
+        },
+        "stageOption": "Advance"
     },
     "storeMap": {
         "string": "String",
@@ -720,7 +771,7 @@
         "timeoutDesc": "All the integers between 0 and 10080 with 0 indicating the maximum timeout allowed by the system",
         "timeoutPlaceholder": "Specifies the maximum time, in minutes, that a task is allowed to execute before being canceled by server. A zero value indicates an infinite timeout.",
         "atomRunCondition": "Run this task",
-        "atomPreSuc": "Only when all previous tasks have succeeded",
+        "atomPreSuc": "Run when all pre-plugins run successfully (including continue when failed)",
         "atomEvenFail": "Even if a previous task has failed, unless the build was canceled",
         "atomOnlyFail": "Only when a previous task has failed",
         "varMatch": "run it when all the custom variables are macthed",
@@ -737,6 +788,8 @@
         "mutualTimeoutPlaceholder": "Please fill in an integer between 1 and 10080 ",
         "queueLabel": " Maximum tasks in queues ",
         "queuePlaceholder": " Please fill in an integer between 1 and 10",
-        "noEnv": "Agentless" 
+        "noEnv": "Agentless",
+        "afterPreStageSuccess": "after Pre Stage done",
+        "manualRunStage": "Manual"
     }
 }

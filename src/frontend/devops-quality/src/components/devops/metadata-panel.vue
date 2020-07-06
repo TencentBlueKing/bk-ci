@@ -1,23 +1,11 @@
 <template>
-    <div class="metadata-select-panel">
-        <div class="metadata-panel-header">
-            <div class="search-input-row" :class="{ 'crtl-point-panel': isCtrPointPanel }">
-                <input class="bk-form-input" type="text" placeholder="请输入..."
-                    v-model="searchKey"
-                    @keyup.enter="toSearch()">
-                <i class="bk-icon icon-search" @click="toSearch()"></i>
-            </div>
-        </div>
+    <div class="metadata-select-panel" v-bkloading="{ isLoading: loading }">
         <div class="metadata-panel-container">
             <div :class="{
                 'metadata-main-tab': true,
                 'indicator-list-tab': isIndexList
             }" v-if="!isCtrPointPanel">
                 <bk-tab :active="currentTab" type="unborder-card" @tab-change="changeTab">
-                    <!-- <bk-tab-panel name="indexList" title="指标集">
-                    </bk-tab-panel>
-                    <bk-tab-panel name="singleIndex" title="单个指标">
-                    </bk-tab-panel> -->
                     <bk-tab-panel
                         v-for="(panel, index) in panels"
                         v-bind="panel"
@@ -66,7 +54,7 @@
                             <div class="task-desc" :title="task.desc">{{ task.desc }}</div>
                             <div class="dropdown-icon" :class="{ 'hide': !task.indicators.length }">
                                 <i :class="{
-                                    'bk-icon': true,
+                                    'devops-icon': true,
                                     'icon-angle-double-right': true,
                                     'icon-flip': task.isDropdownShow
                                 }"></i>
@@ -114,7 +102,7 @@
                                     <div class="task-desc" :title="task.desc">{{ task.desc }}</div>
                                     <div class="dropdown-icon" :class="{ 'hide': !task.items.length }">
                                         <i :class="{
-                                            'bk-icon': true,
+                                            'devops-icon': true,
                                             'icon-angle-double-right': true,
                                             'icon-flip': task.isDropdownShow
                                         }"></i>
@@ -160,6 +148,10 @@
                 type: String,
                 default: ''
             },
+            searchKey: {
+                type: String,
+                default: ''
+            },
             panelType: {
                 type: String,
                 default: 'index'
@@ -172,8 +164,8 @@
         data () {
             return {
                 isInit: false,
+                loading: false,
                 currentTab: 'indexList',
-                searchKey: '',
                 metaTree: [],
                 indicatorSetList: [],
                 indicatorList: [],
@@ -217,7 +209,18 @@
         },
         created () {
             this.isInit = true
-            this.initData()
+
+            // 组件升级之前保留 升级后需注释
+            // this.initData()
+
+            // 兼容sideslider组件升级问题（关闭侧栏时组件被销毁）
+            if (this.isCtrPointPanel) {
+                this.requestControlPoint()
+            } else if (!this.isCtrPointPanel && this.isIndexList) {
+                this.requestIndicatorSet()
+            } else if (!this.isInit && !this.isCtrPointPanel && !this.isIndexList) {
+                this.requestIndicators()
+            }
         },
         methods: {
             initData () {
@@ -226,6 +229,7 @@
                 this.requestControlPoint()
             },
             async requestIndicatorSet () {
+                this.loading = true
                 try {
                     const res = await this.$store.dispatch('quality/requestIndicatorSet')
 
@@ -244,9 +248,12 @@
                         message,
                         theme
                     })
+                } finally {
+                    this.loading = false
                 }
             },
             async requestIndicators () {
+                this.loading = true
                 try {
                     const res = await this.$store.dispatch('quality/requestIndicators', {
                         projectId: this.projectId
@@ -267,9 +274,12 @@
                         message,
                         theme
                     })
+                } finally {
+                    this.loading = false
                 }
             },
             async requestControlPoint () {
+                this.loading = true
                 try {
                     const res = await this.$store.dispatch('quality/requestControlPoint', { projectId: this.projectId })
 
@@ -279,6 +289,7 @@
                             this.controlPointList.push(item)
                         })
                     }
+                    this.getMetaList(this.controlPointList, this.searchKey)
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -287,6 +298,8 @@
                         message,
                         theme
                     })
+                } finally {
+                    this.loading = false
                 }
             },
             getMetaList (container, searchKey) {
@@ -320,7 +333,7 @@
                                     meta.isSelected = this.selectedMeta.some(val => meta.hashId === val.hashId)
                                     if (searchKey) {
                                         const metaName = meta.cnName
-                                        meta.isDisplay = this.matchStr(metaName, searchKey)
+                                        meta.isDisplay = this.matchStr(metaName, searchKey) || this.matchStr(task.detail, searchKey)
                                         if (meta.isDisplay) { // 搜索匹配到指标展开所属指标集
                                             task.isDisplay = true
                                             task.isDropdownShow = true
@@ -431,7 +444,8 @@
             changeTab (tab) {
                 this.currentTab = tab
                 if (tab === 'singleIndex') {
-                    this.getMetaList(this.indicatorList, this.searchKey)
+                    this.requestIndicators()
+                    // this.getMetaList(this.indicatorList, this.searchKey)
                 } else {
                     this.getIndicatortList(this.indicatorSetList, this.searchKey)
                 }
@@ -459,6 +473,11 @@
                     params.type = 'controlPoint'
                 }
                 this.$emit('comfireHandle', params)
+                if (!this.isCtrPointPanel) {
+                    setTimeout(() => {
+                        this.isIndexList ? this.getIndicatortList(this.indicatorSetList, this.searchKey) : this.getMetaList(this.indicatorList, this.searchKey)
+                    }, 10)
+                }
             }
         }
     }
@@ -563,7 +582,7 @@
                 display: flex;
                 line-height: 22px;
             }
-            .bk-icon {
+            .devops-icon {
                 margin-right: 20px;
                 font-size: 24px;
                 color: #C3CDD7;
@@ -677,7 +696,7 @@
                 .task-name,
                 .task-desc,
                 .meta-name,
-                .meta-desc, {
+                .meta-desc {
                     color: $primaryColor;
                 }
                 .select-btn {

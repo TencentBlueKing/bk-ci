@@ -1,18 +1,24 @@
 <template>
-    <div class="staff-selector" :class="{ 'disable-status': disabled }">
-        <span class="staff-placeholder" v-if="!value.length && !curInsertVal.length">{{ placeholder }}</span>
-        <div class="select-tags" @click="toEdit">
-            <div class="select-editor" ref="selectEditor">
-                <span class="tag-info" @click="selectInfo($event, entry)" v-for="(entry, index) in value" :key="index">{{ entry }}</span>
-                <input type="text" ref="staffInput" id="staffInput"
-                    class="bk-tag-input form-input"
-                    autocomplete="off"
-                    :name="name"
-                    :value="curInsertVal"
-                    @input="input"
-                    @keydown="keydown"
-                    @paste="paste"
-                    @blur="hideAll" />
+    <div class="devops-staff-selector" @click="toEdit">
+        <div :class="['devops-staff-input', { 'active': isEdit, 'disabled': disabled }]">
+            <span class="placeholder" v-if="!isEdit && !value.length && !curInsertVal.length">{{ placeholder }}</span>
+            <div class="tag-list" :class="!value.length ? 'no-item' : ''">
+                <div class="select-editor" ref="selectEditor">
+                    <span class="tag-info"
+                        v-for="(entry, index) in value"
+                        :key="index"
+                        @click="selectInfo($event, entry)"
+                    >{{ entry }}</span>
+                    <input type="text" ref="staffInput" id="staffInput"
+                        class="form-input"
+                        autocomplete="off"
+                        :name="name"
+                        :value="curInsertVal"
+                        @input="input"
+                        @keydown="keydown"
+                        @paste="paste"
+                        @blur="hideAll" />
+                </div>
             </div>
         </div>
     </div>
@@ -44,6 +50,7 @@
         },
         data () {
             return {
+                isEdit: false,
                 curInsertVal: ''
             }
         },
@@ -61,6 +68,7 @@
 
                 const { value } = e.target
                 this.changeInputValue(this.name, value)
+                this.isEdit = true
             },
             paste (e) {
                 e.preventDefault()
@@ -91,6 +99,7 @@
             hideAll (e) {
                 e.preventDefault()
                 this.handleValue(e.target.value)
+                this.isEdit = false
             },
             handleValue (val) {
                 setTimeout(() => {
@@ -124,6 +133,7 @@
                     // 删除
                     case 8:
                     case 46:
+                        this.isEdit = true
                         if (parseInt(result.index) !== 0) {
                             target = result.temp[result.index - 1].innerText
 
@@ -138,6 +148,7 @@
                         break
                     // 向左
                     case 37:
+                        this.isEdit = true
                         if (!this.curInsertVal.length) {
                             if (parseInt(result.index) > 1) {
                                 const leftsite = nodes[parseInt(result.index) - 2]
@@ -153,6 +164,7 @@
                         break
                     // 向右
                     case 39:
+                        this.isEdit = true
                         if (!this.curInsertVal.length) {
                             const rightsite = nodes[parseInt(result.index) + 1]
                             this.insertAfter(this.$refs.staffInput, rightsite)
@@ -161,6 +173,7 @@
                         break
                     // 确认
                     case 13:
+                        this.isEdit = true
                         this.handleValue(this.curInsertVal)
                         break
                     // 退出
@@ -208,6 +221,7 @@
                 }
             },
             toEdit (event) {
+                this.isEdit = true
                 this.$refs.staffInput.focus()
             },
             selectInfo (event, val) {
@@ -246,72 +260,100 @@
 
 <style lang="scss" scoped>
     @import '../../../scss/conf';
-    .staff-selector {
-        border: 1px solid $fontLigtherColor;
-        .select-tags {
+    .devops-staff-selector {
+        position: relative;
+        min-height: 32px;
+        .devops-staff-input {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 0 0 5px;
+            border: 1px solid #c4c6cc;
+            min-height: 32px;
+            border-radius: 2px;
+            font-size: 12px;
             position: relative;
+            z-index: 1;
+            background: #fff;
+            cursor: pointer;
+            overflow: hidden;
+            .placeholder {
+                margin: 0;
+                padding: 0;
+                font-size: 12px;
+                position: absolute;
+                line-height: 30px;
+                top: 0;
+                left: 8px;
+                color: #c4c6cc;
+            }
+            &.disabled {
+                background: #fafafa;
+                cursor: not-allowed;
+            }
+            &.active {
+                border-color: #3a84ff;
+            }
+        }
+
+        .tag-list {
             z-index: 99;
-            margin: 4px 10px 0px 4px;
+            display: inline-block;
+            max-height: 135px;
+            overflow: auto;
+            margin: 0;
+            padding: 0;
+            &.no-item {
+                padding: 0 0 0 5px;
+            }
+        }
+        .tag-item {
+            display: inline-block;
+            cursor: pointer;
+            position: relative;
+            margin: 4px 5px 4px 0;
+            border-radius: 2px;
+            height: 22px;
+            overflow: hidden;
+            font-size: 0;
+            line-height: 0;
         }
         .tag-info {
-            display: inline-block;
-            padding: 2px 5px;
-            margin: 1px 5px 4px 5px;
-            background-color: #fafafa;
-            border: 1px solid #d9d9d9;
+            cursor: pointer;
+            position: relative;
+            margin: 2px 5px 4px 0;
             border-radius: 2px;
-            font-size: 14px;
-            color: #2b2b2b;
+            height: 22px;
+            line-height: 20px;
+            overflow: hidden;
+            display: inline-block;
+            background-color: #F0F1F5;
+            color: #63656e;
+            font-size: 12px;
+            border: none;
+            vertical-align: middle;
+            box-sizing: border-box;
+            border-radius: 2px;
+            padding: 0 5px;
+            word-break: break-all;
+            max-width: 190px;
+            display: inline-block;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         .form-input {
-            padding: 6px 0 8px 4px;
             width: 10px;
-            max-width: 160px;
-            border: none;
+            height: 22px;
+            padding: 0;
+            border: 0;
+            box-sizing: border-box;
+            outline: none;
+            max-width: 295px;
+            font-size: 12px;
             background-color: transparent;
-            outline: 0;
-        }
-        .staff-placeholder {
-            position: absolute;
-            z-index: 10;
-            line-height: 36px;
-            padding-left: 8px;
-            color: $fontLigtherColor;
         }
         .select-editor {
             cursor: text;
         }
-        .bk-selector-list {
-            position: absolute;
-            top: calc(100% + 5px);
-        }
-        .bk-selector-list > ul {
-            max-height: 212px;
-        }
-        .bk-selector-list-item {
-            // background-color: pink;
-            .bk-selector-node {
-                display: flex;
-                align-items: center;
-            }
-            .text {
-                display: inline;
-            }
-        }
-        .bk-data-avatar {
-            margin-left: 16px;
-            margin-right: 0;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-        }
-        .bk-selector-selected {
-            background-color: #eef6fe;
-            color: #3c96ff;
-        }
-    }
-    .disable-status {
-        background-color: #fafafa;
-        pointer-events: none;
     }
 </style>

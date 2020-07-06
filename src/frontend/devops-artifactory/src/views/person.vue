@@ -9,7 +9,7 @@
             <div class="artifactory-table">
                 <div class="artifactory-table-pipeline">
                     <div v-if="pipelineLoading" class="folder-loading">
-                        <i class="bk-icon title-icon icon-circle-2-1 spin-icon" />
+                        <i class="devops-icon title-icon icon-circle-2-1 spin-icon" />
                     </div>
                     <div v-else class="repo-table-simulator">
                         <div
@@ -37,7 +37,7 @@
                                     :key="col.id"
                                     @click.stop="selectRowHandler($event, index, col)">
                                     <div class="table-sim-item sim-item-name" :title="`${col.name}`">
-                                        <i :class="['bk-icon', `icon-${extForFile(col.name)}`]"></i>
+                                        <i :class="['devops-icon', `icon-${extForFile(col.name)}`]"></i>
                                         <span class="repo-name">{{ col.name }}</span>
                                     </div>
                                     <div class="table-sim-item sim-item-source" :title="`${col.fullName}`">{{ col.fullName }}</div>
@@ -46,7 +46,7 @@
                                     <div class="table-sim-item sim-item-type">{{ col.artifactoryType === 'PIPELINE' ? '流水线仓库' : '自定义仓库' }}</div>
                                 </div>
                                 <div v-if="moreLoading" class="folder-loading">
-                                    <i class="bk-icon title-icon icon-circle-2-1 spin-icon" />
+                                    <i class="devops-icon title-icon icon-circle-2-1 spin-icon" />
                                 </div>
                             </div>
                         </section>
@@ -59,13 +59,13 @@
                         @click.stop="showDetail()">查看详情</button>
                     <ul class="artifactory-ops-group">
                         <li @click.stop="handlerShare()">
-                            <i class="bk-icon icon-none"></i>共享
+                            <i class="devops-icon icon-none"></i>共享
                         </li>
                         <li @click.stop="handlerDownload()">
-                            <i class="bk-icon icon-download"></i>下载
+                            <i class="devops-icon icon-download"></i>下载
                         </li>
                         <li @click.stop="refresh()">
-                            <i class="bk-icon icon-refresh"></i>刷新
+                            <i class="devops-icon icon-refresh"></i>刷新
                         </li>
                     </ul>
                 </div>

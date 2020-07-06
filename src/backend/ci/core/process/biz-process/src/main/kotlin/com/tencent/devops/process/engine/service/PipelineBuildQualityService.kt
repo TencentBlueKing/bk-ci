@@ -27,18 +27,22 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.utils.QualityUtils
-import com.tencent.devops.quality.QualityGateInElement
-import com.tencent.devops.quality.QualityGateOutElement
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
+import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.pojo.RuleCheckResult
@@ -118,7 +122,6 @@ class PipelineBuildQualityService(
         }
 
         if (!find) {
-            logger.error("[$buildId]| The quality Task($elementId) of pipeline($pipelineId) is not exist")
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.ERROR_QUALITY_TASK_NOT_FOUND,
@@ -128,7 +131,7 @@ class PipelineBuildQualityService(
         }
 
         // 校验审核权限
-        val auditUserSet = getAuditUserList(client, projectId, pipelineId, buildId, taskType)
+        val auditUserSet = getAuditUserList(projectId, pipelineId, buildId, taskType)
         if (!auditUserSet.contains(userId)) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -148,7 +151,6 @@ class PipelineBuildQualityService(
                 container.elements.forEach { element ->
                     if (element is QualityGateInElement && element.status == BuildStatus.REVIEWING.name) {
                         element.reviewUsers = getAuditUserList(
-                            client,
                             projectId,
                             pipelineId,
                             buildId,
@@ -157,7 +159,6 @@ class PipelineBuildQualityService(
                     }
                     if (element is QualityGateOutElement && element.status == BuildStatus.REVIEWING.name) {
                         element.reviewUsers = getAuditUserList(
-                            client,
                             projectId,
                             pipelineId,
                             buildId,
@@ -190,8 +191,8 @@ class PipelineBuildQualityService(
             val convertList = ruleMatchList.map {
                 val gatewayIds = it.ruleList.filter { !it.gatewayId.isNullOrBlank() }.map { it.gatewayId!! }
                 mapOf("position" to it.controlStage.name,
-                        "taskId" to it.taskId,
-                        "gatewayIds" to gatewayIds)
+                    "taskId" to it.taskId,
+                    "gatewayIds" to gatewayIds)
             }
             QualityUtils.fillInOutElement(cleaningModel, startParams, convertList)
         }
@@ -214,7 +215,7 @@ class PipelineBuildQualityService(
         }
     }
 
-    fun getAuditUserList(client: Client, projectId: String, pipelineId: String, buildId: String, taskId: String): Set<String> {
+    fun getAuditUserList(projectId: String, pipelineId: String, buildId: String, taskId: String): Set<String> {
         return try {
             client.get(ServiceQualityRuleResource::class).getAuditUserList(
                 projectId,
@@ -224,21 +225,26 @@ class PipelineBuildQualityService(
             ).data ?: setOf()
         } catch (e: Exception) {
             logger.error("quality get audit user list fail: ${e.message}", e)
-            return setOf()
+            setOf()
         }
     }
 
-    fun check(client: Client, buildCheckParams: BuildCheckParams): RuleCheckResult {
+    fun check(buildCheckParams: BuildCheckParams, position: String): RuleCheckResult {
         return try {
             client.get(ServiceQualityRuleResource::class).check(buildCheckParams).data!!
         } catch (e: Exception) {
-            logger.error("quality check fail for build(${buildCheckParams.buildId})", e)
-            return RuleCheckResult(
-                success = false,
-                failEnd = true,
-                auditTimeoutSeconds = 15 * 6000,
-                resultList = listOf()
+            logger.error("Quality Gate check in fail", e)
+            val atomDesc = if (position == ControlPointPosition.BEFORE_POSITION) "准入" else "准出"
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER,
+                errorMsg = "质量红线($atomDesc)检测失败"
             )
         }
+    }
+
+    fun hasCodeccHisMetadata(buildId: String): Boolean {
+        val hisMetadata = client.get(ServiceQualityRuleResource::class).getHisMetadata(buildId).data ?: listOf()
+        return hisMetadata.any { it.elementType in QualityUtils.QUALITY_CODECC_LAZY_ATOM }
     }
 }

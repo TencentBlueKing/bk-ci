@@ -41,12 +41,12 @@ class ErrorCodeExceptionMapper : ExceptionMapper<ErrorCodeException> {
     }
 
     override fun toResponse(exception: ErrorCodeException): Response {
-        logger.error("Failed with errorCode client exception:$exception")
+        logger.warn("Failed with errorCode client exception:$exception")
         val errorResult = MessageCodeUtil.generateResponseDataObject(
             messageCode = exception.errorCode,
             params = exception.params,
             data = null,
-            defaultMessage = exception.message
+            defaultMessage = exception.defaultMessage
         )
 //        // 在提示信息末尾附加uniqueId定位信息
 //        if (null != errorResult.message && errorResult.message!!.startsWith("[uniqueId=")) {

@@ -36,14 +36,14 @@ import java.util.concurrent.TimeUnit
 @Component
 class Gray {
 
-    @Value("\${project.gray:#{null}}")
-    private val grayFlag: String? = null
+    @Value("\${project.gray.v2:#{null}}")
+    private val grayFlag: String? = "false"
 
     var gray: Boolean? = null
-    private val redisKey = "project:setting:gray" // 灰度项目列表存在redis的标识key
+    private val redisKey = "project:setting:gray:v2" // v2灰度项目列表存在redis的标识key
 
     private val cache = CacheBuilder.newBuilder()
-        .maximumSize(2000)
+        .maximumSize(10)
         .expireAfterWrite(30, TimeUnit.SECONDS)
         .build<String/*Redis Keys*/, Set<String>/*Project Names*/>()
 
@@ -58,17 +58,35 @@ class Gray {
         return gray!!
     }
 
+    fun addGrayProject(projectId: String, redisOperation: RedisOperation) {
+        redisOperation.addSetValue(getGrayRedisKey(), projectId) // 添加项目为灰度项目
+        try {
+            cache.invalidate(getGrayRedisKey())
+        } catch (ignored: Exception) {
+        }
+    }
+
+    fun removeGrayProject(projectId: String, redisOperation: RedisOperation) {
+        redisOperation.removeSetMember(getGrayRedisKey(), projectId) // 取消项目为灰度项目
+        try {
+            cache.invalidate(getGrayRedisKey())
+        } catch (ignored: Exception) {
+        }
+    }
+
     fun isGrayProject(projectId: String, redisOperation: RedisOperation): Boolean {
-        return grayProjectSet(redisOperation).contains(projectId)
+        return redisOperation.isMember(getGrayRedisKey(), projectId)
+//        return grayProjectSet(redisOperation).contains(projectId)
     }
 
     fun isGrayMatchProject(projectId: String, redisOperation: RedisOperation): Boolean {
-        return isGrayMatchProject(projectId, grayProjectSet(redisOperation))
+        return isGray() == isGrayProject(projectId, redisOperation) // 当前是灰度环境 + 灰度项目
+//        return isGrayMatchProject(projectId, grayProjectSet(redisOperation))
     }
 
-    fun isGrayMatchProject(projectId: String, grayProjectSet: Set<String>): Boolean {
-        return isGray() == grayProjectSet.contains(projectId)
-    }
+//    fun isGrayMatchProject(projectId: String, grayProjectSet: Set<String>): Boolean {
+//        return isGray() == grayProjectSet.contains(projectId)
+//    }
 
     fun grayProjectSet(redisOperation: RedisOperation): Set<String> {
         var projects = cache.getIfPresent(getGrayRedisKey())

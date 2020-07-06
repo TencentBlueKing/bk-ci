@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLLimit
@@ -33,12 +35,16 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineResource
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
@@ -48,6 +54,7 @@ import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.PipelineStatus
+import com.tencent.devops.process.pojo.PipelineStageTag
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -55,19 +62,22 @@ import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.PipelineRemoteAuthService
+import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
 class UserPipelineResourceImpl @Autowired constructor(
     private val pipelineService: PipelineService,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineRemoteAuthService: PipelineRemoteAuthService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val stageTagService: StageTagService
 ) : UserPipelineResource {
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
@@ -182,6 +192,8 @@ class UserPipelineResourceImpl @Autowired constructor(
     override fun edit(userId: String, projectId: String, pipelineId: String, pipeline: Model): Result<Boolean> {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
+        checkName(pipeline.name)
+        PipelineUtils.checkPipelineDescLength(pipeline.desc)
         pipelineService.editPipeline(userId, projectId, pipelineId, pipeline, ChannelCode.BS)
         // pipelineGroupService.setPipelineGroup(userId, pipelineId,projectId,pipeline.group)
         return Result(true)
@@ -196,6 +208,8 @@ class UserPipelineResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         checkParam(modelAndSetting.setting)
         checkPipelineId(pipelineId)
+        checkName(modelAndSetting.model.name)
+        PipelineUtils.checkPipelineDescLength(modelAndSetting.model.desc)
         pipelineService.saveAll(
             userId,
             projectId,
@@ -260,6 +274,21 @@ class UserPipelineResourceImpl @Autowired constructor(
     override fun restore(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
+        // 判断用户是否为项目管理员
+        val permission = BkAuthGroup.MANAGER
+        if (!pipelinePermissionService.isProjectUser(userId, projectId, permission)) {
+            val defaultMessage = "管理员"
+            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${permission.value}",
+                defaultMessage = defaultMessage
+            )
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                defaultMessage = defaultMessage,
+                params = arrayOf(permissionMsg)
+            )
+        }
         pipelineService.restorePipeline(userId, projectId, pipelineId, ChannelCode.BS)
         return Result(true)
     }
@@ -363,6 +392,11 @@ class UserPipelineResourceImpl @Autowired constructor(
         }.toMap())
     }
 
+    override fun getStageTag(userId: String): Result<List<PipelineStageTag>> {
+        if (userId.isBlank()) throw ParamBlankException("Invalid userId")
+        return stageTagService.getAllStageTag()
+    }
+
     override fun favor(userId: String, projectId: String, pipelineId: String, favor: Boolean): Result<Boolean> {
         return Result(pipelineGroupService.favorPipeline(userId, projectId, pipelineId, favor))
     }
@@ -379,6 +413,12 @@ class UserPipelineResourceImpl @Autowired constructor(
     private fun checkPipelineId(pipelineId: String) {
         if (pipelineId.isBlank()) {
             throw ParamBlankException("Invalid pipelineId")
+        }
+    }
+
+    private fun checkName(name: String) {
+        if (name.isBlank()) {
+            throw ParamBlankException("Invalid pipeline name")
         }
     }
 

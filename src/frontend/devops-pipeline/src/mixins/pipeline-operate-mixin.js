@@ -154,6 +154,7 @@ export default {
             try {
                 await navConfirm({ type: 'warning', content })
 
+                this.isLoading = true
                 await this.removePipeline({
                     projectId,
                     pipelineId
@@ -177,6 +178,7 @@ export default {
                     message,
                     theme
                 })
+                this.isLoading = false
             }
         },
         /**
@@ -274,7 +276,7 @@ export default {
                     pipelineId
                 })
 
-                if (res.id) {
+                if (res && res.id) {
                     message = this.$t('newlist.sucToStartBuild')
                     theme = 'success'
                     if (goDetail) {
@@ -372,7 +374,7 @@ export default {
                     buildId
                 })
 
-                if (res.id) {
+                if (res && res.id) {
                     message = this.$t('subpage.rebuildSuc')
                     theme = 'success'
                     if (goDetail) {

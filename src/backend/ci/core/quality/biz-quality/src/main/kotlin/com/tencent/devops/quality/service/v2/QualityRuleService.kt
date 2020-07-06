@@ -37,6 +37,7 @@ import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.model.quality.tables.records.TQualityRuleRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
@@ -59,7 +60,6 @@ import com.tencent.devops.quality.constant.QualityMessageCode
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.dao.v2.QualityRuleMapDao
 import com.tencent.devops.quality.pojo.RulePermission
-import com.tencent.devops.quality.pojo.enum.NotifyType
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.pojo.enum.RuleRange
 import com.tencent.devops.quality.util.ElementUtils
@@ -178,8 +178,8 @@ class QualityRuleService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             ruleId = ruleId,
-            authPermission = AuthPermission.ENABLE,
-            message = "用户没拦截规则的停用/启用权限"
+            authPermission = AuthPermission.DELETE,
+            message = "用户没拦截规则的删除权限"
         )
         qualityRuleDao.delete(dslContext, ruleId)
         deleteResource(projectId, ruleId)

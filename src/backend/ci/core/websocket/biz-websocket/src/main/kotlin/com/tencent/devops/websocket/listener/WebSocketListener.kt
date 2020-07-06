@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
+import org.springframework.util.StopWatch
 
 @Component
 class WebSocketListener @Autowired constructor(
@@ -49,17 +50,22 @@ class WebSocketListener @Autowired constructor(
     override fun execute(event: SendMessage) {
         logger.info("WebSocketListener: user:${event.userId},page:${event.page},sessionList:${event.sessionList}")
         try {
+            val watch = StopWatch()
             val startTime = System.currentTimeMillis()
             val sessionList = event.sessionList
             if (sessionList != null && sessionList.isNotEmpty()) {
+                watch.start("addLongSession")
                 addLongSession(sessionList, event.page ?: "")
+                watch.stop()
                 sessionList.forEach { session ->
                     if (websocketService.isCacheSession(session)) {
+                        watch.start("PushMsg:$session")
                         val pushStartTime = System.currentTimeMillis()
                         messagingTemplate!!.convertAndSend(
                             "/topic/bk/notify/$session",
                             objectMapper.writeValueAsString(event.notifyPost)
                         )
+                        watch.stop()
                         if (System.currentTimeMillis() - pushStartTime > 500) {
                             logger.warn("WebSocketListener push msg consuming 500ms, page[$event.page], session[$session]")
                         }
@@ -69,7 +75,7 @@ class WebSocketListener @Autowired constructor(
                 logger.info("webSocketListener sessionList is empty. page:${event.page} user:${event.userId} ")
             }
             if (System.currentTimeMillis() - startTime > 1000) {
-                logger.warn("WebSocketListener push all message consuming 1s, page[$event.page], session[${event.sessionList}]")
+                logger.warn("WebSocketListener push all message consuming 1s, page:[${event.page}] watch[$watch]")
             }
         } catch (ex: Exception) {
             logger.error("webSocketListener error", ex)
@@ -77,9 +83,10 @@ class WebSocketListener @Autowired constructor(
     }
 
     private fun addLongSession(sessionList: List<String>, page: String) {
-        if (sessionList.size < 20) {
+        if (sessionList.size < websocketService.getMaxSession()!!) {
             return
         }
+        logger.warn("page[$page] sessionCount more ${websocketService.getMaxSession()}, sessionList[$sessionList]")
         websocketService.createLongSessionPage(page)
     }
 }

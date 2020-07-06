@@ -58,7 +58,7 @@ class ArchiveAtomToLocalServiceImpl : ArchiveAtomServiceImpl() {
             )
         }
         val file = File("$atomArchiveLocalBasePath/$BK_CI_ATOM_DIR/${URLDecoder.decode(filePath, "UTF-8")}")
-        val content = FileUtils.readFileToString(file)
+        val content = if (file.exists()) FileUtils.readFileToString(file) else ""
         logger.info("getAtomFileContent content is:$content")
         return Result(content)
     }
