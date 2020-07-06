@@ -104,13 +104,13 @@ abstract class PipelineHistoryDataClearService {
             dslContext.query("DELETE FROM $processDbName.${tableInfo[pipelineBuildTaskTableKey]} WHERE BUILD_ID='$buildId'"),
             dslContext.query("DELETE FROM $processDbName.${tableInfo[pipelineBuildVarTableKey]} WHERE BUILD_ID='$buildId'"),
             dslContext.query("DELETE FROM $processDbName.${tableInfo[pipelineBuildContainerTableKey]} WHERE BUILD_ID='$buildId'"),
-            dslContext.query("DELETE FROM $processDbName.${tableInfo[pipelineBuildStageTableKey]} WHERE BUILD_ID='$buildId'")
+            dslContext.query("DELETE FROM $processDbName.${tableInfo[pipelineBuildStageTableKey]} WHERE BUILD_ID='$buildId'"),
+            dslContext.query("DELETE FROM $repositoryDbName.${tableInfo[repositoryCommitTableKey]} WHERE BUILD_ID='$buildId'")
         )
         if (isCompletelyDelete) {
             val dataSqlList = mutableListOf<Query>(
                 dslContext.query("DELETE FROM $processDbName.${tableInfo[pipelineBuildDetailTableKey]} WHERE BUILD_ID='$buildId'"),
                 dslContext.query("DELETE FROM $processDbName.${tableInfo[reportTableKey]} WHERE PROJECT_ID='$projectId' AND PIPELINE_ID='$pipelineId' AND BUILD_ID='$buildId'"),
-                dslContext.query("DELETE FROM $repositoryDbName.${tableInfo[repositoryCommitTableKey]} WHERE BUILD_ID='$buildId'"),
                 dslContext.query("DELETE FROM $dispatchDbName.${tableInfo[dispatchPipelineBuildTableKey]} WHERE BUILD_ID='$buildId'"),
                 dslContext.query("DELETE FROM $dispatchDbName.${tableInfo[dispatchPipelineDockerBuildTableKey]} WHERE BUILD_ID='$buildId'"),
                 dslContext.query("DELETE FROM $dispatchDbName.${tableInfo[dispatchThirdpartyAgentBuildTableKey]} WHERE BUILD_ID='$buildId'"),
