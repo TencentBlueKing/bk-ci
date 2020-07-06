@@ -47,22 +47,22 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Context
 
 @Api(tags = ["USER_SIGN"], description = "用户接口-应用签名")
-@Path("/user/sign")
+@Path("/user/sign/ipa")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserSignResource {
 
-    @ApiOperation("ipa包签名-通配符")
+    @ApiOperation("ipa包签名")
     @POST
-    @Path("/ipa/wildcard")
+    @Path("/ipa")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun ipaSign(
             @ApiParam("userId", required = true)
             @HeaderParam(AUTH_HEADER_USER_ID)
             userId: String,
-            @ApiParam("IPA包签名信息", required = false)
+            @ApiParam("ipaSignInfoHeader", required = false)
             @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
-            ipaSignInfo: String?,
+            ipaSignInfoHeader: String,
             @ApiParam("ipa包文件", required = true)
             ipaInputStream: InputStream
     ): Result<String?>

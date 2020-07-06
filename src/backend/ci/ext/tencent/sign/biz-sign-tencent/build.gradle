@@ -26,7 +26,6 @@
 
 dependencies {
     compile project(":core:sign:biz-sign")
-
     compile project(":ext:tencent:sign:api-sign-tencent")
     compile project(":ext:tencent:sign:model-sign")
 }

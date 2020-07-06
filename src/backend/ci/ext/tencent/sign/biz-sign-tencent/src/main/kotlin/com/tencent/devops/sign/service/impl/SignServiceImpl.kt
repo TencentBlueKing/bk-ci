@@ -4,7 +4,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.sign.pojo.IpaCustomizedSignRequest
-import com.tencent.devops.sign.service.IpaSignService
+import com.tencent.devops.sign.service.SignService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -15,7 +15,7 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 
 @Service
-class IpaSignServiceImpl : IpaSignService {
+class SignServiceImpl : SignService {
 
     @Value("\${sign.workspace:#{null}}")
     val workspace: String = ""
@@ -83,6 +83,6 @@ class IpaSignServiceImpl : IpaSignService {
 
 
     companion object {
-        private val logger = LoggerFactory.getLogger(IpaSignServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(SignServiceImpl::class.java)
     }
 }

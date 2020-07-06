@@ -1,17 +1,15 @@
 package com.tencent.devops.sign.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.sign.pojo.IpaSignInfo
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import java.io.File
-import java.io.InputStream
 
-interface IpaSignService {
+interface SignService {
+
     fun resignIpaPackage(
-            userId: String,
-            ipaSignInfo: IpaSignInfo?,
-            ipaPackage: File
-    ): Result<String?>
+            ipaPackage: File,
+            ipaSignInfo: IpaSignInfo
+    ): File?
 
     fun resignApp(
             appPath: File,

@@ -28,10 +28,8 @@ package com.tencent.devops.sign.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.sign.api.user.UserSignResource
 import com.tencent.devops.sign.pojo.IosProfile
-import com.tencent.devops.sign.pojo.IpaCustomizedSignRequest
-import com.tencent.devops.sign.service.impl.IpaSignServiceImpl
+import com.tencent.devops.sign.service.impl.SignServiceImpl
 import org.apache.commons.codec.binary.Hex
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.compress.utils.IOUtils
@@ -44,7 +42,7 @@ import java.security.MessageDigest
 
 @RestResource
 class UserSignResourceImpl @Autowired constructor(
-        private val ipaSignService: IpaSignServiceImpl
+        private val ipaSignService: SignServiceImpl
 ) : UserSignResource {
 
     override fun ipaCustomizedSign(

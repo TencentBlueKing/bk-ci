@@ -57,9 +57,6 @@ interface ServiceSignResource {
     @Path("/ipa/wildcard")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun ipaSign(
-            @ApiParam("IPA包签名信息", required = false)
-            @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
-            ipaSignInfo: String?,
             @ApiParam("ipa包文件", required = true)
             ipaInputStream: InputStream
     ): Result<String?>
@@ -68,7 +65,6 @@ interface ServiceSignResource {
     @GET
     @Path("/file/download")
     fun downloadIpa(
-            userId: String,
             @ApiParam("文件路径", required = true)
             @QueryParam("filePath")
             filePath: String,

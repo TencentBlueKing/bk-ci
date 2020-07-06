@@ -1,0 +1,65 @@
+package com.tencent.devops.sign.utils
+
+import com.tencent.devops.common.api.util.FileUtil
+import org.apache.commons.codec.binary.Hex
+import java.io.*
+import java.security.MessageDigest
+
+
+object FileSignUtil {
+    private val bufferSize = 8 * 1024
+
+    /*
+    * 复制流到目标文件，并计算md5
+    * */
+    fun copyInputStreamToFile(
+            inputStream: InputStream,
+            target: File
+    ): String? {
+        var outputStream: OutputStream? = null
+        try {
+            outputStream = target.outputStream()
+            val md5 = MessageDigest.getInstance("MD5")
+            var bytesCopied: Long = 0
+            val buffer = ByteArray(bufferSize)
+            var bytes = inputStream.read(buffer)
+            while (bytes >= 0) {
+                outputStream.write(buffer, 0, bytes)
+                md5.update(buffer, 0, bytes)
+                bytesCopied += bytes
+                bytes = inputStream.read(buffer)
+            }
+            return Hex.encodeHexString(md5.digest())
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return null
+        } finally {
+            try {
+                outputStream?.close()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /*
+    *  创建目录
+    * */
+    fun mkdirs(dir: File): Boolean {
+        if (!dir.exists()) {
+            dir.mkdirs()
+            return true
+        }
+        if (dir.exists() && !dir.isDirectory) {
+            dir.deleteOnExit()
+            dir.mkdirs()
+            return true
+        }
+        if (dir.exists() && dir.isDirectory && !dir.canWrite()) {
+            dir.deleteOnExit()
+            dir.mkdirs()
+            return true
+        }
+        return true
+    }
+}
