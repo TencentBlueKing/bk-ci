@@ -30,6 +30,7 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -179,13 +180,15 @@ class NodeDao {
         dslContext: DSLContext,
         projectId: String,
         displayName: String,
-        nodeType: List<String>
+        nodeType: List<String>?
     ): Result<TNodeRecord> {
         with(TNode.T_NODE) {
+            val condition = mutableListOf<Condition>(PROJECT_ID.eq(projectId), DISPLAY_NAME.eq(displayName))
+            if (nodeType != null && nodeType.isNotEmpty()) {
+                condition.add(NODE_TYPE.`in`(nodeType))
+            }
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(DISPLAY_NAME.eq(displayName))
-                .and(NODE_TYPE.`in`(nodeType))
+                .where(condition)
                 .fetch()
         }
     }

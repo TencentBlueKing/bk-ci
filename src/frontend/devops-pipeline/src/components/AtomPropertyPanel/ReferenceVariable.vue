@@ -1,6 +1,6 @@
 <template>
     <div class="reference-var">
-        <span>{{ $t('editPage.useParams') }} <i class="bk-icon icon-angle-down"></i><i class="bk-icon icon-angle-up"></i></span>
+        <span>{{ $t('editPage.useParams') }} <i class="devops-icon icon-angle-down"></i><i class="devops-icon icon-angle-up"></i></span>
         <div v-if="globalEnvs" class="env-layout">
             <bk-table
                 :data="envsData"
@@ -9,7 +9,7 @@
             >
                 <bk-table-column v-for="col in columnList" v-bind="col" :key="col.prop">
                     <template v-if="col.prop === 'clipboard'" v-slot="props">
-                        <i class="bk-icon icon-clipboard env-copy-icon" :data-clipboard-text="&quot;${&quot; + props.row.name + &quot;}&quot;"></i>
+                        <i class="devops-icon icon-clipboard env-copy-icon" :data-clipboard-text="&quot;${&quot; + props.row.name + &quot;}&quot;"></i>
                     </template>
                     <template v-else v-slot="props">
                         <span :title="props.row[col.prop]">{{ props.row[col.prop] }}</span>
@@ -160,7 +160,7 @@
                 background-color: white;
                 right: 0;
                 top: 52px;
-                z-index: 1111;
+                z-index: 1112;
                 width: 640px;
                 margin-bottom: 10px;
                 box-shadow: 0 3px 7px 0 rgba(0,0,0,0.1);

@@ -27,7 +27,7 @@
 package com.tencent.devops.common.service.utils
 
 import com.tencent.devops.common.api.pojo.GlobalMessage
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.CodeCCResult
 import com.tencent.devops.common.util.JsonUtil
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
@@ -55,7 +55,7 @@ class MessageCodeUtil @Autowired constructor() {
          */
         fun <T> generateResponseDataObject(
                 messageCode: String
-        ): Result<T> {
+        ): CodeCCResult<T> {
             return generateResponseDataObject(messageCode, null, null)
         }
 
@@ -67,7 +67,7 @@ class MessageCodeUtil @Autowired constructor() {
         fun <T> generateResponseDataObject(
                 messageCode: String,
                 data: T?
-        ): Result<T> {
+        ): CodeCCResult<T> {
             return generateResponseDataObject(messageCode, null, data)
         }
 
@@ -79,7 +79,7 @@ class MessageCodeUtil @Autowired constructor() {
         fun <T> generateResponseDataObject(
                 messageCode: String,
                 params: Array<String>
-        ): Result<T> {
+        ): CodeCCResult<T> {
             return generateResponseDataObject(messageCode, params, null)
         }
 
@@ -94,7 +94,7 @@ class MessageCodeUtil @Autowired constructor() {
                 messageCode: String,
                 params: Array<String>?,
                 data: T?
-        ): Result<T> {
+        ): CodeCCResult<T> {
             var message = "System service busy, please try again later"
             try {
                 val redisTemplate: RedisTemplate<String, String> = SpringContextUtil.getBean(RedisTemplate::class.java, "redisTemplate") as RedisTemplate<String, String>
@@ -108,7 +108,7 @@ class MessageCodeUtil @Autowired constructor() {
             } catch (e: Exception) {
                 logger.info("get message error is :$e")
             }
-            return Result(
+            return CodeCCResult(
                     status = messageCode.toInt(),
                     message = message,
                     data = data) // 生成Result对象

@@ -29,10 +29,14 @@ package com.tencent.devops.dockerhost.resources
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.api.ServiceDockerHostResource
+import com.tencent.devops.dockerhost.exception.ContainerException
+import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
+import com.tencent.devops.dockerhost.pojo.DockerHostLoad
 import com.tencent.devops.dockerhost.pojo.DockerLogsResponse
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.pojo.DockerRunResponse
@@ -40,6 +44,7 @@ import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import com.tencent.devops.dockerhost.services.DockerService
 import com.tencent.devops.dockerhost.utils.CommonUtils
+import com.tencent.devops.process.engine.common.VMUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletRequest
@@ -49,6 +54,7 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
     private val dockerService: DockerService,
     private val dockerHostBuildService: DockerHostBuildService
 ) : ServiceDockerHostResource {
+
     override fun dockerBuild(
         projectId: String,
         pipelineId: String,
@@ -130,6 +136,47 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun startBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<String> {
+        return try {
+            Result(dockerService.startBuild(dockerHostBuildInfo))
+        } catch (e: NoSuchImageException) {
+            logger.error("Create container container failed, no such image. pipelineId: ${dockerHostBuildInfo.pipelineId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}, err: ${e.message}")
+            dockerHostBuildService.log(
+                buildId = dockerHostBuildInfo.buildId,
+                red = true,
+                message = "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}",
+                tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
+                containerHashId = dockerHostBuildInfo.containerHashId
+            )
+            Result(2, "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}", "")
+        } catch (e: ContainerException) {
+            logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
+            dockerHostBuildService.log(
+                buildId = dockerHostBuildInfo.buildId,
+                red = true,
+                message = "构建环境启动失败，错误信息:${e.message}",
+                tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
+                containerHashId = dockerHostBuildInfo.containerHashId
+            )
+            Result(2, "构建环境启动失败，错误信息:${e.message}", "")
+        }
+    }
+
+    override fun endBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<Boolean> {
+        logger.warn("Stop the container, containerId: ${dockerHostBuildInfo.containerId}")
+        dockerHostBuildService.stopContainer(dockerHostBuildInfo)
+
+        return Result(true)
+    }
+
+    override fun getDockerHostLoad(): Result<DockerHostLoad> {
+        return Result(dockerService.getDockerHostLoad())
+    }
+
+    override fun getContainerStatus(containerId: String): Result<Boolean> {
+        return Result(dockerService.getContainerStatus(containerId))
+    }
+
     private fun checkReq(request: HttpServletRequest) {
         var ip = request.getHeader("x-forwarded-for")
         if (ip.isNullOrBlank() || "unknown".equals(ip, ignoreCase = true)) {
@@ -153,9 +200,10 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
     override fun checkImage(
         buildId: String,
         checkImageRequest: CheckImageRequest,
+        containerId: String?,
         containerHashId: String?
     ): Result<CheckImageResponse?> {
-        return dockerHostBuildService.checkImage(buildId, checkImageRequest, containerHashId)
+        return dockerHostBuildService.checkImage(buildId, checkImageRequest, containerId, containerHashId)
     }
 
     companion object {

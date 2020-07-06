@@ -75,9 +75,11 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         // 使用set集合（去除重复元素）操作提交的项目列表
         for (item in projectCodeList) {
             if (1 == operateFlag) {
-                redisOperation.addSetValue(gray.getGrayRedisKey(), item) // 添加项目为灰度项目
+                gray.addGrayProject(item, redisOperation) // 添加项目为灰度项目
+//                redisOperation.addSetValue(gray.getGrayRedisKey(), item) // 添加项目为灰度项目
             } else if (2 == operateFlag) {
-                redisOperation.removeSetMember(gray.getGrayRedisKey(), item) // 取消项目为灰度项目
+                gray.removeGrayProject(item, redisOperation) // 取消项目为灰度项目
+//                redisOperation.removeSetMember(gray.getGrayRedisKey(), item) // 取消项目为灰度项目
             }
         }
         val projectCodeSet = grayProjectSet()
@@ -89,9 +91,11 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         logger.info("Set bkrepo gray project:the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
         for (item in projectCodeList) {
             if (1 == operateFlag) {
-                redisOperation.addSetValue(repoGray.getRepoGrayRedisKey(), item)
+                repoGray.addGrayProject(item, redisOperation)
+//                redisOperation.addSetValue(repoGray.getRepoGrayRedisKey(), item)
             } else if (2 == operateFlag) {
-                redisOperation.removeSetMember(repoGray.getRepoGrayRedisKey(), item)
+                repoGray.removeGrayProject(item, redisOperation)
+//                redisOperation.removeSetMember(repoGray.getRepoGrayRedisKey(), item)
             }
         }
         val projectCodeSet = grayProjectSet()
@@ -103,9 +107,11 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         logger.info("Set macos gray project:the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
         for (item in projectCodeList) {
             if (1 == operateFlag) {
-                redisOperation.addSetValue(macosGray.getRepoGrayRedisKey(), item)
+                macosGray.addGrayProject(item, redisOperation)
+//                redisOperation.addSetValue(macosGray.getRepoGrayRedisKey(), item)
             } else if (2 == operateFlag) {
-                redisOperation.removeSetMember(macosGray.getRepoGrayRedisKey(), item)
+                macosGray.removeGrayProject(item, redisOperation)
+//                redisOperation.removeSetMember(macosGray.getRepoGrayRedisKey(), item)
             }
         }
         val projectCodeSet = grayProjectSet()
@@ -201,7 +207,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     ): Result<Map<String, Any?>?> {
         val dataObj = mutableMapOf<String, Any?>()
 
-        val projectCodeSet = gray.grayProjectSet(redisOperation)
+        val grayProjectSet = grayProjectSet()
 
         val projectInfos = projectDao.getProjectList(
             dslContext = dslContext,
@@ -215,7 +221,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             offset = offset,
             limit = limit,
             grayFlag = grayFlag,
-            englishNames = projectCodeSet
+            englishNames = grayProjectSet
         )
         val totalCount = projectDao.getProjectCount(
             dslContext = dslContext,
@@ -227,10 +233,10 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             approver = approver,
             approvalStatus = approvalStatus,
             grayFlag = grayFlag,
-            englishNames = projectCodeSet
+            englishNames = grayProjectSet
         )
         val dataList = mutableListOf<ProjectInfoResponse>()
-        val grayProjectSet = grayProjectSet()
+
         for (i in projectInfos.indices) {
             val projectData = projectInfos[i]
             val projectInfo = getProjectInfoResponse(projectData, grayProjectSet)
@@ -256,13 +262,9 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     ): Result<Map<String, Any?>?> {
         val dataObj = mutableMapOf<String, Any?>()
 
-        val grayProject = gray.grayProjectSet(redisOperation)
+        val grayProjectSet = grayProjectSet()
 
-        val repoGrayProject = if (repoGrayFlag) {
-            redisOperation.getSetMembers(repoGray.getRepoGrayRedisKey())
-        } else {
-            null
-        }
+        val repoGrayProjectSet = repoGrayProjectSet()
 
         val projectInfos = projectDao.getProjectList(
             dslContext = dslContext,
@@ -277,8 +279,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             limit = limit,
             grayFlag = grayFlag,
             repoGrayFlag = repoGrayFlag,
-            grayNames = grayProject,
-            repoGrayNames = repoGrayProject
+            grayNames = grayProjectSet,
+            repoGrayNames = repoGrayProjectSet
         )
         val totalCount = projectDao.getProjectCount(
             dslContext = dslContext,
@@ -291,12 +293,11 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             approvalStatus = approvalStatus,
             grayFlag = grayFlag,
             repoGrayFlag = repoGrayFlag,
-            grayNames = grayProject,
-            repoGrayNames = repoGrayProject
+            grayNames = grayProjectSet,
+            repoGrayNames = repoGrayProjectSet
         )
         val dataList = mutableListOf<ProjectInfoResponseRepoGray>()
-        val grayProjectSet = grayProjectSet()
-        val repoGrayProjectSet = repoGrayProjectSet()
+
         for (i in projectInfos.indices) {
             val projectData = projectInfos[i]
             val projectInfo = getProjectInfoResponseRepoGray(
@@ -327,19 +328,9 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     ): Result<Map<String, Any?>?> {
         val dataObj = mutableMapOf<String, Any?>()
 
-        val grayProject = gray.grayProjectSet(redisOperation)
-
-        val repoGrayProject = if (repoGrayFlag) {
-            redisOperation.getSetMembers(repoGray.getRepoGrayRedisKey())
-        } else {
-            null
-        }
-
-        val macosGrayProject = if (macosGrayFlag) {
-            redisOperation.getSetMembers(macosGray.getRepoGrayRedisKey())
-        } else {
-            null
-        }
+        val grayProjectSet = grayProjectSet()
+        val repoGrayProjectSet = repoGrayProjectSet()
+        val macosGrayProjectSet = macosGray.grayProjectSet(redisOperation)
 
         val projectInfos = projectDao.getProjectList(
             dslContext = dslContext,
@@ -355,9 +346,9 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             grayFlag = grayFlag,
             repoGrayFlag = repoGrayFlag,
             macosGrayFlag = macosGrayFlag,
-            grayNames = grayProject,
-            repoGrayNames = repoGrayProject,
-            macosGrayNames = macosGrayProject
+            grayNames = grayProjectSet,
+            repoGrayNames = repoGrayProjectSet,
+            macosGrayNames = macosGrayProjectSet
         )
         val totalCount = projectDao.getProjectCount(
             dslContext = dslContext,
@@ -371,14 +362,12 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             grayFlag = grayFlag,
             repoGrayFlag = repoGrayFlag,
             macosGrayFlag = macosGrayFlag,
-            grayNames = grayProject,
-            repoGrayNames = repoGrayProject,
-            macosGrayNames = macosGrayProject
+            grayNames = grayProjectSet,
+            repoGrayNames = repoGrayProjectSet,
+            macosGrayNames = macosGrayProjectSet
         )
         val dataList = mutableListOf<ProjectInfoResponseMacOSGray>()
-        val grayProjectSet = grayProjectSet()
-        val repoGrayProjectSet = repoGrayProjectSet()
-        val macosGrayProjectSet = macosGray.grayProjectSet(redisOperation)
+
         for (i in projectInfos.indices) {
             val projectData = projectInfos[i]
             val projectInfo =
@@ -421,10 +410,9 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         )
     }
 
-    fun grayProjectSet() = gray.grayProjectSet(redisOperation)
+    private fun grayProjectSet() = gray.grayProjectSet(redisOperation)
 
-    fun repoGrayProjectSet() =
-        (redisOperation.getSetMembers(repoGray.getRepoGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
+    private fun repoGrayProjectSet() = repoGray.grayProjectSet(redisOperation)
 
     private fun getProjectInfoResponse(projectData: TProjectRecord, grayProjectSet: Set<String>): ProjectInfoResponse {
         return ProjectInfoResponse(

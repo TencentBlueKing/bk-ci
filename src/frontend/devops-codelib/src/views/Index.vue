@@ -3,13 +3,13 @@
         <template v-if="hasCodelibs">
             <link-code-lib v-if="codelibs.hasCreatePermission" :create-codelib="createCodelib"></link-code-lib>
             <bk-button theme="primary" v-else @click.stop="goCreatePermission">
-                <i class="bk-icon icon-plus"></i>
+                <i class="devops-icon icon-plus"></i>
                 <span>{{ $t('codelib.linkCodelib') }}</span>
             </bk-button>
             <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
                 class="codelib-search"
                 :clearable="true"
-                :right-icon="'bk-icon icon-search'"
+                right-icon="icon-search"
                 v-model="aliasName"
                 @enter="refreshCodelibList(projectId, page, pageSize, aliasName)"
                 @change="clearAliasName"

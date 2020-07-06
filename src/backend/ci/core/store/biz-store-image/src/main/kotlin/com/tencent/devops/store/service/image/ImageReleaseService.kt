@@ -623,8 +623,11 @@ abstract class ImageReleaseService {
                 startParams["registryPwd"] = password
             }
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
-                userId, projectCode!!, imagePipelineRelRecord.pipelineId, startParams,
-                ChannelCode.AM
+                userId = userId,
+                projectId = projectCode!!,
+                pipelineId = imagePipelineRelRecord.pipelineId,
+                values = startParams,
+                channelCode = ChannelCode.AM
             ).data
             logger.info("the buildIdObj is:$buildIdObj")
             if (null != buildIdObj) {
@@ -805,8 +808,7 @@ abstract class ImageReleaseService {
             return Triple(false, CommonMessageCode.PERMISSION_DENIED, null)
         }
         logger.info("imageRecord status=$imageStatus, status=$status")
-        val allowReleaseStatus = if (isNormalUpgrade != null && isNormalUpgrade) ImageStatusEnum.TESTING
-        else ImageStatusEnum.AUDITING
+        val allowReleaseStatus = getAllowReleaseStatus(isNormalUpgrade)
         var validateFlag = true
         if (status == ImageStatusEnum.COMMITTING.status.toByte() &&
             imageStatus != ImageStatusEnum.INIT.status.toByte()
@@ -871,6 +873,8 @@ abstract class ImageReleaseService {
             null
         )
     }
+
+    abstract fun getAllowReleaseStatus(isNormalUpgrade: Boolean?): ImageStatusEnum
 
     private fun validateNameIsExist(
         count: Int,

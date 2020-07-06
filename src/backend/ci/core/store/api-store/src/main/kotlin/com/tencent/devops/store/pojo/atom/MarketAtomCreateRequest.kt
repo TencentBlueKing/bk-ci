@@ -26,6 +26,8 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -35,15 +37,21 @@ data class MarketAtomCreateRequest(
     @ApiModelProperty("项目编码", required = true)
     var projectCode: String,
     @ApiModelProperty("插件代码", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.STORE_CODE_STYLE)
     var atomCode: String,
     @ApiModelProperty("插件名称", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.STORE_NAME_STYLE)
     var name: String,
     @ApiModelProperty("开发语言", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.LANGUAGE_STYLE)
     var language: String,
     @ApiModelProperty("认证方式", required = false)
+    @field:BkField(patternStyle = BkStyleEnum.AUTH_STYLE, required = false)
     val authType: String? = null,
     @ApiModelProperty(value = "项目可视范围", required = false)
-    val visibilityLevel: VisibilityLevelEnum? = null,
+    @field:BkField(patternStyle = BkStyleEnum.VISIBILITY_LEVEL_STYLE, required = false)
+    val visibilityLevel: VisibilityLevelEnum? = VisibilityLevelEnum.LOGIN_PUBLIC,
     @ApiModelProperty(value = "插件代码库不开源原因", required = false)
+    @field:BkField(patternStyle = BkStyleEnum.PRIVATE_REASON_STYLE, required = false)
     val privateReason: String? = null
 )

@@ -42,13 +42,15 @@ import io.swagger.annotations.ApiModel
 interface Container {
     var id: String? // seq id
     var name: String
-    val elements: List<Element>
+    var elements: List<Element>
     var status: String?
     var startEpoch: Long?
     var systemElapsed: Long? // 系统耗时（开机时间）
     var elementElapsed: Long? // 插件执行耗时
     var canRetry: Boolean? // 当前job是否能重试
     var containerId: String? // container 唯一ID
+    var startVMStatus: String?
+    var executeCount: Int?
 
     /**
      * 只存储Container相关的配置，elements不会存储。

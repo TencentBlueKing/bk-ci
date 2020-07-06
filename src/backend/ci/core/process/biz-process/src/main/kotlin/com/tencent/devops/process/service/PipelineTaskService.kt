@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.utils.LogUtils
@@ -93,14 +94,32 @@ class PipelineTaskService @Autowired constructor(
         val pipelines =
             pipelineModelTaskDao.listByAtomCode(dslContext, atomCode, projectCode, pageNotNull, pageSizeNotNull)
 
+        val pipelineAtomVersionInfo = mutableMapOf<String, MutableList<String>>()
+        val pipelineIds = pipelines?.map { it["pipelineId"] as String }
+        if (pipelineIds != null && pipelineIds.isNotEmpty()) {
+            val pipelineAtoms = pipelineModelTaskDao.listByAtomCodeAndPipelineIds(dslContext, atomCode, pipelineIds)
+            pipelineAtoms?.forEach {
+                val pipelineId = it["pipelineId"] as String
+                val taskParamsStr = it["taskParams"] as? String
+                val taskParams = if (!taskParamsStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(taskParamsStr, Map::class.java) as Map<String, Any> else mapOf()
+                if (pipelineAtomVersionInfo.containsKey(pipelineId)) {
+                    pipelineAtomVersionInfo[pipelineId]!!.add(taskParams["version"].toString())
+                } else {
+                    pipelineAtomVersionInfo[pipelineId] = mutableListOf(taskParams["version"].toString())
+                }
+            }
+        }
+
         val records = if (pipelines == null) {
             listOf<PipelineProjectRel>()
         } else {
             pipelines.map {
+                val pipelineId = it["pipelineId"] as String
                 PipelineProjectRel(
-                    pipelineId = it["pipelineId"] as String,
+                    pipelineId = pipelineId,
                     pipelineName = it["pipelineName"] as String,
-                    projectCode = it["projectCode"] as String
+                    projectCode = it["projectCode"] as String,
+                    atomVersion = pipelineAtomVersionInfo.getOrDefault(pipelineId, mutableListOf<String>()).distinct().joinToString(",")
                 )
             }
         }

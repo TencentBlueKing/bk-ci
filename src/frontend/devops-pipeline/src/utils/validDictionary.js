@@ -31,16 +31,16 @@ const dictionary = {
                 return `字段不符合(${regex})正则表达式规则`
             },
             max: (field, args) => {
-                return `字段长度不能超过${args}个字符`
+                return `字段长度不能超过${args[0]}个字符`
             },
             min: (field, args) => {
-                return `字段长度不能少于${args}个字符`
+                return `字段长度不能少于${args[0]}个字符`
             },
             max_value: (field, args) => {
-                return `最大不能超过${args}`
+                return `最大不能超过${args[0]}`
             },
             min_value: (field, args) => {
-                return `最小不能少于${args}`
+                return `最小不能少于${args[0]}`
             },
             pullmode: field => '字段不能为空',
             excludeEmptyCapital: field => `字段不能为空，只支持英文小写、数字、下划线以及/`,
@@ -60,16 +60,16 @@ const dictionary = {
                 return `Field does not match (${regex}) regular expression rules`
             },
             max: (field, args) => {
-                return `Field length cannot exceed ${args} characters`
+                return `Field length cannot exceed ${args[0]} characters`
             },
             min: (field, args) => {
-                return `Field length cannot be less than ${args} characters`
+                return `Field length cannot be less than ${args[0]} characters`
             },
             max_value: (field, args) => {
-                return `Maximum cannot exceed ${args}`
+                return `Maximum cannot exceed ${args[0]}`
             },
             min_value: (field, args) => {
-                return `Minimum must not be less than ${args}`
+                return `Minimum must not be less than ${args[0]}`
             },
             varRule: field => `${field} only begin with letters and underscores, and only contain letters, numbers, and underscores`,
             pullmode: field => 'Field cannot be empty',

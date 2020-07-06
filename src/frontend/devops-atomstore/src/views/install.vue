@@ -20,7 +20,7 @@
                 <div class="title"> {{ $t('store.请选择项目：') }} </div>
                 <big-select v-model="project" :loading="projectListLoading" :searchable="true" :multiple="true" :show-select-all="true" :options="projectList" setting-key="projectCode" display-key="projectName" @selected="selectProject" :placeholder="$t('store.请选择')">
                     <div slot="extension" style="cursor: pointer;">
-                        <a href="/console/pm" target="_blank"><i class="bk-icon icon-plus-circle" /> {{ $t('store.新建项目') }} </a>
+                        <a href="/console/pm" target="_blank"><i class="devops-icon icon-plus-circle" /> {{ $t('store.新建项目') }} </a>
                     </div>
                 </big-select>
                 <p class="template-tip" v-if="type === 'template'">{{ $t('store.若模版中有未安装的插件，将自动安装') }}</p>
@@ -43,7 +43,7 @@
                 </section>
             </div>
             <div class="install-success-tips" v-else>
-                <i class="bk-icon icon-check-circle"></i>
+                <i class="devops-icon icon-check-circle"></i>
                 <h3> {{ $t('store.恭喜，已安装成功！') }} </h3>
                 <div class="handle-btn">
                     <bk-button class="bk-button bk-primary" size="small" @click="backConsole"> {{ $t('store.工作台') }} </bk-button>
@@ -191,7 +191,7 @@
 
             backConsole () {
                 this.$router.push({
-                    name: 'atomList',
+                    name: 'workList',
                     params: {
                         type: this.type
                     }

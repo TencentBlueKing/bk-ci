@@ -10,10 +10,17 @@
         "strictNullChecks": false,
         "allowJs": true,
         "noImplicitAny": false,
+        "skipLibCheck": true,
         "module": "esnext",
         "moduleResolution": "node",
         "target": "es5",
-        "lib": [ "es2015", "dom" ]
+        "lib": [ "es2015", "dom" ],
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+              "src/*"
+            ]
+        }
     },
     "include": [
         "./src/**/*"

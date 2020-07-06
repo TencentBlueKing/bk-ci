@@ -29,8 +29,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.notify.api.op.OpNotifyMessageTemplateResource
-import com.tencent.devops.notify.model.NotifyMessageCommonTemplate
-import com.tencent.devops.notify.model.NotifyTemplateMessageRequest
+import com.tencent.devops.notify.pojo.NotifyMessageCommonTemplate
+import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
 import com.tencent.devops.notify.service.NotifyMessageTemplateService
 import org.springframework.beans.factory.annotation.Autowired

@@ -3,7 +3,7 @@
         <template v-if="hasAddItem">
             <div class="bk-selector-create-item">
                 <a :href="urlParse(webUrl + itemTargetUrl, { projectId })" target="_blank">
-                    <i class="bk-icon icon-plus-circle" />
+                    <i class="devops-icon icon-plus-circle" />
                     {{ itemText }}
                 </a>
             </div>

@@ -29,7 +29,7 @@ package com.tencent.devops.dispatch.controller
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.ServiceDispatchDockerHostResource
+import com.tencent.devops.dispatch.api.service.ServiceDispatchDockerHostResource
 import com.tencent.devops.dispatch.pojo.DockerHostZone
 import com.tencent.devops.dispatch.service.DockerHostZoneTaskService
 import org.slf4j.LoggerFactory

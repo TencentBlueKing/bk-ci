@@ -13,7 +13,7 @@
                     <div class="title">
                         {{ $t('template.diff') }}
                     </div>
-                    <i class="bk-icon icon-close" @click="cancelHandler()"></i>
+                    <i class="devops-icon icon-close" @click="cancelHandler()"></i>
                 </div>
                 <div class="compared-content"
                     v-bkloading="{
@@ -22,12 +22,12 @@
                     <div class="update-version-compared">
                         <div class="update-before">
                             {{ $t('template.beforeUpdate') }}
-                            <i class="bk-icon icon-minus"></i>{{ curVersion }}
+                            <i class="devops-icon icon-minus"></i>{{ curVersion }}
                         </div>
                         <div class="update-after version-selector">
                             <div class="label">
                                 {{ $t('template.afterUpdate') }}
-                                <i class="bk-icon icon-minus"></i></div>
+                                <i class="devops-icon icon-minus"></i></div>
                             <bk-select
                                 v-model="instanceVersion"
                                 @selected="selectedVersion"

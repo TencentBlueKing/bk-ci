@@ -36,6 +36,7 @@ import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import java.util.Base64
+import java.util.regex.Pattern
 
 object CommonUtils {
 
@@ -94,5 +95,18 @@ object CommonUtils {
         }
 
         return ticketMap
+    }
+
+    /**
+     * IP校验
+     */
+    fun verifyIp(ip: String): Boolean {
+        val pattern = Pattern.compile("([1-9]|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])(\\.(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])){3}")
+        return pattern.matcher(ip).matches()
+    }
+
+    fun isGray(): Boolean {
+        val gray = System.getProperty("gray.project", "none")
+        return gray == "grayproject"
     }
 }

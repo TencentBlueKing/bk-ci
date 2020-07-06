@@ -50,6 +50,7 @@ data class DockerBuildParam(
     @ApiModelProperty("构建的参数", required = true)
     val args: List<String> = emptyList(),
     @ApiModelProperty("host配置", required = true)
-    val host: List<String> = emptyList()
-
+    val host: List<String> = emptyList(),
+    @ApiModelProperty("并发构建池序号", required = false)
+    val poolNo: String? = "0"
 )

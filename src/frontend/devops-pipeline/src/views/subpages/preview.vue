@@ -3,7 +3,7 @@
         <div class="scroll-container">
             <div class="execute-previe-content">
                 <div class="version-option" v-if="isVisibleVersion">
-                    <p class="item-title">{{ $t('preview.introVersion') }}：<i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShowVersion }]" @click="toggleIcon('version')"></i></p>
+                    <p class="item-title">{{ $t('preview.introVersion') }}：<i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShowVersion }]" @click="toggleIcon('version')"></i></p>
                     <pipeline-versions-form ref="versionForm"
                         v-if="isDropdownShowVersion"
                         :build-no="buildNo"
@@ -14,7 +14,7 @@
                     ></pipeline-versions-form>
                 </div>
                 <div class="global-params" v-if="paramList.length">
-                    <p class="item-title">{{ $t('template.pipelineVar') }}：<i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShowParam }]" @click="toggleIcon('params')"></i></p>
+                    <p class="item-title">{{ $t('template.pipelineVar') }}：<i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShowParam }]" @click="toggleIcon('params')"></i></p>
                     <pipeline-params-form ref="paramsForm" v-if="isDropdownShowParam" :param-values="paramValues" :handle-param-change="handleParamChange" :params="paramList"></pipeline-params-form>
                 </div>
                 <div class="execute-detail-option" v-if="pipeline">
@@ -49,6 +49,13 @@
                     :editable="false"
                 />
             </template>
+            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined'">
+                <stage-property-panel
+                    :stage="currentStage"
+                    :stage-index="editingElementPos.stageIndex"
+                    :editable="false"
+                />
+            </template>
         </template>
     </div>
 </template>
@@ -58,12 +65,14 @@
     import Stages from '@/components/Stages'
     import AtomPropertyPanel from '@/components/AtomPropertyPanel'
     import ContainerPropertyPanel from '@/components/ContainerPropertyPanel'
+    import StagePropertyPanel from '@/components/StagePropertyPanel'
     import Vue from 'vue'
     import { bus } from '@/utils/bus'
     import { getParamsValuesMap } from '@/utils/util'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -71,7 +80,8 @@
             AtomPropertyPanel,
             ContainerPropertyPanel,
             PipelineParamsForm,
-            PipelineVersionsForm
+            PipelineVersionsForm,
+            StagePropertyPanel
         },
         mixins: [pipelineOperateMixin],
         data () {
@@ -108,6 +118,10 @@
             pipelineId () {
                 return this.$route.params.pipelineId
             },
+            currentStage () {
+                const { stageIndex } = this.editingElementPos
+                return this.getStageByIndex(stageIndex)
+            },
             panelTitle () {
                 const { stageIndex, containerIndex, elementIndex } = this.editingElementPos
                 if (typeof elementIndex !== 'undefined') {
@@ -132,9 +146,14 @@
             },
             checkTotal (val) {
                 this.pipeline.stages.forEach(stage => {
+                    const stageDisabled = stage.stageControlOption && stage.stageControlOption.enable === false
+                    if (!stageDisabled) {
+                        stage.runStage = val
+                    }
+
                     stage.containers.forEach(container => {
                         if (container['@type'] !== 'trigger') {
-                            const containerDisabled = container.jobControlOption && container.jobControlOption.enable === false
+                            const containerDisabled = stageDisabled || (container.jobControlOption && container.jobControlOption.enable === false)
                             if (!containerDisabled) {
                                 container.runContainer = val
                             }
@@ -142,28 +161,24 @@
                     })
                 })
             },
-            'pipeline.stages' (val) {
+            'pipeline.stages' (val, old) {
                 if (val) {
                     val.forEach(stage => {
+                        const stageDisabled = stage.stageControlOption && stage.stageControlOption.enable === false
+                        if (!stage.hasOwnProperty('runStage')) {
+                            Vue.set(stage, 'runStage', !stageDisabled)
+                        }
                         stage.containers.forEach(container => {
                             if (container['@type'] !== 'trigger') {
                                 const containerDisabled = container.jobControlOption && container.jobControlOption.enable === false
                                 if (!container.hasOwnProperty('runContainer')) {
-                                    Vue.set(container, 'runContainer', true)
-                                } else {
-                                    container.runContainer = true
+                                    Vue.set(container, 'runContainer', !containerDisabled)
                                 }
-                                if (containerDisabled) {
-                                    container.runContainer = false
-                                }
+
                                 container.elements.forEach(element => {
+                                    const isSkipEle = (element.additionalOptions && element.additionalOptions.enable === false) || containerDisabled
                                     if (!element.hasOwnProperty('canElementSkip')) {
-                                        Vue.set(element, 'canElementSkip', true)
-                                    } else {
-                                        element.canElementSkip = true
-                                    }
-                                    if ((element.additionalOptions && element.additionalOptions.enable === false) || containerDisabled) {
-                                        element.canElementSkip = false
+                                        Vue.set(element, 'canElementSkip', !isSkipEle)
                                     }
                                 })
                             }
@@ -198,7 +213,6 @@
             },
             async init () {
                 this.isLoading = true
-
                 try {
                     if (!this.curParamList) {
                         const res = await this.$store.dispatch('pipelines/requestStartupInfo', {
@@ -216,8 +230,8 @@
                             this.buildNo = this.curPipelineInfo.buildNo
                             this.isVisibleVersion = this.curPipelineInfo.buildNo.required
                         }
-                        this.paramList = this.curPipelineInfo.properties.filter(p => p.required)
-                        this.versionParamList = this.curPipelineInfo.properties.filter(p => !p.required)
+                        this.paramList = this.curPipelineInfo.properties.filter(p => p.required && !allVersionKeyList.includes(p.id))
+                        this.versionParamList = this.curPipelineInfo.properties.filter(p => allVersionKeyList.includes(p.id))
                         this.paramValues = getParamsValuesMap(this.paramList)
                         this.versionParamValues = getParamsValuesMap(this.versionParamList)
                         this.requestPipeline(this.$route.params)
@@ -262,6 +276,12 @@
                         res[skip] = true
                         return res
                     }, newParams), true)
+                } else {
+                    // 参数非法
+                    this.$showTips({
+                        message: this.$t('preview.paramsInvalidMsg'),
+                        theme: 'error'
+                    })
                 }
             },
             toggleIcon (type) {
@@ -286,7 +306,8 @@
 </script>
 
 <style lang="scss">
-    @import './../../scss/conf';
+    @import '../../scss/conf';
+    @import '../../scss/mixins/ellipsis';
 
     .pipeline-execute-preview {
         height: 100%;
@@ -304,7 +325,7 @@
             .item-title {
                 line-height: 36px;
                 border-bottom: 1px solid $borderWeightColor;
-                .bk-icon {
+                .devops-icon {
                     display: inline-block;
                     margin-left: 6px;
                     transition: all ease 0.2s;
@@ -325,35 +346,29 @@
             }
             .global-params {
                 margin-bottom: 30px;
+                .bk-form {
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: space-between;
+                }
                 .bk-form-content {
                     position: relative;
                 }
                 .bk-form-help {
-                    position: absolute;
-                    top: 36px;
                     margin: 0;
-                    display: inline-block;
                     width: 100%;
-                    white-space: nowrap;
-                    text-overflow: ellipsis;
-                    overflow: hidden;
+                    @include ellipsis();
+                    display: inline-block;
                 }
             }
             .bk-form-item {
-                float: left;
                 margin-top: 20px;
-                width: 46%;
-                height: 70px;
-                &:nth-child(2n) {
-                    margin-left: 30px;
-                }
+                width: 48%;
             }
             .bk-label {
                 width: 100%;
                 text-align: left;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow: hidden;
+                @include ellipsis();
             }
             .bk-form-content {
                 float: left;
@@ -380,7 +395,7 @@
                 }
             }
         }
-        .sodaci-property-panel {
+        .bkci-property-panel {
             .bk-sideslider-wrapper {
                 top: 0;
                 .bk-sideslider-title {

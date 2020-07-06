@@ -28,6 +28,7 @@ package com.tencent.devops.process.pojo.classify
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import kotlin.math.ceil
 
 @ApiModel("Pipeline分页数据包装模型")
 data class PipelineViewPipelinePage<out T>(
@@ -60,7 +61,7 @@ data class PipelineViewPipelinePage<out T>(
             count,
             page,
             pageSize,
-            Math.ceil(count * 1.0 / pageSize).toInt(),
+            if (pageSize == -1) 1 else ceil(count * 1.0 / pageSize).toInt(),
             records/*, hasCreatePermission, hasPipelines, hasFavorPipelines, hasPermissionPipelines*/
         )
 }

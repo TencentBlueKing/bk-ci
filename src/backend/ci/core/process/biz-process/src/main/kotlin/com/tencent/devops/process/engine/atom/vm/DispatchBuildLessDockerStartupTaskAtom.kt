@@ -160,7 +160,11 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 buildId = buildId,
                 taskId = taskId
             )
-
+        pipelineBuildDetailService.updateStartVMStatus(
+            buildId = buildId,
+            containerId = task.containerId,
+            buildStatus = BuildStatus.RUNNING
+        )
         // 读取原子市场中的原子信息，写入待构建处理
         val atoms = AtomUtils.parseContainerMarketAtom(container, task, client, rabbitTemplate)
 
@@ -240,7 +244,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 containerHashId = container.containerId ?: "",
                 containerType = container.getClassType(),
                 taskSeq = taskSeq,
-                taskId = VMUtils.genStartVMTaskId(containerSeq, taskSeq),
+                taskId = VMUtils.genStartVMTaskId(container.id!!),
                 taskName = "Prepare_Job#${container.id!!}(N)",
                 taskType = EnvControlTaskType.NORMAL.name,
                 taskAtom = AtomUtils.parseAtomBeanName(DispatchBuildLessDockerStartupTaskAtom::class.java),

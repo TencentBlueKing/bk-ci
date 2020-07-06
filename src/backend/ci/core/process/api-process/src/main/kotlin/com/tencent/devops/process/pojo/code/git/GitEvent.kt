@@ -32,9 +32,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "object_kind")
 @JsonSubTypes(
-        JsonSubTypes.Type(value = GitPushEvent::class, name = GitPushEvent.classType),
-        JsonSubTypes.Type(value = GitTagPushEvent::class, name = GitTagPushEvent.classType),
-        JsonSubTypes.Type(value = GitMergeRequestEvent::class, name = GitMergeRequestEvent.classType)
+    JsonSubTypes.Type(value = GitPushEvent::class, name = GitPushEvent.classType),
+    JsonSubTypes.Type(value = GitTagPushEvent::class, name = GitTagPushEvent.classType),
+    JsonSubTypes.Type(value = GitMergeRequestEvent::class, name = GitMergeRequestEvent.classType)
 )
 abstract class GitEvent()
 

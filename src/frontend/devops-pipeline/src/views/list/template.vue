@@ -2,7 +2,7 @@
     <div class="pipeline-template-list" v-bkloading="{ isLoading }">
         <div class="template-list-content">
             <div class="view-table-wrapper">
-                <bk-button theme="primary" icon="bk-icon icon-plus" class="add-template" @click="showSetting" :disabled="!isManagerUser" v-if="!showSelfEmpty">
+                <bk-button theme="primary" icon="devops-icon icon-plus" class="add-template" @click="showSetting" :disabled="!isManagerUser" v-if="!showSelfEmpty">
                     {{ $t('template.addTemplate') }}
                 </bk-button>
                 <template-table @getApiData="getTempFromSelf" ref="selfTemp"></template-table>

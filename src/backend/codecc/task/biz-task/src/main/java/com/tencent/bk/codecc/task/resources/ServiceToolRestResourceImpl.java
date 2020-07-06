@@ -33,7 +33,7 @@ import com.tencent.bk.codecc.task.service.ToolService;
 import com.tencent.bk.codecc.task.vo.DefectConfigInfoVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigBaseVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,35 +57,35 @@ public class ServiceToolRestResourceImpl implements ServiceToolRestResource
     private MetaService metaService;
 
     @Override
-    public Result updateToolStepStatus(ToolConfigBaseVO toolConfigBaseVO)
+    public CodeCCResult updateToolStepStatus(ToolConfigBaseVO toolConfigBaseVO)
     {
         toolService.updateToolStepStatus(toolConfigBaseVO);
-        return new Result(CommonMessageCode.SUCCESS, "mongotemplate tool config ok");
+        return new CodeCCResult(CommonMessageCode.SUCCESS, "mongotemplate tool config ok");
     }
 
     @Override
-    public Result<DefectConfigInfoVO> getDefectConfig(String streamName,
-                                                      String multiToolType)
+    public CodeCCResult<DefectConfigInfoVO> getDefectConfig(String streamName,
+                                                            String multiToolType)
     {
-        return new Result<>(defectConfigService.getDefectConfig(streamName, multiToolType));
+        return new CodeCCResult<>(defectConfigService.getDefectConfig(streamName, multiToolType));
     }
 
     @Override
-    public Result<ToolConfigInfoVO> getToolByTaskIdAndName(Long taskId, String toolName)
+    public CodeCCResult<ToolConfigInfoVO> getToolByTaskIdAndName(Long taskId, String toolName)
     {
-        return new Result<>(toolService.getToolByTaskIdAndName(taskId, toolName));
+        return new CodeCCResult<>(toolService.getToolByTaskIdAndName(taskId, toolName));
     }
 
     @Override
-    public Result<ToolConfigInfoVO> getToolWithNameByTaskIdAndName(Long taskId, String toolName)
+    public CodeCCResult<ToolConfigInfoVO> getToolWithNameByTaskIdAndName(Long taskId, String toolName)
     {
-        return new Result<>(toolService.getToolWithNameByTaskIdAndName(taskId, toolName));
+        return new CodeCCResult<>(toolService.getToolWithNameByTaskIdAndName(taskId, toolName));
     }
 
 
     @Override
-    public Result<String> findToolOrder()
+    public CodeCCResult<String> findToolOrder()
     {
-        return new Result<>(metaService.getToolOrder());
+        return new CodeCCResult<>(metaService.getToolOrder());
     }
 }

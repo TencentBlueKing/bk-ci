@@ -37,5 +37,3 @@ dependencies {
     compile project(":core:common:common-db")
     compile "org.eclipse.jgit:org.eclipse.jgit:5.0.2.201807311906-r"
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

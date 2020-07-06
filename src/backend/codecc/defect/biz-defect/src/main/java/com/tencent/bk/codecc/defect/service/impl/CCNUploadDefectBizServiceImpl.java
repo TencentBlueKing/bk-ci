@@ -38,7 +38,7 @@ import com.tencent.bk.codecc.defect.service.AbstractUploadDefectBizService;
 import com.tencent.bk.codecc.defect.utils.FunctionSignatureBuilder;
 import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
 import com.tencent.bk.codecc.defect.vo.UploadDefectVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.util.JsonUtil;
 import org.apache.commons.collections.CollectionUtils;
@@ -79,7 +79,7 @@ public class CCNUploadDefectBizServiceImpl extends AbstractUploadDefectBizServic
     private ThirdPartySystemCaller thirdPartySystemCaller;
 
     @Override
-    public Result processBiz(UploadDefectVO uploadDefectVO)
+    public CodeCCResult processBiz(UploadDefectVO uploadDefectVO)
     {
         String toolName = uploadDefectVO.getToolName();
         String relPath = uploadDefectVO.getRelPath();
@@ -92,7 +92,7 @@ public class CCNUploadDefectBizServiceImpl extends AbstractUploadDefectBizServic
         if (CollectionUtils.isEmpty(defectList))
         {
             logger.error("File does not contain ccn defect.");
-            return new Result(CommonMessageCode.SUCCESS, "File does not contain ccn defect.");
+            return new CodeCCResult(CommonMessageCode.SUCCESS, "File does not contain ccn defect.");
         }
 
         long taskId = uploadDefectVO.getTaskId();
@@ -171,6 +171,6 @@ public class CCNUploadDefectBizServiceImpl extends AbstractUploadDefectBizServic
         // 批量保存告警列表
         ccnDefectDao.upsertCCNDefectListBySignature(defectList);
 
-        return new Result(CommonMessageCode.SUCCESS, "upload defect ok");
+        return new CodeCCResult(CommonMessageCode.SUCCESS, "upload defect ok");
     }
 }

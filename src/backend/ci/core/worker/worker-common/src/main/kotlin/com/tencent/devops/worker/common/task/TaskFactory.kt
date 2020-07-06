@@ -30,7 +30,6 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.market.MarketAtomTask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.task.script.shell.LinuxScriptTask
@@ -54,7 +53,6 @@ object TaskFactory {
 
         val reflections = Reflections("com.tencent.devops.plugin.worker.task")
         val taskClasses = reflections.getSubTypesOf(ITask::class.java)
-        LoggerService.addNormalLine("Get the ITask classes $taskClasses")
         val candidatePriorityMap = mutableMapOf<String, Int>()
         val candidateMap = HashMap<String, KClass<out ITask>>()
         taskClasses?.forEach { taskClazz ->

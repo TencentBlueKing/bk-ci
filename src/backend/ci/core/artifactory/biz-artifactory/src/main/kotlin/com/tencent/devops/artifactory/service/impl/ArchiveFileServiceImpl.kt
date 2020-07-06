@@ -189,10 +189,10 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         }
         logger.info("$uploadFileName destPath is:$destPath")
         uploadFileToRepo(destPath, file)
-        val shaContent = ShaUtils.sha1(file.readBytes())
+        val shaContent = file.inputStream().use { ShaUtils.sha1InputStream(it) }
         var fileProps: Map<String, String?> = props ?: mapOf()
         fileProps = fileProps.plus("shaContent" to shaContent)
-        val path = destPath.substring(getBasePath().length + 1)
+        val path = destPath.substring(getBasePath().length)
         val fileId = UUIDUtil.generate()
         dslContext.transaction { t ->
             val context = DSL.using(t)
@@ -224,14 +224,20 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         customFilePath: String,
         response: HttpServletResponse
     ) {
-        logger.info("downloadArchiveFile userId is:$userId,projectId is:$projectId,pipelineId is:$pipelineId,buildId is:$buildId,fileType is:$fileType,customFilePath is:$customFilePath")
-        val result = generateDestPath(fileType, projectId, customFilePath, pipelineId, buildId)
-        logger.info("generateDestPath result is:$result")
+        logger.info("[$buildId]|downloadArchiveFile|userId=$userId,projectId=$projectId,pipelineId=$pipelineId,fileType=$fileType,customFilePath=$customFilePath")
+        val result = generateDestPath(
+            fileType = fileType,
+            projectId = projectId,
+            customFilePath = customFilePath,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
+        logger.info("[$buildId]|generateDestPath result=$result")
         if (result.isNotOk()) {
             response.writer.println(JsonUtil.toJson(result))
             return
         }
-        val destPath = result.data!!.substring(getBasePath().length + 1)
+        val destPath = result.data!!.substring(getBasePath().length)
         downloadFile(destPath, response)
     }
 
@@ -242,7 +248,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         pageSize: Int?,
         searchProps: SearchProps
     ): Result<Page<FileInfo>> {
-        logger.info("searchFileList userId is:$userId,projectId is:$projectId,page is:$page,pageSize is:$pageSize,searchProps is:$searchProps")
+        logger.info("searchFileList userId=$userId,projectId=$projectId,page=$page,pageSize=$pageSize,searchProps=$searchProps")
         val props = searchProps.props
         val fileTypeList = listOf(FileTypeEnum.BK_ARCHIVE.fileType, FileTypeEnum.BK_CUSTOM.fileType)
         val fileInfoRecords = fileDao.getFileListByProps(dslContext, projectId, fileTypeList, props, page, pageSize)
@@ -298,9 +304,9 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         disposition: FormDataContentDisposition,
         fileChannelType: FileChannelTypeEnum
     ): Result<String?> {
-        logger.info("archiveFile userId is:$userId,projectId is:$projectId,pipelineId is:$pipelineId,buildId is:$buildId,fileType is:$fileType,filePath is:$customFilePath")
+        logger.info("[$buildId]|archiveFile userId=$userId,projectId=$projectId,pipelineId=$pipelineId,fileType=$fileType,filePath=$customFilePath")
         val result = generateDestPath(fileType, projectId, customFilePath, pipelineId, buildId)
-        logger.info("generateDestPath result is:$result")
+        logger.info("[$buildId]|generateDestPath result=$result")
         if (result.isNotOk()) {
             return result
         }
@@ -333,16 +339,16 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         if (FileTypeEnum.BK_CUSTOM == fileType) {
             if (customFilePath == null) {
                 return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_NULL,
-                    arrayOf("customFilePath")
+                    messageCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf("customFilePath")
                 )
             }
             if (customFilePath.contains("..")) {
                 // 非法路径则抛出错误提示
                 return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_INVALID,
-                    arrayOf(customFilePath),
-                    null
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(customFilePath),
+                    data = null
                 )
             }
             destPathBuilder.append(customFilePath.removePrefix(fileSeparator)) // 自定义方式归档文件
@@ -353,7 +359,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             }
         }
         val destPath = destPathBuilder.toString()
-        logger.info("archiveFile destPath is:$destPath")
+        logger.info("[$buildId]|archiveFile destPath=$destPath")
         return Result(destPath)
     }
 
@@ -373,16 +379,24 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             flag = true
         }
         if (flag) {
-            val destPath = filePath.substring(getBasePath().length + 1)
-            return generateFileDownloadPath(fileChannelType, commonConfig, fileType.fileType, destPath)
+            val destPath = filePath.substring(getBasePath().length)
+            return generateFileDownloadPath(
+                fileChannelType = fileChannelType,
+                commonConfig = commonConfig,
+                fileType = fileType.fileType,
+                destPath = destPath
+            )
         }
         return null
     }
 
+    /**
+     * return the archive root base path which end with / symbol
+     * @return must be end with / symbol (file sperator)
+     */
     abstract fun getBasePath(): String
 
     override fun validateUserDownloadFilePermission(userId: String, filePath: String): Result<Boolean> {
-        logger.info("validateUserDownloadFilePermission userId is:$userId，filePath is:$filePath")
         val realFilePath = URLDecoder.decode(filePath, "UTF-8")
         val realFilePathParts = realFilePath.split(fileSeparator)
         // 兼容用户路径里面带多个/的情况，先把路径里的文件类型、项目代码和流水线ID放到集合里
@@ -397,7 +411,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
                 num++
             }
         }
-        logger.info("validateUserDownloadFilePermission realFilePathParts is:$realFilePathParts")
+        logger.info("validateUserDownloadFilePermission|userId=$userId|filePath=$filePath|realFilePathParts=$realFilePathParts")
         val fileType = dataList[0]
         var flag = true
         val validateFileTypeList = listOf(
@@ -416,7 +430,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
                 permission = AuthPermission.DOWNLOAD
             )
         }
-        logger.info("validateUserDownloadFilePermission flag is:$flag")
+        logger.info("validateUserDownloadFilePermission|flag=$flag")
         return Result(flag)
     }
 
