@@ -121,10 +121,10 @@ class BuildBuildResourceImpl @Autowired constructor(
     }
 
     override fun getBuildVars(userId: String, projectId: String, pipelineId: String, buildId: String, channelCode: ChannelCode): Result<BuildHistoryVariables> {
-	    if (buildId.isBlank()) {
-		    throw ParamBlankException("Invalid buildId")
-	    }
-	    return buildService.getBuildVars(userId, projectId, pipelineId, buildId, ChannelCode.isNeedAuth(channelCode))
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return buildService.getBuildVars(userId, projectId, pipelineId, buildId, ChannelCode.isNeedAuth(channelCode))
     }
 
     private fun checkParam(buildId: String, vmSeqId: String, vmName: String) {
