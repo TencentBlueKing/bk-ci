@@ -3,7 +3,7 @@ package com.tencent.devops.sign.api.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("IPA包签名请求")
+@ApiModel("IPA包签名信息")
 data class IpaSignInfo(
         @ApiModelProperty("证书ID", required = false)
         var certId: String? = null,

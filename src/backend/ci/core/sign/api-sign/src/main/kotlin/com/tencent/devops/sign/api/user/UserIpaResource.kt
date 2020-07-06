@@ -24,11 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.sign.api.service
+package com.tencent.devops.sign.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -46,29 +47,48 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Context
 
-@Api(tags = ["SERVICE_SIGN"], description = "服务接口-应用签名")
-@Path("/service/sign")
+@Api(tags = ["USER_IPA"], description = "用户接口-IPA包")
+@Path("/user/ipa/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceSignResource {
+interface UserIpaResource {
 
-    @ApiOperation("ipa包签名-通配符")
+    @ApiOperation("ipa包签名")
     @POST
-    @Path("/ipa/wildcard")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Path("/sign")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun ipaSign(
+            @ApiParam("userId", required = true)
+            @HeaderParam(AUTH_HEADER_USER_ID)
+            userId: String,
+            @ApiParam("ipaSignInfoHeader", required = false)
+            @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
+            ipaSignInfoHeader: String,
             @ApiParam("ipa包文件", required = true)
             ipaInputStream: InputStream
     ): Result<String?>
 
     @ApiOperation("下载文件")
     @GET
-    @Path("/file/download")
+    @Path("/download")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadIpa(
+            @ApiParam("userId", required = true)
+            @HeaderParam(AUTH_HEADER_USER_ID)
+            userId: String,
             @ApiParam("文件路径", required = true)
             @QueryParam("filePath")
             filePath: String,
             @Context
             response: HttpServletResponse
+    )
+
+
+    @ApiOperation("下载文件")
+    @GET
+    @Path("/test")
+    fun test(
+            @ApiParam("签名信息", required = true)
+            ipaSignInfo: IpaSignInfo
     )
 }

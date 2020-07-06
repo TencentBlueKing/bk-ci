@@ -4,7 +4,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
-import com.tencent.devops.sign.resources.UserSignResourceImpl
 import com.tencent.devops.sign.service.FileService
 import com.tencent.devops.sign.utils.FileSignUtil
 import org.slf4j.LoggerFactory

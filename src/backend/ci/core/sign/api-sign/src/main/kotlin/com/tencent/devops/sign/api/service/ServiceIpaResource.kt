@@ -24,11 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.sign.api.user
+package com.tencent.devops.sign.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -46,16 +47,16 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Context
 
-@Api(tags = ["USER_SIGN"], description = "用户接口-应用签名")
-@Path("/user/sign/ipa")
+@Api(tags = ["SERVICE_IPA"], description = "服务接口-IPA包")
+@Path("/service/ipa")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserSignResource {
+interface ServiceIpaResource {
 
     @ApiOperation("ipa包签名")
     @POST
-    @Path("/ipa")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Path("/sign")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun ipaSign(
             @ApiParam("userId", required = true)
             @HeaderParam(AUTH_HEADER_USER_ID)
@@ -69,7 +70,8 @@ interface UserSignResource {
 
     @ApiOperation("下载文件")
     @GET
-    @Path("/file/download")
+    @Path("/download")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadIpa(
             @ApiParam("userId", required = true)
             @HeaderParam(AUTH_HEADER_USER_ID)
