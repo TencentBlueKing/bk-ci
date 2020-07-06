@@ -289,7 +289,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         val oldInput = JsonUtil.toMap(oldData!!)["input"]
         val oldInputData = oldInput?.let { JsonUtil.toMap(it) }
         inputKeys.forEach {
-            logger.info("continue pause task, oldInput:${oldInputData}, newInput:${newInputData}")
+            logger.info("continue pause task, key[$it] oldInput:${oldInputData?.get(it)}, newInput:${newInputData?.get(it)}")
             if(oldInputData != null && newInputData != null) {
                 if (oldInputData!![it] != (newInputData!![it])) {
                     logger.info("input update, add Log, key $it, newData ${newInputData!![it]}, oldData ${oldInputData!![it]}")
