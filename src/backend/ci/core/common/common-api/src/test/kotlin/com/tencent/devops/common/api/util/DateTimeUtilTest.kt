@@ -28,8 +28,9 @@ package com.tencent.devops.common.api.util
 
 import org.junit.Assert
 import org.junit.Test
+import java.text.SimpleDateFormat
 import java.time.LocalDateTime
-import java.time.ZoneOffset.MIN
+import java.time.ZoneOffset.UTC
 import java.time.format.DateTimeFormatter
 import java.util.Date
 
@@ -38,7 +39,6 @@ class DateTimeUtilTest {
     @Test
     fun minuteToSecondTest() {
         val minutes = 60
-        println(DateTimeUtil.minuteToSecond(minutes))
         val expected = 3600
         Assert.assertEquals(expected, DateTimeUtil.minuteToSecond(minutes))
     }
@@ -46,24 +46,21 @@ class DateTimeUtilTest {
     @Test
     fun secondToMinuteTest() {
         val minutes = 3600
-        println(DateTimeUtil.secondToMinute(minutes))
         val expected = 60
         Assert.assertEquals(expected, DateTimeUtil.secondToMinute(minutes))
     }
 
     @Test
     fun formatDateTest() {
-        val date = Date.from(LocalDateTime.of(2020, 7, 6, 1, 59, 59).toInstant(MIN))
+        val date = Date.from(LocalDateTime.of(2020, 7, 6, 1, 59, 59).toInstant(UTC))
         val format = "yyyy-MM-dd HH:mm:ss"
-        println(DateTimeUtil.formatDate(date, format))
-        val expected = "2020-07-07 03:59:59"
-        Assert.assertEquals(expected, DateTimeUtil.formatDate(date, format))
+        val simpleDateFormat = SimpleDateFormat(format)
+        Assert.assertEquals(simpleDateFormat.format(date), DateTimeUtil.formatDate(date, format))
     }
 
     @Test
     fun convertLocalDateTimeToTimestampTest() {
         val date = LocalDateTime.of(2020, 7, 6, 1, 59, 59)
-        println(DateTimeUtil.convertLocalDateTimeToTimestamp(date))
         val expected: Long = 1593971999
         Assert.assertEquals(expected, DateTimeUtil.convertLocalDateTimeToTimestamp(date))
     }
@@ -72,7 +69,6 @@ class DateTimeUtilTest {
     fun toDateTimeTest() {
         val date = LocalDateTime.of(2020, 7, 6, 1, 59, 59)
         val format = "yyyy-MM-dd HH:mm:ss"
-        println(DateTimeUtil.toDateTime(date, format))
         val expected = "2020-07-06 01:59:59"
         Assert.assertEquals(expected, DateTimeUtil.toDateTime(date, format))
     }
@@ -80,7 +76,6 @@ class DateTimeUtilTest {
     @Test
     fun zoneDateToTimestampTest() {
         val date = "2019-09-02T08:58:46+0000"
-        println(DateTimeUtil.zoneDateToTimestamp(date))
         val expected: Long = 1567414726000
         Assert.assertEquals(expected, DateTimeUtil.zoneDateToTimestamp(date))
     }
@@ -88,7 +83,6 @@ class DateTimeUtilTest {
     @Test
     fun formatTimeTest() {
         val date = "1567414726000"
-        println(DateTimeUtil.formatTime(date))
         val expected = "435392979时26分40秒"
         Assert.assertEquals(expected, DateTimeUtil.formatTime(date))
     }
@@ -96,7 +90,6 @@ class DateTimeUtilTest {
     @Test
     fun formatMilliTimeTest() {
         val date = "1567414726000"
-        println(DateTimeUtil.formatMilliTime(date))
         val expected = "435392时58分46秒"
         Assert.assertEquals(expected, DateTimeUtil.formatMilliTime(date))
     }
@@ -104,7 +97,6 @@ class DateTimeUtilTest {
     @Test
     fun formatMilliTimeStringTest() {
         val date: Long = 1567414726000
-        println(DateTimeUtil.formatMilliTime(date))
         val expected = "435392时58分46秒"
         Assert.assertEquals(expected, DateTimeUtil.formatMilliTime(date))
     }
@@ -112,7 +104,6 @@ class DateTimeUtilTest {
     @Test
     fun formatMillSecondTest() {
         val date: Long = 1567414726000
-        println(DateTimeUtil.formatMillSecond(date))
         val expected = "18141天8时58分46秒"
         Assert.assertEquals(expected, DateTimeUtil.formatMillSecond(date))
     }
@@ -121,7 +112,6 @@ class DateTimeUtilTest {
     fun stringToLocalDateTimeTest() {
         val date = "2020-07-06 01:59:59"
         val format = "yyyy-MM-dd HH:mm:ss"
-        println(DateTimeUtil.stringToLocalDateTime(date, format))
         val expected = LocalDateTime.parse("2020-07-06 01:59:59", DateTimeFormatter.ofPattern(format))
         Assert.assertEquals(expected, DateTimeUtil.stringToLocalDateTime(date, format))
     }
