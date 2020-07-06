@@ -33,6 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineVMBuildService
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.BuildHistoryVariables
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
@@ -109,6 +110,13 @@ class BuildBuildResourceImpl @Autowired constructor(
                 ChannelCode.isNeedAuth(channelCode)
             )
         )
+    }
+
+    override fun getBuildVars(userId: String, projectId: String, pipelineId: String, buildId: String, channelCode: ChannelCode): Result<BuildHistoryVariables> {
+	    if (buildId.isBlank()) {
+		    throw ParamBlankException("Invalid buildId")
+	    }
+	    return buildService.getBuildVars(userId, projectId, pipelineId, buildId, ChannelCode.isNeedAuth(channelCode))
     }
 
     private fun checkParam(buildId: String, vmSeqId: String, vmName: String) {
