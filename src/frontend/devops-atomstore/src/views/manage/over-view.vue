@@ -72,7 +72,7 @@
             .manage-title {
                 color: #222;
                 font-size: 20px;
-                line-height: 28px;
+                line-height: .28rem;
                 font-weight: normal;
             }
         }

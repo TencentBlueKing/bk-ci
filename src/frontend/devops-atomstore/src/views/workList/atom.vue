@@ -582,8 +582,7 @@
                 }, this.$t('store.确定删除插件', [row.name]))
 
                 this.$bkInfo({
-                    type: 'warning',
-                    theme: 'warning',
+                    title: this.$t('store.删除'),
                     subHeader,
                     confirmFn: async () => {
                         this.requestDeleteAtom(row.atomCode)

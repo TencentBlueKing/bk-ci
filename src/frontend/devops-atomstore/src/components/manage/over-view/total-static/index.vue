@@ -61,7 +61,7 @@
 
 <style lang="scss" scoped>
     .total-static-list {
-        height: calc(100% - 28px);
+        height: calc(100% - .28rem);
         display: flex;
         align-items: center;
         .static-item {

@@ -21,13 +21,13 @@
             <bk-sideslider :is-show.sync="showAdd" :quick-close="true" :title="$t('store.新增配置')" :width="640" @hidden="closeAddPrivate">
                 <bk-form :label-width="80" :model="privateObj" slot="content" class="add-private" ref="privateForm">
                     <bk-form-item :label="$t('store.字段名')" :required="true" :rules="[requireRule($t('store.字段名')), nameRule]" property="fieldName" error-display-type="normal">
-                        <bk-input v-model="privateObj.fieldName"></bk-input>
+                        <bk-input v-model="privateObj.fieldName" :placeholder="$t('store.请输入字段名称，不超过30个字符')"></bk-input>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.字段值')" :rules="[requireRule($t('store.字段值'))]" :required="true" property="fieldValue" error-display-type="normal">
-                        <bk-input type="textarea" :rows="3" v-model="privateObj.fieldValue" @focus="handlePrivateFocus"></bk-input>
+                        <bk-input type="textarea" :rows="3" v-model="privateObj.fieldValue" @focus="handlePrivateFocus" :placeholder="$t('store.请输入字段值')"></bk-input>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.描述')" property="fieldDesc">
-                        <bk-input type="textarea" :rows="3" v-model="privateObj.fieldDesc"></bk-input>
+                        <bk-input type="textarea" :rows="3" v-model="privateObj.fieldDesc" :placeholder="$t('store.请输入描述')"></bk-input>
                     </bk-form-item>
                     <bk-form-item>
                         <bk-button theme="primary" @click="savePrivate" :loading="isSaving">{{ $t('store.保存') }}</bk-button>

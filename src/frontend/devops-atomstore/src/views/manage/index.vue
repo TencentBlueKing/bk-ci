@@ -63,6 +63,7 @@
                     atom: [
                         { label: this.$t('store.概览'), name: 'overView' },
                         { label: this.$t('store.详情'), name: 'detail', children: [{ name: 'show' }, { name: 'edit' }], showChildTab: false },
+                        { label: this.$t('store.发布管理'), name: 'release', children: [{ label: this.$t('store.版本管理'), name: 'version' }], showChildTab: true },
                         { label: this.$t('store.审批'), name: 'approval' },
                         { label: this.$t('store.设置'),
                           name: 'setting',
@@ -74,6 +75,7 @@
                     ],
                     image: [
                         { label: this.$t('store.详情'), name: 'detail', children: [{ name: 'show' }, { name: 'edit' }], showChildTab: false },
+                        { label: this.$t('store.发布管理'), name: 'release', children: [{ label: this.$t('store.版本管理'), name: 'version' }], showChildTab: true },
                         { label: this.$t('store.设置'),
                           name: 'setting',
                           children: [

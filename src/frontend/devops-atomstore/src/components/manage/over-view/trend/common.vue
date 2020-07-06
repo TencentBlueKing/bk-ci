@@ -4,6 +4,6 @@
 
 <style lang="scss" scoped>
     .exception-wrap-item {
-        margin: 120px auto;
+        margin: 70px auto;
     }
 </style>

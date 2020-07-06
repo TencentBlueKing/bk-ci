@@ -4,7 +4,7 @@
             <div class="version-info-header">
                 <span class="info-title"> {{ $t('store.协作申请列表') }} </span>
             </div>
-            <section v-bkloading="{ isLoading }" class="approval-table-contain">
+            <section v-bkloading="{ isLoading }" class="approval-table-contain g-scroll-pagination-table">
                 <bk-table class="approval-table"
                     v-if="!isLoading"
                     :data="approveList"
@@ -196,7 +196,7 @@
         background: #fff;
     }
     .version-content {
-        padding: 32px;
+        padding: 32px 32px 17px;
         height: 100%;
         .version-info-header {
             line-height: 20px;
@@ -206,11 +206,6 @@
         }
         .approval-table {
             margin-top: 32px;
-            height: 100%;
-            /deep/ .bk-table-body-wrapper {
-                max-height: calc(100% - 43px);
-                overflow-y: auto;
-            }
         }
     }
     .approve-form {

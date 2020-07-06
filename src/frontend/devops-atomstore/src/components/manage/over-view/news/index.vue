@@ -52,7 +52,7 @@
 <style lang="scss" scoped>
     .over-view-news {
         overflow: auto;
-        height: calc(100% - 28px);
+        height: calc(100% - .28rem);
         padding: 15px 32px 0 37px;
         /deep/ .bk-timeline-dot::before {
             border-color: #1592ff;

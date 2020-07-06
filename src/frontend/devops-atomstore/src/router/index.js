@@ -32,13 +32,15 @@ const imageWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workL
 const install = () => import(/* webpackChunkName: 'install' */ '@/views/install.vue') // 研发商店安装页面
 const manage = () => import(/* webpackChunkName: 'manage' */ '@/views/manage/index.vue') // 研发商店管理页面
 const detail = () => import(/* webpackChunkName: 'detail' */ '@/views/manage/detail/index.vue') // 研发商店管理页面
-const show = () => import(/* webpackChunkName: 'show' */ '@/views/manage/detail/show.vue') // 研发商店管理页面
-const edit = () => import(/* webpackChunkName: 'edit' */ '@/views/manage/detail/edit.vue') // 研发商店管理页面
+const show = () => import(/* webpackChunkName: 'detail' */ '@/views/manage/detail/show.vue') // 研发商店管理页面
+const edit = () => import(/* webpackChunkName: 'detail' */ '@/views/manage/detail/edit.vue') // 研发商店管理页面
 const overView = () => import(/* webpackChunkName: 'overView' */ '@/views/manage/over-view.vue') // 研发商店管理页面
 const approval = () => import(/* webpackChunkName: 'approval' */ '@/views/manage/approval.vue') // 研发商店管理页面
 const setting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/index.vue') // 研发商店管理页面
-const memberSetting = () => import(/* webpackChunkName: 'memberSetting' */ '@/views/manage/setting/member-setting.vue') // 研发商店管理页面
-const privateSetting = () => import(/* webpackChunkName: 'privateSetting' */ '@/views/manage/setting/private-setting.vue') // 研发商店管理页面
+const memberSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/member-setting.vue') // 研发商店管理页面
+const privateSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/private-setting.vue') // 研发商店管理页面
+const releaseManage = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/index.vue') // 研发商店管理页面
+const version = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/version.vue') // 研发商店管理页面
 
 const editAtom = () => import(/* webpackChunkName: 'editAtom' */ '@/views/edit_atom.vue') // 上架/升级流水线插件
 const releaseProgress = () => import(/* webpackChunkName: 'releaseProgress' */ '@/views/release_progress.vue') // 发布进度
@@ -179,6 +181,18 @@ const routes = [
                         path: 'approval',
                         name: 'approval',
                         component: approval
+                    },
+                    {
+                        path: 'releaseManage',
+                        name: 'releaseManage',
+                        component: releaseManage,
+                        children: [
+                            {
+                                path: 'version',
+                                name: 'version',
+                                component: version
+                            }
+                        ]
                     }
                 ],
                 meta: {
