@@ -430,7 +430,7 @@
                     value: defaultBuildResource.value || '',
                     imageCode: defaultBuildResource.code || '',
                     imageName: defaultBuildResource.name || '',
-                    buildImageType: defaultBuildResource.imageType || '',
+                    imageType: defaultBuildResource.imageType || '',
                     recommendFlag: defaultBuildResource.recommendFlag,
                     [name]: val
                 }))
