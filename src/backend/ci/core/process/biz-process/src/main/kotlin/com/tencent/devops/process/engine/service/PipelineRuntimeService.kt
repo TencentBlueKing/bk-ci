@@ -1758,7 +1758,7 @@ class PipelineRuntimeService @Autowired constructor(
         errorCode: Int? = null,
         errorMsg: String? = null
     ) {
-        logger.info("[$buildId]|ERRORCODE|UPDATE_STATUS|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
+        logger.info("[$buildId]|updateTaskStatus|buildStatus=$buildStatus|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
         val task = getBuildTask(buildId, taskId)
         if (task != null) {
             updateTaskStatus(buildId, task, userId, buildStatus, errorType, errorCode, errorMsg)
