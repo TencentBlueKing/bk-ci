@@ -435,6 +435,7 @@
                     [name]: val
                 }))
                 if (val === 'MACOS') this.getMacOsData()
+                if (this.container.dispatchType && this.container.dispatchType.imageCode) this.getVersionList(this.container.dispatchType.imageCode)
             },
 
             changeThirdImage (val) {
