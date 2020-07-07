@@ -24,7 +24,7 @@
                             </template>
                             <template v-else>
                                 <span>{{ props.row.projectName }}</span>
-                                <i class="bk-icon icon-edit2" @click="startEditProject(props.row)"></i>
+                                <i class="bk-icon icon-edit2" @click="startEditProject(props.row)" v-if="userInfo.isProjectAdmin || userInfo.userName === props.row.userName"></i>
                             </template>
                         </section>
                     </template>
@@ -156,6 +156,7 @@
             saveChangeProject (row) {
                 this.isLoading = true
                 const data = {
+                    storeMember: row.userName,
                     projectCode: row.projectCode,
                     storeCode: this.storeCode,
                     storeType: this.storeType

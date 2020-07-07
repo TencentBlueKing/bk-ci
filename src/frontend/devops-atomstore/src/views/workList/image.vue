@@ -292,7 +292,7 @@
 
             goToImageDetail (code) {
                 this.$router.push({
-                    name: 'show',
+                    name: 'version',
                     params: {
                         code,
                         type: 'image'
