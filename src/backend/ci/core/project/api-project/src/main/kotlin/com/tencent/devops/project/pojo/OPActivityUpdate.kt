@@ -33,6 +33,8 @@ import io.swagger.annotations.ApiModelProperty
 data class OPActivityUpdate(
     @ApiModelProperty("名称")
     val name: String,
+    @ApiModelProperty("英文名")
+    val englishName: String,
     @ApiModelProperty("类型")
     val type: String,
     @ApiModelProperty("状态")

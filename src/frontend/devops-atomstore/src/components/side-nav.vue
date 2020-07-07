@@ -112,12 +112,7 @@
         },
         methods: {
             backUrl (name, type) {
-                this.$router.push({
-                    name,
-                    params: {
-                        type: type
-                    }
-                })
+                this.$router.back()
             },
 
             /**
@@ -128,7 +123,7 @@
             menuSelected (data) {
                 data.item.isSelected = true
 
-                this.$router.push({
+                this.$router.replace({
                     name: data.isChild ? data.child.id : data.item.id,
                     params: {
                         ...data.item.params,

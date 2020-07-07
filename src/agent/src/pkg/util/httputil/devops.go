@@ -29,13 +29,14 @@ package httputil
 import (
 	"encoding/json"
 	"errors"
-	"github.com/astaxie/beego/logs"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"pkg/config"
-	"pkg/util/fileutil"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/astaxie/beego/logs"
 )
 
 type DevopsResult struct {

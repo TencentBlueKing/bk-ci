@@ -3,18 +3,18 @@
         <form class="bk-form" action="http://localhost" target="previewHiddenIframe" ref="previewParamsForm" onsubmit="return false;">
             <form-field v-for="(param, index) in paramList"
                 :key="param.id" :required="param.required"
-                :is-error="errors.has(param.id)"
-                :error-msg="errors.first(param.id)"
+                :is-error="errors.has('devops' + param.name)"
+                :error-msg="errors.first('devops' + param.name)"
                 :label="param.id">
                 <section class="component-row">
-                    <component :is="param.component" v-validate="{ required: param.required }" :handle-change="handleParamUpdate" v-bind="param" :disabled="disabled" style="width: 100%;"></component>
+                    <component :is="param.component" v-validate="{ required: param.required }" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;"></component>
                     <span class="meta-data" v-show="showMetadata(param.type, param.value)">{{ $t('metaData') }}
                         <aside class="metadata-box">
                             <metadata-list :is-left-render="(index % 2) === 1" :path="param.type === 'ARTIFACTORY' ? param.value : ''"></metadata-list>
                         </aside>
                     </span>
                 </section>
-                <span v-if="!errors.has(param.id)" style="color: #63656E; position:static" :title="param.desc" class="bk-form-help">{{ param.desc }}</span>
+                <span v-if="!errors.has('devops' + param.name)" class="preview-params-desc" :title="param.desc">{{ param.desc }}</span>
             </form-field>
         </form>
         <iframe v-show="false" name="previewHiddenIframe"></iframe>
@@ -92,8 +92,7 @@
                     return {
                         ...param,
                         component: ParamComponentMap[param.type],
-                        name: 'devops' + param.id,
-                        id: undefined,
+                        name: param.id,
                         required: param.type === SVN_TAG || param.type === GIT_REF,
                         value: this.paramValues[param.id],
                         ...restParam
@@ -132,7 +131,7 @@
             },
 
             getParamByName (name) {
-                return this.paramList.find(param => param.name === name)
+                return this.paramList.find(param => `devops${param.name}` === name)
             },
 
             handleParamUpdate (name, value) {
@@ -140,7 +139,7 @@
                 if (isMultipleParam(param.type)) { // 复选框，需要将数组转化为逗号隔开的字符串
                     value = Array.isArray(value) ? value.join(',') : ''
                 }
-                this.handleParamChange(name, value)
+                this.handleParamChange(param.name, value)
             },
             showMetadata (type, value) {
                 return type === 'ARTIFACTORY' && value && this.$route.path.indexOf('preview')
@@ -151,6 +150,7 @@
 
 <style lang="scss" scoped>
     @import '@/scss/conf';
+    @import '@/scss/mixins/ellipsis';
     .component-row {
         display: flex;
         .metadata-box {
@@ -158,7 +158,7 @@
             display: none;
         }
         .meta-data {
-            margin-top: 8px;
+            align-self: center;
             margin-left: 10px;
             font-size: 12px;
             color: $primaryColor;
@@ -170,5 +170,11 @@
                 display: block;
             }
         }
+    }
+     .preview-params-desc {
+        color: #999;
+        width: 100%;
+        font-size: 12px;
+        @include ellipsis();
     }
 </style>

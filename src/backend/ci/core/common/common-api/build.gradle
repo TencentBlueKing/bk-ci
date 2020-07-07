@@ -49,4 +49,6 @@ dependencies {
     compile "org.apache.commons:commons-compress:$compressVersion"
     compile "org.apache.commons:commons-exec"
     compile "javax.servlet:javax.servlet-api"
+    compile "javax.validation:validation-api"
+    compile 'com.vdurmont:emoji-java:5.1.1'
 }

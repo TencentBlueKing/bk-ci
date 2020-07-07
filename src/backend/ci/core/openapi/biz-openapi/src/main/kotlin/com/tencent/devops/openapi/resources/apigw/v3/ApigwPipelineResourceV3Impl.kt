@@ -36,8 +36,6 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
-import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
-import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -143,17 +141,6 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
             channelCode = ChannelCode.BS,
             checkPermission = true
         )
-    }
-
-    override fun installAtom(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        channelCode: ChannelCode?,
-        installAtomReq: InstallAtomReq
-    ): Result<Boolean> {
-        logger.info("install Atom: userId[$userId] channelCode[$channelCode] installAtomReq[$installAtomReq]")
-        return client.get(ServiceMarketAtomResource::class).installAtom(userId, channelCode, installAtomReq)
     }
 
     override fun rename(

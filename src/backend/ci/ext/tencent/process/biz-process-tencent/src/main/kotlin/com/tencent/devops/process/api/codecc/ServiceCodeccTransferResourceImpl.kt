@@ -27,8 +27,11 @@
 package com.tencent.devops.process.api.codecc
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
+import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.service.codecc.CodeccTransferService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -47,5 +50,27 @@ class ServiceCodeccTransferResourceImpl @Autowired constructor(
         pipelineIds: Set<String>?
     ): Result<Map<String, String>> {
         return Result(codeccTransferService.addToolSetToPipeline(projectId, pipelineIds, toolRuleSet, language))
+    }
+
+    override fun getHistoryBuildScan(
+        status: List<BuildStatus>?,
+        trigger: List<StartType>?,
+        queueTimeStartTime: Long?,
+        queueTimeEndTime: Long?,
+        startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?
+    ): Result<List<BuildBasicInfo>> {
+        return Result(codeccTransferService.getHistoryBuildScan(
+            status,
+            trigger,
+            queueTimeStartTime,
+            queueTimeEndTime,
+            startTimeStartTime,
+            startTimeEndTime,
+            endTimeStartTime,
+            endTimeEndTime
+        ))
     }
 }

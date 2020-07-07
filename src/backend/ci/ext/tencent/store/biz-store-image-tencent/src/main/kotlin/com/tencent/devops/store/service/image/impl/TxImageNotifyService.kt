@@ -104,7 +104,6 @@ class TxImageNotifyService @Autowired constructor() : ImageNotifyService {
         }
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = templateCode,
-            sender = "DevOps",
             receivers = receivers,
             cc = receivers,
             titleParams = titleParams,

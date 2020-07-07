@@ -73,6 +73,11 @@ class OPQualityMetadataResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun deleteMetadata(metadataId: Long): Result<Boolean> {
+        qualityMetadataService.deleteMetadata(metadataId)
+        return Result(true)
+    }
+
     private fun checkParams(userId: String) {
         if (userId.isBlank()) throw ParamBlankException("Invalid userId")
     }

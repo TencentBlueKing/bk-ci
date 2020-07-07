@@ -59,6 +59,7 @@ class ServiceTemplateResourceImpl @Autowired constructor(
                 score = null,
                 rdType = null,
                 sortType = null,
+                projectCode = null,
                 page = null,
                 pageSize = 1
             )

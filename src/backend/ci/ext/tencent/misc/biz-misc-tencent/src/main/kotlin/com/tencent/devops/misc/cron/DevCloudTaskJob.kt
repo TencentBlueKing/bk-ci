@@ -565,7 +565,6 @@ class DevCloudTaskJob @Autowired constructor(
 
             val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
                 templateCode = templateCode,
-                sender = "DevOps",
                 receivers = mutableSetOf(userId),
                 notifyType = mutableSetOf(NotifyType.EMAIL.name),
                 titleParams = mapOf(),
