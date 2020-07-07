@@ -6,7 +6,7 @@ import java.io.File
 import java.io.InputStream
 
 interface SignService {
-    fun singIpa(
+    fun signIpa(
             userId: String,
             ipaSignInfoHeader: String,
             ipaInputStream: InputStream

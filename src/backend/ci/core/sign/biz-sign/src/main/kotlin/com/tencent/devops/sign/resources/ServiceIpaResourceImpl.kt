@@ -59,7 +59,7 @@ class ServiceIpaResourceImpl @Autowired constructor(
             ipaSignInfoHeader: String,
             ipaInputStream: InputStream
     ): Result<String?> {
-        return Result(signService.singIpa(userId, ipaSignInfoHeader, ipaInputStream))
+        return Result(signService.signIpa(userId, ipaSignInfoHeader, ipaInputStream))
     }
 
     override fun downloadIpa(userId: String, filePath: String, response: HttpServletResponse) {
