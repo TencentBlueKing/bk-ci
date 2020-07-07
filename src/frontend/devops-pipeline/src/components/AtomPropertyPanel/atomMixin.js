@@ -25,6 +25,7 @@ import ExperienceInput from '@/components/atomFormField/ExperienceInput'
 import VuexTextarea from '@/components/atomFormField/VuexTextarea'
 import Selector from '@/components/atomFormField/Selector'
 import SelectInput from '@/components/AtomFormComponent/SelectInput'
+import DevopsSelect from '@/components/AtomFormComponent/DevopsSelect'
 import AtomAceEditor from '@/components/atomFormField/AtomAceEditor'
 import CronTimer from '@/components/atomFormField/CronTimer/week'
 import StaffInput from '@/components/atomFormField/StaffInput'
@@ -93,7 +94,8 @@ const atomMixin = {
         CheckInline,
         GroupIdSelector,
         QualitygateTips,
-        AutoComplete
+        AutoComplete,
+        DevopsSelect
     },
     computed: {
         ...mapGetters('atom', [

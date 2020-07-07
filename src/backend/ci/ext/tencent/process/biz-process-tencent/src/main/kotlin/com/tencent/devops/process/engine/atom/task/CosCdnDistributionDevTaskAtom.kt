@@ -73,7 +73,7 @@ class CosCdnDistributionDevTaskAtom @Autowired constructor(
         val buildId = task.buildId
         val containerId = task.containerHashId ?: ""
         if (param.regexPaths.isBlank()) {
-            logger.error("regexPaths is not initialized of build($buildId)")
+            logger.warn("regexPaths is not initialized of build($buildId)")
             LogUtils.addRedLine(
                 rabbitTemplate,
                 buildId,
@@ -91,7 +91,7 @@ class CosCdnDistributionDevTaskAtom @Autowired constructor(
         }
 
         if (param.ticketId.isBlank()) {
-            logger.error("ticketId is not initialized of build($buildId)")
+            logger.warn("ticketId is not initialized of build($buildId)")
             LogUtils.addRedLine(rabbitTemplate, buildId, "ticketId is not initialized", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,

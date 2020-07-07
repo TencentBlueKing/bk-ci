@@ -29,5 +29,3 @@ dependencies {
     compile project(":ext:tencent:artifactory:api-artifactory-store-tencent")
     compile project(":core:artifactory:biz-artifactory")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

@@ -87,6 +87,19 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
         }
     }
 
+    fun deleteByPipelineIdAndVmSeqId(
+        dslContext: DSLContext,
+        pipelineId: String,
+        vmSeqId: String
+    ) {
+        with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VM_SEQ.eq(vmSeqId))
+                .execute()
+        }
+    }
+
     fun getByPipelineIdAndVMSeq(
         dslContext: DSLContext,
         pipelineId: String,

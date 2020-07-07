@@ -50,14 +50,14 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_BUILD_V3"], description = "OPENAPI-构建资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/pipelines/{pipelineId}/builds")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwBuildResourceV3 {
 
     @ApiOperation("启动构建")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/start")
+    @Path("/start")
     fun start(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -75,12 +75,15 @@ interface ApigwBuildResourceV3 {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam("启动参数", required = true)
-        values: Map<String, String>
+        values: Map<String, String>,
+        @ApiParam("手动指定构建版本参数", required = false)
+        @QueryParam("buildNo")
+        buildNo: Int? = null
     ): Result<BuildId>
 
     @ApiOperation("停止构建")
     @POST
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stop")
+    @Path("/{buildId}/stop")
     fun stop(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -104,7 +107,7 @@ interface ApigwBuildResourceV3 {
 
     @ApiOperation("查看构建状态信息")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/status")
+    @Path("/{buildId}/status")
     fun getStatus(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -128,7 +131,7 @@ interface ApigwBuildResourceV3 {
 
     @ApiOperation("获取流水线构建历史")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds")
+    @Path("")
     fun getHistoryBuild(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -155,7 +158,7 @@ interface ApigwBuildResourceV3 {
 
     @ApiOperation("获取流水线手动启动参数")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/manualStartupInfo")
+    @Path("/manualStartupInfo")
     fun manualStartupInfo(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -176,7 +179,7 @@ interface ApigwBuildResourceV3 {
 
     @ApiOperation("构建详情")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
+    @Path("/{buildId}/detail")
     fun detail(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -197,4 +200,34 @@ interface ApigwBuildResourceV3 {
         @PathParam("buildId")
         buildId: String
     ): Result<ModelDetail>
+
+    @ApiOperation("手动审核启动阶段")
+    @POST
+    @Path("/{buildId}/stages/{stageId}/manualStart")
+    fun manualStartStage(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("阶段ID", required = true)
+        @PathParam("stageId")
+        stageId: String,
+        @ApiParam("取消执行", required = false)
+        @QueryParam("cancel")
+        cancel: Boolean?
+    ): Result<Boolean>
 }

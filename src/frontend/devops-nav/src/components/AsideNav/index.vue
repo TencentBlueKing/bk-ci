@@ -12,11 +12,6 @@
                 class="title-icon"
             />
             <span class="title-desc">{{ nav.title }}</span>
-            <i
-                v-if="nav.url"
-                class="devops-icon icon-question-circle"
-                @click="goToDoc(nav.url)"
-            />
         </template>
         <div
             slot="header-set"
@@ -71,10 +66,6 @@
                 itemActiveColor: '#3c96ff',
                 itemDefaultColor: '#7b7d8a'
             }
-        }
-
-        goToDoc (url) {
-            window.open(url, '_blank')
         }
     }
 </script>

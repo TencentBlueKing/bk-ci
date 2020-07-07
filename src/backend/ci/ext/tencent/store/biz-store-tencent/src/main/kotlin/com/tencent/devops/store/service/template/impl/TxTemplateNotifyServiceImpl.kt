@@ -26,7 +26,6 @@
 
 package com.tencent.devops.store.service.template.impl
 
-import com.tencent.devops.common.api.constant.DEVOPS
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -93,7 +92,6 @@ class TxTemplateNotifyServiceImpl @Autowired constructor() : TemplateNotifyServi
         }
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = templateCode,
-            sender = DEVOPS,
             receivers = receivers,
             cc = receivers,
             titleParams = titleParams,

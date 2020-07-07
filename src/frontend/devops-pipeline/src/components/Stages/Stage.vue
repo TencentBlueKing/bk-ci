@@ -9,6 +9,7 @@
             <span @click.stop v-if="showCheckedToatal && canSkipElement" class="check-total-stage">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="stage.runStage" :disabled="stageDisabled"></bk-checkbox>
             </span>
+            <a href="javascript: void(0);" class="atom-single-retry" v-if="canStageRetry" @click.stop="singleRetry(stage.id)">{{ $t('retry') }}</a>
             <span class="stage-entry-btns">
                 <span :title="$t('editPage.copyStage')" v-if="showCopyStage && !stage.isError" class="bk-icon copy-stage" @click.stop="copyStage">
                     <Logo name="copy" size="16"></Logo>
@@ -18,7 +19,7 @@
         </bk-button>
         <draggable v-model="computedContainer" v-bind="dragOptions" :move="checkMove" tag="ul" class="soda-process-stage">
             <stage-container v-for="(container, index) in computedContainer"
-                :key="`${container.id}-${index}`"
+                :key="container.containerId"
                 :stage-index="stageIndex"
                 :container-index="index"
                 :stage-length="stageLength"
@@ -61,7 +62,7 @@
     import Vue from 'vue'
     import { mapActions, mapState, mapGetters } from 'vuex'
     import StageContainer from './StageContainer'
-    import { getOuterHeight } from '@/utils/util'
+    import { getOuterHeight, hashID } from '@/utils/util'
     import Logo from '@/components/Logo'
 
     export default {
@@ -103,6 +104,9 @@
             ...mapGetters('atom', [
                 'isTriggerContainer'
             ]),
+            canStageRetry () {
+                return this.stage.status === 'FAILED' || this.stage.status === 'CANCELED'
+            },
             showCopyStage () {
                 return !this.isTriggerStage && this.editable
             },
@@ -216,6 +220,7 @@
             this.updateHeight()
         },
         methods: {
+            ...mapActions('pipelines', ['requestRetryPipeline']),
             ...mapActions('atom', [
                 'setInertStageIndex',
                 'togglePropertyPanel',
@@ -225,8 +230,55 @@
                 'updateStage',
                 'triggerStage',
                 'deleteStage',
-                'toggleReviewDialog'
+                'toggleReviewDialog',
+                'requestPipelineExecDetail'
             ]),
+            async singleRetry (stageId) {
+                let message, theme
+                try {
+                    // 请求执行构建
+                    const res = await this.requestRetryPipeline({
+                        projectId: this.$route.params.projectId,
+                        pipelineId: this.$route.params.pipelineId,
+                        buildId: this.$route.params.buildNo,
+                        taskId: stageId
+                    })
+                    if (res.id) {
+                        message = this.$t('subpage.retrySuc')
+                        theme = 'success'
+
+                        this.$router.push({
+                            name: 'pipelinesDetail',
+                            params: {
+                                buildNo: res.id
+                            }
+                        })
+                        this.requestPipelineExecDetail(this.$route.params)
+                    } else {
+                        message = this.$t('subpage.retryFail')
+                        theme = 'error'
+                    }
+                } catch (err) {
+                    if (err.code === 403) { // 没有权限执行
+                        this.$showAskPermissionDialog({
+                            noPermissionList: [{
+                                resource: this.$t('pipeline'),
+                                option: this.$t('exec')
+                            }],
+                            applyPermissionUrl: `${PERM_URL_PREFIX}`
+                        })
+                        return
+                    } else {
+                        message = err.message || err
+                        theme = 'error'
+                    }
+                } finally {
+                    message && this.$showTips({
+                        message,
+                        theme
+                    })
+                }
+            },
             checkIsTriggerStage (stage) {
                 try {
                     return this.isTriggerContainer(stage.containers[0])
@@ -312,16 +364,19 @@
             copyStage () {
                 try {
                     const copyStage = JSON.parse(JSON.stringify(this.stage))
-                    const { id, ...stage } = copyStage
-                    stage.containers = stage.containers.map(container => {
-                        const { id, ...job } = container
+                    const stage = {
+                        ...copyStage,
+                        id: `s-${hashID(32)}`,
+                        containers: copyStage.containers.map(container => ({
+                            ...container,
+                            containerId: `c-${hashID(32)}`,
+                            elements: container.elements.map(element => ({
+                                ...element,
+                                id: `e-${hashID(32)}`
+                            }))
+                        }))
 
-                        job.elements = job.elements.map(element => {
-                            const { id, ...ele } = element
-                            return ele
-                        })
-                        return job
-                    })
+                    }
 
                     this.pipeline.stages.splice(this.stageIndex + 1, 0, JSON.parse(JSON.stringify(stage)))
                     this.setPipelineEditing(true)
@@ -423,6 +478,12 @@
                 .stage-entry-error-icon {
                     display: none;
                 }
+            }
+            
+            .atom-single-retry {
+                position: absolute;
+                right: 6%;
+                color: $primaryColor;
             }
 
             .stage-entry-error-icon,

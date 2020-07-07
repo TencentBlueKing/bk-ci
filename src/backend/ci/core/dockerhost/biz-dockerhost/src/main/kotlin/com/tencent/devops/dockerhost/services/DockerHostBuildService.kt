@@ -63,6 +63,7 @@ import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
+import com.tencent.devops.dockerhost.utils.RandomUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.apache.commons.lang3.StringUtils
@@ -273,7 +274,9 @@ class DockerHostBuildService(
             // docker run
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
+            val containerName = "dispatch-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
             val container = dockerCli.createContainerCmd(imageName)
+                .withName(containerName)
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
                 .withEnv(DockerEnvLoader.loadEnv(dockerBuildInfo))
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
@@ -521,7 +524,9 @@ class DockerHostBuildService(
             logger.info("env is $env")
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
+            val containerName = "dockerRun-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
             val container = dockerCli.createContainerCmd(imageName)
+                .withName(containerName)
                 .withCmd(dockerRunParam.command)
                 .withEnv(env)
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
@@ -690,8 +695,13 @@ class DockerHostBuildService(
     }
 
     fun isContainerRunning(containerId: String): Boolean {
-        val inspectContainerResponse = dockerCli.inspectContainerCmd(containerId).exec() ?: return false
-        return inspectContainerResponse.state.running ?: false
+        try {
+            val inspectContainerResponse = dockerCli.inspectContainerCmd(containerId).exec() ?: return false
+            return inspectContainerResponse.state.running ?: false
+        } catch (e: Exception) {
+            logger.error("check container: $containerId status failed.", e)
+            return false
+        }
     }
 
     fun log(buildId: String, message: String, tag: String?, containerHashId: String?) {
@@ -708,7 +718,7 @@ class DockerHostBuildService(
                 tag = tag,
                 jobId = containerHashId
             )
-        } catch (e: Exception) {
+        } catch (t: Throwable) {
             logger.info("write log to dispatch failed")
         }
     }

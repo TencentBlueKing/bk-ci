@@ -26,7 +26,6 @@
 
 package com.tencent.devops.store.service.atom.impl
 
-import com.tencent.devops.common.api.constant.DEVOPS
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -126,7 +125,6 @@ class TxAtomNotifyServiceImpl @Autowired constructor() : AtomNotifyService {
         }
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = templateCode,
-            sender = DEVOPS,
             receivers = receivers,
             cc = receivers,
             titleParams = titleParams,

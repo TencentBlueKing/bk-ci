@@ -104,7 +104,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        values: Map<String, String>
+        values: Map<String, String>,
+        buildNo: Int?
     ): Result<BuildId> {
         logger.info("Start the pipeline($pipelineId) of project($projectId) with param($values) by user($userId)")
         return client.get(ServiceBuildResource::class).manualStartup(
@@ -112,6 +113,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             values = values,
+            buildNo = buildNo,
             channelCode = ChannelCode.BS
         )
     }
@@ -149,6 +151,27 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             channelCode = ChannelCode.BS
+        )
+    }
+
+    override fun manualStartStage(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        cancel: Boolean?
+    ): Result<Boolean> {
+        logger.info("get the pipeline($pipelineId) of project($projectId) manual startup info  by user($userId)")
+        return client.get(ServiceBuildResource::class).manualStartStage(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            cancel = cancel ?: false
         )
     }
 

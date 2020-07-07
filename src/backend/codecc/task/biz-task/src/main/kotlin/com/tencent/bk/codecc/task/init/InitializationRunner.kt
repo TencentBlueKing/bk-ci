@@ -40,8 +40,8 @@ import org.springframework.stereotype.Component
 
 @Component
 class InitializationRunner @Autowired constructor(
-        private val initResponseCode: InitResponseCode,
-        private val taskRepository: TaskRepository
+    private val initResponseCode: InitResponseCode,
+    private val taskRepository: TaskRepository
 ) : CommandLineRunner {
 
     companion object {

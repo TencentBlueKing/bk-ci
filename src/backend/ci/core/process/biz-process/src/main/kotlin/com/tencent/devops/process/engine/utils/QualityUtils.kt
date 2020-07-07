@@ -184,7 +184,16 @@ object QualityUtils {
                 )
             }
 
-            return Model(name, desc, stageList, labels, instanceFromTemplate, pipelineCreator, null, templateId)
+            return Model(
+                name = name,
+                desc = desc,
+                stages = stageList,
+                labels = labels,
+                instanceFromTemplate = instanceFromTemplate,
+                pipelineCreator = pipelineCreator,
+                srcTemplateId = null,
+                templateId = templateId
+            )
         }
     }
 
@@ -234,7 +243,7 @@ object QualityUtils {
         val elementId = task.taskId
 
         if (interceptTask == null) {
-            logger.error("Fail to find quality gate intercept element")
+            logger.warn("Fail to find quality gate intercept element")
             throw TaskExecuteException(
                 errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                 errorType = ErrorType.USER,
@@ -254,7 +263,7 @@ object QualityUtils {
             templateId = templateId,
             runtimeVariable = runVariables
         )
-        val result = if (QUALITY_CODECC_LAZY_ATOM.contains(interceptTask)) {
+        val result = if (position == ControlPointPosition.AFTER_POSITION && QUALITY_CODECC_LAZY_ATOM.contains(interceptTask)) {
             run loop@{
                 QUALITY_LAZY_TIME_GAP.forEachIndexed { index, gap ->
                     val hasMetadata = pipelineBuildQualityService.hasCodeccHisMetadata(buildId)

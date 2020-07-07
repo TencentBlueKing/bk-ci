@@ -100,6 +100,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_PARAMS_NAME_ERROR = "2101054" // 请使用英文命名流水线变量
     const val ERROR_PIPELINE_STAGE_NO_TRIGGER_USER = "2101055" // 手动触发的Stage没有未配置可执行人
     const val ERROR_PIPELINE_DESC_TOO_LONG = "2101056" // 流水线描述过长
+    const val ILLEGAL_TIMER_INTERVAL_CRONTAB = "2101057" // 定时触发器的定时参数[{0}]不能秒级触发
 
     const val ERROR_PIPELINE_NOT_EXISTS = "2101038" // 流水线不存在
     const val ERROR_PIPELINE_MODEL_NOT_EXISTS = "2101039" // 流水线的模型不存在

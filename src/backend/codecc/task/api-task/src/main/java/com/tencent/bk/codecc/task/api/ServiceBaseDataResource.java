@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.task.api;
 
 import com.tencent.bk.codecc.task.vo.BaseDataVO;
-import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -51,7 +51,7 @@ public interface ServiceBaseDataResource
     @ApiOperation("获取任务信息")
     @Path("/paramType/{paramType}/paramCode/{paramCode}")
     @GET
-    Result<List<BaseDataVO>> getInfoByTypeAndCode(
+    CodeCCResult<List<BaseDataVO>> getInfoByTypeAndCode(
             @ApiParam(value = "参数类型", required = true)
             @PathParam(value = "paramType")
                     String paramType,

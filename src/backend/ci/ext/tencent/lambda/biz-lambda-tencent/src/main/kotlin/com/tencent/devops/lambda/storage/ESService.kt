@@ -190,7 +190,8 @@ class ESService @Autowired constructor(
             centerName = source["centerName"]?.toString() ?: "",
             model = source["model"]?.toString() ?: "",
             errorType = source["errorType"]?.toString() ?: "",
-            errorMsg = source["errorMsg"]?.toString() ?: ""
+            errorMsg = source["errorMsg"]?.toString() ?: "",
+            errorCode = try { source["errorCode"]?.toString()?.toInt() ?: 0 } catch (e: NumberFormatException) { 0 }
         )
     }
 
@@ -207,7 +208,8 @@ class ESService @Autowired constructor(
             type = source["type"]?.toString() ?: "",
             atomCode = source["atomCode"]?.toString() ?: "",
             errorType = source["errorType"]?.toString() ?: "",
-            errorMsg = source["errorMsg"]?.toString() ?: ""
+            errorMsg = source["errorMsg"]?.toString() ?: "",
+            errorCode = try { source["errorCode"]?.toString()?.toInt() ?: 0 } catch (e: NumberFormatException) { 0 }
         )
     }
 

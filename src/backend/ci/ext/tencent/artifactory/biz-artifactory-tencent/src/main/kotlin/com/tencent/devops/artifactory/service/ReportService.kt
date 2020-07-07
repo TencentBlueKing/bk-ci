@@ -26,8 +26,6 @@
 
 package com.tencent.devops.artifactory.service
 
-import javax.ws.rs.core.Response
-
 interface ReportService {
     fun get(
         projectId: String,
@@ -35,5 +33,5 @@ interface ReportService {
         buildId: String,
         elementId: String,
         path: String
-    ): Response
+    )
 }

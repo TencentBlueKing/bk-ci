@@ -42,4 +42,6 @@ object KafkaTopic {
     const val SINGLE_DUPC_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-dupc-statistic"
 
     const val LANDUN_GIT_TASK_TOPIC = "tendata-bkdevops-296-topic-landun-git-task"
+    const val LANDUN_TASK_DETAIL_TOPIC = "tendata-bkdevops-296-topic-landun-task-detail"
+    const val LANDUN_JOB_DETAIL_TOPIC = "tendata-bkdevops-296-topic-landun-job-detail"
 }

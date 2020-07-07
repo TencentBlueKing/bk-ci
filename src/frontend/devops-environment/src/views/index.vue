@@ -14,7 +14,6 @@
                 return {
                     icon: 'environment',
                     title: this.$t('environment.environmentManage'),
-                    url: '',
                     menu: [
                         {
                             id: 'envList',

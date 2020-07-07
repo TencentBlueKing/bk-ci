@@ -241,6 +241,7 @@
             },
 
             async handlePathQuery () {
+                // TODO 筛选参数目前不支持带#字符串回填
                 const { $route, historyPageStatus: { queryMap } } = this
                 const pathQuery = $route.query
                 const newSearchKey = []
@@ -307,6 +308,10 @@
 
             async updateBuildHistoryList () {
                 try {
+                    if (!this.pipelineId || !this.projectId || !this.$refs.infiniteScroll) {
+                        webSocketMessage.unInstallWsMessage()
+                        return
+                    }
                     const res = await this.$refs.infiniteScroll.updateList()
                     this.currentPipelineVersion = res.pipelineVersion || ''
                 } catch (err) {

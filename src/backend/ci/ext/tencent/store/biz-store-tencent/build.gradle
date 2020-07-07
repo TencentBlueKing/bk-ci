@@ -40,5 +40,3 @@ dependencies {
     compile project(":core:common:common-archive")
     compile project(":core:plugin:codecc-plugin:api-codecc")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

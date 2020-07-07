@@ -35,7 +35,9 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
+import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -87,6 +89,36 @@ class PipelineStageService @Autowired constructor(
         return result
     }
 
+    fun skipStage(
+        buildId: String,
+        stageId: String
+    ) {
+        updateStageStatus(buildId, stageId, BuildStatus.SKIP)
+        SpringContextUtil.getBean(PipelineBuildDetailService::class.java).stageSkip(buildId, stageId)
+    }
+
+    fun pauseStage(
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        controlOption: PipelineBuildStageControlOption
+    ) {
+        logger.info("[$buildId]|pauseStage|stageId=$stageId|controlOption=$controlOption")
+        pipelineBuildStageDao.updateStatus(
+            dslContext = dslContext,
+            buildId = buildId,
+            stageId = stageId,
+            buildStatus = BuildStatus.PAUSE,
+            controlOption = controlOption
+        )
+        SpringContextUtil.getBean(PipelineBuildDetailService::class.java).stagePause(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            controlOption = controlOption
+        )
+    }
+
     fun startStage(
         userId: String,
         projectId: String,
@@ -122,7 +154,7 @@ class PipelineStageService @Autowired constructor(
             .stageCancel(buildId, stageId)
         pipelineEventDispatcher.dispatch(
             PipelineBuildFinishEvent(
-                source = "FINALLY_STAGE_SUCCESS",
+                source = BS_STAGE_CANCELED_END_SOURCE,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
@@ -137,6 +169,11 @@ class PipelineStageService @Autowired constructor(
     }
 
     fun updatePipelineRunningCount(pipelineId: String, buildId: String, runningIncrement: Int) {
-        pipelineBuildSummaryDao.updateRunningCount(dslContext, pipelineId, buildId, runningIncrement)
+        pipelineBuildSummaryDao.updateRunningCount(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            runningIncrement = runningIncrement
+        )
     }
 }

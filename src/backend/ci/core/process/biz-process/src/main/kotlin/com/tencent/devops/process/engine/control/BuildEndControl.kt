@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
@@ -45,7 +46,6 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.common.api.pojo.ErrorType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -92,7 +92,7 @@ class BuildEndControl @Autowired constructor(
     private fun PipelineBuildFinishEvent.finish() {
 
         // 将状态设置正确
-        val buildStatus = if (BuildStatus.isFinish(status) || status == BuildStatus.STAGE_SUCCESS) {
+        val buildStatus = if (BuildStatus.isFinish(status) || status.name == BuildStatus.STAGE_SUCCESS.name) {
             status
         } else {
             BuildStatus.SUCCEED
@@ -216,7 +216,7 @@ class BuildEndControl @Autowired constructor(
     private fun PipelineBuildFinishEvent.popNextBuild() {
 
         // 获取下一个排队的
-        val nextQueueBuildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(pipelineId)
+        val nextQueueBuildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(projectId = projectId, pipelineId = pipelineId)
         if (nextQueueBuildInfo == null) {
             logger.info("[$buildId]|FETCH_QUEUE|$pipelineId no queue build!")
             return

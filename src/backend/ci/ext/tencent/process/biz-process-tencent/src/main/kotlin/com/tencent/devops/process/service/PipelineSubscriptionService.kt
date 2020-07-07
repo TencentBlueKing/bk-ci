@@ -456,7 +456,7 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
         val parentBuildId = vars[PIPELINE_START_PARENT_BUILD_ID] ?: return
         val parentBuildTask = pipelineRuntimeService.getBuildTask(parentBuildId, parentTaskId)
         if (parentBuildTask == null) {
-            logger.error("The parent build($parentBuildId) task($parentTaskId) not exist ")
+            logger.warn("The parent build($parentBuildId) task($parentTaskId) not exist ")
             return
         }
 
@@ -488,7 +488,6 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
     ) {
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = getNotifyTemplateCode(type, detailFlag),
-            sender = "DevOps",
             receivers = users,
             notifyType = notifyTypes,
             titleParams = mapData,
