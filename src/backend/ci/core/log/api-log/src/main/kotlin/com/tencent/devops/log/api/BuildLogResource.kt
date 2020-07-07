@@ -62,6 +62,28 @@ interface BuildLogResource {
         logMessage: LogMessage
     ): Result<Boolean>
 
+    @ApiOperation("写入一条红色高亮日志")
+    @POST
+    @Path("/red")
+    fun addRedLogLine(
+        @ApiParam("构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @ApiParam("一条日志", required = true)
+        logMessage: LogMessage
+    ): Result<Boolean>
+
+    @ApiOperation("写入一条黄色高亮日志")
+    @POST
+    @Path("/yellow")
+    fun addYellowLogLine(
+        @ApiParam("构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @ApiParam("一条日志", required = true)
+        logMessage: LogMessage
+    ): Result<Boolean>
+
     @ApiOperation("写入多条日志")
     @POST
     @Path("/multi")

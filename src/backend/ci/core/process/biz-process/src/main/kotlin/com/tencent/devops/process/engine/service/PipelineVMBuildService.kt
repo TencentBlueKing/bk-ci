@@ -416,7 +416,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             }.filter {
                 !it.first.startsWith("@type")
             }.toMap(),
-            buildVariable = buildVariable
+            buildVariable = buildVariable,
+            containerType = task.containerType
         )
 
         logger.info("[$buildId]|Claim the task - ($buildTask)")
@@ -474,6 +475,13 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
         val buildStatus = if (result.success) {
             pipelineTaskService.removeRetryCache(buildId, result.taskId)
+            // 清理插件错误信息（重试插件成功的情况下）
+            pipelineTaskService.removeFailVarWhenSuccess(
+                buildId = buildId,
+                projectId = buildInfo.projectId,
+                pipelineId = buildInfo.pipelineId,
+                taskId = result.taskId
+            )
             BuildStatus.SUCCEED
         } else {
             if (pipelineTaskService.isRetryWhenFail(result.taskId, buildId)) {
@@ -482,6 +490,13 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 Thread.sleep(5000)
                 BuildStatus.RETRY
             } else {
+                // 记录错误插件信息
+                pipelineTaskService.createFailElementVar(
+                    buildId = buildId,
+                    projectId = buildInfo.projectId,
+                    pipelineId = buildInfo.pipelineId,
+                    taskId = result.taskId
+                )
                 BuildStatus.FAILED
             }
         }
@@ -495,16 +510,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             errorMsg = result.message
         )
 
-        // 发送度量数据
-        sendElementData(
-            buildId = buildId,
-            taskId = result.taskId,
-            success = result.success,
-            type = result.type,
-            errorType = result.errorType,
-            errorCode = result.errorCode,
-            errorMsg = result.message
-        )
         logger.info("Complete the task(${result.taskId}) of build($buildId) and seqId($vmSeqId)")
         pipelineRuntimeService.completeClaimBuildTask(
             buildId = buildId,
@@ -526,6 +531,18 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 actionType = ActionType.END
             )
         )
+
+        // 发送度量数据
+        sendElementData(
+            buildId = buildId,
+            taskId = result.taskId,
+            success = result.success,
+            type = result.type,
+            errorType = result.errorType,
+            errorCode = result.errorCode,
+            errorMsg = result.message
+        )
+
         LogUtils.stopLog(
             rabbitTemplate = rabbitTemplate,
             buildId = buildId,

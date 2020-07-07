@@ -53,6 +53,8 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchTy
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.gitci.api.TriggerBuildResource
+import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.log.model.pojo.LogLine
 import com.tencent.devops.log.model.pojo.QueryLogs
@@ -226,8 +228,15 @@ class PreBuildService @Autowired constructor(
     private fun createVMBuildContainer(job: Job, startUpReq: StartUpReq, agentInfo: ThirdPartyAgentStaticInfo, jobIndex: Int): VMBuildContainer {
         val elementList = mutableListOf<Element>()
         job.job.steps.forEach {
-            if (it is CodeCCScanInContainerTask && startUpReq.extraParam != null && !(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
-                it.inputs.path = listOf(startUpReq.extraParam!!.codeccScanPath!!)
+            if (it is CodeCCScanInContainerTask && startUpReq.extraParam != null) {
+                val whitePath = mutableListOf<String>()
+                if (!(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
+                    whitePath.add(startUpReq.extraParam!!.codeccScanPath!!)
+                }
+                if (startUpReq.extraParam!!.incrementFileList != null && startUpReq.extraParam!!.incrementFileList!!.isNotEmpty()) {
+                    whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
+                }
+                it.inputs.path = whitePath
             }
             val element = it.covertToElement(getCiBuildConf(preBuildConfig))
             elementList.add(element)
@@ -431,5 +440,9 @@ class PreBuildService @Autowired constructor(
             return AgentStatus.IMPORT_EXCEPTION
         }
         return AgentStatus.fromStatus(agent.status!!)
+    }
+
+    fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
+        return client.get(TriggerBuildResource::class).checkYaml(userId, yaml)
     }
 }

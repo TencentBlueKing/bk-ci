@@ -60,6 +60,7 @@ interface MarketTemplateService {
         score: Int?,
         rdType: TemplateRdTypeEnum?,
         sortType: MarketTemplateSortTypeEnum?,
+        projectCode: String?,
         page: Int?,
         pageSize: Int?
     ): MarketTemplateResp

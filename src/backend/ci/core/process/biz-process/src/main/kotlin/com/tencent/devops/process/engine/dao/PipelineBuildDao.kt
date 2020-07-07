@@ -245,10 +245,11 @@ class PipelineBuildDao {
         }
     }
 
-    fun getOneQueueBuild(dslContext: DSLContext, pipelineId: String): TPipelineBuildHistoryRecord? {
+    fun getOneQueueBuild(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
                 .and(STATUS.eq(BuildStatus.QUEUE.ordinal))
                 .orderBy(BUILD_NUM.asc()).limit(1)
             select.fetchAny()
@@ -409,6 +410,7 @@ class PipelineBuildDao {
                 buildNum = t.buildNum,
                 trigger = t.trigger,
                 status = BuildStatus.values()[t.status],
+                queueTime = t.queueTime?.timestampmilli() ?: 0L,
                 startUser = t.startUser,
                 startTime = t.startTime?.timestampmilli() ?: 0L,
                 endTime = t.endTime?.timestampmilli() ?: 0L,
