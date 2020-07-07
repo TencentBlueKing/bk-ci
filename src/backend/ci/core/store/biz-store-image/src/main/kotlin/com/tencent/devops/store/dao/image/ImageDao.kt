@@ -144,7 +144,7 @@ class ImageDao {
                 .join(tStoreMember)
                 .on(this.IMAGE_CODE.eq(tStoreMember.STORE_CODE))
             if (!imageName.isNullOrBlank()) {
-                conditions.add(IMAGE_NAME.eq(imageName))
+                conditions.add(IMAGE_NAME.contains(imageName))
             }
             conditions.add(tStoreMember.USERNAME.eq(userId))
             conditions.add(DELETE_FLAG.eq(false))
