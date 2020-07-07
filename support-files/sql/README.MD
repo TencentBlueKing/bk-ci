@@ -14,18 +14,19 @@
 
 
 ## 分类
-- 创建数据库脚本：0001_{系统}\_create\-database\_{db类型}.sql
-  - 示例：0001_ci_create-database_mysql.sql
-- 创建表/视图脚本(ddl)：{执行序号}\_{系统}\_{模块}\_ddl\_{db类型}.sql
-  - 示例：0002_ci_process_ddl_mysql.sql
-- 初始化数据脚本(dml)：{执行序号}\_{系统}\_{模块}\_dml\_{db类型}.sql
-  - 示例：0003_ci_process_dml_mysql.sql
-- 系统发版本的更新脚本(update）：{执行序号}\_{系统}\_{模块}\_update\_{版本号}\_{db类型}.sql
-  - 示例：0004_ci_process_update_v2.1.1_mysql.sql
+
+- 创建数据库脚本：0001_{系统}_create-database_{db类型}.sql
+  - 示例：0001_ci_create-database_mysql.sql 是所有db创建都放到该文件中
+- 全版本的创建表/视图脚本(DDL)：1xxx_{系统}_{模块}_ddl_{db类型}.sql
+  - 示例：1001_ci_process_ddl_mysql.sql  完全的db模型，如果有涉及到增字段，必须在该文件中补全，并在update中根据次版本
+- 增量版本的DDL更新脚本(DDL update）2xxx~4xxx(预留)：2xxx_{系统}_{模块}_update_{次版本号}_{db类型}.sql
+  - 示例：2001_ci_process_update_v2.1_mysql.sql  表示是 [2.1~2.2) 区间的所有版本的ddl更新
+- 全版本的初始化数据脚本(DML)：5001_{系统}_{模块}_dml_{db类型}.sql 
+  - 示例：5001_ci_process_dml_mysql.sql  表示是对process模块的初始化脚本，包含所有版本的内容。
 
 **参数说明：**
 **执行序号**： 4位数： 比如0001 按顺序下来，为方便指明执行顺序
 **系统**： ci 表示是ci系统， codecc表示是codecc系统
 **模块**:  process  project 等微服务模块
-**版本号**： 0.1/0.2 等产品的版本号
+**版本号**： 1.1/1.2 等产品的版本号
 **db类型**： mysql
