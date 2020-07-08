@@ -174,7 +174,7 @@ class FileTaskServiceImpl : FileTaskService {
         val rootDir = File(getFileBasePath())
         val taskDirs = rootDir.listFiles(FileFilter { it.isDirectory })
         // 清理机器上的文件目录
-        taskDirs.forEach {
+        taskDirs?.forEach {
             if (System.currentTimeMillis() - it.lastModified() > fileExpireTimeMinutes * 60 * 1000) {
                 logger.info("clear taskDir:${it.path}:it.deleteRecursively()")
             }
