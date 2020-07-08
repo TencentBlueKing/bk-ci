@@ -29,27 +29,42 @@ package com.tencent.devops.artifactory.resources
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryFileTaskResource
 import com.tencent.devops.artifactory.pojo.CreateFileTaskReq
 import com.tencent.devops.artifactory.pojo.FileTaskInfo
-import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.artifactory.service.FileTaskService
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceArtifactoryFileTaskResourceImpl @Autowired constructor(
-    private val archiveFileService: ArchiveFileService,
+    private val client: Client,
     private val fileTaskService: FileTaskService
 ) : ServiceArtifactoryFileTaskResource {
 
     override fun createFileTask(userId: String, projectId: String, pipelineId: String, buildId: String, createFileTaskReq: CreateFileTaskReq): Result<String> {
+        checkUserPermission(userId, projectId)
         return Result(fileTaskService.createFileTask(userId, projectId, pipelineId, buildId, createFileTaskReq))
     }
 
     override fun getStatus(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String): Result<FileTaskInfo?> {
+        checkUserPermission(userId, projectId)
         return Result(fileTaskService.getStatus(userId, projectId, pipelineId, buildId, taskId))
     }
 
     override fun clearFileTask(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String): Result<Boolean> {
+        checkUserPermission(userId, projectId)
         return Result(fileTaskService.clearFileTask(userId, projectId, pipelineId, buildId, taskId))
+    }
+
+    fun checkUserPermission(userId: String, projectId: String) {
+        val projectSet = client.get(ServiceProjectResource::class).list(userId).data!!.map { it.projectCode }.toSet()
+        if (!projectSet.contains(projectId)) {
+            throw PermissionForbiddenException(
+                message = "用户 $userId 无项目 $projectId 权限",
+                params = arrayOf("user[$userId]->project[$projectId]")
+            )
+        }
     }
 }
