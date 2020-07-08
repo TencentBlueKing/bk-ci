@@ -160,17 +160,6 @@ class PipelineTaskPauseListener @Autowired constructor(
         )
         logger.info("taskCancel update|$buildId|$taskId| task status  to ${BuildStatus.CANCELED}")
 
-//        // 修改容器状态位运行
-//        pipelineRuntimeService.updateContainerStatus(
-//            buildId = buildId,
-//            stageId = stageId,
-//            containerId = containerId,
-//            startTime = null,
-//            endTime = null,
-//            buildStatus = BuildStatus.CANCELED
-//        )
-//        logger.info("taskCancel update|$buildId|$taskId| container status  to ${BuildStatus.CANCELED}")
-
         // 刷新detail内model
         buildDetailService.taskCancel(
             buildId = buildId,
@@ -206,15 +195,6 @@ class PipelineTaskPauseListener @Autowired constructor(
                 stageId = stageId,
                 containerType = containerRecord?.containerType ?: "vmBuild"
             )
-//            PipelineBuildStageEvent(
-//                source = "taskCancel",
-//                stageId = stageId,
-//                pipelineId = pipelineId,
-//                projectId = projectId,
-//                actionType = ActionType.REFRESH,
-//                buildId = buildId,
-//                userId = userId
-//            )
         )
     }
 
@@ -226,14 +206,6 @@ class PipelineTaskPauseListener @Autowired constructor(
         containerId: String
     ) {
         logger.info("executePauseBuild pipelineId[$pipelineId], buildId[$buildId] stageId[$stageId] containerId[$containerId] taskId[$taskId]")
-//        // 修改任务状态位运行
-//        pipelineRuntimeService.updateTaskStatus(
-//            buildId = buildId,
-//            taskId = taskId,
-//            userId = "",
-//            buildStatus = BuildStatus.QUEUE
-//        )
-//        logger.info("update|$buildId|$taskId| task status  to ${BuildStatus.QUEUE}")
 
         // 将启动和结束任务置为排队。用于启动构建机
         val taskRecords = pipelineRuntimeService.getAllBuildTask(buildId)

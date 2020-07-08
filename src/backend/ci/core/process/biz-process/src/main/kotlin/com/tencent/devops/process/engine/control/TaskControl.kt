@@ -101,23 +101,6 @@ class TaskControl @Autowired constructor(
 
         logger.info("[$buildId]|[${buildInfo.status}]|ATOM_$actionType|taskId=$taskId|status=${buildTask.status}")
 
-//        if (pipelineTaskService.isPause(taskId, buildId)) {
-//            return pipelineEventDispatcher.dispatch(
-//                PipelineBuildContainerEvent(
-//                    source = "pauseTask",
-//                    projectId = projectId,
-//                    pipelineId = pipelineId,
-//                    userId = userId,
-//                    buildId = buildId,
-//                    stageId = stageId,
-//                    containerId = containerId,
-//                    containerType = containerType,
-//                    actionType = ActionType.REFRESH,
-//                    delayMills = delayMillsNext
-//                )
-//            )
-//        }
-
         val buildStatus = when {
             BuildStatus.isReadyToRun(buildTask.status) -> { // 准备启动执行
                 if (ActionType.isEnd(actionType)) { // #2400 因任务终止&结束的事件命令而未执行的原子设置为UNEXEC，而不是SKIP
