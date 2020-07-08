@@ -274,7 +274,7 @@ class PipelineInfoDao {
         projectId: String?,
         pipelineId: String,
         channelCode: ChannelCode? = null,
-        delete: Boolean = false,
+        delete: Boolean? = false,
         days: Long? // 搜索范围：{days}天内的流水线
     ): TPipelineInfoRecord? {
         return with(T_PIPELINE_INFO) {
@@ -292,7 +292,10 @@ class PipelineInfoDao {
             if (days != null && days > 0) {
                 query.and(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(days)))
             }
-            query.and(DELETE.eq(delete)).fetchAny()
+            if (delete != null) {
+                query.and(DELETE.eq(delete))
+            }
+            query.fetchAny()
         }
     }
 
