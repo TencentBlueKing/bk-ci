@@ -126,7 +126,13 @@ class StageControl @Autowired constructor(
 
                 buildStatus = BuildStatus.TERMINATE
                 stages.forEach { s ->
-                    pipelineStageService.updateStageStatus(buildId, s.stageId, buildStatus)
+                    if (BuildStatus.isRunning(s.status)) {
+                        pipelineStageService.updateStageStatus(
+                            buildId = buildId,
+                            stageId = s.stageId,
+                            buildStatus = buildStatus
+                        )
+                    }
                 }
                 allContainers.forEach { c ->
                     if (BuildStatus.isRunning(c.status)) {
