@@ -88,12 +88,11 @@ class FileTaskServiceImpl : FileTaskService {
     lateinit var dslContext: DSLContext
 
     override fun createFileTask(userId: String, projectId: String, pipelineId: String, buildId: String, createFileTaskReq: CreateFileTaskReq): String {
-
-
         // 1.生成taskId
         val taskId = UUIDUtil.generate()
         val path = createFileTaskReq.path
         val fileType = createFileTaskReq.fileType
+        logger.info("Input=($userId,$projectId,$pipelineId,$buildId,$fileType,$path)")
         // 获取文件名
         var fileName = path
         if (path.contains(fileSeparator)) {
@@ -107,6 +106,7 @@ class FileTaskServiceImpl : FileTaskService {
         }
         val tmpFile = Paths.get(basePath, taskId, fileName).toFile()
         val localPath = tmpFile.absolutePath
+        logger.info("localPath=$localPath")
         // 2.关联入库
         fileTaskDao.addFileTaskInfo(dslContext, taskId, createFileTaskReq.fileType.name, createFileTaskReq.path, machineIp, localPath, FileTaskStatusEnum.WAITING.status, userId, projectId, pipelineId, buildId)
 
@@ -118,10 +118,12 @@ class FileTaskServiceImpl : FileTaskService {
             pipelineId = pipelineId,
             buildId = buildId
         )
+        logger.info("destPath=$destPath")
         // 下载文件到本地临时目录
         fileTaskDao.updateFileTaskStatus(dslContext, taskId, FileTaskStatusEnum.DOWNLOADING.status)
         archiveFileService.downloadFile(destPath.data!!, FileOutputStream(tmpFile))
         fileTaskDao.updateFileTaskStatus(dslContext, taskId, FileTaskStatusEnum.DONE.status)
+        logger.info("taskId=$taskId")
         return taskId
     }
 
