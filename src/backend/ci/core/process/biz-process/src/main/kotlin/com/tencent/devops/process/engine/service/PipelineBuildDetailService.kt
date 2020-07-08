@@ -1138,9 +1138,10 @@ class PipelineBuildDetailService @Autowired constructor(
         if(atomVersion.isNullOrBlank()) {
             return atomVersion
         }
-
+        logger.info("findTaskVersion $buildId| $atomCode | $atomVersion|")
         if(atomVersion!!.contains("*")) {
             val atomRecord = client.get(ServiceMarketAtomEnvResource::class).getAtomEnv(projectCode, atomCode, atomVersion)?.data
+            logger.info("lastVersion $buildId| $atomCode| $atomVersion| ${atomRecord?.version}")
             return atomRecord?.version ?: atomVersion
         }
         return atomVersion
