@@ -150,7 +150,9 @@ class FileTaskServiceImpl : FileTaskService {
     override fun clearFileTask(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String): Boolean {
         val fileTaskRecord = fileTaskDao.getFileTaskInfo(dslContext, taskId)
         if (fileTaskRecord != null) {
-            return if (File(fileTaskRecord.localPath).delete()) {
+            val filePath = normalizeSeparator(fileTaskRecord.localPath)
+            val dirPath = filePath.substring(0, filePath.lastIndexOf(fileSeparator))
+            return if (File(dirPath).deleteRecursively()) {
                 val affectedRows = fileTaskDao.deleteFileTaskInfo(dslContext, taskId)
                 if (1 == affectedRows) {
                     true
@@ -159,7 +161,7 @@ class FileTaskServiceImpl : FileTaskService {
                     false
                 }
             } else {
-                logger.warn("Fail to delete file on disk, taskId=$taskId, path=${fileTaskRecord.localPath}")
+                logger.warn("Fail to delete file dir on disk, taskId=$taskId, path=$dirPath")
                 false
             }
         } else {
