@@ -4,7 +4,7 @@
 - 所有变更都要同步到ddl脚本中
 - 要求：所有脚本必须是可反复执行无差别（幂等）：
   - 插入数据要求用INSERT IGNORE INTO 防止覆盖用户数据。
-  - 对于需要强制刷新的系统数据可用更新语句 INSERT INTO xxx ON DUPLICATE KEY UPDATE
+  - 对于需要强制刷新的系统数据可用更新语句 INSERT INTO xxx ON DUPLICATE KEY UPDATE 或者  REPLACE INTO  xxx
   - 不允许直接删除表或数据库后再重新创建的语句，只能判断后再创建：CREATE TABLE IF NOT EXISTS `表名`
   - 索引字段ALTER修改可用更新脚本存储过程，在update脚本中创建存储过程中在修改字段时先判断是否存在
 - 不允许在程序不更新情况下无法运行：
