@@ -1234,18 +1234,14 @@
     }
     .copy-pipeline {
         .bk-label {
-            width: 100px;
+            width: 150px;
+            padding-right: 24px;
         }
         .bk-form-content {
-            margin-left: 110px;
-        }
-        .tip-bottom {
-            padding: 0;
-            margin: 10px 20px 10px 10px;
-            width: auto;
+            margin-left: 150px;
         }
         .auth-radio {
-            margin: 15px 30px 0 0;
+            margin: 0 30px 0 0;
         }
         .err-name {
             text-align: left;
