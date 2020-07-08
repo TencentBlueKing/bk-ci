@@ -46,9 +46,9 @@ class FileTaskDao {
         projectId: String,
         pipelineId: String,
         buildId: String
-    ) {
+    ): Int {
         with(TFileTask.T_FILE_TASK) {
-            dslContext.insertInto(
+            return dslContext.insertInto(
                 this,
                 TASK_ID,
                 FILE_TYPE,
@@ -73,6 +73,18 @@ class FileTaskDao {
                     pipelineId,
                     buildId
                 ).execute()
+        }
+    }
+
+    fun updateFileTaskStatus(
+        dslContext: DSLContext,
+        taskId: String,
+        status: Short
+    ): Int {
+        with(TFileTask.T_FILE_TASK) {
+            return dslContext.update(this)
+                .set(STATUS, status)
+                .where(TASK_ID.eq(taskId)).execute()
         }
     }
 

@@ -119,8 +119,9 @@ class FileTaskServiceImpl : FileTaskService {
             buildId = buildId
         )
         // 下载文件到本地临时目录
+        fileTaskDao.updateFileTaskStatus(dslContext, taskId, FileTaskStatusEnum.DOWNLOADING.status)
         archiveFileService.downloadFile(destPath.data!!, FileOutputStream(tmpFile))
-
+        fileTaskDao.updateFileTaskStatus(dslContext, taskId, FileTaskStatusEnum.DONE.status)
         return taskId
     }
 
