@@ -231,7 +231,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 )
                 dslContext.batch(batchSqlList).execute()
             }
-            totalHandleNum += pipelineHistoryBuildIds.size
+            totalHandleNum += PIPELINE_BUILD_HISTORY_PAGE_SIZE
         }
     }
 }
