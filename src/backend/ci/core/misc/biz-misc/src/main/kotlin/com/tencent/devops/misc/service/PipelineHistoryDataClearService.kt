@@ -36,7 +36,7 @@ abstract class PipelineHistoryDataClearService {
     protected val repositoryDbKey = "repositoryDb" // repository数据库
     protected val dispatchDbKey = "dispatchDb" // dispatch数据库
     protected val pluginDbKey = "pluginDb" // plugin数据库
-    protected val qualityDbKey = "quality" // quality数据库
+    protected val qualityDbKey = "qualityDb" // quality数据库
     protected val artifactoryDbKey = "artifactoryDb" // artifactory数据库
     val projectTableKey = "projectTable"
     val pipelineInfoTableKey = "pipelineInfoTable"
@@ -55,6 +55,7 @@ abstract class PipelineHistoryDataClearService {
     private val pluginCodeccTableKey = "pluginCodeccTable"
     private val qualityHisDetailMetadataTableKey = "qualityHisDetailMetadataTable"
     private val qualityHisOriginMetadataTableKey = "qualityHisOriginMetadataTable"
+    private val buildStartupParamTableKey = "buildStartupParamTable"
 
     abstract fun getDataBaseInfo(): Map<String, String>
 
@@ -75,7 +76,8 @@ abstract class PipelineHistoryDataClearService {
             dispatchThirdpartyAgentBuildTableKey to "T_DISPATCH_THIRDPARTY_AGENT_BUILD",
             pluginCodeccTableKey to "T_PLUGIN_CODECC",
             qualityHisDetailMetadataTableKey to "T_QUALITY_HIS_DETAIL_METADATA",
-            qualityHisOriginMetadataTableKey to "T_QUALITY_HIS_ORIGIN_METADATA"
+            qualityHisOriginMetadataTableKey to "T_QUALITY_HIS_ORIGIN_METADATA",
+            buildStartupParamTableKey to "T_BUILD_STARTUP_PARAM"
         )
         tableInfoMap = tableInfoMap.plus(getSpecTableInfo())
         return tableInfoMap
@@ -111,6 +113,7 @@ abstract class PipelineHistoryDataClearService {
             val dataSqlList = mutableListOf<Query>(
                 dslContext.query("DELETE FROM $processDbName.${tableInfo[pipelineBuildDetailTableKey]} WHERE BUILD_ID='$buildId'"),
                 dslContext.query("DELETE FROM $processDbName.${tableInfo[reportTableKey]} WHERE PROJECT_ID='$projectId' AND PIPELINE_ID='$pipelineId' AND BUILD_ID='$buildId'"),
+                dslContext.query("DELETE FROM $processDbName.${tableInfo[buildStartupParamTableKey]} WHERE BUILD_ID='$buildId'"),
                 dslContext.query("DELETE FROM $dispatchDbName.${tableInfo[dispatchPipelineBuildTableKey]} WHERE BUILD_ID='$buildId'"),
                 dslContext.query("DELETE FROM $dispatchDbName.${tableInfo[dispatchPipelineDockerBuildTableKey]} WHERE BUILD_ID='$buildId'"),
                 dslContext.query("DELETE FROM $dispatchDbName.${tableInfo[dispatchThirdpartyAgentBuildTableKey]} WHERE BUILD_ID='$buildId'"),

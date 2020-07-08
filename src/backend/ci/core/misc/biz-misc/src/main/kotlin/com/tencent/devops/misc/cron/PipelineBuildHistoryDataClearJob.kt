@@ -78,7 +78,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             return
         }
         logger.info("pipelineBuildHistoryDataClear start")
-        val lock = RedisLock(redisOperation, LOCK_KEY, 100)
+        val lock = RedisLock(redisOperation, LOCK_KEY, 3000)
         try {
             if (!lock.tryLock()) {
                 logger.info("get lock failed, skip")
@@ -123,8 +123,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             val projectBaseQueryStep = dslContext.select().from("$PROJECT_DATA_BASE_NAME.$PROJECT_TABLE_NAME")
             var maxHandleProjectPrimaryId = handleProjectPrimaryId ?: 0L
             if (projectListConfig.isNullOrBlank()) {
-                maxHandleProjectPrimaryId = handleProjectPrimaryId + maxEveryProjectHandleNum
-                projectConditionSqlBuilder.append(" and (id >$handleProjectPrimaryId and id<=$maxHandleProjectPrimaryId)")
+                // 一次查出redis中配置的全部项目的信息（redis中配置的项目个数不要太多）
                 projectBaseQueryStep.where(projectConditionSqlBuilder.toString())
             } else {
                 val page = redisOperation.get(PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_PAGE_KEY)?.toInt() ?: 1
@@ -232,7 +231,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 )
                 dslContext.batch(batchSqlList).execute()
             }
-            totalHandleNum += pipelineHistoryBuildIds.size
+            totalHandleNum += PIPELINE_BUILD_HISTORY_PAGE_SIZE
         }
     }
 }
