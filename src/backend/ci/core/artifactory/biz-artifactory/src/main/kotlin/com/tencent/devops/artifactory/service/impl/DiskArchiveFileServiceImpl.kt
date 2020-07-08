@@ -32,6 +32,7 @@ import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.config.CommonConfig
@@ -43,6 +44,7 @@ import org.springframework.stereotype.Service
 import org.springframework.util.FileCopyUtils
 import java.io.File
 import java.io.FileInputStream
+import java.io.OutputStream
 import java.io.UnsupportedEncodingException
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -66,6 +68,20 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
 
     override fun getCommonFileFolderName(): String {
         return "file"
+    }
+
+    override fun downloadFile(filePath: String, outputStream: OutputStream) {
+        logger.info("downloadFile filePath is:$filePath")
+        if (filePath.contains("..")) {
+            // 非法路径则抛出错误提示
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                defaultMessage = "filePath is invalid",
+                params = arrayOf(filePath)
+            )
+        }
+        val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
+        FileCopyUtils.copy(FileInputStream(file), outputStream)
     }
 
     override fun downloadFile(filePath: String, response: HttpServletResponse) {
@@ -121,7 +137,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
         fileChannelType: FileChannelTypeEnum
     ): Result<GetFileDownloadUrlsResponse?> {
         logger.info("[$buildId]|getFileDownloadUrls|fileChannelType=$fileChannelType|userId=$userId|projectId=$projectId|pipelineId=$pipelineId" +
-        "|artifactoryType=$artifactoryType|customFilePath=$customFilePath")
+            "|artifactoryType=$artifactoryType|customFilePath=$customFilePath")
         val fileType = if (artifactoryType == ArtifactoryType.PIPELINE) FileTypeEnum.BK_ARCHIVE else FileTypeEnum.BK_CUSTOM
         val result = generateDestPath(
             fileType = fileType,

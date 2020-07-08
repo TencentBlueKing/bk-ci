@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.pojo.Result
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.File
 import java.io.InputStream
+import java.io.OutputStream
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.core.Response
 
@@ -90,6 +91,11 @@ interface ArchiveFileService {
         disposition: FormDataContentDisposition,
         fileChannelType: FileChannelTypeEnum
     ): Result<String?>
+
+    /**
+     * 下载文件至输出流
+     */
+    fun downloadFile(filePath: String, outputStream: OutputStream)
 
     /**
      * 下载文件
