@@ -67,8 +67,6 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             "pipeline:build:history:data:clear:project:id"
         private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_KEY =
             "pipeline:build:history:data:clear:project:list"
-        private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_PAGE_KEY =
-            "pipeline:build:history:data:clear:project:list:page"
     }
 
     @Scheduled(initialDelay = 10000, fixedDelay = 12000)
@@ -112,9 +110,6 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 if (handleProjectPrimaryId >= maxProjectPrimaryId) {
                     // 已经清理完全部项目的流水线的过期构建记录，再重新开始清理
                     redisOperation.delete(PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_ID_KEY)
-                    if (!projectListConfig.isNullOrBlank()) {
-                        redisOperation.delete(PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_PAGE_KEY)
-                    }
                     logger.info("pipelineBuildHistoryDataClear reStart")
                     return
                 }
@@ -123,12 +118,11 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             val projectBaseQueryStep = dslContext.select().from("$PROJECT_DATA_BASE_NAME.$PROJECT_TABLE_NAME")
             var maxHandleProjectPrimaryId = handleProjectPrimaryId ?: 0L
             if (projectListConfig.isNullOrBlank()) {
-                // 一次查出redis中配置的全部项目的信息（redis中配置的项目个数不要太多）
+                maxHandleProjectPrimaryId = handleProjectPrimaryId + maxEveryProjectHandleNum
+                projectConditionSqlBuilder.append(" and (id >$handleProjectPrimaryId and id<=$maxHandleProjectPrimaryId)")
                 projectBaseQueryStep.where(projectConditionSqlBuilder.toString())
             } else {
-                val page = redisOperation.get(PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_PAGE_KEY)?.toInt() ?: 1
-                projectBaseQueryStep.where(projectConditionSqlBuilder.toString()).orderBy(DSL.field("id").asc())
-                    .limit((page - 1) * maxEveryProjectHandleNum, maxEveryProjectHandleNum)
+                projectBaseQueryStep.where(projectConditionSqlBuilder.toString())
             }
             val projectInfoRecords = projectBaseQueryStep.fetch()
             // 根据项目依次查询T_PIPELINE_INFO表中的流水线数据处理
@@ -180,15 +174,6 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 value = maxHandleProjectPrimaryId.toString(),
                 expired = false
             )
-            if (!projectListConfig.isNullOrBlank()) {
-                // 如果是指定项目，需把处理项目列表的页码放入redis
-                val page = redisOperation.get(PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_PAGE_KEY)?.toInt() ?: 1
-                redisOperation.set(
-                    key = PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_PAGE_KEY,
-                    value = (page + 1).toString(),
-                    expired = false
-                )
-            }
         } catch (t: Throwable) {
             logger.warn("pipelineBuildHistoryDataClear failed", t)
         } finally {
@@ -206,10 +191,10 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             dslContext.selectCount().from("$PROCESS_DATA_BASE_NAME.$PIPELINE_BUILD_HISTORY_TABLE_NAME")
                 .where(conditionSql)
                 .fetchOne(0, Long::class.java)
-        logger.info("pipelineBuildHistoryDataClear pipelineId:$pipelineId,totalBuildCount:$totalBuildCount")
+        logger.info("pipelineBuildHistoryDataClear projectId:$projectId,pipelineId:$pipelineId,totalBuildCount:$totalBuildCount")
         var totalHandleNum = 0
         while (totalHandleNum < totalBuildCount) {
-            logger.info("pipelineBuildHistoryDataClear pipelineId:$pipelineId,totalBuildCount:$totalBuildCount,totalHandleNum:$totalHandleNum")
+            logger.info("pipelineBuildHistoryDataClear projectId:$projectId,pipelineId:$pipelineId,totalBuildCount:$totalBuildCount,totalHandleNum:$totalHandleNum")
             val baseStep = dslContext.select(DSL.field("BUILD_ID"))
                 .from("$PROCESS_DATA_BASE_NAME.$PIPELINE_BUILD_HISTORY_TABLE_NAME")
                 .where(conditionSql)
