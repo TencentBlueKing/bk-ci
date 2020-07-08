@@ -394,7 +394,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
      * return the archive root base path which end with / symbol
      * @return must be end with / symbol (file sperator)
      */
-    abstract fun getBasePath(): String
+    abstract override fun getBasePath(): String
 
     override fun validateUserDownloadFilePermission(userId: String, filePath: String): Result<Boolean> {
         val realFilePath = URLDecoder.decode(filePath, "UTF-8")

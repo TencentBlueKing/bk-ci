@@ -44,6 +44,7 @@ import javax.ws.rs.core.Response
 
 interface ArchiveFileService {
 
+    fun getBasePath(): String
     /**
      * 获取真正的文件路径
      */

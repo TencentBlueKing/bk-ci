@@ -30,6 +30,7 @@ import com.tencent.devops.model.artifactory.tables.TFileTask
 import com.tencent.devops.model.artifactory.tables.records.TFileTaskRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class FileTaskDao {
@@ -47,6 +48,7 @@ class FileTaskDao {
         pipelineId: String,
         buildId: String
     ): Int {
+        val nowTime = LocalDateTime.now()
         with(TFileTask.T_FILE_TASK) {
             return dslContext.insertInto(
                 this,
@@ -59,7 +61,9 @@ class FileTaskDao {
                 USER_ID,
                 PROJECT_ID,
                 PIPELINE_ID,
-                BUILD_ID
+                BUILD_ID,
+                CREATE_TIME,
+                UPDATE_TIME
             )
                 .values(
                     taskId,
@@ -71,7 +75,9 @@ class FileTaskDao {
                     userId,
                     projectId,
                     pipelineId,
-                    buildId
+                    buildId,
+                    nowTime,
+                    nowTime
                 ).execute()
         }
     }
@@ -81,9 +87,11 @@ class FileTaskDao {
         taskId: String,
         status: Short
     ): Int {
+        val nowTime = LocalDateTime.now()
         with(TFileTask.T_FILE_TASK) {
             return dslContext.update(this)
                 .set(STATUS, status)
+                .set(UPDATE_TIME, nowTime)
                 .where(TASK_ID.eq(taskId)).execute()
         }
     }

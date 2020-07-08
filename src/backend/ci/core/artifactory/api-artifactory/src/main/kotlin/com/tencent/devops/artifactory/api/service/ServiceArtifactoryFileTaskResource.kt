@@ -28,7 +28,6 @@ package com.tencent.devops.artifactory.api.service
 
 import com.tencent.devops.artifactory.pojo.CreateFileTaskReq
 import com.tencent.devops.artifactory.pojo.FileTaskInfo
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID

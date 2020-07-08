@@ -27,22 +27,7 @@
 package com.tencent.devops.artifactory.service
 
 import com.tencent.devops.artifactory.pojo.CreateFileTaskReq
-import com.tencent.devops.artifactory.pojo.FileDetail
-import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileTaskInfo
-import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
-import com.tencent.devops.artifactory.pojo.SearchProps
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.Result
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.File
-import java.io.InputStream
-import java.io.OutputStream
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.core.Response
 
 interface FileTaskService {
     fun createFileTask(userId: String, projectId: String, pipelineId: String, buildId: String, createFileTaskReq: CreateFileTaskReq): String

@@ -27,18 +27,13 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryFileTaskResource
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.CreateFileTaskReq
 import com.tencent.devops.artifactory.pojo.FileTaskInfo
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.artifactory.service.FileTaskService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
-import javax.servlet.http.HttpServletResponse
 
 @RestResource
 class ServiceArtifactoryFileTaskResourceImpl @Autowired constructor(
@@ -57,5 +52,4 @@ class ServiceArtifactoryFileTaskResourceImpl @Autowired constructor(
     override fun clearFileTask(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String): Result<Boolean> {
         return Result(fileTaskService.clearFileTask(userId, projectId, pipelineId, buildId, taskId))
     }
-
 }
