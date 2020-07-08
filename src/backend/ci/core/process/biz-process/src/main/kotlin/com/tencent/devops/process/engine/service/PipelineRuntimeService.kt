@@ -729,10 +729,11 @@ class PipelineRuntimeService @Autowired constructor(
         } else {
             null
         }
-        val (actionType, retryCount) = if (params[PIPELINE_RETRY_COUNT] != null) {
-            Pair(ActionType.RETRY, params[PIPELINE_RETRY_COUNT].toString().toInt())
+
+        val (actionType, retryCount, isStageRetry) = if (params[PIPELINE_RETRY_COUNT] != null) {
+            Triple(ActionType.RETRY, params[PIPELINE_RETRY_COUNT].toString().toInt(), retryStartTaskId?.startsWith("stage-") == true)
         } else {
-            Pair(ActionType.START, 0)
+            Triple(ActionType.START, 0, false)
         }
 
         var firstTaskId = if (params[PIPELINE_START_TASK_ID] != null) {
@@ -772,15 +773,14 @@ class PipelineRuntimeService @Autowired constructor(
             var needUpdateStage = false
             // 当前 stage 是否是重试的 stage
             val retryStage = stageId == retryStartTaskId
+            // 如果是stage重试不是当前stage，则直接进入下一个stage
+            if (isStageRetry && !retryStage) return@s
+
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach c@{ container ->
                 // 判断当前是否是因为 stage 重试而启动, 当前 stage 是否是重试的 stage
-                val ignoreRetryStartTaskId = if (true == retryStartTaskId?.startsWith("stage-")) {
-                    if (!retryStage) {
-                        null
-                    } else {
-                        container.elements[0].id
-                    }
+                val ignoreRetryStartTaskId = if (retryStage) {
+                    container.elements[0].id
                 } else {
                     retryStartTaskId
                 }
@@ -855,9 +855,23 @@ class PipelineRuntimeService @Autowired constructor(
 
                         if (lastTimeBuildTaskRecords.isNotEmpty()) {
                             // 判断是否 stage 重试
-                            if (!retryStartTaskId.isNullOrBlank() && !retryStage) {
+                            if (retryStage) {
+                                // 如果是 stage 重试, 当前 stage 所有原子重试
+                                val taskRecord = retryDetailModelStatus(
+                                    lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                                    stage = stage,
+                                    container = container,
+                                    retryStartTaskId = atomElement.id!!,
+                                    retryCount = retryCount,
+                                    atomElement = atomElement
+                                )
+                                if (taskRecord != null) {
+                                    updateExistsRecord.add(taskRecord)
+                                    needUpdateContainer = true
+                                }
+                            } else if (!retryStartTaskId.isNullOrBlank()) {
                                 if (retryStartTaskId == atomElement.id) {
-                                    // 重试判断是否存在原子重试，其他保持不变
+                                    // 如果是插件重试, 重试判断是否存在原子重试，其他保持不变
                                     val taskRecord = retryDetailModelStatus(
                                         lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                                         stage = stage,
@@ -893,20 +907,6 @@ class PipelineRuntimeService @Autowired constructor(
                                         updateExistsRecord.add(taskRecord)
                                         needUpdateContainer = true
                                     }
-                                }
-                            } else if (retryStage) {
-                                // 如果是 stage 重试, 当前 stage 所有原子重试
-                                val taskRecord = retryDetailModelStatus(
-                                    lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
-                                    stage = stage,
-                                    container = container,
-                                    retryStartTaskId = atomElement.id!!,
-                                    retryCount = retryCount,
-                                    atomElement = atomElement
-                                )
-                                if (taskRecord != null) {
-                                    updateExistsRecord.add(taskRecord)
-                                    needUpdateContainer = true
                                 }
                             } else {
                                 // 如果当前原子之前是要求跳过的状态，则忽略不重试
@@ -1758,7 +1758,7 @@ class PipelineRuntimeService @Autowired constructor(
         errorCode: Int? = null,
         errorMsg: String? = null
     ) {
-        logger.info("[$buildId]|ERRORCODE|UPDATE_STATUS|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
+        logger.info("[$buildId]|updateTaskStatus|buildStatus=$buildStatus|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
         val task = getBuildTask(buildId, taskId)
         if (task != null) {
             updateTaskStatus(buildId, task, userId, buildStatus, errorType, errorCode, errorMsg)

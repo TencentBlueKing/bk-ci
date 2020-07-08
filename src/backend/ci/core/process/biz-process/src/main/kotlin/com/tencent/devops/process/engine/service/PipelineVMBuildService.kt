@@ -468,7 +468,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 logger.warn("[$buildId]| save var fail: ${ignored.message}", ignored)
             }
         }
-        logger.info("[$buildId]|ERRORCODE|completeClaimBuildTask|errorType=${result.errorType}|errorCode=${result.errorCode}|message=${result.message}] ")
+        logger.info("[$buildId]completeClaimBuildTask|errorType=${result.errorType}|errorCode=${result.errorCode}|message=${result.message}] ")
         val errorType = if (!result.errorType.isNullOrBlank()) {
             ErrorType.valueOf(result.errorType!!)
         } else null
