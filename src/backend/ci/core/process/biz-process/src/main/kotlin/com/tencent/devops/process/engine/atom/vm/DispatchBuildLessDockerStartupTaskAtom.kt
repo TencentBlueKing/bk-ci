@@ -54,6 +54,8 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -200,6 +202,30 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         )
         logger.info("[$buildId]|STARTUP_DOCKER|($vmSeqId)|Dispatch startup")
         return BuildStatus.CALL_WAITING
+    }
+
+    override fun tryFinish(task: PipelineBuildTask, param: NormalContainer, runVariables: Map<String, String>, force: Boolean): AtomResponse {
+        return if (force) {
+            if (BuildStatus.isFinish(task.status)) {
+                AtomResponse(task.status)
+            } else { // 强制终止的设置为失败
+                logger.warn("[${task.buildId}]|[FORCE_STOP_BUILD_LESS_IN_START_TASK]")
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildLessShutdownDispatchEvent(
+                        source = "force_stop_startBuildLess",
+                        projectId = task.projectId,
+                        pipelineId = task.pipelineId,
+                        userId = task.starter,
+                        buildId = task.buildId,
+                        vmSeqId = task.containerId,
+                        buildResult = true
+                    )
+                )
+                defaultFailAtomResponse
+            }
+        } else {
+            AtomResponse(task.status)
+        }
     }
 
     private fun getBuildZone(container: Container): Zone? {
