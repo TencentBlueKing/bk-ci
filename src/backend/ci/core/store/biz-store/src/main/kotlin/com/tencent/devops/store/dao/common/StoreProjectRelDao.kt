@@ -138,7 +138,12 @@ class StoreProjectRelDao {
     ): Long {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             val conditions =
-                getStoreInitProjectsCondition(storeType, specProjectCodeList, grayFlag, grayProjectCodeList)
+                getStoreInitProjectsCondition(
+                    storeType = storeType,
+                    specProjectCodeList = specProjectCodeList,
+                    grayFlag = grayFlag,
+                    grayProjectCodeList = grayProjectCodeList
+                )
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)
         }
     }
@@ -155,7 +160,12 @@ class StoreProjectRelDao {
     ): Result<TStoreProjectRelRecord>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             val conditions =
-                getStoreInitProjectsCondition(storeType, specProjectCodeList, grayFlag, grayProjectCodeList)
+                getStoreInitProjectsCondition(
+                    storeType = storeType,
+                    specProjectCodeList = specProjectCodeList,
+                    grayFlag = grayFlag,
+                    grayProjectCodeList = grayProjectCodeList
+                )
             val baseStep = dslContext.selectFrom(this).where(conditions)
             if (descFlag) {
                 baseStep.orderBy(CREATE_TIME.desc())
@@ -347,7 +357,14 @@ class StoreProjectRelDao {
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .fetchOne()
             if (null == record) {
-                addStoreProjectRel(dslContext, userId, storeCode, projectCode, storeProjectType.type.toByte(), storeType.type.toByte())
+                addStoreProjectRel(
+                    dslContext = dslContext,
+                    userId = userId,
+                    storeCode = storeCode,
+                    projectCode = projectCode,
+                    type = storeProjectType.type.toByte(),
+                    storeType = storeType.type.toByte()
+                )
             } else {
                 dslContext.update(this)
                     .set(PROJECT_CODE, projectCode)
