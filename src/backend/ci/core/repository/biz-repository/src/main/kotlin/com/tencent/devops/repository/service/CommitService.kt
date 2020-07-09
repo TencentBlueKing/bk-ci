@@ -29,6 +29,7 @@ package com.tencent.devops.repository.service
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.repository.dao.CommitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.commit.CommitData
@@ -43,7 +44,8 @@ import org.springframework.stereotype.Service
 class CommitService @Autowired constructor(
     private val repositoryDao: RepositoryDao,
     private val commitDao: CommitDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
@@ -90,7 +92,11 @@ class CommitService @Autowired constructor(
 
     fun addCommit(commits: List<CommitData>): Int {
         logger.info("start to add commit: ${commits.firstOrNull()} ... ${commits.lastOrNull()}")
-        return commitDao.addCommit(dslContext, commits).size
+        // T_REPOSITORY_COMMIT表数据双写代码，待最近一段时间数据写到备份表完成切换后再将代码还原
+        val commitSize = commitDao.addCommit(dslContext, commits).size
+        val repositoryCommitBakSwitch = redisOperation.get("repositoryCommitBakSwitch")
+        if (repositoryCommitBakSwitch == "true") commitDao.addBakCommit(dslContext, commits)
+        return commitSize
     }
 
     fun getLatestCommit(
