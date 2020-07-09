@@ -247,13 +247,14 @@ class StageControl @Autowired constructor(
             }
         } else if (status == BuildStatus.PAUSE && ActionType.isEnd(newActionType)) {
             buildStatus = BuildStatus.STAGE_SUCCESS
-            pipelineStageService.updateStageStatus(
-                buildId = buildId,
-                stageId = stageId,
-                buildStatus = buildStatus
-            )
-            logger.info("[$buildId]|STAGE_$actionType|stageId=$stageId|action=$newActionType")
-            return buildStatus
+        }
+
+        logger.info("[$buildId]|STAGE_$actionType|stageId=$stageId|action=$newActionType|status=$buildStatus")
+
+        pipelineStageService.updateStageStatus(buildId = buildId, stageId = stageId, buildStatus = buildStatus)
+
+        if (BuildStatus.isFinish(buildStatus) || buildStatus == BuildStatus.STAGE_SUCCESS) {
+            return buildStatus // 已经是结束或者是STAGE_SUCCESS就直接返回
         }
 
         var finishContainers = 0
