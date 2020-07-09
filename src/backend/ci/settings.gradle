@@ -196,6 +196,8 @@ include ":core:openapi:model-openapi"
 
 include ":core:auth"
 include ":core:auth:api-auth"
+include ":core:auth:api-auth-blueking"
 include ":core:auth:biz-auth"
+include ":core:auth:biz-auth-blueking"
 include ":core:auth:boot-auth"
 include ":core:auth:model-auth"

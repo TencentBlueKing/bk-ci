@@ -26,9 +26,19 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.bk.sdk.iam.dto.InstanceDTO
+import com.tencent.bk.sdk.iam.dto.action.ActionDTO
+import com.tencent.bk.sdk.iam.helper.AuthHelper
+import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.common.auth.utlis.ActionUtils
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-class BluekingV3AuthPermissionApi : AuthPermissionApi {
+class BluekingV3AuthPermissionApi @Autowired constructor(
+    private val authHelper: AuthHelper,
+    private val policyService: PolicyService
+) : AuthPermissionApi {
     override fun addResourcePermissionForUsers(
         userId: String,
         projectCode: String,
@@ -49,7 +59,9 @@ class BluekingV3AuthPermissionApi : AuthPermissionApi {
         projectCode: String,
         permission: AuthPermission
     ): Boolean {
-        return true
+        logger.info("v3 validateUserResourcePermission user[$user] serviceCode[$serviceCode] resourceType[$resourceType]")
+        val actionType = ActionUtils.buildAction(resourceType, permission)
+        return authHelper.isAllowed(user, actionType)
     }
 
     override fun validateUserResourcePermission(
@@ -60,7 +72,12 @@ class BluekingV3AuthPermissionApi : AuthPermissionApi {
         resourceCode: String,
         permission: AuthPermission
     ): Boolean {
-        return true
+        logger.info("v3 validateUserResourcePermission user[$user] serviceCode[${serviceCode.id()}] resourceType[${resourceType.value}] permission[${permission.value}]")
+        val actionType = ActionUtils.buildAction(resourceType, permission)
+        val instanceDTO = InstanceDTO()
+        instanceDTO.id = resourceCode
+        logger.info("v3 validateUserResourcePermission actionType$actionType, resourceCode$resourceCode")
+        return authHelper.isAllowed(user, actionType)
     }
 
     override fun getUserResourceByPermission(
@@ -71,6 +88,13 @@ class BluekingV3AuthPermissionApi : AuthPermissionApi {
         permission: AuthPermission,
         supplier: (() -> List<String>)?
     ): List<String> {
+        logger.info("v3 getUserResourceByPermission user[$user] serviceCode[$serviceCode] resourceType[$resourceType] projectCode[$projectCode] permission[$permission] supplier[$supplier]")
+        val actionType = ActionUtils.buildAction(resourceType, permission)
+        val instances = mutableListOf<InstanceDTO>()
+        val instance = InstanceDTO()
+        instance.system = "bkci"
+        instances.add(instance)
+        authHelper.isAllowed(user, actionType, instances)
         return supplier?.invoke() ?: emptyList()
     }
 
@@ -82,6 +106,7 @@ class BluekingV3AuthPermissionApi : AuthPermissionApi {
         permissions: Set<AuthPermission>,
         supplier: (() -> List<String>)?
     ): Map<AuthPermission, List<String>> {
+        logger.info("v3 getUserResourcesByPermissions user[$user] serviceCode[$serviceCode] resourceType[$resourceType] projectCode[$projectCode] permission[$permissions] supplier[$supplier]")
         return getUserResourcesByPermissions(
             userId = user,
             scopeType = "Project",
@@ -102,12 +127,19 @@ class BluekingV3AuthPermissionApi : AuthPermissionApi {
         systemId: AuthServiceCode,
         supplier: (() -> List<String>)?
     ): Map<AuthPermission, List<String>> {
-
-        val list = supplier?.invoke() ?: emptyList()
-        val mock = mutableMapOf<AuthPermission, List<String>>()
-        permissions.forEach { permission ->
-            mock[permission] = list
+        logger.info("v3 getUserResourcesByPermissions user[$userId] scopeType[$scopeType] scopeId[$scopeId] resourceType[$resourceType] systemId[$systemId] permission[$permissions] supplier[$supplier]")
+        val actionList = mutableListOf<ActionDTO>()
+        permissions.map {
+            val authType = ActionUtils.buildAction(resourceType, it)
+            val actionDTO = ActionDTO()
+            actionDTO.id = authType
+            actionList.add(actionDTO)
         }
+        val ac = authHelper.isAllowed(userId, actionList, emptyList())
         return mock
+    }
+
+    companion object{
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

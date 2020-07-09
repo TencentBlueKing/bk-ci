@@ -26,15 +26,18 @@
 
 package com.tencent.devops.project.config
 
+import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.listener.ProjectEventListener
 import com.tencent.devops.project.listener.SampleProjectEventListener
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.impl.BluekingProjectPermissionServiceImpl
 import com.tencent.devops.project.service.impl.ProjectPermissionServiceImpl
+import com.tencent.devops.project.service.impl.V3ProjectPermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -79,6 +82,21 @@ class ProjectConfiguration {
         projectDao = projectDao,
         authProjectApi = authProjectApi,
         authResourceApi = authResourceApi,
+        projectAuthServiceCode = projectAuthServiceCode
+    )
+
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    fun v3ProjectPermissionService(
+        client: Client,
+        authProjectApi: AuthProjectApi,
+        authPermissionApi: AuthPermissionApi,
+        projectAuthServiceCode: ProjectAuthServiceCode
+    ): ProjectPermissionService = V3ProjectPermissionServiceImpl(
+        client = client,
+        authProjectApi = authProjectApi,
+        authPermissionApi = authPermissionApi,
         projectAuthServiceCode = projectAuthServiceCode
     )
 }

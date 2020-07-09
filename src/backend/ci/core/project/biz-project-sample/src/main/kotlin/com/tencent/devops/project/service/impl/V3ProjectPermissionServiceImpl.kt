@@ -1,18 +1,19 @@
 package com.tencent.devops.project.service.impl
 
-import com.tencent.devops.auth.api.ServiceGroupResource
-import com.tencent.devops.auth.pojo.dto.GroupDTO
-import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
 
 class V3ProjectPermissionServiceImpl @Autowired constructor(
-    val client: Client
+    val client: Client,
+    private val authProjectApi: AuthProjectApi,
+    private val authPermissionApi: AuthPermissionApi,
+    private val projectAuthServiceCode: ProjectAuthServiceCode
 ) : ProjectPermissionService {
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
@@ -25,22 +26,24 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo
     ): String {
-        // 创建从属于该项目的默认内置用户组CI管理员,用户拉入用户组
-        val initProjectGroup = client.get(ServiceGroupResource::class).createGroup(
-            userId = userId,
-            addCreateUser = true,
-            projectCode = resourceRegisterInfo.resourceCode,
-            groupInfo = GroupDTO(
-                groupCode = BkAuthGroup.CIADMIN.value,
-                groupType = 1,
-                groupName = BkAuthGroup.CIADMIN.name,
-                authPermissionList = emptyList()
-            )
-        )
-        if (initProjectGroup.isNotOk()) {
-            // 添加用户组失败抛异常
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
-        }
+//        // 创建从属于该项目的默认内置用户组CI管理员,用户拉入用户组
+//        val initProjectGroup = client.get(ServiceGroupResource::class).createGroup(
+//            userId = userId,
+//            projectCode = resourceRegisterInfo.resourceCode,
+//            groupInfo = GroupDTO(
+//                groupCode = BkAuthGroup.CIADMIN.value,
+//                groupType = GroupType.DEFAULT,
+//                groupName = BkAuthGroup.CIADMIN.name,
+//                authPermissionList = emptyList()
+//            )
+//        )
+//        if (initProjectGroup.isNotOk() || initProjectGroup.data.isNullOrEmpty()) {
+//            // 添加用户组失败抛异常
+//            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
+//        }
+//        val groupId = initProjectGroup.data
+//        client.get(ServiceUserGroupResource::class).addUser2Group(userId, groupId!!)
+
         return ""
     }
 
@@ -53,7 +56,11 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun getUserProjects(userId: String): List<String> {
-        TODO("Not yet implemented")
+        return authProjectApi.getUserProjects(
+            serviceCode = projectAuthServiceCode,
+            userId = userId,
+            supplier = null
+        )
     }
 
     override fun getUserProjectsAvailable(userId: String): Map<String, String> {

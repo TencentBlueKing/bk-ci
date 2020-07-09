@@ -34,6 +34,7 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.service.impl.BluekingPipelinePermissionService
 import com.tencent.devops.process.permission.service.impl.MockPipelinePermissionService
+import com.tencent.devops.process.permission.service.impl.V3PipelinePermissionService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -74,6 +75,20 @@ class PipelinePermConfiguration {
     ): PipelinePermissionService = MockPipelinePermissionService(
         dslContext = dslContext,
         pipelineInfoDao = pipelineInfoDao,
+        authProjectApi = authProjectApi,
+        authResourceApi = authResourceApi,
+        authPermissionApi = authPermissionApi,
+        pipelineAuthServiceCode = pipelineAuthServiceCode
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    fun v3pipelinePermissionService(
+        authProjectApi: AuthProjectApi,
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        pipelineAuthServiceCode: PipelineAuthServiceCode
+    ): PipelinePermissionService = V3PipelinePermissionService(
         authProjectApi = authProjectApi,
         authResourceApi = authResourceApi,
         authPermissionApi = authPermissionApi,

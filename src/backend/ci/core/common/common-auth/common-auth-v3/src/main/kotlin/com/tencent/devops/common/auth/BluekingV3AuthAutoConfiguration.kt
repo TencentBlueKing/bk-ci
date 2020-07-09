@@ -26,6 +26,11 @@
 
 package com.tencent.devops.common.auth
 
+import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.helper.AuthHelper
+import com.tencent.bk.sdk.iam.service.impl.DefaultHttpClientServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.PolicyServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
 import com.tencent.devops.common.auth.api.BluekingV3AuthPermissionApi
 import com.tencent.devops.common.auth.api.BluekingV3AuthProjectApi
 import com.tencent.devops.common.auth.api.BluekingV3ResourceApi
@@ -39,6 +44,7 @@ import com.tencent.devops.common.auth.code.BluekingV3ProjectAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3QualityAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3RepoAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3TicketAuthServiceCode
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -53,13 +59,21 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class BluekingV3AuthAutoConfiguration {
 
-    @Bean
-    @Primary
-    fun authTokenApi() = BluekingV3AuthTokenApi()
+    // TODO: 配置化
+    val iamBaseUrl = "http://9.136.139.172:8080"
+
+    @Value("\${auth.systemId:}")
+    val systemId = ""
+
+    @Value("\${auth.appCode:}")
+    val appCode = ""
+
+    @Value("\${auth.appSecret:}")
+    val appSecret = ""
 
     @Bean
     @Primary
-    fun authPermissionApi() = BluekingV3AuthPermissionApi()
+    fun authTokenApi() = BluekingV3AuthTokenApi()
 
     @Bean
     @Primary
@@ -95,4 +109,23 @@ class BluekingV3AuthAutoConfiguration {
 
     @Bean
     fun artifactoryAuthServiceCode() = BluekingV3ArtifactoryAuthServiceCode()
+
+    @Bean
+    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl)
+
+    @Bean
+    fun httpService() = DefaultHttpClientServiceImpl(iamConfiguration())
+
+    @Bean
+    fun tokenService() = TokenServiceImpl(iamConfiguration(), httpService())
+
+    @Bean
+    fun policyService() = PolicyServiceImpl(iamConfiguration(), httpService())
+
+    @Bean
+    fun authHelper() = AuthHelper(tokenService(), policyService(), iamConfiguration())
+
+    @Bean
+    @Primary
+    fun authPermissionApi() = BluekingV3AuthPermissionApi(authHelper(), policyService())
 }

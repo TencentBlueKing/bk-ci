@@ -49,7 +49,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceNodeResource {
-    @ApiOperation("获取用户有权限使用的服务器列表")
+    @ApiOperation("     ")
     @GET
     @Path("/projects/{projectId}/listUsableServerNodes")
     fun listUsableServerNodes(

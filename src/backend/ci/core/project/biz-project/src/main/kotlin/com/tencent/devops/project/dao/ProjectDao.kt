@@ -111,6 +111,19 @@ class ProjectDao {
         }
     }
 
+    fun list(dslContext: DSLContext, limit: Int, offset: Int): Result<TProjectRecord> {
+        return with(TProject.T_PROJECT) {
+            dslContext.selectFrom(this).where(ENABLED.eq(true)).limit(limit).offset(offset).fetch()
+        }
+    }
+
+    fun getCount(dslContext: DSLContext) : Long {
+        return with(TProject.T_PROJECT) {
+            dslContext.selectCount().from(this).where(ENABLED.eq(true)).fetchOne(0, Long::class.java)
+        }
+    }
+
+
     /**
      * 根据英文名称(projectCode)查询name
      */
@@ -270,7 +283,8 @@ class ProjectDao {
                 REMARK,
                 UPDATED_AT,
                 USE_BK,
-                APPROVAL_STATUS
+                APPROVAL_STATUS,
+                ENABLED
             )
                 .values(
                     paasProject.approval_status,
@@ -300,7 +314,8 @@ class ProjectDao {
                     paasProject.remark,
                     paasProject.updated_at?.time,
                     paasProject.use_bk,
-                    ApproveStatus.APPROVED.status
+                    ApproveStatus.APPROVED.status,
+                    true
                 )
                 .execute()
         }
@@ -347,7 +362,8 @@ class ProjectDao {
                 CREATOR_BG_NAME,
                 CREATOR_DEPT_NAME,
                 CREATOR_CENTER_NAME,
-                CHANNEL
+                CHANNEL,
+                ENABLED
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
@@ -369,7 +385,8 @@ class ProjectDao {
                 userDeptDetail.bgName,
                 userDeptDetail.deptName,
                 userDeptDetail.centerName,
-                channelCode.name
+                channelCode.name,
+                true
             ).execute()
         }
     }

@@ -6,6 +6,7 @@ import com.tencent.devops.auth.dao.AuthGroupPermissionDao
 import com.tencent.devops.auth.dao.AuthGroupUserDao
 import com.tencent.devops.auth.entity.GroupCreateInfo
 import com.tencent.devops.auth.pojo.dto.GroupDTO
+import com.tencent.devops.auth.pojo.enum.GroupType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -40,7 +41,7 @@ class GroupService @Autowired constructor(
         }
         val groupCreateInfo = GroupCreateInfo(
             groupCode = groupInfo.groupCode,
-            groupType = groupInfo.groupType,
+            groupType = groupInfo.groupType.ordinal,
             groupName = groupInfo.groupName,
             projectCode = projectCode,
             user = userId
@@ -48,7 +49,7 @@ class GroupService @Autowired constructor(
         val groupId = groupDao.createGroup(dslContext, groupCreateInfo)
 
         // 若新建分组不是内置分组，需建立分组与权限关系
-        if(groupInfo.groupType == 1) {
+        if(groupInfo.groupType == GroupType.USER_BUILD) {
             if(groupInfo.authPermissionList == null || groupInfo.authPermissionList!!.isEmpty()) {
                 logger.warn("createGroup group is not bind permission| $userId| $projectCode| $groupInfo")
                 // 自定义分组未选权限,抛异常

@@ -29,7 +29,9 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.FileUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.client.Client
@@ -317,6 +319,31 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             }
             success = true
             return list
+        } finally {
+            projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
+        }
+    }
+
+    override fun list(limit: Int, offset: Int): Page<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        val pageNotNull = limit ?: 1
+        val pageSizeNotNull = offset ?: 20
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        var success = false
+        try {
+            val list = ArrayList<ProjectVO>()
+            projectDao.list(dslContext, sqlLimit.limit, sqlLimit.offset).map {
+                list.add(ProjectUtils.packagingBean(it, emptySet()))
+            }
+            val count = projectDao.getCount(dslContext)
+            success = true
+            return Page(
+                count = count,
+                page = limit,
+                pageSize = offset,
+                records = list
+            )
         } finally {
             projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")

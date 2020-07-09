@@ -40,6 +40,7 @@ import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -168,6 +169,15 @@ class ServicePipelineResourceImpl @Autowired constructor(
         checkParams(userId, projectId, pipelineId)
         pipelineService.restorePipeline(userId, projectId, pipelineId, ChannelCode.BS)
         return Result(true)
+    }
+
+    override fun pipelineList(
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        channelCode: ChannelCode?
+    ): Result<PipelineViewPipelinePage<PipelineInfo>> {
+        return Result(pipelineService.getPipeline(projectId, page, pageSize))
     }
 
     private fun checkParams(userId: String, projectId: String, pipelineId: String) {

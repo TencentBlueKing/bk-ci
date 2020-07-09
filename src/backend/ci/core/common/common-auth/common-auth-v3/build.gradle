@@ -37,5 +37,6 @@ dependencies {
     compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
     compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base"
     compile "com.fasterxml.jackson.module:jackson-module-kotlin"
+    compile group: 'com.tencent.bk', name: 'iam-sdk', version:'1.0-SNAPSHOT'
 //    compile group: 'org.json', name: 'json', version: '20180130'
 }

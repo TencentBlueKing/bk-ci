@@ -26,6 +26,7 @@
 
 dependencies {
     compile project(":core:auth:biz-auth")
+    compile project(":core:auth:biz-auth-blueking")
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"

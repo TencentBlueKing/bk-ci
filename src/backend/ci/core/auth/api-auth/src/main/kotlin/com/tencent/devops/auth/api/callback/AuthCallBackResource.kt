@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.api.callback
 
+import com.tencent.devops.auth.pojo.BkResult
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
@@ -25,5 +26,5 @@ interface AuthCallBackResource {
     @GET
     @Path("/healthz")
     @ApiOperation("权限系统心跳接口")
-    fun healthz(): Result<Boolean>
+    fun healthz(): BkResult<Boolean>
 }

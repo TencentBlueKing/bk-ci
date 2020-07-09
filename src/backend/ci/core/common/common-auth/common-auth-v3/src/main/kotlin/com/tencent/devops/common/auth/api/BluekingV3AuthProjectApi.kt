@@ -32,12 +32,14 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.api.pojo.BkAuthProjectInfoResources
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
+import org.slf4j.LoggerFactory
 
 class BluekingV3AuthProjectApi constructor(
     private val bkAuthPermissionApi: BluekingV3AuthPermissionApi
 ) : AuthProjectApi {
 
     override fun getProjectUsers(serviceCode: AuthServiceCode, projectCode: String, group: BkAuthGroup?): List<String> {
+        logger.info("v3 getProjectUsers serviceCode[$serviceCode] projectCode[$projectCode] group[$group]")
         return emptyList()
     }
 
@@ -47,7 +49,7 @@ class BluekingV3AuthProjectApi constructor(
         projectCode: String,
         group: BkAuthGroup?
     ): Boolean {
-
+        logger.info("v3 isProjectUser user[$user] serviceCode[$serviceCode] projectCode[$projectCode] group[$group]")
         return true
     }
 
@@ -55,6 +57,7 @@ class BluekingV3AuthProjectApi constructor(
         serviceCode: AuthServiceCode,
         projectCode: String
     ): List<BkAuthGroupAndUserList> {
+        logger.info("v3 getProjectGroupAndUserList serviceCode[$serviceCode] projectCode[$projectCode] ")
         return emptyList()
     }
 
@@ -63,6 +66,7 @@ class BluekingV3AuthProjectApi constructor(
         userId: String,
         supplier: (() -> List<String>)?
     ): List<String> {
+        logger.info("v3 getUserProjects user[$userId] serviceCode[$serviceCode] supplier[$supplier] ")
         val map = bkAuthPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = serviceCode,
@@ -81,6 +85,7 @@ class BluekingV3AuthProjectApi constructor(
         userId: String,
         supplier: (() -> List<String>)?
     ): Map<String, String> {
+        logger.info("v3 getUserProjectsAvailable user[$userId] serviceCode[$serviceCode] supplier[$supplier] ")
         val map = bkAuthPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = serviceCode,
@@ -120,5 +125,9 @@ class BluekingV3AuthProjectApi constructor(
 
     override fun getProjectInfo(serviceCode: AuthServiceCode, projectId: String): BkAuthProjectInfoResources? {
         TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+    }
+
+    companion object{
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }
