@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.api.service
+package com.tencent.devops.artifactory.api.builds
 
 import com.tencent.devops.artifactory.pojo.CreateFileTaskReq
 import com.tencent.devops.artifactory.pojo.FileTaskInfo
@@ -46,11 +46,11 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_ARTIFACTORY_FILE_TASK"], description = "仓库-文件托管任务")
-@Path("/service/artifactories/filetask/")
+@Api(tags = ["BUILD_ARTIFACTORY_FILE_TASK"], description = "仓库-文件托管任务")
+@Path("/build/artifactories/filetask/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceArtifactoryFileTaskResource {
+interface BuildArtifactoryFileTaskResource {
 
     @ApiOperation("创建文件托管任务")
     @Path("/create")
