@@ -93,8 +93,8 @@ object QualityUtils {
 
     // codecc要跳转到具体详情
     private fun getActualValue(projectId: String, pipelineId: String, buildId: String, detail: String?, value: String, client: Client): String {
-        val variable = client.get(ServiceVarResource::class).getBuildVar(buildId, projectId, pipelineId).data ?: mapOf()
-        var taskId = variable.entries.firstOrNull { it.key.contains(CodeccUtils.BK_CI_CODECC_TASK_ID) }?.value
+        val variable = client.get(ServiceVarResource::class).getBuildVar(buildId, CodeccUtils.BK_CI_CODECC_TASK_ID).data
+        var taskId = variable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID)
         if (taskId.isNullOrBlank()) {
             taskId = client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
         }
