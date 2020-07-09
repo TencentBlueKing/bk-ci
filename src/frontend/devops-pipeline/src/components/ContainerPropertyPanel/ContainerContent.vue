@@ -427,7 +427,7 @@
                     ...this.container.dispatchType,
                     ...defaultAgentType,
                     imageVersion: defaultBuildResource.version || '',
-                    value: defaultBuildResource.code || '',
+                    value: defaultBuildResource.value || '',
                     imageCode: defaultBuildResource.code || '',
                     imageName: defaultBuildResource.name || '',
                     buildImageType: defaultBuildResource.imageType || '',
