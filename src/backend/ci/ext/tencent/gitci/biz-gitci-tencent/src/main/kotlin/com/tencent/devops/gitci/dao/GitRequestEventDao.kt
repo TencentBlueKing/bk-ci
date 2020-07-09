@@ -178,7 +178,7 @@ class GitRequestEventDao {
     ): List<Long> {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             return dslContext.select(ID).from(this)
-                .where(CREATE_TIME.gt(beginTime).and(CREATE_TIME.endsWith(endTime)).and(ID.lt(endId)))
+                .where(CREATE_TIME.gt(beginTime).and(CREATE_TIME.lt(endTime)).and(ID.lt(endId)))
                 .orderBy(ID.desc())
                 .limit(limit).fetch(ID)
         }
