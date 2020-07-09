@@ -55,7 +55,8 @@ export default {
         stageTagList: [],
         defaultStageTags: [],
         showReviewDialog: false,
-        reviewInfo: null
+        reviewInfo: null,
+        showStageReviewPanel: false
     },
     mutations,
     actions,

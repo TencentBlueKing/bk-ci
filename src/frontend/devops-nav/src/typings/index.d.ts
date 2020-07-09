@@ -61,6 +61,11 @@ interface Permission {
     option: string
 }
 
+declare module '*.vue' {
+    import Vue from 'vue'
+    export default Vue
+}
+
 declare var LOGIN_SERVICE_URL: string
 declare var GW_URL_PREFIX: string
 declare var DOCS_URL_PREFIX: string

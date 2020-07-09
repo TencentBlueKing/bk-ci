@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="28px" height="28px" viewBox="0 0 28 28" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>自动触发</title>
+    <g id="流水线" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard-Copy" transform="translate(-40.000000, -134.000000)">
+            <g id="自动触发" transform="translate(40.000000, 134.000000)">
+                <g id="Group-9-Copy">
+                    <g id="编组-11-copy" fill="#FFFFFF" stroke="#3C96FF">
+                        <g id="编组-2">
+                            <rect id="矩形" x="0.5" y="0.5" width="27" height="27" rx="13.5"></rect>
+                        </g>
+                    </g>
+                    <g id="Group-2" transform="translate(5.000000, 5.000000)">
+                        <circle id="Oval" cx="9" cy="9" r="9"></circle>
+                    </g>
+                </g>
+                <g id="触发-面" transform="translate(5.000000, 5.000000)" fill="#3C96FF">
+                    <path d="M9,0 C13.9705627,0 18,4.02943725 18,9 C18,13.9705627 13.9705627,18 9,18 C4.02943725,18 0,13.9705627 0,9 C0,4.02943725 4.02943725,0 9,0 Z M11.923135,4 L7.61535142,4 L6,11.6666073 L8.69232429,11.6666073 L8.15383786,16 L13,8.00004452 L10.3076757,8.00004452 L11.923135,4 Z" id="icon_auto"></path>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
