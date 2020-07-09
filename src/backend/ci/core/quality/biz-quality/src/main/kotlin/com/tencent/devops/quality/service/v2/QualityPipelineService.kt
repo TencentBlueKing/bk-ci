@@ -120,7 +120,6 @@ class QualityPipelineService @Autowired constructor(
         }
     }
 
-
     private fun getExistAndLackElements(
         projectId: String,
         checkElements: List<String>,
