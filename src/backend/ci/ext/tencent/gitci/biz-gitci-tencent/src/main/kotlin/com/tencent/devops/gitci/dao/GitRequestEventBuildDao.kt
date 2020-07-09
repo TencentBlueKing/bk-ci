@@ -168,7 +168,7 @@ class GitRequestEventBuildDao {
     fun getIdByEventIds(
         dslContext: DSLContext,
         eventIds: Collection<Long>
-    ):List<Long>{
+    ): List<Long> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.select(EVENT_ID).from(this)
                 .where(EVENT_ID.`in`(eventIds)).fetch(EVENT_ID)
