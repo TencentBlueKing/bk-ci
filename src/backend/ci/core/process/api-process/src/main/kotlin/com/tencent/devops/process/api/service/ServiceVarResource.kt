@@ -17,17 +17,14 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceVarResource {
     @ApiOperation("获取指定构建或指定流水线下的构建变量")
-    @Path("/getBuildVariable")
+    @Path("/get_build_variable")
     @GET
     fun getBuildVar(
         @ApiParam(value = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam(value = "项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @ApiParam(value = "流水线ID", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String
+        @ApiParam(value = "变量名称", required = false)
+        @QueryParam("varName")
+        varName: String?
     ): Result<Map<String, String>>
 }
