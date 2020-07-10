@@ -109,7 +109,8 @@ class ExtServiceBcsService {
             userId = userId,
             storeType = StoreTypeEnum.SERVICE.name,
             storeCode = serviceCode,
-            scopes = scopes
+            scopes = scopes,
+            isDecrypt = true
         )
         if (storeEnvVarInfoListResult.isNotOk()) {
             throw ErrorCodeException(errorCode = storeEnvVarInfoListResult.status.toString())
