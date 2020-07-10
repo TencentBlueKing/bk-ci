@@ -49,9 +49,6 @@ data class BashTask(
         const val taskVersion = "@latest"
     }
 
-    override fun getTaskType() = taskType
-    override fun getTaskVersion() = taskVersion
-
     override fun covertToElement(config: CiBuildConfig): LinuxScriptElement {
         return LinuxScriptElement(
                 displayName ?: "Bash",

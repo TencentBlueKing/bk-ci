@@ -49,9 +49,6 @@ data class ServiceJobDevCloudTask(
         const val atomCode = "DevCloudJobService"
     }
 
-    override fun getTaskType() = taskType
-    override fun getTaskVersion() = taskVersion
-
     override fun covertToElement(config: CiBuildConfig): MarketBuildAtomElement {
         return MarketBuildAtomElement(
                 "拉代码",
