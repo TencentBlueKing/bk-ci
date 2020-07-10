@@ -21,8 +21,7 @@
 <script>
     export default {
         props: {
-            panels: Array,
-            transitionName: String
+            panels: Array
         },
 
         data () {
@@ -34,33 +33,20 @@
 
         watch: {
             '$route.name': {
-                handler (val, oldVal) {
-                    if (!oldVal) oldVal = val
-                    const calcIndex = (name, isNewVal) => {
-                        let res = ''
-                        this.panels.forEach((panel, index) => {
-                            if (name === panel.name) {
-                                res = index + '0'
-                                if (isNewVal) this.activeTab = name
-                            }
-                            if (panel.children) {
-                                panel.children.forEach((childPanel, childIndex) => {
-                                    if (!panel.showChildTab) childIndex = 1
-                                    if (name === childPanel.name) {
-                                        res = `${index}${childIndex}`
-                                        if (isNewVal) {
-                                            this.activeTab = panel.name
-                                            this.activeChildTab = name
-                                        }
-                                    }
-                                })
-                            }
-                        })
-                        return +res
-                    }
-                    const diff = calcIndex(val, true) - calcIndex(oldVal)
-                    const transitionName = diff > 0 ? 'g-slide-left' : diff === 0 ? 'atom-fade' : 'g-slide-right'
-                    this.$emit('update:transitionName', transitionName)
+                handler (name) {
+                    this.panels.forEach((panel, index) => {
+                        if (name === panel.name) {
+                            this.activeTab = name
+                        }
+                        if (panel.children) {
+                            panel.children.forEach((childPanel) => {
+                                if (name === childPanel.name) {
+                                    this.activeTab = panel.name
+                                    this.activeChildTab = name
+                                }
+                            })
+                        }
+                    })
                 },
                 immediate: true
             }

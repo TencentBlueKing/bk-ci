@@ -2,13 +2,14 @@
     <main>
         <div class="content-header">
             <div class="atom-total-row">
-                <button class="bk-button bk-primary" @click="createNewAtom"> {{ $t('store.新增插件') }} </button>
+                <bk-button theme="primary" @click="createNewAtom"> {{ $t('store.新增插件') }} </bk-button>
             </div>
-            <section :class="[{ 'control-active': isInputFocus }, 'g-input-search', 'list-input']">
-                <input class="g-input-border" type="text" :placeholder="$t('store.请输入关键字搜索')" v-model="searchName" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="search" />
-                <i class="devops-icon icon-search" v-if="!searchName"></i>
-                <i class="devops-icon icon-close-circle-shape clear-icon" v-else @click="clearSearch"></i>
-            </section>
+            <bk-input :placeholder="$t('store.请输入关键字搜索')"
+                class="search-input"
+                :clearable="true"
+                :right-icon="'bk-icon icon-search'"
+                v-model="searchName">
+            </bk-input>
         </div>
         <main class="g-scroll-pagination-table">
             <bk-table style="margin-top: 15px;"
@@ -227,6 +228,7 @@
 </template>
 
 <script>
+    import { debounce } from '@/utils'
     import formTips from '@/components/common/formTips/index'
     import { atomStatusMap } from '@/store/constants'
 
@@ -238,7 +240,6 @@
         data () {
             return {
                 atomStatusList: atomStatusMap,
-                isInputFocus: false,
                 hasOauth: true,
                 bufferError: false,
                 buffer: '',
@@ -316,6 +317,9 @@
                     this.atomErrors.bufferError = false
                     this.buffer = ''
                 }
+            },
+            searchName () {
+                debounce(this.search)
             }
         },
 
@@ -353,11 +357,6 @@
                 } finally {
                     this.isLoading = false
                 }
-            },
-
-            clearSearch () {
-                this.searchName = ''
-                this.requestList()
             },
 
             changeOpenSource () {

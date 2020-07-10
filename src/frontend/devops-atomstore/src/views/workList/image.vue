@@ -2,15 +2,14 @@
     <main>
         <div class="content-header">
             <div class="atom-total-row">
-                <button class="bk-button bk-primary" @click="relateImage">
-                    <span style="margin-left: 0;"> {{ $t('store.关联镜像') }} </span>
-                </button>
+                <bk-button theme="primary" @click="relateImage"> {{ $t('store.关联镜像') }} </bk-button>
             </div>
-            <section :class="[{ 'control-active': isInputFocus }, 'g-input-search', 'list-input']">
-                <input class="g-input-border" type="text" :placeholder="$t('store.请输入关键字搜索')" v-model="searchName" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="search" />
-                <i class="devops-icon icon-search" v-if="!searchName"></i>
-                <i class="devops-icon icon-close-circle-shape clear-icon" v-else @click="clearSearch"></i>
-            </section>
+            <bk-input :placeholder="$t('store.请输入关键字搜索')"
+                class="search-input"
+                :clearable="true"
+                :right-icon="'bk-icon icon-search'"
+                v-model="searchName">
+            </bk-input>
         </div>
         <main class="g-scroll-pagination-table">
             <bk-table style="margin-top: 15px;"
@@ -192,6 +191,7 @@
 </template>
 
 <script>
+    import { debounce } from '@/utils/index'
     import { imageStatusList } from '@/store/constants'
 
     export default {
@@ -257,6 +257,12 @@
                     message: this.$t('store.字段不超过20个字符'),
                     trigger: 'blur'
                 }
+            }
+        },
+
+        watch: {
+            searchName () {
+                debounce(this.search)
             }
         },
 
@@ -416,11 +422,6 @@
 
             pageChanged (page) {
                 this.pagination.current = page
-                this.requestList()
-            },
-
-            clearSearch () {
-                this.searchName = ''
                 this.requestList()
             },
 

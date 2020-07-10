@@ -7,7 +7,6 @@
         </header>
 
         <transition-tab :panels="tabList"
-            :transition-name.sync="transitionName"
             @tab-change="tabChange"
         >
             <template v-slot:tool>
@@ -22,9 +21,7 @@
         </transition-tab>
 
         <main class="g-store-body">
-            <transition :name="transitionName">
-                <router-view class="g-store-route work-list-main"></router-view>
-            </transition>
+            <router-view class="g-store-route work-list-main"></router-view>
         </main>
     </article>
 </template>
@@ -42,7 +39,6 @@
 
         data () {
             return {
-                transitionName: '',
                 currentTabName: this.$route.name,
                 tabList: [
                     { name: 'atomWork',
@@ -117,7 +113,7 @@
         position: absolute;
         z-index: 500;
         right: 5px;
-        top: 30px;
+        top: 27px;
         background: $white;
         border: 1px solid $borderWeightColor;
         border-radius: 2px;
@@ -140,7 +136,7 @@
         a {
             display: block;
             min-width: 88px;
-            line-height: 32px;
+            line-height: 36px;
             border-bottom: 1px solid $borderWeightColor;
             padding: 0 14px;
             margin: 0;
@@ -161,17 +157,8 @@
     }
     .content-header {
         display: flex;
-        .list-input {
-            margin: 0;
-            width: 240px;
-            height: 36px;
-            > input {
-                width: 240px;
-                height: 36px;
-            }
-            i {
-                top: 11px;
-            }
+        .search-input {
+            width: 240px;;
         }
         .bk-button {
             padding: 0 15px;
