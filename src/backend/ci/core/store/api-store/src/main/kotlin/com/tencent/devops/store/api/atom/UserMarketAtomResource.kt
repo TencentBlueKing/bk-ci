@@ -82,9 +82,9 @@ interface UserMarketAtomResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("插件名称", required = false)
-        @QueryParam("atomName")
-        atomName: String?,
+        @ApiParam("搜索关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?,
         @ApiParam("插件分类", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
