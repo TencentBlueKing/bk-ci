@@ -27,7 +27,7 @@
 package com.tencent.devops.common.web.constant
 
 enum class BkStyleEnum(val style: String) {
-    COMMON_STYLE("^.*\$"), // 通用正则表达式
+    COMMON_STYLE("^(.|\\r|\\n)*\$"), // 通用正则表达式
     NUMBER_STYLE("[0-9]*\$"), // 数字正则表达式
     CODE_STYLE("^[a-zA-Z_][\\w-]{0,31}\$"), // 标识正则表达式
     NAME_STYLE("^[\\w-\\u4E00-\\u9FBB\\u3400-\\u4DBF\\uF900-\\uFAD9\\u3000-\\u303F\\u2000-\\u206F\\uFF00-\\uFFEF]{1,32}\$"), // 名称正则表达式
