@@ -60,12 +60,7 @@ class DownloadScriptService {
             }
         }
 
-        val fileStream = StreamingOutput { output ->
-            output.write(scriptFile.readBytes())
-            output.flush()
-        }
-        return Response
-            .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+        return Response.ok(scriptFile.inputStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
             .header("content-disposition", "attachment; filename = $scriptName")
             .build()
     }

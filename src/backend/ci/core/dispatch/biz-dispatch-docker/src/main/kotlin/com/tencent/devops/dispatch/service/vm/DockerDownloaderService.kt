@@ -65,13 +65,8 @@ class DockerDownloaderService {
                 return Response.status(Response.Status.NOT_MODIFIED).build()
             }
         }
-        val fileStream = StreamingOutput { output ->
-            output.write(worker.readBytes())
-            output.flush()
-        }
-        return Response
-                .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-                .header("content-disposition", "attachment; filename = ${worker.name}")
-                .build()
+        return Response.ok(worker.inputStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .header("content-disposition", "attachment; filename = ${worker.name}")
+            .build()
     }
 }
