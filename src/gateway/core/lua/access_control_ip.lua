@@ -31,7 +31,7 @@ function _M:isAccess()
     end
     -- 创建req_limit实例失败时
     if not lim then
-        ngx.log(ngx.ERR, "failed to instantiate a resty.limit.req object: ", err)
+        ngx.log(ngx.STDERR, "failed to instantiate a resty.limit.req object: ", err)
         return false
     end
     -- 获取4字节的IP的KEY
@@ -42,7 +42,7 @@ function _M:isAccess()
         if err == "rejected" then
             return false
         end
-        ngx.log(ngx.ERR, "failed to limit req: ", err)
+        ngx.log(ngx.STDERR, "failed to limit req: ", err)
         return false
     end 
     if delay >= 0.001 then

@@ -3,21 +3,9 @@
         v-bkloading="loadingOption"
         class="devops-index"
     >
-        <div
-            v-if="showExplorerTips === 'true' && isShowPreviewTips && !chromeExplorer"
-            class="user-prompt"
-        >
-            <p><i class="devops-icon icon-info-circle-shape" />{{ $t("recommendationLabel") }}</p>
-            <div class="close-btn">
-                <span
-                    class="close-remind"
-                    @click="closeExplorerTips"
-                >{{ $t("dismiss") }}</span>
-                <i
-                    class="devops-icon icon-close"
-                    @click="closePreviewTips"
-                />
-            </div>
+        <div class="user-prompt" v-if="showAnnounce">
+            <!-- <p><i class="bk-icon icon-info-circle-shape"></i>{{currentNotice.noticeContent}}</p> -->
+            <p v-html="currentNotice.noticeContent"></p>
         </div>
         <template v-if="projectList">
             <Header />
@@ -62,7 +50,6 @@
             </main>
         </template>
 
-        <login-dialog v-if="showLoginDialog" />
         <ask-permission-dialog />
     </div>
 </template>
@@ -71,29 +58,24 @@
     import Vue from 'vue'
     import Header from '../components/Header/index.vue'
     import AskPermissionDialog from '../components/AskPermissionDialog/AskPermissionDialog.vue'
-    import LoginDialog from '../components/LoginDialog/index.vue'
     import { Component } from 'vue-property-decorator'
-    import { State, Getter, Action } from 'vuex-class'
+    import { State, Getter } from 'vuex-class'
     import eventBus from '../utils/eventBus'
 
     @Component({
         components: {
             Header,
-            LoginDialog,
             AskPermissionDialog
         }
     })
     export default class Index extends Vue {
+        @State currentNotice
         @State projectList
         @State headerConfig
-        @State isShowPreviewTips
+        @Getter showAnnounce
         @Getter enableProjectList
         @Getter disableProjectList
         @Getter approvalingProjectList
-        @Action closePreviewTips
-
-        showLoginDialog: boolean = false
-        showExplorerTips: string = localStorage.getItem('showExplorerTips')
 
         get loadingOption (): object {
             return {
@@ -122,29 +104,11 @@
             return this.headerConfig.showProjectList
         }
 
-        get chromeExplorer (): boolean {
-            const explorer = window.navigator.userAgent
-            return explorer.indexOf('Chrome') >= 0 && explorer.indexOf('QQ') === -1
-        }
-
         switchProject () {
             this.iframeUtil.toggleProjectMenu(true)
         }
 
-        closeExplorerTips () {
-            localStorage.setItem('showExplorerTips', 'false')
-            this.closePreviewTips()
-        }
-
         created () {
-            eventBus.$on('toggle-login-dialog', (isShow) => {
-                this.showLoginDialog = isShow
-            })
-
-            if (this.showExplorerTips === null) {
-                localStorage.setItem('showExplorerTips', 'true')
-                this.showExplorerTips = localStorage.getItem('showExplorerTips')
-            }
             eventBus.$on('update-project-id', projectId => {
                 this.$router.replace({
                     params: {
@@ -171,28 +135,12 @@
         }
         .user-prompt {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             padding: 0 24px;
-            min-width: 1280px;
             line-height: 32px;
             background-color: #FF9600;
             color: #fff;
-            .icon-info-circle-shape {
-                position: relative;
-                top: 2px;
-                margin-right: 7px;
-                font-size: 16px;
-            }
-            .close-remind {
-                margin-right: 20px;
-                cursor: pointer;
-            }
-            .icon-close {
-                top: 8px;
-                right: 24px;
-                font-size: 14px;
-                cursor: pointer;
-            }
+            max-height: 32px;
         }
     }
 </style>

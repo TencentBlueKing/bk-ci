@@ -28,6 +28,12 @@ const getters: GetterTree<RootState, any> = {
 
     approvalingProjectList: (state: RootState) => {
         return state.projectList.filter((project: ObjectMap) => project.approvalStatus === 1)
+    },
+
+    // 是否显示跑马灯类型公告
+    showAnnounce (state: RootState) {
+        // @ts-ignore
+        return state.currentNotice && state.currentNotice.id && state.currentNotice.noticeType === 1
     }
     
 }

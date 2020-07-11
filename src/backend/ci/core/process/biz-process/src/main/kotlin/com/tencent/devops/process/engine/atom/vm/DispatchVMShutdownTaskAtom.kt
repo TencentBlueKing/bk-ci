@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.atom.IAtomTask
+import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -95,6 +96,31 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
 
         logger.info("[$buildId]|SHUTDOWN_VM|stageId=${task.stageId}|container=${task.containerId}|vmSeqId=$vmSeqId")
         return AtomResponse(BuildStatus.SUCCEED)
+    }
+
+    override fun tryFinish(task: PipelineBuildTask, param: VMBuildContainer, runVariables: Map<String, String>, force: Boolean): AtomResponse {
+        return if (force) {
+            if (BuildStatus.isFinish(task.status)) {
+                AtomResponse(task.status)
+            } else { // 强制终止的设置为失败
+                logger.warn("[${task.buildId}]|[FORCE_STOP_IN_SHUTDOWN_TASK]")
+                pipelineEventDispatcher.dispatch(
+                    PipelineAgentShutdownEvent(
+                        source = "force_stop_shutdownVM",
+                        projectId = task.projectId,
+                        pipelineId = task.pipelineId,
+                        userId = task.starter,
+                        buildId = task.buildId,
+                        vmSeqId = task.containerId,
+                        buildResult = true,
+                        routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix
+                    )
+                )
+                defaultFailAtomResponse
+            }
+        } else {
+            AtomResponse(task.status)
+        }
     }
 
     companion object {
