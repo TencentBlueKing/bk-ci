@@ -28,13 +28,13 @@ package com.tencent.devops.dispatch.service
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.FileUtil
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
 
 @Service
 class DownloadScriptService {
@@ -43,6 +43,7 @@ class DownloadScriptService {
     private val scriptPath: String? = null
 
     fun downloadScript(scriptName: String, eTag: String?): Response {
+        logger.info("downloadScript, scriptName: $scriptName, eTag: $eTag")
         if (scriptPath.isNullOrBlank()) {
             throw ParamBlankException("脚本路径未配置")
         }
@@ -63,5 +64,9 @@ class DownloadScriptService {
         return Response.ok(scriptFile.inputStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
             .header("content-disposition", "attachment; filename = $scriptName")
             .build()
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(DownloadScriptService::class.java)
     }
 }

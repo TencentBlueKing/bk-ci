@@ -27,6 +27,7 @@
 package com.tencent.devops.dispatch.service
 
 import com.tencent.devops.common.api.util.FileUtil
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
@@ -41,6 +42,7 @@ class DownloaderService {
     private val workerFile: String? = null
 
     fun downloadWorker(eTag: String?): Response {
+        logger.info("downloadWorker, eTag: $eTag")
         if (workerFile.isNullOrBlank()) {
             throw RuntimeException("worker.jar文件路径没有配置")
         }
@@ -48,6 +50,7 @@ class DownloaderService {
     }
 
     private fun download(file: String, eTag: String?): Response {
+        logger.info("download, file: $file, eTag: $eTag")
         val worker = File(file)
         if (!worker.exists()) {
             throw NotFoundException("${worker.absolutePath} 不存在")
@@ -67,5 +70,9 @@ class DownloaderService {
         return Response.ok(worker.inputStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
             .header("content-disposition", "attachment; filename = ${worker.name}")
             .build()
+    }
+
+    companion object{
+        private val logger = LoggerFactory.getLogger(DownloaderService::class.java)
     }
 }
