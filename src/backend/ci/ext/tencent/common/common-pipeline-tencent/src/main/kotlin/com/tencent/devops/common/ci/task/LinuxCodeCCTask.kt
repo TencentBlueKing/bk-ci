@@ -47,9 +47,6 @@ open class LinuxCodeCCTask(
         const val taskVersion = "@latest"
     }
 
-    override fun getTaskType() = taskType
-    override fun getTaskVersion() = taskVersion
-
     override fun covertToElement(config: CiBuildConfig): LinuxPaasCodeCCScriptElement {
         val element = LinuxPaasCodeCCScriptElement(
                 displayName ?: "CodeCCScript",
