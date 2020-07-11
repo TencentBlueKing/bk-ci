@@ -59,16 +59,7 @@ object ImageFileUtils {
     }
 
     private fun parseImagesFromContent(tarInputStream: TarArchiveInputStream): List<DockerImage> {
-        val content = tarInputStream.readBytes()
-//                {
-//                    "dockerhub.blueking.com:8090/bcs.abc/istio/mixer": {
-//                        "latest": "0ae802bf6b7203a4fe91ee4c2877e6fae1d60f027aa059d118026116b6a80f70"
-//                    ,
-//                    "dockerhub.blueking.com:8090/bcs/network": {
-//                        "latest": "0aaa4e2d51cfd8ed86960837584204c9aebf8a721a4ee21074e427374fefb33f"
-//                    }
-//                }
-        val data: Map<String, Any> = jacksonObjectMapper().readValue(content)
+        val data: Map<String, Any> = jacksonObjectMapper().readValue(tarInputStream)
         val imageList = mutableListOf<DockerImage>()
         for ((repoKey, repoValue) in data) {
             val imageTags = repoValue as Map<String, Any>
