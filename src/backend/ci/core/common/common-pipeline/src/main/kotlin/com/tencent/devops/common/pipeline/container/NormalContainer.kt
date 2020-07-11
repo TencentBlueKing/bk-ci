@@ -48,9 +48,11 @@ data class NormalContainer(
     @ApiModelProperty("原子运行时间", required = false, hidden = true)
     override var elementElapsed: Long? = null,
     @ApiModelProperty("允许可跳过", required = false)
-    val enableSkip: Boolean?,
+    @Deprecated(message = "do not use", replaceWith = ReplaceWith("JobControlOption.runCondition"))
+    val enableSkip: Boolean? = false,
     @ApiModelProperty("触发条件", required = false)
-    val conditions: List<NameAndValue>?,
+    @Deprecated(message = "do not use", replaceWith = ReplaceWith("@see JobControlOption.customVariables"))
+    val conditions: List<NameAndValue>? = null,
     @ApiModelProperty("是否可重试", required = false, hidden = true)
     override var canRetry: Boolean? = false,
     override var containerId: String? = null,

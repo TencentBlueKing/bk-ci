@@ -119,6 +119,14 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>) {
         return redisTemplate.opsForHash<String, String>().values(key)
     }
 
+    fun hkeys(key: String): MutableSet<String>? {
+        return redisTemplate.opsForHash<String, String>().keys(key)
+    }
+
+    fun hentries(key: String): MutableMap<String, String>? {
+        return redisTemplate.opsForHash<String, String>().entries(key)
+    }
+
     fun sadd(key: String, values: String): Long? {
         return redisTemplate.opsForSet().add(key, values)
     }

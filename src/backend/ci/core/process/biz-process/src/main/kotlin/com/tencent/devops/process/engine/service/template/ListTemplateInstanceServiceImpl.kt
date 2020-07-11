@@ -32,13 +32,13 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.template.TemplateInstances
 import com.tencent.devops.process.pojo.template.TemplatePipeline
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
-import com.tencent.devops.process.template.dao.PTemplateDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,7 +47,7 @@ import org.springframework.stereotype.Component
 @Component
 class ListTemplateInstanceServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val templateDao: PTemplateDao,
+    private val templateDao: TemplateDao,
     private val pipelinePermissionService: PipelinePermissionService,
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineSettingDao: PipelineSettingDao
