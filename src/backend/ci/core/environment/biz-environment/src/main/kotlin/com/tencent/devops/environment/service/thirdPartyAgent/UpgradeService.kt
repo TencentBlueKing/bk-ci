@@ -145,7 +145,7 @@ class UpgradeService @Autowired constructor(
         file: String,
         md5: String?
     ): Response {
-        logger.info("Trying the download file($file - $md5) of agent($agentId)")
+        logger.info("downloadUpgradeFile, projectId: $projectId, agentId: $agentId, file: $file, md5: $md5")
         val status = checkAgent(projectId, agentId, secretKey)
         if (status == AgentStatus.DELETE) {
             logger.warn("The agent($agentId)'s status($status) is DELETE")
@@ -171,6 +171,7 @@ class UpgradeService @Autowired constructor(
             }
         }
         return if (modify) {
+            logger.info("upgrade file($file) changed, server file md5: $existMD5")
             Response.ok(upgradeFile.inputStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
                 .header("content-disposition", "attachment; filename = $fileName")
                 .header("X-Checksum-Md5", existMD5)
