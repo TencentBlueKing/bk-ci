@@ -171,10 +171,7 @@ class UpgradeService @Autowired constructor(
             }
         }
         return if (modify) {
-            Response.ok(StreamingOutput { output ->
-                output.write(upgradeFile.readBytes())
-                output.flush()
-            }, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            Response.ok(upgradeFile.inputStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
                 .header("content-disposition", "attachment; filename = $fileName")
                 .header("X-Checksum-Md5", existMD5)
                 .build()
