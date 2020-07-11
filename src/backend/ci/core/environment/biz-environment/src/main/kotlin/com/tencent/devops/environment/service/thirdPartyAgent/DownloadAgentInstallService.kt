@@ -237,7 +237,7 @@ class DownloadAgentInstallService @Autowired constructor(
     }
 
     fun downloadJre(agentId: String, eTag: String?): Response {
-        logger.info("Trying to download the jre($agentId)")
+        logger.info("downloadJre, agentId: $agentId, eTag: $eTag")
         val record = getAgentRecord(agentId)
         val file = getJreZipFile(record.os)
 
