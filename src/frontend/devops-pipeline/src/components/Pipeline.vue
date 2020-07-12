@@ -10,7 +10,7 @@
         </header>
         <div v-if="pipeline" class="scroll-container">
             <div class="scroll-wraper">
-                <stages :stages="pipeline.stages" :editable="!pipeline.instanceFromTemplate && templateType !== 'CONSTRAINT'" :is-running="isRunning"></stages>
+                <stages :stages="pipeline.stages" :editable="pipelineEditable" :can-skip-element="canSkipElement" :is-preview="isPreview"></stages>
             </div>
         </div>
 
@@ -39,7 +39,7 @@
                     :element-index="editingElementPos.elementIndex"
                     :container-index="editingElementPos.containerIndex"
                     :stage-index="editingElementPos.stageIndex"
-                    :editable="!pipeline.instanceFromTemplate && templateType !== 'CONSTRAINT'"
+                    :editable="pipelineEditable"
                     :stages="pipeline.stages"
                     :is-instance-template="pipeline.instanceFromTemplate"
                 />
@@ -50,14 +50,21 @@
                     :container-index="editingElementPos.containerIndex"
                     :stage-index="editingElementPos.stageIndex"
                     :stages="pipeline.stages"
-                    :editable="!pipeline.instanceFromTemplate && templateType !== 'CONSTRAINT'"
+                    :editable="pipelineEditable"
+                />
+            </template>
+            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined' && showStageReviewPanel">
+                <stage-review-panel
+                    :stage="stage"
+                    :stage-index="editingElementPos.stageIndex"
+                    :disabled="!pipelineEditable"
                 />
             </template>
             <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined'">
                 <stage-property-panel
                     :stage="stage"
                     :stage-index="editingElementPos.stageIndex"
-                    :editable="!pipeline.instanceFromTemplate && templateType !== 'CONSTRAINT'"
+                    :editable="pipelineEditable"
                 />
             </template>
         </template>
@@ -70,6 +77,7 @@
     import AtomPropertyPanel from './AtomPropertyPanel'
     import ContainerPropertyPanel from './ContainerPropertyPanel'
     import StagePropertyPanel from './StagePropertyPanel'
+    import StageReviewPanel from './StagePropertyPanel/StageReviewPanel'
     import AtomSelector from './AtomSelector'
     import { isObject } from '../utils/util'
 
@@ -79,6 +87,7 @@
             StagePropertyPanel,
             AtomPropertyPanel,
             ContainerPropertyPanel,
+            StageReviewPanel,
             AtomSelector
         },
         props: {
@@ -97,6 +106,18 @@
             showHeader: {
                 type: Boolean,
                 default: true
+            },
+            editable: {
+                type: Boolean,
+                default: true
+            },
+            canSkipElement: {
+                type: Boolean,
+                default: false
+            },
+            isPreview: {
+                type: Boolean,
+                default: false
             }
         },
         computed: {
@@ -112,10 +133,14 @@
                 'editingElementPos',
                 'isStagePopupShow',
                 'insertStageIndex',
-                'isAddParallelContainer'
+                'isAddParallelContainer',
+                'showStageReviewPanel'
             ]),
             routeParams () {
                 return this.$route.params
+            },
+            pipelineEditable () {
+                return this.editable && !this.pipeline.instanceFromTemplate && this.templateType !== 'CONSTRAINT' && !this.isPreview
             },
             isStageShow: {
                 get () {
@@ -279,7 +304,7 @@
         }
         &:before {
             position: absolute;
-            top: 41px + $StagepaddingTop;
+            top: 44px + $StagepaddingTop;
             content: '';
             height: 0;
             left: 30px;
