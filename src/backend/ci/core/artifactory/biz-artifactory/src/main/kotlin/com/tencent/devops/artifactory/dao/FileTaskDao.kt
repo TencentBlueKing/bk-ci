@@ -28,7 +28,9 @@ package com.tencent.devops.artifactory.dao
 
 import com.tencent.devops.model.artifactory.tables.TFileTask
 import com.tencent.devops.model.artifactory.tables.records.TFileTaskRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -96,6 +98,24 @@ class FileTaskDao {
         }
     }
 
+    fun listHistoryFileTaskInfo(dslContext: DSLContext, status: Short?, updateTime: LocalDateTime?, limit: Int?): Result<TFileTaskRecord>? {
+        with(TFileTask.T_FILE_TASK) {
+            val conditions = mutableListOf<Condition>()
+            if (status != null) {
+                conditions.add(STATUS.eq(status))
+            }
+            if (updateTime != null) {
+                conditions.add(UPDATE_TIME.lessOrEqual(updateTime))
+            }
+            val query = dslContext.selectFrom(this).where(conditions)
+            if (limit != null) {
+                return query.limit(limit).fetch()
+            } else {
+                return query.fetch()
+            }
+        }
+    }
+
     fun getFileTaskInfo(dslContext: DSLContext, taskId: String): TFileTaskRecord? {
         return with(TFileTask.T_FILE_TASK) {
             dslContext.selectFrom(this).where(TASK_ID.eq(taskId)).fetchAny()
@@ -105,6 +125,12 @@ class FileTaskDao {
     fun deleteFileTaskInfo(dslContext: DSLContext, taskId: String): Int {
         return with(TFileTask.T_FILE_TASK) {
             dslContext.deleteFrom(this).where(TASK_ID.eq(taskId)).execute()
+        }
+    }
+
+    fun deleteFileTaskInfo(dslContext: DSLContext, taskIds: Collection<String>): Int {
+        return with(TFileTask.T_FILE_TASK) {
+            dslContext.deleteFrom(this).where(TASK_ID.`in`(taskIds)).execute()
         }
     }
 }

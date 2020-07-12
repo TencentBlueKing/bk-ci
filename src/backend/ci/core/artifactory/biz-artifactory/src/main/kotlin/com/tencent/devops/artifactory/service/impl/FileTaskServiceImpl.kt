@@ -44,6 +44,7 @@ import java.io.File
 import java.io.FileFilter
 import java.io.FileOutputStream
 import java.nio.file.Paths
+import java.time.LocalDateTime
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -57,7 +58,10 @@ class FileTaskServiceImpl : FileTaskService {
     val basePath: String? = null
 
     @Value("\${artifactory.file.task.file.expireTimeMinutes:720}")
-    val fileExpireTimeMinutes: Int = 720
+    val fileExpireTimeMinutes: Long = 720L
+
+    @Value("\${artifactory.file.task.record.expireTimeDays:7}")
+    val recordExpireTimeDays: Long = 7L
 
     protected val fileSeparator: String = System.getProperty("file.separator")!!
 
@@ -153,34 +157,58 @@ class FileTaskServiceImpl : FileTaskService {
             val filePath = normalizeSeparator(fileTaskRecord.localPath)
             val dirPath = filePath.substring(0, filePath.lastIndexOf(fileSeparator))
             return if (File(dirPath).deleteRecursively()) {
-                val affectedRows = fileTaskDao.deleteFileTaskInfo(dslContext, taskId)
-                if (1 == affectedRows) {
-                    true
-                } else {
-                    logger.warn("affectedRows=$affectedRows when delete fileTask(taskId=$taskId)")
-                    false
-                }
+                true
             } else {
                 logger.warn("Fail to delete file dir on disk, taskId=$taskId, path=$dirPath")
                 false
             }
         } else {
-            logger.info("fileTask not exist, taskId=$taskId")
+            logger.warn("fileTask not exist, taskId=$taskId")
             return false
         }
     }
 
+    @Scheduled(cron = "0 0 9 0/1 * ?")
+    fun clearRecordTask() {
+        logger.info("clearRecordTask start")
+        // 清理一段时间前的已完成记录
+        val limit = 100
+        var allCount = 0
+        var successCount = 0
+        var records = fileTaskDao.listHistoryFileTaskInfo(dslContext, FileTaskStatusEnum.DONE.status, LocalDateTime.now().minusDays(recordExpireTimeDays), limit)
+        while (records != null && records.size > 0) {
+            val taskIds = records.map { it.taskId }.toList()
+            allCount += taskIds.size
+            val affectedRows = fileTaskDao.deleteFileTaskInfo(dslContext, taskIds)
+            successCount += affectedRows
+            if (records.size != affectedRows) {
+                logger.warn("affectedRows=$affectedRows when delete fileTasks(taskIds=$taskIds)")
+            }
+            records = fileTaskDao.listHistoryFileTaskInfo(dslContext, FileTaskStatusEnum.DONE.status, LocalDateTime.now().minusDays(recordExpireTimeDays), limit)
+        }
+        logger.info("clearRecordTask end, $successCount records deleted, ${allCount - successCount} fail")
+    }
+
     @Scheduled(cron = "0 0/10 * * * ?")
-    fun clearTimer() {
-        logger.info("clearTimer start")
+    fun clearFileTask() {
+        logger.info("clearFileTask start")
+        var successCount = 0
+        var failCount = 0
         val rootDir = File(getFileBasePath())
         val taskDirs = rootDir.listFiles(FileFilter { it.isDirectory })
         // 清理机器上的文件目录
         taskDirs?.forEach {
             if (System.currentTimeMillis() - it.lastModified() > fileExpireTimeMinutes * 60 * 1000) {
-                logger.info("clear taskDir:${it.path}:it.deleteRecursively()")
+                val result = it.deleteRecursively()
+                if (result) {
+                    successCount += 1
+                } else {
+                    failCount += 1
+                    logger.warn("fail to clear taskDir:${it.path}")
+                }
             }
         }
+        logger.info("clearFileTask end, $successCount taskDirs deleted, $failCount fail")
     }
 
     companion object {
