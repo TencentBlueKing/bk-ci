@@ -140,16 +140,17 @@ class ImageDao {
         with(TImage.T_IMAGE) {
             val tStoreMember = TStoreMember.T_STORE_MEMBER.`as`("tStoreMember")
             val conditions = mutableListOf<Condition>()
-            val baseStep = dslContext.selectCount().from(this)
+            val baseStep = dslContext.select(IMAGE_CODE.countDistinct()).from(this)
                 .join(tStoreMember)
                 .on(this.IMAGE_CODE.eq(tStoreMember.STORE_CODE))
             if (!imageName.isNullOrBlank()) {
-                conditions.add(IMAGE_NAME.eq(imageName))
+                conditions.add(IMAGE_NAME.contains(imageName))
             }
             conditions.add(tStoreMember.USERNAME.eq(userId))
+            conditions.add(DELETE_FLAG.eq(false))
+            conditions.add(tStoreMember.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
             baseStep.where(conditions)
-                .groupBy(IMAGE_CODE)
-            return baseStep.fetch().size
+            return baseStep.fetch()[0].value1()
         }
     }
 

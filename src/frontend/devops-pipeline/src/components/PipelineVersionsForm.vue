@@ -3,15 +3,15 @@
         <form class="bk-form" ref="versionParamsForm" onsubmit="return false;">
             <div class="params-flex-col">
                 <form-field v-for="v in allVersionKeyList" :key="v" :required="v.required" :label="versionLabel[v]" :is-error="errors.has(v)" :error-msg="errors.first(v)">
-                    <vuex-input :disabled="disabled" input-type="number" :name="v" :placeholder="versionConfig[v].placeholder" v-validate.initial="&quot;required|numeric&quot;" :value="versionParamValues[v]" :handle-change="handleVersionChange" />
+                    <vuex-input :disabled="disabled" input-type="number" :name="v" :placeholder="versionConfig[v].placeholder" v-validate.initial="'required|numeric'" :value="versionParamValues[v]" :handle-change="handleVersionChange" />
                 </form-field>
             </div>
             <div class="params-flex-col">
-                <form-field :required="true" :label="$t('buildNum')" :is-error="errors.has(&quot;buildNo&quot;)" :error-msg="errors.first(&quot;buildNo&quot;)">
-                    <vuex-input :disabled="(isPreview && buildNo.buildNoType !== 'CONSISTENT') || disabled" input-type="number" name="buildNo" placeholder="BuildNo" v-validate.initial="&quot;required|numeric&quot;" :value="buildNo.buildNo" :handle-change="handleBuildNoChange" />
+                <form-field :required="true" :label="$t('buildNum')" :is-error="errors.has('buildNo')" :error-msg="errors.first('buildNo')">
+                    <vuex-input :disabled="(isPreview && buildNo.buildNoType !== 'CONSISTENT') || disabled" input-type="number" name="buildNo" placeholder="BuildNo" v-validate.initial="'required|numeric'" :value="buildNo.buildNo" :handle-change="handleBuildNoChange" />
                 </form-field>
-                <form-field class="flex-colspan-2" :required="true" :is-error="errors.has(&quot;buildNoType&quot;)" :error-msg="errors.first(&quot;buildNoType&quot;)">
-                    <enum-input :list="buildNoRules" :disabled="disabled || isPreview" name="buildNoType" v-validate.initial="&quot;required|string&quot;" :value="buildNo.buildNoType" :handle-change="handleBuildNoChange" />
+                <form-field class="flex-colspan-2 build-no-group" :required="true" :is-error="errors.has('buildNoType')" :error-msg="errors.first('buildNoType')">
+                    <enum-input :list="buildNoRules" :disabled="disabled || isPreview" name="buildNoType" v-validate.initial="'required|string'" :value="buildNo.buildNoType" :handle-change="handleBuildNoChange" />
                 </form-field>
             </div>
         </form>
@@ -98,6 +98,7 @@
         .bk-form-content {
             margin-top: 42px;
         }
+
         .atom-checkbox {
             padding-right: 0;
             padding-left: 8px;

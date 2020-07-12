@@ -483,7 +483,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
             }
 
-            logger.info("[$buildId]|ERRORCODE|BUILD_END|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
+            logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|finalStatus=$finalStatus|cancelUser=$cancelUser|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
             try {
                 val model: Model = JsonUtil.to(record.model, Model::class.java)
                 val allStageStatus = mutableListOf<BuildStageStatus>()
