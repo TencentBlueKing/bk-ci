@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -97,13 +98,16 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
             return
         }
         val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
+        response.contentType = MimeUtil.mediaType(filePath)
         FileCopyUtils.copy(FileInputStream(file), response.outputStream)
     }
 
     override fun downloadFile(filePath: String): Response {
+        logger.info("downloadFile, filePath: $filePath")
         val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
         // 如果文件不存在，提示404
         if (!file.exists()) {
+            logger.warn("file not found, filePath: $filePath")
             return Response.status(Response.Status.NOT_FOUND).build()
         }
         val fileName: String?
@@ -115,6 +119,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
 
         return Response
             .ok(file)
+            .header("Content-Type", MimeUtil.STREAM_MIME_TYPE)
             .header("Content-disposition", "attachment;filename=" + fileName!!)
             .header("Cache-Control", "no-cache").build()
     }

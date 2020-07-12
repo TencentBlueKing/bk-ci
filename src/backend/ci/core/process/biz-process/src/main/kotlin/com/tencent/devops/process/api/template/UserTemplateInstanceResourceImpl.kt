@@ -56,12 +56,12 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet {
         return templateService.createTemplateInstances(
-            projectId,
-            userId,
-            templateId,
-            version,
-            useTemplateSettings,
-            instances
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            version = version,
+            useTemplateSettings = useTemplateSettings,
+            instances = instances
         )
     }
 
@@ -74,12 +74,12 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
         return templateService.updateTemplateInstances(
-            projectId,
-            userId,
-            templateId,
-            version,
-            useTemplateSettings,
-            instances
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            version = version,
+            useTemplateSettings = useTemplateSettings,
+            instances = instances
         )
     }
 
@@ -91,7 +91,14 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         pageSize: Int?,
         searchKey: String?
     ): Result<TemplateInstancePage> {
-        return Result(templateService.listTemplateInstancesInPage(projectId, userId, templateId, page, pageSize, searchKey))
+        return Result(templateService.listTemplateInstancesInPage(
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            page = page,
+            pageSize = pageSize,
+            searchKey = searchKey
+        ))
     }
 
     override fun listTemplateInstancesParams(
@@ -103,11 +110,11 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
     ): Result<Map<String, TemplateInstanceParams>> {
         return Result(
             templateService.listTemplateInstancesParams(
-                userId,
-                projectId,
-                templateId,
-                version,
-                pipelineIds.map { it.id }.toSet()
+                userId = userId,
+                projectId = projectId,
+                templateId = templateId,
+                version = version,
+                pipelineIds = pipelineIds.map { it.id }.toSet()
             )
         )
     }
@@ -119,6 +126,12 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         pipelineId: String,
         version: Long
     ): Result<TemplateCompareModelResult> {
-        return Result(templateService.compareTemplateInstances(projectId, userId, templateId, pipelineId, version))
+        return Result(templateService.compareTemplateInstances(
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            pipelineId = pipelineId,
+            version = version
+        ))
     }
 }

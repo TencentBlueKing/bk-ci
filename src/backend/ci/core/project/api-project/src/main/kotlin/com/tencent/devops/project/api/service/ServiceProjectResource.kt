@@ -28,19 +28,22 @@ package com.tencent.devops.project.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
-import javax.ws.rs.Path
 import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
+import javax.ws.rs.PUT
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_PROJECT"], description = "项目列表接口")
@@ -128,4 +131,29 @@ interface ServiceProjectResource {
         @PathParam("projectId")
         englishName: String
     ): Result<ProjectVO?>
+
+    @POST
+    @Path("/create")
+    @ApiOperation("创建项目")
+    fun create(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目信息", required = true)
+        projectCreateInfo: ProjectCreateInfo
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/{projectId}")
+    @ApiOperation("修改项目")
+    fun update(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "项目信息", required = true)
+        projectUpdateInfo: ProjectUpdateInfo
+    ): Result<Boolean>
 }

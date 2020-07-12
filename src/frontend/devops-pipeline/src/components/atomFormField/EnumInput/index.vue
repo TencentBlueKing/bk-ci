@@ -49,6 +49,8 @@
         margin-right: 10px;
         /deep/ .bk-radio-text {
             width: calc(100% - 21px);
+            height: 20px;
+            line-height: 20px;
         }
         .overflow {
             overflow: hidden;

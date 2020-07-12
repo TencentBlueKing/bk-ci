@@ -22,13 +22,13 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_ARTIFACTORY_V3"], description = "OPENAPI-构建产物资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/artifactories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwArtifactoryResourceV3 {
 
     @ApiOperation("获取用户下载链接")
-    @Path("/projects/{projectId}/artifactories/userDownloadUrl")
+    @Path("/userDownloadUrl")
     @GET
     fun getUserDownloadUrl(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -52,7 +52,7 @@ interface ApigwArtifactoryResourceV3 {
     ): Result<Url>
 
     @ApiOperation("根据元数据获取文件")
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/artifactories")
+    @Path("/")
     @GET
     fun search(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -68,10 +68,10 @@ interface ApigwArtifactoryResourceV3 {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String,
         @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
+        @QueryParam("buildId")
         buildId: String,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")

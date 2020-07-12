@@ -38,6 +38,7 @@ data class BuildInfo(
     val buildNum: Int,
     val trigger: String,
     val status: BuildStatus,
+    val queueTime: Long,
     val startUser: String,
     val startTime: Long?,
     val endTime: Long?,
