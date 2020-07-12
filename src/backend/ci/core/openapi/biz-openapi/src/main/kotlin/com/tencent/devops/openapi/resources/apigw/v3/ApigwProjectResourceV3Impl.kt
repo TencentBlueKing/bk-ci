@@ -28,7 +28,7 @@ package com.tencent.devops.openapi.resources.apigw.v3
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwProjectResourceV3
-import com.tencent.devops.project.api.user.UserProjectResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -49,10 +49,9 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
         accessToken: String?
     ): com.tencent.devops.project.pojo.Result<Boolean> {
         logger.info("create project projectCreateInfo($projectCreateInfo) by user $userId")
-        return client.get(UserProjectResource::class).create(
+        return client.get(ServiceProjectResource::class).create(
             userId = userId,
-            projectCreateInfo = projectCreateInfo,
-            accessToken = accessToken
+            projectCreateInfo = projectCreateInfo
         )
     }
 
@@ -65,11 +64,10 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
         accessToken: String?
     ): com.tencent.devops.project.pojo.Result<Boolean> {
         logger.info("update project projectId($projectId) projectCreateInfo($projectUpdateInfo) by user $userId")
-        return client.get(UserProjectResource::class).update(
+        return client.get(ServiceProjectResource::class).update(
             userId = userId,
             projectId = projectId,
-            projectUpdateInfo = projectUpdateInfo,
-            accessToken = accessToken
+            projectUpdateInfo = projectUpdateInfo
         )
     }
 
@@ -79,11 +77,10 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
         userId: String,
         projectId: String,
         accessToken: String?
-    ): com.tencent.devops.project.pojo.Result<ProjectVO> {
+    ): com.tencent.devops.project.pojo.Result<ProjectVO?> {
         logger.info("get project projectId($projectId) by user $userId")
-        return client.get(UserProjectResource::class).get(
-            projectId = projectId,
-            accessToken = accessToken
+        return client.get(ServiceProjectResource::class).get(
+                englishName = projectId
         )
     }
 
@@ -94,9 +91,8 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
         accessToken: String?
     ): com.tencent.devops.project.pojo.Result<List<ProjectVO>> {
         logger.info("list project by user $userId")
-        return client.get(UserProjectResource::class).list(
-            userId = userId,
-            accessToken = accessToken
+        return client.get(ServiceProjectResource::class).list(
+            userId = userId
         )
     }
 }

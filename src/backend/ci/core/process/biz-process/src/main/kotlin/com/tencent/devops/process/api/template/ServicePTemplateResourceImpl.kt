@@ -62,6 +62,10 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         return pipelineTemplateService.getTemplateDetailInfo(templateCode, publicFlag)
     }
 
+    override fun getSrcTemplateCodes(projectId: String): Result<List<String>> {
+        return templateService.getSrcTemplateCodes(projectId)
+    }
+
     override fun listTemplate(
         userId: String,
         projectId: String,

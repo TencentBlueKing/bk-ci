@@ -27,22 +27,17 @@ else
   isInServiceWhitelist = true
 end
 if not isInServiceWhitelist then
-  ngx.log(ngx.ERR, "client ip do not in service_ip_whitelist: ", err)
+  ngx.log(ngx.STDERR, "client ip do not in service_ip_whitelist: ", err)
   ngx.exit(403)
 end 
 
 --- 获取Cookie中bk_token
 local bk_token, err = cookieUtil:get_cookie("bk_token")
 if not bk_token then
-  ngx.log(ngx.ERR, "failed to read user request bk_token: ", err)
+  ngx.log(ngx.STDERR, "failed to read user request bk_token: ", err)
   ngx.exit(401)
 end
 local ticket = oauthUtil:get_ticket(bk_token)
-
-
-
--- -- 记录用户的访问情况
--- ngx.log(ngx.ERR, "access user‘s rtx :", ticket.identity.username)
 
 --- 设置sid
 ngx.header["x-devops-uid"] = ticket.identity.username
