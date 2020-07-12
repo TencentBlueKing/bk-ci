@@ -848,9 +848,10 @@ class PipelineRuntimeService @Autowired constructor(
                             BuildStatus.QUEUE
                         }
 
-                        if (status == BuildStatus.SKIP) {
-                            logger.info("[$buildId|${atomElement.id}] The element is skip")
-                            atomElement.status = BuildStatus.SKIP.name
+                        if (BuildStatus.isFinish(status)) {
+                            logger.info("[$buildId|${atomElement.id}] status=$status")
+                            atomElement.status = status.name
+                            return@nextElement
                         }
 
                         if (lastTimeBuildTaskRecords.isNotEmpty()) {
@@ -934,12 +935,6 @@ class PipelineRuntimeService @Autowired constructor(
                                 atomElement.status = status.name
                             }
 
-                            val taskName =
-                                if (atomElement.name.length > 128) {
-                                    atomElement.name.substring(0, 128)
-                                } else {
-                                    atomElement.name
-                                }
                             buildTaskList.add(
                                 PipelineBuildTask(
                                     projectId = pipelineInfo.projectId,
@@ -951,7 +946,7 @@ class PipelineRuntimeService @Autowired constructor(
                                     containerType = containerType,
                                     taskSeq = taskSeq,
                                     taskId = atomElement.id!!,
-                                    taskName = taskName,
+                                    taskName = if (atomElement.name.length > 128) atomElement.name.substring(0, 128) else atomElement.name,
                                     taskType = atomElement.getClassType(),
                                     taskAtom = atomElement.getTaskAtom(),
                                     status = status,
