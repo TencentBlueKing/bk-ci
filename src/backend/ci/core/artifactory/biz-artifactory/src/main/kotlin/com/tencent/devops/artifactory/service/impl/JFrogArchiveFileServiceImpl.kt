@@ -81,7 +81,6 @@ class JFrogArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl()
         logger.info("downloadFile filePath is:$filePath")
         if (filePath.contains("..")) {
             // 非法路径则抛出错误提示
-            // 非法路径则抛出错误提示
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 defaultMessage = "filePath is invalid",
