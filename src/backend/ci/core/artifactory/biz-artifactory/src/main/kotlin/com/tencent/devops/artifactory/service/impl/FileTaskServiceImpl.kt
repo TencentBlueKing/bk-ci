@@ -171,6 +171,8 @@ class FileTaskServiceImpl : FileTaskService {
     @Scheduled(cron = "0 0 9 0/1 * ?")
     fun clearRecordTask() {
         logger.info("clearRecordTask start")
+        // 多实例并发控制
+        Thread.sleep((Math.random() * 10000).toLong())
         // 清理一段时间前的已完成记录
         val limit = 100
         var allCount = 0
