@@ -73,5 +73,4 @@ class ApigwArtifactoryFileTaskResourceV3Impl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwArtifactoryFileTaskResourceV3Impl::class.java)
     }
-
 }
