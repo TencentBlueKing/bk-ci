@@ -51,6 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.FileCopyUtils
 import java.io.File
+import java.io.InputStream
 import java.io.OutputStream
 import java.io.UnsupportedEncodingException
 import java.net.URLDecoder
@@ -76,20 +77,6 @@ class JFrogArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl()
         return "bk-file"
     }
 
-    override fun downloadFile(filePath: String, outputStream: OutputStream) {
-        logger.info("downloadFile filePath is:$filePath")
-        if (filePath.contains("..")) {
-            // 非法路径则抛出错误提示
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                defaultMessage = "filePath is invalid",
-                params = arrayOf(filePath)
-            )
-        }
-        val httpResponse = getFileHttpResponse(filePath)
-        FileCopyUtils.copy(httpResponse.body()!!.byteStream(), outputStream)
-    }
-
     override fun downloadFile(filePath: String, response: HttpServletResponse) {
         logger.info("downloadFile filePath is:$filePath")
         if (filePath.contains("..")) {
@@ -104,6 +91,11 @@ class JFrogArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl()
         }
         val httpResponse = getFileHttpResponse(filePath)
         FileCopyUtils.copy(httpResponse.body()!!.byteStream(), response.outputStream)
+    }
+
+    override fun getInputStreamByFilePath(filePath: String): InputStream {
+        val httpResponse = getFileHttpResponse(filePath)
+        return httpResponse.body()!!.byteStream()
     }
 
     private fun getFileHttpResponse(filePath: String): okhttp3.Response {

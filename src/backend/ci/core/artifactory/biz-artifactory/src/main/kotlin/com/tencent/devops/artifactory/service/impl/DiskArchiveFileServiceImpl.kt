@@ -45,6 +45,7 @@ import org.springframework.stereotype.Service
 import org.springframework.util.FileCopyUtils
 import java.io.File
 import java.io.FileInputStream
+import java.io.InputStream
 import java.io.OutputStream
 import java.io.UnsupportedEncodingException
 import java.net.URLDecoder
@@ -71,18 +72,9 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
         return "file"
     }
 
-    override fun downloadFile(filePath: String, outputStream: OutputStream) {
-        logger.info("downloadFile filePath is:$filePath")
-        if (filePath.contains("..")) {
-            // 非法路径则抛出错误提示
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                defaultMessage = "filePath is invalid",
-                params = arrayOf(filePath)
-            )
-        }
+    override fun getInputStreamByFilePath(filePath: String): InputStream {
         val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
-        FileCopyUtils.copy(FileInputStream(file), outputStream)
+        return FileInputStream(file)
     }
 
     override fun downloadFile(filePath: String, response: HttpServletResponse) {
