@@ -90,7 +90,7 @@ class UserImageResourceImpl @Autowired constructor(
 
     override fun searchImage(
         userId: String,
-        imageName: String?,
+        keyword: String?,
         imageSourceType: ImageType?,
         classifyCode: String?,
         categoryCode: String?,
@@ -103,7 +103,7 @@ class UserImageResourceImpl @Autowired constructor(
     ): Result<MarketImageResp> {
         return imageService.searchImage(
             userId = userId,
-            imageName = imageName,
+            keyword = keyword,
             imageSourceType = imageSourceType,
             classifyCode = classifyCode,
             categoryCode = categoryCode,
