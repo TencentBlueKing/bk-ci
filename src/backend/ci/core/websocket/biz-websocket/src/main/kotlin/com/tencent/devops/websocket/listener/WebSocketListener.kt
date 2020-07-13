@@ -48,7 +48,7 @@ class WebSocketListener @Autowired constructor(
     }
 
     override fun execute(event: SendMessage) {
-        logger.info("WebSocketListener: user:${event.userId},page:${event.page},sessionList:${event.sessionList}")
+        logger.debug("WebSocketListener: user:${event.userId},page:${event.page},sessionList:${event.sessionList}")
         try {
             val watch = StopWatch()
             val startTime = System.currentTimeMillis()
@@ -67,7 +67,7 @@ class WebSocketListener @Autowired constructor(
                         )
                         watch.stop()
                         if (System.currentTimeMillis() - pushStartTime > 500) {
-                            logger.warn("WebSocketListener push msg consuming 500ms, page[$event.page], session[$session]")
+                            logger.warn("WebSocketListener push msg consuming 500ms, page[${event.page}, session[$session]")
                         }
                     }
                 }
