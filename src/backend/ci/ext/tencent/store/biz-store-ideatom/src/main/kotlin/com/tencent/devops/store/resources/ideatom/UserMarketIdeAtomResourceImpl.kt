@@ -48,7 +48,7 @@ class UserMarketIdeAtomResourceImpl @Autowired constructor(
 
     override fun queryIdeAtomList(
         userId: String,
-        atomName: String?,
+        keyword: String?,
         categoryCode: String?,
         classifyCode: String?,
         labelCode: String?,
@@ -58,7 +58,18 @@ class UserMarketIdeAtomResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<MarketIdeAtomResp> {
-        return Result(marketIdeAtomService.list(userId, atomName, categoryCode, classifyCode, labelCode, score, rdType, sortType, page, pageSize))
+        return Result(marketIdeAtomService.list(
+            userId = userId,
+            keyword = keyword,
+            categoryCode = categoryCode,
+            classifyCode = classifyCode,
+            labelCode = labelCode,
+            score = score,
+            rdType = rdType,
+            sortType = sortType,
+            page = page,
+            pageSize = pageSize
+        ))
     }
 
     override fun getIdeAtomByCode(userId: String, atomCode: String): Result<IdeAtomDetail?> {
