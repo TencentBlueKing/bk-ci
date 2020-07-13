@@ -104,14 +104,15 @@
                     score,
                     page: this.page,
                     pageSize: this.pageSize,
+                    keyword: searchStr,
                     ...featureObj
                 }
                 if (classifyValue !== 'all') postData[classifyKey] = classifyValue
 
                 const apiFun = {
-                    atom: () => this.getAtomList(postData, searchStr),
-                    template: () => this.getTemplateList(postData, searchStr),
-                    image: () => this.getImageList(postData, searchStr)
+                    atom: () => this.$store.dispatch('store/requestMarketAtom', postData),
+                    template: () => this.$store.dispatch('store/requestMarketTemplate', postData),
+                    image: () => this.$store.dispatch('store/requestMarketImage', postData)
                 }
 
                 apiFun[pipeType]().then((res) => {
@@ -123,21 +124,6 @@
                     this.isLoading = false
                     this.isLoadingMore = false
                 })
-            },
-
-            getTemplateList (postData, searchStr) {
-                postData.templateName = searchStr
-                return this.$store.dispatch('store/requestMarketTemplate', postData)
-            },
-
-            getAtomList (postData, searchStr) {
-                postData.atomName = searchStr
-                return this.$store.dispatch('store/requestMarketAtom', postData)
-            },
-
-            getImageList (postData, searchStr) {
-                postData.imageName = searchStr
-                return this.$store.dispatch('store/requestMarketImage', postData)
             },
 
             chooseOrderType (order) {
