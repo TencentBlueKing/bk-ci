@@ -44,6 +44,7 @@ import org.springframework.stereotype.Service
 import org.springframework.util.FileCopyUtils
 import java.io.File
 import java.io.FileInputStream
+import java.io.InputStream
 import java.io.UnsupportedEncodingException
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -67,6 +68,11 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
 
     override fun getCommonFileFolderName(): String {
         return "file"
+    }
+
+    override fun getInputStreamByFilePath(filePath: String): InputStream {
+        val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
+        return FileInputStream(file)
     }
 
     override fun downloadFile(filePath: String, response: HttpServletResponse) {
