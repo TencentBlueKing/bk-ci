@@ -73,3 +73,11 @@ export function convertTime (ms) {
 
     return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}`
 }
+
+// 防抖
+export function debounce (callBack) {
+    window.clearTimeout(debounce.timeId)
+    debounce.timeId = window.setTimeout(() => {
+        callBack()
+    }, 200)
+}

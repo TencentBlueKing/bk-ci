@@ -13,12 +13,13 @@
         <main class="store-main" @scroll.passive="mainScroll">
             <section class="home-main">
                 <nav class="home-nav">
-                    <section :class="[{ 'control-active': isInputFocus }, 'g-input-search']">
-                        <input class="g-input-border" type="text" :placeholder="$t('store.请输入名称')" v-model="inputValue" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="filterData.searchStr = inputValue" />
-                        <i class="devops-icon icon-search" v-if="!inputValue"></i>
-                        <i class="devops-icon icon-close-circle-shape clear-icon" v-else @click="(inputValue = '', filterData.searchStr = '')"></i>
-                    </section>
-
+                    <bk-input class="nav-input"
+                        :placeholder="$t('store.请输入关键字')"
+                        :clearable="true"
+                        right-icon="bk-icon icon-search"
+                        :value="filterData.searchStr"
+                        @change="changeSearchStr"
+                    ></bk-input>
                     <section class="nav-pipetype">
                         <p v-for="storeType in storeTypes"
                             :key="storeType.type"
@@ -83,6 +84,7 @@
 </template>
 
 <script>
+    import { debounce } from '@/utils/index'
     import { mapActions } from 'vuex'
     import commentRate from '@/components/common/comment-rate'
 
@@ -121,7 +123,6 @@
                     sortType: undefined,
                     pipeType: undefined
                 },
-                inputValue: '',
                 isInputFocus: false,
                 categories: [{ name: this.$t('store.所有'), children: [{ name: this.$t('store.所有'), id: 'all', classifyValue: 'all' }] }],
                 rates: [
@@ -227,7 +228,6 @@
                             break
                         case 'searchStr':
                             this.filterData[key] = undefined
-                            this.inputValue = undefined
                             break
                         default:
                             this.filterData[key] = undefined
@@ -239,6 +239,12 @@
             changePipeType (type) {
                 this.filterData.pipeType = type
                 this.clearFliterData('features', 'rates', 'classifyValue', 'classifyKey', 'searchStr', 'sortType')
+            },
+
+            changeSearchStr (val) {
+                debounce(() => {
+                    this.filterData.searchStr = val
+                })
             },
 
             chooseFeature (feature) {
@@ -395,6 +401,10 @@
             width: 240px;
             background: $white;
             border: 1px solid $borderWeightColor;
+            .nav-input {
+                margin: 20px 15px 0;
+                width: 210px;
+            }
             .nav-pipetype {
                 margin: 20px 0 15px;
                 .pipe-type {
