@@ -26,7 +26,9 @@
 
 package com.tencent.devops.store.pojo.common.enums
 
-enum class StoreOperationTypeEnum {
-    UPDATE_PIPELINE_MODEL, // 更新流水线模型
-    INSTALL_IDE_PLUGIN; // 安装IDE插件
+enum class ScopeTypeEnum {
+    ALL,
+    GRAY,
+    NO_GRAY,
+    SPEC
 }
