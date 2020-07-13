@@ -9,7 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceVarResourceImpl @Autowired constructor(
     private val buildVariableService: BuildVariableService
 ) : ServiceVarResource {
-    override fun getBuildVar(buildId: String, projectId: String, pipelineId: String): Result<Map<String, String>> {
-        return Result(buildVariableService.getAllVariable(buildId))
+    override fun getBuildVar(buildId: String, varName: String?): Result<Map<String, String>> {
+        return if (varName.isNullOrBlank()) Result(buildVariableService.getAllVariable(buildId))
+        else Result(mapOf(varName!! to (buildVariableService.getVariable(buildId, varName) ?: "")))
     }
 }
