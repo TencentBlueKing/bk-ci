@@ -412,7 +412,8 @@ class PipelineBuildService(
         checkPermission: Boolean = true,
         isMobile: Boolean = false,
         startByMessage: String? = null,
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        frequencyLimit: Boolean = true
     ): String {
         logger.info("Manual build start with value [$values][$buildNo]")
         if (checkPermission) {
@@ -504,7 +505,8 @@ class PipelineBuildService(
                 startParamsWithType = startParamsWithType,
                 channelCode = channelCode,
                 isMobile = isMobile,
-                model = model
+                model = model,
+                frequencyLimit = frequencyLimit
             )
         } finally {
             logger.info("[$pipelineId]|$userId|It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline")
