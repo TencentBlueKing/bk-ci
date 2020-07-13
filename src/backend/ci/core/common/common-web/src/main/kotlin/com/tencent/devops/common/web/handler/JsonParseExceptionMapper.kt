@@ -22,26 +22,31 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.common.web.handler
 
-import com.fasterxml.jackson.databind.JsonMappingException
+import com.fasterxml.jackson.core.JsonParseException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.slf4j.LoggerFactory
+import javax.annotation.Priority
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
+import javax.ws.rs.ext.Provider
 
-class JsonMappingExceptionMapper : ExceptionMapper<JsonMappingException> {
+@Provider
+@Priority(1)
+class JsonParseExceptionMapper : ExceptionMapper<JsonParseException> {
     companion object {
-        val logger = LoggerFactory.getLogger(IllegalArgumentExceptionMapper::class.java)!!
+        val logger = LoggerFactory.getLogger(JsonParseExceptionMapper::class.java)!!
     }
 
-    override fun toResponse(exception: JsonMappingException): Response {
-        logger.warn("Failed with json mapping exception", exception)
+    override fun toResponse(exception: JsonParseException): Response {
+        logger.warn("Failed with json parse exception", exception)
         val status = Response.Status.BAD_REQUEST
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
