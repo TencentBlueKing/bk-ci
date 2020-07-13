@@ -33,7 +33,9 @@ import com.tencent.devops.dispatch.pojo.DeployApp
 import com.tencent.devops.dispatch.pojo.StopApp
 import com.tencent.devops.dispatch.util.BcsClientUtils
 import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.kubernetes.api.model.Probe
 import io.fabric8.kubernetes.api.model.ServiceBuilder
+import io.fabric8.kubernetes.api.model.TCPSocketAction
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder
 import io.fabric8.kubernetes.api.model.apps.DeploymentStrategy
@@ -65,6 +67,8 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
 
     private final val dateConfigPath = "/etc/localtime"
 
+    private final val initialDelaySeconds = 5
+
     fun deployApp(
         userId: String,
         deployApp: DeployApp
@@ -82,6 +86,8 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         val deploymentStrategy = DeploymentStrategy(
             RollingUpdateDeployment(IntOrString(1), IntOrString(0)), "RollingUpdate"
         )
+        // 生成探针对象
+        val probe = getTcpSocketProbe(containerPort)
         // 创建deployment无状态部署
         val deployment = DeploymentBuilder()
             .withNewMetadata()
@@ -107,6 +113,8 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             .withName(dateConfigName)
             .withMountPath(dateConfigPath)
             .endVolumeMount()
+            .withLivenessProbe(probe) // 存活探针来确定何时重启容器
+            .withReadinessProbe(probe) // 就绪探针来确定容器是否已经就绪可以接受流量
             .endContainer()
             .addNewImagePullSecret()
             .withName(appDeployment.pullImageSecretName)
@@ -202,6 +210,15 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             }
         }
         return Result(true)
+    }
+
+    private fun getTcpSocketProbe(containerPort: Int): Probe {
+        val tcpSocket = TCPSocketAction()
+        tcpSocket.port = IntOrString(containerPort)
+        val probe = Probe()
+        probe.initialDelaySeconds = initialDelaySeconds
+        probe.tcpSocket = tcpSocket
+        return probe
     }
 
     private fun getServiceName(serviceCode: String) = "$serviceCode-service"
