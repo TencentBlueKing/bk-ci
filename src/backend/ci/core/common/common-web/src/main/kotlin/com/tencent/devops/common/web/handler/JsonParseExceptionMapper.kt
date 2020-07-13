@@ -46,7 +46,7 @@ class JsonParseExceptionMapper : ExceptionMapper<JsonParseException> {
     }
 
     override fun toResponse(exception: JsonParseException): Response {
-        logger.error("Failed with json parse exception", exception)
+        logger.warn("Failed with json parse exception", exception)
         val status = Response.Status.BAD_REQUEST
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
