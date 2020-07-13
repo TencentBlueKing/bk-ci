@@ -86,8 +86,6 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         val deploymentStrategy = DeploymentStrategy(
             RollingUpdateDeployment(IntOrString(1), IntOrString(0)), "RollingUpdate"
         )
-        // 生成探针对象
-        val probe = getTcpSocketProbe(containerPort)
         // 创建deployment无状态部署
         val deployment = DeploymentBuilder()
             .withNewMetadata()
@@ -113,8 +111,8 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             .withName(dateConfigName)
             .withMountPath(dateConfigPath)
             .endVolumeMount()
-            .withLivenessProbe(probe) // 存活探针来确定何时重启容器
-            .withReadinessProbe(probe) // 就绪探针来确定容器是否已经就绪可以接受流量
+            .withLivenessProbe(getTcpSocketProbe(containerPort)) // 存活探针来确定何时重启容器
+            .withReadinessProbe(getTcpSocketProbe(containerPort)) // 就绪探针来确定容器是否已经就绪可以接受流量
             .endContainer()
             .addNewImagePullSecret()
             .withName(appDeployment.pullImageSecretName)
