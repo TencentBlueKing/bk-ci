@@ -203,7 +203,8 @@ class PipelineBuildStageDao {
         dslContext: DSLContext,
         buildId: String,
         stageId: String,
-        buildStatus: BuildStatus
+        buildStatus: BuildStatus,
+        controlOption: PipelineBuildStageControlOption? = null
     ): Int {
         return with(T_PIPELINE_BUILD_STAGE) {
             val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
@@ -220,7 +221,7 @@ class PipelineBuildStageDao {
             } else if (BuildStatus.isRunning(buildStatus)) {
                 update.set(START_TIME, LocalDateTime.now())
             }
-
+            if (controlOption != null) update.set(CONDITIONS, JsonUtil.toJson(controlOption))
             update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).execute()
         }
     }
