@@ -24,17 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-archive")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:artifactory:api-artifactory")
-    compile project(":core:artifactory:model-artifactory")
-    compile project(":core:project:api-project")
-    compile project(":core:process:api-process")
-    compile("com.amazonaws:aws-java-sdk-s3")
-    compile "net.coobird:thumbnailator:0.4.8"
+package com.tencent.devops.artifactory.constant
+
+enum class FileTaskStatusEnum(val status: Short) {
+    WAITING(0), // 等待
+    DOWNLOADING(1), // 正在下载
+    DONE(2), // 下载完成
+    ERROR(3) // 异常状态
 }

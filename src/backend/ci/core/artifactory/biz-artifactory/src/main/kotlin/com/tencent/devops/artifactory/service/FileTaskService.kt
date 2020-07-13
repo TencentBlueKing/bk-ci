@@ -24,17 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-archive")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:artifactory:api-artifactory")
-    compile project(":core:artifactory:model-artifactory")
-    compile project(":core:project:api-project")
-    compile project(":core:process:api-process")
-    compile("com.amazonaws:aws-java-sdk-s3")
-    compile "net.coobird:thumbnailator:0.4.8"
+package com.tencent.devops.artifactory.service
+
+import com.tencent.devops.artifactory.pojo.CreateFileTaskReq
+import com.tencent.devops.artifactory.pojo.FileTaskInfo
+
+interface FileTaskService {
+    fun createFileTask(userId: String, projectId: String, pipelineId: String, buildId: String, createFileTaskReq: CreateFileTaskReq): String
+
+    fun getStatus(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String): FileTaskInfo?
+
+    fun clearFileTask(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String): Boolean
 }
