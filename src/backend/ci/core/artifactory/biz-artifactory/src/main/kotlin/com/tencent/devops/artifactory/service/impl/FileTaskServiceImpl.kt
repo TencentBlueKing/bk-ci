@@ -54,13 +54,16 @@ class FileTaskServiceImpl : FileTaskService {
 
     val threadPoolExecutor = ThreadPoolExecutor(50, 100, 60, TimeUnit.SECONDS, LinkedBlockingQueue(50))
 
-    @Value("\${artifactory.file.task.savedir:/tmp/bkee/ci/artifactory/filetask/}")
+    @Value("\${artifactory.fileTask.savedir:/tmp/bkee/ci/artifactory/filetask/}")
     val basePath: String? = null
 
-    @Value("\${artifactory.file.task.file.expireTimeMinutes:720}")
+    @Value("\${artifactory.fileTask.file.expireTimeMinutes:720}")
     val fileExpireTimeMinutes: Long = 720L
 
-    @Value("\${artifactory.file.task.record.expireTimeDays:7}")
+    @Value("\${artifactory.fileTask.record.clear.enable:false}")
+    val clearRecordEnable: Boolean = false
+
+    @Value("\${artifactory.fileTask.record.clear.expireTimeDays:7}")
     val recordExpireTimeDays: Long = 7L
 
     protected val fileSeparator: String = System.getProperty("file.separator")!!
@@ -171,6 +174,10 @@ class FileTaskServiceImpl : FileTaskService {
     @Scheduled(cron = "0 0 9 0/1 * ?")
     fun clearRecordTask() {
         logger.info("clearRecordTask start")
+        if (!clearRecordEnable) {
+            logger.info("clearRecordEnable=false, skip")
+            return
+        }
         // 多实例并发控制
         Thread.sleep((Math.random() * 10000).toLong())
         // 清理一段时间前的已完成记录
