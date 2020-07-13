@@ -55,7 +55,7 @@ interface MarketAtomService {
      */
     fun list(
         userId: String,
-        atomName: String?,
+        keyword: String?,
         classifyCode: String?,
         labelCode: String?,
         score: Int?,
