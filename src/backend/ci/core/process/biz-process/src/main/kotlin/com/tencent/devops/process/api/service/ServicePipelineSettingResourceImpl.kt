@@ -24,50 +24,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common.impl
+package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.store.dao.common.OperationLogDao
-import com.tencent.devops.store.pojo.common.enums.StoreOperationTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.common.OperationLogService
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
+import com.tencent.devops.process.service.PipelineSettingService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-/**
- * 操作记录
- * since: 2019-10-28
- */
-@Service
-class OperationLogServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val operationLogDao: OperationLogDao
-) : OperationLogService {
+@RestResource
+class ServicePipelineSettingResourceImpl @Autowired constructor(
+    private val pipelineSettingService: PipelineSettingService
+) : ServicePipelineSettingResource {
 
-    private val logger = LoggerFactory.getLogger(OperationLogServiceImpl::class.java)
-
-    override fun add(
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        optType: StoreOperationTypeEnum,
-        optUser: String,
-        optDesc: String
+    override fun updatePipelineModel(
+        userId: String,
+        updatePipelineModelRequest: UpdatePipelineModelRequest
     ): Result<Boolean> {
-        logger.info("add operation log: storeCode=$storeCode, storeType=$storeType, optType=$optType, optUser=$optUser, optDesc=$optDesc")
-
-        val id = UUIDUtil.generate()
-        operationLogDao.add(
-            dslContext = dslContext,
-            id = id,
-            storeCode = storeCode,
-            storeType = storeType.type.toByte(),
-            optType = optType.name,
-            optUser = optUser,
-            optDesc = optDesc
+        val flag = pipelineSettingService.updatePipelineModel(
+            userId = userId,
+            updatePipelineModelRequest = updatePipelineModelRequest,
+            checkPermission = false
         )
-        return Result(true)
+        return Result(flag)
     }
 }

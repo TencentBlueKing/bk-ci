@@ -1,4 +1,4 @@
-/*
+ /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
@@ -81,6 +81,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamService
+import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -412,7 +413,8 @@ class PipelineBuildService(
         checkPermission: Boolean = true,
         isMobile: Boolean = false,
         startByMessage: String? = null,
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        frequencyLimit: Boolean = true
     ): String {
         logger.info("Manual build start with value [$values][$buildNo]")
         if (checkPermission) {
@@ -504,7 +506,8 @@ class PipelineBuildService(
                 startParamsWithType = startParamsWithType,
                 channelCode = channelCode,
                 isMobile = isMobile,
-                model = model
+                model = model,
+                frequencyLimit = frequencyLimit
             )
         } finally {
             logger.info("[$pipelineId]|$userId|It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline")
@@ -1622,7 +1625,9 @@ class PipelineBuildService(
                     projectId = readyToBuildPipelineInfo.projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    param = JsonUtil.toJson(startParams.filter { realStartParamKeys.contains(it.key) })
+                    param = JsonUtil.toJson(startParams.filter {
+                        realStartParamKeys.contains(it.key) || it.key == BUILD_NO
+                    })
                 )
             }
 

@@ -24,50 +24,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common.impl
+package com.tencent.devops.process.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.store.dao.common.OperationLogDao
-import com.tencent.devops.store.pojo.common.enums.StoreOperationTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.common.OperationLogService
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-/**
- * 操作记录
- * since: 2019-10-28
- */
-@Service
-class OperationLogServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val operationLogDao: OperationLogDao
-) : OperationLogService {
+@Api(tags = ["SERVICE_PIPELINE_SETTING"], description = "服务-流水线设置")
+@Path("/service/setting")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServicePipelineSettingResource {
 
-    private val logger = LoggerFactory.getLogger(OperationLogServiceImpl::class.java)
-
-    override fun add(
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        optType: StoreOperationTypeEnum,
-        optUser: String,
-        optDesc: String
-    ): Result<Boolean> {
-        logger.info("add operation log: storeCode=$storeCode, storeType=$storeType, optType=$optType, optUser=$optUser, optDesc=$optDesc")
-
-        val id = UUIDUtil.generate()
-        operationLogDao.add(
-            dslContext = dslContext,
-            id = id,
-            storeCode = storeCode,
-            storeType = storeType.type.toByte(),
-            optType = optType.name,
-            optUser = optUser,
-            optDesc = optDesc
-        )
-        return Result(true)
-    }
+    @ApiOperation("更新流水线模型")
+    @PUT
+    @Path("/pipeline/model/update")
+    fun updatePipelineModel(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("更新流水线模型请求报文")
+        updatePipelineModelRequest: UpdatePipelineModelRequest
+    ): Result<Boolean>
 }

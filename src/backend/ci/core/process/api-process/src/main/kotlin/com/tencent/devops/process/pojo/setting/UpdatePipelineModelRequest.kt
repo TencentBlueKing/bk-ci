@@ -24,9 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.process.pojo.setting
 
-enum class StoreOperationTypeEnum {
-    UPDATE_PIPELINE_MODEL, // 更新流水线模型
-    INSTALL_IDE_PLUGIN; // 安装IDE插件
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("更新流水线模型请求报文")
+data class UpdatePipelineModelRequest(
+    @ApiModelProperty("流水线模型版本集合", required = true)
+    val pipelineModelVersionList: List<PipelineModelVersion>
+)

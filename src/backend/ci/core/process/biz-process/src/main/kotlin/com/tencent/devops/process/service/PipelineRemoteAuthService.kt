@@ -100,7 +100,8 @@ class PipelineRemoteAuthService @Autowired constructor(
                 channelCode = ChannelCode.BS,
                 checkPermission = true,
                 isMobile = false,
-                startByMessage = "m-$auth"
+                startByMessage = "m-$auth",
+                frequencyLimit = false
             )
         )
     }
