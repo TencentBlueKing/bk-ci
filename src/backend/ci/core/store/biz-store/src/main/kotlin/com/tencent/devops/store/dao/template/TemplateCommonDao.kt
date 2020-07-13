@@ -60,4 +60,19 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
                 .fetch()
         }
     }
+
+    override fun getLatestStoreInfoListByCodes(
+        dslContext: DSLContext,
+        storeCodeList: List<String>
+    ): Result<out Record>? {
+        return with(TTemplate.T_TEMPLATE) {
+            dslContext.select(
+                TEMPLATE_CODE.`as`("storeCode"),
+                VERSION.`as`("version")
+            ).from(this)
+                .where(TEMPLATE_CODE.`in`(storeCodeList))
+                .and(LATEST_FLAG.eq(true))
+                .fetch()
+        }
+    }
 }
