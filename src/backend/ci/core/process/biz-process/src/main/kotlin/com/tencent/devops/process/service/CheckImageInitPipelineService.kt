@@ -51,7 +51,7 @@ import com.tencent.devops.process.pojo.CheckImageInitPipelineResp
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
-import com.tencent.devops.process.util.DateTimeUtils
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -229,7 +229,7 @@ class CheckImageInitPipelineService @Autowired constructor(
                 successSubscription = Subscription(),
                 failSubscription = Subscription(),
                 labels = emptyList(),
-                waitQueueTimeMinute = DateTimeUtils.secondToMinute(settingRecord.waitQueueTimeSecond),
+                waitQueueTimeMinute = DateTimeUtil.secondToMinute(settingRecord.waitQueueTimeSecond),
                 maxQueueSize = settingRecord.maxQueueSize
             )
             pipelineService.saveSetting(

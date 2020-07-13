@@ -106,7 +106,7 @@ import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.template.dao.PipelineTemplateDao
-import com.tencent.devops.process.util.DateTimeUtils
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -458,7 +458,7 @@ class TemplateService @Autowired constructor(
                         content = it.get(FAIL_CONTENT) ?: ""
                     ),
                     labels = labels,
-                    waitQueueTimeMinute = DateTimeUtils.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
+                    waitQueueTimeMinute = DateTimeUtil.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
                     maxQueueSize = it.get(MAX_QUEUE_SIZE),
                     hasPermission = hasPermission
                 )
