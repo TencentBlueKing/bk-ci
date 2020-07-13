@@ -24,17 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-archive")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:artifactory:api-artifactory")
-    compile project(":core:artifactory:model-artifactory")
-    compile project(":core:project:api-project")
-    compile project(":core:process:api-process")
-    compile("com.amazonaws:aws-java-sdk-s3")
-    compile "net.coobird:thumbnailator:0.4.8"
-}
+package com.tencent.devops.artifactory.pojo
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("版本仓库-文件托管任务信息")
+data class FileTaskInfo(
+    @ApiModelProperty("任务Id", required = true)
+    val id: String,
+    @ApiModelProperty("任务状态", required = true)
+    val status: Short,
+    @ApiModelProperty("文件所在机器IP", required = true)
+    val ip: String,
+    @ApiModelProperty("文件绝对路径", required = true)
+    val path: String
+)

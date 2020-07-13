@@ -24,17 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-archive")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:artifactory:api-artifactory")
-    compile project(":core:artifactory:model-artifactory")
-    compile project(":core:project:api-project")
-    compile project(":core:process:api-process")
-    compile("com.amazonaws:aws-java-sdk-s3")
-    compile "net.coobird:thumbnailator:0.4.8"
-}
+package com.tencent.devops.artifactory.pojo
+
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("创建文件托管任务请求")
+data class CreateFileTaskReq(
+    @ApiModelProperty("文件类型", required = true)
+    val fileType: FileTypeEnum,
+    @ApiModelProperty("文件路径", required = true)
+    val path: String
+)

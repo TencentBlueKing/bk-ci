@@ -15,6 +15,18 @@ server:
 artifactory:
   archiveLocalBasePath: __INSTALL_PATH__/public/__MODULE__/artifactory
   archiveJFrogBasePath: /tmp
+  
+# 以下为文件托管任务配置，主要用于作品平台构件分发插件，
+# 可配置文件暂存目录、临时文件过期时间、数据库记录清理策略
+artifactory:  
+  fileTask:
+    savedir: /tmp/bkee/ci/artifactory/filetask/
+    file:
+      expireTimeMinutes: 720
+    record:
+      clear:
+        enable: false
+        expireTimeDays: 7
 
 # 自已有部署Jfrog的可以对接
 jfrog:
@@ -23,3 +35,5 @@ jfrog:
   docker_port: __DOCKER_PORT__
   username: __JFROG_USERNAME__
   password: __JFROG_PASSWORD__
+  
+  
