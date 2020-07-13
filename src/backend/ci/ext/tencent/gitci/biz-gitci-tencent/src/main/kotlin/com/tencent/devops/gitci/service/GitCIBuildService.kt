@@ -54,8 +54,6 @@ import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitProjectPipelineDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
-import com.tencent.devops.gitci.pojo.GitRepositoryConf
-import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
 import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
@@ -71,9 +69,9 @@ import com.tencent.devops.common.ci.yaml.Job
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.gitci.client.ScmClient
+import com.tencent.devops.gitci.pojo.*
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
@@ -83,32 +81,6 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.scm.api.ServiceGitResource
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ID
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_NUMBER
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TITLE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_USERNAME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_NAME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_OPERATION
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_USERNAME
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_NAME
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_TYPE
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import org.jooq.DSLContext
@@ -486,13 +458,15 @@ class GitCIBuildService @Autowired constructor(
 
         val startParams = mutableMapOf<String, String>()
 
-        startParams[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] = event.objectKind
-        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = event.branch
-        startParams[BK_REPO_GIT_WEBHOOK_PUSH_USERNAME] = event.userId
-        startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = event.commitId
-        startParams[BK_REPO_WEBHOOK_REPO_NAME] = gitProjectConf.name
-        startParams[BK_REPO_WEBHOOK_REPO_TYPE] = CodeType.GIT.name
-        startParams[BK_REPO_WEBHOOK_REPO_URL] = gitProjectConf.url
+        // 通用参数
+        startParams[CI_STATUS] = "true"
+        startParams[CI_EVENT_TYPE] = event.objectKind
+        startParams[CI_BRANCH] = event.branch
+        startParams[CI_BUILD_USER] = event.userId
+        startParams[CI_COMMIT_ID] = event.commitId
+        startParams[CI_REPOSITORY_NAME] = gitProjectConf.name
+        startParams[CI_BUILD_WEB_URL] = gitProjectConf.url
+        startParams[CI_COMMIT_MESSAGE] = event.commitMsg.toString()
 
         // 写入WEBHOOK触发环境变量
         val originEvent = try {
@@ -503,33 +477,39 @@ class GitCIBuildService @Autowired constructor(
 
         when (originEvent) {
             is GitPushEvent -> {
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_USERNAME] = originEvent.user_name
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT] = originEvent.before
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT] = originEvent.after
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND] = originEvent.operation_kind
+                startParams[CI_BUILD_USER] = originEvent.user_name
+                startParams[CI_PUSH_BEFORE_COMMIT] = originEvent.before
+                startParams[CI_PUSH_AFTER_COMMIT] = originEvent.after
+                startParams[CI_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
+                startParams[CI_PUSH_OPERATION_KIND] = originEvent.operation_kind
+                startParams[CI_REF] = originEvent.ref
             }
             is GitTagPushEvent -> {
-                startParams[BK_REPO_GIT_WEBHOOK_TAG_NAME] = event.branch
-                startParams[BK_REPO_GIT_WEBHOOK_TAG_OPERATION] = originEvent.operation_kind ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
-                startParams[BK_REPO_GIT_WEBHOOK_TAG_USERNAME] = event.userId
+                startParams[CI_TAG_NAME] = event.branch
+                startParams[CI_TAG_OPERATION] = originEvent.operation_kind ?: ""
+                startParams[CI_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
+                startParams[CI_TAG_USERNAME] = event.userId
+                startParams[CI_REF] = originEvent.ref
             }
             is GitMergeRequestEvent -> {
-                startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = originEvent.user.username
-                startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = originEvent.object_attributes.target_branch
-                startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = originEvent.object_attributes.source_branch
-                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = originEvent.object_attributes.created_at
-                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] =
+                startParams[CI_MR_ACTION] = originEvent.object_attributes.action
+                startParams[CI_MR_AUTHOR] = originEvent.user.username
+                startParams[CI_MR_TARGET_BRANCH] = originEvent.object_attributes.target_branch
+                startParams[CI_MR_SOURCE_BRANCH] = originEvent.object_attributes.source_branch
+                startParams[CI_MR_TARGET_REPOSITORY] = originEvent.object_attributes.target.name
+                startParams[CI_MR_SOURCE_REPOSITORY] = originEvent.object_attributes.source.name
+                startParams[CI_MR_CREATE_TIME] = originEvent.object_attributes.created_at
+                startParams[CI_MR_CREATE_TIME_TIMESTAMP] =
                     DateTimeUtil.zoneDateToTimestamp(originEvent.object_attributes.created_at).toString()
-                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = originEvent.object_attributes.updated_at
-                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] =
+                startParams[CI_MR_UPDATE_TIME] = originEvent.object_attributes.updated_at
+                startParams[CI_MR_UPDATE_TIME_TIMESTAMP] =
                     DateTimeUtil.zoneDateToTimestamp(originEvent.object_attributes.updated_at).toString()
-                startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = originEvent.object_attributes.iid.toString()
-                startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = originEvent.object_attributes.title
-                startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = originEvent.object_attributes.url
-                startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = originEvent.object_attributes.id.toString()
-                startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = originEvent.object_attributes.description
+                startParams[CI_MR_ID] = originEvent.object_attributes.iid.toString()
+                startParams[CI_MR_TITLE] = originEvent.object_attributes.title
+                startParams[CI_MR_URL] = originEvent.object_attributes.url
+                startParams[CI_MR_NUMBER] = originEvent.object_attributes.id.toString()
+                startParams[CI_MR_DESC] = originEvent.object_attributes.description
+                startParams[CI_MR_ASSIGNEE] = originEvent.object_attributes.assignee_id.toString()
             }
         }
 
