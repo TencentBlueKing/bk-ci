@@ -47,7 +47,7 @@ import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.service.label.PipelineGroupService
-import com.tencent.devops.process.util.DateTimeUtils
+import com.tencent.devops.common.api.util.DateTimeUtil
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -150,7 +150,7 @@ class PipelineSettingService @Autowired constructor(
                             it.get(FAIL_CONTENT) ?: ""
                         ),
                         labels = labels,
-                        waitQueueTimeMinute = DateTimeUtils.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
+                        waitQueueTimeMinute = DateTimeUtil.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
                         maxQueueSize = it.get(MAX_QUEUE_SIZE),
                         maxPipelineResNum = it.get(MAX_PIPELINE_RES_NUM)
                     )
