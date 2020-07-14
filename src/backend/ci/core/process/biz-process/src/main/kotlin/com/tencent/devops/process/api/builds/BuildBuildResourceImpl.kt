@@ -33,7 +33,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineVMBuildService
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.process.pojo.BuildHistoryVariables
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
