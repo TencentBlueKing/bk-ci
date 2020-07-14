@@ -38,12 +38,14 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.service.BuildVariableService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildBuildResourceImpl @Autowired constructor(
     private val vmBuildService: PipelineVMBuildService,
-    private val buildService: PipelineBuildService
+    private val buildService: PipelineBuildService,
+    private val buildVariableService: BuildVariableService
 ) : BuildBuildResource {
 
     override fun setStarted(buildId: String, vmSeqId: String, vmName: String): Result<BuildVariables> {
@@ -120,11 +122,11 @@ class BuildBuildResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getBuildVars(userId: String, projectId: String, pipelineId: String, buildId: String, channelCode: ChannelCode): Result<BuildHistoryVariables> {
+    override fun getBuildVars(projectId: String, pipelineId: String, buildId: String): Result<Map<String, String>> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return buildService.getBuildVars(userId, projectId, pipelineId, buildId, ChannelCode.isNeedAuth(channelCode))
+        return Result(buildVariableService.getAllVariable(buildId))
     }
 
     private fun checkParam(buildId: String, vmSeqId: String, vmName: String) {
