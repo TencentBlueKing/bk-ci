@@ -184,4 +184,16 @@ interface BuildBuildResource {
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<ModelDetail>
+
+    @ApiOperation("获取子流水线变量")
+    @GET
+    @Path("/taskIds/{taskId}/subVar")
+    fun getSubBuildVars(
+        @ApiParam("构建ID", required = true)
+        @HeaderParam("buildId")
+        buildId: String,
+        @ApiParam("任务ID", required = false)
+        @PathParam("taskId")
+        taskId: String
+    ): Result<Map<String, String>>
 }

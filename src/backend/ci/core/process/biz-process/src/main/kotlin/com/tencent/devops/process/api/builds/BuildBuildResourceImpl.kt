@@ -37,12 +37,14 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.service.SubPipelineStartUpService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildBuildResourceImpl @Autowired constructor(
     private val vmBuildService: PipelineVMBuildService,
-    private val buildService: PipelineBuildService
+    private val buildService: PipelineBuildService,
+    private val subPipelineStartUpService: SubPipelineStartUpService
 ) : BuildBuildResource {
 
     override fun setStarted(buildId: String, vmSeqId: String, vmName: String): Result<BuildVariables> {
@@ -117,6 +119,10 @@ class BuildBuildResourceImpl @Autowired constructor(
                 ChannelCode.isNeedAuth(channelCode)
             )
         )
+    }
+
+    override fun getSubBuildVars(buildId: String, taskId: String): Result<Map<String, String>> {
+        return subPipelineStartUpService.getSubVar(buildId, taskId)
     }
 
     private fun checkParam(buildId: String, vmSeqId: String, vmName: String) {
