@@ -126,33 +126,38 @@ class QualityPipelineService @Autowired constructor(
         originElementList: List<CheckElement>,
         gatewayId: String
     ): Pair<List<RangeExistElement>, Set<String>> {
+        // gateway id过滤一遍
+        val matchGatewayOriginElementList = originElementList.filter { it.atomName.contains(gatewayId) }
+
         // 1. 查找不存在的插件
         val lackElements = mutableSetOf<String>()
         checkElements.forEach { checkElement ->
-            val isCheckCodeccElemenet = CodeccUtils.isCodeccAtom(checkElement)
-            val isExist = if (isCheckCodeccElemenet)
-                originElementList.any { originElement -> CodeccUtils.isCodeccAtom(originElement.atomCode) }
-            else
-                originElementList.any { originElement -> checkElement == originElement.atomCode }
-            if (!isExist) lackElements.add(checkElement)
-
-            if (!gatewayId.isBlank() && !originElementList.any { originElement -> originElement.atomName.contains(gatewayId) })
-                lackElements.add(checkElement)
+            val isExist = matchGatewayOriginElementList.any {
+                originElement -> getRealAtomCode(checkElement) == getRealAtomCode(originElement.atomCode)
+            }
+            if (!isExist) {
+                // 处理lack element中的codecc插件
+                lackElements.add(getRealAtomCode(checkElement))
+            }
         }
 
         // 2. 查找存在的插件
         // 找出流水线存在的指标原子，并统计个数
         val existElements = mutableListOf<RangeExistElement>()
-        originElementList.filter { it.atomCode !in lackElements }.groupBy { it.atomCode }
+        originElementList.filter { it.atomCode !in lackElements }.groupBy { getRealAtomCode(it.atomCode) }
             .forEach { (classType, tasks) ->
                 val ele = if (CodeccUtils.isCodeccAtom(classType)) {
                     val asynchronous = tasks.any { t ->
                         val asynchronous = t.taskParams["asynchronous"] as? Boolean
-                        asynchronous == true
+
+                        val data = t.taskParams["data"] as? Map<String, Any>
+                        val input = data?.get("input") as? Map<String, Any>
+                        val newAsync = input?.get("asynchronous") as? Boolean
+                        asynchronous == true || newAsync == true
                     }
                     RangeExistElement(
                         name = classType,
-                        cnName = ElementUtils.getElementCnName(classType, projectId),
+                        cnName = ElementUtils.getElementCnName(getRealAtomCode(classType), projectId),
                         count = 1,
                         params = mapOf("asynchronous" to (asynchronous))
                     )
@@ -166,6 +171,10 @@ class QualityPipelineService @Autowired constructor(
                 existElements.add(ele)
             }
         return Pair(existElements, lackElements)
+    }
+
+    private fun getRealAtomCode(atomCode: String): String {
+        return CodeccUtils.realAtomCodeMap[atomCode] ?: atomCode
     }
 
     data class CheckElement(

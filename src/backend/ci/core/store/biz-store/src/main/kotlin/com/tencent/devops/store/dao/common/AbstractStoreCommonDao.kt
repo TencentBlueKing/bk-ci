@@ -46,4 +46,9 @@ abstract class AbstractStoreCommonDao {
         dslContext: DSLContext,
         storeName: String
     ): Result<out Record>?
+
+    abstract fun getLatestStoreInfoListByCodes(
+        dslContext: DSLContext,
+        storeCodeList: List<String>
+    ): Result<out Record>?
 }

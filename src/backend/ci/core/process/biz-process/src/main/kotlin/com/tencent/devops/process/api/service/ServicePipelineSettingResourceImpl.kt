@@ -24,30 +24,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.notify.utils
+package com.tencent.devops.process.api.service
 
-object DateTimeUtil {
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
+import com.tencent.devops.process.service.PipelineSettingService
+import org.springframework.beans.factory.annotation.Autowired
 
-    fun formatMillSecond(mss: Long): String {
-        if (mss == 0L) return "0秒"
+@RestResource
+class ServicePipelineSettingResourceImpl @Autowired constructor(
+    private val pipelineSettingService: PipelineSettingService
+) : ServicePipelineSettingResource {
 
-        val days = mss / (1000 * 60 * 60 * 24)
-        val hours = mss % (1000 * 60 * 60 * 24) / (1000 * 60 * 60)
-        val minutes = mss % (1000 * 60 * 60) / (1000 * 60)
-        val seconds = mss % (1000 * 60) / 1000
-        val sb = StringBuilder()
-        if (days != 0L) {
-            sb.append(days.toString() + "天")
-        }
-        if (hours != 0L) {
-            sb.append(hours.toString() + "时")
-        }
-        if (minutes != 0L) {
-            sb.append(minutes.toString() + "分")
-        }
-        if (seconds != 0L) {
-            sb.append(seconds.toString() + "秒")
-        }
-        return sb.toString()
+    override fun updatePipelineModel(
+        userId: String,
+        updatePipelineModelRequest: UpdatePipelineModelRequest
+    ): Result<Boolean> {
+        val flag = pipelineSettingService.updatePipelineModel(
+            userId = userId,
+            updatePipelineModelRequest = updatePipelineModelRequest,
+            checkPermission = false
+        )
+        return Result(flag)
     }
 }

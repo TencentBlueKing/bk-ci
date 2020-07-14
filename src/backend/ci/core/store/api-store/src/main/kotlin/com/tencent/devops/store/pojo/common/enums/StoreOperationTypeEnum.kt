@@ -26,22 +26,7 @@
 
 package com.tencent.devops.store.pojo.common.enums
 
-enum class StoreOperationTypeEnum(val type: String) {
-    INSTALL_IDE_PLUGIN("INSTALL_IDE_PLUGIN"); // 安装IDE插件
-
-    companion object {
-        fun getStoreOperationType(type: String): String? {
-            return when (type) {
-                "INSTALL_IDE_PLUGIN" -> StoreOperationTypeEnum.INSTALL_IDE_PLUGIN.name
-                else -> null
-            }
-        }
-
-        fun getStoreOperationTypeObj(type: String): StoreOperationTypeEnum? {
-            return when (type) {
-                "INSTALL_IDE_PLUGIN" -> INSTALL_IDE_PLUGIN
-                else -> null
-            }
-        }
-    }
+enum class StoreOperationTypeEnum {
+    UPDATE_PIPELINE_MODEL, // 更新流水线模型
+    INSTALL_IDE_PLUGIN; // 安装IDE插件
 }

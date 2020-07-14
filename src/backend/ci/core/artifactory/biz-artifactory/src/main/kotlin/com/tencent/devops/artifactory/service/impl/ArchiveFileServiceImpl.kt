@@ -36,6 +36,7 @@ import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -57,8 +58,10 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.util.AntPathMatcher
+import org.springframework.util.FileCopyUtils
 import java.io.File
 import java.io.InputStream
+import java.io.OutputStream
 import java.net.URLDecoder
 import java.nio.charset.Charset
 import java.nio.file.Files
@@ -163,6 +166,22 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             file.delete()
         }
         return result
+    }
+
+    abstract fun getInputStreamByFilePath(filePath: String): InputStream
+
+    override fun downloadFile(filePath: String, outputStream: OutputStream) {
+        logger.info("downloadFile filePath is:$filePath")
+        if (filePath.contains("..")) {
+            // 非法路径则抛出错误提示
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                defaultMessage = "filePath is invalid",
+                params = arrayOf(filePath)
+            )
+        }
+        val inputStream = getInputStreamByFilePath(filePath)
+        FileCopyUtils.copy(inputStream, outputStream)
     }
 
     override fun uploadFile(
@@ -394,7 +413,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
      * return the archive root base path which end with / symbol
      * @return must be end with / symbol (file sperator)
      */
-    abstract fun getBasePath(): String
+    abstract override fun getBasePath(): String
 
     override fun validateUserDownloadFilePermission(userId: String, filePath: String): Result<Boolean> {
         val realFilePath = URLDecoder.decode(filePath, "UTF-8")
