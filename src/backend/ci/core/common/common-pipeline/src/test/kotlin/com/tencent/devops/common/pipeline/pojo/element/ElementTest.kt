@@ -98,7 +98,6 @@ class ElementTest {
             assertNotEquals(element.id, element.findFirstTaskIdByStartType(StartType.TIME_TRIGGER))
             assertEquals(element.id, element.findFirstTaskIdByStartType(StartType.REMOTE))
         }
-
     }
 
     private fun elementAdditionalOptions(
