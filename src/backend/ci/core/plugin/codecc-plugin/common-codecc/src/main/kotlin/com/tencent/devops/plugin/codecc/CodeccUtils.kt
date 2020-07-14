@@ -36,6 +36,15 @@ object CodeccUtils {
     fun isCodeccAtom(atomName: String?): Boolean {
         return atomName == LinuxCodeCCScriptElement.classType ||
             atomName == LinuxPaasCodeCCScriptElement.classType ||
-            atomName == "CodeccCheckAtom"
+            atomName == "CodeccCheckAtom" ||
+            atomName == "CodeccCheckAtomDebug"
     }
+
+    // 主要是因为codecc插件版本太多，又要统一处理，故加此map
+    val realAtomCodeMap = mapOf(
+        LinuxCodeCCScriptElement.classType to "CodeccCheckAtomDebug",
+        LinuxPaasCodeCCScriptElement.classType to "CodeccCheckAtomDebug",
+        "CodeccCheckAtom" to "CodeccCheckAtomDebug",
+        "CodeccCheckAtomDebug" to "CodeccCheckAtomDebug"
+    )
 }

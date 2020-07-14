@@ -48,9 +48,6 @@ data class DockerBuildAndPushImageTask(
         const val taskVersion = "@latest"
     }
 
-    override fun getTaskType() = taskType
-    override fun getTaskVersion() = taskVersion
-
     override fun covertToElement(config: CiBuildConfig): MarketBuildAtomElement {
 
         val dockerBuildConvertInput = DockerBuildAndPushImageConvertInput(

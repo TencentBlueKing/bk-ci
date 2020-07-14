@@ -46,11 +46,15 @@ class WebSocketConfig @Autowired constructor(
     @Value("\${thread.min:8}")
     private val min: Int = 8
 
+    @Value("\${ws.cacheLimit:3600}")
+    private val cacheLimit: Int = 3600
+
     companion object {
         private val logger = LoggerFactory.getLogger(WebSocketConfig::class.java)
     }
 
     override fun configureMessageBroker(config: MessageBrokerRegistry) {
+        config.setCacheLimit(cacheLimit)
         config.enableSimpleBroker("/topic")
         config.setApplicationDestinationPrefixes("/app")
     }

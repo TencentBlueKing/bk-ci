@@ -32,17 +32,15 @@ import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TStoreProjectRelRecord
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
 class StoreProjectRelDao {
-
-    private val logger = LoggerFactory.getLogger(StoreProjectRelDao::class.java)
 
     fun addStoreProjectRel(dslContext: DSLContext, userId: String, storeCode: String, projectCode: String, type: Byte, storeType: Byte) {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
@@ -128,6 +126,80 @@ class StoreProjectRelDao {
                 .groupBy(PROJECT_CODE)
                 .fetch()
         }
+    }
+
+    fun getStoreInitProjectCount(
+        dslContext: DSLContext,
+        storeType: Byte,
+        descFlag: Boolean = true,
+        specProjectCodeList: Set<String>? = null,
+        grayFlag: Boolean? = null,
+        grayProjectCodeList: Set<String>? = null
+    ): Long {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions =
+                getStoreInitProjectsCondition(
+                    storeType = storeType,
+                    specProjectCodeList = specProjectCodeList,
+                    grayFlag = grayFlag,
+                    grayProjectCodeList = grayProjectCodeList
+                )
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)
+        }
+    }
+
+    fun getStoreInitProjects(
+        dslContext: DSLContext,
+        storeType: Byte,
+        descFlag: Boolean = true,
+        specProjectCodeList: Set<String>? = null,
+        grayFlag: Boolean? = null,
+        grayProjectCodeList: Set<String>? = null,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Result<TStoreProjectRelRecord>? {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions =
+                getStoreInitProjectsCondition(
+                    storeType = storeType,
+                    specProjectCodeList = specProjectCodeList,
+                    grayFlag = grayFlag,
+                    grayProjectCodeList = grayProjectCodeList
+                )
+            val baseStep = dslContext.selectFrom(this).where(conditions)
+            if (descFlag) {
+                baseStep.orderBy(CREATE_TIME.desc())
+            } else {
+                baseStep.orderBy(CREATE_TIME.asc())
+            }
+            return if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
+        }
+    }
+
+    private fun TStoreProjectRel.getStoreInitProjectsCondition(
+        storeType: Byte,
+        specProjectCodeList: Set<String>?,
+        grayFlag: Boolean?,
+        grayProjectCodeList: Set<String>?
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(STORE_TYPE.eq(storeType))
+        conditions.add(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+        if (specProjectCodeList != null) {
+            conditions.add(PROJECT_CODE.`in`(specProjectCodeList))
+        }
+        if (grayFlag != null && grayProjectCodeList != null) {
+            if (grayFlag) {
+                conditions.add(PROJECT_CODE.`in`(grayProjectCodeList))
+            } else {
+                conditions.add(PROJECT_CODE.notIn(grayProjectCodeList))
+            }
+        }
+        return conditions
     }
 
     /**
@@ -263,7 +335,6 @@ class StoreProjectRelDao {
             .and(b.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
             .and(b.CREATOR.eq(userId))
             .and(a.STORE_TYPE.eq(storeType.type.toByte()))
-        logger.info(finalStep.getSQL(true))
         return finalStep.fetchOne(0, String::class.java)
     }
 
@@ -286,7 +357,14 @@ class StoreProjectRelDao {
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .fetchOne()
             if (null == record) {
-                addStoreProjectRel(dslContext, userId, storeCode, projectCode, storeProjectType.type.toByte(), storeType.type.toByte())
+                addStoreProjectRel(
+                    dslContext = dslContext,
+                    userId = userId,
+                    storeCode = storeCode,
+                    projectCode = projectCode,
+                    type = storeProjectType.type.toByte(),
+                    storeType = storeType.type.toByte()
+                )
             } else {
                 dslContext.update(this)
                     .set(PROJECT_CODE, projectCode)

@@ -41,7 +41,7 @@ class JsonMappingExceptionMapper : ExceptionMapper<JsonMappingException> {
     }
 
     override fun toResponse(exception: JsonMappingException): Response {
-        logger.error("Failed with json mapping exception", exception)
+        logger.warn("Failed with json mapping exception", exception)
         val status = Response.Status.BAD_REQUEST
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message

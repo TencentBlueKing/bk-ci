@@ -52,9 +52,6 @@ data class DockerRunDevCloudTask(
         const val atomCode = "DockerRunDevCloud"
     }
 
-    override fun getTaskType() = taskType
-    override fun getTaskVersion() = taskVersion
-
     override fun covertToElement(config: CiBuildConfig): MarketBuildAtomElement {
         val (host, imageName, imageTag) = CiYamlUtils.parseImage(inputs.image)
 

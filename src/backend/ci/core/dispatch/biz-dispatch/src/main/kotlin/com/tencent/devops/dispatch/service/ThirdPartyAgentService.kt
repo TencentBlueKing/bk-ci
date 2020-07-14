@@ -337,12 +337,13 @@ class ThirdPartyAgentService @Autowired constructor(
             throw NotFoundException("Fail to get the agent")
         }
 
+        // FIXME 构建机停止问题因goAgent传pipelineId为空串问题导致接口报错404，pipelineId是无意义的字段，先解决报错问题。后续需要新增一个没有pipelineId参数的接口
         client.get(ServiceBuildResource::class).workerBuildFinish(
             projectId = projectId,
-            pipelineId = buildInfo.pipelineId ?: "dummyPipelineId",
+            pipelineId = if (buildInfo.pipelineId.isNullOrBlank()) "dummyPipelineId" else buildInfo.pipelineId!!,
             buildId = buildInfo.buildId,
             vmSeqId = buildInfo.vmSeqId,
-            simpleResult = SimpleResult(buildInfo.success, buildInfo.message)
+            simpleResult = SimpleResult(success = buildInfo.success, message = buildInfo.message)
         )
     }
 

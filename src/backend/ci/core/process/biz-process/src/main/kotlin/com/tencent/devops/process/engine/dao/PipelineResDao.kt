@@ -30,6 +30,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
 import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
+import com.tencent.devops.process.pojo.setting.PipelineModelVersion
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -128,6 +130,27 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.le(pipelineMaxVersion - maxPipelineResNum))
                 .execute()
+        }
+    }
+
+    fun updatePipelineModel(
+        dslContext: DSLContext,
+        userId: String,
+        pipelineModelVersionList: List<PipelineModelVersion>
+    ) {
+        with(T_PIPELINE_RESOURCE) {
+            val updateStep = pipelineModelVersionList.map {
+                val conditions = mutableListOf<Condition>()
+                conditions.add(PIPELINE_ID.eq(it.pipelineId))
+                val version = it.version
+                if (version != null) {
+                    conditions.add(VERSION.eq(version))
+                }
+                dslContext.update(this)
+                    .set(MODEL, it.model)
+                    .where(conditions)
+            }
+            dslContext.batch(updateStep).execute()
         }
     }
 
