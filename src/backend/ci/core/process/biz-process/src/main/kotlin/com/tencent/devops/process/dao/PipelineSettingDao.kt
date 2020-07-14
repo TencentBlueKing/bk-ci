@@ -31,7 +31,7 @@ import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.util.DateTimeUtils
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
@@ -89,7 +89,7 @@ class PipelineSettingDao {
                     failNotifyTypes,
                     NotifyTemplateUtils.COMMON_SHUTDOWN_SUCCESS_CONTENT,
                     NotifyTemplateUtils.COMMON_SHUTDOWN_FAILURE_CONTENT,
-                    DateTimeUtils.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT),
+                    DateTimeUtil.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT),
                     PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
                     isTemplate
                 )
@@ -149,7 +149,7 @@ class PipelineSettingDao {
                     setting.failSubscription.detailFlag,
                     setting.successSubscription.content,
                     setting.failSubscription.content,
-                    DateTimeUtils.minuteToSecond(setting.waitQueueTimeMinute),
+                    DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute),
                     setting.maxQueueSize,
                     isTemplate,
                     setting.maxPipelineResNum
@@ -173,7 +173,7 @@ class PipelineSettingDao {
                 .set(FAIL_DETAIL_FLAG, setting.failSubscription.detailFlag)
                 .set(SUCCESS_CONTENT, setting.successSubscription.content)
                 .set(FAIL_CONTENT, setting.failSubscription.content)
-                .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtils.minuteToSecond(setting.waitQueueTimeMinute))
+                .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute))
                 .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
                 .set(IS_TEMPLATE, isTemplate)
                 .set(MAX_PIPELINE_RES_NUM, setting.maxPipelineResNum)

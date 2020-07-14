@@ -1,15 +1,12 @@
 <template>
     <form>
         <bk-radio-group @change="handleSelect" :value="value" :name="name">
-            <template v-for="(item) in list">
-                <bk-popover v-if="item.tips" :key="item.id">
-                    <bk-radio class="bkdevops-radio" :style="`width: calc(${100 / lineNumber}% - 10px)`" :value="item.value" v-bk-tooltips="{ content: item.tips }" :disabled="disabled || item.disabled">
+            <template v-for="item in list">
+                <bk-popover v-if="!item.hidden" :disabled="!item.tips" :key="item.id" :content="item.tips">
+                    <bk-radio class="bkdevops-radio" :style="`width: calc(${100 / lineNumber}% - 10px)`" :value="item.value" :disabled="disabled || item.disabled">
                         <span class="overflow" v-bk-overflow-tips>{{ item.label }}</span>
                     </bk-radio>
                 </bk-popover>
-                <bk-radio :key="item.id" :style="`width: calc(${100 / lineNumber}% - 10px)`" class="bkdevops-radio" :value="item.value" :disabled="disabled || item.disabled" v-if="!item.tips && !item.hidden">
-                    <span class="overflow" v-bk-overflow-tips>{{ item.label }}</span>
-                </bk-radio>
             </template>
         </bk-radio-group>
     </form>

@@ -63,3 +63,26 @@ CREATE TABLE IF NOT EXISTS `T_TOKEN` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ----------------------------
+-- Table structure for T_FILE_TASK
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_FILE_TASK`  (
+  `TASK_ID` varchar(64) NOT NULL,
+  `FILE_TYPE` varchar(32)  NULL DEFAULT NULL,
+  `FILE_PATH` text  NULL,
+  `MACHINE_IP` varchar(32)  NULL DEFAULT NULL,
+  `LOCAL_PATH` text  NULL,
+  `STATUS` smallint(3) NULL DEFAULT NULL,
+  `USER_ID` varchar(32)  NULL DEFAULT NULL,
+  `PROJECT_ID` varchar(64)  NULL DEFAULT NULL,
+  `PIPELINE_ID` varchar(34)  NULL DEFAULT NULL,
+  `BUILD_ID` varchar(34)  NULL DEFAULT NULL,
+  `CREATE_TIME` datetime(0) NULL DEFAULT NULL,
+  `UPDATE_TIME` datetime(0) NULL DEFAULT NULL,
+  PRIMARY KEY (`TASK_ID`) USING BTREE,
+  INDEX `idx_buildId`(`BUILD_ID`) USING BTREE,
+  INDEX `idx_projectId_pipelineId`(`PROJECT_ID`, `PIPELINE_ID`) USING BTREE,
+  INDEX `idx_updateTime`(`UPDATE_TIME`) USING BTREE
+) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4 COMMENT='文件托管任务表';
