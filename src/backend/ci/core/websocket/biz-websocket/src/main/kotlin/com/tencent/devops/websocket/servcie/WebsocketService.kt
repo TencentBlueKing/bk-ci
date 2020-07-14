@@ -103,19 +103,19 @@ class WebsocketService @Autowired constructor(
                 RedisUtlis.cleanPageSessionBySessionId(redisOperation, oldPage, sessionId)
             }
             RedisUtlis.refreshPageSession(redisOperation, sessionId, normalPage)
-            logger.info(
+            logger.debug(
                 "userSession[user:$userId,sessionId:${RedisUtlis.getSessionIdByUserId(
                     redisOperation,
                     userId
                 )}}]"
             )
-            logger.info(
+            logger.debug(
                 "pageSession[page:$newPage,sessionId:${RedisUtlis.getSessionListFormPageSessionByPage(
                     redisOperation,
                     normalPage
                 )}]"
             )
-            logger.info("sessionPage[session:$sessionId,page:$normalPage]")
+            logger.debug("sessionPage[session:$sessionId,page:$normalPage]")
             if (needTransfer && transferData!!.isNotEmpty()) {
                 transferDispatch.dispatch(
                     ChangePageTransferEvent(
