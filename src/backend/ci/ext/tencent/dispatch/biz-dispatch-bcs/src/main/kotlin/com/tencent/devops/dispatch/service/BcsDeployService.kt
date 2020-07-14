@@ -67,8 +67,6 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
 
     private final val dateConfigPath = "/etc/localtime"
 
-    private final val initialDelaySeconds = 5
-
     fun deployApp(
         userId: String,
         deployApp: DeployApp
@@ -111,8 +109,8 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             .withName(dateConfigName)
             .withMountPath(dateConfigPath)
             .endVolumeMount()
-            .withLivenessProbe(getTcpSocketProbe(containerPort)) // 存活探针来确定何时重启容器
-            .withReadinessProbe(getTcpSocketProbe(containerPort)) // 就绪探针来确定容器是否已经就绪可以接受流量
+            .withLivenessProbe(getTcpSocketProbe(containerPort, 10, 20)) // 存活探针来确定何时重启容器
+            .withReadinessProbe(getTcpSocketProbe(containerPort, 60, 10)) // 就绪探针来确定容器是否已经就绪可以接受流量
             .endContainer()
             .addNewImagePullSecret()
             .withName(appDeployment.pullImageSecretName)
@@ -210,12 +208,13 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         return Result(true)
     }
 
-    private fun getTcpSocketProbe(containerPort: Int): Probe {
+    private fun getTcpSocketProbe(containerPort: Int, initialDelaySeconds: Int, periodSeconds: Int): Probe {
         val tcpSocket = TCPSocketAction()
         tcpSocket.port = IntOrString(containerPort)
         val probe = Probe()
         probe.initialDelaySeconds = initialDelaySeconds
         probe.tcpSocket = tcpSocket
+        probe.periodSeconds = periodSeconds
         return probe
     }
 
