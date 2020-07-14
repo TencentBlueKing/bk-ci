@@ -116,13 +116,13 @@ export default {
         const store = state.storeAtomData || {}
         let page = store.page || 1
         const pageSize = store.pageSize || 1000
-        const atomName = store.atomName || undefined
+        const keyword = store.keyword || undefined
         const loadEnd = store.loadEnd || false
         const loading = store.loading || false
         if (loadEnd || loading) return
 
         commit(SET_STORE_LOADING, true)
-        return request.get(`${STORE_API_URL_PREFIX}/user/market/atom/list`, { params: { page, pageSize, atomName } }).then((res) => {
+        return request.get(`${STORE_API_URL_PREFIX}/user/market/atom/list`, { params: { page, pageSize, keyword } }).then((res) => {
             const data = res.data || {}
             const records = data.records || []
             const atomList = store.data || []
@@ -132,7 +132,7 @@ export default {
                 pageSize: 1000,
                 loadEnd: records.length < pageSize,
                 loading: false,
-                atomName
+                keyword
             }
             commit(SET_STORE_DATA, storeData)
         }).catch((e) => {
