@@ -122,7 +122,7 @@ class BuildBuildResourceImpl @Autowired constructor(
     }
 
     override fun getSubBuildVars(buildId: String, taskId: String): Result<Map<String, String>> {
-        return  subPipelineStartUpService.getSubVar(buildId, taskId)
+        return subPipelineStartUpService.getSubVar(buildId, taskId)
     }
 
     private fun checkParam(buildId: String, vmSeqId: String, vmName: String) {
