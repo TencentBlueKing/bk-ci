@@ -37,7 +37,6 @@ import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.scheduling.annotation.SchedulingConfigurer
 import org.springframework.scheduling.config.IntervalTask
 import org.springframework.scheduling.config.ScheduledTaskRegistrar
-import java.util.Random
 import java.util.concurrent.Executors
 
 /**
@@ -56,7 +55,7 @@ class CommonBuildClusterCronConfiguration @Autowired constructor(
 
     override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {
         scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(10))
-        val random = (Random().nextInt(15)  % (15 - 8 + 1) + 8) * 100
+
         if (dockerHostConfig.dockerhostMode != null && (dockerHostConfig.dockerhostMode.equals("docker_build") || dockerHostConfig.dockerhostMode.equals(
                 "codecc_build"
             ))
@@ -73,7 +72,7 @@ class CommonBuildClusterCronConfiguration @Autowired constructor(
 
             scheduledTaskRegistrar.addFixedRateTask(
                 IntervalTask(
-                    Runnable { runner.refreshDockerIpStatus() }, 5 * random.toLong(), random.toLong()
+                    Runnable { runner.refreshDockerIpStatus() }, 5 * 1000, 1000
                 )
             )
 
