@@ -185,18 +185,15 @@ interface BuildBuildResource {
         channelCode: ChannelCode
     ): Result<ModelDetail>
 
-    @ApiOperation("获取构建全部变量")
+    @ApiOperation("获取子流水线变量")
     @GET
-    @Path("/{projectId}/{pipelineId}/{buildId}/vars")
-    fun getBuildVars(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
+    @Path("/taskIds/{taskId}/subVar")
+    fun getSubBuildVars(
         @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String
+        @HeaderParam("buildId")
+        buildId: String,
+        @ApiParam("任务ID", required = false)
+        @QueryParam("taskId")
+        taskId: String
     ): Result<Map<String, String>>
 }

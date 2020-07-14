@@ -316,6 +316,17 @@ class SubPipelineStartUpService(
         return Result(parameter)
     }
 
+    fun getSubVar(buildId: String, taskId: String) : Result<Map<String, String>> {
+        val taskRecord = pipelineBuildTaskDao.get(
+            dslContext = dslContext,
+            buildId = buildId,
+            taskId = taskId
+        ) ?: return Result(emptyMap())
+
+        val subBuildId = taskRecord.subBuildId
+        return Result(buildVariableService.getAllVariable(subBuildId))
+    }
+
     fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {
         val pipelines = pipelineService.getPipelineIdByNames(projectId, setOf(pipelineName), true)
 
