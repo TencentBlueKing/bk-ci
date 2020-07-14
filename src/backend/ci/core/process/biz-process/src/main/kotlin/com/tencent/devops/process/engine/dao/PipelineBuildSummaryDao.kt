@@ -426,8 +426,8 @@ class PipelineBuildSummaryDao {
     }
 
     /**
-    * 获取PipelineInfo与BuildSummary Join后的表
-    */
+     * 获取PipelineInfo与BuildSummary Join后的表
+     */
     fun getPipelineInfoBuildSummaryBaseQuery(
         dslContext: DSLContext,
         favorPipelines: List<String> = emptyList(),
@@ -512,15 +512,19 @@ class PipelineBuildSummaryDao {
     /**
      * 更新运行中的任务信息摘要
      */
-    fun updateCurrentBuildTask(dslContext: DSLContext, latestRunningBuild: LatestRunningBuild) {
-        with(latestRunningBuild) {
-            with(T_PIPELINE_BUILD_SUMMARY) {
-                dslContext.update(this)
-                    .set(LATEST_TASK_ID, currentTaskId)
-                    .set(LATEST_TASK_NAME, currentTaskName)
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .and(LATEST_BUILD_ID.eq(buildId)).execute()
-            }
+    fun updateCurrentBuildTask(
+        dslContext: DSLContext,
+        pipelineId: String,
+        buildId: String,
+        currentTaskId: String? = null,
+        currentTaskName: String? = null
+    ) {
+        with(T_PIPELINE_BUILD_SUMMARY) {
+            dslContext.update(this)
+                .set(LATEST_TASK_ID, currentTaskId)
+                .set(LATEST_TASK_NAME, currentTaskName)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(LATEST_BUILD_ID.eq(buildId)).execute()
         }
     }
 
@@ -532,11 +536,11 @@ class PipelineBuildSummaryDao {
             with(T_PIPELINE_BUILD_SUMMARY) {
                 val update =
                     dslContext.update(this)
-                    .set(LATEST_STATUS, status.ordinal) // 不一定是FINISH，也有可能其它失败的status
-                    .set(LATEST_END_TIME, LocalDateTime.now()) // 结束时间
-                    .set(LATEST_TASK_ID, "") // 结束时清空
-                    .set(LATEST_TASK_NAME, "") // 结束时清空
-                    .set(FINISH_COUNT, FINISH_COUNT + 1)
+                        .set(LATEST_STATUS, status.ordinal) // 不一定是FINISH，也有可能其它失败的status
+                        .set(LATEST_END_TIME, LocalDateTime.now()) // 结束时间
+                        .set(LATEST_TASK_ID, "") // 结束时清空
+                        .set(LATEST_TASK_NAME, "") // 结束时清空
+                        .set(FINISH_COUNT, FINISH_COUNT + 1)
 
                 if (!isStageFinish) update.set(RUNNING_COUNT, RUNNING_COUNT - 1)
                 update.where(PIPELINE_ID.eq(pipelineId))
@@ -550,7 +554,7 @@ class PipelineBuildSummaryDao {
                 with(T_PIPELINE_BUILD_SUMMARY) {
                     val update =
                         dslContext.update(this)
-                        .set(FINISH_COUNT, FINISH_COUNT + 1)
+                            .set(FINISH_COUNT, FINISH_COUNT + 1)
                     if (!isStageFinish) update.set(RUNNING_COUNT, RUNNING_COUNT - 1)
                     update.where(PIPELINE_ID.eq(pipelineId))
                         .execute()
