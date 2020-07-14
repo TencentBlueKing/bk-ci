@@ -50,11 +50,7 @@ class ServicePipelineInitResourceImpl @Autowired constructor(
         return atomMarketInitPipelineService.initPipeline(
             userId = userId,
             projectCode = projectCode,
-            atomBaseInfo = atomMarketInitPipelineReq.atomBaseInfo,
-            repositoryHashId = atomMarketInitPipelineReq.repositoryHashId,
-            repositoryPath = atomMarketInitPipelineReq.repositoryPath,
-            script = atomMarketInitPipelineReq.script,
-            buildEnv = atomMarketInitPipelineReq.buildEnv
+            atomMarketInitPipelineReq = atomMarketInitPipelineReq
         )
     }
 
