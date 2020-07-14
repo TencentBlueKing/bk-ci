@@ -106,6 +106,7 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
         buildId: String,
         containerId: String,
         logStartTimeStamp: Int,
+        printLog: Boolean?,
         request: HttpServletRequest
     ): Result<DockerLogsResponse> {
         checkReq(request)
@@ -117,7 +118,8 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
                 vmSeqId,
                 buildId,
                 containerId,
-                logStartTimeStamp
+                logStartTimeStamp,
+                printLog
             )
         )
     }
