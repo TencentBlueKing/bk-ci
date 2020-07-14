@@ -326,6 +326,7 @@ class SubPipelineStartUpService(
             buildId = buildId,
             taskId = taskId
         ) ?: return Result(emptyMap())
+        logger.info("getSubVar sub buildId :${taskRecord.subBuildId}")
 
         val subBuildId = taskRecord.subBuildId
         return Result(buildVariableService.getAllVariable(subBuildId))
