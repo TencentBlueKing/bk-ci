@@ -2,6 +2,7 @@ package com.tencent.devops.sign.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import java.io.File
 import java.io.InputStream
 
@@ -21,15 +22,17 @@ interface SignService {
     * */
     fun resignIpaPackage(
             ipaPackage: File,
-            ipaSignInfo: IpaSignInfo
-    ): File?
+            ipaSignInfo: IpaSignInfo,
+            MobileProvisionInfoList: Map<String, MobileProvisionInfo>?
+    ): File
 
     /*
     * 解压ipa文件
     * */
     fun unzipIpa(
-            ipaFile: File
-    ): File
+            ipaFile: File,
+            unzipIpaDir: File
+    )
 
     /*
     * 压缩成ipa文件
@@ -54,7 +57,14 @@ interface SignService {
     * 返回描述文件所在目录
     * */
     fun downloadMobileProvision(
-            ipaFile: File,
+            mobileProvisionDir: File,
             ipaSignInfo: IpaSignInfo
-    ): File
+    ): Map<String, MobileProvisionInfo>
+
+    /*
+    * 解析描述文件的内容
+    * */
+    fun parseMobileProvision(
+            mobileProvisionFile:File
+    ): MobileProvisionInfo
 }

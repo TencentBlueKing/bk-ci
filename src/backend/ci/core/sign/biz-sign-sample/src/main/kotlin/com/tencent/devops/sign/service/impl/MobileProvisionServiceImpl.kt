@@ -17,12 +17,8 @@ class MobileProvisionServiceImpl : MobileProvisionService {
         private val logger = LoggerFactory.getLogger(MobileProvisionServiceImpl::class.java)
     }
 
-    override fun downloadAllMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun downloadMobileProvision(mobileProvisionDir: File, mobileProvisionId: String): File {
-        TODO("Not yet implemented")
+    override fun downloadMobileProvision(mobileProvisionDir: File, projectId: String, mobileProvisionId: String): File {
+        return File("${mobileProvisionDir.canonicalPath}/$mobileProvisionId.mobileprovision")
     }
 
 }

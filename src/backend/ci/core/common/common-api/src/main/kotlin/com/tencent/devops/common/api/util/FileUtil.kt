@@ -237,20 +237,13 @@ object FileUtil {
     *  创建目录
     * */
     fun mkdirs(dir: File): Boolean {
-        if (!dir.exists()) {
+        return if (!dir.exists()) {
             dir.mkdirs()
-            return true
-        }
-        if (dir.exists() && !dir.isDirectory) {
-            dir.deleteOnExit()
+            true
+        }else {
+            dir.delete()
             dir.mkdirs()
-            return true
+            true
         }
-        if (dir.exists() && dir.isDirectory && !dir.canWrite()) {
-            dir.deleteOnExit()
-            dir.mkdirs()
-            return true
-        }
-        return true
     }
 }

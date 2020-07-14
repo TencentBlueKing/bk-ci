@@ -29,6 +29,7 @@ dependencies {
     compile project(":core:common:common-web")
     compile project(":core:common:common-client")
     compile project(":core:sign:api-sign")
+    compile "com.googlecode.plist:dd-plist:1.23"
 //    compile project(":core:sign:model-sign")
 }
 

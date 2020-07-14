@@ -1,12 +1,16 @@
 package com.tencent.devops.sign.impl
 
+import com.dd.plist.NSDictionary
+import com.dd.plist.NSString
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.FileUtil
+import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import com.tencent.devops.sign.resources.UserIpaResourceImpl
 import com.tencent.devops.sign.service.*
 import org.jolokia.util.Base64Util
@@ -16,6 +20,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.InputStream
+import com.dd.plist.PropertyListParser
+import java.lang.RuntimeException
 
 @Service
 class SignServiceImpl @Autowired constructor(
@@ -27,6 +33,10 @@ class SignServiceImpl @Autowired constructor(
 ) : SignService {
     @Value("\${bkci.sign.tmpDir:/data/enterprise_sign_tmp/}")
     private val tmpDir = "/data/enterprise_sign_tmp/"
+
+    private lateinit var ipaFile: File
+    private lateinit var ipaUnzipDir: File
+    private lateinit var mobileProvisionDir: File
 
     override fun signIpaAndArchive(
             userId: String,
@@ -49,15 +59,20 @@ class SignServiceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER, defaultMessage = "验证签名信息为非法信息。")
         }
         // 复制文件到临时目录
-        val ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo)
+        ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo)
+        // ipa解压后的目录
+        ipaUnzipDir = File("${ipaFile.canonicalPath}.unzipDir")
+        FileUtil.mkdirs(ipaUnzipDir)
+        // 描述文件的目录
+        mobileProvisionDir = File("${ipaFile.canonicalPath}.mobileProvisionDir")
+        FileUtil.mkdirs(mobileProvisionDir)
 
         // 解压ipa包
-        val unzipIpaDir = unzipIpa(ipaFile)
+        unzipIpa(ipaFile, ipaUnzipDir)
+        // 下载并返回描述文件信息
+        val mobileProvisionInfoMap = downloadMobileProvision(mobileProvisionDir, ipaSignInfo)
 
-        // 下载描述文件
-        val mobileProvisonDir = downloadMobileProvision()
-
-        val signResult = resignIpaPackage(unzipIpaDir, ipaSignInfo)
+        val signedIpaFile = resignIpaPackage(ipaUnzipDir, ipaSignInfo, mobileProvisionInfoMap)
 
         if (signedIpaFile == null) {
             UserIpaResourceImpl.logger.error("sign ipa failed.")
@@ -75,16 +90,14 @@ class SignServiceImpl @Autowired constructor(
 
     override fun resignIpaPackage(
             ipaPackage: File,
-            ipaSignInfo: IpaSignInfo
+            ipaSignInfo: IpaSignInfo,
+            MobileProvisionInfoList: Map<String, MobileProvisionInfo>?
     ): File {
-        ZipUtil.unZipFile(ipaPackage, "${ipaPackage.canonicalPath}.temp", true)
         return ipaPackage
     }
 
-    override fun unzipIpa(ipaFile: File): File {
-        val unzipDirString = "${ipaFile.canonicalPath}.unzipDir"
-        ZipUtil.unZipFile(ipaFile, unzipDirString, true)
-        return File(unzipDirString)
+    override fun unzipIpa(ipaFile: File, unzipIpaDir: File) {
+        ZipUtil.unZipFile(ipaFile, unzipIpaDir.canonicalPath, true)
     }
 
     override fun zipIpaFile(ipaFile: File): File? {
@@ -95,20 +108,47 @@ class SignServiceImpl @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun downloadMobileProvision(ipaFile: File, ipaSignInfo: IpaSignInfo): File {
-        val moblieProvisionDir = File("${ipaFile.canonicalPath}.mobileProvisionDir")
-        FileUtil.mkdirs(moblieProvisionDir)
-
-
+    override fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo):  Map<String, MobileProvisionInfo> {
+        val mobileProvisionMap = mutableMapOf<String, MobileProvisionInfo>()
         if (ipaSignInfo.mobileProvisionId != null) {
-            mobileProvisionService.downloadMobileProvision(moblieProvisionDir, ipaSignInfo.projectId
-                    ?: "", ipaSignInfo.mobileProvisionId ?: "")
+            val mpFile = mobileProvisionService.downloadMobileProvision(mobileProvisionDir, ipaSignInfo.projectId
+                    ?: "", ipaSignInfo.mobileProvisionId!!)
+            mobileProvisionMap["MAIN_APP"] = parseMobileProvision(mpFile)
         }
         ipaSignInfo.appexSignInfo?.forEach {
-            mobileProvisionService.downloadMobileProvision(moblieProvisionDir, ipaSignInfo.projectId
+            val mpFile = mobileProvisionService.downloadMobileProvision(mobileProvisionDir, ipaSignInfo.projectId
                     ?: "", it.mobileProvisionId)
+            mobileProvisionMap[it.appexName] = parseMobileProvision(mpFile)
         }
-        return moblieProvisionDir
+        return mobileProvisionMap
+    }
+
+    override fun parseMobileProvision(mobileProvisionFile: File): MobileProvisionInfo {
+        val plistFile = File("${mobileProvisionFile.canonicalPath}.plist")
+        val entitlementFile = File("${mobileProvisionFile.canonicalPath}.entitlement.plist")
+        // 描述文件转为plist文件
+        val mpToPlistCommand = "/usr/bin/security cms -D -i ${mobileProvisionFile.canonicalPath} > ${plistFile.canonicalPath}"
+        CommandLineUtils.execute(mpToPlistCommand, mobileProvisionFile.parentFile, true)
+        // 从plist文件抽离出entitlement文件
+        val plistToEntitlementCommand = "/usr/libexec/PlistBuddy -x -c 'Print:Entitlements' ${plistFile.canonicalPath} > ${entitlementFile.canonicalPath}"
+
+        CommandLineUtils.execute(plistToEntitlementCommand, mobileProvisionFile.parentFile, true)
+        // 解析bundleId
+        val rootDict = PropertyListParser.parse(plistFile) as NSDictionary
+        // entitlement
+        if (!rootDict.containsKey("Entitlements")) throw RuntimeException("no Entitlements find in plist")
+        val entitlementDict = rootDict.objectForKey("Entitlements") as NSDictionary
+        // application-identifier
+        if (!entitlementDict.containsKey("application-identifier")) throw RuntimeException("no Entitlements.application-identifier find in plist")
+        val bundleId = entitlementDict.objectForKey("application-identifier") as NSString
+        return MobileProvisionInfo(
+                mobileProvisionFile = mobileProvisionFile,
+                plistFile = plistFile,
+                entitlementFile = entitlementFile,
+                bundleId = bundleId.toString()
+        )
+
+
     }
 
     companion object {
