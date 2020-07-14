@@ -321,6 +321,7 @@ class SubPipelineStartUpService(
     }
 
     fun getSubVar(buildId: String, taskId: String): Result<Map<String, String>> {
+        logger.info("getSubVar | $buildId | $taskId")
         val taskRecord = pipelineBuildTaskDao.get(
             dslContext = dslContext,
             buildId = buildId,
