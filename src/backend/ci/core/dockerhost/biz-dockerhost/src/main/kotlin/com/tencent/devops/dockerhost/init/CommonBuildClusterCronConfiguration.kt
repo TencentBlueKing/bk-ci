@@ -56,7 +56,7 @@ class CommonBuildClusterCronConfiguration @Autowired constructor(
 
     override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {
         scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(10))
-        val random = (Random().nextInt(15)  % (15 - 8 + 1) + 8) * 100
+        val random = (Random().nextInt(15) % (15 - 8 + 1) + 8) * 100
 
         if (dockerHostConfig.dockerhostMode != null && (dockerHostConfig.dockerhostMode.equals("docker_build") || dockerHostConfig.dockerhostMode.equals(
                 "codecc_build"
