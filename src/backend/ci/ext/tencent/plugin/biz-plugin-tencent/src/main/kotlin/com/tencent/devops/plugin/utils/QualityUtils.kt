@@ -33,7 +33,9 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScri
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.ServiceCodeccElementResource
+import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorResource
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
@@ -67,7 +69,13 @@ object QualityUtils {
                 val elementCnName = ElementUtils.getElementCnName(indicatorElementName, projectId)
                 val resultList = resultMap[elementCnName] ?: mutableListOf()
                 val actualValue = if (indicatorElementName == LinuxPaasCodeCCScriptElement.classType) {
-                    getActualValue(projectId, pipelineId, indicator?.elementDetail, interceptItem.actualValue ?: "null", client)
+                    getActualValue(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        detail = indicator?.elementDetail,
+                        value = interceptItem.actualValue ?: "null",
+                        client = client)
                 } else {
                     interceptItem.actualValue ?: "null"
                 }
@@ -84,9 +92,14 @@ object QualityUtils {
     }
 
     // codecc要跳转到具体详情
-    private fun getActualValue(projectId: String, pipelineId: String, detail: String?, value: String, client: Client): String {
-        val taskId = client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
-        return if (detail.isNullOrBlank()) {
+    private fun getActualValue(projectId: String, pipelineId: String, buildId: String, detail: String?, value: String, client: Client): String {
+        val variable = client.get(ServiceVarResource::class).getBuildVar(buildId, CodeccUtils.BK_CI_CODECC_TASK_ID).data
+        var taskId = variable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID)
+        if (taskId.isNullOrBlank()) {
+            taskId = client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
+        }
+
+        return if (detail.isNullOrBlank() || detail!!.split(",").size > 1) {
             "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/detail'>$value</a>"
         } else {
             val detailValue = codeccToolUrlPathMap[detail] ?: "defect/lint"
