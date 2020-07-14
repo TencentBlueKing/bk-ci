@@ -67,7 +67,7 @@ class WebSocketListener @Autowired constructor(
                         )
                         watch.stop()
                         if (System.currentTimeMillis() - pushStartTime > 500) {
-                            logger.warn("WebSocketListener push msg consuming 500ms, page[${event.page}], session[$session]")
+                            logger.warn("WebSocketListener push msg consuming 500ms, page[${event.page}, session[$session]")
                         }
                     }
                 }
