@@ -26,16 +26,26 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.constants.ExpressionOperationEnum
+import com.tencent.bk.sdk.iam.dto.InstanceDTO
+import com.tencent.bk.sdk.iam.dto.action.ActionDTO
+import com.tencent.bk.sdk.iam.helper.AuthHelper
+import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.api.pojo.BkAuthProjectInfoResources
 import com.tencent.devops.common.auth.code.AuthServiceCode
-import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
+import com.tencent.devops.common.auth.utlis.ActionUtils
+import com.tencent.devops.common.auth.utlis.AuthUtils
 import org.slf4j.LoggerFactory
 
 class BluekingV3AuthProjectApi constructor(
-    private val bkAuthPermissionApi: BluekingV3AuthPermissionApi
+    private val bkAuthPermissionApi: BluekingV3AuthPermissionApi,
+    private val policyService: PolicyService,
+    private val authHelper: AuthHelper,
+    private val iamConfiguration: IamConfiguration
 ) : AuthProjectApi {
 
     override fun getProjectUsers(serviceCode: AuthServiceCode, projectCode: String, group: BkAuthGroup?): List<String> {
@@ -49,8 +59,20 @@ class BluekingV3AuthProjectApi constructor(
         projectCode: String,
         group: BkAuthGroup?
     ): Boolean {
-        logger.info("v3 isProjectUser user[$user] serviceCode[$serviceCode] projectCode[$projectCode] group[$group]")
-        return true
+        logger.info("v3 isProjectUser user[$user] serviceCode[${serviceCode.id()}] projectCode[$projectCode] group[$group]")
+        val actionType = if (group != null && group == BkAuthGroup.MANAGER) {
+            ActionUtils.buildAction(AuthResourceType.PROJECT, AuthPermission.MANAGE)
+        } else {
+            ActionUtils.buildAction(AuthResourceType.PROJECT, AuthPermission.VIEW)
+        }
+        val instance = InstanceDTO()
+        instance.id = projectCode
+        instance.system = iamConfiguration.systemId
+        instance.type = AuthResourceType.PROJECT.value
+        logger.info("v3 isProjectUser actionType[$actionType] instance[$instance]")
+        val isAllow = authHelper.isAllowed(user, actionType, instance)
+        logger.info("isProjectUser isAllow:$isAllow")
+        return isAllow
     }
 
     override fun getProjectGroupAndUserList(
@@ -67,17 +89,17 @@ class BluekingV3AuthProjectApi constructor(
         supplier: (() -> List<String>)?
     ): List<String> {
         logger.info("v3 getUserProjects user[$userId] serviceCode[$serviceCode] supplier[$supplier] ")
-        val map = bkAuthPermissionApi.getUserResourcesByPermissions(
-            user = userId,
-            serviceCode = serviceCode,
-            resourceType = AuthResourceType.PROJECT,
-            projectCode = BK_DEVOPS_SCOPE,
-            permissions = setOf(AuthPermission.MANAGE),
-            supplier = supplier
-        )
-        val sets = mutableSetOf<String>()
-        map.map { sets.addAll(it.value) }
-        return sets.toList()
+        val actionType = ActionUtils.buildAction(AuthResourceType.PROJECT, AuthPermission.VIEW)
+        val actionDtos = mutableListOf<ActionDTO>()
+        val actionDto = ActionDTO()
+        actionDto.id = actionType
+        actionDtos.add(actionDto)
+        val actionPolicyDTOs = policyService.batchGetPolicyByActionList(userId, actionDtos, null) ?: return emptyList()
+        logger.info("getUserProjects actionPolicyDTOs $actionPolicyDTOs")
+        val actionPolicy = actionPolicyDTOs[0]
+        val projectList = AuthUtils.getProjects(actionPolicy.condition)
+        logger.info("getUserProjects user[$userId],projects$projectList")
+        return projectList
     }
 
     override fun getUserProjectsAvailable(
@@ -86,21 +108,29 @@ class BluekingV3AuthProjectApi constructor(
         supplier: (() -> List<String>)?
     ): Map<String, String> {
         logger.info("v3 getUserProjectsAvailable user[$userId] serviceCode[$serviceCode] supplier[$supplier] ")
-        val map = bkAuthPermissionApi.getUserResourcesByPermissions(
-            user = userId,
-            serviceCode = serviceCode,
-            resourceType = AuthResourceType.PROJECT,
-            projectCode = BK_DEVOPS_SCOPE,
-            permissions = setOf(AuthPermission.VIEW, AuthPermission.MANAGE),
-            supplier = supplier
-        )
-        val sets = mutableSetOf<String>()
-        map.values.forEach { l ->
-            sets.addAll(l)
+        val actionType = ActionUtils.buildAction(AuthResourceType.PROJECT, AuthPermission.VIEW)
+        val actionDtos = mutableListOf<ActionDTO>()
+        val actionDto = ActionDTO()
+        actionDto.id = actionType
+        actionDtos.add(actionDto)
+
+        val actionPolicyDTOs = policyService.batchGetPolicyByActionList(userId, actionDtos, null) ?: return emptyMap()
+        val actionPolicy = actionPolicyDTOs[0]
+        val content = actionPolicy.condition
+        if (content.field != "project.id") {
+            return emptyMap()
         }
+        val projectList = mutableListOf<String>()
+        when (content.operator) {
+            ExpressionOperationEnum.ANY -> projectList.add("*")
+            ExpressionOperationEnum.IN -> projectList.addAll(content.value.toString().splitToSequence(","))
+            ExpressionOperationEnum.EQUAL -> projectList.add(content.value.toString())
+        }
+        logger.info("getUserProjects user[$userId],projects[$projectList]")
+
         // 此处为兼容接口实现，并没有projectName,统一都是projectCode
         val projectCode2Code = mutableMapOf<String, String>()
-        sets.forEach {
+        projectList.forEach {
             projectCode2Code[it] = it
         }
         return projectCode2Code
@@ -127,7 +157,7 @@ class BluekingV3AuthProjectApi constructor(
         TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

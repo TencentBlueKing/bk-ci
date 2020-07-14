@@ -1893,6 +1893,7 @@ class PipelineService @Autowired constructor(
     }
 
     fun getPipeline(projectId: String, page: Int?, pageSize: Int?): PipelineViewPipelinePage<PipelineInfo> {
+        logger.info("getPipeline |$projectId| $page| $pageSize")
         var offset = pageSize
         // 最多一次拉取50条数据, 后续可以改为配置
         if(pageSize!! > 50) {

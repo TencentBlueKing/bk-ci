@@ -35,6 +35,7 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.listener.ProjectEventListener
 import com.tencent.devops.project.listener.SampleProjectEventListener
 import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.impl.BluekingProjectPermissionServiceImpl
 import com.tencent.devops.project.service.impl.ProjectPermissionServiceImpl
 import com.tencent.devops.project.service.impl.V3ProjectPermissionServiceImpl
@@ -92,11 +93,15 @@ class ProjectConfiguration {
         client: Client,
         authProjectApi: AuthProjectApi,
         authPermissionApi: AuthPermissionApi,
-        projectAuthServiceCode: ProjectAuthServiceCode
+        projectAuthServiceCode: ProjectAuthServiceCode,
+        projectDao: ProjectDao,
+        dslContext: DSLContext
     ): ProjectPermissionService = V3ProjectPermissionServiceImpl(
         client = client,
         authProjectApi = authProjectApi,
         authPermissionApi = authPermissionApi,
-        projectAuthServiceCode = projectAuthServiceCode
+        projectAuthServiceCode = projectAuthServiceCode,
+        projectDao = projectDao,
+        dslContext = dslContext
     )
 }

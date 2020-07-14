@@ -26,18 +26,21 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.utlis.ActionUtils
+import com.tencent.devops.common.auth.utlis.AuthUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class BluekingV3AuthPermissionApi @Autowired constructor(
     private val authHelper: AuthHelper,
-    private val policyService: PolicyService
+    private val policyService: PolicyService,
+    private val iamConfiguration: IamConfiguration
 ) : AuthPermissionApi {
     override fun addResourcePermissionForUsers(
         userId: String,
@@ -52,6 +55,7 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         return true
     }
 
+    // 判断用户是否有某个动作的权限。 该动作无需绑定实例。如：判断是否有创建权限，创建无需挂任何实例。 若要判断是否有某实例的权限不能用该接口。
     override fun validateUserResourcePermission(
         user: String,
         serviceCode: AuthServiceCode,
@@ -59,27 +63,36 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         projectCode: String,
         permission: AuthPermission
     ): Boolean {
-        logger.info("v3 validateUserResourcePermission user[$user] serviceCode[$serviceCode] resourceType[$resourceType]")
+        logger.info("v3 validateUserResourcePermission user[$user] serviceCode[${serviceCode.id()}] resourceType[${resourceType.value}] permission[${permission.value}]")
         val actionType = ActionUtils.buildAction(resourceType, permission)
         return authHelper.isAllowed(user, actionType)
     }
 
+    // 判断用户是否有某个动作某个实例的权限。
     override fun validateUserResourcePermission(
         user: String,
         serviceCode: AuthServiceCode,
         resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        relationResourceType: AuthResourceType?
     ): Boolean {
         logger.info("v3 validateUserResourcePermission user[$user] serviceCode[${serviceCode.id()}] resourceType[${resourceType.value}] permission[${permission.value}]")
         val actionType = ActionUtils.buildAction(resourceType, permission)
         val instanceDTO = InstanceDTO()
         instanceDTO.id = resourceCode
-        logger.info("v3 validateUserResourcePermission actionType$actionType, resourceCode$resourceCode")
-        return authHelper.isAllowed(user, actionType)
+        instanceDTO.system = iamConfiguration.systemId
+        if(relationResourceType != null) {
+            instanceDTO.type = relationResourceType!!.value
+        } else {
+            instanceDTO.type = resourceType.value
+        }
+        logger.info("v3 validateUserResourcePermission actionType[$actionType], resourceCode[$resourceCode] resourceType[$resourceType]")
+        return authHelper.isAllowed(user, actionType, instanceDTO)
     }
 
+    // 获取用户某动作下的所有有权限的实例。 如 获取A项目下的所有有查看权限的流水线
     override fun getUserResourceByPermission(
         user: String,
         serviceCode: AuthServiceCode,
@@ -88,13 +101,18 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         permission: AuthPermission,
         supplier: (() -> List<String>)?
     ): List<String> {
-        logger.info("v3 getUserResourceByPermission user[$user] serviceCode[$serviceCode] resourceType[$resourceType] projectCode[$projectCode] permission[$permission] supplier[$supplier]")
+        logger.info("v3 getUserResourceByPermission user[$user] serviceCode[${serviceCode.id()}] resourceType[${resourceType.value}] projectCode[$projectCode] permission[${permission.value}] supplier[$supplier]")
         val actionType = ActionUtils.buildAction(resourceType, permission)
-        val instances = mutableListOf<InstanceDTO>()
-        val instance = InstanceDTO()
-        instance.system = "bkci"
-        instances.add(instance)
-        authHelper.isAllowed(user, actionType, instances)
+        val actionDto = ActionDTO()
+        actionDto.id = actionType
+        val expression = policyService.getPolicyByAction(user, actionDto, null) ?: return emptyList()
+        logger.info("getUserResourceByPermission expression:$expression")
+        if(resourceType == AuthResourceType.PROJECT) {
+            return AuthUtils.getProjects(expression)
+        } else {
+
+        }
+
         return supplier?.invoke() ?: emptyList()
     }
 
@@ -135,8 +153,7 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
             actionDTO.id = authType
             actionList.add(actionDTO)
         }
-        val ac = authHelper.isAllowed(userId, actionList, emptyList())
-        return mock
+        return mutableMapOf()
     }
 
     companion object{

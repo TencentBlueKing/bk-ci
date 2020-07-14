@@ -26,9 +26,10 @@ class ResourceService @Autowired constructor(
 
     fun getProjectList(page: PageInfoDTO, token: String, method: CallbackMethodEnum): ListInstanceResponseDTO {
         logger.info("getProjectList method $method, page $page token $token")
-        checkToken(token)
+//        checkToken(token)
         val projectRecords =
             client.get(ServiceProjectResource::class).list(page.offset!!.toInt(), page.limit!!.toInt()).data
+        logger.info("projectRecords $projectRecords")
         val count = projectRecords?.count ?: 0L
         val projectInfo = mutableListOf<InstanceInfoDTO>()
         projectRecords?.records?.map {

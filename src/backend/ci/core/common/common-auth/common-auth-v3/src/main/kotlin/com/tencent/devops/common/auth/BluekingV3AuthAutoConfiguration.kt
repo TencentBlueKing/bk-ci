@@ -62,14 +62,14 @@ class BluekingV3AuthAutoConfiguration {
     // TODO: 配置化
     val iamBaseUrl = "http://9.136.139.172:8080"
 
-    @Value("\${auth.systemId:}")
-    val systemId = ""
+//    @Value("\${auth.systemId:}")
+    val systemId = "bk_ci"
 
     @Value("\${auth.appCode:}")
-    val appCode = ""
+    val appCode = "bk_ci"
 
     @Value("\${auth.appSecret:}")
-    val appSecret = ""
+    val appSecret = "d043bde2-0b49-4024-b102-3bf0552193dd"
 
     @Bean
     @Primary
@@ -81,7 +81,7 @@ class BluekingV3AuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun authProjectApi(bkAuthPermissionApi: BluekingV3AuthPermissionApi) = BluekingV3AuthProjectApi(bkAuthPermissionApi)
+    fun authProjectApi(bkAuthPermissionApi: BluekingV3AuthPermissionApi) = BluekingV3AuthProjectApi(bkAuthPermissionApi, policyService(), authHelper(), iamConfiguration())
 
     @Bean
     fun bcsAuthServiceCode() = BluekingV3BcsAuthServiceCode()
@@ -127,5 +127,5 @@ class BluekingV3AuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun authPermissionApi() = BluekingV3AuthPermissionApi(authHelper(), policyService())
+    fun authPermissionApi() = BluekingV3AuthPermissionApi(authHelper(), policyService(), iamConfiguration())
 }

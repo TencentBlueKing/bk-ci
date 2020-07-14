@@ -6,14 +6,19 @@ import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.ProjectPermissionService
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class V3ProjectPermissionServiceImpl @Autowired constructor(
     val client: Client,
     private val authProjectApi: AuthProjectApi,
     private val authPermissionApi: AuthPermissionApi,
-    private val projectAuthServiceCode: ProjectAuthServiceCode
+    private val projectAuthServiceCode: ProjectAuthServiceCode,
+    private val projectDao: ProjectDao,
+    private val dslContext: DSLContext
 ) : ProjectPermissionService {
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
@@ -56,14 +61,28 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun getUserProjects(userId: String): List<String> {
-        return authProjectApi.getUserProjects(
+        val projects = authProjectApi.getUserProjects(
             serviceCode = projectAuthServiceCode,
             userId = userId,
             supplier = null
         )
+        val projectList = mutableListOf<String>()
+        return if(projects[0] == "*") {
+            projectDao.getAllProject(dslContext).filter { projectList.add(it.englishName) }
+            projectList
+        } else {
+            projects.map {
+                projectList.add(it.trim())
+            }
+            projectList
+        }
     }
 
     override fun getUserProjectsAvailable(userId: String): Map<String, String> {
         TODO("Not yet implemented")
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

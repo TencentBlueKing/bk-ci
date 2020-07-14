@@ -233,7 +233,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
 
             val projects = projectPermissionService.getUserProjects(userId)
-
+            logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
             projectDao.listByEnglishName(dslContext, projects).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
@@ -338,6 +338,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             }
             val count = projectDao.getCount(dslContext)
             success = true
+            logger.info("list count$count")
             return Page(
                 count = count,
                 page = limit,
