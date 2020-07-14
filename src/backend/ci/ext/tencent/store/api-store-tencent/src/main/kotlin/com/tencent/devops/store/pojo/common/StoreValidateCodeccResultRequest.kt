@@ -24,17 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:worker:worker-common")
-    compile project(":core:artifactory:api-artifactory-store")
-    compile project(":ext:tencent:common:common-archive-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-    compile project(":ext:tencent:store:api-store-tencent")
-    compile project(":ext:tencent:store:api-store-service")
-    compile project(":ext:tencent:dispatch:api-dispatch-bcs")
-    compile group: 'me.cassiano', name: 'ktlint-html-reporter', version: '0.1.2'
-    compile group: 'com.github.shyiko', name: 'ktlint', version: '0.29.0'
-}
+package com.tencent.devops.store.pojo.common
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("校验codecc扫描结果请求报文体")
+data class StoreValidateCodeccResultRequest(
+    @ApiModelProperty("项目代码", required = true)
+    val projectCode: String,
+    @ApiModelProperty("用户ID", required = true)
+    val userId: String,
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("组件代码", required = true)
+    val storeCode: String,
+    @ApiModelProperty("组件类型", required = true)
+    val storeType: StoreTypeEnum,
+    @ApiModelProperty("开发语言", required = true)
+    val language: String
+)

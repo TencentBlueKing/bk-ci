@@ -23,18 +23,27 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.worker.common.api.store
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:worker:worker-common")
-    compile project(":core:artifactory:api-artifactory-store")
-    compile project(":ext:tencent:common:common-archive-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-    compile project(":ext:tencent:store:api-store-tencent")
-    compile project(":ext:tencent:store:api-store-service")
-    compile project(":ext:tencent:dispatch:api-dispatch-bcs")
-    compile group: 'me.cassiano', name: 'ktlint-html-reporter', version: '0.1.2'
-    compile group: 'com.github.shyiko', name: 'ktlint', version: '0.29.0'
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import okhttp3.MediaType
+import okhttp3.RequestBody
+
+class StoreCodeccResourceApi : AbstractBuildResourceApi() {
+
+    fun validate(
+        storeValidateCodeccResultRequest: StoreValidateCodeccResultRequest
+    ): Result<Boolean> {
+        val path = "/ms/store/api/build/store/codecc/validate"
+        val body = RequestBody.create(
+            MediaType.parse("application/json; charset=utf-8"),
+            objectMapper.writeValueAsString(storeValidateCodeccResultRequest)
+        )
+        val request = buildPost(path, body)
+        val responseContent = request(request, "codecc validate fail")
+        return objectMapper.readValue(responseContent)
+    }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

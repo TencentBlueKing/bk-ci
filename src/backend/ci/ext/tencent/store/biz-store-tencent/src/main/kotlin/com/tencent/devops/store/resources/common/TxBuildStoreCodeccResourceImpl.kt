@@ -24,17 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:worker:worker-common")
-    compile project(":core:artifactory:api-artifactory-store")
-    compile project(":ext:tencent:common:common-archive-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-    compile project(":ext:tencent:store:api-store-tencent")
-    compile project(":ext:tencent:store:api-store-service")
-    compile project(":ext:tencent:dispatch:api-dispatch-bcs")
-    compile group: 'me.cassiano', name: 'ktlint-html-reporter', version: '0.1.2'
-    compile group: 'com.github.shyiko', name: 'ktlint', version: '0.29.0'
-}
+package com.tencent.devops.store.resources.common
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.TxBuildStoreCodeccResource
+import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
+import com.tencent.devops.store.service.common.TxStoreCodeccValidateService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class TxBuildStoreCodeccResourceImpl @Autowired constructor(
+    private val txStoreCodeccValidateService: TxStoreCodeccValidateService
+) : TxBuildStoreCodeccResource {
+
+    override fun validate(storeValidateCodeccResultRequest: StoreValidateCodeccResultRequest): Result<Boolean> {
+        return txStoreCodeccValidateService.validateCodeccResult(storeValidateCodeccResultRequest)
+    }
+}
