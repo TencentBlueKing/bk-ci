@@ -193,7 +193,7 @@ interface BuildBuildResource {
         @HeaderParam("buildId")
         buildId: String,
         @ApiParam("任务ID", required = false)
-        @QueryParam("taskId")
+        @PathParam("taskId")
         taskId: String
     ): Result<Map<String, String>>
 }
