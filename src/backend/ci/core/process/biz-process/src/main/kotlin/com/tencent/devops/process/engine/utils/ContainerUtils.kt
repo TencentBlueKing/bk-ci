@@ -26,6 +26,9 @@
 
 package com.tencent.devops.process.engine.utils
 
+import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
+
 object ContainerUtils {
 
     fun getContainerStartupKey(
@@ -33,4 +36,12 @@ object ContainerUtils {
         buildId: String,
         containerId: String
     ) = "container:startup:$pipelineId:$buildId:$containerId"
+
+    fun isNormalContainerEnable(normalContainer: NormalContainer): Boolean {
+        return if (normalContainer.jobControlOption != null) normalContainer.jobControlOption!!.enable else normalContainer.enableSkip == false
+    }
+
+    fun isVMBuildContainerEnable(container: VMBuildContainer): Boolean {
+        return if (container.jobControlOption != null) container.jobControlOption!!.enable else true
+    }
 }
