@@ -710,10 +710,15 @@ class PipelineRuntimeService @Autowired constructor(
         // 原子重试
         val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]?.toString()
 
-        val (actionType, isStageRetry) = if (params[PIPELINE_RETRY_COUNT] != null) {
-            Pair(ActionType.RETRY, retryStartTaskId?.startsWith("stage-") == true)
+        val (actionType, retryCount, isStageRetry) = if (params[PIPELINE_RETRY_COUNT] != null) {
+            val i = try {
+                params[PIPELINE_RETRY_COUNT].toString().trim().toInt()
+            } catch (ignored: NumberFormatException) {
+                0
+            }
+            Triple(ActionType.RETRY, i, retryStartTaskId?.startsWith("stage-") == true)
         } else {
-            Pair(ActionType.START, false)
+            Triple(ActionType.START, 0, false)
         }
 
         var firstTaskId = if (params[PIPELINE_START_TASK_ID] != null) params[PIPELINE_START_TASK_ID].toString() else ""
@@ -859,6 +864,7 @@ class PipelineRuntimeService @Autowired constructor(
                             stage = stage,
                             container = container,
                             retryStartTaskId = atomElement.id!!,
+                            retryCount = retryCount,
                             atomElement = atomElement
                         )
 
@@ -884,6 +890,7 @@ class PipelineRuntimeService @Autowired constructor(
                         updateExistsRecord = updateExistsRecord,
                         buildTaskList = buildTaskList,
                         pipelineInfo = pipelineInfo,
+                        retryCount = retryCount,
                         buildId = buildId,
                         stageId = stageId,
                         userId = userId
@@ -1122,6 +1129,7 @@ class PipelineRuntimeService @Autowired constructor(
         updateExistsRecord: MutableList<TPipelineBuildTaskRecord>,
         buildTaskList: MutableList<PipelineBuildTask>,
         pipelineInfo: PipelineInfo,
+        retryCount: Int,
         buildId: String,
         stageId: String,
         userId: String
@@ -1189,6 +1197,7 @@ class PipelineRuntimeService @Autowired constructor(
                 lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                 stage = stage,
                 container = container,
+                retryCount = retryCount,
                 retryStartTaskId = startTaskVMId
             )
             if (taskRecord != null) {
@@ -1202,6 +1211,7 @@ class PipelineRuntimeService @Autowired constructor(
                 lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                 stage = stage,
                 container = container,
+                retryCount = retryCount,
                 retryStartTaskId = endPointTaskId
             )
             if (taskRecord != null) {
@@ -1211,6 +1221,7 @@ class PipelineRuntimeService @Autowired constructor(
                     lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                     stage = stage,
                     container = container,
+                    retryCount = retryCount,
                     retryStartTaskId = stopVmTaskId
                 )
                 if (taskRecord != null) {
@@ -1236,6 +1247,7 @@ class PipelineRuntimeService @Autowired constructor(
         stage: Stage,
         container: Container,
         retryStartTaskId: String,
+        retryCount: Int,
         atomElement: Element? = null
     ): TPipelineBuildTaskRecord? {
         val target: TPipelineBuildTaskRecord? = findTaskRecord(
@@ -1245,7 +1257,7 @@ class PipelineRuntimeService @Autowired constructor(
         )
 
         if (target != null) {
-            target.executeCount += 1 // 执行次数增1
+            target.executeCount = retryCount + 1 // 执行次数增1
             target.status = BuildStatus.QUEUE.ordinal // 进入排队状态
             stage.status = null
             stage.startEpoch = null
