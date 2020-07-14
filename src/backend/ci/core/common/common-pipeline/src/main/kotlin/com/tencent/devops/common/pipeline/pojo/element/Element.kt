@@ -29,6 +29,8 @@ package com.tencent.devops.common.pipeline.pojo.element
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
@@ -48,6 +50,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
+import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
 @JsonSubTypes(
@@ -106,5 +109,50 @@ abstract class Element(
         }
 
         return additionalOptions!!.enable
+    }
+
+    fun findFirstTaskIdByStartType(startType: StartType): String {
+
+        var firstTaskId = ""
+
+        if (startType.name == StartType.WEB_HOOK.name) {
+            if (this is CodeGitlabWebHookTriggerElement ||
+                this is CodeGitWebHookTriggerElement ||
+                this is CodeSVNWebHookTriggerElement ||
+                this is CodeGithubWebHookTriggerElement
+            ) {
+                firstTaskId = this.id!!
+            }
+        } else if (startType.name == StartType.MANUAL.name || startType.name == StartType.SERVICE.name || startType.name == StartType.PIPELINE.name) {
+            if (this is ManualTriggerElement) {
+                firstTaskId = this.id!!
+            }
+        } else if (startType.name == StartType.TIME_TRIGGER.name) {
+            if (this is TimerTriggerElement) {
+                firstTaskId = this.id!!
+            }
+        } else if (startType.name == StartType.REMOTE.name) {
+            if (this is RemoteTriggerElement) {
+                firstTaskId = this.id!!
+            }
+        }
+
+        return firstTaskId
+    }
+
+    /**
+     * 根据参数变量检查插件是否跳过
+     * @param params 参数变量值
+     */
+    fun takeStatus(params: Map<String, Any>): BuildStatus {
+        return if (params[SkipElementUtils.getSkipElementVariableName(id!!)] == "true") { // 参数中指明要求跳过
+            BuildStatus.SKIP // 跳过
+        } else if (!isElementEnable()) { // 插件未启用
+            BuildStatus.SKIP // 跳过
+        } else if (status == BuildStatus.SKIP.name) { // 原本状态为SKIP，一般为 Rebuild/Fail Retry 的上一次执行标志下来
+            BuildStatus.SKIP // 跳过
+        } else {
+            BuildStatus.QUEUE // 默认为排队状态
+        }
     }
 }
