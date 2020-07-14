@@ -24,9 +24,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:store:api-store-tencent")
-    compile project(":ext:tencent:store:api-store-service")
-}
+package com.tencent.devops.store.api.common
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["OP_STORE_PIPELINE"], description = "OP-STORE-流水线")
+@Path("/op/store/pipeline")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpStorePipelineResource {
+
+    @ApiOperation("更新研发商店组件流水线模型")
+    @PUT
+    @Path("/model/update")
+    fun updateStorePipelineModel(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("更新研发商店流水线模型请求报文")
+        updateStorePipelineModelRequest: UpdateStorePipelineModelRequest
+    ): Result<Boolean>
+}
