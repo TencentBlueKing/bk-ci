@@ -183,16 +183,8 @@ export const actions = {
         }
     },
     // 获取RD Store模板
-    requestStoreTemplate: async ({ commit }, { templateName, category }) => {
-        const params = Object.assign({ page: 1, pageSize: 1000 }, { templateName: templateName, categoryCode: category })
-        try {
-            const response = await request.get(`/${STORE_API_URL_PREFIX}/user/market/template/list`, { params })
-            commit(STORE_TEMPLATE_MUTATION, {
-                storeTemplate: response.data.records
-            })
-        } catch (e) {
-            rootCommit(commit, FETCH_ERROR, e)
-        }
+    requestStoreTemplate: async ({ commit }, params) => {
+        return request.get(`/${STORE_API_URL_PREFIX}/user/market/template/list`, { params })
     },
     requestPipelineSetting: async ({ commit }, { projectId, pipelineId }) => {
         try {
@@ -324,7 +316,7 @@ export const actions = {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    reviewExcudeAtom: async ({ commit }, { projectId, pipelineId, buildId, elementId, action }) => {
+    reviewExcuteAtom: async ({ commit }, { projectId, pipelineId, buildId, elementId, action }) => {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`).then(response => {
             return response.data
         })

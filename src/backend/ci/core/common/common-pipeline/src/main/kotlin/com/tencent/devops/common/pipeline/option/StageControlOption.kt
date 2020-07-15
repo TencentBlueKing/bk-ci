@@ -37,7 +37,7 @@ data class StageControlOption(
     val enable: Boolean, // 是否启用该阶段
     val runCondition: StageRunCondition, // 运行条件
     val manualTrigger: Boolean? = false,
-    val triggerUsers: List<String>? = null, // 可触发用户
+    var triggerUsers: List<String>? = null, // 可触发用户，支持引用变量
     val timeout: Int? = null, // 等待审核的超时时间
     val customVariables: List<NameAndValue>? = null, // 自定义变量
     val customCondition: String? = null // 自定义条件

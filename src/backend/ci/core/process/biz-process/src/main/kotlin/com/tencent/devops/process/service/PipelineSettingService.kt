@@ -46,8 +46,9 @@ import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
 import com.tencent.devops.process.service.label.PipelineGroupService
-import com.tencent.devops.process.util.DateTimeUtils
+import com.tencent.devops.common.api.util.DateTimeUtil
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -150,7 +151,7 @@ class PipelineSettingService @Autowired constructor(
                             it.get(FAIL_CONTENT) ?: ""
                         ),
                         labels = labels,
-                        waitQueueTimeMinute = DateTimeUtils.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
+                        waitQueueTimeMinute = DateTimeUtil.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
                         maxQueueSize = it.get(MAX_QUEUE_SIZE),
                         maxPipelineResNum = it.get(MAX_PIPELINE_RES_NUM)
                     )
@@ -201,6 +202,30 @@ class PipelineSettingService @Autowired constructor(
     fun isQueueTimeout(pipelineId: String, startTime: Long): Boolean {
         val waitQueueTimeMills = (getSetting(pipelineId)?.waitQueueTimeSecond ?: 3600) * 1000
         return System.currentTimeMillis() - startTime > waitQueueTimeMills
+    }
+
+    fun updatePipelineModel(
+        userId: String,
+        updatePipelineModelRequest: UpdatePipelineModelRequest,
+        checkPermission: Boolean = true
+    ): Boolean {
+        val pipelineModelVersionList = updatePipelineModelRequest.pipelineModelVersionList
+        if (checkPermission) {
+            pipelineModelVersionList.forEach {
+                checkEditPermission(
+                    userId = it.creator,
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    message = "The user (\$ userId) does not have permission to edit the pipeline (\$ pipelineId) under the project (\$ projectId)"
+                )
+            }
+        }
+        pipelineResDao.updatePipelineModel(
+            dslContext = dslContext,
+            userId = userId,
+            pipelineModelVersionList = pipelineModelVersionList
+        )
+        return true
     }
 
     fun maxQueue(pipelineId: String): Int {

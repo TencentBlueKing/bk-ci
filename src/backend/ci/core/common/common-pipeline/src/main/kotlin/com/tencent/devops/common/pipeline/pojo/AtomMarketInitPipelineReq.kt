@@ -31,14 +31,10 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("插件市场初始化流水线请求报文体")
 data class AtomMarketInitPipelineReq(
-    @ApiModelProperty("仓库hashId", required = true)
-    val repositoryHashId: String,
-    @ApiModelProperty("仓库路径", required = true)
-    val repositoryPath: String?,
+    @ApiModelProperty("流水线模型", required = true)
+    val pipelineModel: String,
     @ApiModelProperty("脚本任务插件Shell执行脚本", required = true)
     val script: String,
     @ApiModelProperty("插件基本信息", required = true)
-    val atomBaseInfo: AtomBaseInfo,
-    @ApiModelProperty("构建环境依赖环境变量", required = true)
-    val buildEnv: Map<String, String>
+    val atomBaseInfo: AtomBaseInfo
 )

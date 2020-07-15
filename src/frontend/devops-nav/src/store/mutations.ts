@@ -17,7 +17,8 @@ import {
     CLOSE_PREVIEW_TIPS,
     TOGGLE_MODULE_LOADING,
     UPDATE_CURRENT_PAGE,
-    TOGGLE_PERMISSION_DIALOG
+    TOGGLE_PERMISSION_DIALOG,
+    SET_CURRENT_NOTICE
 } from './constants'
 
 const mutations: MutationTree<RootState> = {
@@ -93,6 +94,9 @@ const mutations: MutationTree<RootState> = {
     },
     [TOGGLE_MODULE_LOADING]: (state: RootState, moduleLoading: boolean) => {
         Vue.set(state, 'moduleLoading', moduleLoading)
+    },
+    [SET_CURRENT_NOTICE]: (state: RootState, notice: object) => {
+        Vue.set(state, 'currentNotice', notice)
     }
 }
 

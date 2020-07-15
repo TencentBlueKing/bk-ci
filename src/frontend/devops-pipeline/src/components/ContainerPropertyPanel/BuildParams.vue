@@ -36,7 +36,7 @@
                                 </header>
                                 <bk-form slot="content">
                                     <div class="params-flex-col">
-                                        <bk-form-item :label="$t('editPage.paramsType')" class="flex-col-span-1">
+                                        <bk-form-item label-width="auto" :label="$t('editPage.paramsType')" class="flex-col-span-1">
                                             <selector
                                                 :popover-min-width="246"
                                                 :data-vv-scope="`param-${param.id}`"
@@ -47,15 +47,15 @@
                                                 :value="param.type"
                                             />
                                         </bk-form-item>
-                                        <bk-form-item class="flex-col-span-1" v-if="settingKey !== 'templateParams'">
+                                        <bk-form-item label-width="auto" class="flex-col-span-1" v-if="settingKey !== 'templateParams'">
                                             <atom-checkbox :disabled="disabled" :text="$t('editPage.showOnStarting')" :value="param.required" name="required" :handle-change="(name, value) => handleUpdateParam(name, value, index)" />
                                         </bk-form-item>
                                     </div>
                                     <div class="params-flex-col pt10">
-                                        <bk-form-item class="flex-col-span-1" :label="$t('name')" :is-error="errors.has(`param-${param.id}.id`)" :error-msg="errors.first(`param-${param.id}.id`)">
+                                        <bk-form-item label-width="auto" class="flex-col-span-1" :label="$t('name')" :is-error="errors.has(`param-${param.id}.id`)" :error-msg="errors.first(`param-${param.id}.id`)">
                                             <vuex-input :ref="`paramId${index}Input`" :data-vv-scope="`param-${param.id}`" :disabled="disabled" :handle-change="(name, value) => handleUpdateParamId(name, value, index)" v-validate.initial="`required|unique:${validateParams.map(p => p.id).join(',')}`" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
                                         </bk-form-item>
-                                        <bk-form-item class="flex-col-span-1" :label="$t('editPage.defaultValue')" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="showTips">
+                                        <bk-form-item label-width="auto" class="flex-col-span-1" :label="$t('editPage.defaultValue')" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="showTips">
                                             <selector
                                                 :popover-min-width="250"
                                                 v-if="isSelectorParam(param.type)"
@@ -86,45 +86,45 @@
                                         </bk-form-item>
                                     </div>
 
-                                    <bk-form-item v-if="isSelectorParam(param.type)" :label="$t('editPage.selectOptions')" :desc="$t('editPage.optionsDesc')" :is-error="errors.has(`param-${param.id}.options`)" :error-msg="errors.first(`param-${param.id}.options`)">
+                                    <bk-form-item label-width="auto" v-if="isSelectorParam(param.type)" :label="$t('editPage.selectOptions')" :desc="$t('editPage.optionsDesc')" :is-error="errors.has(`param-${param.id}.options`)" :error-msg="errors.first(`param-${param.id}.options`)">
                                         <vuex-textarea v-validate.initial="'excludeComma'" :disabled="disabled" :handle-change="(name, value) => editOption(name, value, index)" name="options" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.optionTips')" :value="getOptions(param)"></vuex-textarea>
                                     </bk-form-item>
 
-                                    <bk-form-item v-if="isSvnParam(param.type)" :label="$t('editPage.svnParams')" :is-error="errors.has(`param-${param.id}.repoHashId`)" :error-msg="errors.first(`param-${param.id}.repoHashId`)">
+                                    <bk-form-item label-width="auto" v-if="isSvnParam(param.type)" :label="$t('editPage.svnParams')" :is-error="errors.has(`param-${param.id}.repoHashId`)" :error-msg="errors.first(`param-${param.id}.repoHashId`)">
                                         <request-selector v-bind="getRepoOption('CODE_SVN')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="'required'"></request-selector>
                                     </bk-form-item>
 
-                                    <bk-form-item v-if="isSvnParam(param.type)" :label="$t('editPage.relativePath')" :is-error="errors.has(`param-${param.id}.relativePath`)" :error-msg="errors.first(`param-${param.id}.relativePath`)">
+                                    <bk-form-item label-width="auto" v-if="isSvnParam(param.type)" :label="$t('editPage.relativePath')" :is-error="errors.has(`param-${param.id}.relativePath`)" :error-msg="errors.first(`param-${param.id}.relativePath`)">
                                         <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="relativePath" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.relativePathTips')" :value="param.relativePath"></vuex-input>
                                     </bk-form-item>
 
-                                    <bk-form-item v-if="isGitParam(param.type)" :label="$t('editPage.gitRepo')" :is-error="errors.has(`param-${param.id}.repoHashId`)" :error-msg="errors.first(`param-${param.id}.repoHashId`)">
+                                    <bk-form-item label-width="auto" v-if="isGitParam(param.type)" :label="$t('editPage.gitRepo')" :is-error="errors.has(`param-${param.id}.repoHashId`)" :error-msg="errors.first(`param-${param.id}.repoHashId`)">
                                         <request-selector v-bind="getRepoOption('CODE_GIT')" :disabled="disabled" name="repoHashId" :value="param.repoHashId" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" v-validate.initial="'required'"></request-selector>
                                     </bk-form-item>
 
-                                    <bk-form-item v-if="isCodelibParam(param.type)" :label="$t('editPage.codelibParams')" :is-error="errors.has(`param-${param.id}.scmType`)" :error-msg="errors.first(`param-${param.id}.scmType`)">
+                                    <bk-form-item label-width="auto" v-if="isCodelibParam(param.type)" :label="$t('editPage.codelibParams')" :is-error="errors.has(`param-${param.id}.scmType`)" :error-msg="errors.first(`param-${param.id}.scmType`)">
                                         <selector :disabled="disabled" :list="codeTypeList" :handle-change="(name, value) => handleCodeTypeChange(name, value, index)" name="scmType" :data-vv-scope="`param-${param.id}`" placeholder="" :value="param.scmType"></selector>
                                     </bk-form-item>
 
                                     <template v-if="isBuildResourceParam(param.type)">
-                                        <bk-form-item :label="$t('editPage.buildEnv')" :is-error="errors.has(`param-${param.id}.os`)" :error-msg="errors.first(`param-${param.id}.os`)">
+                                        <bk-form-item label-width="auto" :label="$t('editPage.buildEnv')" :is-error="errors.has(`param-${param.id}.os`)" :error-msg="errors.first(`param-${param.id}.os`)">
                                             <selector :popover-min-width="510" :disabled="disabled" :list="baseOSList" :handle-change="(name, value) => handleBuildResourceChange(name, value, index, param)" name="os" :data-vv-scope="`param-${param.id}`" placeholder="" :value="param.containerType.os"></selector>
                                         </bk-form-item>
 
-                                        <bk-form-item :label="$t('editPage.addMetaData')" :is-error="errors.has(`param-${param.id}.buildType`)" :error-msg="errors.first(`param-${param.id}.buildType`)">
+                                        <bk-form-item label-width="auto" :label="$t('editPage.addMetaData')" :is-error="errors.has(`param-${param.id}.buildType`)" :error-msg="errors.first(`param-${param.id}.buildType`)">
                                             <selector :popover-min-width="510" :disabled="disabled" :list="getBuildTypeList(param.containerType.os)" setting-key="type" :handle-change="(name, value) => handleBuildResourceChange(name, value, index, param)" name="buildType" :data-vv-scope="`param-${param.id}`" placeholder="" :value="param.containerType.buildType"></selector>
                                         </bk-form-item>
                                     </template>
 
-                                    <bk-form-item v-if="isArtifactoryParam(param.type)" :label="$t('editPage.filterRule')" :is-error="errors.has(`param-${param.id}.glob`)" :error-msg="errors.first(`param-${param.id}.glob`)">
+                                    <bk-form-item label-width="auto" v-if="isArtifactoryParam(param.type)" :label="$t('editPage.filterRule')" :is-error="errors.has(`param-${param.id}.glob`)" :error-msg="errors.first(`param-${param.id}.glob`)">
                                         <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="glob" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.filterRuleTips')" :value="param.glob"></vuex-input>
                                     </bk-form-item>
 
-                                    <bk-form-item v-if="isArtifactoryParam(param.type)" :label="$t('metaData')" :is-error="errors.has(`param-${param.id}.properties`)" :error-msg="errors.first(`param-${param.id}.properties`)">
+                                    <bk-form-item label-width="auto" v-if="isArtifactoryParam(param.type)" :label="$t('metaData')" :is-error="errors.has(`param-${param.id}.properties`)" :error-msg="errors.first(`param-${param.id}.properties`)">
                                         <key-value-normal :disabled="disabled" name="properties" :data-vv-scope="`param-${param.id}`" :is-metadata-var="true" :add-btn-text="$t('editPage.addMetaData')" :value="getProperties(param)" :handle-change="(name, value) => handleProperties(name, value, index)"></key-value-normal>
                                     </bk-form-item>
 
-                                    <bk-form-item :label="$t('desc')">
+                                    <bk-form-item label-width="auto" :label="$t('desc')">
                                         <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="desc" :placeholder="$t('editPage.descTips')" :value="param.desc" />
                                     </bk-form-item>
                                 </bk-form>

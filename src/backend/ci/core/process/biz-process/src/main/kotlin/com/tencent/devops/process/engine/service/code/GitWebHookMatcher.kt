@@ -51,6 +51,7 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         private val matcher = AntPathMatcher()
         const val MATCH_BRANCH = "matchBranch"
         const val MATCH_PATHS = "matchPaths"
+        const val EXCLUDE_MSG = "[skip ci]"
     }
 
     override fun isMatch(
@@ -157,6 +158,7 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         repository: Repository
     ): ScmWebhookMatcher.MatchResult {
         val eventBranch = getBranch()
+        val eventSourceBranch = (event as GitMergeRequestEvent).object_attributes.source_branch
         with(webHookParams) {
             // get mr change file list
             val gitScmService = SpringContextUtil.getBean(GitScmService::class.java)
@@ -179,6 +181,11 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
                 return ScmWebhookMatcher.MatchResult(false)
             }
 
+            if (doExcludeSourceBranchMatch(excludeSourceBranchName, eventSourceBranch, pipelineId)) {
+                logger.warn("Do mr event match fail for exclude source branch match for pipeline: $pipelineId")
+                return ScmWebhookMatcher.MatchResult(false)
+            }
+
             val matchBranch = doIncludeBranchMatch(branchName, eventBranch, pipelineId)
             if (matchBranch == null) {
                 logger.warn("Do mr match fail for include branch not match for pipeline: $pipelineId")
@@ -188,6 +195,12 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
             val matchPaths = doIncludePathMatch(changeFiles, includePaths, pipelineId)
             if (matchPaths == null) {
                 logger.warn("Do mr event match fail for include path not match for pipeline: $pipelineId")
+                return ScmWebhookMatcher.MatchResult(false)
+            }
+
+            val matchSourceBranch = doIncludeSourceBranchMatch(includeSourceBranchName, eventSourceBranch, pipelineId)
+            if (matchSourceBranch == null) {
+                logger.warn("Do mr match fail for include source branch not match for pipeline: $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)
             }
 
@@ -201,10 +214,12 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         with(webHookParams) {
             val commits = (event as GitPushEvent).commits
             val eventPaths = mutableSetOf<String>()
+            val commitMsg = mutableListOf<String>()
             commits.forEach { commit ->
                 eventPaths.addAll(commit.added ?: listOf())
                 eventPaths.addAll(commit.removed ?: listOf())
                 eventPaths.addAll(commit.modified ?: listOf())
+                commitMsg.add(commit.message)
             }
 
             if (doExcludeBranchMatch(excludeBranchName, eventBranch, pipelineId)) {
@@ -214,6 +229,11 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
             if (doExcludePathMatch(eventPaths, excludePaths, pipelineId)) {
                 logger.warn("Do push event match fail for exclude path match for pipeline: $pipelineId")
+                return ScmWebhookMatcher.MatchResult(false)
+            }
+
+            if (doExcludeMsgMatch(commitMsg[0], pipelineId)) {
+                logger.warn("Do push event match fail for exclude message match for pipeline: $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)
             }
 
@@ -389,6 +409,46 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
             is GitMergeRequestEvent -> event.object_attributes.target_branch
             else -> ""
         }
+    }
+
+    private fun doExcludeMsgMatch(commitMsg: String, pipelineId: String): Boolean {
+        logger.info("Do exclude msg match for pipeline: $pipelineId, $commitMsg")
+        if (commitMsg.contains(EXCLUDE_MSG)) {
+            logger.warn("Do exclude msg match success for pipeline: $pipelineId")
+            return true
+        }
+        return false
+    }
+
+    private fun doExcludeSourceBranchMatch(excludeSourceBranchName: String?, eventSourceBranch: String, pipelineId: String): Boolean {
+        logger.info("Do exclude source branch match for pipeline: $pipelineId, $eventSourceBranch")
+        if (excludeSourceBranchName.isNullOrBlank()) return false
+
+        val excludeSourceBranchNameSet = regex.split(excludeSourceBranchName).toSet()
+        logger.info("Exclude source branch set for pipeline: $pipelineId, ${excludeSourceBranchNameSet.map { it }}")
+        excludeSourceBranchNameSet.forEach {
+            if (isBranchMatch(it, eventSourceBranch)) {
+                logger.warn("The exclude source branch match the git event branch for pipeline: $pipelineId, $eventSourceBranch")
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun doIncludeSourceBranchMatch(sourceBranchName: String?, eventSourceBranch: String, pipelineId: String): String? {
+        logger.info("Do include source branch match for pipeline: $pipelineId, $eventSourceBranch")
+        if (sourceBranchName.isNullOrBlank()) return ""
+
+        val includeSourceBranchNameSet = regex.split(sourceBranchName)
+        logger.info("Include source branch set for pipeline: $pipelineId, ${includeSourceBranchNameSet.map { it }}")
+        includeSourceBranchNameSet.forEach {
+            if (isBranchMatch(it, eventSourceBranch)) {
+                logger.warn("The include source branch match the git event branch for pipeline: $pipelineId, $eventSourceBranch")
+                return it
+            }
+        }
+
+        return null
     }
 
     override fun getUsername(): String {

@@ -639,7 +639,7 @@
     }
     .artifact-list-popup {
         position: absolute;
-        width: 408px;
+        width: 800px;
         background: white;
         right: 150px;
         top: 0;
@@ -701,7 +701,7 @@
                     align-items: center;
                 }
                 .artifact-name {
-                    max-width: 222px;
+                    max-width: 600px;
                     @include ellipsis();
                 }
                 .artifact-size {

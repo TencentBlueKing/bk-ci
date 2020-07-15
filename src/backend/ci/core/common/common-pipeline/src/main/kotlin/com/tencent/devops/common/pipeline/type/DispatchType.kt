@@ -46,7 +46,8 @@ import com.tencent.devops.common.pipeline.type.tstack.TStackDispatchType
     JsonSubTypes.Type(value = ThirdPartyAgentIDDispatchType::class, name = "THIRD_PARTY_AGENT_ID"),
     JsonSubTypes.Type(value = ThirdPartyAgentEnvDispatchType::class, name = "THIRD_PARTY_AGENT_ENV"),
     JsonSubTypes.Type(value = ThirdPartyDevCloudDispatchType::class, name = "THIRD_PARTY_DEVCLOUD"),
-    JsonSubTypes.Type(value = CodeCCDispatchType::class, name = "CODECC")
+    JsonSubTypes.Type(value = CodeCCDispatchType::class, name = "CODECC"),
+    JsonSubTypes.Type(value = CodeCCDispatchType::class, name = "MACOS")
 )
 abstract class DispatchType(
     open var value: String,

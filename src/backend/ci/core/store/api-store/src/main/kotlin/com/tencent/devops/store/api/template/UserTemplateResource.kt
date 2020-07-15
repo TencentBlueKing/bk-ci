@@ -80,9 +80,9 @@ interface UserTemplateResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("模版名称", required = false)
-        @QueryParam("templateName")
-        templateName: String?,
+        @ApiParam("搜索关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?,
         @ApiParam("模版分类", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
@@ -101,6 +101,9 @@ interface UserTemplateResource {
         @ApiParam("排序", required = false)
         @QueryParam("sortType")
         sortType: MarketTemplateSortTypeEnum ? = MarketTemplateSortTypeEnum.CREATE_TIME,
+        @ApiParam("项目ID", required = false)
+        @QueryParam("projectCode")
+        projectCode: String?,
         @ApiParam("页码", required = false)
         @QueryParam("page")
         page: Int?,
