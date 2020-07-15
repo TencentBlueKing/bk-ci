@@ -105,6 +105,8 @@ import com.tencent.devops.gitci.pojo.CI_MR_TITLE
 import com.tencent.devops.gitci.pojo.CI_MR_URL
 import com.tencent.devops.gitci.pojo.CI_MR_ACTION
 import com.tencent.devops.gitci.pojo.CI_MR_ASSIGNEE
+import com.tencent.devops.gitci.pojo.CI_COMMIT_ID_SHORT
+import com.tencent.devops.gitci.pojo.CI_TAG_CREATE_FROM
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
@@ -499,6 +501,7 @@ class GitCIBuildService @Autowired constructor(
         startParams[CI_BRANCH] = event.branch
         startParams[CI_BUILD_USER] = event.userId
         startParams[CI_COMMIT_ID] = event.commitId
+        startParams[CI_COMMIT_ID_SHORT] = event.commitId.substring(0, 8)
         startParams[CI_REPOSITORY_NAME] = gitProjectConf.name
         startParams[CI_BUILD_WEB_URL] = gitProjectConf.url
         startParams[CI_COMMIT_MESSAGE] = event.commitMsg.toString()
@@ -525,6 +528,7 @@ class GitCIBuildService @Autowired constructor(
                 startParams[CI_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
                 startParams[CI_TAG_USERNAME] = event.userId
                 startParams[CI_REF] = originEvent.ref
+                startParams[CI_TAG_CREATE_FROM] = originEvent.create_from.toString()
             }
             is GitMergeRequestEvent -> {
                 startParams[CI_MR_ACTION] = originEvent.object_attributes.action
