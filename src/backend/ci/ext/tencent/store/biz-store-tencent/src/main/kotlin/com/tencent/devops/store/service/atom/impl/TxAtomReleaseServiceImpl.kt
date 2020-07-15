@@ -359,7 +359,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             val pipelineName = "am-$projectCode-$atomCode-${System.currentTimeMillis()}"
             val paramMap = mapOf(
                 "pipelineName" to pipelineName,
-                "atomCode" to atomCode,
+                "storeCode" to atomCode,
                 "version" to version,
                 "language" to language,
                 "script" to StringEscapeUtils.escapeJava(script),

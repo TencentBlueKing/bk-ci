@@ -177,9 +177,9 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         val storeName = storeCommonService.getStoreNameById(buildRelRecord.storeId, storeType)
         val bodyParams = mapOf(
             "storeName" to storeName,
-            "codeStyleScore" to codeStyleScore.toString(),
-            "codeSecurityScore" to codeSecurityScore.toString(),
-            "codeMeasureScore" to codeMeasureScore.toString(),
+            "codeStyleScore" to String.format(scoreFormat, codeStyleScore),
+            "codeSecurityScore" to String.format(scoreFormat, codeSecurityScore),
+            "codeMeasureScore" to String.format(scoreFormat, codeMeasureScore),
             "codeccDetailUrl" to codeccDetailUrl,
             "dataTime" to DateTimeUtil.toDateTime(LocalDateTime.now())
         )
@@ -225,8 +225,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         val languageWaringConfig = businessConfigDao.get(dslContext, storeType.name, "codeStyleHundredWaring", language)
         val languageWaringConfigCount = languageWaringConfig?.configValue ?: "6"
         // 计算代码规范评分
-        val score = 100 * ((0.6.pow(1.toDouble() / languageWaringConfigCount.toDouble())).pow(hundredWaringCount))
-        return String.format(scoreFormat, score).toDouble()
+        return 100 * ((0.6.pow(1.toDouble() / languageWaringConfigCount.toDouble())).pow(hundredWaringCount))
     }
 
     /**
@@ -244,7 +243,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         } else {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         }
-        return String.format(scoreFormat, score.toDouble()).toDouble()
+        return score.toDouble()
     }
 
     /**
@@ -278,7 +277,6 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         val coverityCalScoreStyle = coverityCalScoreStyleConfig!!.configValue
         // 计算一般告警数得分评分
         val coverityNormalWaringScore = storeCodeccDao.calScore(dslContext, coverityCalScoreStyle, thousandCoverityNormalWaringCount)
-        val score = 0.9 * ccnScore + 0.08 * coveritySeriousWaringScore + 0.02 * coverityNormalWaringScore
-        return String.format(scoreFormat, score).toDouble()
+        return 0.9 * ccnScore + 0.08 * coveritySeriousWaringScore + 0.02 * coverityNormalWaringScore
     }
 }
