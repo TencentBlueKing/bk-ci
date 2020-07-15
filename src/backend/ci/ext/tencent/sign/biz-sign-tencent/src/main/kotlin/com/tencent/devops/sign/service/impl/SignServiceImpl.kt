@@ -104,10 +104,6 @@ class SignServiceImpl : SignService {
         TODO("Not yet implemented")
     }
 
-    override fun resignApp(appPath: File, certId: String, bundleId: String?, mobileProvision: File?): Boolean {
-        TODO("Not yet implemented")
-    }
-
     override fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): Map<String, MobileProvisionInfo> {
         TODO("Not yet implemented")
     }

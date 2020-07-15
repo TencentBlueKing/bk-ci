@@ -4,7 +4,6 @@ import com.dd.plist.NSDictionary
 import com.dd.plist.NSString
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.common.service.utils.ZipUtil
@@ -21,15 +20,18 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.io.InputStream
 import com.dd.plist.PropertyListParser
+import com.tencent.devops.sign.utils.SignUtils
+import com.tencent.devops.sign.utils.SignUtils.DEFAULT_CER_ID
+import com.tencent.devops.sign.utils.SignUtils.MAIN_APP_FILENAME
 import java.lang.RuntimeException
 
 @Service
 class SignServiceImpl @Autowired constructor(
-        private val fileService: FileService,
-        private val signInfoService: SignInfoService,
-        private val archiveService: ArchiveService,
-        private val objectMapper: ObjectMapper,
-        private val mobileProvisionService: MobileProvisionService
+    private val fileService: FileService,
+    private val signInfoService: SignInfoService,
+    private val archiveService: ArchiveService,
+    private val objectMapper: ObjectMapper,
+    private val mobileProvisionService: MobileProvisionService
 ) : SignService {
     @Value("\${bkci.sign.tmpDir:/data/enterprise_sign_tmp/}")
     private val tmpDir = "/data/enterprise_sign_tmp/"
@@ -39,9 +41,9 @@ class SignServiceImpl @Autowired constructor(
     private lateinit var mobileProvisionDir: File
 
     override fun signIpaAndArchive(
-            userId: String,
-            ipaSignInfoHeader: String,
-            ipaInputStream: InputStream
+        userId: String,
+        ipaSignInfoHeader: String,
+        ipaInputStream: InputStream
     ): String? {
         var ipaSignInfo: IpaSignInfo? = null
 
@@ -50,13 +52,13 @@ class SignServiceImpl @Autowired constructor(
             ipaSignInfo = objectMapper.readValue(ipaSignInfoHeaderDecode, IpaSignInfo::class.java)
         } catch (e: Exception) {
             UserIpaResourceImpl.logger.error("Fail to parse ipaSignInfoHeaderDecode:$ipaSignInfoHeaderDecode; Exception:", e)
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_PARSE_SIGN_INFO_HEADER, defaultMessage = "解析签名信息失败。")
+            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_PARSE_SIGN_INFO_HEADER, defaultMessage = "解析签名信息失败")
         }
         // 检查ipaSignInfo的合法性
         ipaSignInfo = signInfoService.check(ipaSignInfo)
         if (ipaSignInfo == null) {
             UserIpaResourceImpl.logger.error("Check ipaSignInfo is invalided,  ipaSignInfoHeaderDecode:$ipaSignInfoHeaderDecode")
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER, defaultMessage = "验证签名信息为非法信息。")
+            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER, defaultMessage = "验证签名信息为非法信息")
         }
         // 复制文件到临时目录
         ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo)
@@ -76,23 +78,68 @@ class SignServiceImpl @Autowired constructor(
 
         if (signedIpaFile == null) {
             UserIpaResourceImpl.logger.error("sign ipa failed.")
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA包签名失败。")
+            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA包签名失败")
         }
 
         // 归档ipa包
         val fileDownloadUrl = archiveService.archive(signedIpaFile, ipaSignInfo)
         if (fileDownloadUrl == null) {
             UserIpaResourceImpl.logger.error("archive signed ipa failed.")
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA, defaultMessage = "归档IPA包失败。")
+            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA, defaultMessage = "归档IPA包失败")
         }
         return fileDownloadUrl
     }
 
+    @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     override fun resignIpaPackage(
-            ipaPackage: File,
-            ipaSignInfo: IpaSignInfo,
-            MobileProvisionInfoList: Map<String, MobileProvisionInfo>?
+        ipaPackage: File,
+        ipaSignInfo: IpaSignInfo,
+        mobileProvisionInfoList: Map<String, MobileProvisionInfo>?
     ): File {
+        val payloadDir = File(ipaPackage.absolutePath + File.separator + "Payload")
+        val appDirs = payloadDir.listFiles { dir, name ->
+            dir.extension == "app" || name.endsWith("app")
+        }.toList()
+        if (appDirs.isEmpty()) throw ErrorCodeException(
+            errorCode = SignMessageCode.ERROR_SIGN_IPA_ILLEGAL,
+            defaultMessage = "IPA包解析失败"
+        )
+        val appDir = appDirs.first()
+
+        // 通配符方式签名
+        if (mobileProvisionInfoList == null) {
+            SignUtils.resignAppWildcard(
+                appDir = appDir,
+                certId = ipaSignInfo.certId ?: DEFAULT_CER_ID,
+                wildcardInfo = MobileProvisionInfo(
+                    mobileProvisionFile = File(""),
+                    plistFile = File(""),
+                    entitlementFile = File(""),
+                    bundleId = ""
+                )
+            )
+        } else {
+            // 检查是否将包内所有app/appex对应的签名信息传入
+            val allAppsInPackage = mutableListOf<File>()
+            SignUtils.getAllAppsInDir(appDir, allAppsInPackage)
+            allAppsInPackage.forEach { app ->
+                if (!mobileProvisionInfoList.keys.contains(app.nameWithoutExtension)) {
+                    logger.error("Not found appex <${app.name}> MobileProvisionInfo")
+                    throw ErrorCodeException(
+                        errorCode = SignMessageCode.ERROR_SIGN_INFO_ILLEGAL,
+                        defaultMessage = "缺少${app.name}签名信息，请检查参数"
+                    )
+                }
+            }
+
+            logger.info("Start to resign ${appDir.name} with $mobileProvisionInfoList")
+            SignUtils.resignApp(
+                appDir = appDir,
+                certId = ipaSignInfo.certId ?: DEFAULT_CER_ID,
+                infos = mobileProvisionInfoList,
+                appName = MAIN_APP_FILENAME
+            )
+        }
         return ipaPackage
     }
 
@@ -104,20 +151,17 @@ class SignServiceImpl @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun resignApp(appPath: File, certId: String, bundleId: String?, mobileProvision: File?): Boolean {
-        TODO("Not yet implemented")
-    }
 
     override fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): Map<String, MobileProvisionInfo> {
         val mobileProvisionMap = mutableMapOf<String, MobileProvisionInfo>()
         if (ipaSignInfo.mobileProvisionId != null) {
             val mpFile = mobileProvisionService.downloadMobileProvision(mobileProvisionDir, ipaSignInfo.projectId
-                    ?: "", ipaSignInfo.mobileProvisionId!!)
+                ?: "", ipaSignInfo.mobileProvisionId!!)
             mobileProvisionMap["MAIN_APP"] = parseMobileProvision(mpFile)
         }
         ipaSignInfo.appexSignInfo?.forEach {
             val mpFile = mobileProvisionService.downloadMobileProvision(mobileProvisionDir, ipaSignInfo.projectId
-                    ?: "", it.mobileProvisionId)
+                ?: "", it.mobileProvisionId)
             mobileProvisionMap[it.appexName] = parseMobileProvision(mpFile)
         }
         return mobileProvisionMap
@@ -147,10 +191,10 @@ class SignServiceImpl @Autowired constructor(
         val bundleIdString = (entitlementDict.objectForKey("application-identifier") as NSString).toString()
         val bundleId = bundleIdString.substring(bundleIdString.indexOf(".") + 1)
         return MobileProvisionInfo(
-                mobileProvisionFile = mobileProvisionFile,
-                plistFile = plistFile,
-                entitlementFile = entitlementFile,
-                bundleId = bundleId
+            mobileProvisionFile = mobileProvisionFile,
+            plistFile = plistFile,
+            entitlementFile = entitlementFile,
+            bundleId = bundleId
         )
 
 

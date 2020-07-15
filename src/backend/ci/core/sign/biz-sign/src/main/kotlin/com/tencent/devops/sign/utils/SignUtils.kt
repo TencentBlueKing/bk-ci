@@ -17,12 +17,13 @@ object SignUtils {
     private const val APP_INFO_PLIST_FILENAME = "Info.plist"
     const val EXPORT_CODESIGN_ALLOCATE="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/codesign_allocate"
     const val EXPORT_PATH="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin:/Applications/xcode6.0.1_sdk8.0/Contents/Developer/usr/bin:/Library/Frameworks/Python.framework/Versions/2.7/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/X11/bin"
+    const val DEFAULT_CER_ID = "6E2D8E7C0967FFAD54C8113DA8557A84223AA5B2"
 
     /**
      *  APP目录递归签名-通配符
      *
      *  @param appDir 待签名的最外层app目录
-     *  @param cerName 本次签名使用的企业证书
+     *  @param certId 本次签名使用的企业证书
      *  @param wildcardInfo 通配符的证书信息
      *  @return 本层app包签名结果
      *
@@ -30,7 +31,7 @@ object SignUtils {
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     fun resignAppWildcard(
         appDir: File,
-        cerName: String,
+        certId: String,
         wildcardInfo: MobileProvisionInfo
     ) {
         try {
@@ -44,16 +45,16 @@ object SignUtils {
                     needResginDir.listFiles().forEach { subFile ->
                         // 如果是个拓展则递归进入进行重签
                         if (subFile.isDirectory && subFile.extension.contains("app")) {
-                            resignAppWildcard(subFile, cerName, wildcardInfo)
+                            resignAppWildcard(subFile, certId, wildcardInfo)
                         } else {
                             // 如果是个其他待签文件则使用住描述文件进行重签
                             overwriteInfo(subFile, wildcardInfo, false)
-                            codesignFile(cerName, subFile.absolutePath)
+                            codesignFile(certId, subFile.absolutePath)
                         }
                     }
                 }
                 // 替换后进行重签名
-                codesignFileByEntitlement(cerName, appDir.absolutePath, wildcardInfo.entitlementFile.absolutePath)
+                codesignFileByEntitlement(certId, appDir.absolutePath, wildcardInfo.entitlementFile.absolutePath)
             }
         } catch (e: Exception) {
             logger.error("WildcardResign app <$appDir> directory with exception: $e")
@@ -64,7 +65,7 @@ object SignUtils {
      *  APP目录递归签名
      *
      *  @param appDir 待签名的最外层app目录
-     *  @param cerName 本次签名使用的企业证书
+     *  @param certId 本次签名使用的企业证书
      *  @param infos 所有证书信息 <包名, 证书信息>
      *  @param appName 本次签名的app/appex名称
      *  @return 本层app包签名结果
@@ -73,7 +74,7 @@ object SignUtils {
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     fun resignApp(
         appDir: File,
-        cerName: String,
+        certId: String,
         infos: Map<String, MobileProvisionInfo>,
         appName: String
     ) {
@@ -93,17 +94,17 @@ object SignUtils {
                     needResginDir.listFiles().forEach { subFile ->
                         // 如果是个拓展则递归进入进行重签
                         if (subFile.isDirectory && subFile.extension.contains("app")) {
-                            resignApp(subFile, cerName, infos, subFile.nameWithoutExtension)
+                            resignApp(subFile, certId, infos, subFile.nameWithoutExtension)
                         } else {
                             // 如果是个其他待签文件则使用住描述文件进行重签
                             overwriteInfo(subFile, mainInfo, false)
-                            codesignFile(cerName, subFile.absolutePath)
+                            codesignFile(certId, subFile.absolutePath)
                         }
                     }
                 }
                 // 替换后进行重签名
                 val info = infos[appName] ?: throw Exception("Not found $appName info in MobileProvisionInfos")
-                codesignFileByEntitlement(cerName, appDir.absolutePath, info.entitlementFile.absolutePath)
+                codesignFileByEntitlement(certId, appDir.absolutePath, info.entitlementFile.absolutePath)
             }
         } catch (e: Exception) {
             logger.error("Resign app <$appName> directory with exception: $e")
@@ -127,7 +128,6 @@ object SignUtils {
         if (resignDir.exists()) {
             val infoPlist = File(resignDir.absolutePath + File.separator + APP_INFO_PLIST_FILENAME)
             val originMpFile = File(resignDir.absolutePath + File.separator + APP_MOBILE_PROVISION_FILENAME)
-            logger.info("Start to sign file ${resignDir.canonicalPath} with mpFile <${info.mobileProvisionFile.nameWithoutExtension}>")
 
             // 无论是什么目录都将 mobileprovision 文件进行替换
             if (originMpFile.exists()) {
@@ -140,6 +140,26 @@ object SignUtils {
             }
         }
         return true
+    }
+
+    /**
+     *  扫描获取目录下所有app/appex文件
+     */
+    @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+    fun getAllAppsInDir(
+        appDir: File,
+        appList: MutableList<File>
+    ) {
+        // 扫描是否有待签目录
+        val needResginFiles = scanNeedResignFiles(appDir)
+        needResginFiles.forEach { needResginDir ->
+            needResginDir.listFiles().forEach { subFile ->
+                // 如果是个拓展则递归进入进行重签
+                if (subFile.isDirectory && subFile.extension.contains("app")) {
+                    appList.add(subFile)
+                }
+            }
+        }
     }
 
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")

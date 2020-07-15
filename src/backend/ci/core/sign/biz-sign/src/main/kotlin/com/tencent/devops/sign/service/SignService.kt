@@ -30,8 +30,8 @@ interface SignService {
     * 解压ipa文件
     * */
     fun unzipIpa(
-            ipaFile: File,
-            unzipIpaDir: File
+        ipaFile: File,
+        unzipIpaDir: File
     )
 
     /*
@@ -40,16 +40,6 @@ interface SignService {
     fun zipIpaFile(
             ipaFile: File
     ): File?
-
-    /*
-    * 对框架进行签名
-    * */
-    fun resignApp(
-            appPath: File,
-            certId: String,
-            bundleId: String?,
-            mobileProvision: File?
-    ): Boolean
 
 
     /*

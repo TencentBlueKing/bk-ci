@@ -48,6 +48,8 @@ object SignMessageCode {
     const val ERROR_PARSE_SIGN_INFO_HEADER = "2122001" // 解析签名信息头部失败
     const val ERROR_CHECK_SIGN_INFO_HEADER = "2122002" // 验证签名信息头部失败
     const val ERROR_COPY_FILE = "2122003" // 复制并计算MD5失败
-    const val ERROR_SIGN_IPA = "2122004" // IPA包签名失败
-    const val ERROR_ARCHIVE_SIGNED_IPA = "2122005" // 归档IPA包失败
+    const val ERROR_SIGN_IPA_ILLEGAL = "2122004" // IPA包解析失败
+    const val ERROR_SIGN_INFO_ILLEGAL = "2122005" // 缺少拓展的签名信息
+    const val ERROR_SIGN_IPA = "2122006" // IPA包签名失败
+    const val ERROR_ARCHIVE_SIGNED_IPA = "2122007" // 归档IPA包失败
 }
