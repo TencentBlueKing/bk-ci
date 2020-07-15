@@ -78,7 +78,7 @@
                         </div>
                     </div>
                     <div class="item-form item-form-right">
-                        <img :src="atomDetail.logoUrl">
+                        <img v-if="atomDetail.logoUrl" :src="atomDetail.logoUrl">
                     </div>
                 </div>
                 <div class="version-content">

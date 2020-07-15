@@ -129,14 +129,20 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
         vmSeqId: String,
         buildId: String,
         containerId: String,
-        logStartTimeStamp: Int
+        logStartTimeStamp: Int,
+        printLog: Boolean? = true
     ): DockerLogsResponse {
         val isRunning = dockerHostBuildService.isContainerRunning(containerId)
         val exitCode = when {
             !isRunning -> dockerHostBuildService.getDockerRunExitCode(containerId)
             else -> null
         }
-        val logs = dockerHostBuildService.getDockerLogs(containerId, logStartTimeStamp)
+        val logs = if (printLog != null && !printLog) {
+            emptyList()
+        } else {
+            dockerHostBuildService.getDockerLogs(containerId, logStartTimeStamp)
+        }
+
         return DockerLogsResponse(isRunning, exitCode, logs)
     }
 

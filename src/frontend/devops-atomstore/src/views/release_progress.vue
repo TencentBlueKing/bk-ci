@@ -13,9 +13,10 @@
                 <i class="right-arrow"></i>
                 <div class="title secondary" @click="toAtomList()"> {{ $t('store.工作台') }} </div>
                 <i class="right-arrow"></i>
+                <div class="title secondary" @click="toAtomDetail"> {{ versionDetail.atomCode }} </div>
+                <i class="right-arrow"></i>
                 <div class="title third-level">
                     <span class="">{{ curTitle }}</span>
-                    <span>（{{ versionDetail.atomCode }}）</span>
                 </div>
             </div>
             <div class="sub_header_right">
@@ -248,6 +249,15 @@
             webSocketMessage.unInstallWsMessage()
         },
         methods: {
+            toAtomDetail () {
+                this.$router.push({
+                    name: 'overview',
+                    params: {
+                        atomCode: this.versionDetail.atomCode
+                    }
+                })
+            },
+
             toAtomList () {
                 this.$router.push({
                     name: 'workList',

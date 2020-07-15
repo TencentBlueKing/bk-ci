@@ -53,13 +53,14 @@ interface MarketTemplateService {
      */
     fun list(
         userId: String,
-        name: String?,
+        keyword: String?,
         classifyCode: String?,
         category: String?,
         labelCode: String?,
         score: Int?,
         rdType: TemplateRdTypeEnum?,
         sortType: MarketTemplateSortTypeEnum?,
+        projectCode: String?,
         page: Int?,
         pageSize: Int?
     ): MarketTemplateResp

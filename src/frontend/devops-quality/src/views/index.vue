@@ -30,55 +30,55 @@
                             {
                                 id: 'qualityOverview',
                                 name: '总览',
-                                icon: 'icon-overview',
+                                icon: 'devops-icon icon-overview',
                                 showChildren: false
                             },
                             {
                                 id: 'ruleList',
                                 name: '红线规则',
-                                icon: 'icon-rule',
+                                icon: 'devops-icon icon-rule',
                                 showChildren: false,
                                 children: [
                                     {
                                         id: 'createRule',
                                         name: '创建红线规则',
-                                        icon: 'icon-rule'
+                                        icon: 'devops-icon icon-rule'
                                     },
                                     {
                                         id: 'editRule',
                                         name: '编辑规则',
-                                        icon: 'icon-rule'
+                                        icon: 'devops-icon icon-rule'
                                     }
                                 ]
                             },
                             {
                                 id: 'interceptHistory',
                                 name: '红线记录',
-                                icon: 'icon-intercept-history',
+                                icon: 'devops-icon icon-intercept-history',
                                 showChildren: false
                             },
                             {
                                 id: 'metadataList',
                                 name: '指标列表',
-                                icon: 'icon-rule',
+                                icon: 'devops-icon icon-rule',
                                 showChildren: false,
                                 children: [
                                     {
                                         id: 'createMeta',
                                         name: '创建脚本任务指标',
-                                        icon: 'icon-rule'
+                                        icon: 'devops-icon icon-rule'
                                     },
                                     {
                                         id: 'editMeta',
                                         name: '编辑脚本任务指标',
-                                        icon: 'icon-rule'
+                                        icon: 'devops-icon icon-rule'
                                     }
                                 ]
                             },
                             {
                                 id: 'noticeGroup',
                                 name: '通知组',
-                                icon: 'icon-notification',
+                                icon: 'devops-icon icon-notification',
                                 showChildren: false
                             }
                         ]

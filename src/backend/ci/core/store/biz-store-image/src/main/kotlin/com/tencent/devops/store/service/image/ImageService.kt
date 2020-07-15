@@ -223,7 +223,7 @@ abstract class ImageService @Autowired constructor() {
     fun count(
         userId: String,
         userDeptList: List<Int>,
-        imageName: String?,
+        keyword: String?,
         classifyCodeList: List<String>?,
         categoryCodeList: List<String>?,
         rdType: ImageRDTypeEnum?,
@@ -236,7 +236,7 @@ abstract class ImageService @Autowired constructor() {
         val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
         return marketImageDao.count(
             dslContext = dslContext,
-            imageName = imageName,
+            keyword = keyword,
             classifyCodeList = classifyCodeList,
             categoryCodeList = categoryCodeList,
             rdType = rdType,
@@ -250,7 +250,7 @@ abstract class ImageService @Autowired constructor() {
     fun doList(
         userId: String,
         userDeptList: List<Int>,
-        imageName: String?,
+        keyword: String?,
         classifyCodeList: List<String>?,
         categoryCodeList: List<String>?,
         rdType: ImageRDTypeEnum?,
@@ -269,7 +269,7 @@ abstract class ImageService @Autowired constructor() {
         val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
         val images = marketImageDao.list(
             dslContext = dslContext,
-            imageName = imageName,
+            keyword = keyword,
             classifyCodeList = classifyCodeList,
             categoryCodeList = categoryCodeList,
             rdType = rdType,
@@ -371,7 +371,7 @@ abstract class ImageService @Autowired constructor() {
      */
     fun searchImage(
         userId: String,
-        imageName: String?,
+        keyword: String?,
         imageSourceType: ImageType?,
         classifyCode: String?,
         categoryCode: String?,
@@ -383,7 +383,7 @@ abstract class ImageService @Autowired constructor() {
         pageSize: Int?,
         interfaceName: String? = "Anon interface"
     ): Result<MarketImageResp> {
-        logger.info("$interfaceName:searchImage:Input:($userId,$imageName,$imageSourceType,$classifyCode,$categoryCode,$labelCode,$score,$sortType,$page,$pageSize)")
+        logger.info("$interfaceName:searchImage:Input:($userId,$keyword,$imageSourceType,$classifyCode,$categoryCode,$labelCode,$score,$sortType,$page,$pageSize)")
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
         logger.info("$interfaceName:searchImage:Inner:userDeptList=$userDeptList")
@@ -391,7 +391,7 @@ abstract class ImageService @Autowired constructor() {
             count = count(
                 userId = userId,
                 userDeptList = userDeptList,
-                imageName = imageName,
+                keyword = keyword,
                 classifyCodeList = if (null != classifyCode) listOf(classifyCode) else null,
                 categoryCodeList = if (null != categoryCode) listOf(categoryCode) else null,
                 rdType = rdType,
@@ -404,7 +404,7 @@ abstract class ImageService @Autowired constructor() {
             records = doList(
                 userId = userId,
                 userDeptList = userDeptList,
-                imageName = imageName,
+                keyword = keyword,
                 classifyCodeList = if (null != classifyCode) listOf(classifyCode) else null,
                 categoryCodeList = if (null != categoryCode) listOf(categoryCode) else null,
                 rdType = rdType,
@@ -467,7 +467,7 @@ abstract class ImageService @Autowired constructor() {
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
-                    imageName = null,
+                    keyword = null,
                     classifyCodeList = null,
                     categoryCodeList = null,
                     rdType = null,
@@ -489,7 +489,7 @@ abstract class ImageService @Autowired constructor() {
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
-                    imageName = null,
+                    keyword = null,
                     classifyCodeList = null,
                     categoryCodeList = null,
                     rdType = null,
@@ -519,7 +519,7 @@ abstract class ImageService @Autowired constructor() {
                         records = doList(
                             userId = userId,
                             userDeptList = userDeptList,
-                            imageName = null,
+                            keyword = null,
                             classifyCodeList = listOf(classifyCode),
                             categoryCodeList = null,
                             rdType = null,
@@ -855,7 +855,6 @@ abstract class ImageService @Autowired constructor() {
             )
         val classifyRecord = classifyService.getClassify(imageRecord.classifyId).data
         val imageFeatureRecord = imageFeatureDao.getImageFeature(dslContext, imageRecord.imageCode)
-            ?: throw InvalidParamException("imageFeature is null,imageCode=${imageRecord.imageCode}")
         val imageVersionLog = imageVersionLogDao.getLatestImageVersionLogByImageId(dslContext, imageId)?.get(0)
         val imageCode = imageRecord.imageCode
         val publicFlag = imageFeatureRecord.publicFlag
@@ -1071,7 +1070,6 @@ abstract class ImageService @Autowired constructor() {
         versionRecords?.forEach {
             // 通用处理
             val imageVersion = it["version"] as String
-            val imageTag = it["imageTag"] as String
             val index = imageVersion.indexOf(".")
             val versionPrefix = imageVersion.substring(0, index + 1)
             var versionName = imageVersion

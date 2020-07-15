@@ -50,8 +50,11 @@
             <template v-else-if="showContainerPanel">
                 <job @close="showLog = false" />
             </template>
-            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined'">
+            <template v-else-if="showStagePanel">
                 <stage @close="showLog = false" />
+            </template>
+            <template v-else-if="showStageReviewPanel">
+                <stage-review @close="showLog = false" />
             </template>
         </template>
         <template v-if="execDetail">
@@ -85,6 +88,7 @@
     import plugin from '@/components/ExecDetail/plugin'
     import job from '@/components/ExecDetail/job'
     import stage from '@/components/ExecDetail/stage'
+    import stageReview from '@/components/ExecDetail/stageReview'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import { convertMStoStringByRule } from '@/utils/util'
@@ -103,6 +107,7 @@
             log,
             job,
             stage,
+            stageReview,
             ReviewDialog,
             Logo,
             MiniMap
@@ -145,7 +150,8 @@
                 'isPropertyPanelVisible',
                 'isShowCompleteLog',
                 'fetchingAtomList',
-                'showReviewDialog'
+                'showReviewDialog',
+                'showStageReviewPanel'
             ]),
             ...mapState([
                 'fetchError'
@@ -164,6 +170,7 @@
                     className: 'exec-pipeline',
                     bindData: {
                         editable: false,
+                        isExecDetail: true,
                         stages: this.execDetail && this.execDetail.model && this.execDetail.model.stages
                     }
                 }, {
@@ -190,9 +197,8 @@
             },
             showLog: {
                 get () {
-                    const { editingElementPos, $route: { params } } = this
-                    const res = typeof editingElementPos.elementIndex !== 'undefined' && params.buildNo
-                    return res
+                    const { editingElementPos, isPropertyPanelVisible, $route: { params } } = this
+                    return typeof editingElementPos.elementIndex !== 'undefined' && params.buildNo && isPropertyPanelVisible
                 },
                 set (value) {
                     this.togglePropertyPanel({
@@ -206,10 +212,12 @@
                 if (res) this.$nextTick(this.initAllLog)
                 return res
             },
+            showStagePanel () {
+                return typeof this.editingElementPos.stageIndex !== 'undefined' && this.isPropertyPanelVisible
+            },
             showContainerPanel () {
-                const { editingElementPos } = this
-                const res = typeof editingElementPos.containerIndex !== 'undefined'
-                return res
+                const { editingElementPos, isPropertyPanelVisible } = this
+                return typeof editingElementPos.containerIndex !== 'undefined' && isPropertyPanelVisible
             },
             currentJob () {
                 const { editingElementPos, execDetail } = this
@@ -440,7 +448,7 @@
     @import './../../scss/pipelineStatus';
     .pipeline-detail-wrapper {
         height: 100%;
-        padding: 7px 0 0 25px;
+        padding: 7px 25px 0 25px;
 
         .pipeline-detail-tab-card {
             height: 100%;

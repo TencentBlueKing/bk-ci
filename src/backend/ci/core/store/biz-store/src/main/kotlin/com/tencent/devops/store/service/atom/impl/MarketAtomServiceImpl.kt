@@ -137,7 +137,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     private fun doList(
         userId: String,
         userDeptList: List<Int>,
-        atomName: String?,
+        keyword: String?,
         classifyCode: String?,
         labelCode: String?,
         score: Int?,
@@ -153,10 +153,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val results = mutableListOf<MarketItem>()
             // 获取插件
             val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
-            val count = marketAtomDao.count(dslContext, atomName, classifyCode, labelCodeList, score, rdType, yamlFlag, recommendFlag)
+            val count = marketAtomDao.count(dslContext, keyword, classifyCode, labelCodeList, score, rdType, yamlFlag, recommendFlag)
             val atoms = marketAtomDao.list(
                 dslContext = dslContext,
-                atomName = atomName,
+                keyword = keyword,
                 classifyCode = classifyCode,
                 labelCodeList = labelCodeList,
                 score = score,
@@ -265,7 +265,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             doList(
                 userId = userId,
                 userDeptList = userDeptList,
-                atomName = null,
+                keyword = null,
                 classifyCode = null,
                 labelCode = null,
                 score = null,
@@ -283,7 +283,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             doList(
                 userId = userId,
                 userDeptList = userDeptList,
-                atomName = null,
+                keyword = null,
                 classifyCode = null,
                 labelCode = null,
                 score = null,
@@ -311,7 +311,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     doList(
                         userId = userId,
                         userDeptList = userDeptList,
-                        atomName = null,
+                        keyword = null,
                         classifyCode = classifyCode,
                         labelCode = null,
                         score = null,
@@ -344,7 +344,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
      */
     override fun list(
         userId: String,
-        atomName: String?,
+        keyword: String?,
         classifyCode: String?,
         labelCode: String?,
         score: Int?,
@@ -364,7 +364,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return doList(
             userId = userId,
             userDeptList = userDeptList,
-            atomName = atomName,
+            keyword = keyword,
             classifyCode = classifyCode,
             labelCode = labelCode,
             score = score,

@@ -72,7 +72,6 @@ class MQPipelineCreateListener @Autowired constructor(
         val watch = StopWatch("pipelineCreateEventWatch")
         val pipelineId = event.pipelineId
         if (event.source == ("create_pipeline")) {
-            logger.info("[$pipelineId] createPipelineBuildSummary!")
             watch.start("createPipeline[pipelineId:$pipelineId]")
             callBackControl.pipelineCreateEvent(projectId = event.projectId, pipelineId = pipelineId)
             watch.stop()

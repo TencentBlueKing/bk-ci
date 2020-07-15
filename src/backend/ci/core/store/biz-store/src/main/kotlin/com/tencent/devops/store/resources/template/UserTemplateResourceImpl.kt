@@ -68,27 +68,31 @@ class UserTemplateResourceImpl @Autowired constructor(
 
     override fun list(
         userId: String,
-        templateName: String?,
+        keyword: String?,
         classifyCode: String?,
         categoryCode: String?,
         labelCode: String?,
         score: Int?,
         rdType: TemplateRdTypeEnum?,
         sortType: MarketTemplateSortTypeEnum?,
+        projectCode: String?,
         page: Int?,
         pageSize: Int?
     ): Result<MarketTemplateResp> {
-        return Result(marketTemplateService.list(
-            userId.trim(),
-            templateName?.trim(),
-            classifyCode?.trim(),
-            categoryCode?.trim(),
-            labelCode?.trim(),
-            score,
-            rdType,
-            sortType,
-            page,
-            pageSize)
+        return Result(
+            marketTemplateService.list(
+                userId = userId.trim(),
+                keyword = keyword?.trim(),
+                classifyCode = classifyCode?.trim(),
+                category = categoryCode?.trim(),
+                labelCode = labelCode?.trim(),
+                score = score,
+                rdType = rdType,
+                sortType = sortType,
+                projectCode = projectCode,
+                page = page,
+                pageSize = pageSize
+            )
         )
     }
 

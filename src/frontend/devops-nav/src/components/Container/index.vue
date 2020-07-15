@@ -7,12 +7,8 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import None from '../../views/None.vue'
-    @Component({
-        components: {
-            None
-        }
-    })
+
+    @Component()
     export default class DevopsContainer extends Vue {
     }
 </script>

@@ -32,7 +32,7 @@
                                 <bk-option v-for="option in versionList" :key="option.version" :id="option.version" :name="option.versionName">
                                 </bk-option>
                             </bk-select>
-                            <label class="bk-form-checkbox template-setting-checkbox" v-if="!hashVal">
+                            <label class="bk-form-checkbox template-setting-checkbox">
                                 <bk-checkbox
                                     v-model="isTemplateSetting">
                                     {{ $t('template.applyTemplateSetting') }}
@@ -444,7 +444,7 @@
                             projectId: this.projectId,
                             templateId: this.templateId,
                             versionId: this.instanceVersion,
-                            useTemplateSettings: !this.hashVal ? this.isTemplateSetting : undefined,
+                            useTemplateSettings: this.isTemplateSetting,
                             params
                         }
                         if (this.hashVal) {

@@ -106,7 +106,9 @@ interface ScmWebhookMatcher {
         var relativePath: String? = null,
         var excludeUsers: String? = "",
         var includeUsers: String? = null,
-        var codeType: CodeType = CodeType.GIT
+        var codeType: CodeType = CodeType.GIT,
+        var excludeSourceBranchName: String? = null,
+        var includeSourceBranchName: String? = null
     )
 
     data class MatchResult(

@@ -59,7 +59,15 @@ class OperationLogServiceImpl @Autowired constructor(
         logger.info("add operation log: storeCode=$storeCode, storeType=$storeType, optType=$optType, optUser=$optUser, optDesc=$optDesc")
 
         val id = UUIDUtil.generate()
-        operationLogDao.add(dslContext, id, storeCode, storeType.type.toByte(), optType.type, optUser, optDesc)
+        operationLogDao.add(
+            dslContext = dslContext,
+            id = id,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte(),
+            optType = optType.name,
+            optUser = optUser,
+            optDesc = optDesc
+        )
         return Result(true)
     }
 }

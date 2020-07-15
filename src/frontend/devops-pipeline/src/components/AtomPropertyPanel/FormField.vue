@@ -48,13 +48,15 @@
                         { docsLink
                             && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
                         }
+                        { label.trim() && desc.trim() && <bk-popover placement="top" class="form-field-icon">
+                            <i class="bk-icon icon-info-circle"></i>
+                            <div slot="content" style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
+                                <div> {desc} { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>} </div>
+                            </div>
+                        </bk-popover>
+                    }
                     </label> }
-                    { label.trim() && desc.trim() && <bk-popover placement="top" class="form-field-icon">
-                        <i class="bk-icon icon-info-circle"></i>
-                        <div slot="content" style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
-                            <div> {desc} { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>} </div>
-                        </div>
-                    </bk-popover> }
+
                     <div class='bk-form-content'>
                         {$slots.default}
                         {isError ? $slots.errorTip || <span class='bk-form-help is-danger'>{errorMsg}</span> : null}
@@ -70,17 +72,29 @@
         color: #C3CDD7;
         font-size: 14px;
         vertical-align: middle;
+        pointer-events: auto;
     }
     .form-field.bk-form-item {
         position: relative;
     }
     .form-field-icon {
-        position: relative;
-        left: -20px;
-        top: 6px;
+        position: absolute;
+        right:  14px;
+        top: 0;
+        font-size: 0;
     }
-    .bk-sideslider-wrapper .bk-form-item.is-required .bk-label, .bk-form-inline-item.is-required .bk-label {
-        margin-right: 10px
+    .bk-form-item,
+    .bk-form-inline-item {
+        .bk-label {
+            position: relative;
+        }
+    }
+    .bk-form-item.is-required .bk-label,
+    .bk-form-inline-item.is-required .bk-label {
+        margin-right: 10px;
+        .form-field-icon {
+            right:  -4px;
+        }
     }
     .desc-link {
         color: #3c96ff;
