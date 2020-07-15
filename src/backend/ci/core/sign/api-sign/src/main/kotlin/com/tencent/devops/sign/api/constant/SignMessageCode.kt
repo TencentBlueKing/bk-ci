@@ -52,4 +52,6 @@ object SignMessageCode {
     const val ERROR_SIGN_INFO_ILLEGAL = "2122005" // 缺少拓展的签名信息
     const val ERROR_SIGN_IPA = "2122006" // IPA包签名失败
     const val ERROR_ARCHIVE_SIGNED_IPA = "2122007" // 归档IPA包失败
+    const val ERROR_MP_NOT_EXIST = "2122008" // 描述文件不存在
+
 }

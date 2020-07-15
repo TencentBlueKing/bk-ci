@@ -28,6 +28,7 @@ dependencies {
     compile project(":core:sign:biz-sign")
     compile project(":ext:tencent:sign:api-sign-tencent")
     compile project(":ext:tencent:sign:model-sign")
+    compile 'io.jsonwebtoken:jjwt:0.9.1'
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"
