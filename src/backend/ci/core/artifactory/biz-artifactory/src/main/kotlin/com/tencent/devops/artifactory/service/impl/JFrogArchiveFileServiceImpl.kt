@@ -28,6 +28,7 @@ package com.tencent.devops.artifactory.service.impl
 
 import com.tencent.devops.artifactory.client.JFrogServiceClient
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
+import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
@@ -230,6 +231,15 @@ class JFrogArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl()
             BK_CI_ATOM_DIR -> "atom"
             else -> "file"
         }
+    }
+
+    override fun doAcrossProjectCopy(
+        sourceParentPath: String,
+        sourcePathPattern: String,
+        destPath: String,
+        targetProjectId: String
+    ): Result<Count> {
+        return Result(Count(0))
     }
 
     companion object {
