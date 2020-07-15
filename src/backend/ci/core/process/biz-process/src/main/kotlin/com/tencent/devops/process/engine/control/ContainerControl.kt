@@ -97,6 +97,8 @@ class ContainerControl @Autowired constructor(
 
         // 当build的状态是结束的时候，直接返回
         if (BuildStatus.isFinish(container.status)) {
+            pipelineBuildDetailService.updateContainerStatus(buildId, containerId, container.status)
+            logger.warn("[$buildId]||stage=$stageId|container=$containerId|status=${container.status}")
             return
         }
 
