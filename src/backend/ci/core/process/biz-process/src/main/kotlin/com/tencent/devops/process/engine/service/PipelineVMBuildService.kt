@@ -130,17 +130,21 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             s.containers.forEach c@{
 
                 if (vmId.toString() == vmSeqId) {
+                    // 增加判断状态，如果是已经结束的，拒绝重复启动请求
+                    BuildStatus.values().forEach { s ->
+                        if (BuildStatus.isFinish(s) && s.name == it.startVMStatus) {
+                            throw IllegalStateException("Deny to start VM! startVMStatus=${it.startVMStatus}")
+                        }
+                    }
+
+                    val containerAppResource = client.get(ServiceContainerAppResource::class)
                     val buildEnvs = if (it is VMBuildContainer) {
                         if (it.buildEnv == null) {
                             emptyList<BuildEnv>()
                         } else {
                             val list = ArrayList<BuildEnv>()
                             it.buildEnv!!.forEach { build ->
-                                val env = client.get(ServiceContainerAppResource::class).getBuildEnv(
-                                    build.key,
-                                    build.value,
-                                    it.baseOS.name.toLowerCase()
-                                ).data
+                                val env = containerAppResource.getBuildEnv(name = build.key, version = build.value, os = it.baseOS.name.toLowerCase()).data
                                 if (env == null) {
                                     logger.warn("The container app($build) is not exist")
                                 } else {
@@ -152,11 +156,14 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     } else {
                         emptyList()
                     }
-                    pipelineBuildDetailService.containerStart(buildId, vmSeqId.toInt())
-                    addHeartBeat(buildId, vmSeqId, System.currentTimeMillis())
+                    pipelineBuildDetailService.containerStart(buildId = buildId, containerId = vmSeqId.toInt())
+                    addHeartBeat(buildId = buildId, vmSeqId = vmSeqId, time = System.currentTimeMillis())
                     setStartUpVMStatus(
-                        projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId,
-                        buildId = buildId, vmSeqId = vmSeqId, buildStatus = BuildStatus.SUCCEED
+                        projectId = buildInfo.projectId,
+                        pipelineId = buildInfo.pipelineId,
+                        buildId = buildId,
+                        vmSeqId = vmSeqId,
+                        buildStatus = BuildStatus.SUCCEED
                     )
                     return BuildVariables(
                         buildId = buildId,
@@ -176,7 +183,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         }
 
         logger.warn("Fail to find the vm build container($vmSeqId) of $model")
-        throw IllegalStateException("Fail to find the vm build container")
+        throw NotFoundException("Fail to find the vm build container")
     }
 
     fun setStartUpVMStatus(
