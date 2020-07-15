@@ -35,7 +35,7 @@ object CommonUtils {
 //    private const val dockerHubUrl = "https://index.docker.io/v1/"
     private const val dockerHubUrl = ""
 
-    fun getRepoName(httpUrl: String): String {
+    fun getRepoOwner(httpUrl: String): String {
         if (httpUrl.startsWith("http://")) {
             return httpUrl.removePrefix("http://")
                 .split("/")[1]
@@ -96,6 +96,6 @@ object CommonUtils {
 }
 
 fun main(args: Array<String>) {
-    println(CommonUtils.getRepoName("https://git.dev.code.oa.com/royalhuang/gitci-test.git"))
+    println(CommonUtils.getRepoOwner("https://git.dev.code.oa.com/royalhuang/gitci-test.git"))
 
 }

@@ -507,7 +507,7 @@ class GitCIBuildService @Autowired constructor(
         startParams[CI_REPOSITORY_NAME] = gitProjectConf.name
         startParams[CI_BUILD_WEB_URL] = gitProjectConf.url
         startParams[CI_COMMIT_MESSAGE] = event.commitMsg.toString()
-        startParams[CI_REPOSITORY_OWNER] = CommonUtils.getRepoName(gitProjectConf.gitHttpUrl)
+        startParams[CI_REPOSITORY_OWNER] = CommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl)
 
         // 写入WEBHOOK触发环境变量
         val originEvent = try {
