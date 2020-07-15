@@ -79,9 +79,9 @@ interface UserImageResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("镜像名称", required = false)
-        @QueryParam("imageName")
-        imageName: String?,
+        @ApiParam("搜索关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?,
         @ApiParam("镜像来源", required = false)
         @QueryParam("imageSourceType")
         imageSourceType: ImageType?,
