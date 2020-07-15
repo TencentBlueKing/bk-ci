@@ -108,7 +108,7 @@ class SignServiceImpl @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo):  Map<String, MobileProvisionInfo> {
+    override fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): Map<String, MobileProvisionInfo> {
         val mobileProvisionMap = mutableMapOf<String, MobileProvisionInfo>()
         if (ipaSignInfo.mobileProvisionId != null) {
             val mpFile = mobileProvisionService.downloadMobileProvision(mobileProvisionDir, ipaSignInfo.projectId
@@ -127,12 +127,16 @@ class SignServiceImpl @Autowired constructor(
         val plistFile = File("${mobileProvisionFile.canonicalPath}.plist")
         val entitlementFile = File("${mobileProvisionFile.canonicalPath}.entitlement.plist")
         // 描述文件转为plist文件
-        val mpToPlistCommand = "/usr/bin/security cms -D -i ${mobileProvisionFile.canonicalPath} > ${plistFile.canonicalPath}"
-        CommandLineUtils.execute(mpToPlistCommand, mobileProvisionFile.parentFile, true)
+        val mpToPlistCommand = "/usr/bin/security cms -D -i ${mobileProvisionFile.canonicalPath}"
+        val plistResult = CommandLineUtils.execute(mpToPlistCommand, mobileProvisionFile.parentFile, true)
+        // 将plist写入到文件
+        plistFile.writeText(plistResult)
         // 从plist文件抽离出entitlement文件
-        val plistToEntitlementCommand = "/usr/libexec/PlistBuddy -x -c 'Print:Entitlements' ${plistFile.canonicalPath} > ${entitlementFile.canonicalPath}"
+        val plistToEntitlementCommand = "/usr/libexec/PlistBuddy -x -c 'Print:Entitlements' ${plistFile.canonicalPath}"
+        // 将entitlment写入到文件
+        val entitlementResult = CommandLineUtils.execute(plistToEntitlementCommand, mobileProvisionFile.parentFile, true)
+        entitlementFile.writeText(entitlementResult)
 
-        CommandLineUtils.execute(plistToEntitlementCommand, mobileProvisionFile.parentFile, true)
         // 解析bundleId
         val rootDict = PropertyListParser.parse(plistFile) as NSDictionary
         // entitlement
@@ -140,12 +144,13 @@ class SignServiceImpl @Autowired constructor(
         val entitlementDict = rootDict.objectForKey("Entitlements") as NSDictionary
         // application-identifier
         if (!entitlementDict.containsKey("application-identifier")) throw RuntimeException("no Entitlements.application-identifier find in plist")
-        val bundleId = entitlementDict.objectForKey("application-identifier") as NSString
+        val bundleIdString = (entitlementDict.objectForKey("application-identifier") as NSString).toString()
+        val bundleId = bundleIdString.substring(bundleIdString.indexOf(".") + 1)
         return MobileProvisionInfo(
                 mobileProvisionFile = mobileProvisionFile,
                 plistFile = plistFile,
                 entitlementFile = entitlementFile,
-                bundleId = bundleId.toString()
+                bundleId = bundleId
         )
 
 

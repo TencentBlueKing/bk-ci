@@ -241,7 +241,7 @@ object FileUtil {
             dir.mkdirs()
             true
         }else {
-            dir.delete()
+//            dir.deleteRecursively()
             dir.mkdirs()
             true
         }
