@@ -59,14 +59,19 @@ class MarketTemplateDao {
      */
     fun count(
         dslContext: DSLContext,
-        templateName: String?,
+        keyword: String?,
         classifyCode: String?,
         categoryList: List<String>?,
         labelCodeList: List<String>?,
         score: Int?,
         rdType: TemplateRdTypeEnum?
     ): Int {
-        val (tt, conditions) = formatConditions(templateName, rdType, classifyCode, dslContext)
+        val (tt, conditions) = formatConditions(
+            keyword = keyword,
+            rdType = rdType,
+            classifyCode = classifyCode,
+            dslContext = dslContext
+        )
 
         val baseStep = dslContext.select(tt.ID.countDistinct()).from(tt)
         val storeType = StoreTypeEnum.TEMPLATE.type.toByte()
@@ -108,14 +113,14 @@ class MarketTemplateDao {
         return baseStep.where(conditions).fetchOne(0, Int::class.java)
     }
 
-    private fun formatConditions(templateName: String?, rdType: TemplateRdTypeEnum?, classifyCode: String?, dslContext: DSLContext): Pair<TTemplate, MutableList<Condition>> {
+    private fun formatConditions(keyword: String?, rdType: TemplateRdTypeEnum?, classifyCode: String?, dslContext: DSLContext): Pair<TTemplate, MutableList<Condition>> {
         val tt = TTemplate.T_TEMPLATE.`as`("tt")
 
         val conditions = mutableListOf<Condition>()
         conditions.add(tt.TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte())) // 已发布的
         conditions.add(tt.LATEST_FLAG.eq(true)) // 最新版本
-        if (!templateName.isNullOrEmpty()) {
-            conditions.add(tt.TEMPLATE_NAME.contains(templateName))
+        if (!keyword.isNullOrEmpty()) {
+            conditions.add(tt.TEMPLATE_NAME.contains(keyword).or(tt.SUMMARY.contains(keyword)))
         }
         if (rdType != null) {
             conditions.add(tt.TEMPLATE_RD_TYPE.eq(rdType.type.toByte()))
@@ -136,7 +141,7 @@ class MarketTemplateDao {
      */
     fun list(
         dslContext: DSLContext,
-        templateName: String?,
+        keyword: String?,
         classifyCode: String?,
         categoryList: List<String>?,
         labelCodeList: List<String>?,
@@ -147,7 +152,12 @@ class MarketTemplateDao {
         page: Int?,
         pageSize: Int?
     ): Result<out Record>? {
-        val (tt, conditions) = formatConditions(templateName, rdType, classifyCode, dslContext)
+        val (tt, conditions) = formatConditions(
+            keyword = keyword,
+            rdType = rdType,
+            classifyCode = classifyCode,
+            dslContext = dslContext
+        )
 
         val baseStep = dslContext.select(
             tt.ID,

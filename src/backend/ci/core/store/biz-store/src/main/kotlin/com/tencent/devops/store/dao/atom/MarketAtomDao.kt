@@ -64,7 +64,7 @@ class MarketAtomDao : AtomBaseDao() {
      */
     fun count(
         dslContext: DSLContext,
-        atomName: String?,
+        keyword: String?,
         classifyCode: String?,
         labelCodeList: List<String>?,
         score: Int?,
@@ -72,7 +72,7 @@ class MarketAtomDao : AtomBaseDao() {
         yamlFlag: Boolean?,
         recommendFlag: Boolean?
     ): Int {
-        val (ta, conditions) = formatConditions(atomName, rdType, classifyCode, dslContext)
+        val (ta, conditions) = formatConditions(keyword, rdType, classifyCode, dslContext)
         val taf = TAtomFeature.T_ATOM_FEATURE.`as`("taf")
         val baseStep = dslContext.select(ta.ID.countDistinct()).from(ta).leftJoin(taf)
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
@@ -94,7 +94,7 @@ class MarketAtomDao : AtomBaseDao() {
     }
 
     private fun formatConditions(
-        atomName: String?,
+        keyword: String?,
         rdType: AtomTypeEnum?,
         classifyCode: String?,
         dslContext: DSLContext
@@ -103,8 +103,8 @@ class MarketAtomDao : AtomBaseDao() {
         val storeType = StoreTypeEnum.ATOM.type.toByte()
         val conditions = setAtomVisibleCondition(ta)
         conditions.add(ta.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
-        if (!atomName.isNullOrEmpty()) {
-            conditions.add(ta.NAME.contains(atomName))
+        if (!keyword.isNullOrEmpty()) {
+            conditions.add(ta.NAME.contains(keyword).or(ta.SUMMARY.contains(keyword)))
         }
         if (rdType != null) {
             conditions.add(ta.ATOM_TYPE.eq(rdType.type.toByte()))
@@ -125,7 +125,7 @@ class MarketAtomDao : AtomBaseDao() {
      */
     fun list(
         dslContext: DSLContext,
-        atomName: String?,
+        keyword: String?,
         classifyCode: String?,
         labelCodeList: List<String>?,
         score: Int?,
@@ -137,7 +137,7 @@ class MarketAtomDao : AtomBaseDao() {
         page: Int?,
         pageSize: Int?
     ): Result<out Record>? {
-        val (ta, conditions) = formatConditions(atomName, rdType, classifyCode, dslContext)
+        val (ta, conditions) = formatConditions(keyword, rdType, classifyCode, dslContext)
         val taf = TAtomFeature.T_ATOM_FEATURE.`as`("taf")
         val baseStep = dslContext.select(
             ta.ID,

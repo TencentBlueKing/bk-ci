@@ -68,7 +68,7 @@ class UserTemplateResourceImpl @Autowired constructor(
 
     override fun list(
         userId: String,
-        templateName: String?,
+        keyword: String?,
         classifyCode: String?,
         categoryCode: String?,
         labelCode: String?,
@@ -82,7 +82,7 @@ class UserTemplateResourceImpl @Autowired constructor(
         return Result(
             marketTemplateService.list(
                 userId = userId.trim(),
-                name = templateName?.trim(),
+                keyword = keyword?.trim(),
                 classifyCode = classifyCode?.trim(),
                 category = categoryCode?.trim(),
                 labelCode = labelCode?.trim(),
