@@ -159,9 +159,9 @@ interface UserImageProjectResource {
         @ApiParam("是否推荐", required = false)
         @QueryParam("recommendFlag")
         recommendFlag: Boolean?,
-        @ApiParam("部分镜像名称", required = false)
-        @QueryParam("imageNamePart")
-        imageNamePart: String?,
+        @ApiParam("搜索关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?,
         @ApiParam("镜像分类Id", required = false)
         @QueryParam("classifyId")
         classifyId: String?,

@@ -12,13 +12,11 @@ server:
 # 以下为构件存储目录，需要做分布式分享
 # 如果微服务是部署多机节点，则以下目录需要做成分布式高可用的，比如NFS，CephFS挂载
 # 保证多节点都能读取到
+# fileTask为文件托管任务配置，主要用于作品平台构件分发插件，
+# 可配置文件暂存目录、临时文件过期时间、数据库记录清理策略
 artifactory:
   archiveLocalBasePath: __INSTALL_PATH__/public/__MODULE__/artifactory
   archiveJFrogBasePath: /tmp
-  
-# 以下为文件托管任务配置，主要用于作品平台构件分发插件，
-# 可配置文件暂存目录、临时文件过期时间、数据库记录清理策略
-artifactory:  
   fileTask:
     savedir: /tmp/bkee/ci/artifactory/filetask/
     file:

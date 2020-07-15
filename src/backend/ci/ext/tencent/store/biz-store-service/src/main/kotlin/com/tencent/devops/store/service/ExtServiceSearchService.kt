@@ -81,7 +81,7 @@ class ExtServiceSearchService @Autowired constructor(
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
-                    serviceName = null,
+                    keyword = null,
                     classifyCode = null,
                     bkServiceId = null,
                     labelCode = null,
@@ -100,7 +100,7 @@ class ExtServiceSearchService @Autowired constructor(
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
-                    serviceName = null,
+                    keyword = null,
                     classifyCode = null,
                     labelCode = null,
                     bkServiceId = null,
@@ -131,7 +131,7 @@ class ExtServiceSearchService @Autowired constructor(
                         userId = userId,
                         userDeptList = userDeptList,
                         classifyCode = null,
-                        serviceName = null,
+                        keyword = null,
                         bkServiceId = bkServiceId,
                         labelCode = null,
                         score = null,
@@ -151,7 +151,7 @@ class ExtServiceSearchService @Autowired constructor(
      */
     fun list(
         userId: String,
-        serviceName: String?,
+        keyword: String?,
         classifyCode: String?,
         labelCode: String?,
         bkServiceId: Long?,
@@ -168,7 +168,7 @@ class ExtServiceSearchService @Autowired constructor(
         return doList(
             userId = userId,
             userDeptList = userDeptList,
-            serviceName = serviceName,
+            keyword = keyword,
             classifyCode = classifyCode,
             labelCode = labelCode,
             bkServiceId = bkServiceId,
@@ -185,7 +185,7 @@ class ExtServiceSearchService @Autowired constructor(
     private fun doList(
         userId: String,
         userDeptList: List<Int>,
-        serviceName: String?,
+        keyword: String?,
         classifyCode: String?,
         labelCode: String?,
         bkServiceId: Long?,
@@ -200,11 +200,11 @@ class ExtServiceSearchService @Autowired constructor(
         // 获取扩展服务
         val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
         val count =
-            extServiceDao.count(dslContext, serviceName, classifyCode, bkServiceId, rdType, labelCodeList, score)
-        logger.info("doList userId[$userId],userDeptList[$userDeptList],serviceName[$serviceName], rdType[$rdType],classifyCode[$classifyCode],labelCode[$labelCode], bkService[$bkServiceId] sortType[$sortType] count[$count]")
+            extServiceDao.count(dslContext, keyword, classifyCode, bkServiceId, rdType, labelCodeList, score)
+        logger.info("doList userId[$userId],userDeptList[$userDeptList],keyword[$keyword], rdType[$rdType],classifyCode[$classifyCode],labelCode[$labelCode], bkService[$bkServiceId] sortType[$sortType] count[$count]")
         val services = extServiceDao.list(
             dslContext = dslContext,
-            serviceName = serviceName,
+            keyword = keyword,
             classifyCode = classifyCode,
             bkService = bkServiceId,
             labelCodeList = labelCodeList,
@@ -215,7 +215,7 @@ class ExtServiceSearchService @Autowired constructor(
             page = page,
             pageSize = pageSize
         ) ?: return SearchExtServiceVO(0, page, pageSize, results)
-        logger.info("[list] userId[$userId],userDeptList[$userDeptList],serviceName[$serviceName],rdType[$rdType],bkService[$bkServiceId],labelCode[$labelCode] sortType[$sortType] get services: $services")
+        logger.info("[list] userId[$userId],userDeptList[$userDeptList],keyword[$keyword],rdType[$rdType],bkService[$bkServiceId],labelCode[$labelCode] sortType[$sortType] get services: $services")
 
         val serviceCodeList = services.map {
             it["SERVICE_CODE"] as String

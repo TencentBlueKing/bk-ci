@@ -49,7 +49,7 @@ interface MarketIdeAtomService {
      */
     fun list(
         userId: String,
-        atomName: String?,
+        keyword: String?,
         categoryCode: String?,
         classifyCode: String?,
         labelCode: String?,

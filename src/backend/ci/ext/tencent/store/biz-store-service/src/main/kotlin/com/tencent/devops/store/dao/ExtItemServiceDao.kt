@@ -56,59 +56,6 @@ class ExtItemServiceDao {
         }
     }
 
-    fun getExtItemServiceCount(
-        dslContext: DSLContext,
-        userId: String,
-        itemId: String,
-        projectCode: String?
-    ): Long {
-        val tes = TExtensionService.T_EXTENSION_SERVICE.`as`("tes")
-        val tesir = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("tesir")
-        val tesf = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("tesf")
-        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tspr")
-        val conditions = setQueryExtItemServiceBaseCondition(tes, tesir, itemId)
-        if (!projectCode.isNullOrBlank()) {
-            // 查询公共扩展服务
-            val publicConditions =
-                queryPublicExtItemServiceCondition(dslContext, conditions, tes, tesf, tspr, projectCode)
-            // 查询普通的扩展服务
-            val normalConditions =
-                queryNormalExtItemServiceCondition(dslContext, conditions, tes, tesf, tspr, projectCode)
-            // 查询初始化或者调试项目下状态为测试中或审核中的扩展服务
-            val initTestConditions = queryInitTestExtItemServiceCondition(conditions, tes, tspr, projectCode)
-            val publicServiceCount = dslContext.selectCount().from(tes)
-                .join(tesir)
-                .on(tes.ID.eq(tesir.SERVICE_ID))
-                .join(tesf)
-                .on(tes.SERVICE_CODE.eq(tesf.SERVICE_CODE))
-                .where(publicConditions).fetchOne(0, Long::class.java)
-            val normalServiceCount = dslContext.selectCount().from(tes)
-                .join(tesir)
-                .on(tes.ID.eq(tesir.SERVICE_ID))
-                .join(tesf)
-                .on(tes.SERVICE_CODE.eq(tesf.SERVICE_CODE))
-                .leftJoin(tspr).on(tes.SERVICE_CODE.eq(tspr.STORE_CODE))
-                .where(normalConditions).fetchOne(0, Long::class.java)
-            val initTestServiceCount = dslContext.selectCount().from(tes)
-                .join(tesir)
-                .on(tes.ID.eq(tesir.SERVICE_ID))
-                .join(tesf)
-                .on(tes.SERVICE_CODE.eq(tesf.SERVICE_CODE))
-                .leftJoin(tspr).on(tes.SERVICE_CODE.eq(tspr.STORE_CODE))
-                .where(normalConditions).fetchOne(0, Long::class.java)
-            return publicServiceCount + normalServiceCount + initTestServiceCount
-        } else {
-            // 只查已发布的扩展服务
-            conditions.add(tes.SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte()))
-            return dslContext.selectCount().from(tes)
-                .join(tesir)
-                .on(tes.ID.eq(tesir.SERVICE_ID))
-                .join(tesf)
-                .on(tes.SERVICE_CODE.eq(tesf.SERVICE_CODE))
-                .where(conditions).fetchOne(0, Long::class.java)
-        }
-    }
-
     fun getItemByServiceId(
         dslContext: DSLContext,
         serviceIds: List<String>

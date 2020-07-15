@@ -93,22 +93,22 @@ class GitRequestEventDao {
                 null
             } else {
                 GitRequestEvent(
-                    record.id,
-                    record.objectKind,
-                    record.operationKind,
-                    record.extensionAction,
-                    record.gitProjectId,
-                    record.branch,
-                    record.targetBranch,
-                    record.commitId,
-                    record.commitMsg,
-                    record.commitTimestamp,
-                    record.userName,
-                    record.totalCommitCount,
-                    record.mergeRequestId,
-                    "", // record.event,
-                    record.description,
-                    record.mrTitle
+                    id = record.id,
+                    objectKind = record.objectKind,
+                    operationKind = record.operationKind,
+                    extensionAction = record.extensionAction,
+                    gitProjectId = record.gitProjectId,
+                    branch = record.branch,
+                    targetBranch = record.targetBranch,
+                    commitId = record.commitId,
+                    commitMsg = record.commitMsg,
+                    commitTimeStamp = record.commitTimestamp,
+                    userId = record.userName,
+                    totalCommitCount = record.totalCommitCount,
+                    mergeRequestId = record.mergeRequestId,
+                    event = "", // record.event,
+                    description = record.description,
+                    mrTitle = record.mrTitle
                 )
             }
         }
@@ -130,22 +130,22 @@ class GitRequestEventDao {
             records.forEach {
                 result.add(
                     GitRequestEvent(
-                        it.id,
-                        it.objectKind,
-                        it.operationKind,
-                        it.extensionAction,
-                        it.gitProjectId,
-                        it.branch,
-                        it.targetBranch,
-                        it.commitId,
-                        it.commitMsg,
-                        it.commitTimestamp,
-                        it.userName,
-                        it.totalCommitCount,
-                        it.mergeRequestId,
-                        "", // record.event,
-                        it.description,
-                        it.mrTitle
+                        id = it.id,
+                        objectKind = it.objectKind,
+                        operationKind = it.operationKind,
+                        extensionAction = it.extensionAction,
+                        gitProjectId = it.gitProjectId,
+                        branch = it.branch,
+                        targetBranch = it.targetBranch,
+                        commitId = it.commitId,
+                        commitMsg = it.commitMsg,
+                        commitTimeStamp = it.commitTimestamp,
+                        userId = it.userName,
+                        totalCommitCount = it.totalCommitCount,
+                        mergeRequestId = it.mergeRequestId,
+                        event = "", // record.event,
+                        description = it.description,
+                        mrTitle = it.mrTitle
                     )
                 )
             }

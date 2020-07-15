@@ -33,7 +33,9 @@ import com.tencent.devops.dispatch.pojo.DeployApp
 import com.tencent.devops.dispatch.pojo.StopApp
 import com.tencent.devops.dispatch.util.BcsClientUtils
 import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.kubernetes.api.model.Probe
 import io.fabric8.kubernetes.api.model.ServiceBuilder
+import io.fabric8.kubernetes.api.model.TCPSocketAction
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder
 import io.fabric8.kubernetes.api.model.apps.DeploymentStrategy
@@ -107,6 +109,9 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             .withName(dateConfigName)
             .withMountPath(dateConfigPath)
             .endVolumeMount()
+            .withEnv(appDeployment.envVarList)
+            .withLivenessProbe(getTcpSocketProbe(containerPort, 10, 20)) // 存活探针来确定何时重启容器
+            .withReadinessProbe(getTcpSocketProbe(containerPort, 60, 10)) // 就绪探针来确定容器是否已经就绪可以接受流量
             .endContainer()
             .addNewImagePullSecret()
             .withName(appDeployment.pullImageSecretName)
@@ -202,6 +207,16 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             }
         }
         return Result(true)
+    }
+
+    private fun getTcpSocketProbe(containerPort: Int, initialDelaySeconds: Int, periodSeconds: Int): Probe {
+        val tcpSocket = TCPSocketAction()
+        tcpSocket.port = IntOrString(containerPort)
+        val probe = Probe()
+        probe.initialDelaySeconds = initialDelaySeconds
+        probe.tcpSocket = tcpSocket
+        probe.periodSeconds = periodSeconds
+        return probe
     }
 
     private fun getServiceName(serviceCode: String) = "$serviceCode-service"

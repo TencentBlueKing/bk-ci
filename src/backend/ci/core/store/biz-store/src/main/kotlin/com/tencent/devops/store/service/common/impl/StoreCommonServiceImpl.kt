@@ -26,9 +26,7 @@
 
 package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.FAIL
-import com.tencent.devops.common.api.constant.ING
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -122,9 +120,7 @@ class StoreCommonServiceImpl @Autowired constructor(
                     item.status = SUCCESS
                 } else {
                     item.status = status
-                    item.name += if (status == DOING) MessageCodeUtil.getCodeLanMessage(ING) else MessageCodeUtil.getCodeLanMessage(
-                        FAIL
-                    )
+                    item.name += if (status == FAIL) MessageCodeUtil.getCodeLanMessage(FAIL) else ""
                 }
             }
         }

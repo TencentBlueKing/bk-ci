@@ -26,6 +26,7 @@
 
 package com.tencent.devops.artifactory.service
 
+import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
@@ -198,4 +199,12 @@ interface ArchiveFileService {
      * @return Result<Boolean>
      */
     fun validateUserDownloadFilePermission(userId: String, filePath: String): Result<Boolean>
+
+    fun acrossProjectCopy(
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String,
+        targetProjectId: String,
+        targetPath: String
+    ): Result<Count>
 }

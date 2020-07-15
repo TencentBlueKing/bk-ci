@@ -27,7 +27,7 @@
  *
  */
 
-package com.tencent.devops.common.pipeline.element.market
+package com.tencent.devops.common.pipeline.element.store
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
