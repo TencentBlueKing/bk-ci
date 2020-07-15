@@ -94,8 +94,3 @@ object CommonUtils {
         }
     }
 }
-
-fun main(args: Array<String>) {
-    println(CommonUtils.getRepoOwner("https://git.dev.code.oa.com/royalhuang/gitci-test.git"))
-
-}
