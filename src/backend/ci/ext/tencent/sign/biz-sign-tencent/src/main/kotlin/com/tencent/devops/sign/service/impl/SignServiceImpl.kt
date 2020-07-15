@@ -3,6 +3,8 @@ package com.tencent.devops.sign.service.impl
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import com.tencent.devops.sign.pojo.IpaCustomizedSignRequest
 import com.tencent.devops.sign.service.SignService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -20,7 +22,7 @@ class SignServiceImpl : SignService {
     @Value("\${sign.workspace:#{null}}")
     val workspace: String = ""
 
-    override fun resignIpaPackage(
+    fun resignIpaPackage(
         userId: String,
         ipaSignInfo: String?,
         inputStream: InputStream
@@ -84,5 +86,33 @@ class SignServiceImpl : SignService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(SignServiceImpl::class.java)
+    }
+
+    override fun signIpaAndArchive(userId: String, ipaSignInfoHeader: String, ipaInputStream: InputStream): String? {
+        TODO("Not yet implemented")
+    }
+
+    override fun resignIpaPackage(ipaPackage: File, ipaSignInfo: IpaSignInfo, MobileProvisionInfoList: Map<String, MobileProvisionInfo>?): File {
+        TODO("Not yet implemented")
+    }
+
+    override fun unzipIpa(ipaFile: File, unzipIpaDir: File) {
+        TODO("Not yet implemented")
+    }
+
+    override fun zipIpaFile(ipaFile: File): File? {
+        TODO("Not yet implemented")
+    }
+
+    override fun resignApp(appPath: File, certId: String, bundleId: String?, mobileProvision: File?): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): Map<String, MobileProvisionInfo> {
+        TODO("Not yet implemented")
+    }
+
+    override fun parseMobileProvision(mobileProvisionFile: File): MobileProvisionInfo {
+        TODO("Not yet implemented")
     }
 }

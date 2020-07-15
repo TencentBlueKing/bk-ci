@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.FileService
-import com.tencent.devops.sign.utils.FileSignUtil
+import com.tencent.devops.sign.utils.IpaFileUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -29,7 +29,7 @@ class FileServiceImpl: FileService {
         val ipaTmpDirFile = File(ipaTmpDir)
         val ipaFile = File("$ipaTmpDir/${ipaSignInfo.fileName}")
         FileUtil.mkdirs(ipaTmpDirFile)
-        val md5 = FileSignUtil.copyInputStreamToFile(ipaInputStream, ipaFile)
+        val md5 = IpaFileUtil.copyInputStreamToFile(ipaInputStream, ipaFile)
         when {
             md5 == null -> {
                 logger.error("copy file and calculate file md5 is failed.")

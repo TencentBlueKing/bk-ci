@@ -6,7 +6,7 @@ import java.io.*
 import java.security.MessageDigest
 
 
-object FileSignUtil {
+object IpaFileUtil {
     private val bufferSize = 8 * 1024
 
     /*

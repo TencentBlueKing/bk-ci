@@ -43,9 +43,9 @@ import java.security.MessageDigest
 @RestResource
 class UserSignResourceImpl @Autowired constructor(
         private val ipaSignService: SignServiceImpl
-) : UserSignResource {
+) {
 
-    override fun ipaCustomizedSign(
+    fun ipaCustomizedSign(
             userId: String,
             ipaSignRequest: String?,
             ipaInputStream: InputStream
@@ -64,7 +64,7 @@ class UserSignResourceImpl @Autowired constructor(
         return Result(data = null)
     }
 
-    override fun ipaCustomizedSign2(
+    fun ipaCustomizedSign2(
             userId: String,
             ipaSignRequest: String,
             ipaInputStream: InputStream
@@ -84,7 +84,7 @@ class UserSignResourceImpl @Autowired constructor(
         return Result(data = null)
     }
 
-    override fun getKeystoreCerts(userId: String, appId: String): Result<List<IosProfile>> {
+    fun getKeystoreCerts(userId: String, appId: String): Result<List<IosProfile>> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 

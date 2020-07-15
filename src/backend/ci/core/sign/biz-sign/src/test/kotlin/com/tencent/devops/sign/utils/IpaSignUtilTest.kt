@@ -19,7 +19,7 @@ public class IpaSignUtilTest {
     ) {
         val inputStream = File(inputStreamFile).inputStream()
         val outputStreamFile = File(outputStreamStreamFile)
-        val md5 = FileSignUtil.copyInputStreamToFile(inputStream, outputStreamFile)
+        val md5 = IpaFileUtil.copyInputStreamToFile(inputStream, outputStreamFile)
         assertEquals("20280fbe2856a679abc636f0db263231", md5)
     }
 }
