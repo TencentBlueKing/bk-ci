@@ -81,6 +81,7 @@ class AtomCommonDao : AbstractStoreCommonDao() {
             ta.VERSION.`as`("version"),
             ta.REPOSITORY_HASH_ID.`as`("repositoryHashId"),
             ta.CODE_SRC.`as`("codeSrc"),
+            taei.LANGUAGE.`as`("language"),
             tsbi.SCRIPT.`as`("script"),
             tsbi.REPOSITORY_PATH.`as`("repositoryPath"),
             tspr.PROJECT_CODE.`as`("projectCode"),
