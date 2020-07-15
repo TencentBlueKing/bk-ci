@@ -496,7 +496,7 @@ class GitService @Autowired constructor(
             CommonScriptUtils.execute("git config user.name \"$gitPublicAccount\"", atomFileDir)
             CommonScriptUtils.execute("git add .", atomFileDir)
             // 6、提交本地文件
-            CommonScriptUtils.execute("git commit -m \"init\"", atomFileDir)
+            CommonScriptUtils.execute("git commit -m init", atomFileDir)
             // 7、提交代码到远程仓库
             CommonScriptUtils.execute("git push origin master", atomFileDir)
             logger.info("initRepositoryInfo finish")
