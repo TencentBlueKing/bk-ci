@@ -50,4 +50,5 @@ object SignMessageCode {
     const val ERROR_COPY_FILE = "2122003" // 复制并计算MD5失败
     const val ERROR_SIGN_IPA = "2122004" // IPA包签名失败
     const val ERROR_ARCHIVE_SIGNED_IPA = "2122005" // 归档IPA包失败
+    const val ERROR_MP_NOT_EXIST = "2122006" // 描述文件不存在
 }
