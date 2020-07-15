@@ -190,7 +190,7 @@ interface BuildBuildResource {
     @Path("/taskIds/{taskId}/subVar")
     fun getSubBuildVars(
         @ApiParam("构建ID", required = true)
-        @HeaderParam("buildId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
         @ApiParam("任务ID", required = false)
         @PathParam("taskId")
