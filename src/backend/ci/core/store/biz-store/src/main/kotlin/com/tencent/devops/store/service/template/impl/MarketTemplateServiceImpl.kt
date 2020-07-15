@@ -149,7 +149,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     private fun getMarketTemplateList(
         userId: String,
         userDeptList: List<Int>,
-        name: String?,
+        keyword: String?,
         classifyCode: String?,
         category: String?,
         labelCode: String?,
@@ -168,10 +168,18 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             // 获取模版
             val categoryList = if (category.isNullOrEmpty()) listOf() else category?.split(",")
             val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
-            val count = marketTemplateDao.count(dslContext, name, classifyCode, categoryList, labelCodeList, score, rdType)
+            val count = marketTemplateDao.count(
+                dslContext = dslContext,
+                keyword = keyword,
+                classifyCode = classifyCode,
+                categoryList = categoryList,
+                labelCodeList = labelCodeList,
+                score = score,
+                rdType = rdType
+            )
             val templates = marketTemplateDao.list(
                 dslContext = dslContext,
-                templateName = name,
+                keyword = keyword,
                 classifyCode = classifyCode,
                 categoryList = categoryList,
                 labelCodeList = labelCodeList,
@@ -292,7 +300,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             getMarketTemplateList(
                 userId = userId,
                 userDeptList = userDeptList,
-                name = null,
+                keyword = null,
                 classifyCode = null,
                 category = null,
                 labelCode = null,
@@ -310,7 +318,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             getMarketTemplateList(
                 userId = userId,
                 userDeptList = userDeptList,
-                name = null,
+                keyword = null,
                 classifyCode = null,
                 category = null,
                 labelCode = null,
@@ -335,7 +343,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 getMarketTemplateList(
                     userId = userId,
                     userDeptList = userDeptList,
-                    name = null,
+                    keyword = null,
                     classifyCode = classifyCode,
                     category = null,
                     labelCode = null,
@@ -367,7 +375,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
      */
     override fun list(
         userId: String,
-        name: String?,
+        keyword: String?,
         classifyCode: String?,
         category: String?,
         labelCode: String?,
@@ -398,7 +406,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         return getMarketTemplateList(
             userId = userId,
             userDeptList = userDeptList,
-            name = name,
+            keyword = keyword,
             classifyCode = classifyCode,
             category = category,
             labelCode = labelCode,
