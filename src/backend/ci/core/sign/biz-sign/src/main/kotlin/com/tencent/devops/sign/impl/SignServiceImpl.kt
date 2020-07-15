@@ -155,13 +155,19 @@ class SignServiceImpl @Autowired constructor(
     override fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): Map<String, MobileProvisionInfo> {
         val mobileProvisionMap = mutableMapOf<String, MobileProvisionInfo>()
         if (ipaSignInfo.mobileProvisionId != null) {
-            val mpFile = mobileProvisionService.downloadMobileProvision(mobileProvisionDir, ipaSignInfo.projectId
-                ?: "", ipaSignInfo.mobileProvisionId!!)
-            mobileProvisionMap["MAIN_APP"] = parseMobileProvision(mpFile)
+            val mpFile = mobileProvisionService.downloadMobileProvision(
+                mobileProvisionDir = mobileProvisionDir,
+                projectId = ipaSignInfo.projectId ?: "",
+                mobileProvisionId = ipaSignInfo.mobileProvisionId!!
+            )
+            mobileProvisionMap[MAIN_APP_FILENAME] = parseMobileProvision(mpFile)
         }
         ipaSignInfo.appexSignInfo?.forEach {
-            val mpFile = mobileProvisionService.downloadMobileProvision(mobileProvisionDir, ipaSignInfo.projectId
-                ?: "", it.mobileProvisionId)
+            val mpFile = mobileProvisionService.downloadMobileProvision(
+                mobileProvisionDir = mobileProvisionDir,
+                projectId = ipaSignInfo.projectId ?: "",
+                mobileProvisionId = it.mobileProvisionId
+            )
             mobileProvisionMap[it.appexName] = parseMobileProvision(mpFile)
         }
         return mobileProvisionMap
