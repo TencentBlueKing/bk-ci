@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.io.File
+import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.*
 
@@ -54,18 +55,18 @@ class MobileProvisionServiceImpl  @Autowired constructor(
         return mobileProvisionDir
     }
 
-    private fun generateToken(): String? {
+    private fun generateToken() {
         val claims = mutableMapOf<String, Any>()
         claims["authId"] = keyStoreAuthId
         claims["timeMillis"] = Instant.now().epochSecond
+        val key = Keys.hmacShaKeyFor(keyStoreAuthSecret.toByteArray(StandardCharsets.UTF_8))
         token = Jwts.builder().setClaims(claims)
-                .signWith(SignatureAlgorithm.HS256, keyStoreAuthSecret).compact()
-        return token
+                .signWith(key, SignatureAlgorithm.HS256).compact()
     }
 
     /*
     * keystore的jwt有效期为3分钟，设置为
-    * */ServiceBuildResource
+    * */
     @Scheduled(fixedDelay = 1 * 60 * 1000)
     fun refreshToken() {
         logger.info("Refresh keystore jwt token")
@@ -73,15 +74,3 @@ class MobileProvisionServiceImpl  @Autowired constructor(
     }
 
 }
-
-fun main(argv: Array<String>) {
-    val keyStoreAuthId = "devops"
-    val keyStoreAuthSecret = "a21c218df41f6d7fd032535fe20394e2"
-    val claims = mutableMapOf<String, Any>()
-    claims["authId"] = keyStoreAuthId
-    claims["timeMillis"] = Instant.now().epochSecond
-    val token = Jwts.builder().setClaims(claims)
-            .signWith(SignatureAlgorithm.HS256, keyStoreAuthSecret).compact()
-}
-
-

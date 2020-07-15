@@ -42,15 +42,3 @@ class MobileProvisionServiceImpl  @Autowired constructor(
     }
 
 }
-
-fun main(argv: Array<String>) {
-    val keyStoreAuthId = "devops"
-    val keyStoreAuthSecret = "a21c218df41f6d7fd032535fe20394e2"
-    val claims = mutableMapOf<String, Any>()
-    claims["authId"] = keyStoreAuthId
-    claims["timeMillis"] = Instant.now().epochSecond
-    val key = Keys.hmacShaKeyFor(keyStoreAuthSecret.toByteArray(StandardCharsets.UTF_8))
-    val token = Jwts.builder().setClaims(claims)
-            .signWith(key, SignatureAlgorithm.HS256).compact()
-    val a = 1
-}
