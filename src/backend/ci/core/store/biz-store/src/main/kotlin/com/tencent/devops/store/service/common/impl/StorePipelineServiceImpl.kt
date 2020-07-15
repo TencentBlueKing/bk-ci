@@ -104,7 +104,7 @@ class StorePipelineServiceImpl : StorePipelineService {
         val updatePipelineModel = updateStorePipelineModelRequest.pipelineModel
         var pipelineModel = StringUtils.EMPTY
         var grayPipelineModel = StringUtils.EMPTY
-        if (updatePipelineModel == null) {
+        if (updatePipelineModel.isNullOrBlank()) {
             val pipelineModelConfig =
                 businessConfigDao.get(dslContext, storeType, featureName, "PIPELINE_MODEL")
                     ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
@@ -114,7 +114,7 @@ class StorePipelineServiceImpl : StorePipelineService {
             pipelineModel = pipelineModelConfig.configValue
             grayPipelineModel = grayPipelineModelConfig.configValue
         } else {
-            pipelineModel = updatePipelineModel
+            pipelineModel = updatePipelineModel!!
             grayPipelineModel = updatePipelineModel
         }
         when (scopeType) {
@@ -254,6 +254,7 @@ class StorePipelineServiceImpl : StorePipelineService {
                 "pipelineName" to pipelineName,
                 "storeCode" to storeCode,
                 "version" to storeInfo["version"],
+                "language" to storeInfo["language"],
                 "script" to StringEscapeUtils.escapeJava(storeInfo["script"] as String),
                 "repositoryHashId" to storeInfo["repositoryHashId"],
                 "repositoryPath" to (storeInfo["repositoryPath"] ?: "")
