@@ -54,6 +54,8 @@ import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitProjectPipelineDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
+import com.tencent.devops.gitci.pojo.GitRepositoryConf
+import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
 import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
@@ -71,7 +73,38 @@ import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.gitci.client.ScmClient
-import com.tencent.devops.gitci.pojo.*
+import com.tencent.devops.gitci.pojo.CI_STATUS
+import com.tencent.devops.gitci.pojo.CI_BUILD_WEB_URL
+import com.tencent.devops.gitci.pojo.CI_REPOSITORY_NAME
+import com.tencent.devops.gitci.pojo.CI_BUILD_USER
+import com.tencent.devops.gitci.pojo.CI_COMMIT_ID
+import com.tencent.devops.gitci.pojo.CI_EVENT_TYPE
+import com.tencent.devops.gitci.pojo.CI_BRANCH
+import com.tencent.devops.gitci.pojo.CI_REF
+import com.tencent.devops.gitci.pojo.CI_COMMIT_MESSAGE
+import com.tencent.devops.gitci.pojo.CI_PUSH_BEFORE_COMMIT
+import com.tencent.devops.gitci.pojo.CI_PUSH_AFTER_COMMIT
+import com.tencent.devops.gitci.pojo.CI_PUSH_TOTAL_COMMIT
+import com.tencent.devops.gitci.pojo.CI_PUSH_OPERATION_KIND
+import com.tencent.devops.gitci.pojo.CI_TAG_NAME
+import com.tencent.devops.gitci.pojo.CI_TAG_OPERATION
+import com.tencent.devops.gitci.pojo.CI_TAG_USERNAME
+import com.tencent.devops.gitci.pojo.CI_MR_ID
+import com.tencent.devops.gitci.pojo.CI_MR_AUTHOR
+import com.tencent.devops.gitci.pojo.CI_MR_TARGET_BRANCH
+import com.tencent.devops.gitci.pojo.CI_MR_SOURCE_BRANCH
+import com.tencent.devops.gitci.pojo.CI_MR_TARGET_REPOSITORY
+import com.tencent.devops.gitci.pojo.CI_MR_SOURCE_REPOSITORY
+import com.tencent.devops.gitci.pojo.CI_MR_CREATE_TIME
+import com.tencent.devops.gitci.pojo.CI_MR_UPDATE_TIME
+import com.tencent.devops.gitci.pojo.CI_MR_CREATE_TIME_TIMESTAMP
+import com.tencent.devops.gitci.pojo.CI_MR_UPDATE_TIME_TIMESTAMP
+import com.tencent.devops.gitci.pojo.CI_MR_NUMBER
+import com.tencent.devops.gitci.pojo.CI_MR_DESC
+import com.tencent.devops.gitci.pojo.CI_MR_TITLE
+import com.tencent.devops.gitci.pojo.CI_MR_URL
+import com.tencent.devops.gitci.pojo.CI_MR_ACTION
+import com.tencent.devops.gitci.pojo.CI_MR_ASSIGNEE
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
@@ -242,7 +275,8 @@ class GitCIBuildService @Autowired constructor(
                             user = job.job.pool!!.credential?.user ?: "",
                             password = job.job.pool!!.credential?.password ?: ""
                         ),
-                        macOS = null
+                        macOS = null,
+                        third = null
                     )
                 }
 
@@ -255,13 +289,14 @@ class GitCIBuildService @Autowired constructor(
                         macOS = MacOS(
                             systemVersion = job.job.pool!!.macOS?.systemVersion ?: "",
                             xcodeVersion = job.job.pool!!.macOS?.xcodeVersion ?: ""
-                        )
+                        ),
+                        third = null
                     )
                 }
 
                 // 假设都没有配置，使用默认镜像
                 else -> {
-                    Pool(buildConfig.registryImage, Credential("", ""), null)
+                    Pool(buildConfig.registryImage, Credential("", ""), null, null)
                 }
             }
 

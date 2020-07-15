@@ -190,7 +190,7 @@ class PipelineBuildService @Autowired constructor(
             } else {
                 val atomCode = taskParamMap["atomCode"].toString()
 
-                val taskParams = if (taskParamMap["@type"] != "marketBuild") {
+                val taskParams = if (taskParamMap["@type"] != "marketBuild" || taskParamMap["@type"] != "marketBuildLess") {
                     val inputMap = mutableMapOf("key" to "value")
                     val dataMap = mutableMapOf("input" to inputMap)
                     val taskParamMap1 = mutableMapOf("data" to dataMap)
@@ -329,6 +329,7 @@ class PipelineBuildService @Autowired constructor(
                 trigger = t.trigger,
                 status = BuildStatus.values()[t.status],
                 startUser = t.startUser,
+                queueTime = t.queueTime?.timestampmilli() ?: 0L,
                 startTime = t.startTime?.timestampmilli() ?: 0L,
                 endTime = t.endTime?.timestampmilli() ?: 0L,
                 taskCount = t.taskCount,

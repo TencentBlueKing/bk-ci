@@ -40,7 +40,8 @@ class GitRequestEventDao {
         event: GitRequestEvent
     ): Long {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
-            val record = dslContext.insertInto(this,
+            val record = dslContext.insertInto(
+                this,
                 OBJECT_KIND,
                 OPERATION_KIND,
                 EXTENSION_ACTION,
@@ -86,8 +87,8 @@ class GitRequestEventDao {
     ): GitRequestEvent? {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             val record = dslContext.selectFrom(this)
-                    .where(ID.eq(id))
-                    .fetchOne()
+                .where(ID.eq(id))
+                .fetchOne()
             return if (record == null) {
                 null
             } else {
@@ -121,10 +122,10 @@ class GitRequestEventDao {
     ): List<GitRequestEvent> {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             val records = dslContext.selectFrom(this)
-                    .where(GIT_PROJECT_ID.eq(gitProjectId))
-                    .orderBy(ID.desc())
-                    .limit(pageSize).offset((page - 1) * pageSize)
-                    .fetch()
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .orderBy(ID.desc())
+                .limit(pageSize).offset((page - 1) * pageSize)
+                .fetch()
             val result = mutableListOf<GitRequestEvent>()
             records.forEach {
                 result.add(
@@ -158,10 +159,41 @@ class GitRequestEventDao {
     ): Long {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             return dslContext.selectCount()
-                    .from(this)
-                    .where(GIT_PROJECT_ID.eq(gitProjectId))
-                    .orderBy(ID.desc())
-                    .fetchOne(0, Long::class.java)
+                .from(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .orderBy(ID.desc())
+                .fetchOne(0, Long::class.java)
+        }
+    }
+
+    /**
+     * 根据创建时间范围获取主键ID
+     */
+    fun getRequestIdByCreateTime(
+        dslContext: DSLContext,
+        beginTime: LocalDateTime = LocalDateTime.MIN,
+        endTime: LocalDateTime = LocalDateTime.MAX,
+        endId: Long = Long.MAX_VALUE,
+        limit: Int = 1000
+    ): List<Long> {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            return dslContext.select(ID).from(this)
+                .where(CREATE_TIME.gt(beginTime).and(CREATE_TIME.lt(endTime)).and(ID.lt(endId)))
+                .orderBy(ID.desc())
+                .limit(limit).fetch(ID)
+        }
+    }
+
+    /**
+     * 根据ID删除
+     */
+    fun deleteByIds(
+        dslContext: DSLContext,
+        ids: Collection<Long>
+    ): Int {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            return dslContext.delete(this)
+                .where(ID.`in`(ids)).execute()
         }
     }
 }

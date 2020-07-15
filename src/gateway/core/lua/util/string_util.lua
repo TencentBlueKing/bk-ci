@@ -33,6 +33,18 @@ function _M:endswith(str, substr)
   end
 end
 
+--[[判断str是否以substr开头。是返回true，否返回false，失败返回失败信息]]
+function _M:startswith(str, substr)
+  if str == nil or substr == nil then
+    return nil, "the string or the sub-string parameter is nil"
+  end
+  if string.find(str, substr) ~= 1 then
+    return false
+  else
+    return true
+  end
+end
+
 function _M:split(str, pattern)
   local rt = {}
   string.gsub(str, '[^' .. pattern .. ']+', function(w) table.insert(rt, w) end)

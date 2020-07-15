@@ -27,7 +27,13 @@
 package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.model.store.tables.TAtom
+import com.tencent.devops.model.store.tables.TAtomEnvInfo
+import com.tencent.devops.model.store.tables.TStoreBuildInfo
+import com.tencent.devops.model.store.tables.TStorePipelineRel
+import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -59,5 +65,35 @@ class AtomCommonDao : AbstractStoreCommonDao() {
                 .groupBy(ATOM_CODE)
                 .fetch()
         }
+    }
+
+    override fun getLatestStoreInfoListByCodes(
+        dslContext: DSLContext,
+        storeCodeList: List<String>
+    ): Result<out Record>? {
+        val ta = TAtom.T_ATOM.`as`("ta")
+        val taei = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("taei")
+        val tsbi = TStoreBuildInfo.T_STORE_BUILD_INFO.`as`("tsbi")
+        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tspr")
+        val tspir = TStorePipelineRel.T_STORE_PIPELINE_REL.`as`("tspir")
+        return dslContext.select(
+            ta.ATOM_CODE.`as`("storeCode"),
+            ta.VERSION.`as`("version"),
+            ta.REPOSITORY_HASH_ID.`as`("repositoryHashId"),
+            ta.CODE_SRC.`as`("codeSrc"),
+            tsbi.SCRIPT.`as`("script"),
+            tsbi.REPOSITORY_PATH.`as`("repositoryPath"),
+            tspr.PROJECT_CODE.`as`("projectCode"),
+            tspr.CREATOR.`as`("creator"),
+            tspir.PIPELINE_ID.`as`("pipelineId")
+        ).from(ta).join(taei).on(ta.ID.eq(taei.ATOM_ID))
+            .join(tsbi).on(taei.LANGUAGE.eq(tsbi.LANGUAGE))
+            .join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE).and(tsbi.STORE_TYPE.eq(tspr.STORE_TYPE)))
+            .join(tspir).on(ta.ATOM_CODE.eq(tspir.STORE_CODE).and(tsbi.STORE_TYPE.eq(tspir.STORE_TYPE)))
+            .where(tsbi.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+            .and(ta.LATEST_FLAG.eq(true))
+            .and(tspr.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+            .and(ta.ATOM_CODE.`in`(storeCodeList))
+            .fetch()
     }
 }

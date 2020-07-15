@@ -69,8 +69,9 @@ class GitCIBuildFinishListener @Autowired constructor(
         try {
             val record = gitRequestEventBuildDao.getEventByBuildId(dslContext, buildFinishEvent.buildId)
             if (record != null) {
-                val originYaml = record["ORIGIN_YAML"] as String
-                val yamlObject = YamlUtil.getObjectMapper().readValue(originYaml, CIBuildYaml::class.java)
+                val normalizerYaml = record["NORMALIZED_YAML"] as String
+                logger.info("listenPipelineBuildFinishBroadCastEvent , normalizerYaml : $normalizerYaml")
+                val yamlObject = YamlUtil.getObjectMapper().readValue(normalizerYaml, CIBuildYaml::class.java)
 
                 val objectKind = record["OBJECT_KIND"] as String
 
@@ -84,7 +85,8 @@ class GitCIBuildFinishListener @Autowired constructor(
                     }
                     val description = record["DESCRIPTION"] as String
 
-                    val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw OperationException("git ci projectCode not exist")
+                    val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId)
+                        ?: throw OperationException("git ci projectCode not exist")
 
                     // 检测状态
                     val state = if (BuildStatus.isFailure(BuildStatus.valueOf(buildFinishEvent.status))) {

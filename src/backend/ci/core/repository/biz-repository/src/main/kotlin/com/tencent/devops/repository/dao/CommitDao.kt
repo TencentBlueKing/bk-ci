@@ -29,6 +29,7 @@ package com.tencent.devops.repository.dao
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.model.repository.tables.TRepositoryCommit
+import com.tencent.devops.model.repository.tables.TRepositoryCommitBak
 import com.tencent.devops.model.repository.tables.records.TRepositoryCommitRecord
 import com.tencent.devops.repository.pojo.commit.CommitData
 import org.jooq.DSLContext
@@ -53,6 +54,45 @@ class CommitDao {
 
     fun addCommit(dslContext: DSLContext, commits: List<CommitData>): IntArray {
         with(TRepositoryCommit.T_REPOSITORY_COMMIT) {
+            val query = commits.map {
+                dslContext.insertInto(
+                    this,
+                    BUILD_ID,
+                    REPO_ID,
+                    REPO_NAME,
+                    TYPE,
+                    PIPELINE_ID,
+                    COMMIT,
+                    COMMITTER,
+                    COMMIT_TIME,
+                    COMMENT,
+                    ELEMENT_ID
+                )
+                    .values(
+                        it.buildId,
+                        if (it.repoId.isNullOrBlank()) 0L else HashUtil.decodeOtherIdToLong(it.repoId!!),
+                        it.repoName,
+                        it.type,
+                        it.pipelineId,
+                        it.commit,
+                        it.committer,
+                        LocalDateTime.ofInstant(
+                            Date(TimeUnit.SECONDS.toMillis(it.commitTime)).toInstant(),
+                            ZoneId.systemDefault()
+                        ),
+                        it.comment,
+                        it.elementId
+                    )
+            }
+            return dslContext.batch(query).execute()
+        }
+    }
+
+    /**
+     * 添加代码库提交记录备份表，待双写指定时间后再将此表删除
+     */
+    fun addBakCommit(dslContext: DSLContext, commits: List<CommitData>): IntArray {
+        with(TRepositoryCommitBak.T_REPOSITORY_COMMIT_BAK) {
             val query = commits.map {
                 dslContext.insertInto(
                     this,

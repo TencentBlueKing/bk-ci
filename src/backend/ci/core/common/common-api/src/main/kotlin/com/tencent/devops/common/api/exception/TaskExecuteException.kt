@@ -32,4 +32,4 @@ open class TaskExecuteException(
     open val errorType: ErrorType,
     open val errorCode: Int,
     open val errorMsg: String
-) : Throwable(errorMsg)
+) : RuntimeException(errorMsg)

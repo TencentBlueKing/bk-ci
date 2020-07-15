@@ -45,7 +45,8 @@ data class TimerTriggerElement(
     override var status: String? = null,
     // express是老的接口数据， 后面要废弃掉
     @ApiModelProperty("定时表达式", required = false)
-    val expression: String?,
+    @Deprecated(message = "@see advanceExpression")
+    val expression: String? = null,
     @ApiModelProperty("改进后的表达式", required = false)
     val newExpression: List<String>? = null,
     @ApiModelProperty("高级定时表达式", required = false)

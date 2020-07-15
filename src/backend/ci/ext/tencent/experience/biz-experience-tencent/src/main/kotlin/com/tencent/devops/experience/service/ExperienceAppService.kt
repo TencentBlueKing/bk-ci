@@ -223,7 +223,7 @@ class ExperienceAppService(
         }
         val groupMap = groupService.serviceGet(groupIdSet)
 
-        return experienceList.map {
+        val appExperienceSummaryList = experienceList.map {
             val userSet = mutableSetOf<String>()
             val innerUsers = objectMapper.readValue<Set<String>>(it.innerUsers)
             val experienceGroups = objectMapper.readValue<Set<String>>(it.experienceGroups)
@@ -250,6 +250,9 @@ class ExperienceAppService(
                 canExperience = canExperience,
                 online = it.online
             )
+        }
+        return appExperienceSummaryList.filter { appExperienceSummary ->
+            appExperienceSummary.canExperience && !appExperienceSummary.expired
         }
     }
 
