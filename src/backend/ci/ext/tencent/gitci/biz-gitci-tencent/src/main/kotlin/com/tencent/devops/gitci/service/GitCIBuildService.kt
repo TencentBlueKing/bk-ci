@@ -107,10 +107,12 @@ import com.tencent.devops.gitci.pojo.CI_MR_ACTION
 import com.tencent.devops.gitci.pojo.CI_MR_ASSIGNEE
 import com.tencent.devops.gitci.pojo.CI_COMMIT_ID_SHORT
 import com.tencent.devops.gitci.pojo.CI_TAG_CREATE_FROM
+import com.tencent.devops.gitci.pojo.CI_REPOSITORY_OWNER
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
+import com.tencent.devops.gitci.utils.CommonUtils
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -505,6 +507,7 @@ class GitCIBuildService @Autowired constructor(
         startParams[CI_REPOSITORY_NAME] = gitProjectConf.name
         startParams[CI_BUILD_WEB_URL] = gitProjectConf.url
         startParams[CI_COMMIT_MESSAGE] = event.commitMsg.toString()
+        startParams[CI_REPOSITORY_OWNER] = CommonUtils.getRepoName(gitProjectConf.gitHttpUrl)
 
         // 写入WEBHOOK触发环境变量
         val originEvent = try {
