@@ -26,6 +26,7 @@
 
 package com.tencent.devops.dispatch.pojo
 
+import io.fabric8.kubernetes.api.model.EnvVar
 import io.swagger.annotations.ApiModelProperty
 
 data class AppDeployment(
@@ -36,5 +37,7 @@ data class AppDeployment(
     @ApiModelProperty(value = "拉取镜像秘钥名称", required = false)
     val pullImageSecretName: String?,
     @ApiModelProperty("容器端口", required = true)
-    val containerPort: Int
+    val containerPort: Int,
+    @ApiModelProperty("环境变量列表", required = false)
+    val envVarList: List<EnvVar>? = null
 )

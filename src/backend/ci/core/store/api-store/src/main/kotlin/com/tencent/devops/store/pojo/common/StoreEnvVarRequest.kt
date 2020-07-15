@@ -24,19 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.constant
+package com.tencent.devops.store.pojo.common
 
-enum class BkStyleEnum(val style: String) {
-    COMMON_STYLE("^(.|\\r|\\n)*\$"), // 通用正则表达式
-    NUMBER_STYLE("[0-9]*\$"), // 数字正则表达式
-    CODE_STYLE("^[a-zA-Z_][\\w-]{0,31}\$"), // 标识正则表达式
-    NAME_STYLE("^[\\w-\\u4E00-\\u9FBB\\u3400-\\u4DBF\\uF900-\\uFAD9\\u3000-\\u303F\\u2000-\\u206F\\uFF00-\\uFFEF]{1,32}\$"), // 名称正则表达式
-    EMAIL_STYLE("^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*\$"), // 电子邮箱正则表达式
-    AUTH_STYLE("^HTTP|HTTPS|OAUTH|SSH\$"), // 权限认证类型正则表达式
-    NOTE_STYLE("^[A-Za-z0-9\\u4E00-\\u9FBB\\u3400-\\u4DBF\\uF900-\\uFAD9\\u3000-\\u303F\\u2000-\\u206F\\uFF00-\\uFFEF.。?？！!,()，、；;：:'‘’“”\"…\\s]{2,256}\$"), // 备注正则表达式
-    VISIBILITY_LEVEL_STYLE("^PRIVATE|LOGIN_PUBLIC\$"), // 项目可视范围正则表达式
-    LANGUAGE_STYLE("^java|python|nodejs|golang|c|c++|php|c#\$"), // 开发语言正则表达式
-    BOOLEAN_STYLE("^true|false\$"), // 布尔型正则表达式
-    SCOPE_STYLE("^TEST|PRD|ALL\$"), // 适用范围正则表达式
-    SERVICE_CODE_STYLE("^[a-z][([-a-z-0-9]*[a-z-0-9])?]{0,31}\$"), // 研发商店扩展服务标识正则表达式
-}
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("store组件环境变量请求报文体")
+data class StoreEnvVarRequest(
+    @ApiModelProperty("store组件代码", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+    val storeCode: String,
+    @ApiModelProperty("store组件类型", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+    val storeType: String,
+    @ApiModelProperty("变量名", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+    val varName: String,
+    @ApiModelProperty("变量值", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.COMMON_STYLE)
+    val varValue: String,
+    @ApiModelProperty("描述", required = false)
+    @field:BkField(patternStyle = BkStyleEnum.NOTE_STYLE, required = false)
+    val varDesc: String?,
+    @ApiModelProperty("变量值是否加密", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE)
+    val encryptFlag: Boolean,
+    @ApiModelProperty("适用范围 TEST：测试 PRD：正式 ALL：所有", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.SCOPE_STYLE)
+    val scope: String
+)
