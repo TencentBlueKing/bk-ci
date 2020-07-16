@@ -72,7 +72,7 @@ class DownloaderService {
             .build()
     }
 
-    companion object{
+    companion object {
         private val logger = LoggerFactory.getLogger(DownloaderService::class.java)
     }
 }

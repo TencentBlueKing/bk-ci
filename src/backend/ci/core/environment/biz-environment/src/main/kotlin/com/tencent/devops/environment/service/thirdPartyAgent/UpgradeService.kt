@@ -44,7 +44,6 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
 
 @Service
 class UpgradeService @Autowired constructor(
