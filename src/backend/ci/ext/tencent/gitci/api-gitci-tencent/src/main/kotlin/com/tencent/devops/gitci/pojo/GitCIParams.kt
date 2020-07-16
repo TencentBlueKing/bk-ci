@@ -29,7 +29,7 @@ package com.tencent.devops.gitci.pojo
 // 通用变量
 const val CI_STATUS = "CI"
 const val CI_PIPELINE = "CI_PIPELINE"
-const val CI_BUILD_WEB_URL = "CI_BUILD_WEB_URL"
+const val CI_REPOSITORY_URL = "CI_REPOSITORY_URL"
 const val CI_REPOSITORY_NAME = "CI_REPOSITORY"
 const val CI_BUILD_USER = "CI_BUILD_USER"
 const val CI_COMMIT_ID = "CI_COMMIT_ID"
