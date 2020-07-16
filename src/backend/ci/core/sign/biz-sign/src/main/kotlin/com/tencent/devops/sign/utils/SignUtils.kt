@@ -103,7 +103,7 @@ object SignUtils {
                         }
                     }
                 }
-                // 替换后进行重签名
+                // 替换后进行重签名C
                 val info = infos[appName] ?: throw Exception("Not found $appName info in MobileProvisionInfos")
                 codesignFileByEntitlement(certId, appDir.absolutePath, info.entitlementFile.absolutePath)
             }

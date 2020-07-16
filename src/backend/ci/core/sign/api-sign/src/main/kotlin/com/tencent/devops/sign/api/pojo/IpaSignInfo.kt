@@ -20,7 +20,7 @@ data class IpaSignInfo(
     @ApiModelProperty("主App描述文件ID", required = false)
     var mobileProvisionId: String? = null,
     @ApiModelProperty("Universal Link的设置", required = false)
-    var ul: String? = null,
+    var ul: List<String>? = null,
     @ApiModelProperty("是否替换bundleId", required = false)
     var repalceBundleId: Boolean? = false,
     @ApiModelProperty("拓展应用名和对应的描述文件ID", required = false)

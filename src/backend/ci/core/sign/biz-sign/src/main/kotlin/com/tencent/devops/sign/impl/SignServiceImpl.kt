@@ -193,8 +193,6 @@ class SignServiceImpl @Autowired constructor(
             entitlementFile = entitlementFile,
             bundleId = bundleId
         )
-
-
     }
 
     companion object {
