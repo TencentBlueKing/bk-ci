@@ -192,7 +192,7 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
             return true
         }
         if (tagIncluded && pathIncluded) {
-            logger.info("Git trigger tags($eventTag) is included and path(${trigger.paths!!.include}) is included")
+            logger.info("Git trigger tags($eventTag) is included and path(${trigger.paths?.include}) is included")
             return true
         }
         return false

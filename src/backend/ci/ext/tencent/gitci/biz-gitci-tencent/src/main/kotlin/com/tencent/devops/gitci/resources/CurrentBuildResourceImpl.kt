@@ -71,12 +71,13 @@ class CurrentBuildResourceImpl @Autowired constructor(
 
     override fun downloadUrl(
         userId: String,
+        gitGroupId: Long,
         gitProjectId: Long,
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<Url> {
         checkParam(userId, gitProjectId)
-        return Result(currentBuildService.downloadUrl(userId, gitProjectId, artifactoryType, path))
+        return Result(currentBuildService.downloadUrl(userId, gitGroupId, gitProjectId, artifactoryType, path))
     }
 
     override fun getReports(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): Result<List<Report>> {

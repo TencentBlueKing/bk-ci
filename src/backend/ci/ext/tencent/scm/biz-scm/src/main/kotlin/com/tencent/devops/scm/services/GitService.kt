@@ -338,7 +338,7 @@ class GitService @Autowired constructor(
         }
     }
 
-    fun checkUserGitAuth(userId: String, gitProjectId: String): Boolean {
+/*    fun checkUserGitAuth(userId: String, gitProjectId: String): Boolean {
         var page = 1
         var dataSize: Int
         do {
@@ -362,7 +362,7 @@ class GitService @Autowired constructor(
                 }
                 dataSize = ownerList.size
                 ownerList.forEach {
-                    if (userId == it.userName && it.accessLevel!! >= 15)
+                    if (userId == it.userName && it.accessLevel!! >= 35)
                         return true
                 }
                 page++
@@ -371,6 +371,31 @@ class GitService @Autowired constructor(
                 return false
             }
         } while (dataSize >= 100)
+
+        return false
+    }*/
+
+    fun checkUserGitAuth(userId: String, gitProjectId: String): Boolean {
+        try {
+            val token = getToken(gitProjectId)
+            val url = "$gitCIOauthUrl/api/v3/groups/$gitProjectId/members/all/$userId?access_token=${token.accessToken}"
+
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use { response ->
+                val body = response.body()!!.string()
+                logger.info("[$userId]|[$gitProjectId]| Get gongfeng project member response body: $body")
+                val ownerInfo = JsonUtil.to(body, OwnerInfo::class.java)
+                if (ownerInfo != null && ownerInfo.accessLevel!! >= 30) {
+                    return true
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("get gongfeng project member fail! griupId: $gitProjectId", e)
+            return false
+        }
 
         return false
     }

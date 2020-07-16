@@ -130,6 +130,7 @@ class CurrentBuildService @Autowired constructor(
 
     fun downloadUrl(
         userId: String,
+        gitGroupId: Long,
         gitProjectId: Long,
         artifactoryType: ArtifactoryType,
         path: String
@@ -151,7 +152,8 @@ class CurrentBuildService @Autowired constructor(
                 artifactoryType,
                 userId,
                 path,
-                ChannelCode.GIT
+                10,
+                true
             ).data!!
         } catch (e: Exception) {
             logger.error("Artifactory download url failed. ${e.message}")

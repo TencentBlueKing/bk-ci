@@ -75,13 +75,15 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         artifactoryType: ArtifactoryType,
         userId: String,
         path: String,
-        channelCode: ChannelCode?
+        ttl: Int,
+        directed: Boolean?
     ): Result<Url> {
         checkParam(projectId, path)
+        val isDirected = directed ?: false
         return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path))
+            Result(bkRepoDownloadService.serviceGetInnerDownloadUrl(userId, projectId, artifactoryType, path, ttl, isDirected))
         } else {
-            Result(artifactoryDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path, channelCode))
+            Result(artifactoryDownloadService.serviceGetInnerDownloadUrl(userId, projectId, artifactoryType, path, ttl, isDirected))
         }
     }
 
