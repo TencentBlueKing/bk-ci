@@ -281,13 +281,13 @@
                 this.searchImage(this.searchKey)
             },
 
-            searchImage (imageNamePart) {
+            searchImage (keyword) {
                 this.isLoading = true
                 const params = this.$route.params || {}
                 const projectCode = params.projectId
                 const tab = this.tabList.find((item) => (item.classifyCode === this.currentTab))
                 const postData = Object.assign({
-                    imageNamePart,
+                    keyword,
                     projectCode,
                     agentType: this.buildResourceType
                 }, tab)
