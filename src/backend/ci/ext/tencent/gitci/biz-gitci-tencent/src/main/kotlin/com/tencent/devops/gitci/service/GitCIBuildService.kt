@@ -74,7 +74,7 @@ import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.pojo.CI_STATUS
-import com.tencent.devops.gitci.pojo.CI_BUILD_WEB_URL
+import com.tencent.devops.gitci.pojo.CI_REPOSITORY_URL
 import com.tencent.devops.gitci.pojo.CI_REPOSITORY_NAME
 import com.tencent.devops.gitci.pojo.CI_BUILD_USER
 import com.tencent.devops.gitci.pojo.CI_COMMIT_ID
