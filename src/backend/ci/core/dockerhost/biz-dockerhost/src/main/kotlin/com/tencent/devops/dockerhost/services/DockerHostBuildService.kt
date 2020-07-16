@@ -76,6 +76,7 @@ import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.TimeZone
+import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 
 @Component
@@ -600,10 +601,15 @@ class DockerHostBuildService(
         return logs
     }
 
-    fun getDockerRunExitCode(containerId: String): Int {
-        return dockerCli.waitContainerCmd(containerId)
-            .exec(WaitContainerResultCallback())
-            .awaitStatusCode()
+    fun getDockerRunExitCode(containerId: String): Int? {
+        return try {
+            dockerCli.waitContainerCmd(containerId)
+                .exec(WaitContainerResultCallback())
+                .awaitStatusCode(10, TimeUnit.SECONDS)
+        } catch (e: Exception) {
+            logger.error("[$containerId]| getDockerRunExitCode error.", e)
+            null
+        }
     }
 
     fun clearContainers() {
