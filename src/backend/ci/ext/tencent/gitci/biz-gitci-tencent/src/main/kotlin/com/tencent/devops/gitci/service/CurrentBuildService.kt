@@ -130,7 +130,6 @@ class CurrentBuildService @Autowired constructor(
 
     fun downloadUrl(
         userId: String,
-        gitGroupId: Long,
         gitProjectId: Long,
         artifactoryType: ArtifactoryType,
         path: String
