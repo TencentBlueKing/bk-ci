@@ -34,7 +34,6 @@ import com.tencent.devops.dockerhost.pojo.DockerLogsResponse
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.pojo.DockerRunResponse
 import com.tencent.devops.dockerhost.pojo.Status
-import com.tencent.devops.dockerhost.resources.ServiceDockerHostResourceImpl
 import com.tencent.devops.dockerhost.utils.SigarUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import org.slf4j.LoggerFactory
