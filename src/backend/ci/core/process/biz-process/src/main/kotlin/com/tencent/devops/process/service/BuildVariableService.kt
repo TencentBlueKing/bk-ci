@@ -71,6 +71,18 @@ class BuildVariableService @Autowired constructor(
             name = realVarName,
             value = varValue
         )
+        val moveVarDataBakSwitch = redisOperation.get("moveVarDataBakSwitch")
+        // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+        if (moveVarDataBakSwitch == "true") {
+            pipelineBuildVarDao.saveBakVar(
+                dslContext = commonDslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                name = realVarName,
+                value = varValue
+            )
+        }
     }
 
     fun batchSetVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) =
@@ -82,6 +94,15 @@ class BuildVariableService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
+        val moveVarDataBakSwitch = redisOperation.get("moveVarDataBakSwitch")
+        // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+        if (moveVarDataBakSwitch == "true") {
+            pipelineBuildVarDao.deletePipelineBuildBakVar(
+                dslContext = commonDslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+        }
     }
 
     // 保存方法需要提供事务保护的实现，传入特定dslContext
@@ -97,6 +118,7 @@ class BuildVariableService @Autowired constructor(
         try {
             redisLock.lock()
             val varMap = pipelineBuildVarDao.getVars(dslContext, buildId, name)
+            val moveVarDataBakSwitch = redisOperation.get("moveVarDataBakSwitch")
             if (varMap.isEmpty()) {
                 pipelineBuildVarDao.save(
                     dslContext = dslContext,
@@ -106,6 +128,16 @@ class BuildVariableService @Autowired constructor(
                     name = name,
                     value = value
                 )
+                if (moveVarDataBakSwitch == "true") {
+                    pipelineBuildVarDao.saveBakVar(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        name = name,
+                        value = value
+                    )
+                }
             } else {
                 pipelineBuildVarDao.update(
                     dslContext = dslContext,
@@ -113,6 +145,14 @@ class BuildVariableService @Autowired constructor(
                     name = name,
                     value = value
                 )
+                if (moveVarDataBakSwitch == "true") {
+                    pipelineBuildVarDao.updateBakVar(
+                        dslContext = dslContext,
+                        buildId = buildId,
+                        name = name,
+                        value = value
+                    )
+                }
             }
         } finally {
             redisLock.unlock()
@@ -139,6 +179,7 @@ class BuildVariableService @Autowired constructor(
                     updateBuildParameters.add(it)
                 }
             }
+            val moveVarDataBakSwitch = redisOperation.get("moveVarDataBakSwitch")
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 pipelineBuildVarDao.batchSave(
@@ -148,11 +189,27 @@ class BuildVariableService @Autowired constructor(
                     buildId = buildId,
                     variables = insertBuildParameters
                 )
+                if (moveVarDataBakSwitch == "true") {
+                    pipelineBuildVarDao.batchSaveBakVar(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        variables = pipelineBuildParameters
+                    )
+                }
                 pipelineBuildVarDao.batchUpdate(
                     dslContext = context,
                     buildId = buildId,
                     variables = updateBuildParameters
                 )
+                if (moveVarDataBakSwitch == "true") {
+                    pipelineBuildVarDao.batchUpdateBakVar(
+                        dslContext = context,
+                        buildId = buildId,
+                        variables = updateBuildParameters
+                    )
+                }
             }
         } finally {
             redisLock.unlock()
