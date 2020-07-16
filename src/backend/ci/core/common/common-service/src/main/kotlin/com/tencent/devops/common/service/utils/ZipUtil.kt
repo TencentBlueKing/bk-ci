@@ -27,15 +27,13 @@
 package com.tencent.devops.common.service.utils
 
 import org.slf4j.LoggerFactory
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
+import java.io.*
 import java.nio.charset.Charset
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 import javax.ws.rs.NotFoundException
+
 
 object ZipUtil {
 
@@ -70,6 +68,61 @@ object ZipUtil {
             logger.error("unzip error!", e)
         } finally {
             closeUnzipFileStream(fos, inputStream, zipFile)
+        }
+    }
+
+    fun zipAll(srcDir: File, zipFile: File) {
+        ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { it ->
+            it.use {
+                zipFiles(it, srcDir, "")
+            }
+        }
+    }
+
+    @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+    private fun zipFiles(zipOut: ZipOutputStream, sourceFile: File, parentDirPath: String) {
+
+        val data = ByteArray(2048)
+
+        for (f in sourceFile.listFiles()) {
+
+            if (f.isDirectory) {
+                val entry = ZipEntry(f.name + File.separator)
+                entry.time = f.lastModified()
+                entry.isDirectory
+                entry.size = f.length()
+
+                logger.info("zip", "Adding Directory: " + f.name)
+                zipOut.putNextEntry(entry)
+
+                //Call recursively to add files within this directory
+                zipFiles(zipOut, f, f.name)
+            } else {
+
+                if (!f.name.contains(".zip")) { //If folder contains a file with extension ".zip", skip it
+                    FileInputStream(f).use { fi ->
+                        BufferedInputStream(fi).use { origin ->
+                            val path = parentDirPath + File.separator + f.name
+                            logger.info("zip", "Adding file: $path")
+                            val entry = ZipEntry(path)
+                            entry.time = f.lastModified()
+                            entry.isDirectory
+                            entry.size = f.length()
+                            zipOut.putNextEntry(entry)
+                            while (true) {
+                                val readBytes = origin.read(data)
+                                if (readBytes == -1) {
+                                    break
+                                }
+                                zipOut.write(data, 0, readBytes)
+                            }
+                        }
+                    }
+                } else {
+                    zipOut.closeEntry()
+                    zipOut.close()
+                }
+            }
         }
     }
 

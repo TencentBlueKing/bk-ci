@@ -49,14 +49,13 @@ import javax.ws.rs.HeaderParam
 
 @RestResource
 class UserIpaResourceImpl @Autowired constructor(
-        private val signService: SignService
+    private val signService: SignService
 ) : UserIpaResource {
 
-
     override fun ipaSign(
-            userId: String,
-            ipaSignInfoHeader: String,
-            ipaInputStream: InputStream
+        userId: String,
+        ipaSignInfoHeader: String,
+        ipaInputStream: InputStream
     ): Result<String?> {
         return Result(signService.signIpaAndArchive(userId, ipaSignInfoHeader, ipaInputStream))
     }
@@ -66,7 +65,7 @@ class UserIpaResourceImpl @Autowired constructor(
     }
 
     override fun test(
-            ipaSignInfo: IpaSignInfo
+        ipaSignInfo: IpaSignInfo
     ) {
 
     }

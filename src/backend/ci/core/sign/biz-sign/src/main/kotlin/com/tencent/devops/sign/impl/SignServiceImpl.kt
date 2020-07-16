@@ -147,8 +147,14 @@ class SignServiceImpl @Autowired constructor(
         ZipUtil.unZipFile(ipaFile, unzipIpaDir.canonicalPath, true)
     }
 
-    override fun zipIpaFile(ipaFile: File): File? {
-        TODO("Not yet implemented")
+    override fun zipIpaFile(payloadDir: File, ipaPath: String): File? {
+        val result = File(ipaPath)
+        if (!result.parentFile.exists()) result.parentFile.mkdirs()
+        if (result.exists()) result.delete()
+        val cmd = "zip -r $ipaPath ${payloadDir.absolutePath}"
+        logger.info("[zip to ipa] $cmd")
+        logger.info(CommandLineUtils.execute(cmd, null, true))
+        return if (File(ipaPath).exists()) File(ipaPath) else null
     }
 
 

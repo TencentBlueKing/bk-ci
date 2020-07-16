@@ -7,8 +7,8 @@ import java.io.File
 interface MobileProvisionService {
 
     fun downloadMobileProvision(
-            mobileProvisionDir: File,
-            projectId: String,
-            mobileProvisionId: String
+        mobileProvisionDir: File,
+        projectId: String,
+        mobileProvisionId: String
     ): File
 }

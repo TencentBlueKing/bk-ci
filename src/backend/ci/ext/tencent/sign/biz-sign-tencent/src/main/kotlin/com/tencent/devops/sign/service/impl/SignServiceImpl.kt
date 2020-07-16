@@ -92,15 +92,11 @@ class SignServiceImpl : SignService {
         TODO("Not yet implemented")
     }
 
-    override fun resignIpaPackage(ipaPackage: File, ipaSignInfo: IpaSignInfo, MobileProvisionInfoList: Map<String, MobileProvisionInfo>?): File {
-        TODO("Not yet implemented")
-    }
-
-    override fun unzipIpa(ipaFile: File, unzipIpaDir: File) {
-        TODO("Not yet implemented")
-    }
-
-    override fun zipIpaFile(ipaFile: File): File? {
+    override fun resignIpaPackage(
+        ipaPackage: File,
+        ipaSignInfo: IpaSignInfo,
+        mobileProvisionInfoList: Map<String, MobileProvisionInfo>?
+    ): File {
         TODO("Not yet implemented")
     }
 

@@ -111,6 +111,16 @@ object SignUtils {
         }
     }
 
+    fun zipIpaFile(payloadDir: File, ipaPath: String): File? {
+        val result = File(ipaPath)
+        if (!result.parentFile.exists()) result.parentFile.mkdirs()
+        if (result.exists()) result.delete()
+        val cmd = "/usr/bin/zip -r $ipaPath *"
+        logger.info("[zip to ipa] $cmd")
+        CommandLineUtils.execute(cmd, payloadDir.parentFile, true)
+        return if (File(ipaPath).exists()) File(ipaPath) else null
+    }
+
     /**
      *  对单个文件的基本重签操作
      *
@@ -177,21 +187,20 @@ object SignUtils {
     }
 
     private fun replaceInfoBundleId(bundleId: String, infoPlistPath: String) {
-        val replaceCmd = "plutil -replace CFBundleIdentifier -string $bundleId $infoPlistPath"
-        logger.info("[replaceCFBundleId] $replaceCmd")
-        CommandLineUtils.execute(replaceCmd, null, true)
+        val cmd = "plutil -replace CFBundleIdentifier -string $bundleId $infoPlistPath"
+        logger.info("[replaceCFBundleId] $cmd")
+        CommandLineUtils.execute(cmd, null, true)
     }
 
     private fun codesignFile(cerName: String, signFilename: String) {
-        val replaceCmd = "/usr/bin/codesign -f -s '$cerName' '$signFilename'"
-        logger.info("[codesignFile] $replaceCmd")
-        CommandLineUtils.execute(replaceCmd, null, true)
+        val cmd = "/usr/bin/codesign -f -s '$cerName' '$signFilename'"
+        logger.info("[codesignFile] $cmd")
+        CommandLineUtils.execute(cmd, null, true)
     }
 
     private fun codesignFileByEntitlement(cerName: String, signFilename: String, entitlementsPath: String) {
-        val replaceCmd = "/usr/bin/codesign -f -s '$cerName' --entitlements '$entitlementsPath' '$signFilename'"
-        logger.info("[codesignFile entitlements] $replaceCmd")
-        CommandLineUtils.execute(replaceCmd, null, true)
+        val cmd = "/usr/bin/codesign -f -s '$cerName' --entitlements '$entitlementsPath' '$signFilename'"
+        logger.info("[codesignFile entitlements] $cmd")
+        CommandLineUtils.execute(cmd, null, true)
     }
-
 }

@@ -24,14 +24,4 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:sign:biz-sign")
-    compile project(":ext:tencent:sign:api-sign-tencent")
-    compile project(":ext:tencent:sign:model-sign-tencent")
-    compile project(":core:common:common-db")
-    compile "mysql:mysql-connector-java"
-    compile "org.json:json"
-    compile 'io.jsonwebtoken:jjwt:0.9.1'
-}
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+apply from: "$rootDir/task_gen_jooq.gradle"
