@@ -27,11 +27,15 @@
 dependencies {
     compile project(":core:sign:biz-sign")
     compile project(":ext:tencent:sign:api-sign-tencent")
+    compile project(":ext:tencent:sign:model-sign")
     compile project(":ext:tencent:sign:model-sign-tencent")
     compile project(":core:common:common-db")
     compile "mysql:mysql-connector-java"
     compile "org.json:json"
     compile 'io.jsonwebtoken:jjwt:0.9.1'
+    compile 'io.jsonwebtoken:jjwt-api:0.10.5'
+    compile 'io.jsonwebtoken:jjwt-impl:0.10.5'
+    compile 'io.jsonwebtoken:jjwt-jackson:0.10.5'
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

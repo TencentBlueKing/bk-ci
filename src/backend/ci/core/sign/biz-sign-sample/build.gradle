@@ -27,10 +27,6 @@
 dependencies {
     compile project(":core:sign:biz-sign")
     compile project(":core:ticket:api-ticket")
-//    compile 'io.jsonwebtoken:jjwt:0.9.1'
-    compile 'io.jsonwebtoken:jjwt-api:0.10.5'
-    compile 'io.jsonwebtoken:jjwt-impl:0.10.5'
-    compile 'io.jsonwebtoken:jjwt-jackson:0.10.5'
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

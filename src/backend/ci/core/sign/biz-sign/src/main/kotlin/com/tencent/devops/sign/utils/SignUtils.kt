@@ -1,6 +1,7 @@
 package com.tencent.devops.sign.utils
 
 import com.tencent.devops.common.api.util.script.CommandLineUtils
+import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -109,6 +110,10 @@ object SignUtils {
         } catch (e: Exception) {
             logger.error("Resign app <$appName> directory with exception: $e")
         }
+    }
+
+    fun unzipIpa(ipaFile: File, unzipIpaDir: File) {
+        ZipUtil.unZipFile(ipaFile, unzipIpaDir.canonicalPath, true)
     }
 
     fun zipIpaFile(payloadDir: File, ipaPath: String): File? {

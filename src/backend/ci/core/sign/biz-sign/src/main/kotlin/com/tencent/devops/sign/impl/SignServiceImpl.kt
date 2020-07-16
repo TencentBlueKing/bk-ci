@@ -70,7 +70,7 @@ class SignServiceImpl @Autowired constructor(
         FileUtil.mkdirs(mobileProvisionDir)
 
         // 解压ipa包
-        unzipIpa(ipaFile, ipaUnzipDir)
+        SignUtils.unzipIpa(ipaFile, ipaUnzipDir)
         // 下载并返回描述文件信息
         val mobileProvisionInfoMap = downloadMobileProvision(mobileProvisionDir, ipaSignInfo)
 
@@ -142,21 +142,6 @@ class SignServiceImpl @Autowired constructor(
         }
         return ipaPackage
     }
-
-    override fun unzipIpa(ipaFile: File, unzipIpaDir: File) {
-        ZipUtil.unZipFile(ipaFile, unzipIpaDir.canonicalPath, true)
-    }
-
-    override fun zipIpaFile(payloadDir: File, ipaPath: String): File? {
-        val result = File(ipaPath)
-        if (!result.parentFile.exists()) result.parentFile.mkdirs()
-        if (result.exists()) result.delete()
-        val cmd = "zip -r $ipaPath ${payloadDir.absolutePath}"
-        logger.info("[zip to ipa] $cmd")
-        logger.info(CommandLineUtils.execute(cmd, null, true))
-        return if (File(ipaPath).exists()) File(ipaPath) else null
-    }
-
 
     override fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): Map<String, MobileProvisionInfo> {
         val mobileProvisionMap = mutableMapOf<String, MobileProvisionInfo>()
