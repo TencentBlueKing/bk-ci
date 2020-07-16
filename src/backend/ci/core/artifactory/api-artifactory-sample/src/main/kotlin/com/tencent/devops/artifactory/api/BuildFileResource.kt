@@ -26,9 +26,7 @@
 
 package com.tencent.devops.artifactory.api
 
-import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
@@ -140,7 +138,7 @@ interface BuildFileResource {
         customFilePath: String?
     ): Result<GetFileDownloadUrlsResponse?>
 
-    @ApiOperation("跨项目拷贝文件")
+/*    @ApiOperation("跨项目拷贝文件")
     @Path("/artifactoryType/{artifactoryType}/acrossProjectCopy")
     @GET
     fun acrossProjectCopy(
@@ -159,5 +157,5 @@ interface BuildFileResource {
         @ApiParam("目标路径", required = true)
         @QueryParam("targetPath")
         targetPath: String
-    ): Result<Count>
+    ): Result<Count>*/
 }
