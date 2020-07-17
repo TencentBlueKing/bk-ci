@@ -110,7 +110,6 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
         request: HttpServletRequest
     ): Result<DockerLogsResponse> {
         checkReq(request)
-        logger.info("[$buildId]|Enter ServiceDockerHostResourceImpl.dockerRun...")
         return Result(
             dockerService.getDockerRunLogs(
                 projectId,
