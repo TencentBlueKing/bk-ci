@@ -106,7 +106,7 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
         buildId: String,
         dockerRunParam: DockerRunParam
     ): DockerRunResponse {
-        logger.info("projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, dockerRunParam: $dockerRunParam")
+        logger.info("Start dockerRun projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, dockerRunParam: $dockerRunParam.")
 
         val (containerId, timeStamp) = dockerHostBuildService.dockerRun(
             projectId = projectId,
@@ -115,6 +115,7 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
             buildId = buildId,
             dockerRunParam = dockerRunParam
         )
+        logger.info("End dockerRun projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, dockerRunParam: $dockerRunParam")
         return DockerRunResponse(containerId, timeStamp)
     }
 
@@ -132,6 +133,7 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
         logStartTimeStamp: Int,
         printLog: Boolean? = true
     ): DockerLogsResponse {
+        logger.info("[$buildId]|[$vmSeqId]|[$containerId]|[$logStartTimeStamp] Enter DockerService.getDockerRunLogs...")
         val isRunning = dockerHostBuildService.isContainerRunning(containerId)
         val exitCode = when {
             !isRunning -> dockerHostBuildService.getDockerRunExitCode(containerId)
@@ -143,6 +145,7 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
             dockerHostBuildService.getDockerLogs(containerId, logStartTimeStamp)
         }
 
+        logger.info("[$buildId]|[$vmSeqId]|[$containerId] Finish DockerService.getDockerRunLogs...")
         return DockerLogsResponse(isRunning, exitCode, logs)
     }
 
