@@ -130,6 +130,7 @@ class CurrentBuildService @Autowired constructor(
 
     fun downloadUrl(
         userId: String,
+        gitUserId: String,
         gitProjectId: Long,
         artifactoryType: ArtifactoryType,
         path: String
@@ -140,7 +141,7 @@ class CurrentBuildService @Autowired constructor(
         )
 
         // 校验工蜂项目权限
-        val checkAuth = client.getScm(ServiceGitCiResource::class).checkUserGitAuth(userId, gitProjectId.toString())
+        val checkAuth = client.getScm(ServiceGitCiResource::class).checkUserGitAuth(gitUserId, gitProjectId.toString())
         if (!checkAuth.data!!) {
             throw CustomException(Response.Status.FORBIDDEN, "用户没有工蜂项目权限，无法获取下载链接")
         }
