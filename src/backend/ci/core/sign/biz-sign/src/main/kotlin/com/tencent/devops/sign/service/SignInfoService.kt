@@ -8,7 +8,7 @@ interface SignInfoService {
     /*
     * 检查IpaSignInfo信息，并补齐默认值，如果返回null则表示IpaSignInfo的值不合法
     * */
-    fun check(
-            ipaSignInfo: IpaSignInfo
-    ): IpaSignInfo?
+    fun check(info: IpaSignInfo): IpaSignInfo?
+
+    fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo?)
 }

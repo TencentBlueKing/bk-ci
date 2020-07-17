@@ -12,4 +12,9 @@ interface FileService {
             ipaInputStream: InputStream,
             ipaSignInfo: IpaSignInfo
     ): File
+
+    fun zipDirToFile(
+        srcDir: File,
+        destFile: String
+    ): File
 }

@@ -39,8 +39,8 @@ class SignIpaInfoDao {
     fun saveSignInfo(
         dslContext: DSLContext,
         resignId: String,
-        info: IpaSignInfo?,
-        ipaSignInfoHeader: String? = null
+        ipaSignInfoHeader: String,
+        info: IpaSignInfo?
     ) {
         with(TSignIpaInfo.T_SIGN_IPA_INFO) {
             dslContext.insertInto(this,
@@ -78,7 +78,7 @@ class SignIpaInfoDao {
                 info?.fileSize,
                 info?.md5,
                 info?.userId,
-                JsonUtil.toJson(info ?: "")
+                ipaSignInfoHeader
             ).execute()
         }
     }
