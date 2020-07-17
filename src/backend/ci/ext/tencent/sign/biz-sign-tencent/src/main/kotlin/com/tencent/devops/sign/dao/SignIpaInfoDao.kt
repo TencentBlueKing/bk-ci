@@ -37,9 +37,10 @@ import org.springframework.stereotype.Repository
 class SignIpaInfoDao {
 
     fun saveSignInfo(
-        resignId: String,
         dslContext: DSLContext,
-        info: IpaSignInfo
+        resignId: String,
+        info: IpaSignInfo?,
+        ipaSignInfoHeader: String? = null
     ) {
         with(TSignIpaInfo.T_SIGN_IPA_INFO) {
             dslContext.insertInto(this,
@@ -51,7 +52,8 @@ class SignIpaInfoDao {
                 BUILD_ID,
                 ARCHIVE_PATH,
                 MOBILE_PROVISION_ID,
-                UNIVERSAL_LINK,
+                UNIVERSAL_LINKS,
+                APPLICATION_GROUPS,
                 REPLACE_BUNDLE,
                 APPEX_SIGN_INFO,
                 FILENAME,
@@ -61,21 +63,22 @@ class SignIpaInfoDao {
                 REQUEST_CONTENT
             ).values(
                 resignId,
-                info.certId,
-                info.archiveType,
-                info.projectId,
-                info.pipelineId,
-                info.buildId,
-                info.path,
-                info.mobileProvisionId,
-                if (info.ul != null) JsonUtil.toJson(info.ul!!) else null,
-                info.repalceBundleId,
-                if (info.appexSignInfo != null) JsonUtil.toJson(info.appexSignInfo!!) else null,
-                info.fileName,
-                info.fileSize,
-                info.md5,
-                info.userId,
-                JsonUtil.toJson(info)
+                info?.certId,
+                info?.archiveType,
+                info?.projectId,
+                info?.pipelineId,
+                info?.buildId,
+                info?.archivePath,
+                info?.mobileProvisionId,
+                if (info?.universalLinks != null) JsonUtil.toJson(info.universalLinks!!) else null,
+                if (info?.applicationGroups != null) JsonUtil.toJson(info.applicationGroups!!) else null,
+                info?.repalceBundleId,
+                if (info?.appexSignInfo != null) JsonUtil.toJson(info.appexSignInfo!!) else null,
+                info?.fileName,
+                info?.fileSize,
+                info?.md5,
+                info?.userId,
+                JsonUtil.toJson(info ?: "")
             ).execute()
         }
     }
@@ -97,9 +100,14 @@ class SignIpaInfoDao {
                     projectId = record.projectId,
                     pipelineId = record.pipelineId,
                     buildId = record.buildId,
-                    path = record.archivePath,
+                    archivePath = record.archivePath,
                     mobileProvisionId = record.mobileProvisionId,
-                    ul = if (record.universalLink != null) JsonUtil.getObjectMapper().readValue(record.universalLink!!, listOf<String>()::class.java) else null,
+                    universalLinks = if (record.universalLinks != null) {
+                        JsonUtil.getObjectMapper().readValue(record.universalLinks!!, listOf<String>()::class.java)
+                    } else null,
+                    applicationGroups = if (record.applicationGroups != null) {
+                        JsonUtil.getObjectMapper().readValue(record.applicationGroups!!, listOf<String>()::class.java)
+                    } else null,
                     repalceBundleId = record.replaceBundle,
                     appexSignInfo = if (record.appexSignInfo != null) JsonUtil.getObjectMapper().readValue(record.appexSignInfo!!, listOf<AppexSignInfo>()::class.java) else null,
                     fileName = record.filename,

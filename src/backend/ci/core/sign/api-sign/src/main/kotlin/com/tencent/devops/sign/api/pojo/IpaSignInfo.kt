@@ -16,11 +16,13 @@ data class IpaSignInfo(
     @ApiModelProperty("构建Id", required = false)
     var buildId: String? = null,
     @ApiModelProperty("归档路径", required = false)
-    var path: String? = "/",
+    var archivePath: String? = "/",
     @ApiModelProperty("主App描述文件ID", required = false)
     var mobileProvisionId: String? = null,
     @ApiModelProperty("Universal Link的设置", required = false)
-    var ul: List<String>? = null,
+    var universalLinks: List<String>? = null,
+    @ApiModelProperty("应用安全组", required = false)
+    var applicationGroups: List<String>? = null,
     @ApiModelProperty("是否替换bundleId", required = false)
     var repalceBundleId: Boolean? = false,
     @ApiModelProperty("拓展应用名和对应的描述文件ID", required = false)

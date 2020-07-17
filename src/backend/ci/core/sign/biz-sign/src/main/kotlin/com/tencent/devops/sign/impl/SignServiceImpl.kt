@@ -33,6 +33,7 @@ class SignServiceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val mobileProvisionService: MobileProvisionService
 ) : SignService {
+
     @Value("\${bkci.sign.tmpDir:/data/enterprise_sign_tmp/}")
     private val tmpDir = "/data/enterprise_sign_tmp/"
 
@@ -90,59 +91,6 @@ class SignServiceImpl @Autowired constructor(
         return fileDownloadUrl
     }
 
-    @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-    override fun resignIpaPackage(
-        ipaPackage: File,
-        ipaSignInfo: IpaSignInfo,
-        mobileProvisionInfoList: Map<String, MobileProvisionInfo>?
-    ): File {
-        val payloadDir = File(ipaPackage.absolutePath + File.separator + "Payload")
-        val appDirs = payloadDir.listFiles { dir, name ->
-            dir.extension == "app" || name.endsWith("app")
-        }.toList()
-        if (appDirs.isEmpty()) throw ErrorCodeException(
-            errorCode = SignMessageCode.ERROR_SIGN_IPA_ILLEGAL,
-            defaultMessage = "IPA包解析失败"
-        )
-        val appDir = appDirs.first()
-
-        // 通配符方式签名
-        if (mobileProvisionInfoList == null) {
-            SignUtils.resignAppWildcard(
-                appDir = appDir,
-                certId = ipaSignInfo.certId ?: DEFAULT_CER_ID,
-                wildcardInfo = MobileProvisionInfo(
-                    mobileProvisionFile = File(""),
-                    plistFile = File(""),
-                    entitlementFile = File(""),
-                    bundleId = ""
-                )
-            )
-        } else {
-            // 检查是否将包内所有app/appex对应的签名信息传入
-            val allAppsInPackage = mutableListOf<File>()
-            SignUtils.getAllAppsInDir(appDir, allAppsInPackage)
-            allAppsInPackage.forEach { app ->
-                if (!mobileProvisionInfoList.keys.contains(app.nameWithoutExtension)) {
-                    logger.error("Not found appex <${app.name}> MobileProvisionInfo")
-                    throw ErrorCodeException(
-                        errorCode = SignMessageCode.ERROR_SIGN_INFO_ILLEGAL,
-                        defaultMessage = "缺少${app.name}签名信息，请检查参数"
-                    )
-                }
-            }
-
-            logger.info("Start to resign ${appDir.name} with $mobileProvisionInfoList")
-            SignUtils.resignApp(
-                appDir = appDir,
-                certId = ipaSignInfo.certId ?: DEFAULT_CER_ID,
-                infos = mobileProvisionInfoList,
-                appName = MAIN_APP_FILENAME
-            )
-        }
-        return ipaPackage
-    }
-
     override fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): Map<String, MobileProvisionInfo> {
         val mobileProvisionMap = mutableMapOf<String, MobileProvisionInfo>()
         if (ipaSignInfo.mobileProvisionId != null) {
@@ -162,37 +110,6 @@ class SignServiceImpl @Autowired constructor(
             mobileProvisionMap[it.appexName] = parseMobileProvision(mpFile)
         }
         return mobileProvisionMap
-    }
-
-    override fun parseMobileProvision(mobileProvisionFile: File): MobileProvisionInfo {
-        val plistFile = File("${mobileProvisionFile.canonicalPath}.plist")
-        val entitlementFile = File("${mobileProvisionFile.canonicalPath}.entitlement.plist")
-        // 描述文件转为plist文件
-        val mpToPlistCommand = "/usr/bin/security cms -D -i ${mobileProvisionFile.canonicalPath}"
-        val plistResult = CommandLineUtils.execute(mpToPlistCommand, mobileProvisionFile.parentFile, true)
-        // 将plist写入到文件
-        plistFile.writeText(plistResult)
-        // 从plist文件抽离出entitlement文件
-        val plistToEntitlementCommand = "/usr/libexec/PlistBuddy -x -c 'Print:Entitlements' ${plistFile.canonicalPath}"
-        // 将entitlment写入到文件
-        val entitlementResult = CommandLineUtils.execute(plistToEntitlementCommand, mobileProvisionFile.parentFile, true)
-        entitlementFile.writeText(entitlementResult)
-
-        // 解析bundleId
-        val rootDict = PropertyListParser.parse(plistFile) as NSDictionary
-        // entitlement
-        if (!rootDict.containsKey("Entitlements")) throw RuntimeException("no Entitlements find in plist")
-        val entitlementDict = rootDict.objectForKey("Entitlements") as NSDictionary
-        // application-identifier
-        if (!entitlementDict.containsKey("application-identifier")) throw RuntimeException("no Entitlements.application-identifier find in plist")
-        val bundleIdString = (entitlementDict.objectForKey("application-identifier") as NSString).toString()
-        val bundleId = bundleIdString.substring(bundleIdString.indexOf(".") + 1)
-        return MobileProvisionInfo(
-            mobileProvisionFile = mobileProvisionFile,
-            plistFile = plistFile,
-            entitlementFile = entitlementFile,
-            bundleId = bundleId
-        )
     }
 
     companion object {

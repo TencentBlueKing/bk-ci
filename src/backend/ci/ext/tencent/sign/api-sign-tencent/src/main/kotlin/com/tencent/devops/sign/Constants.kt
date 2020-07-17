@@ -24,11 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.sign;
+package com.tencent.devops.sign
 
-
-public class Constants {
-    public static final String KEYSTORE_HTTP_HEADER_AUTH = "Authorization";
-    public static final String KEYSTORE_HTTP_HEADER_IP = "X-Client-LocalIp";
-    public static final String KEYSTORE_CATEGORY_PROVISION = "SignProvision";
+object Constants {
+    const val  KEYSTORE_HTTP_HEADER_AUTH = "Authorization"
+    const val  KEYSTORE_HTTP_HEADER_IP = "X-Client-LocalIp"
+    const val  KEYSTORE_CATEGORY_PROVISION = "SignProvision"
 }

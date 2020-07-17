@@ -4,6 +4,11 @@ spring:
     desc: DevOps Sign Service
     version: 4.0.0
     packageName: com.tencent.devops.sign
+  datasource:
+    url: jdbc:mysql://10.125.48.80:3306/devops_sign?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: tig4php
+    password: tig4php
+
 
 server:
   port: 21950
@@ -11,3 +16,10 @@ server:
 bkci:
   sign:
     tmpDir: "/data/enterprise_sign_tmp/"
+
+keystore:
+  url: "https://proxy.test.keystore.oa.com"
+  certListUrl: "/api/auth/getCertList?appId=%s"
+  certUrl: "/api/auth/getCert?id=%s&category=%s"
+  authId: "devops"
+  authSecret: "a21c218df41f6d7fd032535fe20394e2"
