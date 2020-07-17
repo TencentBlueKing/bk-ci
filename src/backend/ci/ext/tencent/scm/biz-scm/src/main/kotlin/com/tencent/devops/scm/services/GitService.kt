@@ -26,7 +26,6 @@
 
 package com.tencent.devops.scm.services
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
