@@ -1,11 +1,14 @@
 package com.tencent.devops.sign.utils
 
+import com.dd.plist.NSDictionary
+import com.dd.plist.PropertyListParser
 import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.lang.Exception
+import java.lang.StringBuilder
 
 
 object SignUtils {
@@ -77,7 +80,9 @@ object SignUtils {
         appDir: File,
         certId: String,
         infos: Map<String, MobileProvisionInfo>,
-        appName: String
+        appName: String,
+        applicationGroups: List<String>? = null,
+        universalLinks: List<String>? = null
     ) {
         val mainInfo = infos[appName]
         if (mainInfo == null) {
@@ -86,6 +91,10 @@ object SignUtils {
         }
         try {
             if (appDir.isDirectory && appDir.extension.contains("app")) {
+                // 先将entitlements文件中补充所有ul和group
+                if (universalLinks != null) addUniversalLink(universalLinks, mainInfo.entitlementFile)
+                if (applicationGroups != null) addApplicationGroups(applicationGroups, mainInfo.entitlementFile)
+
                 // 用主描述文件对外层app进行重签
                 overwriteInfo(appDir, mainInfo, true)
 
@@ -95,15 +104,15 @@ object SignUtils {
                     needResginDir.listFiles().forEach { subFile ->
                         // 如果是个拓展则递归进入进行重签
                         if (subFile.isDirectory && subFile.extension.contains("app")) {
-                            resignApp(subFile, certId, infos, subFile.nameWithoutExtension)
+                            resignApp(subFile, certId, infos, subFile.nameWithoutExtension, applicationGroups)
                         } else {
-                            // 如果是个其他待签文件则使用住描述文件进行重签
+                            // 如果是个其他待签文件则使用主描述文件进行重签
                             overwriteInfo(subFile, mainInfo, false)
                             codesignFile(certId, subFile.absolutePath)
                         }
                     }
                 }
-                // 替换后进行重签名C
+                // 替换后进行重签名
                 val info = infos[appName] ?: throw Exception("Not found $appName info in MobileProvisionInfos")
                 codesignFileByEntitlement(certId, appDir.absolutePath, info.entitlementFile.absolutePath)
             }
@@ -151,7 +160,7 @@ object SignUtils {
             }
 
             if (infoPlist.exists() && replaceBundle) {
-                replaceInfoBundleId(info.bundleId, infoPlist.absolutePath)
+                replaceInfoBundle(info.bundleId, infoPlist.absolutePath)
             }
         }
         return true
@@ -191,7 +200,7 @@ object SignUtils {
         return needResginFiles
     }
 
-    private fun replaceInfoBundleId(bundleId: String, infoPlistPath: String) {
+    private fun replaceInfoBundle(bundleId: String, infoPlistPath: String) {
         val cmd = "plutil -replace CFBundleIdentifier -string $bundleId $infoPlistPath"
         logger.info("[replaceCFBundleId] $cmd")
         CommandLineUtils.execute(cmd, null, true)
@@ -207,5 +216,59 @@ object SignUtils {
         val cmd = "/usr/bin/codesign -f -s '$cerName' --entitlements '$entitlementsPath' '$signFilename'"
         logger.info("[codesignFile entitlements] $cmd")
         CommandLineUtils.execute(cmd, null, true)
+    }
+
+    private fun addUniversalLink(ul: List<String>, entitlementsFile: File) {
+        // 如果存在com.apple.developer.associated-domains字段则可以添加UL
+        val rootDict = PropertyListParser.parse(entitlementsFile) as NSDictionary
+        if (rootDict.containsKey("com.apple.developer.associated-domains")) {
+
+            // 将com.apple.developer.associated-domains字段变成数组
+            try {
+                val removeCmd = "/usr/bin/plutil -remove \"com\\.apple\\.developer\\.associated-domains\" $entitlementsFile"
+                logger.info("[add UniversalLink in entitlements] $removeCmd")
+                CommandLineUtils.execute(removeCmd, null, true)
+            } catch (e: Exception) {
+                logger.error("entitlement <$entitlementsFile> does not have com.apple.developer.associated-domains")
+            } finally {
+                val sb = StringBuilder()
+                sb.appendln("<array>")
+                ul.forEach {
+                    sb.appendln("<string>applinks:$it</string>")
+                }
+                sb.appendln("</array>")
+
+                val insertCmd = "/usr/bin/plutil -insert \"com\\.apple\\.developer\\.associated-domains\" -xml \"$sb\" $entitlementsFile"
+                logger.info("[add UniversalLink in entitlements] $insertCmd")
+                CommandLineUtils.execute(insertCmd, null, true)
+            }
+        }
+    }
+
+    private fun addApplicationGroups(groups: List<String>, entitlementsFile: File) {
+        // 如果存在com.apple.security.application-groups字段则可以添加UL
+        val rootDict = PropertyListParser.parse(entitlementsFile) as NSDictionary
+        if (rootDict.containsKey("com.apple.security.application-groups")) {
+
+            // 将com.apple.security.application-groups字段变成数组插入
+            try {
+                val removeCmd = "/usr/bin/plutil -remove \"com\\.apple\\.security\\.application-groups\" $entitlementsFile"
+                logger.info("[add UniversalLink in entitlements] $removeCmd")
+                CommandLineUtils.execute(removeCmd, null, true)
+            } catch (e: Exception) {
+                logger.error("entitlement <$entitlementsFile> does not have com.apple.developer.associated-domains")
+            } finally {
+                val sb = StringBuilder()
+                sb.appendln("<array>")
+                groups.forEach {
+                    sb.appendln("<string>$it</string>")
+                }
+                sb.appendln("</array>")
+
+                val insertCmd = "/usr/bin/plutil -insert \"com\\.apple\\.security\\.application-groups\" -xml \"$sb\" $entitlementsFile"
+                logger.info("[add UniversalLink in entitlements] $insertCmd")
+                CommandLineUtils.execute(insertCmd, null, true)
+            }
+        }
     }
 }

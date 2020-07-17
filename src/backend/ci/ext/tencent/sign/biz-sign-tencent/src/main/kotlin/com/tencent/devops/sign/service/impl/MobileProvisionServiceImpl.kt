@@ -61,7 +61,7 @@ class MobileProvisionServiceImpl  @Autowired constructor(
         claims["timeMillis"] = Instant.now().epochSecond
         val key = Keys.hmacShaKeyFor(keyStoreAuthSecret.toByteArray(StandardCharsets.UTF_8))
         token = Jwts.builder().setClaims(claims)
-                .signWith(key, SignatureAlgorithm.HS256).compact()
+                .signWith(SignatureAlgorithm.HS256, key).compact()
     }
 
     /*

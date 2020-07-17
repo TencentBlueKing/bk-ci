@@ -3,7 +3,7 @@ package com.tencent.devops.sign.api.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("项目信息")
+@ApiModel("APPEX拓展信息")
 data class AppexSignInfo(
     @ApiModelProperty("appex拓展应用名", required = true)
     val appexName: String,
