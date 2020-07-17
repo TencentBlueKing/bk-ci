@@ -121,9 +121,20 @@ func DetectWorkerVersion() string {
 		GAgentEnv.SlaveVersion = ""
 		return ""
 	}
-	logs.Info("worker version: ", string(output))
 
-	return strings.TrimSpace(string(output))
+	return parseWorkerVersion(string(output))
+}
+
+func parseWorkerVersion(output string) string{
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if !strings.Contains(line, " ") && !strings.Contains(line,"OPTIONS") {
+			logs.Info("worker version: ", string(output))
+			return line
+		}
+	}
+	return ""
 }
 
 func BuildAgentJarPath() string {
