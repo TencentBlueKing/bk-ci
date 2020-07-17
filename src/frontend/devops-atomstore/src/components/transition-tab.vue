@@ -72,9 +72,9 @@
         margin: 0 auto;
         box-shadow: 1px 2px 3px 0 rgba(0,0,0,0.05);
         .transition-child-tabs {
-            height: 47px;
-            line-height: 47px;
-            padding: 12px 16px;
+            height: 4.7vh;
+            line-height: 4.7vh;
+            padding: 1.2vh 16px;
             background-color: #fff;
             &::after {
                 content: '';
@@ -98,13 +98,13 @@
         }
         /deep/ .bk-tab-header {
             background-color: #fff;
-            height: 64px;
-            line-height: 64px;
-            background-image: linear-gradient(transparent 63px,#dcdee5 0);
+            height: 6.4vh;
+            line-height: 6.4vh;
+            background-image: linear-gradient(transparent 6.3vh,#dcdee5 0);
             .bk-tab-label-wrapper .bk-tab-label-list {
-                height: 64px;
+                height: 6.4vh;
                 .bk-tab-label-item {
-                    line-height: 64px;
+                    line-height: 6.4vh;
                     color: #666;
                     &::after {
                         height: 3px;
@@ -118,8 +118,8 @@
                 }
             }
             .bk-tab-header-setting {
-                height: 64px;
-                line-height: 64px;
+                height: 6.4vh;
+                line-height: 6.4vh;
             }
         }
         /deep/ .bk-tab-section {

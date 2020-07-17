@@ -6,7 +6,11 @@
             @click="editAtom('upgradeAtom', versionList[0].atomId)"
         > {{ $t('store.新增版本') }} </bk-button>
         <bk-table :data="versionList" :outer-border="false" :header-border="false" :header-cell-style="{ background: '#fff' }">
-            <bk-table-column :label="$t('store.版本')" prop="version"></bk-table-column>
+            <bk-table-column :label="$t('store.版本')">
+                <template slot-scope="props">
+                    <span>{{ props.row.version || 'init' }}</span>
+                </template>
+            </bk-table-column>
             <bk-table-column :label="$t('store.状态')" prop="atomStatus" :formatter="statusFormatter"></bk-table-column>
             <bk-table-column :label="$t('store.创建人')" prop="creator"></bk-table-column>
             <bk-table-column :label="$t('store.创建时间')" prop="createTime"></bk-table-column>

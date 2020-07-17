@@ -128,7 +128,7 @@
                         <bk-popover placement="left">
                             <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p> {{ $t('store["插件详细介绍，请说明插件功能、使用场景、使用限制和受限解决方案[可选]、常见的失败原因和解决方案、以及接口人联系方式。"]') }} </p>
+                                <p> {{ $t('store.atomRemark') }} </p>
                                 <p> {{ $t('store.展示在插件市场查看插件详情界面，帮助用户快速了解插件和解决遇到的问题。') }} </p>
                             </template>
                         </bk-popover>
@@ -693,6 +693,9 @@
 
 <style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
+    .atom-item-content {
+        max-width: calc(100% - 110px);
+    }
 
     .edit-atom-wrapper {
         height: 100%;
@@ -824,6 +827,7 @@
             .atom-introduction-input,
             .atom-remark-input {
                 min-width: 100%;
+                max-width: 100%;
                 border: 1px solid #c4c6cc;
             }
             .version-num-form-item {

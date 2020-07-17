@@ -1,22 +1,22 @@
 <template>
     <article>
         <section class="show-detail">
-            <img v-if="detail.logoUrl" :src="detail.logoUrl" class="detail-img">
+            <img :src="detail.logoUrl || defaultPic" class="detail-img">
             <ul class="detail-items" ref="detail">
                 <li class="detail-item">
                     <span class="item-name">{{ detail.imageName }}</span>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.标识') }}：</span>
-                    <span>{{ detail.imageCode }}</span>
+                    <span>{{ detail.imageCode || '--' }}</span>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.范畴') }}：</span>
-                    <span>{{ detail.categoryName }}</span>
+                    <span>{{ detail.categoryName || '--' }}</span>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.分类') }}：</span>
-                    <span>{{ detail.classifyName }}</span>
+                    <span>{{ detail.classifyName || '--' }}</span>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.功能标签') }}：</span>
@@ -45,15 +45,15 @@
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.镜像') }}：</span>
-                    <span>{{(detail.imageRepoUrl ? detail.imageRepoUrl + '/' : '') + detail.imageRepoName + ':' + detail.imageTag}}</span>
+                    <span>{{((detail.imageRepoUrl ? detail.imageRepoUrl + '/' : '') + (detail.imageRepoName ? detail.imageRepoName + ':' : '') + detail.imageTag) || '--'}}</span>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.镜像凭证') }}：</span>
-                    <span>{{detail.ticketId}}</span>
+                    <span>{{detail.ticketId || '--'}}</span>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.发布者') }}：</span>
-                    <span>{{detail.publisher}}</span>
+                    <span>{{detail.publisher || '--'}}</span>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.发布类型') }}：</span>
@@ -61,11 +61,11 @@
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.版本') }}：</span>
-                    <span>{{detail.version}}</span>
+                    <span>{{detail.version || '--'}}</span>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.发布描述') }}：</span>
-                    <span>{{detail.versionContent}}</span>
+                    <span>{{detail.versionContent || '--'}}</span>
                 </li>
             </ul>
         </section>
@@ -74,6 +74,7 @@
 
 <script>
     import labelList from '../../../labelList'
+    import defaultPic from '../../../../images/defaultPic.svg'
 
     export default {
         filters: {
@@ -104,6 +105,12 @@
 
         props: {
             detail: Object
+        },
+
+        data () {
+            return {
+                defaultPic
+            }
         },
 
         methods: {

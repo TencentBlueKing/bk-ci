@@ -196,16 +196,16 @@
         background: #fff;
     }
     .version-content {
-        padding: 32px 32px 17px;
+        padding: 3.2vh 3.2vh 1.7vh;
         height: 100%;
         .version-info-header {
             line-height: 20px;
         }
         .approval-table-contain {
-            height: calc(100% - 52px);
+            height: calc(100% - 20px - 3.2vh);
         }
         .approval-table {
-            margin-top: 32px;
+            margin-top: 3.2vh;
         }
     }
     .approve-form {

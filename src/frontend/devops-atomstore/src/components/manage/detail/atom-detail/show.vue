@@ -1,22 +1,22 @@
 <template>
     <article>
         <section class="show-detail">
-            <img v-if="detail.logoUrl" :src="detail.logoUrl" class="detail-img">
+            <img :src="detail.logoUrl || defaultPic" class="detail-img">
             <ul class="detail-items" ref="detail">
                 <li class="detail-item">
                     <span class="item-name">{{ detail.name }}</span>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.标识') }}：</span>
-                    <span>{{ detail.atomCode }}</span>
+                    <span>{{ detail.atomCode || '--' }}</span>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.范畴') }}：</span>
-                    <span>{{ categoryMap[detail.category] }}</span>
+                    <span>{{ categoryMap[detail.category] || '--' }}</span>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.分类') }}：</span>
-                    <span>{{ detail.classifyName }}</span>
+                    <span>{{ detail.classifyName || '--' }}</span>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.适用机器类型') }}：</span>
@@ -60,6 +60,7 @@
 
 <script>
     import labelList from '../../../labelList'
+    import defaultPic from '../../../../images/defaultPic.svg'
 
     export default {
         components: {
@@ -72,6 +73,7 @@
 
         data () {
             return {
+                defaultPic,
                 categoryMap: {
                     'TASK': this.$t('store.流水线插件'),
                     'TRIGGER': this.$t('store.流水线触发器')

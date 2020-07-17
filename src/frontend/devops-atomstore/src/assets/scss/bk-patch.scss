@@ -23,7 +23,7 @@
 @import './conf';
 @import './mixins/scroller.scss';
 .g-scroll-table {
-	height: calc(100% - 64px);
+	height: calc(100% - 32px - 3.2vh);
 	.bk-table {
 		height: 100%;
 		.bk-table-body-wrapper {
@@ -34,7 +34,7 @@
 }
 
 .g-scroll-pagination-table {
-	height: calc(100% - 64px);
+	height: calc(100% - 32px - 3.2vh);
 	.bk-table {
 		height: 100%;
 		.bk-table-body-wrapper {

@@ -1,6 +1,7 @@
 <template>
     <article class="g-store-main">
         <header class="g-store-title">
+            <icon class="title-icon" name="color-logo-store" size="22" />
             <span class="back-home quick-route" @click="toAtomStore"> {{ $t('store.研发商店') }} </span>
             <i class="right-arrow banner-arrow"></i>
             <span class="banner-des"> {{ $t('store.工作台') }} </span>
@@ -10,13 +11,7 @@
             @tab-change="tabChange"
         >
             <template v-slot:tool>
-                <a class="title-work" target="_blank" :href="currentTab.link">{{ currentTab.linkName }}</a>
-                <section v-if="currentTab.showMore" class="banner-more">
-                    <i class="bk-icon icon-more"></i>
-                    <section class="more-list">
-                        <a class="title-work" :href="more.link" v-for="more in currentTab.moreList" :key="more.linkName" target="_blank">{{ more.linkName }}</a>
-                    </section>
-                </section>
+                <a class="title-work" target="_blank" :href="link.link" v-for="link in currentTab.links" :key="link.name">{{ link.name }}</a>
             </template>
         </transition-tab>
 
@@ -43,14 +38,23 @@
                 tabList: [
                     { name: 'atomWork',
                       label: this.$t('store.流水线插件'),
-                      linkName: this.$t('store.插件指引'),
-                      link: 'http://tempdocklink/pages/viewpage.action?pageId=15008942',
-                      showMore: true,
-                      moreList: [
-                          { linkName: this.$t('store.debugTask'), link: `/console/pipeline/${currentProjectCode}/atomDebug` }
-                      ] },
-                    { name: 'templateWork', label: this.$t('store.流水线模板'), linkName: this.$t('store.模版指引'), link: 'http://tempdocklink/pages/viewpage.action?pageId=15008944' },
-                    { name: 'imageWork', label: this.$t('store.容器镜像'), linkName: this.$t('store.镜像指引'), link: 'http://tempdocklink/pages/viewpage.action?pageId=22118721' }
+                      links: [
+                          { name: this.$t('store.插件指引'), link: 'http://tempdocklink/pages/viewpage.action?pageId=15008942' },
+                          { name: this.$t('store.debugTask'), link: `/console/pipeline/${currentProjectCode}/atomDebug` }
+                      ]
+                    },
+                    { name: 'templateWork',
+                      label: this.$t('store.流水线模板'),
+                      links: [
+                          { name: this.$t('store.模版指引'), link: 'http://tempdocklink/pages/viewpage.action?pageId=15008944' }
+                      ]
+                    },
+                    { name: 'imageWork',
+                      label: this.$t('store.容器镜像'),
+                      links: [
+                          { name: this.$t('store.镜像指引'), link: 'http://tempdocklink/pages/viewpage.action?pageId=22118721' }
+                      ]
+                    }
                 ]
             }
         },
@@ -152,8 +156,12 @@
         }
     }
     .title-work {
+        cursor: pointer;
         color: #1592ff;
-        margin-right: 32px;
+        margin-right: 16px;
+        &:last-child {
+            margin-right: 32px;
+        }
     }
     .content-header {
         display: flex;

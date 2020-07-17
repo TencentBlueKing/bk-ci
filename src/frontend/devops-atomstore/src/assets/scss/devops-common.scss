@@ -41,20 +41,22 @@
     color: #222;
     display: flex;
     max-height: 100vh;
-    padding-bottom: 40px;
+    padding-bottom: 4vh;
     flex-direction: column;
     overflow: hidden;
     .g-store-title {
-        height: 56px;
-        line-height: 56px;
+        height: 5.6vh;
         display: flex;
         align-items: center;
         padding-left: .32rem;
-        margin-bottom: 32px;
+        margin-bottom: 3.2vh;
         background-color: #fff;
         color: #999;
+        .title-icon {
+            margin-right: 6px;
+        }
         .right-arrow {
-            height: 56px;
+            height: 5.6vh;
             &::after {
                 margin-top: -2.5px;
                 border-color: #252935;

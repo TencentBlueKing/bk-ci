@@ -1,9 +1,12 @@
 <template>
     <article class="g-store-main">
         <header class="g-store-title">
+            <icon class="title-icon" name="color-logo-store" size="22" />
             <span class="banner-des quick-route" @click="goToStore"> {{ $t('store.研发商店') }} </span>
             <i class="right-arrow banner-arrow"></i>
-            <span class="banner-des quick-route" @click="goToWorkList"> {{ $t('store.工作台') }}：{{ type | typeFilter }}</span>
+            <span class="banner-des"> {{ $t('store.工作台') }} </span>
+            <i class="right-arrow banner-arrow"></i>
+            <span class="banner-des quick-route" @click="goToWorkList"> {{ type | typeFilter }}</span>
             <i class="right-arrow banner-arrow"></i>
             <span class="banner-des">{{ $route.params.code }}</span>
         </header>

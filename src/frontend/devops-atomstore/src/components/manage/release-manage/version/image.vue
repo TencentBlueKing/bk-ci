@@ -18,7 +18,11 @@
             @page-change="(page) => $emit('pageChanged', page)"
             @page-limit-change="(currentLimit, prevLimit) => $emit('pageLimitChanged', currentLimit, prevLimit)"
         >
-            <bk-table-column :label="$t('store.版本')" prop="version"></bk-table-column>
+            <bk-table-column :label="$t('store.版本')">
+                <template slot-scope="props">
+                    <span>{{ props.row.version || 'init' }}</span>
+                </template>
+            </bk-table-column>
             <bk-table-column :label="$t('store.状态')" prop="imageStatus" :formatter="statusFormatter"></bk-table-column>
             <bk-table-column :label="$t('store.创建人')" prop="creator"></bk-table-column>
             <bk-table-column :label="$t('store.创建时间')" prop="createTime" :formatter="convertTime"></bk-table-column>

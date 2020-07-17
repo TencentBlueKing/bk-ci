@@ -282,9 +282,9 @@
 <style lang="scss" scoped>
     .member-setting {
         background: #fff;
-        padding: 32px;
+        padding: 3.2vh;
         .member-header {
-            margin-bottom: 32px;
+            margin-bottom: 3.2vh;
             color: #666;
             font-size: 14px;
             font-weight: normal;
