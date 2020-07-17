@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class KeystoreSignService {
+class KeystoreService {
 
     @Value("\${keystore.url:#{null}}")
     val keyStoreUrl: String? = null
@@ -47,11 +47,10 @@ class KeystoreSignService {
         }
     }
 
-
     private fun getKeystoreUrl(appId: String):String
         = "${getHost()}/api/auth/getInHouseCertList?appId=$appId"
 
     companion object {
-        private val logger = LoggerFactory.getLogger(KeystoreSignService::class.java)
+        private val logger = LoggerFactory.getLogger(KeystoreService::class.java)
     }
 }
