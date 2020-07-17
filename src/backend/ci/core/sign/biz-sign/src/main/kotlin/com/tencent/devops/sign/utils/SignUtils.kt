@@ -130,6 +130,7 @@ object SignUtils {
         ZipUtil.unZipFile(ipaFile, unzipIpaDir.canonicalPath, true)
     }
 
+    // TODO 还未测试通过
     fun zipIpaFile(unzipDir: File, ipaPath: String): File? {
         val result = File(ipaPath)
         if (!result.parentFile.exists()) result.parentFile.mkdirs()
