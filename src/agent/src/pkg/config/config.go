@@ -125,12 +125,15 @@ func DetectWorkerVersion() string {
 	return parseWorkerVersion(string(output))
 }
 
-func parseWorkerVersion(output string) string{
+func parseWorkerVersion(output string) string {
 	lines := strings.Split(output, "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
-		if !strings.Contains(line, " ") && !strings.Contains(line,"OPTIONS") {
-			logs.Info("worker version: ", string(output))
+		if !(line == "") && !strings.Contains(line, " ") && !strings.Contains(line, "OPTIONS") {
+			if len(line) > 64 {
+				line = line[:64]
+			}
+			logs.Info("worker version: ", line)
 			return line
 		}
 	}
