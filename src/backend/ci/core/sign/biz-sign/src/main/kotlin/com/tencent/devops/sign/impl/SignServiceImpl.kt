@@ -1,17 +1,17 @@
 package com.tencent.devops.sign.impl
 
-import com.dd.plist.NSDictionary
-import com.dd.plist.NSString
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.FileUtil
-import com.tencent.devops.common.api.util.script.CommandLineUtils
-import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import com.tencent.devops.sign.resources.UserIpaResourceImpl
-import com.tencent.devops.sign.service.*
+import com.tencent.devops.sign.service.ArchiveService
+import com.tencent.devops.sign.service.FileService
+import com.tencent.devops.sign.service.SignInfoService
+import com.tencent.devops.sign.service.SignService
+import com.tencent.devops.sign.service.MobileProvisionService
 import org.jolokia.util.Base64Util
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,11 +19,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.InputStream
-import com.dd.plist.PropertyListParser
 import com.tencent.devops.sign.utils.SignUtils
-import com.tencent.devops.sign.utils.SignUtils.DEFAULT_CER_ID
 import com.tencent.devops.sign.utils.SignUtils.MAIN_APP_FILENAME
-import java.lang.RuntimeException
 
 @Service
 class SignServiceImpl @Autowired constructor(
@@ -75,12 +72,14 @@ class SignServiceImpl @Autowired constructor(
         // 下载并返回描述文件信息
         val mobileProvisionInfoMap = downloadMobileProvision(mobileProvisionDir, ipaSignInfo)
 
-        val signedIpaFile = resignIpaPackage(ipaUnzipDir, ipaSignInfo, mobileProvisionInfoMap)
+        val signFinished = resignIpaPackage(ipaUnzipDir, ipaSignInfo, mobileProvisionInfoMap)
 
-        if (signedIpaFile == null) {
+        if (!signFinished) {
             UserIpaResourceImpl.logger.error("sign ipa failed.")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA包签名失败")
         }
+        // 压缩目录
+        val signedIpaFile = fileService.zipDirToFile(ipaUnzipDir, ipaUnzipDir.parent + File.separator + "result.ipa")
 
         // 归档ipa包
         val fileDownloadUrl = archiveService.archive(signedIpaFile, ipaSignInfo)

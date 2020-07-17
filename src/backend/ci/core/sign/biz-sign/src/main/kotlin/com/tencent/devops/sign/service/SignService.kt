@@ -90,11 +90,11 @@ interface SignService {
     * */
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     fun resignIpaPackage(
-        ipaPackage: File,
+        unzipDir: File,
         ipaSignInfo: IpaSignInfo,
         mobileProvisionInfoList: Map<String, MobileProvisionInfo>?
-    ): File {
-        val payloadDir = File(ipaPackage.absolutePath + File.separator + "Payload")
+    ): Boolean {
+        val payloadDir = File(unzipDir.absolutePath + File.separator + "Payload")
         val appDirs = payloadDir.listFiles { dir, name ->
             dir.extension == "app" || name.endsWith("app")
         }.toList()
@@ -106,7 +106,7 @@ interface SignService {
 
         // 通配符方式签名
         if (mobileProvisionInfoList == null) {
-            SignUtils.resignAppWildcard(
+            return SignUtils.resignAppWildcard(
                 appDir = appDir,
                 certId = ipaSignInfo.certId ?: SignUtils.DEFAULT_CER_ID,
                 wildcardInfo = MobileProvisionInfo(
@@ -131,7 +131,7 @@ interface SignService {
             }
 
             logger.info("Start to resign ${appDir.name} with $mobileProvisionInfoList")
-            SignUtils.resignApp(
+            return SignUtils.resignApp(
                 appDir = appDir,
                 certId = ipaSignInfo.certId ?: SignUtils.DEFAULT_CER_ID,
                 infos = mobileProvisionInfoList,
@@ -139,10 +139,7 @@ interface SignService {
                 universalLinks = ipaSignInfo.universalLinks,
                 applicationGroups = ipaSignInfo.applicationGroups
             )
-            // 压缩文件
-
         }
-        return ipaPackage
     }
 
     companion object {

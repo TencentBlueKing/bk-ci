@@ -37,15 +37,15 @@ object SignUtils {
         appDir: File,
         certId: String,
         wildcardInfo: MobileProvisionInfo
-    ) {
+    ): Boolean {
         try {
             if (appDir.isDirectory && appDir.extension.contains("app")) {
                 // 通配符签名统一不做Bundle替换
                 overwriteInfo(appDir, wildcardInfo, false)
 
                 // 扫描是否有其他待签目录
-                val needResginFiles = scanNeedResignFiles(appDir)
-                needResginFiles.forEach { needResginDir ->
+                val needResginDirs = scanNeedResignFiles(appDir)
+                needResginDirs.forEach { needResginDir ->
                     needResginDir.listFiles().forEach { subFile ->
                         // 如果是个拓展则递归进入进行重签
                         if (subFile.isDirectory && subFile.extension.contains("app")) {
@@ -60,8 +60,10 @@ object SignUtils {
                 // 替换后进行重签名
                 codesignFileByEntitlement(certId, appDir.absolutePath, wildcardInfo.entitlementFile.absolutePath)
             }
+            return true
         } catch (e: Exception) {
             logger.error("WildcardResign app <$appDir> directory with exception: $e")
+            return false
         }
     }
 
@@ -83,41 +85,44 @@ object SignUtils {
         appName: String,
         applicationGroups: List<String>? = null,
         universalLinks: List<String>? = null
-    ) {
-        val mainInfo = infos[appName]
-        if (mainInfo == null) {
+    ): Boolean {
+        val info = infos[appName]
+        if (info == null) {
             logger.error("Not found $appName MobileProvisionInfo from IpaSignInfo, please check request.")
-            return
+            return false
         }
         try {
             if (appDir.isDirectory && appDir.extension.contains("app")) {
                 // 先将entitlements文件中补充所有ul和group
-                if (universalLinks != null) addUniversalLink(universalLinks, mainInfo.entitlementFile)
-                if (applicationGroups != null) addApplicationGroups(applicationGroups, mainInfo.entitlementFile)
+                if (universalLinks != null) addUniversalLink(universalLinks, info.entitlementFile)
+                if (applicationGroups != null) addApplicationGroups(applicationGroups, info.entitlementFile)
 
                 // 用主描述文件对外层app进行重签
-                overwriteInfo(appDir, mainInfo, true)
+                overwriteInfo(appDir, info, true)
 
                 // 扫描是否有其他待签目录
-                val needResginFiles = scanNeedResignFiles(appDir)
-                needResginFiles.forEach { needResginDir ->
+                val needResginDirs = scanNeedResignFiles(appDir)
+                needResginDirs.forEach { needResginDir ->
                     needResginDir.listFiles().forEach { subFile ->
                         // 如果是个拓展则递归进入进行重签
                         if (subFile.isDirectory && subFile.extension.contains("app")) {
-                            resignApp(subFile, certId, infos, subFile.nameWithoutExtension, applicationGroups)
+                            if (!resignApp(subFile, certId, infos, subFile.nameWithoutExtension, applicationGroups)) {
+                                return false
+                            }
                         } else {
                             // 如果是个其他待签文件则使用主描述文件进行重签
-                            overwriteInfo(subFile, mainInfo, false)
+                            overwriteInfo(subFile, info, false)
                             codesignFile(certId, subFile.absolutePath)
                         }
                     }
                 }
-                // 替换后进行重签名
-                val info = infos[appName] ?: throw Exception("Not found $appName info in MobileProvisionInfos")
+                // 替换后对当前APP进行重签名操作
                 codesignFileByEntitlement(certId, appDir.absolutePath, info.entitlementFile.absolutePath)
             }
+            return true
         } catch (e: Exception) {
             logger.error("Resign app <$appName> directory with exception: $e")
+            return false
         }
     }
 
@@ -125,13 +130,13 @@ object SignUtils {
         ZipUtil.unZipFile(ipaFile, unzipIpaDir.canonicalPath, true)
     }
 
-    fun zipIpaFile(payloadDir: File, ipaPath: String): File? {
+    fun zipIpaFile(unzipDir: File, ipaPath: String): File? {
         val result = File(ipaPath)
         if (!result.parentFile.exists()) result.parentFile.mkdirs()
         if (result.exists()) result.delete()
-        val cmd = "/usr/bin/zip -r $ipaPath *"
+        val cmd = "cd ${unzipDir.canonicalPath} && /usr/bin/zip -r $ipaPath *"
         logger.info("[zip to ipa] $cmd")
-        CommandLineUtils.execute(cmd, payloadDir.parentFile, true)
+        CommandLineUtils.execute(cmd, null, true)
         return if (File(ipaPath).exists()) File(ipaPath) else null
     }
 
@@ -190,10 +195,10 @@ object SignUtils {
     private fun scanNeedResignFiles(appDir: File): List<File> {
         logger.info("---- scan app directory start -----")
         val needResginFiles = mutableListOf<File>()
-        appDir.listFiles().forEach {
+        appDir.listFiles().forEachIndexed { index, it ->
             if (it.isDirectory && resignFilenamesSet.contains(it.name)) {
                 needResginFiles.add(it)
-                logger.info("${needResginFiles.size} -> ${it.absolutePath}")
+                logger.info("$index -> ${it.absolutePath}")
             }
         }
         logger.info("----- scan app directory finish -----")

@@ -44,4 +44,8 @@ class FileServiceImpl: FileService {
             }
         }
     }
+
+    override fun zipDirToFile(srcDir: InputStream, destFile: File): File {
+        TODO("Not yet implemented")
+    }
 }
