@@ -354,7 +354,7 @@ interface ServiceBuildResource {
 
     @ApiOperation("获取构建详情的状态（平台调用，不鉴权）")
     @GET
-    @Path("/{projectId}/{pipelineId}/{buildId}/nopermission/detailStatus")
+    @Path("/{projectId}/{pipelineId}/{buildId}/noPermission/detailStatus")
     fun getBuildDetailStatusWithoutPermission(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
