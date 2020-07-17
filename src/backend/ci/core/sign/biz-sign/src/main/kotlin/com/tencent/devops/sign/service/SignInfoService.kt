@@ -10,5 +10,5 @@ interface SignInfoService {
     * */
     fun check(info: IpaSignInfo): IpaSignInfo?
 
-    fun save(resignId: String, info: IpaSignInfo)
+    fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo?)
 }

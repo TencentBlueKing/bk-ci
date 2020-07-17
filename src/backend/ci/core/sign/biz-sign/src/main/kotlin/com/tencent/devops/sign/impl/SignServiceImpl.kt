@@ -46,6 +46,7 @@ class SignServiceImpl @Autowired constructor(
     ): String? {
         val resignId = UUIDUtil.generate()
         var ipaSignInfo = decodeIpaSignInfo(ipaSignInfoHeader)
+        signInfoService.save(resignId, ipaSignInfoHeader, ipaSignInfo)
 
         if (ipaSignInfo == null) {
             UserIpaResourceImpl.logger.error("Fail to parse ipaSignInfoHeaderDecode:$ipaSignInfo")

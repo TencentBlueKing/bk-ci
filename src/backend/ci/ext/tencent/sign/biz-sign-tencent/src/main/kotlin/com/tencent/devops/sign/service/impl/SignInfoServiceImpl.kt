@@ -22,7 +22,7 @@ class SignInfoServiceImpl(
         return info
     }
 
-    override fun save(resignId: String, info: IpaSignInfo) {
-        signIpaInfoDao.saveSignInfo(dslContext, resignId, info)
+    override fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo?) {
+        signIpaInfoDao.saveSignInfo(dslContext, resignId, ipaSignInfoHeader, info)
     }
 }

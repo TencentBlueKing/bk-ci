@@ -1,6 +1,6 @@
 package com.tencent.devops.sign.service.impl
 
-import com.tencent.devops.common.api.util.FileUtil
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.SignInfoService
@@ -23,10 +23,11 @@ class SignInfoServiceImpl : SignInfoService {
         return info
     }
 
-    override fun save(resignId: String, info: IpaSignInfo) {
+    override fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo?) {
         val infoDir = File(infoPath)
+        infoDir.mkdirs()
         val resignInfoDir = File(infoDir.absolutePath + File.separator + resignId + ".json")
         if (!infoDir.exists()) infoDir.mkdirs()
-        resignInfoDir.writeText(JsonUtil.toJson(info))
+        resignInfoDir.writeText(JsonUtil.toJson(info ?: AUTH_HEADER_DEVOPS_SIGN_INFO to ipaSignInfoHeader))
     }
 }
