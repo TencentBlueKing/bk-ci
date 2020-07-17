@@ -28,6 +28,7 @@ package com.tencent.devops.common.auth.api
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
+import com.tencent.bk.sdk.iam.dto.PathInfoDTO
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
@@ -81,14 +82,29 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         logger.info("v3 validateUserResourcePermission user[$user] serviceCode[${serviceCode.id()}] resourceType[${resourceType.value}] permission[${permission.value}]")
         val actionType = ActionUtils.buildAction(resourceType, permission)
         val instanceDTO = InstanceDTO()
-        instanceDTO.id = resourceCode
-        instanceDTO.system = iamConfiguration.systemId
+        instanceDTO.system = serviceCode.id()
+        // 若不关注操作资源实例，则必须关注是否在项目下
+        if(resourceCode == "*") {
+            instanceDTO.id = projectCode
+            instanceDTO.type = AuthResourceType.PROJECT.value
+        } else {
+            instanceDTO.id = resourceCode
+            instanceDTO.type = resourceType.value
+
+            // 因除项目外的所有资源都需关联项目, 需要拼接策略path供sdk计算
+            val path = PathInfoDTO()
+            path.type = AuthResourceType.PROJECT.value
+            path.id = projectCode
+            instanceDTO.path = path
+        }
+        // 有可能出现提供的resourceCode是关联资源的code,需将type类型调整为对应的关联资源。
         if(relationResourceType != null) {
             instanceDTO.type = relationResourceType!!.value
         } else {
             instanceDTO.type = resourceType.value
         }
-        logger.info("v3 validateUserResourcePermission actionType[$actionType], resourceCode[$resourceCode] resourceType[$resourceType]")
+
+        logger.info("v3 validateUserResourcePermission instanceDTO[$instanceDTO]")
         return authHelper.isAllowed(user, actionType, instanceDTO)
     }
 
@@ -110,7 +126,11 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         if(resourceType == AuthResourceType.PROJECT) {
             return AuthUtils.getProjects(expression)
         } else {
-
+            val instancesList = AuthUtils.getResourceInstance(expression, projectCode, resourceType)
+            logger.info("getUserResourceByPermission getInstance project[$projectCode], type[${resourceType.value}], instances[$instancesList]")
+            if(!instancesList.contains("*")) {
+                return instancesList.toList()
+            }
         }
 
         return supplier?.invoke() ?: emptyList()

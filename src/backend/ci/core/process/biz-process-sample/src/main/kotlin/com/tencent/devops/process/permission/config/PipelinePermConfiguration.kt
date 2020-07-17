@@ -84,11 +84,15 @@ class PipelinePermConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
     fun v3pipelinePermissionService(
+        dslContext: DSLContext,
+        pipelineInfoDao: PipelineInfoDao,
         authProjectApi: AuthProjectApi,
         authResourceApi: AuthResourceApi,
         authPermissionApi: AuthPermissionApi,
         pipelineAuthServiceCode: PipelineAuthServiceCode
     ): PipelinePermissionService = V3PipelinePermissionService(
+        dslContext = dslContext,
+        pipelineInfoDao = pipelineInfoDao,
         authProjectApi = authProjectApi,
         authResourceApi = authResourceApi,
         authPermissionApi = authPermissionApi,

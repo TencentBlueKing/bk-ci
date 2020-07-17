@@ -26,11 +26,20 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.dto.resource.ResourceDTO
+import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.common.auth.utlis.ActionUtils
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-class BluekingV3ResourceApi : AuthResourceApi {
+class BluekingV3ResourceApi @Autowired constructor(
+    val grantServiceImpl: GrantServiceImpl,
+    val iamConfiguration: IamConfiguration
+) : AuthResourceApi {
 
     override fun createGrantResource(
         user: String,
@@ -92,6 +101,16 @@ class BluekingV3ResourceApi : AuthResourceApi {
         resourceCode: String,
         resourceName: String
     ) {
+        logger.info("V3 createResource user[$user] serviceCode[${serviceCode.id()}] resourceType[${resourceType.value}] projectCode[$projectCode] resourceCode[$resourceCode]")
+        val actionType = ActionUtils.buildAction(resourceType, AuthPermission.VIEW)
+        val resourceList = mutableListOf<ResourceDTO>()
+        val projectResource = ResourceDTO.builder().system(iamConfiguration.systemId).id(projectCode).type(AuthResourceType.PROJECT.value).build()
+        val entityResource = ResourceDTO.builder().system(iamConfiguration.systemId).id(resourceCode).type(resourceType.value).build()
+        resourceList.add(projectResource)
+        resourceList.add(entityResource)
+        logger.info("V3 createResource actionType: $actionType, resourceList: $resourceList")
+        val policyId = grantServiceImpl.executeGrant(user, actionType, resourceList)
+        logger.info("V3 createResource policyId: $policyId")
     }
 
     override fun modifyResource(
@@ -118,5 +137,9 @@ class BluekingV3ResourceApi : AuthResourceApi {
         user: String,
         resourceList: List<ResourceRegisterInfo>
     ) {
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

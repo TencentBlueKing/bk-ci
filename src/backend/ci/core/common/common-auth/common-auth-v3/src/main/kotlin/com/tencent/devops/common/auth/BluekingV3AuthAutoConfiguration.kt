@@ -29,6 +29,7 @@ package com.tencent.devops.common.auth
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.impl.DefaultHttpClientServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.PolicyServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
 import com.tencent.devops.common.auth.api.BluekingV3AuthPermissionApi
@@ -77,7 +78,7 @@ class BluekingV3AuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun authResourceApi(authTokenApi: BluekingV3AuthTokenApi) = BluekingV3ResourceApi()
+    fun authResourceApi(authTokenApi: BluekingV3AuthTokenApi) = BluekingV3ResourceApi(grantService(), iamConfiguration())
 
     @Bean
     @Primary
@@ -124,6 +125,9 @@ class BluekingV3AuthAutoConfiguration {
 
     @Bean
     fun authHelper() = AuthHelper(tokenService(), policyService(), iamConfiguration())
+
+    @Bean
+    fun grantService() = GrantServiceImpl(httpService(), iamConfiguration())
 
     @Bean
     @Primary
