@@ -73,7 +73,7 @@
         box-shadow: 1px 2px 3px 0 rgba(0,0,0,0.05);
         .transition-child-tabs {
             height: 4.7vh;
-            line-height: 4.7vh;
+            min-height: 40px;
             padding: 1.2vh 16px;
             background-color: #fff;
             &::after {
