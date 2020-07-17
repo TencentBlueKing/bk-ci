@@ -5,6 +5,8 @@
             <span class="back-home quick-route" @click="toAtomStore"> {{ $t('store.研发商店') }} </span>
             <i class="right-arrow banner-arrow"></i>
             <span class="banner-des"> {{ $t('store.工作台') }} </span>
+            <i class="right-arrow banner-arrow"></i>
+            <span class="banner-des"> {{ currentTab.name|typeFilter }} </span>
         </header>
 
         <transition-tab :panels="tabList"
@@ -30,6 +32,25 @@
     export default {
         components: {
             transitionTab
+        },
+
+        filters: {
+            typeFilter (val) {
+                const bkLocale = window.devops || {}
+                let res = ''
+                switch (val) {
+                    case 'templateWork':
+                        res = bkLocale.$t('store.流水线模板')
+                        break
+                    case 'imageWork':
+                        res = bkLocale.$t('store.容器镜像')
+                        break
+                    default:
+                        res = bkLocale.$t('store.流水线插件')
+                        break
+                }
+                return res
+            }
         },
 
         data () {
