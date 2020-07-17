@@ -28,14 +28,16 @@ package httputil
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"github.com/astaxie/beego/logs"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"reflect"
+
+	"github.com/astaxie/beego/logs"
 )
 
 type HttpClient struct {
@@ -52,6 +54,10 @@ type HttpResult struct {
 	Body   []byte
 	Status int
 	Error  error
+}
+
+func init() {
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 }
 
 func IsSuccess(status int) bool {
