@@ -24,16 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:sign:biz-sign")
-    compile project(":ext:tencnet:sign:model-sign-tencent")
-    compile project(":ext:tencent:sign:api-sign-tencent")
-    compile project(":core:common:common-db")
-    compile "mysql:mysql-connector-java"
-    compile "org.json:json"
-    compile 'io.jsonwebtoken:jjwt-api:0.10.5'
-    compile 'io.jsonwebtoken:jjwt-impl:0.10.5'
-    compile 'io.jsonwebtoken:jjwt-jackson:0.10.5'
-}
+package com.tencent.devops.sign;
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+
+public class Constants {
+    public static final String KEYSTORE_HTTP_HEADER_AUTH = "Authorization";
+    public static final String KEYSTORE_HTTP_HEADER_IP = "X-Client-LocalIp";
+    public static final String KEYSTORE_CATEGORY_PROVISION = "SignProvision";
+}

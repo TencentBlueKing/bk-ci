@@ -7,3 +7,7 @@ spring:
 
 server:
   port: 21950
+
+bkci:
+  sign:
+    tmpDir: "/data/enterprise_sign_tmp/"

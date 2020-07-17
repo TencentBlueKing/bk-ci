@@ -6,15 +6,10 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.service.MobileProvisionService
 import com.tencent.devops.ticket.api.ServiceCertResource
-import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
-import io.jsonwebtoken.security.Keys
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
-import java.nio.charset.StandardCharsets
-import java.time.Instant
 import java.util.*
 
 @Service
