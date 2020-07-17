@@ -36,6 +36,9 @@ interface SignService {
         ipaSignInfo: IpaSignInfo
     ): Map<String, MobileProvisionInfo>
 
+    /*
+    * 通用逻辑-解析请求头的签名信息
+    * */
     fun decodeIpaSignInfo(ipaSignInfoHeader: String): IpaSignInfo? {
         val ipaSignInfoHeaderDecode = String(Base64Util.decode(ipaSignInfoHeader))
         val objectMapper = ObjectMapper()
