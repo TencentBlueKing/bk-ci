@@ -1,19 +1,28 @@
 package com.tencent.devops.sign.service.impl
 
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.dao.SignIpaInfoDao
 import com.tencent.devops.sign.service.SignInfoService
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class SignInfoServiceImpl : SignInfoService {
+class SignInfoServiceImpl(
+    private val dslContext: DSLContext,
+    private val signIpaInfoDao: SignIpaInfoDao
+) : SignInfoService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(SignInfoServiceImpl::class.java)
     }
 
-    override fun check(ipaSignInfo: IpaSignInfo): IpaSignInfo? {
+    override fun check(info: IpaSignInfo): IpaSignInfo? {
         // 暂时不做判断
-        return ipaSignInfo
+        return info
+    }
+
+    override fun save(resignId: String, info: IpaSignInfo) {
+        signIpaInfoDao.saveSignInfo(dslContext, resignId, info)
     }
 }

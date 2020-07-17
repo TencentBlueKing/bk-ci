@@ -3,6 +3,7 @@ package com.tencent.devops.sign.impl
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.FileUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
@@ -43,21 +44,22 @@ class SignServiceImpl @Autowired constructor(
         ipaSignInfoHeader: String,
         ipaInputStream: InputStream
     ): String? {
-        var ipaSignInfo: IpaSignInfo? = null
+        val resignId = UUIDUtil.generate()
+        var ipaSignInfo = decodeIpaSignInfo(ipaSignInfoHeader)
 
-        var ipaSignInfoHeaderDecode = String(Base64Util.decode(ipaSignInfoHeader))
-        try {
-            ipaSignInfo = objectMapper.readValue(ipaSignInfoHeaderDecode, IpaSignInfo::class.java)
-        } catch (e: Exception) {
-            UserIpaResourceImpl.logger.error("Fail to parse ipaSignInfoHeaderDecode:$ipaSignInfoHeaderDecode; Exception:", e)
+        if (ipaSignInfo == null) {
+            UserIpaResourceImpl.logger.error("Fail to parse ipaSignInfoHeaderDecode:$ipaSignInfo")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_PARSE_SIGN_INFO_HEADER, defaultMessage = "解析签名信息失败")
         }
-        // 检查ipaSignInfo的合法性
+
         ipaSignInfo = signInfoService.check(ipaSignInfo)
+
+        // 检查ipaSignInfo的合法性
         if (ipaSignInfo == null) {
-            UserIpaResourceImpl.logger.error("Check ipaSignInfo is invalided,  ipaSignInfoHeaderDecode:$ipaSignInfoHeaderDecode")
+            UserIpaResourceImpl.logger.error("Check ipaSignInfo is invalided,  ipaSignInfoHeaderDecode:$ipaSignInfo")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER, defaultMessage = "验证签名信息为非法信息")
         }
+
         // 复制文件到临时目录
         ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo)
         // ipa解压后的目录

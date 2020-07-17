@@ -39,8 +39,7 @@ class SignIpaInfoDao {
     fun saveSignInfo(
         dslContext: DSLContext,
         resignId: String,
-        info: IpaSignInfo?,
-        ipaSignInfoHeader: String? = null
+        info: IpaSignInfo
     ) {
         with(TSignIpaInfo.T_SIGN_IPA_INFO) {
             dslContext.insertInto(this,
@@ -63,22 +62,22 @@ class SignIpaInfoDao {
                 REQUEST_CONTENT
             ).values(
                 resignId,
-                info?.certId,
-                info?.archiveType,
-                info?.projectId,
-                info?.pipelineId,
-                info?.buildId,
-                info?.archivePath,
-                info?.mobileProvisionId,
-                if (info?.universalLinks != null) JsonUtil.toJson(info.universalLinks!!) else null,
-                if (info?.applicationGroups != null) JsonUtil.toJson(info.applicationGroups!!) else null,
-                info?.repalceBundleId,
-                if (info?.appexSignInfo != null) JsonUtil.toJson(info.appexSignInfo!!) else null,
-                info?.fileName,
-                info?.fileSize,
-                info?.md5,
-                info?.userId,
-                JsonUtil.toJson(info ?: "")
+                info.certId,
+                info.archiveType,
+                info.projectId,
+                info.pipelineId,
+                info.buildId,
+                info.archivePath,
+                info.mobileProvisionId,
+                if (info.universalLinks != null) JsonUtil.toJson(info.universalLinks!!) else null,
+                if (info.applicationGroups != null) JsonUtil.toJson(info.applicationGroups!!) else null,
+                info.repalceBundleId,
+                if (info.appexSignInfo != null) JsonUtil.toJson(info.appexSignInfo!!) else null,
+                info.fileName,
+                info.fileSize,
+                info.md5,
+                info.userId,
+                JsonUtil.toJson(info)
             ).execute()
         }
     }
