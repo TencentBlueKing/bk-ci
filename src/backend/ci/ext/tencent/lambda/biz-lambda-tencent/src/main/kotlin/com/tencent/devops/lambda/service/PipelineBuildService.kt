@@ -200,7 +200,9 @@ class PipelineBuildService @Autowired constructor(
                             inputMap["script"] = taskParamMap["script"] as String
                             inputMap["continueNoneZero"] = (taskParamMap["continueNoneZero"] as Boolean).toString()
                             inputMap["enableArchiveFile"] = (taskParamMap["enableArchiveFile"] as Boolean).toString()
-                            inputMap["archiveFile"] = taskParamMap["archiveFile"] as String
+                            if (taskParamMap["archiveFile"] != null) {
+                                inputMap["archiveFile"] = taskParamMap["archiveFile"] as String
+                            }
                         }
                         taskParamMap["@type"]== "windowsScript" -> {
                             inputMap["scriptType"] = taskParamMap["scriptType"] as String
@@ -208,7 +210,9 @@ class PipelineBuildService @Autowired constructor(
                         }
                         taskParamMap["@type"]== "manualReviewUserTask" -> {
                             inputMap["reviewUsers"] = taskParamMap["reviewUsers"] as String
-                            inputMap["desc"] = taskParamMap["params"] as String
+                            if (taskParamMap["params"] != null) {
+                                inputMap["desc"] = taskParamMap["params"] as String
+                            }
                         }
                         else -> {
                             inputMap["key"] = "value"
