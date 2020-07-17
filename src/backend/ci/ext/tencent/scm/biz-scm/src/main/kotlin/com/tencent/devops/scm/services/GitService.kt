@@ -380,6 +380,7 @@ class GitService @Autowired constructor(
             val token = getToken(gitProjectId)
             val url = "$gitCIOauthUrl/api/v3/groups/$gitProjectId/members/all/$userId?access_token=${token.accessToken}"
 
+            logger.info("[$userId]|[$gitProjectId]| Get gongfeng project member utl: $url")
             val request = Request.Builder()
                 .url(url)
                 .get()
@@ -393,7 +394,7 @@ class GitService @Autowired constructor(
                 }
             }
         } catch (e: Exception) {
-            logger.error("get gongfeng project member fail! griupId: $gitProjectId", e)
+            logger.error("get gongfeng project member fail! gitProjectId: $gitProjectId", e)
             return false
         }
 
