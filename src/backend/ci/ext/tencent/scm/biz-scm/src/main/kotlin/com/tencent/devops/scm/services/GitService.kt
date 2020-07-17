@@ -378,7 +378,7 @@ class GitService @Autowired constructor(
     fun checkUserGitAuth(userId: String, gitProjectId: String): Boolean {
         try {
             val token = getToken(gitProjectId)
-            val url = "$gitCIOauthUrl/api/v3/groups/$gitProjectId/members/all/$userId?access_token=${token.accessToken}"
+            val url = "$gitCIOauthUrl/api/v3/projects/$gitProjectId/members/all/$userId?access_token=${token.accessToken}"
 
             logger.info("[$userId]|[$gitProjectId]| Get gongfeng project member utl: $url")
             val request = Request.Builder()
