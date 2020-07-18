@@ -195,7 +195,7 @@ class PipelineBuildService @Autowired constructor(
                 val taskParams = if (taskParamMap["@type"] != "marketBuild" && taskParamMap["@type"] != "marketBuildLess") {
                     val inputMap = mutableMapOf<String, String>()
                     when {
-                        taskParamMap["@type"]== "linuxScript" -> {
+                        taskParamMap["@type"] == "linuxScript" -> {
                             inputMap["scriptType"] = taskParamMap["scriptType"] as String
                             inputMap["script"] = taskParamMap["script"] as String
                             inputMap["continueNoneZero"] = (taskParamMap["continueNoneZero"] as Boolean).toString()
@@ -204,11 +204,11 @@ class PipelineBuildService @Autowired constructor(
                                 inputMap["archiveFile"] = taskParamMap["archiveFile"] as String
                             }
                         }
-                        taskParamMap["@type"]== "windowsScript" -> {
+                        taskParamMap["@type"] == "windowsScript" -> {
                             inputMap["scriptType"] = taskParamMap["scriptType"] as String
                             inputMap["script"] = taskParamMap["script"] as String
                         }
-                        taskParamMap["@type"]== "manualReviewUserTask" -> {
+                        taskParamMap["@type"] == "manualReviewUserTask" -> {
                             inputMap["reviewUsers"] = taskParamMap["reviewUsers"] as String
                             if (taskParamMap["params"] != null) {
                                 inputMap["desc"] = taskParamMap["params"] as String
