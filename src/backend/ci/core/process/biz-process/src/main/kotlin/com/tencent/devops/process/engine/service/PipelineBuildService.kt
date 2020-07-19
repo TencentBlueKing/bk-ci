@@ -1710,4 +1710,39 @@ class PipelineBuildService(
             vmInfo = vmInfo
         )
     }
+
+    fun getBuildDetailStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode,
+        checkPermission: Boolean
+    ): String {
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = "用户（$userId) 无权限获取流水线($pipelineId)详情"
+            )
+        }
+
+        return getBuildDetailStatus(projectId, pipelineId, buildId, channelCode)
+    }
+
+    fun getBuildDetailStatus(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode
+    ): String {
+        val newModel = buildDetailService.get(buildId) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
+            defaultMessage = "流水线编排不存在"
+        )
+        return newModel.status
+    }
 }
