@@ -57,8 +57,8 @@ func Run() {
 	// 启动pipeline
 	go pipeline.Start()
 
-	// 定期清理 24小时内生成 hs_err 文件
-	go cron.CleanDumpFileJob(1, 24)
+	// 定期清理
+	go cron.CleanJob()
 
 	job.DoPollAndBuild()
 }

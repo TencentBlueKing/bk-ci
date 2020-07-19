@@ -1,6 +1,7 @@
 @echo off
 
-set service_name=landun_devops_agent
+set agent_id=##agentId##
+set service_name=devops_agent_%agent_id%
 
 echo stop agent service
 sc stop %service_name%
