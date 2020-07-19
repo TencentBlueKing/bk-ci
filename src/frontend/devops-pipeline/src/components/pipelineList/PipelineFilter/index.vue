@@ -20,10 +20,10 @@
                     </div>
                     <div class="form-group">
                         <form-field :label="$t('creator')">
-                            <staff-input :handle-change="handleChange"
+                            <user-input :handle-change="handleChange"
                                 name="users"
                                 v-model="currentFilter.filterByCreator">
-                            </staff-input>
+                            </user-input>
                         </form-field>
                     </div>
                     <div class="form-group"
@@ -50,13 +50,12 @@
 <script>
     import { mapGetters } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
-    // import UserInput from '@/components/atomFormField/UserInput/index.vue'
-    import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
+    import UserInput from '@/components/atomFormField/UserInput/index.vue'
 
     export default {
         components: {
             FormField,
-            StaffInput
+            UserInput
         },
         props: {
             isDisabled: {

@@ -113,8 +113,7 @@
                         <bk-input v-model="relateImageData.form.imageCode" :placeholder="$t('store.请输入镜像标识，不超过20个字符')"></bk-input>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.镜像源')" :required="true" property="imageSourceType" class="h32" :rules="[requireRule]">
-                        <bk-radio-group v-model="relateImageData.form.imageSourceType">
-                            <bk-radio value="BKDEVOPS" class="mr12"> {{ $t('store.蓝盾源') }} </bk-radio>
+                        <bk-radio-group v-model="relateImageData.form.imageSourceType" class="mt6">
                             <bk-radio value="THIRD"> {{ $t('store.第三方源') }} </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
@@ -127,9 +126,9 @@
                     >
                         <bk-select v-model="relateImageData.form.projectCode" searchable :placeholder="$t('store.请选择项目')" @change="toggleProjectList">
                             <bk-option v-for="option in projectList"
-                                :key="option.projectCode"
-                                :id="option.projectCode"
-                                :name="option.projectName">
+                                :key="option.project_code"
+                                :id="option.project_code"
+                                :name="option.project_name">
                             </bk-option>
                             <a href="/console/pm" slot="extension" target="_blank"> {{ $t('store.新增项目') }} </a>
                         </bk-select>
@@ -214,7 +213,7 @@
                         imageCode: '',
                         projectCode: '',
                         imageName: '',
-                        imageSourceType: 'BKDEVOPS',
+                        imageSourceType: 'THIRD',
                         ticketId: ''
                     }
                 },
@@ -333,8 +332,6 @@
                 }
                 this.$bkInfo({
                     title: this.$t('store.确认要删除？'),
-                    type: 'warning',
-                    theme: 'warning',
                     confirmFn
                 })
             },
