@@ -86,6 +86,10 @@ func GetUpgradeDir() string {
 	return GetWorkDir() + "/tmp"
 }
 
+func GetLogDir() string {
+	return GetWorkDir() + "/logs"
+}
+
 func GetRuntimeDir() string {
 	runDir := fmt.Sprintf("%s/runtime", GetWorkDir())
 	if err := os.MkdirAll(runDir, 0755); err == nil {
