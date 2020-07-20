@@ -92,26 +92,26 @@ object ZipUtil {
         val data = ByteArray(2048)
 
         for (f in sourceFile.listFiles()) {
-
+            val basePath = if (parentDirPath.isNullOrBlank()) {
+                f.name
+            } else {
+                parentDirPath + File.separator + f.name
+            }
             if (f.isDirectory) {
-                val entry = ZipEntry(parentDirPath + File.separator + f.name + File.separator)
+                val entry = ZipEntry(basePath + File.separator)
                 entry.time = f.lastModified()
-                entry.isDirectory
                 entry.size = f.length()
-
                 logger.info("zip -> Adding Directory: " + f.name)
                 zipOut.putNextEntry(entry)
 
-                zipFiles(zipOut, f, parentDirPath + File.separator + f.name)
+                zipFiles(zipOut, f, basePath)
             } else {
                 if (!f.extension.contains("zip")) {
                     FileInputStream(f).use { fi ->
                         BufferedInputStream(fi).use { origin ->
-                            val path = parentDirPath + File.separator + f.name
-                            logger.info("zip ---> Adding file: $path")
-                            val entry = ZipEntry(path)
+                            logger.info("zip -> Adding file: $basePath")
+                            val entry = ZipEntry(basePath)
                             entry.time = f.lastModified()
-                            entry.isDirectory
                             entry.size = f.length()
                             zipOut.putNextEntry(entry)
                             while (true) {
