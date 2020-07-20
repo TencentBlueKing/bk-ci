@@ -78,7 +78,7 @@ class AtomBuildArchiveTask : ITask() {
             val frontendDestPath = taskParams["frontendDestPath"] ?: throw TaskExecuteException(
                 errorMsg = "param [frontendDestPath] is empty",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
             )
             val baseFile = File(workspace, frontendFilePath)
             val baseFileDirPath = Paths.get(baseFile.canonicalPath)
