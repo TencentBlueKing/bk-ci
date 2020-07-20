@@ -70,16 +70,17 @@ class SignServiceImpl @Autowired constructor(
             bundleId = ""
         )
 
+        // 签名操作
         val signFinished = if (ipaSignInfo.wildcard) {
             resignIpaPackage(ipaUnzipDir, ipaSignInfo, mobileProvisionInfoMap)
         } else {
             resignIpaPackageWildcard(ipaUnzipDir, ipaSignInfo, wildcardInfo)
         }
-
         if (!signFinished) {
             UserIpaResourceImpl.logger.error("sign ipa failed.")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA包签名失败")
         }
+
         // 压缩目录
         val signedIpaFile = SignUtils.zipIpaFile(ipaUnzipDir, ipaUnzipDir.parent + File.separator + "result.ipa")
         if (signedIpaFile == null) {
