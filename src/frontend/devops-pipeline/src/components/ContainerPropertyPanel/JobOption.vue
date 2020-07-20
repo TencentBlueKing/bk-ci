@@ -15,6 +15,7 @@
 </template>
 
 <script>
+    import Vue from 'vue'
     import { mapActions } from 'vuex'
     import atomMixin from '@/components/AtomPropertyPanel/atomMixin'
     import validMixins from '@/components/validMixins'
@@ -65,6 +66,11 @@
             initOptionConfig () {
                 if (this.jobOption === undefined || JSON.stringify(this.jobOption) === '{}') {
                     this.updateContainerParams('jobControlOption', this.getJobOptionDefault())
+                } else {
+                    if (this.jobOption && this.jobOption.dependOnType === undefined) {
+                        Vue.set(this.jobOption, 'dependOnType', 'ID')
+                        this.handleUpdateJobOption('dependOnId', [])
+                    }
                 }
             },
             setKeyValueValidate (addErrors, removeErrors) {

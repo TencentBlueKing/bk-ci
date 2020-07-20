@@ -1,6 +1,6 @@
 <template>
     <section v-if="container" :class="{ &quot;readonly&quot;: !editable }" class="container-property-panel bk-form bk-form-vertical">
-        <form-field label="ID" :is-error="errors.has(&quot;jobId&quot;)" :error-msg="errors.first(&quot;jobId&quot;)" :desc="$t('jobIdTips')">
+        <form-field label="Job ID" :is-error="errors.has(&quot;jobId&quot;)" :error-msg="errors.first(&quot;jobId&quot;)" :desc="$t('jobIdTips')">
             <div class="container-resource-name">
                 <vuex-input :disabled="!editable" input-type="text" :placeholder="$t('jobIdTips')" name="jobId" v-validate.initial="`paramsRule|unique:${allJobId}`" :value="container.jobId" :handle-change="handleContainerChange" />
                 <atom-checkbox

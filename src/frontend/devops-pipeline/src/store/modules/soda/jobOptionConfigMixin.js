@@ -77,12 +77,39 @@ const jobOptionConfigMixin = {
                     text: this.$t('storeMap.enableJob'),
                     default: true
                 },
-                dependOn: {
-                    rule: {},
-                    component: 'vuex-input',
+                dependOnType: {
+                    component: 'enum-input',
                     label: this.$t('storeMap.dependOn'),
                     desc: this.$t('storeMap.dependOnDesc'),
-                    default: ''
+                    default: 'ID',
+                    list: [
+                        {
+                            label: this.$t('storeMap.dependOnId'),
+                            value: 'ID'
+                        },
+                        {
+                            label: this.$t('storeMap.dependOnName'),
+                            value: 'NAME'
+                        }
+                    ]
+                },
+                dependOnId: {
+                    component: 'selector',
+                    default: [],
+                    multiSelect: true,
+                    list: this.dependOnList,
+                    isHidden: (jobOption) => {
+                        return !(jobOption && (jobOption.dependOnType === 'ID' || !jobOption.dependOnType))
+                    }
+                },
+                dependOnName: {
+                    rule: {},
+                    component: 'vuex-input',
+                    default: '',
+                    placeholder: this.$t('storeMap.dependOnNamePlaceholder'),
+                    isHidden: (jobOption) => {
+                        return !(jobOption && jobOption.dependOnType === 'NAME')
+                    }
                 },
                 timeout: {
                     rule: { 'numeric': true, 'max_value': 10080 },
@@ -119,8 +146,8 @@ const jobOptionConfigMixin = {
                     default: [{ key: 'param1', value: '' }],
                     label: this.$t('storeMap.customVar'),
                     allowNull: false,
-                    isHidden: (jobOptoin) => {
-                        return !(jobOptoin && (jobOptoin.runCondition === 'CUSTOM_VARIABLE_MATCH' || jobOptoin.runCondition === 'CUSTOM_VARIABLE_MATCH_NOT_RUN'))
+                    isHidden: (jobOption) => {
+                        return !(jobOption && (jobOption.runCondition === 'CUSTOM_VARIABLE_MATCH' || jobOption.runCondition === 'CUSTOM_VARIABLE_MATCH_NOT_RUN'))
                     }
                 },
                 customCondition: {
@@ -128,18 +155,23 @@ const jobOptionConfigMixin = {
                     default: ''
                 }
             }
+        },
+        dependOnList () {
+            const list = []
+            // if (!this.stage.containers || this.stage.containers.length <= 1) return list
+            this.stage.containers && this.stage.containers.map((container, index) => {
+                if (index !== this.containerIndex) {
+                    list.push(
+                        {
+                            id: container.jobId || Math.random(),
+                            name: `Job${this.stageIndex + 1}-${index + 1}${!container.jobId ? ' (该job未设置Job ID)' : ' (Job ID:' + container.jobId + ')'} `,
+                            disabled: !container.jobId
+                        }
+                    )
+                }
+            })
+            return list
         }
-        // dependOnList () {
-        //     console.log(this.stage, 'list')
-        //     const list = []
-        //     // if (!this.stage.containers || this.stage.containers.length <= 1) return list
-        //     this.stage.containers && this.stage.containers.map((container, index) => {
-        //         if (index !== this.containerIndex) {
-        //             list.push({ id: container.jobId || container.containerId, name: `Job${this.stageIndex + 1}-${index + 1}` })
-        //         }
-        //     })
-        //     return list
-        // }
     },
     methods: {
         getJobOptionDefault (OPTION = this.JOB_OPTION) {
