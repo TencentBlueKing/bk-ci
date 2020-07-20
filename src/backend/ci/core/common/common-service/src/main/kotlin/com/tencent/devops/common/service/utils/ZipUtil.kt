@@ -100,7 +100,7 @@ object ZipUtil {
                 entry.isDirectory
                 entry.size = f.length()
 
-                println("zip -> Adding Directory: " + f.name)
+                logger.info("zip -> Adding Directory: " + f.name)
                 zipOut.putNextEntry(entry)
 
                 zipFiles(zipOut, f, parentDirPath + File.separator + f.name)
@@ -109,7 +109,7 @@ object ZipUtil {
                     FileInputStream(f).use { fi ->
                         BufferedInputStream(fi).use { origin ->
                             val path = parentDirPath + File.separator + f.name
-                            println("zip -> Adding file: $path")
+                            logger.info("zip ---> Adding file: $path")
                             val entry = ZipEntry(path)
                             entry.time = f.lastModified()
                             entry.isDirectory
