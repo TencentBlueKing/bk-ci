@@ -69,7 +69,7 @@ class CodeService @Autowired constructor(
             val username = repository.userName
             val svnType = repository.svnType ?: "SSH"
 
-            val svnFileInfoList = client.getScm(ServiceSvnResource::class).getDirectories(
+            val svnFileInfoList = client.get(ServiceSvnResource::class).getDirectories(
                 url = repository.url,
                 userId = username,
                 svnType = svnType,

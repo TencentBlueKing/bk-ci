@@ -8,7 +8,7 @@
                 <span class="bk-option-name">{{ name }}</span>
                 <i
                     v-if="multiple && isSelected"
-                    class="bk-option-icon bk-icon icon-check-1"
+                    class="bk-option-icon devops-icon icon-check-1"
                 />
             </div>
         </slot>
@@ -18,7 +18,9 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Prop, Component } from 'vue-property-decorator'
-    @Component
+    @Component({
+        name: 'devops-option'
+    })
     export default class DevopsOption extends Vue {
         @Prop({ required: true })
         id: string | number

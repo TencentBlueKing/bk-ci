@@ -29,29 +29,36 @@ package com.tencent.devops.common.service.utils
 import com.tencent.devops.common.service.config.CommonConfig
 
 object HomeHostUtil {
+    fun getHost(host: String): String {
+        return if (host.startsWith("http://") || host.startsWith("https://")) {
+            host.removeSuffix("/")
+        } else {
+            "http://${host.removeSuffix("/")}"
+        }
+    }
 
     fun buildGateway(): String {
         val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return commonConfig.devopsBuildGateway!!
+        return getHost(commonConfig.devopsBuildGateway!!)
     }
 
     fun innerServerHost(): String {
         val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return commonConfig.devopsHostGateway!!
+        return getHost(commonConfig.devopsHostGateway!!)
     }
 
     fun innerApiHost(): String {
         val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return commonConfig.devopsApiGateway!!
+        return getHost(commonConfig.devopsApiGateway!!)
     }
 
     fun outerServerHost(): String {
         val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return commonConfig.devopsOuterHostGateWay!!
+        return getHost(commonConfig.devopsOuterHostGateWay!!)
     }
 
     fun outerApiServerHost(): String {
         val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return commonConfig.devopsOuteApiHostGateWay!!
+        return getHost(commonConfig.devopsOuteApiHostGateWay!!)
     }
 }

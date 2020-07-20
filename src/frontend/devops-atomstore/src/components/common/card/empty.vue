@@ -2,7 +2,7 @@
     <h3 class="atom-card empty-card">
         <img class="empty-logo" :src="image" />
         <p class="empty-prompt">{{emptyData.str}}
-            <router-link class="router-list" :to="{ name: 'atomList', params: { type: emptyData.type } }">{{emptyData.tip}}</router-link>
+            <router-link class="router-list" :to="{ name: 'workList', params: { type: emptyData.type } }">{{emptyData.tip}}</router-link>
         </p>
     </h3>
 </template>
@@ -22,8 +22,9 @@
                 const query = this.$route.query || {}
                 const type = query.pipeType || 'atom'
                 const emptyMap = {
-                    atom: { str: this.$t('该分类下暂无流水线插件'), tip: this.$t('新增流水线插件') },
-                    template: { str: this.$t('该分类下暂无流水线模板'), tip: this.$t('新增流水线模板') }
+                    atom: { str: this.$t('store.该分类下暂无流水线插件'), tip: this.$t('store.新增流水线插件') },
+                    template: { str: this.$t('store.该分类下暂无流水线模板'), tip: this.$t('store.新增流水线模板') },
+                    image: { str: this.$t('store.该分类下暂无容器镜像'), tip: this.$t('store.发布容器镜像') }
                 }
                 const tipObj = emptyMap[type]
                 return Object.assign({ type }, tipObj)

@@ -7,17 +7,17 @@ spring:
 
 # 并发配置
 queueConcurrency:
-  buildStart: 1
-  stage: 1
-  container: 1
-  task: 1
+  buildStart: 5
+  stage: 5
+  container: 5
+  task: 10
+  buildFinish: 5
+  buildCancel: 5
+  pipelineCreate: 5
+  pipelineDelete: 2
+  pipelineUpdate: 5
+  timerTrigger: 5
   monitor: 1
-  buildFinish: 1
-  buildCancel: 1
-  pipelineCreate: 1
-  pipelineDelete: 1
-  pipelineUpdate: 1
-  timerTrigger: 1
   webhook: 1
   measure: 1
   market: 1

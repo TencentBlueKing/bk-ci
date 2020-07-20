@@ -13,7 +13,7 @@
                         <div class="group-list-title">
                             <span class="title-text">{{group.name}}</span>
                             <bk-popover placement="bottom" class="group-list-edit" theme="light">
-                                <span class="bk-icon icon-more"></span>
+                                <span class="devops-icon icon-more"></span>
                                 <div class="group-operate-container" slot="content">
                                     <p class="entry-link" @click="showDialog($event, groupIndex)">{{ $t('rename') }}</p>
                                     <p class="entry-link" @click="deleteGroup(groupIndex)">{{ $t('delete') }}</p>
@@ -35,21 +35,22 @@
                                     :placeholder="$t('group.labelLimitTips')">
                             </div>
                             <div class="group-card-tools">
-                                <i class="bk-icon icon-edit2 group-card-icon" @click="tagEdit($event, groupIndex, tagIndex)"></i>
-                                <span class="tools-ele group-card-icon bk-icon icon-close"
-                                    @click.stop="toggleTools(groupIndex, tagIndex)">
-                                    <div class="tips-content">
+                                <i class="devops-icon icon-edit2 group-card-icon" @click="tagEdit($event, groupIndex, tagIndex)"></i>
+                                <bk-popover ref="toolsConfigRef" placement="top" trigger="click">
+                                    <span class="tools-ele group-card-icon devops-icon icon-close" @click="toggleTools(groupIndex, tagIndex)">
+                                    </span>
+                                    <div slot="content" class="tools-config-tooltip">
                                         <a class="confirm" @click.stop="tagRemove(groupIndex, tagIndex)">{{ $t('confirm') }}</a>
                                         <span></span>
                                         <a class="cancel" @click.stop="hideTools">{{ $t('cancel') }}</a>
                                     </div>
-                                </span>
+                                </bk-popover>
                             </div>
                         </div>
 
                         <bk-button
                             size="normal"
-                            icon="bk-icon icon-plus"
+                            icon="devops-icon icon-plus"
                             class="group-card-add"
                             v-if="group.labels.length < 10"
                             @click="tagAdd($event, groupIndex)"
@@ -64,7 +65,7 @@
 
                     <div class="group-list-cards" v-if="isShowGroupBtn()">
                         <h3 class="group-list-title"></h3>
-                        <bk-button size="large" icon="bk-icon icon-plus" class="group-list-creat"
+                        <bk-button size="large" icon="devops-icon icon-plus" class="group-list-creat"
                             :disabled="btnIsdisable"
                             @click="showDialog"
                         >
@@ -177,14 +178,14 @@
             },
             projectId () {
                 return this.$route.params.projectId
+            },
+            toolsConfigInstance () {
+                return this.$refs.toolsConfigRef && this.$refs.toolsConfigRef[0] && this.$refs.toolsConfigRef[0].instance ? this.$refs.toolsConfigRef[0].instance : null
             }
         },
         async created () {
             await this.init()
             this.addClickListenr()
-        },
-        mounted () {
-
         },
         methods: {
             isShowGroupBtn () {
@@ -271,8 +272,8 @@
             deleteGroup (groupIndex) {
                 // const name = this.tagGroupList[groupIndex].name
                 const { $store } = this
-                const content = this.$t('deleteReason')
-                navConfirm({ title: this.$t('confirm'), content })
+                const content = this.$t('group.deleteReason')
+                navConfirm({ type: 'warning', content })
                     .then(async () => {
                         try {
                             await $store.dispatch('pipelines/deleteGroup', {
@@ -290,10 +291,13 @@
                     }).catch(() => {})
             },
 
-            async tagRemove (groupIndex, tagIndex) { // 标签删除
+            tagRemove (groupIndex, tagIndex) { // 标签删除
                 this.REQUEST('deleteTag', {
                     labelId: this.tagGroupList[groupIndex].labels[tagIndex].id
                 })
+                if (this.toolsConfigInstance) {
+                    this.toolsConfigInstance.hide()
+                }
             },
             toggleTools (groupIndex, tagIndex) { // 删除提示toggle
                 const active = this.active
@@ -309,6 +313,9 @@
             },
             hideTools () { // 删除提示隐藏
                 this.active.isActiveToops = false
+                if (this.toolsConfigInstance) {
+                    this.toolsConfigInstance.hide()
+                }
             },
 
             tagEdit (e, groupIndex, tagIndex) {
@@ -466,12 +473,10 @@
                 margin-bottom: 10px;
             }
             .devops-empty-tips .content {
-                width: 250px;
                 height: 60px;
-                margin: 0 auto;
                 line-height: 20px;
                 font-size: 14px;
-                text-align: left;
+                text-align: center;
             }
             .bk-dialog-body .form-group{
                 label {
@@ -552,7 +557,7 @@
                 right:16px;
                 line-height: 18px;
                 font-size: 0;
-                .bk-icon {
+                .devops-icon {
                     font-size: 10px;
                     color: $fontLigtherColor;
                 }
@@ -567,46 +572,8 @@
                             display: block;
                         }
                     }
-                    .tips-content {
-                        display: none;
-                        position: absolute;
-                        bottom: 22px;
-                        left: -38px;
-                        padding: 0 12px;
-                        width: 90px;
-                        height: 30px;
-                        line-height: 30px;
-                        border: none;
-                        border-radius: 2px;
-                        font-size: 0;
-                        color: #fff;
-                        background-color: rgba(0,0,0,0.9);
-                        z-index: 50;
-                        span {
-                            margin: 0 7px;
-                            font-size: 12px;
-                            border: 1px solid rgba(255,255,255,0.1)
-                        }
-                        a {
-                            font-size: 12px;
-                            cursor: pointer;
-                        }
-                        &:after {
-                            position: absolute;
-                            content: '';
-                            width: 6px;
-                            height: 6px;
-                            border: 1px solid #000;
-                            border-bottom: 0;
-                            border-right: 0;
-                            transform: rotate(45deg);
-                            background: rgba(0,0,0,0.9);
-                            bottom: -2px;
-                            right: 42px;
-                        }
-                    }
                 }
-                .bk-icon:hover {
+                .devops-icon:hover {
                     color: $iconPrimaryColor;
                     cursor: pointer;
                 }
@@ -736,6 +703,21 @@
                 > a {
                     color: $primaryColor;
                 }
+            }
+        }
+    }
+
+    .tools-config-tooltip {
+        span {
+            margin: 0 7px;
+            font-size: 12px;
+            border: 1px solid rgba(255,255,255,0.1)
+        }
+        a {
+            font-size: 12px;
+            cursor: pointer;
+            &:hover {
+                color: $primaryColor;
             }
         }
     }

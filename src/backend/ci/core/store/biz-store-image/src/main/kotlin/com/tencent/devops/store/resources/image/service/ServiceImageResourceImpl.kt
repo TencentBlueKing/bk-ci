@@ -41,6 +41,14 @@ class ServiceImageResourceImpl @Autowired constructor(
     private val imageFeatureService: ImageFeatureService,
     private val storeProjectService: StoreProjectService
 ) : ServiceStoreImageResource {
+    override fun getSelfDevelopPublicImages(): Result<List<ImageRepoInfo>> {
+        return Result(
+            imageService.getSelfDevelopPublicImages(
+                interfaceName = "/service/market/image/self_develop/public_images"
+            )
+        )
+    }
+
     override fun isInstalled(userId: String, projectCode: String, imageCode: String): Result<Boolean> {
         return Result(
             // 公共镜像视为默认安装

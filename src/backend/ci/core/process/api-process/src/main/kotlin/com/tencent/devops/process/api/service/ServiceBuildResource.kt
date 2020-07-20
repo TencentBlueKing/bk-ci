@@ -389,7 +389,7 @@ interface ServiceBuildResource {
     @ApiOperation("根据流水线id获取最新执行信息")
     @POST
     // @Path("/projects/{projectId}/getPipelineLatestBuild")
-    @Path("/{projectCode}/getPipelineLatestBuild")
+    @Path("/{projectId}/getPipelineLatestBuild")
     fun getPipelineLatestBuildByIds(
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
@@ -401,7 +401,7 @@ interface ServiceBuildResource {
     @ApiOperation("第三方构建机Agent构建结束")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/seqs/{vmSeqId}/workerBuildFinish")
-    @Path("/{projectCode}/{pipelineId}/{buildId}/{vmSeqId}/workerBuildFinish")
+    @Path("/{projectId}/{pipelineId}/{buildId}/{vmSeqId}/workerBuildFinish")
     fun workerBuildFinish(
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
@@ -419,7 +419,7 @@ interface ServiceBuildResource {
         simpleResult: SimpleResult
     ): Result<Boolean>
 
-    @ApiOperation("获取构建详情")
+    @ApiOperation("保存构建详情")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/seqs/{vmSeqId}/saveBuildVmInfo")
     @Path("/{projectId}/{pipelineId}/{buildId}/{vmSeqId}/saveBuildVmInfo")
@@ -457,4 +457,28 @@ interface ServiceBuildResource {
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<BuildHistory?>
+
+    @ApiOperation("手动触发启动阶段")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stages/{stageId}/manualStart")
+    fun manualStartStage(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("阶段ID", required = true)
+        @PathParam("stageId")
+        stageId: String,
+        @ApiParam("取消执行", required = false)
+        @QueryParam("cancel")
+        cancel: Boolean?
+    ): Result<Boolean>
 }

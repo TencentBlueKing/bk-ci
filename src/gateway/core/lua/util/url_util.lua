@@ -20,16 +20,21 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 _M = {}
 
 function Split(szFullString, szSeparator)
+	local szFullStringLocal = ""
+	if (szFullString ~= nil and szFullString ~= "") then
+		szFullStringLocal = szFullString
+	end
+
 	local nFindStartIndex = 1
 	local nSplitIndex = 1
 	local nSplitArray = {}
 	while true do
-	   local nFindLastIndex = string.find(szFullString, szSeparator, nFindStartIndex)
+	   local nFindLastIndex = string.find(szFullStringLocal, szSeparator, nFindStartIndex)
 	   if not nFindLastIndex then
-	    nSplitArray[nSplitIndex] = string.sub(szFullString, nFindStartIndex, string.len(szFullString))
+	    nSplitArray[nSplitIndex] = string.sub(szFullStringLocal, nFindStartIndex, string.len(szFullStringLocal))
 	    break
 	   end
-	   nSplitArray[nSplitIndex] = string.sub(szFullString, nFindStartIndex, nFindLastIndex - 1)
+	   nSplitArray[nSplitIndex] = string.sub(szFullStringLocal, nFindStartIndex, nFindLastIndex - 1)
 	   nFindStartIndex = nFindLastIndex + string.len(szSeparator)
 	   nSplitIndex = nSplitIndex + 1
 	end

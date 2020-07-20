@@ -36,9 +36,7 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
 class ProjectPermissionServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,

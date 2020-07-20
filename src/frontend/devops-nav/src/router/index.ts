@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScript, importStyle } from '../utils/util'
 
 import compilePath from '../utils/pathExp'
+import * as cookie from 'js-cookie'
 
 // 404
 // const None = () => import('../views/None.vue')
@@ -75,7 +76,7 @@ function isAmdModule (currentPage: subService): boolean {
     return currentPage && currentPage.inject_type === 'amd'
 }
 
-const createRouter = (store: any, dynamicLoadModule: any) => {
+const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     const router = new Router({
         mode: 'history',
         routes: routes
@@ -85,7 +86,6 @@ const createRouter = (store: any, dynamicLoadModule: any) => {
 
     if (isAmdModule(window.currentPage)) {
         const serviceAlias = getServiceAliasByPath(window.currentPage.link_new)
-        dynamicLoadModule(serviceAlias)
         loadedModule = {
             [serviceAlias]: true
         }
@@ -103,14 +103,13 @@ const createRouter = (store: any, dynamicLoadModule: any) => {
         }
         
         const { css_url, js_url } = currentPage
-        
-        
         if (isAmdModule(currentPage) && !loadedModule[serviceAlias]) {
+            loadedModule[serviceAlias] = true
             store.dispatch('toggleModuleLoading', true)
             Promise.all([
                 importStyle(css_url, document.head),
                 importScript(js_url, document.body),
-                dynamicLoadModule(serviceAlias)
+                dynamicLoadModule(serviceAlias, i18n.locale)
             ]).then(() => {
                 const module = window.Pages[serviceAlias]
                 store.registerModule(serviceAlias, module.store)
@@ -123,19 +122,16 @@ const createRouter = (store: any, dynamicLoadModule: any) => {
                 router.addRoutes(dynamicRoutes)
                 setTimeout(() => {
                     store.dispatch('toggleModuleLoading', false)
-                }, 0)
+                }, 100)
+                goNext(to, next)
             })
-            loadedModule[serviceAlias] = true
-        }
-        const newPath = initProjectId(to, store)
-        if (to.path !== newPath) {
-            next({
-                path: newPath,
-                query: to.query,
-                hash: to.hash
+            goNext(to, next)
+        } else if (isAmdModule(currentPage) && loadedModule[serviceAlias]) {
+            dynamicLoadModule(serviceAlias, i18n.locale).then(() => {
+                goNext(to, next)
             })
         } else {
-            next()
+            goNext(to, next)
         }
     })
 
@@ -154,43 +150,46 @@ function updateHeaderConfig ({ showProjectList, showNav }) {
     }
 }
 
-function parseOS (): string {
-    const { userAgent } = window.navigator
-    switch (true) {
-        case userAgent.indexOf('Linux') > -1:
-            return /android/i.test(userAgent) ? 'ANDROID' : 'LINUX'
-        case userAgent.indexOf('iPhone') > -1:
-            return 'IOS'
-        case userAgent.indexOf('iPad') > -1:
-            return 'iPad'
-        case userAgent.indexOf('Mac') > -1:
-            return 'MACOS'
-        case userAgent.indexOf('Win') > -1:
-            return 'WINDOWS'
+function getProjectId (params): string {
+    try {
+        const cookiePid = cookie.get(X_DEVOPS_PROJECT_ID)
+        const projectId = window.GLOBAL_PID || cookiePid
+        return String(params.projectId) !== '0' && params.projectId ? params.projectId : projectId
+    } catch (e) {
+        return ''
     }
-    return 'WINDOWS'
 }
 
-function getProjectId (store, params): string {
-    const projectId = localStorage.getItem('projectId') || store.getters.enableProjectList[0].project_code
-    return String(params.projectId) !== '0' && params.projectId ? params.projectId : projectId
-}
-
-function initProjectId (to, store): string {
+function initProjectId (to): string {
     try {
         const { matched, params } = to
-        const projectId: string = getProjectId(store, params)
+        const projectId: string = getProjectId(params)
         const lastMatched = matched[matched.length - 1]
         
         const options = projectId ? {
             ...params,
             projectId
         } : params
-        
         return matched.length ? compilePath(lastMatched.path)(options) : to.path
     } catch (e) {
         console.log(e)
         return to.path
+    }
+}
+
+function goNext (to, next) {
+    const newPath = initProjectId(to)
+
+    // @ts-ignore
+    window.setProjectIdCookie(getProjectId(to.params))
+    if (to.path !== newPath) {
+        next({
+            path: newPath,
+            query: to.query,
+            hash: to.hash
+        })
+    } else {
+        next()
     }
 }
 export default createRouter

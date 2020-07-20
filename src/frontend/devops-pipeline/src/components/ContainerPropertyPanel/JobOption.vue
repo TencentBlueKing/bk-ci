@@ -2,7 +2,7 @@
     <accordion show-checkbox show-content key="otherChoice">
         <header class="var-header" slot="header">
             <span>{{ $t('editPage.jobOption') }}</span>
-            <i class="bk-icon icon-angle-down" style="display:block"></i>
+            <i class="devops-icon icon-angle-down" style="display:block"></i>
         </header>
         <div slot="content" class="bk-form bk-form-vertical">
             <template v-for="(obj, key) in optionModel">

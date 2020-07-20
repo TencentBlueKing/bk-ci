@@ -52,7 +52,7 @@ const val PIPELINE_WEBHOOK_BLOCK = "BK_CI_HOOK_BLOCK" // hookBlock
 const val PIPELINE_WEBHOOK_TYPE = "BK_CI_HOOK_TYPE" // hookType
 const val PIPELINE_WEBHOOK_EVENT_TYPE = "BK_CI_HOOK_EVENT_TYPE" // hookEventType
 const val PIPELINE_WEBHOOK_MR_ID = "BK_CI_HOOK_MR_ID" // bk_hookMergeRequestId
-const val PIPELINE_REPO_NAME = "BL_CI_REPO_NAME" // "repoName"
+const val PIPELINE_REPO_NAME = "BK_CI_REPO_NAME" // "repoName"
 const val PIPELINE_WEBHOOK_MR_COMMITTER = "BK_CI_HOOK_MR_COMMITTER" // "bk_hookMergeRequest_committer"
 
 const val GIT_MR_NUMBER = "BK_CI_GIT_MR_NUMBER" // git_mr_number
@@ -79,6 +79,9 @@ const val PIPELINE_RETRY_COUNT = "BK_CI_RETRY_COUNT" // "pipeline.retry.count"
 const val PIPELINE_RETRY_BUILD_ID = "BK_CI_RETRY_BUILD_ID" // "pipeline.retry.build.id"
 const val PIPELINE_RETRY_START_TASK_ID = "BK_CI_RETRY_TASK_ID" // "pipeline.retry.start.task.id"
 
+const val BK_CI_BUILD_FAIL_TASKS = "BK_CI_BUILD_FAIL_TASKS"
+const val BK_CI_BUILD_FAIL_TASKNAMES = "BK_CI_BUILD_FAIL_TASKNAMES"
+
 const val PIPELINE_VIEW_MY_PIPELINES = "myPipeline"
 const val PIPELINE_VIEW_FAVORITE_PIPELINES = "collect"
 const val PIPELINE_VIEW_ALL_PIPELINES = "allPipeline"
@@ -92,9 +95,9 @@ const val PIPELINE_MATERIAL_NEW_COMMIT_COMMENT =
 const val PIPELINE_MATERIAL_NEW_COMMIT_TIMES =
     "BK_CI_PIPELINE_MATERIAL_NEW_COMMIT_TIMES" // pipeline.material.new.commit.times
 
-const val MAJORVERSION = "BK_CI_MAJOR_VERSION" // majorVersion
-const val MINORVERSION = "BK_CI_MINOR_VERSION" // minorVersion
-const val FIXVERSION = "BK_CI_FIX_VERSION" // fixVersion
+const val MAJORVERSION = "BK_CI_MAJOR_VERSION" // MajorVersion
+const val MINORVERSION = "BK_CI_MINOR_VERSION" // MinorVersion
+const val FIXVERSION = "BK_CI_FIX_VERSION" // FixVersion
 const val BUILD_NO = "BK_CI_BUILD_NO" // "BuildNo"
 
 /**
@@ -110,6 +113,15 @@ const val PIPELINE_ATOM_FRONTEND_DIST_PATH = "BK_CI_CUSTOM_FRONTEND_DIST_PATH" /
  */
 const val PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT = 10
 /**
+ * 流水线插件设置-失败重试最大值
+ */
+const val TASK_FAIL_RETRY_MAX_COUNT = 5
+/**
+ * 流水线插件设置-失败重试最小值
+ */
+const val TASK_FAIL_RETRY_MIN_COUNT = 1
+
+/**
  * 流水线设置-最大排队数量-最小值
  */
 const val PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN = 0
@@ -122,14 +134,66 @@ const val PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX = 20
  * 流水线设置-最大排队时间-默认值 单位:分钟
  */
 const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT = 1
+
 /**
  * 流水线设置-最大排队时间-最小值 单位:分钟
  */
 const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN = 1
+
 /**
  * 流水线设置-最大排队时间-默认值 单位:分钟
  */
 const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX = 1440
+
+/**
+ * 流水线设置-错误信息入库长度最大值 单位:分钟
+ */
+const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 4000
+
+/**
+ * 流水线设置-启动的通知模板代码
+ */
+const val PIPELINE_STARTUP_NOTIFY_TEMPLATE = "PIPELINE_STARTUP_NOTIFY_TEMPLATE"
+
+/**
+ * 流水线设置-启动的详情通知模板代码
+ */
+const val PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL = "PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL"
+
+/**
+ * 流水线设置-执行成功的通知模板代码
+ */
+const val PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE = "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE"
+
+/**
+ * 流水线设置-执行成功的详情通知模板代码
+ */
+const val PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL = "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL"
+
+/**
+ * 流水线设置-执行失败的通知模板代码
+ */
+const val PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE = "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE"
+
+/**
+ * 流水线设置-执行失败的详情通知模板代码
+ */
+const val PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL = "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL"
+
+/**
+ * 流水线设置-执行取消的通知模板代码
+ */
+const val PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE = "PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE"
+
+/**
+ * 流水线设置-执行取消的详情通知模板代码
+ */
+const val PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL = "PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL"
+
+/**
+ * 流水线设置-人工审核插件的通知模板代码
+ */
+const val PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE = "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE"
 
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 
@@ -155,13 +219,14 @@ object PipelineVarUtil {
      * 以下用于兼容旧参数
      */
     private val oldVarMappingNewVar = mapOf(
+        "pipeline.start.isMobile" to PIPELINE_START_MOBILE,
         "repoName" to PIPELINE_REPO_NAME,
         "pipeline.version" to PIPELINE_VERSION,
         "pipeline.start.parent.build.task.id" to PIPELINE_START_PARENT_BUILD_TASK_ID,
         "pipeline.start.parent.build.id" to PIPELINE_START_PARENT_BUILD_ID,
-        "majorVersion" to MAJORVERSION,
-        "minorVersion" to MINORVERSION,
-        "fixVersion" to FIXVERSION,
+        "MajorVersion" to MAJORVERSION,
+        "MinorVersion" to MINORVERSION,
+        "FixVersion" to FIXVERSION,
         "BuildNo" to BUILD_NO,
         "pipeline.start.channel" to PIPELINE_START_CHANNEL,
         "pipeline.build.last.update" to PIPELINE_BUILD_LAST_UPDATE,
@@ -217,10 +282,35 @@ object PipelineVarUtil {
     }
 
     /**
-     * 从新变量前缀的变量中查出并增加旧变量前缀的变量
+     * 从新变量前缀的变量中查出并增加旧变量，会做去重
+     * @param vars 变量Map
+     * @return 包含新旧变量的Map
      */
-    fun fillOldVarPrefixTurning(vars: MutableMap<String, String>, replace: Boolean = false) {
-        prefixTurning(newPrefixMappingOld, vars, replace)
+    fun mixOldVarAndNewVar(vars: MutableMap<String, String>): MutableMap<String, String> {
+        // 旧流水线的前缀变量追加 一些旧代码类插件生成的
+        prefixTurning(newPrefixMappingOld, vars)
+
+        val allVars = mutableMapOf<String, String>()
+        vars.forEach {
+            // 从新转旧: 新流水线产生的变量 兼容在旧流水线中已经使用到的旧变量
+            val oldVarName = newVarToOldVar(it.key)
+            if (!oldVarName.isNullOrBlank()) {
+                allVars[oldVarName!!] = it.value // 旧变量写入，如果之前有了，则替换
+                allVars[it.key] = it.value // 新变量仍然写入
+            } else {
+                // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
+                val newVarName = oldVarToNewVar(it.key)
+                // 新变量已经存在，忽略旧变量转换
+                if (!newVarName.isNullOrBlank() && !vars.contains(newVarName)) {
+                    allVars[newVarName!!] = it.value
+                }
+                // 已经存在从新变量转化过来的旧变量，则不覆盖，放弃
+                if (!allVars.containsKey(it.key)) {
+                    allVars[it.key] = it.value
+                }
+            }
+        }
+        return allVars
     }
 
     /**
@@ -233,7 +323,8 @@ object PipelineVarUtil {
 
     private fun turning(mapping: Map<String, String>, vars: MutableMap<String, String>, replace: Boolean = false) {
         mapping.forEach {
-            if (vars[it.key] != null) {
+            // 如果新旧key同时存在，则保留原value
+            if (vars[it.key] != null && vars[it.value] == null) {
                 vars[it.value] = vars[it.key]!!
                 if (replace) {
                     vars.remove(it.key)

@@ -26,11 +26,15 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
+import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
+import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
 import org.slf4j.LoggerFactory
 
 /**
@@ -64,6 +68,26 @@ object ControlUtils {
         return additionalOptions.continueWhenFailed
     }
 
+    fun retryWhenFailure(additionalOptions: ElementAdditionalOptions?, retryCount: Int): Boolean {
+        if (additionalOptions == null || !isEnable(additionalOptions)) {
+            return false
+        }
+        val retryWhenFailed = additionalOptions.retryWhenFailed
+
+        return if (retryWhenFailed) {
+            var settingRetryCount = additionalOptions.retryCount
+            if (settingRetryCount > TASK_FAIL_RETRY_MAX_COUNT) {
+                settingRetryCount = TASK_FAIL_RETRY_MAX_COUNT
+            }
+            if (settingRetryCount < TASK_FAIL_RETRY_MIN_COUNT) {
+                settingRetryCount = TASK_FAIL_RETRY_MIN_COUNT
+            }
+            retryCount < settingRetryCount
+        } else {
+            false
+        }
+    }
+
     fun checkAdditionalSkip(
         buildId: String,
         additionalOptions: ElementAdditionalOptions?,
@@ -76,14 +100,22 @@ object ControlUtils {
             logger.info("buildId=[$buildId]|PRE_TASK_FAILED_ONLY|containerFinalStatus=$containerFinalStatus|will skip")
             return true
         }
+        if (!isEnable(additionalOptions)) {
+            return true
+        }
+
+        return checkCustomVariableSkip(buildId = buildId, additionalOptions = additionalOptions, variables = variables)
+    }
+
+    fun checkCustomVariableSkip(buildId: String, additionalOptions: ElementAdditionalOptions?, variables: Map<String, String>): Boolean {
         // 自定义变量全部满足时不运行
         if (skipWhenCustomVarMatch(additionalOptions)) {
             for (names in additionalOptions!!.customVariables!!) {
                 val key = names.key
-                val value = names.value
+                val value = EnvUtils.parseEnv(names.value, variables)
                 val existValue = variables[key]
                 if (value != existValue) {
-                    logger.info("buildId=[$buildId]|CUSTOM_VARIABLE_MATCH_NOT_RUN|exists=$existValue|expect=$value")
+                    logger.info("buildId=[$buildId]|CUSTOM_VARIABLE_MATCH_NOT_RUN|key=$key|exists=$existValue|expect=$value|origin=${names.value}")
                     return false
                 }
             }
@@ -95,10 +127,10 @@ object ControlUtils {
         if (notSkipWhenCustomVarMatch(additionalOptions)) {
             for (names in additionalOptions!!.customVariables!!) {
                 val key = names.key
-                val value = names.value
+                val value = EnvUtils.parseEnv(names.value, variables)
                 val existValue = variables[key]
                 if (value != existValue) {
-                    logger.info("buildId=[$buildId]|CUSTOM_VARIABLE_MATCH|exists=$existValue|expect=$value")
+                    logger.info("buildId=[$buildId]|CUSTOM_VARIABLE_MATCH|key=$key|exists=$existValue|expect=$value|origin=${names.value}")
                     return true
                 }
             }
@@ -109,11 +141,11 @@ object ControlUtils {
 
     private fun notSkipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
         additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH &&
-            additionalOptions.customVariables != null && !additionalOptions.customVariables!!.isEmpty()
+            additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
 
     private fun skipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
         additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN &&
-            additionalOptions.customVariables != null && !additionalOptions.customVariables!!.isEmpty()
+            additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
 
     private fun skipWhenPreTaskFailedOnly(
         additionalOptions: ElementAdditionalOptions?,
@@ -126,9 +158,9 @@ object ControlUtils {
             !hasFailedTaskInSuccessContainer
     }
 
-    fun checkSkipCondition(
+    fun checkJobSkipCondition(
         conditions: List<NameAndValue>,
-        variables: Map<String, Any>,
+        variables: Map<String, String>,
         buildId: String,
         runCondition: JobRunCondition
     ): Boolean {
@@ -141,8 +173,32 @@ object ControlUtils {
             val key = names.key
             val value = names.value
             val existValue = variables[key]
+            val env = EnvUtils.parseEnv(value, variables)
+            if (env != existValue) {
+                logger.info("[$buildId]|JOB_CONDITION|$runCondition|key=$key|actual=$existValue|expect=$value")
+                return !skip // 不满足则取反
+            }
+        }
+        return skip
+    }
+
+    fun checkStageSkipCondition(
+        conditions: List<NameAndValue>,
+        variables: Map<String, Any>,
+        buildId: String,
+        runCondition: StageRunCondition
+    ): Boolean {
+        val skip = when (runCondition) {
+            StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
+            StageRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
+            else -> return false // 其它类型直接返回不跳过
+        }
+        for (names in conditions) {
+            val key = names.key
+            val value = names.value
+            val existValue = variables[key]
             if (value != existValue) {
-                logger.info("[$buildId]|$runCondition|key=$key|actual=$existValue|expect=$value")
+                logger.info("[$buildId]|STAGE_CONDITION|$runCondition|key=$key|actual=$existValue|expect=$value")
                 return !skip // 不满足则取反
             }
         }

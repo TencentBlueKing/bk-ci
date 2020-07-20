@@ -29,15 +29,15 @@ package com.tencent.devops.plugin.worker.task.archive
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
-import com.tencent.devops.worker.common.exception.TaskExecuteException
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -55,12 +55,12 @@ class AtomBuildArchiveTask : ITask() {
         val destPath = taskParams["destPath"] ?: throw TaskExecuteException(
             errorMsg = "param [destPath] is empty",
             errorType = ErrorType.SYSTEM,
-            errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
         val filePath = taskParams["filePath"] ?: throw TaskExecuteException(
             errorMsg = "param [filePath] is empty",
             errorType = ErrorType.SYSTEM,
-            errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
 
         val fileSha = atomApi.archiveAtom(filePath, destPath, workspace, buildVariables)
@@ -68,7 +68,7 @@ class AtomBuildArchiveTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "atom file check sha fail!",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
             )
         }
 
@@ -78,7 +78,7 @@ class AtomBuildArchiveTask : ITask() {
             val frontendDestPath = taskParams["frontendDestPath"] ?: throw TaskExecuteException(
                 errorMsg = "param [frontendDestPath] is empty",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
             )
             val baseFile = File(workspace, frontendFilePath)
             val baseFileDirPath = Paths.get(baseFile.canonicalPath)
@@ -98,12 +98,12 @@ class AtomBuildArchiveTask : ITask() {
         val atomCode = buildVariable!!["atomCode"] ?: throw TaskExecuteException(
             errorMsg = "need atomCode param",
             errorType = ErrorType.SYSTEM,
-            errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
         val atomVersion = buildVariable["version"] ?: throw TaskExecuteException(
             errorMsg = "need version param",
             errorType = ErrorType.SYSTEM,
-            errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
         val preCmd = buildVariable["preCmd"]
         val target = buildVariable["target"]
@@ -111,12 +111,12 @@ class AtomBuildArchiveTask : ITask() {
         val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID) ?: throw TaskExecuteException(
             errorMsg = "user basic info error, please check environment.",
             errorType = ErrorType.SYSTEM,
-            errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
         val atomEnv = atomEnvResult.data ?: throw TaskExecuteException(
             errorMsg = "can not found any $atomCode env",
             errorType = ErrorType.SYSTEM,
-            errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
         val request = AtomEnvRequest(
             userId = userId,
@@ -134,7 +134,7 @@ class AtomBuildArchiveTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "update Atom Env fail: ${result.message}",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
             )
         }
     }

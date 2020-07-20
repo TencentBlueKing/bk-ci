@@ -48,7 +48,7 @@ class GroupDao {
         }
     }
 
-    fun list(dslContext: DSLContext, groupIds: Set<Long>): Result<TGroupRecord> {
+    fun list(dslContext: DSLContext, groupIds: Collection<Long>): Result<TGroupRecord> {
         with(TGroup.T_GROUP) {
             return dslContext.selectFrom(this)
                 .where(ID.`in`(groupIds))

@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("VM-基本信息")
 data class VM(
     @ApiModelProperty("VM ID", required = true)
-    val id: Int,
+    val id: Long,
     @ApiModelProperty("VM 对应母机ID", required = true)
     val machineId: Int,
     @ApiModelProperty("VM 类型ID", required = true)

@@ -26,6 +26,8 @@
 
 dependencies {
     compile project(":core:ticket:biz-ticket-sample")
+    compile project(":core:common:common-auth:common-auth-mock")
+    compile project(":core:common:common-auth:common-auth-blueking")
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"

@@ -7,14 +7,14 @@
             v-if="showExplorerTips === 'true' && isShowPreviewTips && !chromeExplorer"
             class="user-prompt"
         >
-            <p><i class="bk-icon icon-info-circle-shape" />{{ $t("recommendationLabel") }}</p>
+            <p><i class="devops-icon icon-info-circle-shape" />{{ $t("recommendationLabel") }}</p>
             <div class="close-btn">
                 <span
                     class="close-remind"
                     @click="closeExplorerTips"
                 >{{ $t("dismiss") }}</span>
                 <i
-                    class="bk-icon icon-close"
+                    class="devops-icon icon-close"
                     @click="closePreviewTips"
                 />
             </div>
@@ -72,7 +72,7 @@
     import Header from '../components/Header/index.vue'
     import AskPermissionDialog from '../components/AskPermissionDialog/AskPermissionDialog.vue'
     import LoginDialog from '../components/LoginDialog/index.vue'
-    import { Component, Watch } from 'vue-property-decorator'
+    import { Component } from 'vue-property-decorator'
     import { State, Getter, Action } from 'vuex-class'
     import eventBus from '../utils/eventBus'
 
@@ -102,34 +102,29 @@
         }
 
         get hasProject (): boolean {
-            return this.projectList.some(project => project.project_code === this.$route.params.projectId)
+            return this.projectList.some(project => project.projectCode === this.$route.params.projectId)
         }
 
         get isDisableProject (): boolean {
-            const project = this.disableProjectList.find(project => project.project_code === this.$route.params.projectId)
+            const project = this.disableProjectList.find(project => project.projectCode === this.$route.params.projectId)
             return project ? !project.enabled : false
         }
 
         get isApprovalingProject (): boolean {
-            return !!this.approvalingProjectList.find(project => project.project_code === this.$route.params.projectId)
+            return !!this.approvalingProjectList.find(project => project.projectCode === this.$route.params.projectId)
         }
 
         get isOnlineProject (): boolean {
-            return !!this.enableProjectList.find(project => project.project_code === this.$route.params.projectId)
+            return !!this.enableProjectList.find(project => project.projectCode === this.$route.params.projectId)
         }
 
         get hasProjectList (): boolean {
             return this.headerConfig.showProjectList
         }
 
-        get chromeExplorer () :boolean {
+        get chromeExplorer (): boolean {
             const explorer = window.navigator.userAgent
             return explorer.indexOf('Chrome') >= 0 && explorer.indexOf('QQ') === -1
-        }
-
-        @Watch('$route.path')
-        routeChange (name: string): void {
-            this.hasProjectList && this.saveProjectId()
         }
 
         switchProject () {
@@ -141,15 +136,7 @@
             this.closePreviewTips()
         }
 
-        saveProjectId (): void {
-            const { $route, projectList } = this
-            if (projectList.find(project => (project.project_code === $route.params.projectId && project.enabled && (project.approval_status === 2 || project.approval_status === 1)))) {
-                localStorage.setItem('projectId', $route.params.projectId)
-            }
-        }
-
         created () {
-            this.hasProjectList && this.saveProjectId()
             eventBus.$on('toggle-login-dialog', (isShow) => {
                 this.showLoginDialog = isShow
             })

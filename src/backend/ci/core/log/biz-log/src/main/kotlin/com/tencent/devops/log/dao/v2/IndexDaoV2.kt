@@ -52,7 +52,8 @@ class IndexDaoV2 {
                 LAST_LINE_NUM,
                 CREATED_TIME,
                 UPDATED_TIME,
-                ENABLE
+                ENABLE,
+                USE_CLUSTER
                 )
                 .values(
                     buildId,
@@ -60,7 +61,8 @@ class IndexDaoV2 {
                     1,
                     now,
                     now,
-                    enable
+                    enable,
+                    true
                 )
                 .onDuplicateKeyIgnore()
                 .execute()

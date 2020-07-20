@@ -30,18 +30,22 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
-import com.tencent.devops.dispatch.api.BuildDockerHostResource
+import com.tencent.devops.dispatch.api.builds.BuildDockerHostResource
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
+import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
+import com.tencent.devops.dispatch.service.DispatchDockerService
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.DockerHostDebugService
+import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildDockerHostResourceImpl @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService,
-    private val dockerHostDebugService: DockerHostDebugService
+    private val dockerHostDebugService: DockerHostDebugService,
+    private val dispatchDockerService: DispatchDockerService
 ) : BuildDockerHostResource {
 
     override fun getHost(hostTag: String): Result<DockerHostInfo>? {
@@ -85,13 +89,21 @@ class BuildDockerHostResourceImpl @Autowired constructor(
         return Result(0, "success")
     }
 
-    override fun log(buildId: String, red: Boolean, message: String, tag: String?): Result<Boolean>? {
-        dockerHostBuildService.log(buildId, red, message, tag)
+    override fun log(buildId: String, red: Boolean, message: String, tag: String?, jobId: String?): Result<Boolean>? {
+        dockerHostBuildService.log(buildId, red, message, tag, jobId)
         return Result(0, "success")
     }
 
-    override fun postLog(buildId: String, red: Boolean, message: String, tag: String?): Result<Boolean>? {
-        dockerHostBuildService.log(buildId, red, message, tag)
+    override fun postLog(buildId: String, red: Boolean, message: String, tag: String?, jobId: String?): Result<Boolean>? {
+        dockerHostBuildService.log(buildId, red, message, tag, jobId)
         return Result(0, "success")
+    }
+
+    override fun getPublicImages(): Result<List<ImageRepoInfo>> {
+        return dockerHostBuildService.getPublicImage()
+    }
+
+    override fun refresh(dockerIp: String, dockerIpInfoVO: DockerIpInfoVO): Result<Boolean> {
+        return Result(dispatchDockerService.updateDockerIpLoad("dockerhost", dockerIp, dockerIpInfoVO))
     }
 }

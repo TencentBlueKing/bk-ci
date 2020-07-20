@@ -35,10 +35,13 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TContainerRecord
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.container.BuildResourceDao
 import com.tencent.devops.store.dao.container.ContainerDao
 import com.tencent.devops.store.dao.container.ContainerResourceRelDao
 import com.tencent.devops.store.pojo.app.ContainerAppWithVersion
+import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.container.Container
 import com.tencent.devops.store.pojo.container.ContainerBuildType
 import com.tencent.devops.store.pojo.container.ContainerRequest
@@ -46,6 +49,7 @@ import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResourceValue
 import com.tencent.devops.store.pojo.container.ContainerResp
 import com.tencent.devops.store.pojo.container.enums.ContainerRequiredEnum
+import com.tencent.devops.store.service.container.BuildResourceService
 import com.tencent.devops.store.service.container.ContainerAppService
 import com.tencent.devops.store.service.container.ContainerService
 import org.jooq.DSLContext
@@ -71,17 +75,15 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
     @Autowired
     lateinit var buildResourceDao: BuildResourceDao
     @Autowired
+    lateinit var businessConfigDao: BusinessConfigDao
+    @Autowired
     lateinit var containerAppService: ContainerAppService
     @Autowired
     lateinit var client: Client
+    @Autowired
+    lateinit var buildResourceService: BuildResourceService
 
     private val logger = LoggerFactory.getLogger(ContainerServiceImpl::class.java)
-
-    private val OSDefaultBuildType = mapOf(
-        OS.LINUX to BuildType.DOCKER,
-        OS.WINDOWS to BuildType.THIRD_PARTY_AGENT_ID,
-        OS.MACOS to BuildType.ESXi
-    )
 
     /**
      * 获取所有构建容器信息
@@ -136,7 +138,18 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             val typeList = mutableListOf<ContainerBuildType>()
             BuildType.values().filter { type -> type.visable == true }.forEach { type ->
                 if ((containerOS == null || type.osList.contains(containerOS)) && buildTypeEnable(type, projectCode)) {
-                        typeList.add(ContainerBuildType(type.name, type.value, type.enableApp, !clickable(type, projectCode)))
+                    // 构建资源国际化转换
+                    val i18nTypeName = MessageCodeUtil.getCodeLanMessage(
+                        messageCode = "${StoreMessageCode.MSG_CODE_BUILD_TYPE_PREFIX}${type.name}",
+                        defaultMessage = type.value
+                    )
+                    typeList.add(ContainerBuildType(
+                        type = type.name,
+                        name = i18nTypeName,
+                        enableApp = type.enableApp,
+                        disabled = !clickable(buildType = type, projectCode = projectCode),
+                        defaultBuildResource = buildResourceService.getDefaultBuildResource(type)
+                    ))
                 }
                 if (!queryAllFlag && containerOS != null) {
                     val resource = try {
@@ -153,6 +166,14 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
                     }
                 }
             }
+            val defaultBuildType = if (containerOS == null) null else BuildType.valueOf(
+                businessConfigDao.get(
+                    dslContext = dslContext,
+                    business = BusinessEnum.BUILD_TYPE.name,
+                    feature = "defaultBuildType",
+                    businessValue = containerOS.name
+                )!!.configValue
+            )
             val pipelineContainerResp = ContainerResp(
                 id = it.id,
                 name = it.name,
@@ -165,7 +186,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
                 typeList = typeList,
                 props = convertString(it.props),
                 apps = appList,
-                defaultBuildType = if (containerOS == null) null else OSDefaultBuildType[containerOS],
+                defaultBuildType = defaultBuildType,
                 resources = resources
             )
             logger.info("pipelineContainerResp is: $pipelineContainerResp")

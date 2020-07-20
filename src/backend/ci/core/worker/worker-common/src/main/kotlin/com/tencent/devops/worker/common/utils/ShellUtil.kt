@@ -26,6 +26,9 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CommonEnv
@@ -83,10 +86,19 @@ object ShellUtil {
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
+        systemEnvVariables: Map<String, String>? = null,
         prefix: String = ""
     ): String {
         return executeUnixCommand(
-            command = getCommandFile(buildId, script, dir, buildEnvs, runtimeVariables, continueNoneZero).canonicalPath,
+            command = getCommandFile(
+                buildId = buildId,
+                script = script,
+                dir = dir,
+                buildEnvs = buildEnvs,
+                runtimeVariables = runtimeVariables,
+                continueNoneZero = continueNoneZero,
+                systemEnvVariables = systemEnvVariables
+            ).canonicalPath,
             sourceDir = dir,
             prefix = prefix
         )
@@ -98,7 +110,8 @@ object ShellUtil {
         dir: File,
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
-        continueNoneZero: Boolean = false
+        continueNoneZero: Boolean = false,
+        systemEnvVariables: Map<String, String>? = null
     ): File {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
         file.deleteOnExit()
@@ -111,6 +124,12 @@ object ShellUtil {
 
         command.append("export $WORKSPACE_ENV=${dir.absolutePath}\n")
             .append("export DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\n")
+
+        // 设置系统环境变量
+        systemEnvVariables?.forEach { (name, value) ->
+            command.append("export $name=$value\n")
+        }
+
         val commonEnv = runtimeVariables.plus(CommonEnv.getCommonEnv())
             .filter {
                 !specialEnv(it.key, it.value)
@@ -146,7 +165,7 @@ object ShellUtil {
                 path = if (path.isEmpty()) {
                     envFile.absolutePath
                 } else {
-                    "${envFile.absolutePath}:$path"
+                    "$path:${envFile.absolutePath}"
                 }
                 if (buildEnv.env.isNotEmpty()) {
                     buildEnv.env.forEach { (name, path) ->
@@ -183,7 +202,11 @@ object ShellUtil {
             return CommandLineUtils.execute(command, sourceDir, true, prefix)
         } catch (ignored: Throwable) {
             LoggerService.addNormalLine("Fail to run the command $command because of error(${ignored.message})")
-            throw ignored
+            throw throw TaskExecuteException(
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorMsg = ignored.message ?: ""
+            )
         }
     }
 

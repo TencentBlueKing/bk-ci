@@ -217,6 +217,25 @@ class PipelineViewService @Autowired constructor(
                     tmpList.add(PipelineViewIdAndName(id = encode(record.id), name = record.name))
                 }
             }
+            // If tmpList is empty, then the view is delete, so return the default view list
+            if (tmpList.isEmpty()) {
+                tmpList.addAll(
+                    listOf(
+                        PipelineViewIdAndName(
+                            id = PIPELINE_VIEW_FAVORITE_PIPELINES,
+                            name = MessageCodeUtil.getCodeLanMessage(FAVORITE_PIPELINES_LABEL)
+                        ),
+                        PipelineViewIdAndName(
+                            id = PIPELINE_VIEW_MY_PIPELINES,
+                            name = MessageCodeUtil.getCodeLanMessage(MY_PIPELINES_LABEL)
+                        ),
+                        PipelineViewIdAndName(
+                            id = PIPELINE_VIEW_ALL_PIPELINES,
+                            name = MessageCodeUtil.getCodeLanMessage(ALL_PIPELINES_LABEL)
+                        )
+                    )
+                )
+            }
             tmpList
         }
 
@@ -224,7 +243,12 @@ class PipelineViewService @Autowired constructor(
         val currentViewId = if (usingViewId != null && currentViewList.map { it.id }.contains(usingViewId)) {
             usingViewId
         } else {
-            currentViewList.first().id
+            // 如果之前没有用过， 那就先选`我的流水线`， 如果`我的流水线`也没有， 那就直接选第一个
+            if (currentViewList.map { it.id }.contains(PIPELINE_VIEW_MY_PIPELINES)) {
+                PIPELINE_VIEW_MY_PIPELINES
+            } else {
+                currentViewList.first().id
+            }
         }
 
         return Pair(first = currentViewId, second = currentViewList)

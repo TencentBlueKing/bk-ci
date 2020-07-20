@@ -2,16 +2,16 @@
     <div style="text-align: left">
         <form class="bk-form" ref="versionParamsForm" onsubmit="return false;">
             <div class="params-flex-col">
-                <form-field v-for="v in allVersionKeyList" :key="v" :required="v.required" :label="versionConfig[v].label" :is-error="errors.has(v)" :error-msg="errors.first(v)">
+                <form-field v-for="v in allVersionKeyList" :key="v" :required="v.required" :label="versionLabel[v]" :is-error="errors.has(v)" :error-msg="errors.first(v)">
                     <vuex-input :disabled="disabled" input-type="number" :name="v" :placeholder="versionConfig[v].placeholder" v-validate.initial="&quot;required|numeric&quot;" :value="versionParamValues[v]" :handle-change="handleVersionChange" />
                 </form-field>
             </div>
             <div class="params-flex-col">
                 <form-field :required="true" :label="$t('buildNum')" :is-error="errors.has(&quot;buildNo&quot;)" :error-msg="errors.first(&quot;buildNo&quot;)">
-                    <vuex-input :disabled="buildNo.buildNoType !== 'CONSISTENT'" input-type="number" name="buildNo" placeholder="BuildNo" v-validate.initial="&quot;required|numeric&quot;" :value="buildNo.buildNo" :handle-change="handleBuildNoChange" />
+                    <vuex-input :disabled="(isPreview && buildNo.buildNoType !== 'CONSISTENT') || disabled" input-type="number" name="buildNo" placeholder="BuildNo" v-validate.initial="&quot;required|numeric&quot;" :value="buildNo.buildNo" :handle-change="handleBuildNoChange" />
                 </form-field>
                 <form-field class="flex-colspan-2" :required="true" :is-error="errors.has(&quot;buildNoType&quot;)" :error-msg="errors.first(&quot;buildNoType&quot;)">
-                    <enum-input :list="buildNoRules" :disabled="true" name="buildNoType" v-validate.initial="&quot;required|string&quot;" :value="buildNo.buildNoType" />
+                    <enum-input :list="buildNoRules" :disabled="disabled || isPreview" name="buildNoType" v-validate.initial="&quot;required|string&quot;" :value="buildNo.buildNoType" :handle-change="handleBuildNoChange" />
                 </form-field>
             </div>
         </form>
@@ -23,6 +23,7 @@
     import VuexInput from '@/components/atomFormField/VuexInput'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import FormField from '@/components/AtomPropertyPanel/FormField'
+    import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -31,6 +32,13 @@
             FormField
         },
         props: {
+            isPreview: {
+                type: Boolean
+            },
+            disabled: {
+                type: Boolean,
+                default: false
+            },
             versionParamValues: {
                 type: Object,
                 default: () => ({})
@@ -48,41 +56,21 @@
                 default: () => () => {}
             }
         },
-        data () {
-            return {
-            }
-        },
         computed: {
             ...mapGetters('atom', [
                 'buildNoRules'
             ]),
             allVersionKeyList () {
-                return [
-                    'MajorVersion',
-                    'MinorVersion',
-                    'FixVersion'
-                ]
+                return allVersionKeyList
             },
             versionConfig () {
+                return getVersionConfig()
+            },
+            versionLabel () {
                 return {
-                    MajorVersion: {
-                        label: this.$t('preview.majorVersion'),
-                        type: 'STRING',
-                        default: '0',
-                        placeholder: 'MajorVersion'
-                    },
-                    MinorVersion: {
-                        label: this.$t('preview.minorVersion'),
-                        type: 'STRING',
-                        default: '0',
-                        placeholder: 'MinorVersion'
-                    },
-                    FixVersion: {
-                        label: this.$t('preview.fixVersion'),
-                        type: 'STRING',
-                        default: '0',
-                        placeholder: 'FixVersion'
-                    }
+                    BK_CI_MAJOR_VERSION: this.$t('preview.majorVersion'),
+                    BK_CI_MINOR_VERSION: this.$t('preview.minorVersion'),
+                    BK_CI_FIX_VERSION: this.$t('preview.fixVersion')
                 }
             }
         }

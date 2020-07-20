@@ -78,5 +78,9 @@ data class ThirdPartyAgentDetail(
     @ApiModelProperty("硬盘空间（最大盘）", required = true)
     val diskTotal: String,
     @ApiModelProperty("是否可以编辑", required = false)
-    val canEdit: Boolean?
+    val canEdit: Boolean?,
+    @ApiModelProperty("当前Agent版本", required = false)
+    val currentAgentVersion: String? = "",
+    @ApiModelProperty("当前Worker版本", required = false)
+    val currentWorkerVersion: String? = ""
 )

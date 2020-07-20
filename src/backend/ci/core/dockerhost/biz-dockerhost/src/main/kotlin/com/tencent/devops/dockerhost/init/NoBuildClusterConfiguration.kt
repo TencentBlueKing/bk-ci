@@ -65,7 +65,7 @@ import kotlin.system.exitProcess
  */
 
 @Configuration
-@ConditionalOnProperty(prefix = "run", name = ["mode"], havingValue = "docker_no_build")
+@ConditionalOnProperty(prefix = "dockerhost", name = ["mode"], havingValue = "docker_no_build")
 @EnableScheduling
 class NoBuildClusterConfiguration : SchedulingConfigurer {
 

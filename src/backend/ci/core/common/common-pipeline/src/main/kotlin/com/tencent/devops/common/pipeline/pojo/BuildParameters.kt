@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("构建模型-构建参数")
 data class BuildParameters(
     @ApiModelProperty("元素值ID-标识符", required = true)
-    val key: String,
+    var key: String,
     @ApiModelProperty("元素值名称-显示用", required = true)
     val value: Any,
     @ApiModelProperty("元素值类型", required = false)

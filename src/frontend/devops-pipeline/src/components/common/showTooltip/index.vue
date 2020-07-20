@@ -52,7 +52,7 @@
         },
         computed: {
             instance () {
-                return this.$refs.showPopover && this.$refs.showPopover.instance && this.$refs.showPopover.instance.instances && this.$refs.showPopover.instance.instances[0]
+                return this.$refs.showPopover && this.$refs.showPopover.instance
             }
         },
         beforeDestroy () {

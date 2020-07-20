@@ -44,10 +44,6 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-/**
- * deng
- * 2019-01-11
- */
 @Api(tags = ["OP_PIPELINE_CONTAINER_MONITOR"], description = "OP-流水线-构建机监控")
 @Path("/op/pipelineContainer")
 @Produces(MediaType.APPLICATION_JSON)

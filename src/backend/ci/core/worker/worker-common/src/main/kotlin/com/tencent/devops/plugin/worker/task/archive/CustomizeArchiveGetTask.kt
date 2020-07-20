@@ -27,6 +27,9 @@
 package com.tencent.devops.plugin.worker.task.archive
 
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.archive.element.CustomizeArchiveGetElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
@@ -47,7 +50,11 @@ class CustomizeArchiveGetTask : ITask() {
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
         val destPath = File(workspace, taskParams["destPath"] ?: ".")
-        val downloadPaths = taskParams["downloadPaths"] ?: throw RuntimeException("downloadPaths can not be null")
+        val downloadPaths = taskParams["downloadPaths"] ?: throw TaskExecuteException(
+            errorCode = ErrorCode.USER_INPUT_INVAILD,
+            errorType = ErrorType.USER,
+            errorMsg = "downloadPaths can not be null"
+        )
         val notFoundContinue = taskParams["notFoundContinue"] ?: ""
         var count = 0
 
@@ -86,6 +93,10 @@ class CustomizeArchiveGetTask : ITask() {
         }
 
         LoggerService.addNormalLine("total $count file(s) found")
-        if (count == 0 && notFoundContinue == "false") throw RuntimeException("0 file found in path: $downloadPaths")
+        if (count == 0 && notFoundContinue == "false") throw TaskExecuteException(
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+            errorType = ErrorType.USER,
+            errorMsg = "0 file found in path: $downloadPaths"
+        )
     }
 }

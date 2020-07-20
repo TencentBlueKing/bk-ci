@@ -12,12 +12,12 @@
             <div v-bkloading="{ isLoading }" class="pipeline-template">
                 <header>
                     {{ $t('newlist.addPipeline') }}
-                    <i class="bk-icon icon-close" @click="toggleTemplatePopup(false)" />
+                    <i class="devops-icon icon-close" @click="toggleTemplatePopup(false)" />
                 </header>
                 <div class="temp-type-tab">
                     <span v-for="(type, index) in tempTypeList" :key="type" :class="{ &quot;active&quot;: tempTypeIndex === index }" @click="selectTempType(index)">
                         {{ type.categoryName }}
-                        <i class="bk-icon icon-refresh" v-if="type.categoryCode === 'store' && tempTypeIndex === index" @click="refreshStoreTEmp"></i>
+                        <i class="devops-icon icon-refresh" v-if="type.categoryCode === 'store' && tempTypeIndex === index" @click="refreshStoreTEmp"></i>
                     </span>
                 </div>
                 <div class="template-content" :style="{ height: viewHeight }">
@@ -28,7 +28,7 @@
                                     name="searchInput"
                                     v-model="searchName"
                                     @keyup.enter="search()">
-                                <i class="bk-icon icon-search" @click="search()"></i>
+                                <i class="devops-icon icon-search" @click="search()"></i>
                             </div>
                             <div class="search-category">
                                 <span v-for="category in categoryList"
@@ -56,16 +56,16 @@
                                     v-if="(tempTypeIndex !== tempTypeList.length - 1) && item.templateType.toLowerCase() === 'constraint'"
                                     class="temp-tip"
                                 >{{ $t('newlist.store') }}</span>
-                                <i v-if="activeTempIndex === index && !item.isInstall" class="bk-icon icon-check-circle-shape"></i>
+                                <i v-if="activeTempIndex === index && !item.isInstall" class="devops-icon icon-check-circle-shape"></i>
                                 <p class="temp-logo">
                                     <logo size="50" :name="item.icon" v-if="item.icon"></logo>
                                     <img class="temp-img" :src="item.logoUrl" v-else-if="item.logoUrl">
-                                    <i class="bk-icon icon-placeholder" v-else></i>
+                                    <i class="devops-icon icon-placeholder" v-else></i>
                                 </p>
                                 <p class="temp-title" :title="item.name">
                                     {{ item.name }}
                                 </p>
-                                <p class="install-btn" v-if="item.isInstall && item.isFlag " @click="installTemplate(item)" :title="item.name">{{ $t('install') }}</p>
+                                <p class="install-btn" v-if="item.isInstall && item.isFlag " @click="installTemplate(item)" :title="item.name">{{ $t('editPage.install') }}</p>
                                 <p class="permission-tips" v-if="item.isInstall && !item.isFlag" :title="item.name">{{ $t('newlist.noInstallPerm') }}</p>
                                 <p class="permission-tips" v-if="!item.isInstall" :title="item.name">{{ $t('newlist.installed') }}</p>
                             </li>
@@ -272,6 +272,9 @@
             ...mapActions('atom', [
                 'setPipeline'
             ]),
+            ...mapActions('pipelines', [
+                'requestInstallTemplate'
+            ]),
 
             search () {
                 this.selectTemp(0)
@@ -284,8 +287,20 @@
                 }
             },
             installTemplate (temp) {
-                const href = `${WEB_URL_PIRFIX}/store/${temp.code}/install/template?projectCode=${this.projectId}#MARKET`
-                window.open(href, '_blank')
+                const postData = {
+                    projectCodeList: [this.projectId],
+                    templateCode: temp.code
+                }
+                this.isLoading = true
+                this.requestInstallTemplate(postData).then((res) => {
+                    this.requestPipelineTemplate({
+                        projectId: this.projectId
+                    })
+                }).catch((err) => {
+                    this.$showTips({ message: err.message || err, theme: 'error' })
+                }).finally(() => {
+                    this.isLoading = false
+                })
             },
             selectTempType (index) {
                 if (index === this.tempTypeList.length - 1 && !this.storeTemplate) {
@@ -459,7 +474,7 @@
             .icon-refresh {
                 position: absolute;
                 top: 15px;
-                left: 80px;
+                padding-left: 10px;
                 font-size: 18px;
             }
         }
@@ -728,6 +743,7 @@
                         .validate-fail-border-effect {
                             position: absolute;
                             bottom: 0;
+                            left: 0;
                             content: '';
                             height:2px;
                             width: 100%;

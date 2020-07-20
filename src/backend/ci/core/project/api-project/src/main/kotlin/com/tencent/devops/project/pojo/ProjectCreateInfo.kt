@@ -39,27 +39,27 @@ data class ProjectCreateInfo(
     val englishName: String,
     @ApiModelProperty("项目类型")
     // @JsonProperty("project_type")
-    val projectType: Int,
+    val projectType: Int = 0,
     @ApiModelProperty("描述")
     val description: String,
     @ApiModelProperty("一级部门ID")
     // @JsonProperty("bg_id")
-    val bgId: Long,
+    val bgId: Long = 0,
     @ApiModelProperty("一级部门名字")
     // @JsonProperty("bg_name")
-    val bgName: String,
+    val bgName: String = "",
     @ApiModelProperty("二级部门ID")
     // @JsonProperty("dept_id")
-    val deptId: Long,
+    val deptId: Long = 0,
     @ApiModelProperty("二级部门名称")
     // @JsonProperty("dept_name")
-    val deptName: String,
+    val deptName: String = "",
     @ApiModelProperty("三级部门ID")
     // @JsonProperty("center_id")
-    val centerId: Long,
+    val centerId: Long = 0,
     @ApiModelProperty("三级部门名称")
     // @JsonProperty("center_name")
-    val centerName: String,
+    val centerName: String = "",
     @ApiModelProperty("是否保密")
     // @get:JsonProperty("is_secrecy")
     var secrecy: Boolean = false,

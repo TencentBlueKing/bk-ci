@@ -50,6 +50,8 @@ object Constants {
     const val KEY_IMAGE_SUMMARY = "imageSummary"
     const val KEY_IMAGE_DESCRIPTION = "imageDescription"
     const val KEY_IMAGE_LATEST_FLAG = "imageLatestFlag"
+    const val KEY_IMAGE_DOCKER_FILE_TYPE = "imageDockerFileType"
+    const val KEY_IMAGE_DOCKER_FILE_CONTENT = "imageDockerFileContent"
     const val KEY_IMAGE_FEATURE_PUBLIC_FLAG = "publicFlag"
     const val KEY_IMAGE_FEATURE_RECOMMEND_FLAG = "recommendFlag"
     const val KEY_IMAGE_FEATURE_CERTIFICATION_FLAG = "certificationFlag"

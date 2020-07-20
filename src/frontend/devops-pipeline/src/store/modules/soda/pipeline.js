@@ -34,7 +34,6 @@ import {
     PIPELINE_TEMPLATE_MUTATION,
     STORE_TEMPLATE_MUTATION,
     TEMPLATE_MUTATION,
-    PROJECT_GROUP_USERS_MUTATION,
     PIPELINE_SETTING_MUTATION,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     RESET_PIPELINE_SETTING_MUNTATION,
@@ -59,8 +58,7 @@ export const state = {
     pipelineSetting: {},
     ruleList: [],
     templateRuleList: [],
-    qualityAtom: [],
-    projectGroupAndUsers: []
+    qualityAtom: []
 }
 
 export const mutations = {
@@ -128,11 +126,6 @@ export const mutations = {
             reposList: records
         })
         return state
-    },
-    [PROJECT_GROUP_USERS_MUTATION]: (state, { projectGroupAndUsers }) => {
-        return Object.assign(state, {
-            projectGroupAndUsers
-        })
     },
     [UPDATE_PIPELINE_SETTING_MUNTATION]: (state, { container, param }) => {
         Object.assign(container, param)
@@ -282,20 +275,6 @@ export const actions = {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    requestProjectGroupAndUsers: async ({ commit }, { projectId }) => {
-        try {
-            const response = await request.get(`/experience/api/user/groups/${projectId}/projectGroupAndUsers`)
-
-            commit(PROJECT_GROUP_USERS_MUTATION, {
-                projectGroupAndUsers: response.data
-            })
-        } catch (e) {
-            if (e.code === 403) {
-                e.message = ''
-            }
-            rootCommit(commit, FETCH_ERROR, e)
-        }
-    },
     requestPartFile: async ({ commit }, { projectId, params }) => {
         return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/search`, params).then(response => {
             return response.data
@@ -306,6 +285,7 @@ export const actions = {
             return response.data
         })
     },
+
     requestDownloadUrl: async ({ commit }, { projectId, artifactoryType, path }) => {
         return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${artifactoryType}/downloadUrl?path=${encodeURIComponent(path)}`).then(response => {
             return response.data
@@ -377,7 +357,7 @@ export const getters = {
             if (index) {
                 return stage.containers.some(container => {
                     return container.elements.find(el => {
-                        return el['@type'] === atom
+                        return el.atomCode === atom
                     })
                 })
             }

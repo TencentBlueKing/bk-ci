@@ -104,13 +104,14 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
             )
             // 如果审批通过，需要为用户添加插件代码库的开发权限和保存调试项目
             if (storeApproveRequest.approveStatus == ApproveStatusEnum.PASS) {
-                storeProjectRelDao.addStoreProjectRel(
-                    dslContext = context,
-                    userId = atomApproveRecord!!.applicant,
-                    storeCode = storeCode,
-                    storeType = storeType.type.toByte(),
-                    projectCode = atomApproveRelRecord.testProjectCode,
-                    type = StoreProjectTypeEnum.TEST.type.toByte()
+                // 如果申请者已经是插件的成员则直接更新该成员的调试项目为协作申请时录入的项目
+                storeProjectRelDao.updateUserStoreTestProject(
+                        dslContext = context,
+                        userId = atomApproveRecord!!.applicant,
+                        storeCode = storeCode,
+                        storeType = storeType,
+                        projectCode = atomApproveRelRecord.testProjectCode,
+                        storeProjectType = StoreProjectTypeEnum.TEST
                 )
             }
         }

@@ -77,7 +77,6 @@
                 'requestReportList'
             ]),
             async init () {
-                // WeTest
                 try {
                     const { projectId, pipelineId, buildNo } = this.$route.params
                     const params = {
@@ -122,7 +121,6 @@
         .report-iframe-content {
             // overflow: hidden;
             height: 95%;
-            margin-top: 20px;
             width: 100%;
             // min-width: 1280px;
             .iframe-over-layout {

@@ -2,22 +2,45 @@ import VueI18n from 'vue-i18n'
 import Vue from 'vue'
 import { lang, locale } from 'bk-magic-vue'
 import axios from 'axios'
+import cookies from 'js-cookie'
 const DEFAULT_LOCALE = 'zh-CN'
-const LS_KEY = 'devops_i18n_locale'
+const LS_KEY = 'blueking_language'
 const loadedModule = {}
 const localeLabelMap = {
     'zh-CN': '中文',
-    'en-US': 'English'
+    'zh-cn': '中文',
+    'cn': '中文',
+    'en-US': 'English',
+    'en-us': 'English',
+    'en': 'English',
+    'us': 'English'
+}
+const localeAliasMap = {
+    'zh-CN': 'zh-CN',
+    'zh-cn': 'zh-CN',
+    'cn': 'zh-CN',
+    'en-US': 'en-US',
+    'en-us': 'en-US',
+    'en': 'en-US',
+    'us': 'en-US'
 }
 
+const BK_CI_DOMAIN = location.host
+
 function getLsLocale () {
-    if (!localStorage) return DEFAULT_LOCALE
-    return localStorage.getItem(LS_KEY) || DEFAULT_LOCALE
+    try {
+        const cookieLcale = cookies.get(LS_KEY) || DEFAULT_LOCALE
+        return localeAliasMap[cookieLcale.toLowerCase()] || DEFAULT_LOCALE
+    } catch (error) {
+        return DEFAULT_LOCALE
+    }
 }
 
 function setLsLocale (locale) {
-    if (localStorage) {
-        localStorage.setItem(LS_KEY, locale)
+    const formateLocale = localeAliasMap[locale] === 'zh-CN' ? 'zh-cn' : 'en'
+    if (typeof cookies.set === 'function') {
+        cookies.remove(LS_KEY)
+        cookies.set(LS_KEY, formateLocale, { domain: BK_CI_DOMAIN, path: '/' })
     }
 }
 
@@ -36,12 +59,10 @@ export default (r) => {
 
     locale.i18n((key, value) => i18n.t(key, value))
 
-
     function dynamicLoadModule (module, locale = DEFAULT_LOCALE) {
-        
         const localeModuleId = getLocalModuleId(module, locale)
         if (loadedModule[localeModuleId]) {
-            return
+            return Promise.resolve()
         }
         return axios.get(`${WEBSITE_URL}/${module}/${locale}.json?t=${+new Date()}`, {
             crossdomain: true
@@ -58,7 +79,7 @@ export default (r) => {
 
     function setLocale (localeLang) {
         Object.keys(loadedModule).map(mod => {
-            const [ , module ] = mod.split('_')
+            const [, module] = mod.split('_')
             if (!loadedModule[getLocalModuleId(module, localeLang)]) {
                 dynamicLoadModule(module, localeLang)
             }
@@ -71,8 +92,7 @@ export default (r) => {
         
         return localeLang
     }
-    
- 
+     
     return {
         i18n,
         setLocale,
@@ -81,13 +101,12 @@ export default (r) => {
     }
 }
 
-
 function getLocalModuleId (module, locale) {
     return `${locale}_${module}`
 }
 
 function importAll (r) {
-    let localeList = []
+    const localeList = []
     const messages = r.keys().reduce((acc, key) => {
         const mod = r(key)
         
@@ -98,14 +117,13 @@ function importAll (r) {
                 ...lang[localeKey.replace('-', '')],
                 ...mod
             }
-            
             localeList.push({
                 key: localeKey,
-                label: localeKey.split('-').pop()
+                label: localeLabelMap[localeKey]
             })
         }
         return acc
-    }, {});
+    }, {})
 
     return {
         localeList,

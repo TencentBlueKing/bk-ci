@@ -29,13 +29,14 @@ package com.tencent.devops.dispatch.controller
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.OpDockerHostZoneResource
+import com.tencent.devops.dispatch.api.op.OpDockerHostZoneResource
 import com.tencent.devops.dispatch.pojo.DockerHostZoneWithPage
 import com.tencent.devops.dispatch.service.DockerHostZoneTaskService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpDockerhostZoneResourceImpl @Autowired constructor(private val dockerHostZoneTaskService: DockerHostZoneTaskService) : OpDockerHostZoneResource {
+class OpDockerhostZoneResourceImpl @Autowired constructor(private val dockerHostZoneTaskService: DockerHostZoneTaskService) :
+    OpDockerHostZoneResource {
     override fun create(hostIp: String, zone: Zone, remark: String?): Result<Boolean> {
         dockerHostZoneTaskService.create(hostIp, zone.toString(), remark)
         return Result(true)

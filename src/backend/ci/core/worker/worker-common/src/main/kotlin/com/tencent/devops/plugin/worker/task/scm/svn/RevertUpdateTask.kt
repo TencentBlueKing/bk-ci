@@ -31,6 +31,7 @@ import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.SVNVersion
 import com.tencent.devops.plugin.worker.task.scm.util.SvnUtil
+import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.tmatesoft.svn.core.SVNDepth
@@ -53,23 +54,25 @@ class RevertUpdateTask constructor(
     override val pipelineId: String,
     override val buildId: String,
     override val repositoryConfig: RepositoryConfig,
-    override val svnVersion: SVNVersion?
+    override val svnVersion: SVNVersion?,
+    override val svnRepo: CodeSvnRepository
 ) : SvnUpdateTask(
-    svnUrl,
-    projectName,
-    username,
-    privateKey,
-    passPhrase,
-    revision,
-    workspace,
-    strategy,
-    update,
-    enableSubmodule,
-    svnDepth,
-    pipelineId,
-    buildId,
-    repositoryConfig,
-    svnVersion
+    svnUrl = svnUrl,
+    projectName = projectName,
+    username = username,
+    privateKey = privateKey,
+    passPhrase = passPhrase,
+    revision = revision,
+    workspace = workspace,
+    strategy = strategy,
+    update = update,
+    enableSubmodule = enableSubmodule,
+    svnDepth = svnDepth,
+    pipelineId = pipelineId,
+    buildId = buildId,
+    repositoryConfig = repositoryConfig,
+    svnVersion = svnVersion,
+    svnRepo = svnRepo
 ) {
 
     override fun preUpdate() {

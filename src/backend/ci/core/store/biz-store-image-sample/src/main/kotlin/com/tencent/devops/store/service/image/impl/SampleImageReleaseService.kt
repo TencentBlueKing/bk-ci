@@ -43,10 +43,9 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.service.image.ImageReleaseService
-import org.springframework.stereotype.Service
 
-@Service
 class SampleImageReleaseService : ImageReleaseService() {
+
     override fun getPassTestStatus(isNormalUpgrade: Boolean): Byte {
         // 开源版不审核直接发布
         return ImageStatusEnum.RELEASED.status.toByte()
@@ -86,5 +85,13 @@ class SampleImageReleaseService : ImageReleaseService() {
         processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(TEST), TEST, NUM_FOUR, UNDO))
         processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_FIVE, UNDO))
         return processInfo
+    }
+
+    /**
+     * 获取允许发布的状态
+     */
+    override fun getAllowReleaseStatus(isNormalUpgrade: Boolean?): ImageStatusEnum {
+        // 开源版镜像发布不需要审核，只有处于测试中的镜像才允许发布
+        return ImageStatusEnum.TESTING
     }
 }

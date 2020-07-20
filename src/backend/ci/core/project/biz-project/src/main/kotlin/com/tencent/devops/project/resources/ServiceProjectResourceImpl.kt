@@ -44,10 +44,6 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getProjectByUser(userName))
     }
 
-    override fun getProjectByUserV2(userName: String): Result<List<ProjectVO>> {
-        return Result(projectService.getProjectByUser(userName))
-    }
-
     override fun verifyUserProjectPermission(
         accessToken: String?,
         projectCode: String,
@@ -66,10 +62,6 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.list(userId))
     }
 
-    override fun listV2(userId: String): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId))
-    }
-
     override fun getAllProject(): Result<List<ProjectVO>> {
         return Result(projectService.getAllProject())
     }
@@ -82,10 +74,6 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.listOnlyByProjectCode(projectCodes))
     }
 
-    override fun listByProjectCodeV2(projectCodes: Set<String>): Result<List<ProjectVO>> {
-        return Result(projectService.list(projectCodes))
-    }
-
     override fun listByProjectCodeList(projectCodes: List<String>): Result<List<ProjectVO>> {
         return Result(projectService.list(projectCodes))
     }
@@ -94,15 +82,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getNameByCode(projectCodes))
     }
 
-    override fun getNameByCodeV2(projectCodes: String): Result<HashMap<String, String>> {
-        return Result(projectService.getNameByCode(projectCodes))
-    }
-
     override fun get(englishName: String): Result<ProjectVO?> {
-        return Result(projectService.getByEnglishName(englishName))
-    }
-
-    override fun getV2(englishName: String): Result<ProjectVO?> {
         return Result(projectService.getByEnglishName(englishName))
     }
 }

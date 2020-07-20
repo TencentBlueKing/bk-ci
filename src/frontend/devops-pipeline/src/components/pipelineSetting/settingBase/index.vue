@@ -57,7 +57,7 @@
                 </div>
             </div>
 
-            <div class="handle-btn" style="margin: 30px 0 0 146px">
+            <div class="handle-btn" style="margin-left: 146px; margin-top: 20px">
                 <bk-button @click="savePipelineSetting()" theme="primary" :disabled="isDisabled || noPermission">{{ $t('save') }}</bk-button>
                 <bk-button @click="exit">{{ $t('cancel') }}</bk-button>
             </div>
@@ -97,7 +97,9 @@
                         label: this.$t('settings.runningOption.single'),
                         value: 'SINGLE'
                     }
-                ]
+                ],
+                groupIdDesc: this.$t('settings.groupIdDesc'),
+                groupIdStorage: []
             }
         },
         computed: {
@@ -110,14 +112,8 @@
             projectId () {
                 return this.$route.params.projectId
             },
-            pipelineId () {
-                return this.$route.params.pipelineId
-            },
             templateId () {
                 return this.$route.params.templateId
-            },
-            routeName () {
-                return this.$route.name
             },
             grouInlineCol () {
                 const classObj = {}
@@ -162,9 +158,13 @@
             this.requestTemplateSetting(this.$route.params)
             this.requestGrouptLists()
         },
+        mounted () {
+            this.list = this.groupIdStorage = localStorage.getItem('groupIdStr') ? localStorage.getItem('groupIdStr').split(';').filter(item => item) : []
+        },
         methods: {
             ...mapActions('soda', [
-                'requestTemplateSetting'
+                'requestTemplateSetting',
+                'updatePipelineSetting'
             ]),
             handleLabelSelect (index, arg) {
                 let labels = []
@@ -179,6 +179,9 @@
                     isLoading: this.isLoading,
                     isEditing: this.isEditing
                 })
+            },
+            handleChangeRunType (name, value) {
+                Object.assign(this.pipelineSetting, { [name]: value })
             },
             exit () {
                 this.$emit('cancel')
@@ -227,20 +230,10 @@
                         })
                     }
                 } catch (err) {
-                    if (this.routeName !== 'templateSetting' && err.code === 403) { // 没有权限执行
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: `${this.$t('pipeline')}: ${this.pipelineSetting.pipelineName}`,
-                                option: this.$t('edit')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_manager=pipeline:${this.pipelineId}`
-                        })
-                    } else {
-                        this.$showTips({
-                            message: err.message || err,
-                            theme: 'error'
-                        })
-                    }
+                    this.$showTips({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
                     result = false
                 }
                 this.isDisabled = false
@@ -266,6 +259,26 @@
              & .bk-form-content .bk-form-radio{
                 display: block;
              }
+        }
+        .notice-tab {
+            padding: 10px 0px 0px;
+            margin-left: -70px;
+            .bk-form-content {
+                margin-left: 155px;
+            }
+            .item-groupid .bk-tooltip {
+                float: left;
+                margin-left: -15px;
+                line-height: 30px;
+            }
+            .bk-form-item label{
+                display: inline-block;
+                width: 145px;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                padding-right: 10px;
+            }
         }
         .form-group-inline {
             font-size: 0;
@@ -360,5 +373,24 @@
                 font-size: 14px;
             }
         }
+    }
+    .item-notice {
+        .notice-group {
+            margin-top: 8px;
+            .atom-checkbox-list-item {
+                font-weight: bold;
+                width: 170px;
+                padding: 0 20px 10px 0;
+                overflow: hidden;
+                text-overflow:ellipsis;
+                white-space: nowrap;
+            }
+        }
+    }
+    .notice-user-content {
+        max-width: 300px;
+        white-space: normal;
+        word-wrap: break-word;
+        font-weight: 400;
     }
 </style>

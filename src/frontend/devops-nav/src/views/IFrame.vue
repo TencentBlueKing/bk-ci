@@ -29,6 +29,7 @@
     import eventBus from '../utils/eventBus'
     import { urlJoin, queryStringify, getServiceAliasByPath } from '../utils/util'
     import { State } from 'vuex-class'
+    import * as cookie from 'js-cookie'
 
     Component.registerHooks([
         'beforeRouteEnter',
@@ -71,6 +72,8 @@
         leaveConfirm (to, from, next) {
             this.leaving = true
             this.$bkInfo({
+                type: 'warning',
+                theme: 'warning',
                 title: this.$t('leaveConfirmTitle'),
                 subTitle: this.$t('leaveConfirmMsg'),
                 confirmFn: () => {
@@ -94,7 +97,7 @@
             return this.$route.name === 'job'
         }
 
-        get chromeExplorer () :boolean {
+        get chromeExplorer (): boolean {
             const explorer = window.navigator.userAgent
             return explorer.indexOf('Chrome') >= 0 && explorer.indexOf('QQ') === -1
         }
@@ -133,7 +136,7 @@
                 const reg = /^\/?\w+\/(\S*)\/?$/
                 const initPath = path.match(reg) ? path.replace(reg, '$1') : ''
                 const query = Object.assign({
-                    project_code: localStorage.getItem('projectId')
+                    project_code: cookie.get(X_DEVOPS_PROJECT_ID)
                 }, this.$route.query)
 
                 this.src = urlJoin(this.currentPage.iframe_url, initPath) + '?' + queryStringify(query) + hash
@@ -145,6 +148,8 @@
                 const childWin = this.$refs.iframeEle.contentWindow
                 this.iframeUtil.syncProjectList(childWin, this.projectList)
                 this.iframeUtil.syncUserInfo(childWin, this.user)
+                this.iframeUtil.syncLocale(childWin, this.$i18n.locale)
+                
                 if (this.$route.params.projectId) {
                     this.iframeUtil.syncProjectId(childWin, this.$route.params.projectId)
                 }

@@ -28,14 +28,14 @@
                             class="bk-selector-create-item"
                             @click.stop.prevent="popProjectDialog()"
                         >
-                            <i class="bk-icon icon-plus-circle" />
+                            <i class="devops-icon icon-plus-circle" />
                             <span class="text">{{ $t('newProject') }}</span>
                         </div>
                         <div
                             class="bk-selector-create-item"
                             @click.stop.prevent="goToPm"
                         >
-                            <i class="bk-icon icon-apps" />
+                            <i class="devops-icon icon-apps" />
                             <span class="text">{{ $t('projectManage') }}</span>
                         </div>
                     </template>
@@ -55,11 +55,13 @@
             </h3>
         </div>
         <div class="header-right-bar">
+            <locale-switcher v-if="!isInIframe"></locale-switcher>
+            <span class="seperate-line">|</span>
+            <!-- <feed-back class='feed-back-icon'></feed-back> -->
             <i
-                class="bk-icon icon-helper"
+                class="devops-icon icon-helper"
                 @click.stop="goToDocs"
             />
-            <locale-switcher />
             <User
                 class="user-info"
                 v-bind="user"
@@ -80,11 +82,10 @@
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
     import Logo from '../Logo/index.vue'
+    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
-    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import eventBus from '../../utils/eventBus'
-    import * as cookie from 'js-cookie'
     import { urlJoin } from '../../utils/util'
 
     @Component({
@@ -121,18 +122,24 @@
         get projectId (): string {
             return this.$route.params.projectId
         }
-        get title (): any {
-            return this.$route.meta.header ? this.$t(`${this.serviceLogo}.${this.$route.meta.header}`) : ''
+        get title (): string {
+            const name = this.currentPage && this.currentPage.name ? this.currentPage.name : ''
+            const charPos = name.indexOf('(')
+            return charPos > -1 ? name.slice(0, charPos) : name
         }
         get serviceLogo (): string {
-            return this.$route.meta.logo
+            return this.currentPage && this.currentPage.logoUrl ? this.currentPage.logoUrl : 'placeholder'
         }
         get selectProjectList (): Project[] {
             return this.enableProjectList.map(project => ({
                 ...project,
-                id: project.project_code,
-                name: project.project_name
+                id: project.projectCode,
+                name: project.projectName
             }))
+        }
+
+        get isInIframe () {
+            return top !== window
         }
 
         $refs: {
@@ -141,14 +148,20 @@
 
         created () {
             eventBus.$on('show-project-menu', () => {
-                const ele = this.$refs.projectDropdown.$el
-                ele && ele.click()
+                const ele = this.$refs.projectDropdown && this.$refs.projectDropdown.$el
+                if (ele) {
+                    const triggerEle = ele.querySelector('.bk-select-name')
+                    triggerEle && triggerEle.click()
+                }
             })
 
             eventBus.$on('hide-project-menu', () => {
                 if (this.isDropdownMenuVisible) {
-                    const ele = this.$refs.projectDropdown.$el
-                    ele && ele.click()
+                    const ele = this.$refs.projectDropdown && this.$refs.projectDropdown.$el
+                    if (ele) {
+                        const triggerEle = ele.querySelector('.bk-select-name')
+                        triggerEle && triggerEle.click()
+                    }
                 }
             })
 
@@ -179,9 +192,7 @@
         goHomeById (projectId: string, reload: boolean = false): void {
             const hasProjectId = this.currentPage.show_project_list
             let path = urlJoin('/console', this.currentPage.link_new)
-            if (this.$route.name === 'codecc') { // hack todo
-                path = `/console/codecc/${projectId}`
-            } else if (hasProjectId) {
+            if (hasProjectId) {
                 if (this.currentPage.project_id_type === 'path') {
                     path = urlJoin(path, projectId)
                 } else {
@@ -196,8 +207,8 @@
 
         handleProjectChange (id: string) {
             const { projectId } = this.$route.params
-            const oldProject = this.selectProjectList.find(project => project.project_code === projectId)
-            const project = this.selectProjectList.find(project => project.project_code === id)
+            const oldProject = this.selectProjectList.find(project => project.projectCode === projectId)
+            const project = this.selectProjectList.find(project => project.projectCode === id)
             
             if (projectId && !oldProject) { // 当前无权限时返回首页
                 this.goHomeById(id)
@@ -208,14 +219,9 @@
                     }
                 })
             }
-
-            cookie.set(X_DEVOPS_PROJECT_ID, id, {
-                domain: 'tencent.com',
-                path: '/'
-            })
+            window.setProjectIdCookie(id)
 
             if ((!oldProject && project.gray) || (oldProject && oldProject.gray !== project.gray)) {
-                localStorage.setItem('projectId', id)
                 this.goHomeById(id, true)
             }
         }
@@ -225,7 +231,7 @@
         }
 
         goToDocs (): void {
-            this.to('/console/docs')
+            this.to(`${DOCS_URL_PREFIX}`)
         }
 
         goToPm (): void {
@@ -295,6 +301,7 @@
                 }
                 .bk-select-angle {
                     color: white;
+                    top: 7px;
                 }
                 .bk-tooltip-ref {
                     outline: none;
@@ -335,7 +342,7 @@
             display: flex;
             align-items: center;
 
-            >.bk-icon:hover,
+            >.devops-icon:hover,
             >.feed-back-icon:hover,
             >.user-info:hover,
             >.feed-back-icon.active,
@@ -344,7 +351,14 @@
                 background-color: black;
             }
 
-            > .bk-icon {
+            > .seperate-line {
+                padding: 0 5px;
+                font-size: 20px;
+                // color: $fontLigtherColor;
+                line-height: $headerHeight;
+            }
+
+            > .devops-icon {
                 padding: 0 10px;
                 font-size: 20px;
                 color: $fontLigtherColor;
@@ -361,6 +375,12 @@
         cursor: pointer;
         &:hover {
             color: $primaryColor;
+            .text {
+                color: $primaryColor;
+            }
+        }
+        &:first-child {
+            border-top: 0
         }
     }
 </style>

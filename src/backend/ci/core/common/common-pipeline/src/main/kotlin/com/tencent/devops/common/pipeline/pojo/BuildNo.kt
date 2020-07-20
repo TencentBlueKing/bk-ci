@@ -28,7 +28,8 @@ package com.tencent.devops.common.pipeline.pojo
 
 data class BuildNo(
     var buildNo: Int,
-    val buildNoType: BuildNoType
+    val buildNoType: BuildNoType,
+    var required: Boolean? = false
 )
 
 enum class BuildNoType {

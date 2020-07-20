@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.container.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.dao.container.BuildResourceDao
 import com.tencent.devops.store.pojo.container.BuildResource
@@ -49,6 +50,11 @@ class BuildResourceServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val buildResourceDao: BuildResourceDao
 ) : BuildResourceService {
+    override fun getDefaultBuildResource(buildType: BuildType): Any? {
+        logger.info("Input(${buildType.name})")
+        return null
+    }
+
     private val logger = LoggerFactory.getLogger(BuildResourceServiceImpl::class.java)
 
     /**

@@ -1,22 +1,27 @@
 <template>
     <section>
-        <draggable class="container-atom-list" :class="{ &quot;trigger-container&quot;: isTriggerContainer(container), &quot;readonly&quot;: !editable }" :data-baseos="container.baseOS || container.classType" v-model="atomList" v-bind="dragOptions" :move="checkMove">
-            <li v-for="(atom, index) in atomList" :key="atom.name" :class="{ &quot;atom-item&quot;: true,
-                                                                             [atom.status]: atom.status,
-                                                                             &quot;arrival-atom&quot;: atom.status
+        <draggable class="container-atom-list" :class="{ 'trigger-container': isTriggerContainer(container), 'readonly': !editable }" :data-baseos="container.baseOS || container.classType" v-model="atomList" v-bind="dragOptions" :move="checkMove">
+            <li v-for="(atom, index) in atomList" :key="atom.id" :class="{ 'atom-item': true,
+                                                                           [atom.status]: atom.status,
+                                                                           'quality-item': (atom['@type'] === 'qualityGateOutTask') || (atom['@type'] === 'qualityGateInTask'),
+                                                                           'last-quality-item': (atom['@type'] === 'qualityGateOutTask' && index === atomList.length - 1),
+                                                                           'arrival-atom': atom.status,
+                                                                           'qualitt-next-atom': handlePreviousAtomCheck(atomList, index)
             }"
-                @click="showPropertyPanel(index)"
+                @click.stop="showPropertyPanel(index)"
             >
                 <section class="atom-item atom-section normal-atom" :class="{ [atom.status]: atom.status,
-                                                                              &quot;is-error&quot;: atom.isError,
-                                                                              &quot;template-compare-atom&quot;: atom.templateModify }"
-                >
+                                                                              'is-error': atom.isError,
+                                                                              'quality-atom': atom['@type'] === 'qualityGateOutTask',
+                                                                              'is-intercept': atom.isQualityCheck,
+                                                                              'template-compare-atom': atom.templateModify }"
+                    v-if="atom['@type'] !== 'qualityGateInTask' && atom['@type'] !== 'qualityGateOutTask'">
                     <status-icon v-if="atom.status && atom.status !== 'SKIP'" type="element" :status="atom.status" />
-                    <status-icon v-else-if="isWaiting && atom.status !== &quot;SKIP&quot;" type="element" status="WAITING" />
-                    <img v-else-if="atomMap[atom.atomCode] && atomMap[atom.atomCode].icon" :src="atomMap[atom.atomCode].icon" :class="{ &quot;atom-icon&quot;: true, &quot;skip-icon&quot;: useSkipStyle(atom) }" />
-                    <logo v-else :class="{ &quot;atom-icon&quot;: true, &quot;skip-icon&quot;: useSkipStyle(atom) }" :name="getAtomIcon(atom.atomCode)" size="18" />
+                    <status-icon v-else-if="isWaiting && atom.status !== 'SKIP'" type="element" status="WAITING" />
+                    <img v-else-if="atomMap[atom.atomCode] && atomMap[atom.atomCode].icon" :src="atomMap[atom.atomCode].icon" :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" />
+                    <logo v-else :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" :name="getAtomIcon(atom.atomCode)" size="18" />
                     <p class="atom-name">
-                        <span :title="atom.name" :class="{ &quot;skip-name&quot;: useSkipStyle(atom) }">{{ atom.atomCode ? atom.name : $t('editPage.pendingAtom') }}</span>
+                        <span :title="atom.name" :class="{ 'skip-name': useSkipStyle(atom) }">{{ atom.atomCode ? atom.name : $t('editPage.pendingAtom') }}</span>
                     </p>
                     <bk-popover placement="top" v-if="atom.status === 'REVIEWING'">
                         <span @click.stop="checkAtom(atom)" :class="{ 'atom-reviewing-tips': userInfo && isCurrentUser(getReviewUser(atom)), 'atom-review-diasbled-tips': !(userInfo && isCurrentUser(getReviewUser(atom))) }">{{ $t('editPage.toCheck') }}</span>
@@ -31,7 +36,7 @@
                         </template>
                     </bk-popover>
                     <a href="javascript: void(0);" class="atom-single-retry" v-if="atom.status !== 'SKIP' && atom.canRetry" @click.stop="singleRetry(atom.id)">{{ $t('retry') }}</a>
-                    <bk-popover placement="top" v-else-if="atom.status !== 'SKIP'">
+                    <bk-popover placement="top" v-else-if="atom.status !== 'SKIP'" :disabled="!atom.elapsed">
                         <span :class="atom.status === 'SUCCEED' ? 'atom-success-timer' : (atom.status === 'REVIEW_ABORT' ? 'atom-warning-timer' : 'atom-fail-timer')">
                             <span v-if="atom.elapsed && atom.elapsed >= 36e5">&gt;</span>{{ atom.elapsed ? atom.elapsed > 36e5 ? '1h' : localTime(atom.elapsed) : '' }}
                         </span>
@@ -39,17 +44,31 @@
                             <p>{{ atom.elapsed ? localTime(atom.elapsed) : '' }}</p>
                         </template>
                     </bk-popover>
-                    <span class="bk-icon copy" v-if="editable && stageIndex !== 0 && !atom.isError" :title="$t('editPage.copyAtom')" @click.stop="copyAtom(index)">
+                    <span class="devops-icon copy" v-if="editable && stageIndex !== 0 && !atom.isError" :title="$t('editPage.copyAtom')" @click.stop="copyAtom(index)">
                         <Logo name="copy" size="18"></Logo>
                     </span>
                     <i v-if="editable" @click.stop="editAtom(index, false)" class="add-plus-icon close" />
-                    <i v-if="editable && atom.isError" class="bk-icon icon-exclamation-triangle-shape" />
+                    <i v-if="editable && atom.isError" class="devops-icon icon-exclamation-triangle-shape" />
                     <span @click.stop="" v-if="isPreview && canSkipElement && container['@type'].indexOf('trigger') < 0">
                         <bk-checkbox class="atom-canskip-checkbox" v-model="atom.canElementSkip" :disabled="useSkipStyle(atom)" />
                     </span>
                 </section>
+
+                <section class="atom-section quality-atom"
+                    :class="{ 'is-review': (atom.status === 'REVIEWING'),
+                              'is-success': (atom.status === 'SUCCEED' || atom.status === 'REVIEW_PROCESSED'),
+                              'is-fail': (atom.status === 'QUALITY_CHECK_FAIL' || atom.status === 'REVIEW_ABORT') }"
+                    v-if="atom['@type'] === 'qualityGateInTask' || atom['@type'] === 'qualityGateOutTask'">
+                    <span class="atom-title">{{ $t('details.quality.quality') }}</span>
+                    <span class="handler-list" :class="{ 'disabled-review': atom.status === 'REVIEWING' && userInfo && !isCurrentUser(atom.reviewUsers) }"
+                        v-if="atom.status === 'REVIEWING' && !reviewLoading">
+                        <span class="revire-btn continue-excude" @click.stop="reviewExcude(atom, 'PROCESS', atom.reviewUsers)">{{ $t('resume') }}</span>
+                        <span class="review-btn stop-excude" @click.stop="reviewExcude(atom, 'ABORT', atom.reviewUsers)">{{ $t('terminate') }}</span>
+                    </span>
+                    <i class="devops-icon icon-circle-2-1 executing-job" v-if="atom.status === 'REVIEWING' && reviewLoading"></i>
+                </section>
             </li>
-            <span v-if="editable" :class="{ &quot;add-atom-entry&quot;: true, &quot;block-add-entry&quot;: atomList.length === 0 }" @click="editAtom(atomList.length - 1, true)">
+            <span v-if="editable" :class="{ 'add-atom-entry': true, 'block-add-entry': atomList.length === 0 }" @click="editAtom(atomList.length - 1, true)">
                 <i class="add-plus-icon" />
                 <span v-if="atomList.length === 0">{{ $t('editPage.addAtom') }}</span>
             </span>
@@ -61,7 +80,7 @@
 <script>
     import StatusIcon from './StatusIcon'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import { coverTimer } from '@/utils/util'
+    import { coverTimer, hashID } from '@/utils/util'
     import draggable from 'vuedraggable'
     import Logo from '@/components/Logo'
     import CheckAtomDialog from './CheckAtomDialog'
@@ -78,6 +97,7 @@
             stageIndex: Number,
             containerIndex: Number,
             containerStatus: String,
+            containerDisabled: Boolean,
             editable: {
                 type: Boolean,
                 default: true
@@ -99,6 +119,10 @@
             }
         },
         computed: {
+            ...mapState('soda', [
+                'ruleList',
+                'templateRuleList'
+            ]),
             ...mapState('atom', [
                 'execDetail',
                 'atomMap',
@@ -121,9 +145,21 @@
             isInstanceEditable () {
                 return !this.editable && this.pipeline && this.pipeline.instanceFromTemplate
             },
+            curMatchRules () {
+                return this.$route.path.indexOf('template') > 0 ? this.templateRuleList : this.isInstanceEditable ? this.templateRuleList.concat(this.ruleList) : this.ruleList
+            },
             atomList: {
                 get () {
                     const atoms = this.getElements(this.container)
+                    atoms.forEach(atom => {
+                        if (this.curMatchRules.some(rule => rule.taskId === atom.atomCode
+                            && (rule.ruleList.every(val => !val.gatewayId)
+                            || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
+                            atom.isQualityCheck = true
+                        } else {
+                            atom.isQualityCheck = false
+                        }
+                    })
                     return atoms
                 },
                 set (elements) {
@@ -148,6 +184,10 @@
         },
 
         methods: {
+            ...mapActions('soda', [
+                'reviewExcudeAtom',
+                'requestAuditUserList'
+            ]),
             ...mapActions('atom', [
                 'updateContainer',
                 'requestPipelineExecDetail',
@@ -182,6 +222,14 @@
 
                 const isJobTypeOk = os.includes(baseOS) || (os.length <= 0 && (!baseOS || baseOS === 'normal'))
                 return !!atomCode && ((isTriggerAtom && baseOS === 'trigger') || (!isTriggerAtom && isJobTypeOk) || (!isTriggerAtom && baseOS !== 'trigger' && os.length <= 0 && atom.buildLessRunFlag))
+            },
+
+            handlePreviousAtomCheck (atomList, index) {
+                if (index && (atomList[index - 1]['@type'] === 'qualityGateInTask' || atomList[index - 1]['@type'] === 'qualityGateOutTask')) {
+                    return true
+                } else {
+                    return false
+                }
             },
             getAtomIcon (atomCode) {
                 if (!atomCode) {
@@ -227,7 +275,10 @@
             copyAtom (atomIndex) {
                 try {
                     const { id, ...element } = this.container.elements[atomIndex]
-                    this.container.elements.splice(atomIndex + 1, 0, JSON.parse(JSON.stringify(element)))
+                    this.container.elements.splice(atomIndex + 1, 0, JSON.parse(JSON.stringify({
+                        ...element,
+                        id: `e-${hashID(32)}`
+                    })))
                     this.setPipelineEditing(true)
                 } catch (e) {
                     console.error(e)
@@ -235,6 +286,37 @@
                         theme: 'error',
                         message: this.$t('editPage.copyAtomFail')
                     })
+                }
+            },
+            async reviewExcude (atom, action, reviewer) {
+                if (this.isCurrentUser(reviewer)) {
+                    this.reviewLoading = true
+                    try {
+                        const data = {
+                            projectId: this.routerParams.projectId,
+                            pipelineId: this.routerParams.pipelineId,
+                            buildId: this.routerParams.buildNo,
+                            elementId: atom.id,
+                            action
+                        }
+                        const res = await this.reviewExcudeAtom(data)
+                        if (res === true) {
+                            this.$showTips({
+                                message: this.$t('editPage.operateSuc'),
+                                theme: 'success'
+                            })
+                            this.requestPipelineExecDetail(this.routerParams)
+                        }
+                    } catch (err) {
+                        this.$showTips({
+                            message: err.message || err,
+                            theme: 'error'
+                        })
+                    } finally {
+                        setTimeout(() => {
+                            this.reviewLoading = false
+                        }, 1000)
+                    }
                 }
             },
             singleRetry (taskId) {
@@ -292,7 +374,7 @@
                 }
             },
             useSkipStyle (atom) {
-                return atom && (atom.status === 'SKIP' || (atom.additionalOptions && atom.additionalOptions.enable === false) || (this.container.jobControlOption && this.container.jobControlOption.enable === false))
+                return (atom && (atom.status === 'SKIP' || (atom.additionalOptions && atom.additionalOptions.enable === false))) || this.containerDisabled
             }
         }
     }
@@ -459,6 +541,21 @@
             }
         }
 
+        .quality-item {
+            height: 24px;
+            line-height: 20px;
+            text-align: center;
+            background: transparent;
+            font-size: 12px;
+            &:before {
+                height: 40px;
+                z-index: 8;
+            }
+            &:after {
+                display: none;
+            }
+        }
+
         .atom-section {
             margin: 0;
             width: 100%;
@@ -467,6 +564,103 @@
             &:before,
             &:after {
                 display: none;
+            }
+        }
+
+        .is-intercept {
+            border-color: $warningColor;
+            &:hover {
+                border-color: $warningColor;
+            }
+        }
+
+        .last-quality-item {
+            &:before {
+                height: 22px;
+            }
+        }
+
+        .quality-atom {
+            margin-left: 84px;
+            width: 70px;
+            border-radius: 12px;
+            z-index: 9;
+            .atom-title {
+                font-weight: bold;
+                &:before,
+                &:after {
+                    content: '';
+                    position: absolute;
+                    left: 0;
+                    top: 10px;
+                    height: 1px;
+                    width: 84px;
+                    border-top: 2px dashed $fontLigtherColor;
+                }
+                &:before {
+                    left: 21.5px;
+                    width: 62px;
+                }
+                &:after {
+                    left: 154px;
+                    width: 85px;
+                }
+            }
+            &.is-success {
+                border-color: $successColor;
+                .atom-title {
+                    color: $successColor;
+                    &:before,
+                    &:after {
+                        border-color: $successColor;
+                    }
+                }
+            }
+            &.is-review {
+                border-color: $warningColor;
+                .atom-title {
+                    color: $warningColor;
+                    &:before {
+                        border-color: $warningColor;
+                    }
+                    &:after {
+                        display: none;
+                    }
+                }
+            }
+            &.is-fail {
+                border-color: $dangerColor;
+                .atom-title {
+                    color: $dangerColor;
+                    &:before,
+                    &:after {
+                        border-top: 2px solid $dangerColor;
+                    }
+                }
+            }
+            .handler-list {
+                position: absolute;
+                right: 10px;
+                span {
+                    color: $primaryColor;
+                    font-size: 12px;
+                    &:first-child {
+                        margin-right: 5px;
+                    }
+                }
+            }
+            .executing-job {
+                position: absolute;
+                top: 6px;
+                right: 42px;
+                &:before {
+                    display: inline-block;
+                    animation: rotating infinite .6s ease-in-out;
+                }
+            }
+            .disabled-review span {
+                color: #c4cdd6;
+                cursor: default;
             }
         }
 

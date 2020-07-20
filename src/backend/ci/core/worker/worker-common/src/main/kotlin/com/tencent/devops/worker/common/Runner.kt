@@ -32,17 +32,21 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
-import com.tencent.devops.worker.common.exception.TaskExecuteException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.ProcessService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
+import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.system.exitProcess
@@ -56,21 +60,25 @@ object Runner {
             logger.info("Start the worker ...")
             // 启动成功了，报告process我已经启动了
             val buildVariables = ProcessService.setStarted()
-
+            // 为进程加上ShutdownHook事件
+            KillBuildProcessTree.addKillProcessTreeHook(buildVariables.projectId, buildVariables.buildId, buildVariables.vmSeqId)
             // 启动日志服务
             LoggerService.start()
             val variables = buildVariables.variablesWithType
             val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
             LoggerService.executeCount = retryCount.toInt() + 1
-            LoggerService.jobId = buildVariables.containerId
+            LoggerService.jobId = buildVariables.containerHashId
 
             Heartbeat.start()
             // 开始轮询
             try {
+                LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
+
                 showBuildStartupLog(buildVariables.buildId, buildVariables.vmSeqId)
                 showMachineLog(buildVariables.vmName)
                 showSystemLog()
                 showRuntimeEnvs(buildVariables.variablesWithType)
+
                 val variablesMap = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
                 workspacePathFile = workspaceInterface.getWorkspace(variablesMap, buildVariables.pipelineId)
 
@@ -80,7 +88,6 @@ object Runner {
                 loop@ while (true) {
                     logger.info("Start to claim the task")
                     val buildTask = ProcessService.claimTask()
-                    val taskName = buildTask.elementName ?: "Task"
                     logger.info("Start to execute the task($buildTask)")
                     when (buildTask.status) {
                         BuildTaskStatus.DO -> {
@@ -95,7 +102,6 @@ object Runner {
                                 LoggerService.elementId = buildTask.elementId!!
 
                                 // 开始Task执行
-                                LoggerService.addFoldStartLine(taskName)
                                 taskDaemon.run()
 
                                 // 获取执行结果
@@ -107,7 +113,7 @@ object Runner {
                                     taskId = taskId,
                                     elementId = buildTask.elementId!!,
                                     elementName = buildTask.elementName ?: "",
-                                    containerId = buildVariables.containerId,
+                                    containerId = buildVariables.containerHashId,
                                     isSuccess = true,
                                     buildResult = env,
                                     type = buildTask.type
@@ -141,7 +147,7 @@ object Runner {
                                     }
                                     message = e.message ?: defaultMessage.toString()
                                     errorType = ErrorType.SYSTEM.name
-                                    errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                                    errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
                                 }
 
                                 val env = taskDaemon.getAllEnv()
@@ -151,16 +157,16 @@ object Runner {
                                     taskId = taskId,
                                     elementId = buildTask.elementId!!,
                                     elementName = buildTask.elementName ?: "",
-                                    containerId = buildVariables.containerId,
+                                    containerId = buildVariables.containerHashId,
                                     isSuccess = false,
                                     buildResult = env,
                                     type = buildTask.type,
-                                    message = message,
+                                    message = CommonUtils.interceptStringInLength(message, PIPELINE_MESSAGE_STRING_LENGTH_MAX),
                                     errorType = errorType,
                                     errorCode = errorCode
                                 )
                             } finally {
-                                LoggerService.addFoldEndLine(taskName)
+                                LoggerService.finishTask()
                                 LoggerService.elementId = ""
                             }
                         }
@@ -224,10 +230,10 @@ object Runner {
         LoggerService.addNormalLine("")
         LoggerService.addFoldStartLine("[Machine Environment Properties]")
         System.getProperties().forEach { k, v ->
-            LoggerService.addYellowLine("$k: $v")
+            LoggerService.addNormalLine("$k: $v")
             logger.info("$k: $v")
         }
-        LoggerService.addFoldEndLine("env_machine")
+        LoggerService.addFoldEndLine("-----")
     }
 
     /**
@@ -238,7 +244,7 @@ object Runner {
         LoggerService.addFoldStartLine("[System Environment Properties]")
         val envs = System.getenv()
         envs.forEach { (k, v) ->
-            LoggerService.addYellowLine("$k: $v")
+            LoggerService.addNormalLine("$k: $v")
             logger.info("$k: $v")
         }
         LoggerService.addFoldEndLine("-----")
@@ -252,12 +258,13 @@ object Runner {
         LoggerService.addFoldStartLine("[Build Environment Properties]")
         variables.forEach { v ->
             if (v.valueType == BuildFormPropertyType.PASSWORD) {
-                LoggerService.addYellowLine(Ansi().a("${v.key}: ").reset().a("******").toString())
+                LoggerService.addNormalLine(Ansi().a("${v.key}: ").reset().a("******").toString())
             } else {
-                LoggerService.addYellowLine(Ansi().a("${v.key}: ").reset().a(v.value.toString()).toString())
+                LoggerService.addNormalLine(Ansi().a("${v.key}: ").reset().a(v.value.toString()).toString())
             }
             logger.info("${v.key}: ${v.value}")
         }
-        LoggerService.addFoldEndLine("env_user")
+        LoggerService.addFoldEndLine("-----")
+        LoggerService.addNormalLine("")
     }
 }

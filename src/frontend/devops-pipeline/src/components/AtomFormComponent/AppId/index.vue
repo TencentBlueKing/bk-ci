@@ -10,7 +10,7 @@
         props: {
             appIdKey: {
                 type: String,
-                default: 'cc_app_id'
+                default: 'ccAppId'
             },
             appIdName: {
                 type: String,

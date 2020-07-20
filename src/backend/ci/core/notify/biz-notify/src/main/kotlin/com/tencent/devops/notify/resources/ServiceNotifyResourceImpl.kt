@@ -26,25 +26,33 @@
 package com.tencent.devops.notify.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.notify.enums.WeworkMediaType
+import com.tencent.devops.common.notify.enums.WeworkReceiverType
+import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
+import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
+import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
 import com.tencent.devops.notify.service.EmailService
 import com.tencent.devops.notify.service.RtxService
 import com.tencent.devops.notify.service.SmsService
 import com.tencent.devops.notify.service.WechatService
+import com.tencent.devops.notify.service.WeworkService
 import com.tencent.devops.notify.util.MessageCheckUtil
 import org.springframework.beans.factory.annotation.Autowired
+import java.io.InputStream
 
 @RestResource
 class ServiceNotifyResourceImpl @Autowired constructor(
     private val emailService: EmailService,
     private val rtxService: RtxService,
     private val smsService: SmsService,
-    private val wechatService: WechatService
+    private val wechatService: WechatService,
+    private val weworkService: WeworkService
 ) : ServiceNotifyResource {
 
     override fun sendRtxNotify(message: RtxNotifyMessage): Result<Boolean> {
@@ -68,6 +76,40 @@ class ServiceNotifyResourceImpl @Autowired constructor(
     override fun sendSmsNotify(message: SmsNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkSmsMessage(message)
         smsService.sendMqMsg(message)
+        return Result(true)
+    }
+
+    override fun sendWeworkMediaNotify(
+        receivers: String,
+        receiverType: WeworkReceiverType,
+        mediaType: WeworkMediaType,
+        mediaName: String,
+        inputStream: InputStream
+    ): Result<Boolean> {
+        val weworkNotifyMediaMessage = WeworkNotifyMediaMessage(
+            receivers = receivers.split(",|;".toRegex()),
+            receiverType = receiverType,
+            mediaInputStream = inputStream,
+            mediaType = mediaType,
+            mediaName = mediaName
+        )
+        weworkService.sendMediaMessage(weworkNotifyMediaMessage)
+        return Result(true)
+    }
+
+    override fun sendWeworkTextNotify(
+        receivers: String,
+        receiverType: WeworkReceiverType,
+        textType: WeworkTextType,
+        message: String
+    ): Result<Boolean> {
+        val weworkNotifyTextMessage = WeworkNotifyTextMessage(
+            receivers = receivers.split(",|;".toRegex()),
+            receiverType = receiverType,
+            textType = textType,
+            message = message
+        )
+        weworkService.sendTextMessage(weworkNotifyTextMessage)
         return Result(true)
     }
 }

@@ -44,11 +44,11 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
-import com.tencent.devops.store.dao.atom.MarketAtomBuildInfoDao
 import com.tencent.devops.store.dao.atom.MarketAtomClassifyDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
+import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
@@ -103,7 +103,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
     @Autowired
-    lateinit var marketAtomBuildInfoDao: MarketAtomBuildInfoDao
+    lateinit var storeBuildInfoDao: StoreBuildInfoDao
     @Autowired
     lateinit var marketAtomEnvInfoDao: MarketAtomEnvInfoDao
     @Autowired
@@ -143,29 +143,31 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         labelCode: String?,
         score: Int?,
         rdType: AtomTypeEnum?,
+        yamlFlag: Boolean?,
+        recommendFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         desc: Boolean?,
         page: Int?,
         pageSize: Int?
     ): Future<MarketAtomResp> {
         return executor.submit(Callable<MarketAtomResp> {
-
             val results = mutableListOf<MarketItem>()
-
             // 获取插件
             val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
-            val count = marketAtomDao.count(dslContext, atomName, classifyCode, labelCodeList, score, rdType)
+            val count = marketAtomDao.count(dslContext, atomName, classifyCode, labelCodeList, score, rdType, yamlFlag, recommendFlag)
             val atoms = marketAtomDao.list(
-                dslContext,
-                atomName,
-                classifyCode,
-                labelCodeList,
-                score,
-                rdType,
-                sortType,
-                desc,
-                page,
-                pageSize
+                dslContext = dslContext,
+                atomName = atomName,
+                classifyCode = classifyCode,
+                labelCodeList = labelCodeList,
+                score = score,
+                rdType = rdType,
+                yamlFlag = yamlFlag,
+                recommendFlag = recommendFlag,
+                sortType = sortType,
+                desc = desc,
+                page = page,
+                pageSize = pageSize
             )
                 ?: return@Callable MarketAtomResp(0, page, pageSize, results)
             logger.info("[list]get atoms: $atoms")
@@ -221,7 +223,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         publicFlag = it["DEFAULT_FLAG"] as Boolean,
                         buildLessRunFlag = if (it["BUILD_LESS_RUN_FLAG"] == null) false else it["BUILD_LESS_RUN_FLAG"] as Boolean,
                         docsLink = if (it["DOCS_LINK"] == null) "" else it["DOCS_LINK"] as String,
-                        recommendFlag = it["RECOMMEND_FLAG"] as? Boolean
+                        recommendFlag = it["RECOMMEND_FLAG"] as? Boolean,
+                        yamlFlag = it["YAML_FLAG"] as? Boolean
                     )
                 )
             }
@@ -268,6 +271,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 labelCode = null,
                 score = null,
                 rdType = null,
+                yamlFlag = null,
+                recommendFlag = null,
                 sortType = MarketAtomSortTypeEnum.UPDATE_TIME,
                 desc = true,
                 page = page,
@@ -284,6 +289,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 labelCode = null,
                 score = null,
                 rdType = null,
+                yamlFlag = null,
+                recommendFlag = null,
                 sortType = MarketAtomSortTypeEnum.DOWNLOAD_COUNT,
                 desc = true,
                 page = page,
@@ -310,6 +317,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         labelCode = null,
                         score = null,
                         rdType = null,
+                        yamlFlag = null,
+                        recommendFlag = null,
                         sortType = MarketAtomSortTypeEnum.DOWNLOAD_COUNT,
                         desc = true,
                         page = page,
@@ -341,6 +350,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         labelCode: String?,
         score: Int?,
         rdType: AtomTypeEnum?,
+        yamlFlag: Boolean?,
+        recommendFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         page: Int?,
         pageSize: Int?
@@ -360,6 +371,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             score = score,
             rdType = rdType,
             sortType = sortType,
+            yamlFlag = yamlFlag,
+            recommendFlag = recommendFlag,
             desc = true,
             page = page,
             pageSize = pageSize
@@ -511,13 +524,15 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         atomCode,
                         StoreTypeEnum.ATOM
                     ),
+                    initProjectCode = projectCode,
                     labelList = labelList,
                     pkgName = atomEnvInfoRecord?.pkgName,
                     userCommentInfo = userCommentInfo,
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(record["visibilityLevel"] as Int),
                     privateReason = record["privateReason"] as? String,
                     recommendFlag = feature?.recommendFlag,
-                    frontendType = FrontendTypeEnum.getFrontendTypeObj(htmlTemplateVersion)
+                    frontendType = FrontendTypeEnum.getFrontendTypeObj(htmlTemplateVersion),
+                    yamlFlag = feature?.yamlFlag
                 )
             )
         }
@@ -642,7 +657,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
      * 获取插件开发支持的语言
      */
     override fun listLanguage(): Result<List<AtomDevLanguage?>> {
-        val records = marketAtomBuildInfoDao.list(dslContext)
+        val records = storeBuildInfoDao.list(dslContext, StoreTypeEnum.ATOM)
         val ret = mutableListOf<AtomDevLanguage>()
         records?.forEach {
             ret.add(

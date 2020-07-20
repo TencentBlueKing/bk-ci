@@ -40,8 +40,8 @@ import org.springframework.stereotype.Service
 @Service
 class ProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
-    dslContext: DSLContext,
-    projectDao: ProjectDao,
+    private val dslContext: DSLContext,
+    private val projectDao: ProjectDao,
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
     gray: Gray,
@@ -50,6 +50,6 @@ class ProjectServiceImpl @Autowired constructor(
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher) {
 
     override fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean) {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+        projectDao.updateUsableStatus(dslContext, userId, projectId, enabled)
     }
 }

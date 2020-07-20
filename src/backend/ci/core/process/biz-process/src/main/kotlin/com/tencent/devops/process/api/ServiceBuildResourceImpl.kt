@@ -111,8 +111,13 @@ class ServiceBuildResourceImpl @Autowired constructor(
         return Result(
             BuildId(
                 buildService.buildManualStartup(
-                    userId, StartType.SERVICE,
-                    projectId, pipelineId, values, channelCode, ChannelCode.isNeedAuth(channelCode)
+                    userId = userId,
+                    startType = StartType.SERVICE,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = values,
+                    channelCode = channelCode,
+                    checkPermission = ChannelCode.isNeedAuth(channelCode)
                 )
             )
         )
@@ -360,6 +365,32 @@ class ServiceBuildResourceImpl @Autowired constructor(
             buildId = buildId,
             vmSeqId = vmSeqId,
             simpleResult = simpleResult
+        )
+        return Result(true)
+    }
+
+    override fun manualStartStage(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        cancel: Boolean?
+    ): Result<Boolean> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (stageId.isBlank()) {
+            throw ParamBlankException("Invalid stageId")
+        }
+
+        buildService.buildManualStartStage(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            isCancel = cancel ?: false
         )
         return Result(true)
     }

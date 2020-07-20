@@ -139,7 +139,7 @@ class StoreCommonServiceImpl @Autowired constructor(
         storeId: String,
         storeCode: String,
         storeType: StoreTypeEnum,
-        modifier: String,
+        creator: String,
         processInfo: List<ReleaseProcessItem>
     ): StoreProcessInfo {
         val opPermission = storeMemberDao.isStoreAdmin(
@@ -147,7 +147,7 @@ class StoreCommonServiceImpl @Autowired constructor(
             userId,
             storeCode,
             storeType.type.toByte()
-        ) || modifier == userId
+        ) || creator == userId
         val storeProcessInfo = StoreProcessInfo(opPermission, null, processInfo)
         val storeBuildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, storeId)
         if (null != storeBuildInfoRecord) {

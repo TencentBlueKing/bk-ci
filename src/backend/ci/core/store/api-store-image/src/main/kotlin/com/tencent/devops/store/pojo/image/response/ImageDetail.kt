@@ -127,6 +127,12 @@ data class ImageDetail(
     @ApiModelProperty("镜像描述", required = true)
     val description: String,
 
+    @ApiModelProperty("dockerFile类型", required = true)
+    val dockerFileType: String,
+
+    @ApiModelProperty("dockerFile内容", required = true)
+    val dockerFileContent: String,
+
     @ApiModelProperty("Label数组", required = true)
     val labelList: List<Label>,
 

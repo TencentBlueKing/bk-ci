@@ -11,7 +11,6 @@
                     v-if="title">
                     {{ title }}
                 </span>
-                <i v-if="links.length" class="bk-icon icon-question-circle" @click="links[0].handler"></i>
             </slot>
         </div>
         <div class="sub-header-center">
@@ -74,7 +73,7 @@
         }
         &-right {
             flex: 1;
-            max-width: 80px;
+            max-width: fit-content;
             height: 100%;
             align-items: center;
             text-align: right;

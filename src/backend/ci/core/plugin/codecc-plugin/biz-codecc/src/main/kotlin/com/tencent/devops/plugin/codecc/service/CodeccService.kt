@@ -33,6 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.plugin.codecc.config.CodeccScriptConfig
 import com.tencent.devops.plugin.codecc.dao.PluginCodeccDao
 import com.tencent.devops.plugin.codecc.pojo.BlueShieldRequest
 import com.tencent.devops.plugin.codecc.pojo.BlueShieldResponse
@@ -67,6 +68,18 @@ class CodeccService @Autowired constructor(
 
     @Value("\${codecc.host:#{null}}")
     private lateinit var codeccHost: String
+
+    @Value("\${devopsGateway.devnet:}")
+    private lateinit var devopsDevnetGateway: String
+
+    @Value("\${codeccGateway.scriptName:build_tool_external_dev.py}")
+    private lateinit var codeccScript: String
+
+    @Value("\${codeccGateway.api.fileSize:}")
+    private lateinit var fileSizePath: String
+
+    @Value("\${codeccGateway.api.script:}")
+    private lateinit var scriptPath: String
 
     fun getCodeccTaskByProject(
         beginDate: Long?,
@@ -267,5 +280,14 @@ class CodeccService @Autowired constructor(
         }
         val response = getCodeccBlueShield(blueShieldRequest)
         return response.data
+    }
+
+    fun getSingleCodeccScriptConfig(): CodeccScriptConfig {
+        return CodeccScriptConfig(
+            devnetHost = devopsDevnetGateway,
+            scriptFileName = codeccScript,
+            fileSizeUrl = fileSizePath,
+            downloadUrl = scriptPath
+        )
     }
 }

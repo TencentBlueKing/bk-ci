@@ -27,6 +27,7 @@
 package com.tencent.devops.process.pojo.template
 
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 
 data class TemplateModelDetail(
     val versions: List<TemplateVersion>,
@@ -38,5 +39,7 @@ data class TemplateModelDetail(
     val template: Model,
     val templateType: String,
     val logoUrl: String,
-    val hasPermission: Boolean // 管理员权限
+    val hasPermission: Boolean, // 管理员权限
+    val params: List<BuildFormProperty>,
+    val templateParams: List<BuildFormProperty>? = null
 )

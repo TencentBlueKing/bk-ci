@@ -85,7 +85,15 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
     @Test(expected = OperationException::class)
     fun afterCreateWhenLanguagesIsEmptyThrowException() {
         element.languages = emptyList()
-        plugin.afterCreate(element, projectId, pipelineId, pipelineName, userId, ChannelCode.BS)
+        plugin.afterCreate(
+            element = element,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineName = pipelineName,
+            userId = userId,
+            channelCode = ChannelCode.BS,
+            create = true
+        )
     }
 
     @Test
@@ -98,16 +106,19 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
             )
         ).thenReturn(true)
 
-        plugin.afterCreate(element, projectId, pipelineId, pipelineName, userId, ChannelCode.BS)
+        plugin.afterCreate(
+            element = element,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineName = pipelineName,
+            userId = userId,
+            channelCode = ChannelCode.BS,
+            create = false
+        )
     }
 
     @Test(expected = OperationException::class)
     fun afterCreateWhenCoverityReturnNull() {
-        val coverityResult = CoverityResult(
-            status = 1010,
-            message = "error",
-            data = null
-        )
         whenever(
             coverityApi.isTaskExist(
                 taskId = any(),
@@ -124,9 +135,17 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
                 rtx = any(),
                 element = any()
             )
-        ).thenReturn(coverityResult)
+        ).thenReturn(null)
 
-        plugin.afterCreate(element, projectId, pipelineId, pipelineName, userId, ChannelCode.BS)
+        plugin.afterCreate(
+            element = element,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineName = pipelineName,
+            userId = userId,
+            channelCode = ChannelCode.BS,
+            create = false
+        )
     }
 
     @Test(expected = OperationException::class)
@@ -156,27 +175,35 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
             )
         ).thenReturn(coverityResult)
 
-        plugin.afterCreate(element, projectId, pipelineId, pipelineName, userId, ChannelCode.BS)
+        plugin.afterCreate(
+            element = element,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineName = pipelineName,
+            userId = userId,
+            channelCode = ChannelCode.BS,
+            create = true
+        )
         val map = coverityResult.data as Map<String, Any>
         assertEquals(map["taskId"], element.codeCCTaskId)
     }
 
     @Test
     fun beforeDeleteFail() {
-        plugin.beforeDelete(element, userId, pipelineId)
+        plugin.beforeDelete(element = element, userId = userId, pipelineId = pipelineId)
     }
 
     @Test
     fun beforeDeleteWhenIDNull() {
         element.codeCCTaskId = null
-        plugin.beforeDelete(element, userId, pipelineId)
+        plugin.beforeDelete(element = element, userId = userId, pipelineId = pipelineId)
         element.codeCCTaskId = ""
-        plugin.beforeDelete(element, userId, pipelineId)
+        plugin.beforeDelete(element = element, userId = userId, pipelineId = pipelineId)
     }
 
     @Test
     fun beforeDeleteWhenSuccess() {
-        plugin.beforeDelete(element, userId, pipelineId)
+        plugin.beforeDelete(element = element, userId = userId, pipelineId = pipelineId)
         assertEquals(element.codeCCTaskId, null)
     }
 }

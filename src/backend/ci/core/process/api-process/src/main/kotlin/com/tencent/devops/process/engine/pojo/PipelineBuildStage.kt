@@ -39,5 +39,6 @@ data class PipelineBuildStage(
     val startTime: LocalDateTime? = null,
     val endTime: LocalDateTime? = null,
     val cost: Int = 0,
-    val executeCount: Int = 1
+    val executeCount: Int = 1,
+    val controlOption: PipelineBuildStageControlOption?
 )

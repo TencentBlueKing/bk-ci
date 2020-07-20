@@ -90,6 +90,8 @@ data class AtomVersion(
     val repositoryAuthorizer: String?,
     @ApiModelProperty("插件的调试项目")
     val projectCode: String?,
+    @ApiModelProperty("插件的初始化项目")
+    val initProjectCode: String?,
     @ApiModelProperty("标签列表", required = false)
     val labelList: List<Label>?,
     @ApiModelProperty("插件包名")
@@ -103,5 +105,7 @@ data class AtomVersion(
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
     @ApiModelProperty(value = "前端UI渲染方式", required = false)
-    val frontendType: FrontendTypeEnum?
+    val frontendType: FrontendTypeEnum?,
+    @ApiModelProperty("yaml可用标识 true：是，false：否")
+    val yamlFlag: Boolean? = null
 )
