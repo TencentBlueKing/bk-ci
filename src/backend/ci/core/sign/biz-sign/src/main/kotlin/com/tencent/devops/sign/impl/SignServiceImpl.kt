@@ -72,9 +72,9 @@ class SignServiceImpl @Autowired constructor(
 
         // 签名操作
         val signFinished = if (ipaSignInfo.wildcard) {
-            resignIpaPackage(ipaUnzipDir, ipaSignInfo, mobileProvisionInfoMap)
-        } else {
             resignIpaPackageWildcard(ipaUnzipDir, ipaSignInfo, wildcardInfo)
+        } else {
+            resignIpaPackage(ipaUnzipDir, ipaSignInfo, mobileProvisionInfoMap)
         }
         if (!signFinished) {
             UserIpaResourceImpl.logger.error("sign ipa failed.")
