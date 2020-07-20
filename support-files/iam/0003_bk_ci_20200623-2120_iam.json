@@ -8,10 +8,10 @@
         "name": "蓝鲸持续集成平台",
         "name_en": "bkci",
         "description": "蓝鲸持续集成平台是一个",
-        "description_en": "CMDB is a...",
-        "clients": "bk_cmdb,cmdb",
+        "description_en": "BKCI is a...",
+        "clients": "bkci",
         "provider_config": {
-          "host": "http://cmdb.service.consul",
+          "host": "http://ci-auth.service.consul:21936",
           "auth": "basic",
           "healthz": "/api/v1/healthz"
         }
@@ -23,11 +23,11 @@
         "id": "project",
         "name": "项目",
         "name_en": "project",
-        "description": "业务集是...",
-        "description_en": "biz_set is a ...",
+        "description": "项目集是...",
+        "description_en": "project is a ...",
         "parents": [],
         "provider_config": {
-          "path": "/api/v1/resources/biz_set/query"
+          "path": "/api/service/auth/resource/projects"
         },
         "version": 1
       }
@@ -39,10 +39,10 @@
         "name": "流水线",
         "name_en": "pipeline",
         "description": "流水线是...",
-        "description_en": "biz_set is a ...",
+        "description_en": "pipeline is a ...",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
-          "path": "/api/v1/resources/biz_set/query"
+          "path": "/api/service/auth/resource/instances/list"
         },
         "version": 1
       }
@@ -54,10 +54,10 @@
         "name": "代码库",
         "name_en": "repository",
         "description": "代码库是...",
-        "description_en": "biz_set is a ...",
+        "description_en": "repository is a ...",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
-          "path": "/api/v1/resources/biz_set/query"
+          "path": "/api/service/auth/resource/instances/list"
         },
         "version": 1
       }
@@ -69,10 +69,10 @@
         "name": "凭据",
         "name_en": "credential",
         "description": "凭据是...",
-        "description_en": "biz_set is a ...",
+        "description_en": "credential is a ...",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
-          "path": "/api/v1/resources/biz_set/query"
+          "path": "/api/service/auth/resource/instances/list"
         },
         "version": 1
       }
@@ -84,10 +84,10 @@
         "name": "证书",
         "name_en": "cert",
         "description": "证书是...",
-        "description_en": "biz_set is a ...",
+        "description_en": "cert is a ...",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
-          "path": "/api/v1/resources/biz_set/query"
+          "path": "/api/service/auth/resource/instances/list"
         },
         "version": 1
       }
@@ -99,10 +99,10 @@
         "name": "环境",
         "name_en": "environment",
         "description": "环境是...",
-        "description_en": "biz_set is a ...",
+        "description_en": "environment is a ...",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
-          "path": "/api/v1/resources/biz_set/query"
+          "path": "/api/service/auth/resource/instances/list"
         },
         "version": 1
       }
@@ -114,10 +114,10 @@
         "name": "环境节点",
         "name_en": "node",
         "description": "环境节点是...",
-        "description_en": "biz_set is a ...",
+        "description_en": "node is a ...",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
-          "path": "/api/v1/resources/biz_set/query"
+          "path": "/api/service/auth/resource/instances/list"
         },
         "version": 1
       }
@@ -132,7 +132,7 @@
         "description_en": "biz_set is a ...",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
-          "path": "/api/v1/resources/biz_set/query"
+          "path": "/api/service/auth/resource/instances/list"
         },
         "version": 1
       }
@@ -147,7 +147,7 @@
         "description_en": "biz_set is a ...",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
-          "path": "/api/v1/resources/biz_set/query"
+          "path": "/api/service/auth/resource/instances/list"
         },
         "version": 1
       }
@@ -162,7 +162,7 @@
         "description_en": "biz_set is a ...",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
-          "path": "/api/v1/resources/biz_set/query"
+          "path": "/api/service/auth/resource/instances/list"
         },
         "version": 1
       }

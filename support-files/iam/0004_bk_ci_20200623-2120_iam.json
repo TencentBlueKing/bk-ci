@@ -5,7 +5,7 @@
       "operation": "upsert_instance_selection",
       "data": {
         "id": "project_instance",
-        "name": "项目视图",
+        "name": "��Ŀ��ͼ",
         "name_en": "project instance selection",
         "resource_type_chain": [
           {"system_id": "bk_ci","id": "project"}
@@ -16,36 +16,12 @@
       "operation": "upsert_instance_selection",
       "data": {
         "id": "pipeline_instance",
-        "name": "流水线视图",
+        "name": "��ˮ����ͼ",
         "name_en": "pipeline instance selection",
         "resource_type_chain": [
           {"system_id": "bk_ci","id": "project"},
           {"system_id": "bk_ci","id": "pipeline"}
         ]
-      }
-    },
-    {
-      "operation": "upsert_action",
-      "data":  {
-        "id": "project_view",
-        "name": "查看项目",
-        "name_en": "project_view",
-        "description": "查看项目是...",
-        "description_en": "project view is...",
-        "type": "view",
-        "related_resource_types": [
-          {
-            "system_id": "bk_ci",
-            "id": "project",
-            "related_instance_selections": [
-              {
-                "system_id": "bk_ci",
-                "id": "project_instance"
-              }
-            ]
-          }
-        ],
-        "version": 1
       }
     }
   ]
