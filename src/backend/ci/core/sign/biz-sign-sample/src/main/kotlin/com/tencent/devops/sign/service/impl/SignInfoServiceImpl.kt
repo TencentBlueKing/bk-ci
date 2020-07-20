@@ -17,11 +17,6 @@ class SignInfoServiceImpl : SignInfoService {
         private val logger = LoggerFactory.getLogger(SignInfoServiceImpl::class.java)
     }
 
-    override fun check(info: IpaSignInfo): IpaSignInfo {
-        // 暂时不做判断
-        return info
-    }
-
     override fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo) {
         val infoDir = File(infoPath)
         infoDir.mkdirs()

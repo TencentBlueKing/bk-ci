@@ -51,9 +51,11 @@ class SignServiceImpl @Autowired constructor(
 
         // 复制文件到临时目录
         ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo)
+
         // ipa解压后的目录
         ipaUnzipDir = File("${ipaFile.canonicalPath}.unzipDir")
         FileUtil.mkdirs(ipaUnzipDir)
+
         // 描述文件的目录
         mobileProvisionDir = File("${ipaFile.canonicalPath}.mobileProvisionDir")
         FileUtil.mkdirs(mobileProvisionDir)
