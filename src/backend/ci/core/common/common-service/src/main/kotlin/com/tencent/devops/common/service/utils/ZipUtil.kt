@@ -80,7 +80,6 @@ object ZipUtil {
                 }
             } catch (e: Exception) {
                 logger.error("zip error: ", e)
-            } finally {
                 it.closeEntry()
                 it.close()
             }
