@@ -78,7 +78,7 @@ interface SignService {
     fun resignIpaPackage(
         unzipDir: File,
         ipaSignInfo: IpaSignInfo,
-        mobileProvisionInfoList: Map<String, MobileProvisionInfo>?
+        mobileProvisionInfoList: Map<String, MobileProvisionInfo>
     ): Boolean {
         val payloadDir = File(unzipDir.absolutePath + File.separator + "Payload")
         val appDirs = payloadDir.listFiles { dir, name ->
@@ -90,42 +90,28 @@ interface SignService {
         )
         val appDir = appDirs.first()
 
-        // 通配符方式签名
-        if (mobileProvisionInfoList == null) {
-            return SignUtils.resignAppWildcard(
-                appDir = appDir,
-                certId = ipaSignInfo.certId ?: SignUtils.DEFAULT_CER_ID,
-                wildcardInfo = MobileProvisionInfo(
-                    mobileProvisionFile = File(""),
-                    plistFile = File(""),
-                    entitlementFile = File(""),
-                    bundleId = ""
+        // 检查是否将包内所有app/appex对应的签名信息传入
+        val allAppsInPackage = mutableListOf<File>()
+        SignUtils.getAllAppsInDir(appDir, allAppsInPackage)
+        allAppsInPackage.forEach { app ->
+            if (!mobileProvisionInfoList.keys.contains(app.nameWithoutExtension)) {
+                logger.error("Not found appex <${app.name}> MobileProvisionInfo")
+                throw ErrorCodeException(
+                    errorCode = SignMessageCode.ERROR_SIGN_INFO_ILLEGAL,
+                    defaultMessage = "缺少${app.name}签名信息，请检查参数"
                 )
-            )
-        } else {
-            // 检查是否将包内所有app/appex对应的签名信息传入
-            val allAppsInPackage = mutableListOf<File>()
-            SignUtils.getAllAppsInDir(appDir, allAppsInPackage)
-            allAppsInPackage.forEach { app ->
-                if (!mobileProvisionInfoList.keys.contains(app.nameWithoutExtension)) {
-                    logger.error("Not found appex <${app.name}> MobileProvisionInfo")
-                    throw ErrorCodeException(
-                        errorCode = SignMessageCode.ERROR_SIGN_INFO_ILLEGAL,
-                        defaultMessage = "缺少${app.name}签名信息，请检查参数"
-                    )
-                }
             }
-
-            logger.info("Start to resign ${appDir.name} with $mobileProvisionInfoList")
-            return SignUtils.resignApp(
-                appDir = appDir,
-                certId = ipaSignInfo.certId ?: SignUtils.DEFAULT_CER_ID,
-                infos = mobileProvisionInfoList,
-                appName = SignUtils.MAIN_APP_FILENAME,
-                universalLinks = ipaSignInfo.universalLinks,
-                applicationGroups = ipaSignInfo.applicationGroups
-            )
         }
+
+        logger.info("Start to resign ${appDir.name} with $mobileProvisionInfoList")
+        return SignUtils.resignApp(
+            appDir = appDir,
+            certId = ipaSignInfo.certId ?: SignUtils.DEFAULT_CER_ID,
+            infos = mobileProvisionInfoList,
+            appName = SignUtils.MAIN_APP_FILENAME,
+            universalLinks = ipaSignInfo.universalLinks,
+            applicationGroups = ipaSignInfo.applicationGroups
+        )
     }
 
     /*
