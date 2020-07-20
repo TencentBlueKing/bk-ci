@@ -72,7 +72,6 @@ object ZipUtil {
     }
 
     fun zipDir(srcDir: File, zipFile: String) {
-
         ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { it ->
             try {
                 it.use {
