@@ -98,6 +98,10 @@ export function PipelineEditActionCreator (mutation) {
             if (compareParam(payload.newParam, payload.atom)) {
                 commit(SET_PIPELINE_EDITING, true)
             }
+        } else if (payload.stage && payload.newParam) {
+            if (compareParam(payload.newParam, payload.stage)) {
+                commit(SET_PIPELINE_EDITING, true)
+            }
         } else if ([UPDATE_ATOM_OUTPUT_NAMESPACE, ADD_STAGE].includes(mutation)) {
             commit(SET_PIPELINE_EDITING, true)
         }
@@ -146,11 +150,30 @@ export function getAtomOutputObj (output = {}) {
         }
         return outputObj
     } catch (e) {
-        console.warn('获取原子输出对象出错', output)
+        console.warn('get output error', output)
         return {}
     }
 }
 
 export function isNewAtomTemplate (htmlTemplateVersion) {
     return htmlTemplateVersion !== '1.0'
+}
+
+/**
+ * 获取插件上一个版本的字段值
+ */
+export function getAtomPreviousVal (preAtomVal = {}, preAtomProps = {}, atomProps = {}, isChangeAtom) {
+    let res = {}
+    if (!isChangeAtom) {
+        res = Object.keys(atomProps).reduce((formProps, key) => {
+            const atomProp = atomProps[key] || {}
+            const preAtomProp = preAtomProps[key] || {}
+            const isSameMultiple = (atomProp.optionsConf || {}).multiple === (preAtomProp.optionsConf || {}).multiple
+            if (atomProp.component === preAtomProp.component && atomProp.type === preAtomProp.type && isSameMultiple) {
+                formProps[key] = preAtomVal[key]
+            }
+            return formProps
+        }, {})
+    }
+    return res
 }

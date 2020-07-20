@@ -51,14 +51,14 @@ class MarketIdeAtomDao {
 
     fun count(
         dslContext: DSLContext,
-        ideAtomName: String?,
+        keyword: String?,
         categoryCode: String?,
         classifyCode: String?,
         labelCodeList: List<String>?,
         score: Int?,
         rdType: IdeAtomTypeEnum?
     ): Int {
-        val (tia, conditions) = formatConditions(ideAtomName, classifyCode, dslContext)
+        val (tia, conditions) = formatConditions(keyword, classifyCode, dslContext)
         val tiaf = TIdeAtomFeature.T_IDE_ATOM_FEATURE.`as`("tiaf")
 
         val baseStep = dslContext.select(tia.ID.countDistinct()).from(tia)
@@ -105,7 +105,7 @@ class MarketIdeAtomDao {
     }
 
     private fun formatConditions(
-        ideAtomName: String?,
+        keyword: String?,
         classifyCode: String?,
         dslContext: DSLContext
     ): Pair<TIdeAtom, MutableList<Condition>> {
@@ -115,8 +115,8 @@ class MarketIdeAtomDao {
         val conditions = mutableListOf<Condition>()
         conditions.add(tia.ATOM_STATUS.eq(IdeAtomStatusEnum.RELEASED.status.toByte())) // 已发布的
         conditions.add(tia.LATEST_FLAG.eq(true)) // 最新版本
-        if (!ideAtomName.isNullOrEmpty()) {
-            conditions.add(tia.ATOM_NAME.contains(ideAtomName))
+        if (!keyword.isNullOrEmpty()) {
+            conditions.add(tia.ATOM_NAME.contains(keyword).or(tia.SUMMARY.contains(keyword)))
         }
         if (!classifyCode.isNullOrEmpty()) {
             val a = TClassify.T_CLASSIFY.`as`("a")
@@ -131,7 +131,7 @@ class MarketIdeAtomDao {
 
     fun list(
         dslContext: DSLContext,
-        ideAtomName: String?,
+        keyword: String?,
         categoryCode: String?,
         classifyCode: String?,
         labelCodeList: List<String>?,
@@ -142,7 +142,7 @@ class MarketIdeAtomDao {
         page: Int?,
         pageSize: Int?
     ): Result<out Record>? {
-        val (tia, conditions) = formatConditions(ideAtomName, classifyCode, dslContext)
+        val (tia, conditions) = formatConditions(keyword, classifyCode, dslContext)
         val tiaf = TIdeAtomFeature.T_IDE_ATOM_FEATURE.`as`("tiaf")
 
         val baseStep = dslContext.select(

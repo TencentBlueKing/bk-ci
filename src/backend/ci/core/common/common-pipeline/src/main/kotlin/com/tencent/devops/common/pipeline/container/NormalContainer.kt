@@ -28,6 +28,7 @@ package com.tencent.devops.common.pipeline.container
 
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.option.JobControlOption
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -38,7 +39,7 @@ data class NormalContainer(
     @ApiModelProperty("容器名称", required = true)
     override var name: String = "",
     @ApiModelProperty("任务集合", required = true)
-    override val elements: List<Element> = listOf(),
+    override var elements: List<Element> = listOf(),
     @ApiModelProperty("容器状态", required = false, hidden = true)
     override var status: String? = null,
     @ApiModelProperty("系统运行时间", required = false, hidden = true)
@@ -47,9 +48,11 @@ data class NormalContainer(
     @ApiModelProperty("原子运行时间", required = false, hidden = true)
     override var elementElapsed: Long? = null,
     @ApiModelProperty("允许可跳过", required = false)
-    val enableSkip: Boolean?,
+    @Deprecated(message = "do not use", replaceWith = ReplaceWith("JobControlOption.runCondition"))
+    val enableSkip: Boolean? = false,
     @ApiModelProperty("触发条件", required = false)
-    val conditions: List<NameAndValue>?,
+    @Deprecated(message = "do not use", replaceWith = ReplaceWith("@see JobControlOption.customVariables"))
+    val conditions: List<NameAndValue>? = null,
     @ApiModelProperty("是否可重试", required = false, hidden = true)
     override var canRetry: Boolean? = false,
     override var containerId: String? = null,
@@ -62,7 +65,11 @@ data class NormalContainer(
     @ApiModelProperty("流程控制选项", required = true)
     var jobControlOption: JobControlOption? = null, // 为了兼容旧数据，所以定义为可空以及var
     @ApiModelProperty("互斥组", required = false)
-    var mutexGroup: MutexGroup? = null // 为了兼容旧数据，所以定义为可空以及var
+    var mutexGroup: MutexGroup? = null, // 为了兼容旧数据，所以定义为可空以及var
+    @ApiModelProperty("构建环境启动状态", required = false, hidden = true)
+    override var startVMStatus: String? = null,
+    @ApiModelProperty("容器运行次数", required = false, hidden = true)
+    override var executeCount: Int? = 0
 ) : Container {
     companion object {
         const val classType = "normal"

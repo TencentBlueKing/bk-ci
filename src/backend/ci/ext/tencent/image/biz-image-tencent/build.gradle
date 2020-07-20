@@ -29,5 +29,3 @@ dependencies {
     compile project(":ext:tencent:image:api-image-tencent")
     compile project(":core:image:biz-image")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

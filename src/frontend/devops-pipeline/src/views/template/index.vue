@@ -26,24 +26,24 @@
                         list: [
                             {
                                 id: 'templateEdit',
-                                name: '编辑',
+                                name: this.$t('edit'),
                                 icon: 'icon-edit'
                             },
                             {
                                 id: 'templateSetting',
-                                name: '设置',
+                                name: this.$t('setting'),
                                 icon: 'icon-cog'
                             },
                             {
                                 id: 'templateInstance',
-                                name: '实例管理',
+                                name: this.$t('template.instanceManage'),
                                 icon: 'icon-list',
                                 isSelected: false,
                                 showChildren: false,
                                 children: [
                                     {
                                         id: 'createInstance',
-                                        name: '新增实例',
+                                        name: this.$t('template.addInstance'),
                                         icon: 'icon-list'
                                     }
                                 ]
@@ -53,10 +53,13 @@
                 ],
                 nav: {
                     backUrl: 'pipelinesTemplate',
-                    title: '模板管理',
+                    title: this.$t('templateManage'),
                     icon: ''
                 }
             }
+        },
+        created () {
+            this.$store.dispatch('requestProjectDetail', { projectId: this.$route.params.projectId })
         }
     }
 </script>

@@ -82,9 +82,9 @@ interface UserMarketAtomResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("插件名称", required = false)
-        @QueryParam("atomName")
-        atomName: String?,
+        @ApiParam("搜索关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?,
         @ApiParam("插件分类", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
@@ -97,6 +97,12 @@ interface UserMarketAtomResource {
         @ApiParam("研发来源", required = false)
         @QueryParam("rdType")
         rdType: AtomTypeEnum?,
+        @ApiParam("yaml是否可用", required = false)
+        @QueryParam("yamlFlag")
+        yamlFlag: Boolean?,
+        @ApiParam("是否推荐标识 true：推荐，false：不推荐", required = false)
+        @QueryParam("recommendFlag")
+        recommendFlag: Boolean?,
         @ApiParam("排序", required = false)
         @QueryParam("sortType")
         sortType: MarketAtomSortTypeEnum? = MarketAtomSortTypeEnum.CREATE_TIME,

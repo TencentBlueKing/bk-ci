@@ -17,7 +17,7 @@
                     :class="{
                         'has-error': errors.has('members')
                     }">
-                    <company-staff-input :handle-change="handleChange" :value="shareMembers" v-validate="'required'" placeholder="请输入企业微信用户英文名"></company-staff-input>
+                    <user-input :handle-change="handleChange" name="members" :value="shareMembers" v-validate="'required'" placeholder="请输入用户名称"></user-input>
                     <div v-if="errors.has('members')" class="error-tips">请输入企业微信用户</div>
                 </div>
             </div>
@@ -41,11 +41,11 @@
 </template>
 
 <script>
-    import CompanyStaffInput from '@/components/devops/CompanyStaffInput/index.vue'
+    import UserInput from '@/components/devops/UserInput/index.vue'
 
     export default {
         components: {
-            CompanyStaffInput
+            UserInput
         },
         props: {
             shareConfig: {

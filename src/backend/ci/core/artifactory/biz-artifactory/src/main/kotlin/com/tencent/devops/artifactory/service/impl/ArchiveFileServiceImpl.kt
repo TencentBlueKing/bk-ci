@@ -27,6 +27,7 @@
 package com.tencent.devops.artifactory.service.impl
 
 import com.tencent.devops.artifactory.dao.FileDao
+import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -36,6 +37,7 @@ import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -57,8 +59,10 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.util.AntPathMatcher
+import org.springframework.util.FileCopyUtils
 import java.io.File
 import java.io.InputStream
+import java.io.OutputStream
 import java.net.URLDecoder
 import java.nio.charset.Charset
 import java.nio.file.Files
@@ -165,6 +169,22 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         return result
     }
 
+    abstract fun getInputStreamByFilePath(filePath: String): InputStream
+
+    override fun downloadFile(filePath: String, outputStream: OutputStream) {
+        logger.info("downloadFile filePath is:$filePath")
+        if (filePath.contains("..")) {
+            // 非法路径则抛出错误提示
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                defaultMessage = "filePath is invalid",
+                params = arrayOf(filePath)
+            )
+        }
+        val inputStream = getInputStreamByFilePath(filePath)
+        FileCopyUtils.copy(inputStream, outputStream)
+    }
+
     override fun uploadFile(
         userId: String,
         file: File,
@@ -189,10 +209,10 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         }
         logger.info("$uploadFileName destPath is:$destPath")
         uploadFileToRepo(destPath, file)
-        val shaContent = ShaUtils.sha1(file.readBytes())
+        val shaContent = file.inputStream().use { ShaUtils.sha1InputStream(it) }
         var fileProps: Map<String, String?> = props ?: mapOf()
         fileProps = fileProps.plus("shaContent" to shaContent)
-        val path = destPath.substring(getBasePath().length + 1)
+        val path = destPath.substring(getBasePath().length)
         val fileId = UUIDUtil.generate()
         dslContext.transaction { t ->
             val context = DSL.using(t)
@@ -224,14 +244,20 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         customFilePath: String,
         response: HttpServletResponse
     ) {
-        logger.info("downloadArchiveFile userId is:$userId,projectId is:$projectId,pipelineId is:$pipelineId,buildId is:$buildId,fileType is:$fileType,customFilePath is:$customFilePath")
-        val result = generateDestPath(fileType, projectId, customFilePath, pipelineId, buildId)
-        logger.info("generateDestPath result is:$result")
+        logger.info("[$buildId]|downloadArchiveFile|userId=$userId,projectId=$projectId,pipelineId=$pipelineId,fileType=$fileType,customFilePath=$customFilePath")
+        val result = generateDestPath(
+            fileType = fileType,
+            projectId = projectId,
+            customFilePath = customFilePath,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
+        logger.info("[$buildId]|generateDestPath result=$result")
         if (result.isNotOk()) {
             response.writer.println(JsonUtil.toJson(result))
             return
         }
-        val destPath = result.data!!.substring(getBasePath().length + 1)
+        val destPath = result.data!!.substring(getBasePath().length)
         downloadFile(destPath, response)
     }
 
@@ -242,7 +268,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         pageSize: Int?,
         searchProps: SearchProps
     ): Result<Page<FileInfo>> {
-        logger.info("searchFileList userId is:$userId,projectId is:$projectId,page is:$page,pageSize is:$pageSize,searchProps is:$searchProps")
+        logger.info("searchFileList userId=$userId,projectId=$projectId,page=$page,pageSize=$pageSize,searchProps=$searchProps")
         val props = searchProps.props
         val fileTypeList = listOf(FileTypeEnum.BK_ARCHIVE.fileType, FileTypeEnum.BK_CUSTOM.fileType)
         val fileInfoRecords = fileDao.getFileListByProps(dslContext, projectId, fileTypeList, props, page, pageSize)
@@ -298,9 +324,9 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         disposition: FormDataContentDisposition,
         fileChannelType: FileChannelTypeEnum
     ): Result<String?> {
-        logger.info("archiveFile userId is:$userId,projectId is:$projectId,pipelineId is:$pipelineId,buildId is:$buildId,fileType is:$fileType,filePath is:$customFilePath")
+        logger.info("[$buildId]|archiveFile userId=$userId,projectId=$projectId,pipelineId=$pipelineId,fileType=$fileType,filePath=$customFilePath")
         val result = generateDestPath(fileType, projectId, customFilePath, pipelineId, buildId)
-        logger.info("generateDestPath result is:$result")
+        logger.info("[$buildId]|generateDestPath result=$result")
         if (result.isNotOk()) {
             return result
         }
@@ -338,16 +364,16 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         if (FileTypeEnum.BK_CUSTOM == fileType || FileTypeEnum.BK_PLUGIN_FE == fileType) {
             if (customFilePath == null) {
                 return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_NULL,
-                    arrayOf("customFilePath")
+                    messageCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf("customFilePath")
                 )
             }
             if (customFilePath.contains("..")) {
                 // 非法路径则抛出错误提示
                 return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_INVALID,
-                    arrayOf(customFilePath),
-                    null
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(customFilePath),
+                    data = null
                 )
             }
             destPathBuilder.append(customFilePath.removePrefix(fileSeparator)) // 自定义方式归档文件
@@ -358,7 +384,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             }
         }
         val destPath = destPathBuilder.toString()
-        logger.info("archiveFile destPath is:$destPath")
+        logger.info("[$buildId]|archiveFile destPath=$destPath")
         return Result(destPath)
     }
 
@@ -378,16 +404,24 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             flag = true
         }
         if (flag) {
-            val destPath = filePath.substring(getBasePath().length + 1)
-            return generateFileDownloadPath(fileChannelType, commonConfig, fileType.fileType, destPath)
+            val destPath = filePath.substring(getBasePath().length)
+            return generateFileDownloadPath(
+                fileChannelType = fileChannelType,
+                commonConfig = commonConfig,
+                fileType = fileType.fileType,
+                destPath = destPath
+            )
         }
         return null
     }
 
-    abstract fun getBasePath(): String
+    /**
+     * return the archive root base path which end with / symbol
+     * @return must be end with / symbol (file sperator)
+     */
+    abstract override fun getBasePath(): String
 
     override fun validateUserDownloadFilePermission(userId: String, filePath: String): Result<Boolean> {
-        logger.info("validateUserDownloadFilePermission userId is:$userId，filePath is:$filePath")
         val realFilePath = URLDecoder.decode(filePath, "UTF-8")
         val realFilePathParts = realFilePath.split(fileSeparator)
         // 兼容用户路径里面带多个/的情况，先把路径里的文件类型、项目代码和流水线ID放到集合里
@@ -402,7 +436,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
                 num++
             }
         }
-        logger.info("validateUserDownloadFilePermission realFilePathParts is:$realFilePathParts")
+        logger.info("validateUserDownloadFilePermission|userId=$userId|filePath=$filePath|realFilePathParts=$realFilePathParts")
         val fileType = dataList[0]
         var flag = true
         val validateFileTypeList = listOf(
@@ -421,9 +455,95 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
                 permission = AuthPermission.DOWNLOAD
             )
         }
-        logger.info("validateUserDownloadFilePermission flag is:$flag")
+        logger.info("validateUserDownloadFilePermission|flag=$flag")
         return Result(flag)
     }
+
+    override fun acrossProjectCopy(
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String,
+        targetProjectId: String,
+        targetPath: String
+    ): Result<Count> {
+        val sourcePathPattern = getSourcePath(
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = path
+        )
+        logger.info("acrossProjectCopy source path pattern:$sourcePathPattern")
+        val sourceParentPath = sourcePathPattern.substring(0, sourcePathPattern.lastIndexOf(fileSeparator))
+        logger.info("acrossProjectCopy source parent path:$sourceParentPath")
+        val destPath = getTargetPath(
+            targetProjectId = targetProjectId,
+            targetPath = targetPath
+        )
+        logger.info("acrossProjectCopy dest path:$destPath")
+        return doAcrossProjectCopy(
+            sourceParentPath = sourceParentPath,
+            sourcePathPattern = sourcePathPattern,
+            destPath = destPath,
+            targetProjectId = targetProjectId
+        )
+    }
+
+    private fun getSourcePath(
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): String {
+        val pathBuilder = StringBuilder(getBasePath())
+        if (artifactoryType == ArtifactoryType.CUSTOM_DIR) {
+            pathBuilder.append(FileTypeEnum.BK_CUSTOM.fileType).append(fileSeparator)
+        } else {
+            pathBuilder.append(FileTypeEnum.BK_ARCHIVE.fileType).append(fileSeparator)
+        }
+        pathBuilder.append(projectId).append(fileSeparator)
+        if (path == null) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("path")
+            )
+        }
+        if (path.contains("..")) {
+            // 非法路径则抛出错误提示
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(path)
+            )
+        }
+        return pathBuilder.append(path.removePrefix("/")).toString()
+    }
+
+    private fun getTargetPath(
+        targetProjectId: String,
+        targetPath: String
+    ): String {
+        val pathBuilder = StringBuilder(getBasePath())
+            .append(FileTypeEnum.BK_CUSTOM.fileType).append(fileSeparator)
+            .append(targetProjectId).append(fileSeparator)
+        if (targetPath == null) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("targetPath")
+            )
+        }
+        if (targetPath.contains("..")) {
+            // 非法路径则抛出错误提示
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(targetPath)
+            )
+        }
+        return pathBuilder.append(targetPath.removePrefix("/")).toString()
+    }
+
+    abstract fun doAcrossProjectCopy(
+        sourceParentPath: String,
+        sourcePathPattern: String,
+        destPath: String,
+        targetProjectId: String
+    ): Result<Count>
 
     companion object {
         private val logger = LoggerFactory.getLogger(ArchiveFileServiceImpl::class.java)

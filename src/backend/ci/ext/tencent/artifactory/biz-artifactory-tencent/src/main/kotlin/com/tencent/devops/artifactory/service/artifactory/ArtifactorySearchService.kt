@@ -91,7 +91,7 @@ class ArtifactorySearchService @Autowired constructor(
             finalLimit
         )
         val fileInfoList =
-            artifactoryService.transferJFrogAQLFileInfo(projectId, jFrogAQLFileInfoList, pipelineHasPermissionList)
+            artifactoryService.transferJFrogAQLFileInfo(projectId, jFrogAQLFileInfoList, pipelineHasPermissionList, true)
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 

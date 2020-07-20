@@ -28,6 +28,9 @@ package com.tencent.devops.common.gcloud
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.gcloud.api.pojo.ActionParam
 import com.tencent.devops.common.gcloud.api.pojo.CommonParam
 import com.tencent.devops.common.gcloud.api.pojo.GetUploadTaskParam
@@ -72,13 +75,19 @@ class DynamicGcloudClient constructor(
         OkhttpUtils.doLongHttp(request).use { res ->
             val uploadResp = res.body()!!.string()
             logger.info("dyn uploadRes response>> $uploadResp")
-            if (!res.isSuccessful) throw RuntimeException("dyn upload res ${file.path} fail:\n$uploadResp")
+            if (!res.isSuccessful) throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "dyn upload res ${file.path} fail:\n$uploadResp")
             val response: Map<String, Any> = objectMapper.readValue(uploadResp)
             if (response["code"] == 0) {
                 val result = response["result"] as Map<*, *>
                 return Pair(result["task_id"] as Int, result["filepath"] as String)
             } else {
-                throw RuntimeException("dyn upload res ${file.path} fail, msg: ${response["message"] as String}:\n$uploadResp")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "dyn upload res ${file.path} fail, msg: ${response["message"] as String}:\n$uploadResp")
             }
         }
     }
@@ -96,7 +105,10 @@ class DynamicGcloudClient constructor(
             val data = res.body()!!.string()
 
             logger.info("dyn getUploadTask response>> $data")
-            if (!res.isSuccessful) throw RuntimeException("dyn getUploadTask for taskId $taskID fail:\n$data")
+            if (!res.isSuccessful) throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "dyn getUploadTask for taskId $taskID fail:\n$data")
             val response: Map<String, Any> = objectMapper.readValue(data)
             if (response["code"] == 0) {
                 val result = response["result"] as Map<*, *>
@@ -111,7 +123,10 @@ class DynamicGcloudClient constructor(
                         "versionStr" to versionStr,
                         "message" to message)
             } else {
-                throw RuntimeException("dyn getUploadTask for taskId $taskID fail:\n$data")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "dyn getUploadTask for taskId $taskID fail:\n$data")
             }
         }
     }
@@ -128,12 +143,18 @@ class DynamicGcloudClient constructor(
         OkhttpUtils.doLongHttp(request).use { res ->
             val data = res.body()!!.string()
             logger.info("dyn newResource response>> $data")
-            if (!res.isSuccessful) throw RuntimeException("dyn newResource fail:\n$data")
+            if (!res.isSuccessful) throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "dyn newResource fail:\n$data")
             val response: Map<String, Any> = objectMapper.readValue(data)
             if (response["code"] == 0) {
                 return response["message"] as String
             } else {
-                throw RuntimeException("dyn newResource fail:\n$data")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "dyn newResource fail:\n$data")
             }
         }
     }
@@ -148,12 +169,18 @@ class DynamicGcloudClient constructor(
         OkhttpUtils.doLongHttp(request).use { res ->
             val data = res.body()!!.string()
             logger.info("dyn newApp response>> $data")
-            if (!res.isSuccessful) throw RuntimeException("dyn newApp fail:\n$data")
+            if (!res.isSuccessful) throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "dyn newApp fail:\n$data")
             val response: Map<String, Any> = objectMapper.readValue(data)
             if (response["code"] == 0) {
                 return response["message"] as String
             } else {
-                throw RuntimeException("dyn newApp fail:\n$data")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "dyn newApp fail:\n$data")
             }
         }
     }
@@ -172,12 +199,18 @@ class DynamicGcloudClient constructor(
         OkhttpUtils.doLongHttp(request).use { res ->
             val data = res.body()!!.string()
             logger.info("delete version response>> $data")
-            if (!res.isSuccessful) throw RuntimeException("delete version fail:\n$data")
+            if (!res.isSuccessful) throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "delete version fail:\n$data")
             val response: Map<String, Any> = objectMapper.readValue(data)
             if (response["code"] == 0) {
                 return response["message"] as String
             } else {
-                throw RuntimeException("delete version fail:\n$data")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "delete version fail:\n$data")
             }
         }
     }
@@ -192,12 +225,18 @@ class DynamicGcloudClient constructor(
         OkhttpUtils.doLongHttp(request).use { res ->
             val data = res.body()!!.string()
             logger.info("update version response>> $data")
-            if (!res.isSuccessful) throw RuntimeException("update version fail:\n$data")
+            if (!res.isSuccessful) throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "update version fail:\n$data")
             val response: Map<String, Any> = objectMapper.readValue(data)
             if (response["code"] == 0) {
                 return response["message"] as String
             } else {
-                throw RuntimeException("update version fail:\n$data")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "update version fail:\n$data")
             }
         }
     }

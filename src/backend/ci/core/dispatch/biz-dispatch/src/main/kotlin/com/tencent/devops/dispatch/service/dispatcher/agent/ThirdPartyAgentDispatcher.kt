@@ -46,6 +46,8 @@ import com.tencent.devops.dispatch.utils.redis.ThirdPartyRedisBuild
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.slf4j.LoggerFactory
@@ -196,6 +198,13 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     buildNo = pipelineAgentStartupEvent.buildNo,
                     taskName = pipelineAgentStartupEvent.taskName
                 )
+                saveAgentInfoToBuildDetail(
+                    projectId = pipelineAgentStartupEvent.projectId,
+                    pipelineId = pipelineAgentStartupEvent.pipelineId,
+                    buildId = pipelineAgentStartupEvent.buildId,
+                    vmSeqId = pipelineAgentStartupEvent.vmSeqId,
+                    agent = agent
+                )
                 logger.info(
                     "Start the third party build agent($agentId) " +
                         "of build(${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId})"
@@ -216,6 +225,23 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         } finally {
             redisLock.unlock()
         }
+    }
+
+    private fun saveAgentInfoToBuildDetail(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        agent: ThirdPartyAgent
+
+    ) {
+        client.get(ServiceBuildResource::class).saveBuildVmInfo(
+            projectId,
+            pipelineId,
+            buildId,
+            vmSeqId,
+            VmInfo(agent.ip, agent.ip)
+        )
     }
 
     private fun buildByEnvId(

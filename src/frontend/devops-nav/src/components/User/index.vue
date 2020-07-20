@@ -8,14 +8,17 @@
             @click.stop="toggleUserInfo"
         >
             {{ username }}
-            <i class="bk-icon icon-down-shape" />
+            <i class="devops-icon icon-down-shape" />
         </div>
         <div
             v-if="show"
             class="user-info-dropmenu"
         >
             <p class="user-avatar">
-                <!--<img :src="avatarUrl" alt="用户头像" />-->
+                <img
+                    :src="avatarUrl"
+                    alt="userAvatar"
+                >
                 <span>{{ chineseName }}</span>
             </p>
             <slot name="menu">
@@ -48,12 +51,13 @@
     import Vue from 'vue'
     import { Component, Prop, Watch } from 'vue-property-decorator'
     import { Action } from 'vuex-class'
+    import bkLogout from '../../utils/bklogout.js'
     import { clickoutside } from '../../directives/index'
 
     @Component({
-      directives: {
-        clickoutside
-      }
+        directives: {
+            clickoutside
+        }
     })
     export default class User extends Vue {
         @Prop()
@@ -68,28 +72,46 @@
 
         @Action togglePopupShow
 
-        toggleUserInfo (show: boolean) :void {
-          this.show = !this.show
+        toggleUserInfo (show: boolean): void {
+            this.show = !this.show
         }
 
-        hideUserInfo () : void {
-          this.show = false
+        hideUserInfo (): void {
+            this.show = false
         }
 
         @Watch('show')
         handleShow (show, oldVal) {
-          if (show !== oldVal) {
-            this.togglePopupShow(show)
-          }
+            if (show !== oldVal) {
+                this.togglePopupShow(show)
+            }
         }
 
         get menu (): object[] {
-          return [
-            {
-              to: '/console/pm',
-              label: '项目管理'
+            try {
+                const { projectId } = this.$route.params
+                return [
+                    {
+                        to: '/console/pm',
+                        label: this.$t('projectManage')
+                    },
+                    {
+                        to: `/console/perm/my-perm?project_code=${projectId || ''}`,
+                        label: this.$t('accessCenter')
+                    },
+                    {
+                        cb: this.logout,
+                        label: this.$t('logout')
+                    }
+                ]
+            } catch (e) {
+                console.warn(e)
+                return []
             }
-          ]
+        }
+        logout (): void {
+            bkLogout.logout()
+            window.location.href = LOGIN_SERVICE_URL + '/?c_url=' + window.location.href
         }
     }
 </script>
@@ -113,7 +135,7 @@
             align-items: center;
         }
 
-        .bk-icon.icon-down-shape {
+        .devops-icon.icon-down-shape {
             vertical-align: -2px;
         }
 

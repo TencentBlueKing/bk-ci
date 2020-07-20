@@ -35,6 +35,7 @@ export const INSERT_ATOM = 'INSERT_ATOM'
 export const DELETE_ATOM = 'DELETE_ATOM'
 export const UPDATE_ATOM = 'UPDATE_ATOM'
 export const UPDATE_ATOM_INPUT = 'UPDATE_ATOM_INPUT'
+export const UPDATE_WHOLE_ATOM_INPUT = 'UPDATE_WHOLE_ATOM_INPUT'
 export const UPDATE_ATOM_OUTPUT = 'UPDATE_ATOM_OUTPUT'
 export const UPDATE_ATOM_OUTPUT_NAMESPACE = 'UPDATE_ATOM_OUTPUT_NAMESPACE'
 export const DELETE_ATOM_PROP = 'DELETE_ATOM_PROP'
@@ -42,7 +43,11 @@ export const SET_REMOTE_TRIGGER_TOKEN = 'SET_REMOTE_TRIGGER_TOKEN'
 
 export const ADD_STAGE = 'ADD_STAGE'
 export const DELETE_STAGE = 'DELETE_STAGE'
+export const UPDATE_STAGE = 'UPDATE_STAGE'
 export const SET_INSERT_STAGE_INDEX = 'SET_INSERT_STAGE_INDEX'
+export const SET_STAGE_TAG_LIST = 'SET_STAGE_TAG_LIST'
+
+export const SET_DEFAULT_STAGE_TAG = 'SET_DEFAULT_STAGE_TAG'
 
 export const ADD_CONTAINER = 'ADD_CONTAINER'
 export const UPDATE_CONTAINER = 'UPDATE_CONTAINER'
@@ -74,16 +79,19 @@ export const SET_STORE_SEARCH = 'SET_STORE_SEARCH'
 export const SET_EXECUTE_STATUS = 'SET_EXECUTE_STATUS'
 export const SET_SAVE_STATUS = 'SET_SAVE_STATUS'
 
+export const SET_PIPELINE_STAGE = 'SET_PIPELINE_STAGE'
+export const SET_PIPELINE_CONTAINER = 'SET_PIPELINE_CONTAINER'
+
 export const buildNoRules = [
     {
         value: 'CONSISTENT',
-        label: '锁定构建号'
+        label: 'consistent'
     }, {
         value: 'SUCCESS_BUILD_INCREMENT',
-        label: '构建成功 + 1'
+        label: 'success_build_increment'
     }, {
         value: 'EVERY_BUILD_INCREMENT',
-        label: '每次构建 + 1',
+        label: 'every_build_increment',
         default: true
     }
 ]
@@ -103,3 +111,6 @@ export const defaultBuildNo = {
     buildNo: '0',
     buildNoType: buildNoRules[2].value
 }
+
+export const TOGGLE_REVIEW_DIALOG = 'TOGGLE_REVIEW_DIALOG'
+export const TOGGLE_STAGE_REVIEW_PANEL = 'TOGGLE_STAGE_REVIEW_PANEL'

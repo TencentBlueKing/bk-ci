@@ -6,8 +6,8 @@
             :style="{
                 width: percentage
             }">
-            <i class="bk-icon icon-check-1 success status-icon" v-if="hasIcon && status === 'success'"></i>
-            <i class="bk-icon icon-exclamation error status-icon" v-if="hasIcon && status === 'error' || status === 'known_error'"></i>
+            <i class="devops-icon icon-check-1 success status-icon" v-if="hasIcon && status === 'success'"></i>
+            <i class="devops-icon icon-exclamation error status-icon" v-if="hasIcon && status === 'error' || status === 'known_error'"></i>
         </div>
     </div>
 </template>
@@ -62,7 +62,7 @@
             &.known_error {
                 background: linear-gradient(to right, $dangerColor, #ff7979);
             }
-            .bk-icon {
+            .devops-icon {
                 position: absolute;
                 top: 50%;
                 transform: translateY(-50%);

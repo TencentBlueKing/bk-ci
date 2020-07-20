@@ -43,5 +43,3 @@ dependencies {
     compile group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.25.1'
     compile group: 'org.glassfish.jersey.core', name: 'jersey-common', version: '2.25.1'
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

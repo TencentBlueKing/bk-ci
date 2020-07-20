@@ -45,6 +45,7 @@ import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.services.GitService
 import org.springframework.beans.factory.annotation.Autowired
@@ -131,6 +132,10 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getProject(accessToken, userId))
     }
 
+    override fun getProjectInfo(accessToken: String, gitProjectId: Long): Result<GitCIProjectInfo?> {
+        return gitService.getGitCIProjectInfo(gitProjectId.toString(), accessToken)
+    }
+
     override fun getProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?): Result<List<Project>> {
         return Result(gitService.getProjectList(accessToken, userId, page, pageSize))
     }
@@ -156,7 +161,7 @@ class ServiceGitResourceImpl @Autowired constructor(
     }
 
     override fun getToken(gitProjectId: Long): Result<GitToken> {
-        return Result(gitService.getToken(gitProjectId))
+        return Result(gitService.getToken(gitProjectId.toString()))
     }
 
     override fun getGitCIFileContent(gitProjectId: Long, filePath: String, token: String, ref: String): Result<String> {

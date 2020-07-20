@@ -29,7 +29,6 @@ package com.tencent.bk.codecc.task.service;
 import com.tencent.bk.codecc.task.vo.MetadataVO;
 import com.tencent.bk.codecc.task.vo.ToolMetaBaseVO;
 import com.tencent.bk.codecc.task.vo.ToolMetaDetailVO;
-import com.tencent.devops.common.api.pojo.Result;
 
 import java.util.List;
 import java.util.Map;

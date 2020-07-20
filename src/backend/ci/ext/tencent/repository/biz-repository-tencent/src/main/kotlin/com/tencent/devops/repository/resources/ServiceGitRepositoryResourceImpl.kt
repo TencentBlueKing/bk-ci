@@ -121,4 +121,8 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
             tokenType = tokenType
         )
     }
+
+    override fun getAuthUrl(authParamJsonStr: String): Result<String> {
+        return repositoryService.getAuthUrl(authParamJsonStr)
+    }
 }

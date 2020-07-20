@@ -21,12 +21,13 @@ import ajax from '@/utils/request'
 import {
     FETCH_ERROR,
     PROCESS_API_URL_PREFIX,
-    BACKEND_API_URL_PREFIX
+    BACKEND_API_URL_PREFIX,
+    STORE_API_URL_PREFIX
 } from '@/store/constants'
 
 // import axios from 'axios'
 // const CancelToken = axios.CancelToken
-import { PIPELINE_SETTING_MUTATION, UPDATE_PIPELINE_SETTING_MUNTATION, PROJECT_GROUP_USERS_MUTATION, RESET_PIPELINE_SETTING_MUNTATION, PIPELINE_AUTHORITY_MUTATION } from './constants'
+import { PIPELINE_SETTING_MUTATION, UPDATE_PIPELINE_SETTING_MUNTATION, RESET_PIPELINE_SETTING_MUNTATION, PIPELINE_AUTHORITY_MUTATION } from './constants'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/pipelines/`
 const backpre = `${BACKEND_API_URL_PREFIX}/api`
@@ -42,7 +43,6 @@ const state = {
     allPipelineList: [],
     hasCreatePermission: false,
     pipelineSetting: {},
-    projectGroupAndUsers: [],
     pipelineAuthority: {}
 }
 
@@ -74,11 +74,6 @@ const mutations = {
     [RESET_PIPELINE_SETTING_MUNTATION]: (state, payload) => {
         return Object.assign(state, {
             pipelineSetting: {}
-        })
-    },
-    [PROJECT_GROUP_USERS_MUTATION]: (state, { projectGroupAndUsers }) => {
-        return Object.assign(state, {
-            projectGroupAndUsers
         })
     },
     [PIPELINE_SETTING_MUTATION]: (state, { pipelineSetting }) => {
@@ -204,6 +199,39 @@ const mutations = {
 }
 
 const actions = {
+    requestImageDetail ({ commit }, { code }) {
+        return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/image/imageCodes/${code}`)
+    },
+    requestImageHistory ({ commit }, { agentType, value }) {
+        return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/history/transfer?agentType=${agentType}&value=${value}`)
+    },
+    requestImageVersionlist ({ commit }, { projectCode, imageCode }) {
+        return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/projectCodes/${projectCode}/imageCodes/${imageCode}/version/list`)
+    },
+
+    requestInstallImage ({ commit }, params) {
+        return ajax.post(`/${STORE_API_URL_PREFIX}/user/market/image/install`, params)
+    },
+    requestImageVersion ({ commit }, imageCode) {
+        return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/image/imageCodes/${imageCode}/version/list`)
+    },
+
+    requestMarketImage ({ commit }, { projectCode, agentType, imageNamePart, recommendFlag }) {
+        return ajax.post(`/${STORE_API_URL_PREFIX}/user/market/image/jobMarketImages/search?projectCode=${projectCode}&imageNamePart=${imageNamePart}&agentType=${agentType}&recommendFlag=${recommendFlag}&page=1&pageSize=1000`)
+    },
+
+    requestImageClassifys ({ commit }) {
+        return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/image/classifys`)
+    },
+
+    requestInstallImageList ({ commit }, { projectCode, agentType, recommendFlag, id, page, pageSize }) {
+        return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/image/availableImages?projectCode=${projectCode}&agentType=${agentType}&recommendFlag=${recommendFlag}&classifyId=${id}&page=${page}&pageSize=${pageSize}`)
+    },
+
+    requestStoreImageList ({ commit }, { projectCode, agentType, recommendFlag, page, pageSize }) {
+        return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/image/jobMarketImages?projectCode=${projectCode}&agentType=${agentType}&recommendFlag=${recommendFlag}&page=${page}&pageSize=${pageSize}`)
+    },
+
     resetPipelineSetting: ({ commit }, payload) => {
         commit(RESET_PIPELINE_SETTING_MUNTATION, payload)
     },
@@ -226,7 +254,7 @@ const actions = {
     updatePipelineAuthority: ({ commit }, payload) => {
         commit(PIPELINE_AUTHORITY_MUTATION, payload)
     },
-
+    
     requestHasCreatePermission (state, { projectId }) {
         return ajax.get(`${prefix}${projectId}/hasCreatePermission`).then(response => {
             return response.data
@@ -423,7 +451,7 @@ const actions = {
     async fetchRoleList ({ commit, state, dispatch }, { projectId, pipelineId }) {
         try {
             const { data } = await ajax.get(`${backpre}/perm/service/pipeline/mgr_resource/permission/?project_id=${projectId}&resource_type_code=pipeline&resource_code=${pipelineId}`)
-
+            
             commit(PIPELINE_AUTHORITY_MUTATION, {
                 pipelineAuthority: {
                     role: data.role.map(item => {

@@ -27,16 +27,40 @@
 package com.tencent.devops.common.api.util
 
 import org.bouncycastle.util.encoders.Hex
+import java.io.InputStream
+import java.security.DigestInputStream
 import java.security.MessageDigest
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 object ShaUtils {
 
-    fun sha1(str: ByteArray): String {
+    /**
+     * 适用于大数据量（文件）的流处理方式
+     */
+    fun sha1InputStream(inputStream: InputStream): String {
+        // 指定sha1算法
+        val messageDigest = MessageDigest.getInstance("SHA-1")
+        DigestInputStream(inputStream, messageDigest).use { ins ->
+            val buffer = ByteArray(1024 * 16) // 16KB
+            var size: Int
+            do {
+                size = ins.read(buffer)
+            } while (size > -1)
+        }
+
+        val digestBytes = messageDigest.digest()
+        // 字节数组转换为 十六进制 数
+        return digestBytes.toHexString()
+    }
+
+    /**
+     * 注意，data过大的byteArray请使用流的方式
+     */
+    fun sha1(data: ByteArray): String {
         // 指定sha1算法
         val digest = MessageDigest.getInstance("SHA-1")
-        digest.update(str)
+        digest.update(data)
         // 获取字节数组
         val messageDigest = digest.digest()
 

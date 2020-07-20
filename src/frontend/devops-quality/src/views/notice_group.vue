@@ -131,7 +131,7 @@
         watch: {
             projectId () {
                 this.$router.push({
-                    name: 'overview',
+                    name: 'qualityOverview',
                     params: {
                         projectId: this.projectId
                     }
@@ -304,7 +304,7 @@
                         noPermissionList: [
                             { resource: '通知组', option: '编辑' }
                         ],
-                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=group:${row.groupHashId}`
+                        applyPermissionUrl: PERM_URL_PREFIX
                     }
 
                     this.$showAskPermissionDialog(params)
@@ -351,7 +351,7 @@
                         noPermissionList: [
                             { resource: '通知组', option: '删除' }
                         ],
-                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=group:${row.groupHashId}`
+                        applyPermissionUrl: PERM_URL_PREFIX
                     }
 
                     this.$showAskPermissionDialog(params)

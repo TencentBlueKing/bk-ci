@@ -25,10 +25,17 @@ $borderWeightColor: #dde4eb; // 相对较深，常用于输入框边框色
 $inputBorderColor: #d1d9e1;
 
 // 字体色
+$fontLightColor: #c4c6cd;
 $fontColor: #7b7d8a;
 $fontWeightColor: #737987;
 $fontBoldColor: #333948;
 $fontLigtherColor: #c3cdd7;
+$fontDarkColor: #63656f;
+$fontLightGray: #63656e;
+
+// 蓝色
+$darkerBlue: #0484ff;
+$tinyBlue: #9ac5ff;
 
 // 主体 icon 颜色
 $iconPrimaryColor: #3c96ff;
@@ -49,6 +56,9 @@ $warningColor: #ffb400;
 
 // 淡色
 $primaryLightColor: #ebf4ff;
+$lightColor: #dcdee6;
+$borderLightColor: #f0f1f5;
+$buttonLightColor: #e0e0e0;
 
 // 适配宽度
 $mediaWidth: 1500px;
@@ -63,19 +73,23 @@ $lineColor: #c3cdd7;
 
 $white: #ffffff;
 $lightBlue: #e0ecff;
+$fontDarkBlack: #222222;
 $fontBlack: #333C48;
 $fontLightBlack: #4a4a4a;
 $darkWhite: #c5c7d1;
 $lightGray: #dde4eb;
+$navGray: #b5c0d5;
 $fontGray: #979ba5;
 $lighterBlue: #7ab5fb;
-$starYellow: #f5a623;
+$starYellow: #ffca2b;
 $darkBlue: #3a84ff;
 $gray: #000000;
 $lighterGray: #e5e5e5;
 $laberColor: #3e97ff;
 $laberBackColor: #ecf3ff;
 $lightBorder: #dcdee5;
+$grayBlack: #666666;
+$grayBackGroundColor: #f1f2f3;
 
 .spin-icon {
     animation: loading .8s linear infinite;

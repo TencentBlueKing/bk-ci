@@ -6,7 +6,7 @@
             </div>
             <!-- <bk-guide></bk-guide> -->
             <div class="biz-actions">
-                <a :href="`${DOCS_URL_PREFIX}/%E6%89%80%E6%9C%89%E6%9C%8D%E5%8A%A1/%E5%AE%B9%E5%99%A8%E6%9C%8D%E5%8A%A1/bkcli/%E5%A6%82%E4%BD%95%E5%90%91%E8%93%9D%E7%9B%BE%E6%8E%A8%E9%80%81%E9%95%9C%E5%83%8F.html`"
+                <a :href="`${DOCS_URL_PREFIX}`"
                     target="_blank" class="bk-text-button ml10">如何推镜像？</a>
             </div>
         </div>
@@ -16,7 +16,7 @@
                     <div class="biz-search-input">
                         <input @keyup.enter="enterHandler" v-model="searchKey" type="text" class="bk-form-input" placeholder="搜索">
                         <a href="javascript:void(0)" class="biz-search-btn" @click="handleClick">
-                            <i class="bk-icon icon-search icon-search-li"></i>
+                            <i class="devops-icon icon-search icon-search-li"></i>
                         </a>
                     </div>
                 </div>
@@ -44,7 +44,7 @@
                                 </div>
                                 <div class="detail" @click="toImageDetail(item)">
                                     <!-- <router-link :to="{name: 'imageDetail'}"> -->
-                                    详情<i class="bk-icon icon-angle-right"></i>
+                                    详情<i class="devops-icon icon-angle-right"></i>
                                     <!-- </router-link> -->
                                 </div>
                             </div>
@@ -400,7 +400,7 @@
         }
     }
     .mc-operate-audit-table {
-        i.bk-icon {
+        i.devops-icon {
             font-size: 16px;
             vertical-align: middle;
             position: relative;

@@ -24,18 +24,21 @@ import {
 import { getQueryParamList } from '../../../utils/util'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/builds/`
+const pluginPrefix = `plugin/api`
 
 const state = {
     historyPageStatus: {
         currentPage: 1,
         scrollTop: 0,
+        queryStr: false,
         hasNext: false,
         isQuerying: false,
         queryMap: {
             query: {
                 status: [],
                 materialAlias: [],
-                materialBranch: []
+                materialBranch: [],
+                dateTimeRange: []
             },
             searchKey: []
         },
@@ -61,7 +64,7 @@ function flatSearchKey (searchKey) {
 
 function generateQueryString (query) {
     return Object.keys(query).map(key => {
-        const val = query[key]
+        const val = key !== 'dateTimeRange' && query[key]
         return getQueryParamList(val, key)
     }).filter(item => item).join('&')
 }
@@ -76,6 +79,12 @@ const mutations = {
             ...state.historyPageStatus,
             ...status
         }
+    },
+    updateCurrentRouterQuery (state, queryStr) {
+        state.historyPageStatus = {
+            ...state.historyPageStatus,
+            ...queryStr
+        }
     }
 }
 
@@ -83,13 +92,17 @@ const actions = {
     setHistoryPageStatus ({ commit, state }, newStatus) {
         commit('updateHistoryPageStatus', newStatus)
     },
+    setRouterQuery ({ commit, state }, query) {
+        commit('updateCurrentRouterQuery', query)
+    },
     resetHistoryFilterCondition ({ commit }) {
         commit('updateHistoryPageStatus', {
             queryMap: {
                 query: {
                     status: [],
                     materialAlias: [],
-                    materialBranch: []
+                    materialBranch: [],
+                    dateTimeRange: []
                 },
                 searchKey: []
             }
@@ -123,7 +136,14 @@ const actions = {
      * @return {Promise} promise 对象
      */
     requestExecPipeline ({ commit, state, dispatch }, { projectId, pipelineId, params }) {
-        return ajax.post(`${prefix}${projectId}/${pipelineId}`, {
+        let url
+        if (params.buildNo) {
+            url = `${prefix}${projectId}/${pipelineId}?buildNo=${params.buildNo.buildNo}`
+            delete params.buildNo
+        } else {
+            url = `${prefix}${projectId}/${pipelineId}`
+        }
+        return ajax.post(url, {
             ...params
         }).then(response => {
             return response.data
@@ -182,7 +202,43 @@ const actions = {
         dispatch('setHistoryPageStatus', {
             isQuerying: !!filterStr
         })
+        dispatch('setRouterQuery', {
+            queryStr: filterStr
+        })
+        
         return ajax.get(`${prefix}${projectId}/${pipelineId}/history/new?page=${page}&pageSize=${pageSize}&${filterStr}`).then(response => {
+            return response.data
+        })
+    },
+    /**
+     * 获取CodeCC报告
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {String} projectId 项目 id
+     * @param {String} pipelineId 任务 id
+     * @param {String} buildId 构建 id
+     *
+     * @return {Promise} promise 对象
+     */
+    requestCodeCCReport ({ commit, state, dispatch }, { projectId, pipelineId }) {
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/codeccReport`).then(response => {
+            return response.data
+        })
+    },
+    /**
+     * 获取CodeCC报告
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {String} buildId 构建 id
+     *
+     * @return {Promise} promise 对象
+     */
+    requestNewCodeCCReport ({ commit, state, dispatch }, { buildId }) {
+        return ajax.get(`${pluginPrefix}/user/codecc/report/${buildId}`).then(response => {
             return response.data
         })
     },
@@ -205,6 +261,59 @@ const actions = {
      */
     requestRetryPipeline ({ commit, state, dispatch }, { projectId, pipelineId, buildId, taskId }) {
         return ajax.post(`${prefix}${projectId}/${pipelineId}/${buildId}/retry${taskId ? '?taskId=' + taskId : ''}`).then(response => {
+            return response.data
+        })
+    },
+    /**
+     * 编译加速项信息
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {String} bsPipelineId 流水线 id
+     * @param {String} bsContainerId 原子 id
+     * @param {String} bsElementId 原子任务 id
+     *
+     * @return {Promise} promise 对象
+     */
+    requestTurboIofo ({ commit, state, dispatch }, { bsPipelineId, bsContainerId, bsElementId }) {
+        return ajax.get(`turbo/api/user/turbo/task/pipeline/${bsPipelineId}/${bsElementId}`).then(response => {
+            return response
+        })
+    },
+    /**
+     * 编译加速开关
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {String} taskId 加速任务 id
+     * @param {Boolean} banAllBooster 开关
+     *
+     * @return {Promise} promise 对象
+     */
+    setTurboSwitch ({ commit, state, dispatch }, { taskId, banAllBooster }) {
+        return ajax.put(`turbo/api/user/turbo/task/switch/${taskId}/${banAllBooster}`).then(response => {
+            return response.data
+        })
+    },
+
+    /**
+     * 同步流水线信息至编译加速
+     *
+     * @param {Function} commit store commit mutation handler
+     * @param {Object} state store state
+     * @param {Function} dispatch store dispatch action handler
+     * @param {String} pipelineId 流水线 id
+     * @return {params} params 对象
+     */
+    updateToTurbo ({ commit, state, dispatch }, { pipelineId, params }) {
+        return ajax.post(`turbo/api/user/turbo/pipeline/synchronization/${pipelineId}`, params).then(response => {
+            return response.data
+        })
+    },
+    requestMetadataInfo ({ commit, state, dispatch }, { projectId, artifactoryType, path }) {
+        return ajax.get(`artifactory/api/user/artifactories/${projectId}/${artifactoryType}/show?path=${path}`).then(response => {
             return response.data
         })
     }

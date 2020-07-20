@@ -91,6 +91,12 @@ data class JobMarketImageItem(
     @ApiModelProperty("镜像tag", required = true)
     val imageTag: String,
 
+    @ApiModelProperty("dockerFile类型", required = true)
+    val dockerFileType: String,
+
+    @ApiModelProperty("dockerFile内容", required = true)
+    val dockerFileContent: String,
+
     @ApiModelProperty("逗号分隔的Label名称", required = true)
     val labelNames: String,
 

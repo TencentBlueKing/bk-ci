@@ -31,6 +31,10 @@ package com.tencent.devops.process.engine.atom.task
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode.USER_TASK_OPERATE_FAIL
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.jsonMediaType
@@ -41,10 +45,8 @@ import com.tencent.devops.common.pipeline.element.JobExecuteTaskExtElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -170,7 +172,7 @@ class JobExecuteTaskExtAtom @Autowired constructor(
         return if (buildStatus == BuildStatus.FAILED) AtomResponse(
             buildStatus = BuildStatus.FAILED,
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
             errorMsg = "failed to excute job"
         ) else AtomResponse(buildStatus)
     }
@@ -227,7 +229,10 @@ class JobExecuteTaskExtAtom @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("execute job error", e)
-            throw RuntimeException("execute job error: ${e.message}")
+            throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "execute job error: ${e.message}")
         }
     }
 
@@ -345,7 +350,11 @@ class JobExecuteTaskExtAtom @Autowired constructor(
                     jobId = task.containerHashId,
                 executeCount = executeCount
             )
-            throw RuntimeException("start job exception")
+            throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "start job exception"
+            )
         }
     }
 

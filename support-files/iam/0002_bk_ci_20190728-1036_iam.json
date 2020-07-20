@@ -206,32 +206,32 @@
 
           {
             "scope_type_id": "project",
-            "resource_type_id": "node",
+            "resource_type_id": "env_node",
             "action_id": "view"
           },
           {
             "scope_type_id": "project",
-            "resource_type_id": "node",
+            "resource_type_id": "env_node",
             "action_id": "edit"
           },
           {
             "scope_type_id": "project",
-            "resource_type_id": "node",
+            "resource_type_id": "env_node",
             "action_id": "create"
           },
           {
             "scope_type_id": "project",
-            "resource_type_id": "node",
+            "resource_type_id": "env_node",
             "action_id": "delete"
           },
           {
             "scope_type_id": "project",
-            "resource_type_id": "node",
+            "resource_type_id": "env_node",
             "action_id": "use"
           },
           {
             "scope_type_id": "project",
-            "resource_type_id": "node",
+            "resource_type_id": "env_node",
             "action_id": "list"
           },
 

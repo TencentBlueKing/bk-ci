@@ -69,14 +69,14 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
             val name = it.uri.removePrefix("/")
             val fullPath = JFrogUtil.compose(normalizePath, name, it.folder)
             FileInfo(
-                name,
-                fullPath,
-                it.uri,
-                fullPath,
-                it.size,
-                it.folder,
-                LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                ArtifactoryType.CUSTOM_DIR
+                name = name,
+                fullName = fullPath,
+                path = it.uri,
+                fullPath = fullPath,
+                size = it.size,
+                folder = it.folder,
+                modifiedTime = LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                artifactoryType = ArtifactoryType.CUSTOM_DIR
             )
         }
         return JFrogUtil.sort(fileInfoList)
@@ -139,9 +139,9 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
         }
     }
 
-    override fun mkdir(projectId: String, path: String) {
-        logger.info("[$projectId|[$path]] the method of being done is: mkdir")
-        val path = JFrogUtil.normalize(path)
+    override fun mkdir(projectId: String, argPath: String) {
+        logger.info("[$projectId|[$argPath]] the method of being done is: mkdir")
+        val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
             throw BadRequestException("非法路径")

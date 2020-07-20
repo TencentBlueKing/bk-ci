@@ -37,6 +37,6 @@ class ImageFeatureService @Autowired constructor(
 ) {
     fun isImagePublic(imageCode: String): Boolean {
         val imageFeature = imageFeatureDao.getImageFeature(dslContext, imageCode)
-        return imageFeature?.publicFlag ?: false
+        return imageFeature.publicFlag ?: false
     }
 }

@@ -2,11 +2,11 @@
     <div class="cron-trigger">
         <accordion show-checkbox :show-content="isShowBasicRule" :after-toggle="toggleBasicRule">
             <header class="var-header" slot="header">
-                <span>基础规则</span>
+                <span>{{ $t('editPage.baseRule') }}</span>
                 <input class="accordion-checkbox" type="checkbox" :checked="showBasicRule" style="margin-left: auto;" />
             </header>
             <div slot="content">
-                <form-field :required="true" label="基础规则" :is-error="errors.has(&quot;newExpression&quot;)" :error-msg="errors.first(&quot;newExpression&quot;)">
+                <form-field :required="true" :label="$t('editPage.baseRule')" :is-error="errors.has(&quot;newExpression&quot;)" :error-msg="errors.first(&quot;newExpression&quot;)">
                     <cron-timer :name="'newExpression'" ref="newExpression" :value="element['newExpression']" :handle-change="handleUpdateElement" v-validate.initial="{ &quot;required&quot;: showBasicRule }" />
                 </form-field>
             </div>
@@ -14,20 +14,20 @@
 
         <accordion show-checkbox :show-content="showAdvance" :after-toggle="toggleAdvance">
             <header class="var-header" slot="header">
-                <span>高级（自定义crontab表达式）</span>
+                <span>{{ $t('editPage.crontabTitle') }}</span>
                 <input class="accordion-checkbox" type="checkbox" :checked="advance" style="margin-left: auto;" />
             </header>
             <div slot="content" class="cron-build-tab">
-                <form-field :required="false" label="计划任务规则" :is-error="errors.has(&quot;advanceExpression&quot;)" :error-msg="errors.first(&quot;advanceExpression&quot;)">
-                    <vuex-textarea name="advanceExpression" :handle-change="handleUpdateElement" :value="advanceValue" placeholder="请填写语法正确的crontab表达式，多条表达式请换行输入" v-validate.initial="{ &quot;required&quot;: advance }"></vuex-textarea>
+                <form-field :required="false" :label="$t('editPage.planRule')" :is-error="errors.has(&quot;advanceExpression&quot;)" :error-msg="errors.first(&quot;advanceExpression&quot;)">
+                    <vuex-textarea name="advanceExpression" :handle-change="handleUpdateElement" :value="advanceValue" :placeholder="$t('editPage.crontabExpression')" v-validate.initial="{ &quot;required&quot;: advance }"></vuex-textarea>
                 </form-field>
             </div>
         </accordion>
 
-        <p class="empty-trigger-tips" v-if="!showBasicRule && !advance">基础规则和自定义表达式不能同时为空</p>
+        <p class="empty-trigger-tips" v-if="!showBasicRule && !advance">{{ $t('editPage.triggerEmptyTips') }}</p>
 
         <form-field class="bk-form-checkbox">
-            <atom-checkbox :disabled="disabled" text="源代码未更新时不触发" :name="'noScm'" :value="element['noScm']" :handle-change="handleUpdateElement" />
+            <atom-checkbox :disabled="disabled" :text="$t('editPage.noScm')" :name="'noScm'" :value="element['noScm']" :handle-change="handleUpdateElement" />
         </form-field>
     </div>
 </template>

@@ -28,6 +28,8 @@ package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -41,10 +43,6 @@ class ServiceProjectResourceImpl @Autowired constructor(
 ) : ServiceProjectResource {
 
     override fun getProjectByUser(userName: String): Result<List<ProjectVO>> {
-        return Result(projectService.getProjectByUser(userName))
-    }
-
-    override fun getProjectByUserV2(userName: String): Result<List<ProjectVO>> {
         return Result(projectService.getProjectByUser(userName))
     }
 
@@ -66,10 +64,6 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.list(userId))
     }
 
-    override fun listV2(userId: String): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId))
-    }
-
     override fun getAllProject(): Result<List<ProjectVO>> {
         return Result(projectService.getAllProject())
     }
@@ -82,10 +76,6 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.listOnlyByProjectCode(projectCodes))
     }
 
-    override fun listByProjectCodeV2(projectCodes: Set<String>): Result<List<ProjectVO>> {
-        return Result(projectService.list(projectCodes))
-    }
-
     override fun listByProjectCodeList(projectCodes: List<String>): Result<List<ProjectVO>> {
         return Result(projectService.list(projectCodes))
     }
@@ -94,15 +84,18 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getNameByCode(projectCodes))
     }
 
-    override fun getNameByCodeV2(projectCodes: String): Result<HashMap<String, String>> {
-        return Result(projectService.getNameByCode(projectCodes))
-    }
-
     override fun get(englishName: String): Result<ProjectVO?> {
         return Result(projectService.getByEnglishName(englishName))
     }
 
-    override fun getV2(englishName: String): Result<ProjectVO?> {
-        return Result(projectService.getByEnglishName(englishName))
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<Boolean> {
+        // 创建项目
+        projectService.create(userId, projectCreateInfo)
+
+        return Result(true)
+    }
+
+    override fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Result<Boolean> {
+        return Result(projectService.update(userId, projectId, projectUpdateInfo))
     }
 }

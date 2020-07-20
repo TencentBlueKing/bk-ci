@@ -37,6 +37,10 @@ data class ImageCreateRequest(
     val ticketId: String?,
     @ApiModelProperty("镜像TAG", required = true)
     val imageTag: String,
+    @ApiModelProperty("dockerFile类型", required = true)
+    val dockerFileType: String?,
+    @ApiModelProperty("dockerFile内容", required = true)
+    val dockerFileContent: String?,
     @ApiModelProperty("logo地址", required = false)
     val logoUrl: String?,
     @ApiModelProperty("镜像简介", required = false)

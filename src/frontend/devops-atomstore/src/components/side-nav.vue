@@ -12,10 +12,10 @@
             @item-selected="dropdownConfig.itemSelected">
         </bk-dropdown>
         <div class="side-menu-nav clearfix" v-else>
-            <div @click.stop="backUrl(nav.backUrl, nav.backType)" v-if="nav.backUrl" class="back-icon"><i class="bk-icon icon-angle-left"></i></div>
+            <div @click.stop="backUrl(nav.backUrl, nav.backType)" v-if="nav.backUrl" class="back-icon"><i class="devops-icon icon-angle-left"></i></div>
             <logo :name="nav.icon" size="32" class="nav-icon" />
             <span class="side-menu-title" :title="nav.title">{{ nav.title }}</span>
-            <i v-if="nav.url" class="bk-icon icon-question-circle" @click="goToDoc(nav.url)"></i>
+            <i v-if="nav.url" class="devops-icon icon-question-circle" @click="goToDoc(nav.url)"></i>
         </div>
         <section class="side-menu-list">
             <div class="side-menu-item"
@@ -112,12 +112,7 @@
         },
         methods: {
             backUrl (name, type) {
-                this.$router.push({
-                    name,
-                    params: {
-                        type: type
-                    }
-                })
+                this.$router.back()
             },
 
             /**
@@ -128,7 +123,7 @@
             menuSelected (data) {
                 data.item.isSelected = true
 
-                this.$router.push({
+                this.$router.replace({
                     name: data.isChild ? data.child.id : data.item.id,
                     params: {
                         ...data.item.params,

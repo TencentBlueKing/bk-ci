@@ -26,14 +26,14 @@
 
 package com.tencent.devops.plugin.worker.task.bugly
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.element.RqdElement
 import com.tencent.devops.common.pipeline.enums.Platform
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.worker.common.api.process.RqdResourceApi
-import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -109,7 +109,7 @@ class RqdTask : ITask() {
             else -> throw TaskExecuteException(
                 errorMsg = "not platform found",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
     }
@@ -121,7 +121,7 @@ class RqdTask : ITask() {
         if (apkFiles.count() == 0) throw TaskExecuteException(
             errorMsg = "no apk file found in ${folderFile.canonicalPath}",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
         )
         apkFiles.forEach { apk ->
             LoggerService.addNormalLine("apk file: ${apk.canonicalPath}")
@@ -157,7 +157,7 @@ class RqdTask : ITask() {
         if (ipaFiles.count() == 0) TaskExecuteException(
             errorMsg = "no ipa file found in ${folderFile.canonicalPath}",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
         )
         ipaFiles.forEach { ipa ->
             LoggerService.addNormalLine("ipa file: ${ipa.canonicalPath}")
@@ -191,7 +191,7 @@ class RqdTask : ITask() {
         if (dsymFiles.count() == 0) throw TaskExecuteException(
             errorMsg = "no dSYM file found",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
         )
         dsymFiles.forEach { dsymFile ->
 
@@ -243,7 +243,7 @@ class RqdTask : ITask() {
         if (!sourceFolder.isDirectory) throw TaskExecuteException(
             errorMsg = "$folder is not a directory",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorCode = ErrorCode.USER_INPUT_INVAILD
         ) // transfer .so
         // 按照目录来压缩
         // 查找so文件的数量,匹配后缀为".so|.so.debug|.sym"的文件
@@ -310,7 +310,7 @@ class RqdTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "post rqd file fail. ${result.data}",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
             )
         }
     }

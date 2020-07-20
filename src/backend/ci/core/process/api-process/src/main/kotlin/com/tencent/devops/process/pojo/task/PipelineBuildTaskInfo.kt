@@ -28,7 +28,7 @@ package com.tencent.devops.process.pojo.task
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
 
 data class PipelineBuildTaskInfo(
     val projectId: String,

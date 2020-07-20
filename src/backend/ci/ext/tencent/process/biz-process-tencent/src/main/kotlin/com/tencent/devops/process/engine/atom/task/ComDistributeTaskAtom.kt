@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.gray.RepoGray
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -74,8 +75,8 @@ class ComDistributeTaskAtom @Autowired constructor(
     private val pipelineUserService: PipelineUserService,
     private val client: Client,
     private val commonConfig: CommonConfig,
-    private val repoGray: RepoGray,
     private val redisOperation: RedisOperation,
+    private val repoGray: RepoGray,
     private val bkRepoClient: BkRepoClient
 ) : IAtomTask<ComDistributionElement> {
 
@@ -183,9 +184,7 @@ class ComDistributeTaskAtom @Autowired constructor(
         val executeCount = task.executeCount ?: 1
         val workspace = java.nio.file.Files.createTempDirectory("${DigestUtils.md5Hex("$buildId-$taskId")}_").toFile()
         val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        if (isRepoGray) {
-            LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
-        }
+        LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
 
         val localFileList = mutableListOf<String>()
         val appId = client.get(ServiceProjectResource::class).get(task.projectId).data?.ccAppId?.toInt()
@@ -226,7 +225,7 @@ class ComDistributeTaskAtom @Autowired constructor(
                         executeCount
                     )
 
-                    val searchUrl = "${commonConfig.devopsHostGateway}/jfrog/api/service/search/aql"
+                    val searchUrl = "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/jfrog/api/service/search/aql"
                     val request = Request.Builder()
                         .url(searchUrl)
                         .post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
@@ -419,9 +418,9 @@ class ComDistributeTaskAtom @Autowired constructor(
     // 获取jfrog传回的url
     private fun getUrl(realPath: String, isCustom: Boolean): String {
         return if (isCustom) {
-            "${commonConfig.devopsHostGateway}/jfrog/storage/service/custom/$realPath"
+            "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/jfrog/storage/service/custom/$realPath"
         } else {
-            "${commonConfig.devopsHostGateway}/jfrog/storage/service/archive/$realPath"
+            "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/jfrog/storage/service/archive/$realPath"
         }
     }
 

@@ -29,17 +29,17 @@
 package com.tencent.devops.process.engine.atom.task
 
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.common.pipeline.element.JobCloudsFastExecuteScriptElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.esb.JobCloudsFastExecuteScript
-import com.tencent.devops.process.pojo.ErrorType
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -74,7 +74,7 @@ class JobCloudsFastExecuteScriptTaskAtom @Autowired constructor(
             ?: return if (force) AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "JOB_TASK_ID is not correct"
             ) else AtomResponse(task.status)
 
@@ -146,7 +146,7 @@ class JobCloudsFastExecuteScriptTaskAtom @Autowired constructor(
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "send cloud stone file to Svr fail"
             )
         else AtomResponse(buildStatus)

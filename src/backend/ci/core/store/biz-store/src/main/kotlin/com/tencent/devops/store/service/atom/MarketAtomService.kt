@@ -55,11 +55,13 @@ interface MarketAtomService {
      */
     fun list(
         userId: String,
-        atomName: String?,
+        keyword: String?,
         classifyCode: String?,
         labelCode: String?,
         score: Int?,
         rdType: AtomTypeEnum?,
+        yamlFlag: Boolean?,
+        recommendFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         page: Int?,
         pageSize: Int?

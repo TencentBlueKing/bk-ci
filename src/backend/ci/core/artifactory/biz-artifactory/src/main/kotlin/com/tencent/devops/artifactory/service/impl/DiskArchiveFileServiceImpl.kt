@@ -26,6 +26,7 @@
 
 package com.tencent.devops.artifactory.service.impl
 
+import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
@@ -34,14 +35,18 @@ import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.util.AntPathMatcher
 import org.springframework.util.FileCopyUtils
 import java.io.File
 import java.io.FileInputStream
+import java.io.InputStream
 import java.io.UnsupportedEncodingException
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -51,8 +56,10 @@ import javax.ws.rs.core.Response
 @Service
 class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() {
 
-    @Value("\${artifactory.archiveLocalBasePath:#{null}}")
+    @Value("\${artifactory.archiveLocalBasePath:/data/bkee/public/ci/artifactory/}")
     private lateinit var archiveLocalBasePath: String
+
+    private val matcher = AntPathMatcher()
 
     override fun uploadFileToRepo(destPath: String, file: File) {
         val targetFile = File(destPath)
@@ -67,26 +74,34 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
         return "file"
     }
 
+    override fun getInputStreamByFilePath(filePath: String): InputStream {
+        val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
+        return FileInputStream(file)
+    }
+
     override fun downloadFile(filePath: String, response: HttpServletResponse) {
         logger.info("downloadFile filePath is:$filePath")
         if (filePath.contains("..")) {
             // 非法路径则抛出错误提示
             val result = MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(filePath),
-                null
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(filePath),
+                data = null
             )
             response.writer.println(JsonUtil.toJson(result))
             return
         }
         val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
+        response.contentType = MimeUtil.mediaType(filePath)
         FileCopyUtils.copy(FileInputStream(file), response.outputStream)
     }
 
     override fun downloadFile(filePath: String): Response {
+        logger.info("downloadFile, filePath: $filePath")
         val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
         // 如果文件不存在，提示404
         if (!file.exists()) {
+            logger.warn("file not found, filePath: $filePath")
             return Response.status(Response.Status.NOT_FOUND).build()
         }
         val fileName: String?
@@ -98,12 +113,17 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
 
         return Response
             .ok(file)
+            .header("Content-Type", MimeUtil.STREAM_MIME_TYPE)
             .header("Content-disposition", "attachment;filename=" + fileName!!)
             .header("Cache-Control", "no-cache").build()
     }
 
     override fun getBasePath(): String {
-        return archiveLocalBasePath
+        return if (archiveLocalBasePath.endsWith("/")) {
+            archiveLocalBasePath
+        } else {
+            "$archiveLocalBasePath/"
+        }
     }
 
     override fun getFileDownloadUrls(
@@ -115,17 +135,26 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
         customFilePath: String?,
         fileChannelType: FileChannelTypeEnum
     ): Result<GetFileDownloadUrlsResponse?> {
-        logger.info("getFileDownloadUrls fileChannelType is:$fileChannelType")
-        logger.info("getFileDownloadUrls userId is:$userId,projectId is:$projectId,pipelineId is:$pipelineId")
-        logger.info("getFileDownloadUrls buildId is:$buildId,artifactoryType is:$artifactoryType,customFilePath is:$customFilePath")
+        logger.info("[$buildId]|getFileDownloadUrls|fileChannelType=$fileChannelType|userId=$userId|projectId=$projectId|pipelineId=$pipelineId" +
+            "|artifactoryType=$artifactoryType|customFilePath=$customFilePath")
         val fileType = if (artifactoryType == ArtifactoryType.PIPELINE) FileTypeEnum.BK_ARCHIVE else FileTypeEnum.BK_CUSTOM
-        val result = generateDestPath(fileType, projectId, customFilePath, pipelineId, buildId)
+        val result = generateDestPath(
+            fileType = fileType,
+            projectId = projectId,
+            customFilePath = customFilePath,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
         logger.info("generateDestPath result is:$result")
         if (result.isNotOk()) {
             return Result(result.status, result.message, null)
         }
         val filePath = result.data!!
-        return getFileDownloadUrls(filePath, artifactoryType, fileChannelType)
+        return getFileDownloadUrls(
+            filePath = filePath,
+            artifactoryType = artifactoryType,
+            fileChannelType = fileChannelType
+        )
     }
 
     override fun getFileDownloadUrls(
@@ -137,9 +166,9 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
         if (filePath.contains("..")) {
             // 非法路径则抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(filePath),
-                null
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(filePath),
+                data = null
             )
         }
 
@@ -155,13 +184,19 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
         if (!file.exists()) {
             // 目录或者文件不存在则抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(filePath),
-                null
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(filePath),
+                data = null
             )
         }
         val fileType = if (artifactoryType == ArtifactoryType.PIPELINE) FileTypeEnum.BK_ARCHIVE else FileTypeEnum.BK_CUSTOM
-        val fileUrlList = traverseFolder(file, fileType, pathPattern, true, fileChannelType)
+        val fileUrlList = traverseFolder(
+            file = file,
+            fileType = fileType,
+            pathPattern = pathPattern,
+            wildFlag = true,
+            fileChannelType = fileChannelType
+        )
         logger.info("getFileDownloadUrls fileUrlList is:$fileUrlList")
         return Result(fileUrlList)
     }
@@ -178,14 +213,26 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
             file.listFiles()?.forEach { subFile ->
                 // 考虑到文件夹下面层级太深的问题，只支持遍历当前文件夹下的文件
                 if (!subFile.isDirectory) {
-                    val url = transformFileUrl(fileType, wildFlag, pathPattern, fileChannelType, subFile.absolutePath)
+                    val url = transformFileUrl(
+                        fileType = fileType,
+                        wildFlag = wildFlag,
+                        pathPattern = pathPattern,
+                        fileChannelType = fileChannelType,
+                        filePath = subFile.absolutePath
+                    )
                     if (!url.isNullOrBlank()) {
                         fileUrlList.add(url!!)
                     }
                 }
             }
         } else {
-            val url = transformFileUrl(fileType, wildFlag, pathPattern, fileChannelType, file.absolutePath)
+            val url = transformFileUrl(
+                fileType = fileType,
+                wildFlag = wildFlag,
+                pathPattern = pathPattern,
+                fileChannelType = fileChannelType,
+                filePath = file.absolutePath
+            )
             if (!url.isNullOrBlank()) {
                 fileUrlList.add(url!!)
             }
@@ -201,10 +248,10 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
     ): String {
         logger.info("generateFileDownloadPath fileChannelType is: $fileChannelType,fileType is: $fileType,destPath is: $destPath")
         val urlPrefix = when (fileChannelType) {
-            FileChannelTypeEnum.WEB_SHOW -> "${commonConfig.devopsHostGateway}/ms/artifactory/api/user/artifactories/file/download"
-            FileChannelTypeEnum.WEB_DOWNLOAD -> "${commonConfig.devopsHostGateway}/ms/artifactory/api/user/artifactories/file/download/local"
-            FileChannelTypeEnum.SERVICE -> "${commonConfig.devopsApiGateway}/ms/artifactory/api/service/artifactories/file/download"
-            FileChannelTypeEnum.BUILD -> "${commonConfig.devopsBuildGateway}/ms/artifactory/api/build/artifactories/file/download"
+            FileChannelTypeEnum.WEB_SHOW -> "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/ms/artifactory/api/user/artifactories/file/download"
+            FileChannelTypeEnum.WEB_DOWNLOAD -> "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/ms/artifactory/api/user/artifactories/file/download/local"
+            FileChannelTypeEnum.SERVICE -> "${HomeHostUtil.getHost(commonConfig.devopsApiGateway!!)}/ms/artifactory/api/service/artifactories/file/download"
+            FileChannelTypeEnum.BUILD -> "${HomeHostUtil.getHost(commonConfig.devopsBuildGateway!!)}/ms/artifactory/api/build/artifactories/file/download"
         }
         val filePath = URLEncoder.encode("/$destPath", "UTF-8")
         return if (fileChannelType == FileChannelTypeEnum.WEB_SHOW) {
@@ -212,6 +259,45 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
         } else {
             "$urlPrefix?filePath=$filePath"
         }
+    }
+
+    override fun doAcrossProjectCopy(
+        sourceParentPath: String,
+        sourcePathPattern: String,
+        destPath: String,
+        targetProjectId: String
+    ): Result<Count> {
+        val sourceFile = File(sourceParentPath)
+        if (!sourceFile.exists()) {
+            logger.info("acrossProjectCopy source file not exist, $sourceParentPath")
+            return Result(Count(0))
+        }
+        val fileList = mutableListOf<File>()
+        if (sourceFile.isDirectory) {
+            sourceFile.listFiles()?.forEach {
+                if (it.isDirectory) {
+                    return@forEach
+                }
+                if (matcher.match(sourcePathPattern, it.absolutePath)) {
+                    fileList.add(it)
+                }
+            }
+        } else {
+            if (matcher.match(sourcePathPattern, sourceFile.absolutePath)) {
+                fileList.add(sourceFile)
+            }
+        }
+        fileList.forEach {
+            uploadFile(
+                userId = "",
+                file = it,
+                projectId = targetProjectId,
+                filePath = "$destPath$fileSeparator${it.name}",
+                fileType = FileTypeEnum.BK_CUSTOM,
+                fileChannelType = FileChannelTypeEnum.BUILD
+            )
+        }
+        return Result(Count(fileList.size))
     }
 
     companion object {

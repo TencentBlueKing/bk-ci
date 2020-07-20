@@ -46,7 +46,8 @@ import com.tencent.devops.common.pipeline.type.tstack.TStackDispatchType
     JsonSubTypes.Type(value = ThirdPartyAgentIDDispatchType::class, name = "THIRD_PARTY_AGENT_ID"),
     JsonSubTypes.Type(value = ThirdPartyAgentEnvDispatchType::class, name = "THIRD_PARTY_AGENT_ENV"),
     JsonSubTypes.Type(value = ThirdPartyDevCloudDispatchType::class, name = "THIRD_PARTY_DEVCLOUD"),
-    JsonSubTypes.Type(value = CodeCCDispatchType::class, name = "CODECC")
+    JsonSubTypes.Type(value = CodeCCDispatchType::class, name = "CODECC"),
+    JsonSubTypes.Type(value = CodeCCDispatchType::class, name = "MACOS")
 )
 abstract class DispatchType(
     open var value: String,
@@ -84,4 +85,9 @@ abstract class DispatchType(
      * 用来替换每种类型的自定义字符串
      */
     protected abstract fun replaceField(variables: Map<String, String>)
+
+    /**
+     * 保存至流水线模型前对字符串类型的值进行trim等清理操作
+     */
+    abstract fun cleanDataBeforeSave()
 }

@@ -27,6 +27,9 @@
 package com.tencent.devops.plugin.worker.task.archive
 
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.archive.element.SingleArchiveElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
@@ -51,7 +54,11 @@ class SingleFileArchiveTask : ITask() {
             archivePipelineFiles(filePath, workspace, buildVariables)
         }
         if (count == 0) {
-            throw RuntimeException("没有匹配到任何待归档文件，请检查工作空间下面的文件")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                errorType = ErrorType.USER,
+                errorMsg = "没有匹配到任何待归档文件，请检查工作空间下面的文件"
+            )
         }
     }
 }

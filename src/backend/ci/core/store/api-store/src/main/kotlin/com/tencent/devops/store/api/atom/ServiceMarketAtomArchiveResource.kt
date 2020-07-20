@@ -27,7 +27,7 @@
 package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomEnvRequest
+import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import io.swagger.annotations.Api
@@ -90,17 +90,17 @@ interface ServiceMarketAtomArchiveResource {
         version: String
     ): Result<GetAtomConfigResult?>
 
-    @ApiOperation("更新插件环境信息")
+    @ApiOperation("更新插件执行包相关信息")
     @PUT
-    @Path("/users/{userId}/atoms/{atomId}/env/update")
-    fun updateAtomEnv(
+    @Path("/users/{userId}/atoms/{atomId}/pkg/info/update")
+    fun updateAtomPkgInfo(
         @ApiParam("用户ID", required = true)
         @PathParam("userId")
         userId: String,
         @ApiParam("插件ID", required = true)
         @PathParam("atomId")
         atomId: String,
-        @ApiParam("插件环境信息", required = true)
-        atomEnvRequest: AtomEnvRequest
+        @ApiParam("插件执行包相关信息修改请求报文体", required = true)
+        atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
     ): Result<Boolean>
 }

@@ -30,20 +30,22 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.io.Files
 import com.google.gson.JsonParser
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.element.SpmDistributionElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_CDN_FAIL
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.util.CommonUtils
 import okhttp3.MediaType
 import okhttp3.Request
@@ -67,10 +69,6 @@ class SpmDistributionTaskAtom @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
     private val commonConfig: CommonConfig
 ) : IAtomTask<SpmDistributionElement> {
-
-//    @Value("\${gateway.url:#{null}}")
-//    private val gatewayUrl: String? = null
-
     @Value("\${cdntool.cmdpath}")
     private val cmdpath = "/data1/cdntool/cdntool"
     @Value("\${cdntool.master}")
@@ -101,7 +99,7 @@ class SpmDistributionTaskAtom @Autowired constructor(
 
     override fun execute(task: PipelineBuildTask, param: SpmDistributionElement, runVariables: Map<String, String>): AtomResponse {
         logger.info("Enter SpmDistributionDelegate run...")
-        val searchUrl = "${commonConfig.devopsHostGateway}/jfrog/api/service/search/aql"
+        val searchUrl = "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/jfrog/api/service/search/aql"
 
         val cmdbAppId = param.cmdbAppId
         val cmdbAppName = parseVariable(param.cmdbAppName, runVariables)
@@ -147,7 +145,11 @@ class SpmDistributionTaskAtom @Autowired constructor(
             }
             logger.info("$count file(s) will be distribute...")
             LogUtils.addLine(rabbitTemplate, buildId, "$count file(s) will be distribute...", elementId, task.containerHashId, task.executeCount ?: 1)
-            if (count == 0) throw RuntimeException("No file to distribute")
+            if (count == 0) throw TaskExecuteException(
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                errorType = ErrorType.USER,
+                errorMsg = "No file to distribute"
+            )
             zipFile = FileUtil.zipToCurrentPath(workspace)
             logger.info("Zip file: ${zipFile.canonicalPath}")
             LogUtils.addLine(rabbitTemplate, buildId, "Zip file: $zipFile", elementId, task.containerHashId, task.executeCount ?: 1)
@@ -180,7 +182,7 @@ class SpmDistributionTaskAtom @Autowired constructor(
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "分发CDN失败. msg: $msg"
                 )
             }
@@ -224,7 +226,11 @@ class SpmDistributionTaskAtom @Autowired constructor(
         try {
             val exitCode = executor.execute(cmdLine)
             if (exitCode != 0) {
-                throw RuntimeException("Script command execution failed with exit code($exitCode)")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Script command execution failed with exit code($exitCode)"
+                )
             }
         } catch (t: Throwable) {
             logger.warn("Fail to execute the command($command)", t)
@@ -330,9 +336,9 @@ class SpmDistributionTaskAtom @Autowired constructor(
     // 获取jfrog传回的url
     private fun getUrl(realPath: String, isCustom: Boolean): String {
         return if (isCustom) {
-            "${commonConfig.devopsHostGateway}/jfrog/storage/service/custom/$realPath"
+            "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/jfrog/storage/service/custom/$realPath"
         } else {
-            "${commonConfig.devopsHostGateway}/jfrog/storage/service/archive/$realPath"
+            "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/jfrog/storage/service/archive/$realPath"
         }
     }
 

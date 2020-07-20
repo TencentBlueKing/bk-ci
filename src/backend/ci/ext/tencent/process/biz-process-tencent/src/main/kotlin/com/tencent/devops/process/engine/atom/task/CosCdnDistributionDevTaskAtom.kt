@@ -26,6 +26,9 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.pojo.ErrorCode.USER_INPUT_INVAILD
+import com.tencent.devops.common.api.pojo.ErrorCode.USER_TASK_OPERATE_FAIL
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -36,12 +39,9 @@ import com.tencent.devops.plugin.pojo.cos.CdnUploadFileInfo
 import com.tencent.devops.common.pipeline.element.CosCdnDistributionElementDev
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.AtomErrorCode.USER_TASK_OPERATE_FAIL
 import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -73,7 +73,7 @@ class CosCdnDistributionDevTaskAtom @Autowired constructor(
         val buildId = task.buildId
         val containerId = task.containerHashId ?: ""
         if (param.regexPaths.isBlank()) {
-            logger.error("regexPaths is not initialized of build($buildId)")
+            logger.warn("regexPaths is not initialized of build($buildId)")
             LogUtils.addRedLine(
                 rabbitTemplate,
                 buildId,
@@ -85,18 +85,18 @@ class CosCdnDistributionDevTaskAtom @Autowired constructor(
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = USER_INPUT_INVAILD,
                 errorMsg = "regexPaths is not initialized"
             )
         }
 
         if (param.ticketId.isBlank()) {
-            logger.error("ticketId is not initialized of build($buildId)")
+            logger.warn("ticketId is not initialized of build($buildId)")
             LogUtils.addRedLine(rabbitTemplate, buildId, "ticketId is not initialized", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = USER_INPUT_INVAILD,
                 errorMsg = "ticketId is not initialized"
             )
         }
@@ -114,7 +114,7 @@ class CosCdnDistributionDevTaskAtom @Autowired constructor(
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = USER_INPUT_INVAILD,
                 errorMsg = "启动用户名为空"
             )
         }

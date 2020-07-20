@@ -37,9 +37,15 @@ data class MacOSDispatchType(
     var systemVersion: String? = "",
     var xcodeVersion: String? = ""
 ) : DispatchType("$systemVersion:$xcodeVersion", DispatchRouteKeySuffix.MACOS) {
+    override fun cleanDataBeforeSave() {
+        this.macOSEvn = this.macOSEvn.trim()
+        this.systemVersion = this.systemVersion?.trim()
+        this.xcodeVersion = this.xcodeVersion?.trim()
+    }
+
     override fun replaceField(variables: Map<String, String>) {
         macOSEvn = EnvUtils.parseEnv(macOSEvn, variables)
     }
 
-    override fun buildType() = BuildType.MACOS
+    override fun buildType() = BuildType.valueOf(BuildType.MACOS.name)
 }

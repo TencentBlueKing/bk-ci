@@ -26,10 +26,10 @@
 
 package com.tencent.devops.plugin.worker.task.unity3d
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.plugin.worker.task.unity3d.model.AndroidKey
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
-import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import java.io.BufferedInputStream
 import java.io.BufferedReader
@@ -65,7 +65,7 @@ class Scripter(
             throw TaskExecuteException(
                 errorMsg = "The specified unity3d project root path does not exist",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
 
@@ -80,7 +80,7 @@ class Scripter(
             throw TaskExecuteException(
                 errorMsg = "Unable to create unity3d build scripts meta automatically",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
 
@@ -102,7 +102,7 @@ class Scripter(
             throw TaskExecuteException(
                 errorMsg = "Unable to create unity3d build scripts meta automatically",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
     }
@@ -132,7 +132,7 @@ class Scripter(
             throw TaskExecuteException(
                 errorMsg = "The specified unity3d project root path does not exist",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
 
@@ -148,7 +148,7 @@ class Scripter(
             throw TaskExecuteException(
                 errorMsg = "Unable to create unity3d build scripts meta automatically",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
         try {
@@ -178,7 +178,7 @@ class Scripter(
             throw TaskExecuteException(
                 errorMsg = "Unable to create unity3d build scripts automatically",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
         LoggerService.addNormalLine("builder.cs file copy successfully in: ${builderFile.canonicalPath}")

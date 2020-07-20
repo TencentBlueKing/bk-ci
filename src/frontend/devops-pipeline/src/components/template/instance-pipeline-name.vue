@@ -11,11 +11,11 @@
                 v-bkloading="{
                     isLoading: instanceDialogConfig.loading
                 }">
-                <div class="info-title">实例化流水线名称</div>
+                <div class="info-title">{{ $t('template.newPipelineName') }}</div>
                 <div class="bk-form create-form">
-                    <div class="item-label">流水线名称</div>
+                    <div class="item-label">{{ $t('pipelineName') }}</div>
                     <input type="text" class="bk-form-input pipeline-name-input"
-                        placeholder="请输入流水线名称"
+                        :placeholder="$t('pipelineNameInputTips')"
                         name="pipelineName"
                         v-model="pipelineName"
                         v-focus="isFocus()"
@@ -28,8 +28,8 @@
                 </div>
             </section>
             <div class="form-footer">
-                <bk-button theme="primary" @click="confirm()">确定</bk-button>
-                <bk-button @click="cancel()">取消</bk-button>
+                <bk-button theme="primary" @click="confirm()">{{ $t('confirm') }}</bk-button>
+                <bk-button @click="cancel()">{{ $t('cancel') }}</bk-button>
             </div>
         </template>
     </bk-dialog>
@@ -85,7 +85,7 @@
                         })
 
                         if (res || this.$parent.pipelineNameList.some(item => item.pipelineName === this.pipelineName.trim())) {
-                            message = '流水线名称已存在'
+                            message = this.$t('template.nameExists')
                             theme = 'error'
                         } else {
                             this.$emit('comfire', this.pipelineName.trim())

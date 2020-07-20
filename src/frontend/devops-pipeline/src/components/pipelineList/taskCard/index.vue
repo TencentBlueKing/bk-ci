@@ -1,25 +1,25 @@
 <template>
     <div class="task-card" :class="`${config.isRunning ? `task-${config.status}` : ''}`">
-        <!-- <div v-if="!hasPermission" class="card-overflow"> -->
-        <!--<bk-button class="apply-button" theme="success">申请权限</bk-button>-->
-        <!-- </div> -->
+        <div v-if="!hasPermission" class="card-overflow">
+        </div>
         <bk-button
             class="apply-button"
             theme="success"
             v-if="!hasPermission"
             @click="applyPermission(config)"
         >
-            申请权限
+            {{ $t('newlist.applyPerm') }}
         </bk-button>
         <div class="task-card-header">
-            <p
+            <a
                 class="task-card-name text-overflow"
-                :title="config.name"
-                @click.stop="emitEventHandler('title-click', config.pipelineId)"
+                :title="config.pipelineName"
+                :href="getHistoryURL(config.pipelineId)"
+                @click.stop.prevent="e => goHistory(e, config.pipelineId)"
             >
-                <span class="template-tag" v-if="config.isInstanceTemplate">模</span>
-                {{ config.name }}
-            </p>
+                <span class="template-tag" v-if="config.isInstanceTemplate">{{ $t('newlist.temp') }}</span>
+                {{ config.pipelineName }}
+            </a>
             <!-- 状态切换按钮 start -->
             <triggers
                 :pipeline-id="config.pipelineId"
@@ -29,14 +29,14 @@
             ></triggers>
             <!-- 状态切换按钮 end -->
             <!-- 角标 start -->
-            <!-- <bk-popover :content="config.name" placement="right" class="corner-tips"> -->
+            <!-- <bk-popover :content="config.pipelineName" placement="right" class="corner-tips"> -->
             <div
                 class="corner-mark"
                 :class="config.status"
                 v-if="!config.isRunning && (config.status === 'known_error' || config.status === 'success')"
             >
-                <i class="bk-icon icon-exclamation" v-if="config.status === 'known_error'"></i>
-                <i class="bk-icon icon-check-1" v-else></i>
+                <i class="devops-icon icon-exclamation" v-if="config.status === 'known_error'"></i>
+                <i class="devops-icon icon-check-1" v-else></i>
             </div>
             <!-- </bk-popover> -->
             <!-- 角标 end -->
@@ -46,12 +46,12 @@
         <template v-if="!config.isRunning">
             <div class="task-card-content" @click.stop="cardContentClick">
                 <template v-if="config.content.length">
-                    <p class="content-row" v-for="row of config.content" :key="row.key">
+                    <p class="content-row" v-for="(row, cindex) of config.content" :key="row.key">
                         <span class="row-key">{{ row.key }}</span>
                         :
                         <span
                             class="row-value"
-                            :class="!index ? config.status : ''"
+                            :class="!cindex ? config.status : ''"
                         >{{ row.value }}</span>
                     </p>
                 </template>
@@ -79,11 +79,14 @@
 
         <!-- 任务执行时，显示进度条 start -->
         <template v-else>
-            <div
+            <a
                 class="task-card-running-multi"
-                @click.stop="emitEventHandler('title-click', config.pipelineId)"
+                :href="getHistoryURL(config.pipelineId)"
+                @click.stop.prevent="e => goHistory(e, config.pipelineId)"
                 v-if="config.runningInfo.buildCount > 1"
-            >正在同时运行多个构建任务</div>
+            >
+                {{ $t('newlist.multipleBuilds') }}
+            </a>
             <div class="task-card-running" @click.stop="cardContentClick" v-else>
                 <div class="running-detail clearfix">
                     <div class="running-detail-text fl">{{ config.runningInfo.time }}</div>
@@ -104,7 +107,7 @@
                         >
                             {{ btn.text }}
                             <i
-                                class="bk-icon"
+                                class="devops-icon"
                                 v-if="btn.icon"
                                 :class="`icon-${btn.icon}`"
                             ></i>
@@ -118,17 +121,10 @@
 </template>
 
 <script>
-    import { bus } from '@/utils/bus'
-    import progress from '@/components/devops/progressBar'
-    import triggers from '@/components/pipeline/triggers'
-    import extMenu from '@/components/pipelineList/extMenu'
+    import mixins from '../pipeline-list-mixins'
 
     export default {
-        components: {
-            'progress-bar': progress,
-            triggers,
-            extMenu
-        },
+        mixins: [mixins],
         props: {
             canManualStartup: {
                 type: Boolean,
@@ -151,7 +147,7 @@
                         isRunning: false,
                         name: '',
                         runningInfo: {
-                            time: '0秒',
+                            time: '0',
                             percentage: '0%',
                             log: '',
                             buildCount: 0
@@ -180,12 +176,6 @@
         },
         methods: {
             /**
-             *  参数为pipelineId的触发全局bus事件
-             */
-            emitEventHandler (eventName, pipelineId) {
-                bus.$emit(eventName, pipelineId)
-            },
-            /**
              * 点击content部分的回调
              */
             cardContentClick () {
@@ -209,20 +199,6 @@
                         }
                     })
                 }
-            },
-            triggersExec ({ pipelineId, ...params }) {
-                bus.$emit('triggers-exec', params, pipelineId)
-            },
-            titleClickHandler (pipelineId) {
-                bus.$emit('title-click', pipelineId)
-            },
-            applyPermission (config) {
-                bus.$emit(
-                    'set-permission',
-                    `流水线：${config.name}`,
-                    '查看',
-                    config.pipelineId
-                )
             }
         }
     }
@@ -284,6 +260,7 @@
             }
         }
         & > .task-card-name {
+            display: block;
             width: 70%;
             margin-left: 24px;
         }
@@ -360,6 +337,7 @@
         position: relative;
     }
     &-running-multi {
+        display: block;
         cursor: pointer;
         font-size: 14px;
         line-height: 155px;
@@ -384,7 +362,7 @@
         border-color: transparent transparent transparent transparent;
         border-style: solid;
         border-top-left-radius: 3px;
-        & > .bk-icon {
+        & > .devops-icon {
             position: absolute;
             top: -15px;
             left: -15px;

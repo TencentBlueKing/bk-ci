@@ -43,7 +43,7 @@ import com.tencent.devops.common.ci.yaml.Trigger
 import com.tencent.devops.common.ci.yaml.MatchRule
 import com.tencent.devops.common.ci.yaml.MergeRequest
 import com.tencent.devops.common.ci.yaml.JobDetail
-import com.tencent.devops.common.ci.yaml.Pool
+import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.yaml.Stage
 import com.tencent.devops.common.ci.yaml.Job
 import org.slf4j.LoggerFactory
@@ -112,7 +112,7 @@ object CiYamlUtils {
         val br = BufferedReader(StringReader(yamlStr))
         val taskTypeRegex = Regex("- $TASK_TYPE:\\s+")
         val mrNoneRegex = Regex("^(mr:)\\s*(none)\$")
-        val triggerNoneRegex = Regex("^(mr:)\\s*(none)\$")
+        val triggerNoneRegex = Regex("^(trigger:)\\s*(none)\$")
         var line: String? = br.readLine()
         while (line != null) {
             val taskTypeMatches = taskTypeRegex.find(line)
@@ -127,12 +127,12 @@ object CiYamlUtils {
 
             val mrNoneMatches = mrNoneRegex.find(line)
             if (null != mrNoneMatches) {
-                line = "mr:" + "\n" + "  enable: false"
+                line = "mr:" + "\n" + "  disable: true"
             }
 
             val triggerNoneMatches = triggerNoneRegex.find(line)
             if (null != triggerNoneMatches) {
-                line = "trigger:" + "\n" + "  enable: false"
+                line = "trigger:" + "\n" + "  disable: true"
             }
 
             sb.append(line).append("\n")
@@ -146,11 +146,12 @@ object CiYamlUtils {
             logger.error("Invalid yaml: steps and stages conflict") // 不能并列存在steps和stages
             throw CustomException(Response.Status.BAD_REQUEST, "stages和steps不能并列存在!")
         }
+        val pipelineName = originYaml.pipelineName ?: ""
         val defaultTrigger = originYaml.trigger ?: Trigger(false, MatchRule(listOf("*"), null), null, null)
         val defaultMr = originYaml.mr ?: MergeRequest(disable = false, autoCancel = true, branches = MatchRule(listOf("*"), null), paths = null)
         val variable = originYaml.variables
         val services = originYaml.services
-        val stages = originYaml.stages ?: listOf(Stage(listOf(Job(JobDetail("job1", VM_JOB, Pool(null, null), originYaml.steps!!, null)))))
+        val stages = originYaml.stages ?: listOf(Stage(listOf(Job(JobDetail("job1", VM_JOB, Pool(null, null, null, null), originYaml.steps!!, null)))))
 
         // 校验job类型
         stages.forEach {
@@ -164,7 +165,7 @@ object CiYamlUtils {
             }
         }
 
-        return CIBuildYaml(defaultTrigger, defaultMr, variable, services, stages, null)
+        return CIBuildYaml(pipelineName, defaultTrigger, defaultMr, variable, services, stages, null)
     }
 
     fun normalizePrebuildYaml(originYaml: CIBuildYaml): CIBuildYaml {
@@ -173,9 +174,9 @@ object CiYamlUtils {
             throw CustomException(Response.Status.BAD_REQUEST, "stages和steps不能并列存在!")
         }
 
-        val stages = originYaml.stages ?: listOf(Stage(listOf(Job(JobDetail("job1", "vmBuild", Pool(null, null), originYaml.steps!!, null)))))
+        val stages = originYaml.stages ?: listOf(Stage(listOf(Job(JobDetail("job1", "vmBuild", Pool(null, null, null, null), originYaml.steps!!, null)))))
 
-        return CIBuildYaml(null, null, null, null, stages, null)
+        return CIBuildYaml(null, null, null, null, null, stages, null)
     }
 
     fun validateYaml(yamlStr: String): Pair<Boolean, String> {
@@ -183,7 +184,7 @@ object CiYamlUtils {
             convertYamlToJson(yamlStr)
         } catch (e: Throwable) {
             logger.error("", e)
-            throw CustomException(Response.Status.BAD_REQUEST, "非法的yaml格式: ${e.cause}")
+            throw CustomException(Response.Status.BAD_REQUEST, "${e.cause}")
         }
 
         try {
@@ -191,7 +192,7 @@ object CiYamlUtils {
             return validate(schema, yamlJsonStr)
         } catch (e: Throwable) {
             logger.error("", e)
-            throw CustomException(Response.Status.BAD_REQUEST, "非法的yaml格式: ${e.message}")
+            throw CustomException(Response.Status.BAD_REQUEST, "${e.message}")
         }
     }
 

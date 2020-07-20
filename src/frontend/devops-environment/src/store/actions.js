@@ -18,11 +18,9 @@
  */
 
 import Vue from 'vue'
-import {
-    
-} from './constants'
 
 const prefix = 'environment/api'
+const imagePrefix = 'image/api'
 const vue = new Vue()
 
 const actions = {
@@ -47,6 +45,30 @@ const actions = {
      */
     requestPermission ({ commit }, { projectId }) {
         return vue.$ajax.get(`${prefix}/user/environment/${projectId}/hasCreatePermission`).then(response => {
+            return response
+        })
+    },
+    /**
+     * VM机型
+     */
+    requestVmModelList ({ commit }, { projectId }) {
+        return vue.$ajax.get(`${prefix}/user/cluster/${projectId}/getVmModelList`).then(response => {
+            return response
+        })
+    },
+    /**
+     * Bcs镜像
+     */
+    requestImageList ({ commit }, { projectId }) {
+        return vue.$ajax.get(`${prefix}/user/cluster/${projectId}/getImageList`).then(response => {
+            return response
+        })
+    },
+    /**
+     * 配额台数
+     */
+    requestVmQuta ({ commit }, { projectId }) {
+        return vue.$ajax.get(`${prefix}/user/cluster/${projectId}/getProjectInfo`).then(response => {
             return response
         })
     },
@@ -123,6 +145,14 @@ const actions = {
         })
     },
     /**
+     * 创建节点
+     */
+    createNewNode ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/addBcsVmNodes`, params).then(response => {
+            return response
+        })
+    },
+    /**
      * 删除节点
      */
     toDeleteNode ({ commit }, { projectId, params }) {
@@ -135,6 +165,38 @@ const actions = {
      */
     changeCreatedUser ({ commit }, { projectId, nodeHashId, params }) {
         return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/${nodeHashId}/changeCreatedUser`, params).then(response => {
+            return response
+        })
+    },
+    /**
+     * CMDB节点列表
+     */
+    requestCmdbNode ({ commit }, { params }) {
+        return vue.$ajax.post(`${prefix}/user/envnode/listUserCmdbNodesNew?page=${params.page}&pageSize=${params.pageSize}&bakOperator=${params.bakOperator}`, params.ipList).then(response => {
+            return response
+        })
+    },
+    /**
+     * 导入CMDB节点
+     */
+    importCmdbNode ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/addCmdbNodes`, params).then(response => {
+            return response
+        })
+    },
+    /**
+     * CC节点列表
+     */
+    requestCcNode ({ commit }) {
+        return vue.$ajax.get(`${prefix}/user/envnode/listUserCcNodes`).then(response => {
+            return response
+        })
+    },
+    /**
+     * 导入CC节点
+     */
+    importCcNode ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/addCcNodes`, params).then(response => {
             return response
         })
     },
@@ -172,6 +234,11 @@ const actions = {
             return response
         })
     },
+    getVncToken ({ commit }, { projectId, nodeHashId }) {
+        return vue.$ajax.get(`${prefix}/user/tstack/${projectId}/nodes/${nodeHashId}/getVncToken`).then(response => {
+            return response
+        })
+    },
     /**
      * 获取网关列表
      */
@@ -188,6 +255,52 @@ const actions = {
             return response
         })
     },
+
+    /**
+     * 获取DevCloud机型列表
+     */
+    requestDevCloudModel ({ commit }, { projectId }) {
+        return vue.$ajax.get(`${prefix}/user/devcloud/${projectId}/getModelList`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 获取项目DevCloud构建镜像列表
+     */
+    requestPublicDockers ({ commit }, { projectId, isPublic }) {
+        return vue.$ajax.get(`${imagePrefix}/user/image/${projectId}/listDevCloudImages/${isPublic}`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 添加DevCloud虚拟机
+     */
+    applyDocker ({ commit }, { projectId, params }) {
+        return vue.$ajax.post(`${prefix}/user/devcloud/${projectId}/addDevCloudVm`, params).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 销毁DevCloud虚拟机
+     */
+    toDestoryNode ({ commit }, { projectId, nodeHashId }) {
+        return vue.$ajax.post(`${prefix}/user/devcloud/${projectId}/deleteDevCloudVm/${nodeHashId}`).then(response => {
+            return response
+        })
+    },
+
+    /**
+     * 制作镜像
+     */
+    createImage ({ commit }, { projectId, nodeHashId, params }) {
+        return vue.$ajax.post(`${prefix}/user/devcloud/${projectId}/createImage/${nodeHashId}`, params).then(response => {
+            return response
+        })
+    },
+
     /**
      * 获取节点详情
      */
@@ -196,7 +309,7 @@ const actions = {
             return response
         })
     },
-    
+
     /**
      * 获取agent环境变量
      */
@@ -232,7 +345,7 @@ const actions = {
             return response
         })
     },
-    
+
     /**
     * 设置agent构建并发数
     */
@@ -268,7 +381,7 @@ const actions = {
             return response
         })
     },
-    
+
     /**
     * 获取磁盘IO图表数据
     */

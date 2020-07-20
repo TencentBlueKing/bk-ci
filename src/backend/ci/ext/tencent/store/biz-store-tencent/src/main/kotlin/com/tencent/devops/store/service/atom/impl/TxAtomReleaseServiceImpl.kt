@@ -44,13 +44,17 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.plugin.api.ServiceCodeccResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineInitResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
@@ -58,8 +62,9 @@ import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.dao.atom.MarketAtomBuildAppRelDao
 import com.tencent.devops.store.dao.atom.MarketAtomBuildInfoDao
+import com.tencent.devops.store.dao.common.BusinessConfigDao
+import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
@@ -70,6 +75,7 @@ import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.TxAtomReleaseService
+import org.apache.commons.lang.StringEscapeUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -89,10 +95,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     lateinit var storePipelineRelDao: StorePipelineRelDao
 
     @Autowired
-    lateinit var marketAtomBuildAppRelDao: MarketAtomBuildAppRelDao
+    lateinit var storeBuildInfoDao: StoreBuildInfoDao
 
     @Autowired
     lateinit var storePipelineBuildRelDao: StorePipelineBuildRelDao
+
+    @Autowired
+    lateinit var businessConfigDao: BusinessConfigDao
 
     @Value("\${git.plugin.nameSpaceId}")
     private lateinit var pluginNameSpaceId: String
@@ -131,9 +140,10 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 userId = userId,
                 projectCode = marketAtomCreateRequest.projectCode,
                 repositoryName = atomCode,
-                sampleProjectPath = marketAtomBuildInfoDao.getAtomBuildInfoByLanguage(
+                sampleProjectPath = storeBuildInfoDao.getStoreBuildInfoByLanguage(
                     dslContext,
-                    marketAtomCreateRequest.language
+                    marketAtomCreateRequest.language,
+                    StoreTypeEnum.ATOM
                 ).sampleProjectPath,
                 namespaceId = pluginNameSpaceId.toInt(),
                 visibilityLevel = marketAtomCreateRequest.visibilityLevel,
@@ -274,7 +284,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val atomName = atomRecord.name
         val atomVersion = atomRecord.version
         val repoId = atomRecord.repositoryHashId
-        val atomPackageSourceType = if (repoId.isBlank()) AtomPackageSourceTypeEnum.UPLOAD else AtomPackageSourceTypeEnum.REPO
+        val atomPackageSourceType =
+            if (repoId.isBlank()) AtomPackageSourceTypeEnum.UPLOAD else AtomPackageSourceTypeEnum.REPO
         val getAtomConfResult = getAtomConfig(
             atomPackageSourceType = atomPackageSourceType,
             projectCode = projectCode,
@@ -361,20 +372,53 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val buildInfo = marketAtomBuildInfoDao.getAtomBuildInfo(context, atomId)
         logger.info("the buildInfo is:$buildInfo")
         val script = buildInfo.value1()
+        val language = buildInfo.value3()
         if (null == atomPipelineRelRecord) {
             // 为用户初始化构建流水线并触发执行
-            val atomBaseInfo = AtomBaseInfo(atomId, atomCode, atomRecord.version)
-            val atomBuildAppInfoRecords = marketAtomBuildAppRelDao.getMarketAtomBuildAppInfo(context, atomId)
-            val buildEnv = mutableMapOf<String, String>()
-            atomBuildAppInfoRecords?.forEach {
-                buildEnv[it["appName"] as String] = it["appVersion"] as String
+            val profile = SpringContextUtil.getBean(Profile::class.java)
+            if (!profile.isDev()) {
+                // dev环境暂不支持codecc，无需安装规则集
+                val checkerSetConfig = businessConfigDao.get(context, StoreTypeEnum.ATOM.name, "${language}Codecc", "CHECKER_SET")
+                val checkerSetIds = checkerSetConfig?.configValue?.split(",")
+                checkerSetIds?.forEach { checkerSetId ->
+                    val installCheckerSetResult = client.get(ServiceCodeccResource::class).installCheckerSet(
+                        projectId = projectCode!!,
+                        userId = userId,
+                        type = "PROJECT",
+                        checkerSetId = checkerSetId
+                    )
+                    if (installCheckerSetResult.isNotOk() || installCheckerSetResult.data == false) {
+                        throw ErrorCodeException(errorCode = installCheckerSetResult.status.toString(), defaultMessage = installCheckerSetResult.message)
+                    }
+                }
+            }
+            val version = atomRecord.version
+            val atomBaseInfo = AtomBaseInfo(
+                atomId = atomId,
+                atomCode = atomCode,
+                version = atomRecord.version,
+                language = language
+            )
+            val pipelineModelConfig = businessConfigDao.get(context, StoreTypeEnum.ATOM.name, "initBuildPipeline", "PIPELINE_MODEL")
+            var pipelineModel = pipelineModelConfig!!.configValue
+            val pipelineName = "am-$projectCode-$atomCode-${System.currentTimeMillis()}"
+            val paramMap = mapOf(
+                "pipelineName" to pipelineName,
+                "storeCode" to atomCode,
+                "version" to version,
+                "language" to language,
+                "script" to StringEscapeUtils.escapeJava(script),
+                "repositoryHashId" to atomRecord.repositoryHashId,
+                "repositoryPath" to (buildInfo.value2() ?: "")
+            )
+            // 将流水线模型中的变量替换成具体的值
+            paramMap.forEach { (key, value) ->
+                pipelineModel = pipelineModel.replace("#{$key}", value)
             }
             val atomMarketInitPipelineReq = AtomMarketInitPipelineReq(
-                atomRecord.repositoryHashId,
-                buildInfo.value2(),
-                script,
-                atomBaseInfo,
-                buildEnv
+                pipelineModel = pipelineModel,
+                script = script,
+                atomBaseInfo = atomBaseInfo
             )
             val atomMarketInitPipelineResp = client.get(ServicePipelineInitResource::class)
                 .initAtomMarketPipeline(userId, projectCode!!, atomMarketInitPipelineReq).data
@@ -382,11 +426,11 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             if (null != atomMarketInitPipelineResp) {
                 storePipelineRelDao.add(context, atomCode, StoreTypeEnum.ATOM, atomMarketInitPipelineResp.pipelineId)
                 marketAtomDao.setAtomStatusById(
-                    context,
-                    atomId,
-                    atomMarketInitPipelineResp.atomBuildStatus.status.toByte(),
-                    userId,
-                    null
+                    dslContext = context,
+                    atomId = atomId,
+                    atomStatus = atomMarketInitPipelineResp.atomBuildStatus.status.toByte(),
+                    userId = userId,
+                    msg = null
                 )
                 val buildId = atomMarketInitPipelineResp.buildId
                 if (null != buildId) {
@@ -400,6 +444,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             val startParams = mutableMapOf<String, String>() // 启动参数
             startParams["atomCode"] = atomCode
             startParams["version"] = atomRecord.version
+            startParams["language"] = language
             startParams["script"] = script
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, projectCode!!, atomPipelineRelRecord.pipelineId, startParams,
@@ -428,5 +473,98 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             storeWebsocketService.sendWebsocketMessage(userId, atomId)
         }
         return true
+    }
+
+    /**
+     * 检查版本发布过程中的操作权限
+     */
+    override fun checkAtomVersionOptRight(
+        userId: String,
+        atomId: String,
+        status: Byte,
+        isNormalUpgrade: Boolean?
+    ): Pair<Boolean, String> {
+        logger.info("checkAtomVersionOptRight, userId=$userId, atomId=$atomId, status=$status, isNormalUpgrade=$isNormalUpgrade")
+        val record =
+            marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Pair(
+                false,
+                CommonMessageCode.PARAMETER_IS_INVALID
+            )
+        val atomCode = record.atomCode
+        val creator = record.creator
+        val recordStatus = record.atomStatus
+
+        // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
+        if (!(storeMemberDao.isStoreAdmin(
+                dslContext,
+                userId,
+                atomCode,
+                StoreTypeEnum.ATOM.type.toByte()
+            ) || creator == userId)
+        ) {
+            return Pair(false, CommonMessageCode.PERMISSION_DENIED)
+        }
+        logger.info("record status=$recordStatus, status=$status")
+        val allowReleaseStatus = if (isNormalUpgrade != null && isNormalUpgrade) AtomStatusEnum.TESTING
+        else AtomStatusEnum.AUDITING
+        var validateFlag = true
+        if (status == AtomStatusEnum.COMMITTING.status.toByte() &&
+            recordStatus != AtomStatusEnum.INIT.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == AtomStatusEnum.BUILDING.status.toByte() &&
+            recordStatus !in (
+                listOf(
+                    AtomStatusEnum.COMMITTING.status.toByte(),
+                    AtomStatusEnum.BUILD_FAIL.status.toByte(),
+                    AtomStatusEnum.TESTING.status.toByte()
+                ))
+        ) {
+            validateFlag = false
+        } else if (status == AtomStatusEnum.BUILD_FAIL.status.toByte() &&
+            recordStatus !in (
+                listOf(
+                    AtomStatusEnum.COMMITTING.status.toByte(),
+                    AtomStatusEnum.BUILDING.status.toByte(),
+                    AtomStatusEnum.BUILD_FAIL.status.toByte(),
+                    AtomStatusEnum.TESTING.status.toByte()
+                ))
+        ) {
+            validateFlag = false
+        } else if (status == AtomStatusEnum.TESTING.status.toByte() &&
+            recordStatus != AtomStatusEnum.BUILDING.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == AtomStatusEnum.AUDITING.status.toByte() &&
+            recordStatus != AtomStatusEnum.TESTING.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == AtomStatusEnum.AUDIT_REJECT.status.toByte() &&
+            recordStatus != AtomStatusEnum.AUDITING.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == AtomStatusEnum.RELEASED.status.toByte() &&
+            recordStatus != allowReleaseStatus.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte() &&
+            recordStatus == AtomStatusEnum.RELEASED.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == AtomStatusEnum.UNDERCARRIAGING.status.toByte() &&
+            recordStatus == AtomStatusEnum.RELEASED.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == AtomStatusEnum.UNDERCARRIAGED.status.toByte() &&
+            recordStatus !in (
+                listOf(
+                    AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
+                    AtomStatusEnum.RELEASED.status.toByte()
+                ))
+        ) {
+            validateFlag = false
+        }
+
+        return if (validateFlag) Pair(true, "") else Pair(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR)
     }
 }

@@ -29,6 +29,7 @@ package com.tencent.devops.gitci.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -67,7 +68,7 @@ interface TriggerBuildResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("yaml内容", required = true)
-        yaml: String
+        yaml: GitYamlString
     ): Result<String>
 
     @ApiOperation("获取yaml schema")

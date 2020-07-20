@@ -27,10 +27,12 @@
 package com.tencent.devops.gitci.listener
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
+import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
@@ -67,6 +69,10 @@ class GitCIBuildFinishListener @Autowired constructor(
         try {
             val record = gitRequestEventBuildDao.getEventByBuildId(dslContext, buildFinishEvent.buildId)
             if (record != null) {
+                val normalizerYaml = record["NORMALIZED_YAML"] as String
+                logger.info("listenPipelineBuildFinishBroadCastEvent , normalizerYaml : $normalizerYaml")
+                val yamlObject = YamlUtil.getObjectMapper().readValue(normalizerYaml, CIBuildYaml::class.java)
+
                 val objectKind = record["OBJECT_KIND"] as String
 
                 // 推送结束构建消息,当人工触发时不推送构建消息
@@ -79,7 +85,8 @@ class GitCIBuildFinishListener @Autowired constructor(
                     }
                     val description = record["DESCRIPTION"] as String
 
-                    val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw OperationException("git ci projectCode not exist")
+                    val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId)
+                        ?: throw OperationException("git ci projectCode not exist")
 
                     // 检测状态
                     val state = if (BuildStatus.isFailure(BuildStatus.valueOf(buildFinishEvent.status))) {
@@ -95,6 +102,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                         buildFinishEvent.buildId,
                         buildFinishEvent.userId,
                         state,
+                        yamlObject.pipelineName ?: "",
                         gitProjectConf
                     )
                 }

@@ -27,7 +27,9 @@
 package com.tencent.devops.gitci.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
@@ -58,17 +60,55 @@ import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
 import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
-import com.tencent.devops.common.ci.yaml.Credential
-import com.tencent.devops.common.ci.yaml.Pool
+import com.tencent.devops.common.ci.image.Credential
+import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.NORMAL_JOB
 import com.tencent.devops.common.ci.VM_JOB
+import com.tencent.devops.common.ci.image.MacOS
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.yaml.Job
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
+import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.gitci.client.ScmClient
+import com.tencent.devops.gitci.pojo.CI_STATUS
+import com.tencent.devops.gitci.pojo.CI_BUILD_WEB_URL
+import com.tencent.devops.gitci.pojo.CI_REPOSITORY_NAME
+import com.tencent.devops.gitci.pojo.CI_BUILD_USER
+import com.tencent.devops.gitci.pojo.CI_COMMIT_ID
+import com.tencent.devops.gitci.pojo.CI_EVENT_TYPE
+import com.tencent.devops.gitci.pojo.CI_BRANCH
+import com.tencent.devops.gitci.pojo.CI_REF
+import com.tencent.devops.gitci.pojo.CI_COMMIT_MESSAGE
+import com.tencent.devops.gitci.pojo.CI_PUSH_BEFORE_COMMIT
+import com.tencent.devops.gitci.pojo.CI_PUSH_AFTER_COMMIT
+import com.tencent.devops.gitci.pojo.CI_PUSH_TOTAL_COMMIT
+import com.tencent.devops.gitci.pojo.CI_PUSH_OPERATION_KIND
+import com.tencent.devops.gitci.pojo.CI_TAG_NAME
+import com.tencent.devops.gitci.pojo.CI_TAG_OPERATION
+import com.tencent.devops.gitci.pojo.CI_TAG_USERNAME
+import com.tencent.devops.gitci.pojo.CI_MR_ID
+import com.tencent.devops.gitci.pojo.CI_MR_AUTHOR
+import com.tencent.devops.gitci.pojo.CI_MR_TARGET_BRANCH
+import com.tencent.devops.gitci.pojo.CI_MR_SOURCE_BRANCH
+import com.tencent.devops.gitci.pojo.CI_MR_TARGET_REPOSITORY
+import com.tencent.devops.gitci.pojo.CI_MR_SOURCE_REPOSITORY
+import com.tencent.devops.gitci.pojo.CI_MR_CREATE_TIME
+import com.tencent.devops.gitci.pojo.CI_MR_UPDATE_TIME
+import com.tencent.devops.gitci.pojo.CI_MR_CREATE_TIME_TIMESTAMP
+import com.tencent.devops.gitci.pojo.CI_MR_UPDATE_TIME_TIMESTAMP
+import com.tencent.devops.gitci.pojo.CI_MR_NUMBER
+import com.tencent.devops.gitci.pojo.CI_MR_DESC
+import com.tencent.devops.gitci.pojo.CI_MR_TITLE
+import com.tencent.devops.gitci.pojo.CI_MR_URL
+import com.tencent.devops.gitci.pojo.CI_MR_ACTION
+import com.tencent.devops.gitci.pojo.CI_MR_ASSIGNEE
+import com.tencent.devops.gitci.pojo.git.GitEvent
+import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.gitci.pojo.git.GitPushEvent
+import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -137,8 +177,14 @@ class GitCIBuildService @Autowired constructor(
 
         logger.info("pipelineId: $pipelineId")
 
-        // 启动构建
-        val buildId = client.get(ServiceBuildResource::class).manualStartup(event.userId, gitProjectConf.projectCode!!, pipelineId, mapOf(), channelCode).data!!.id
+            // 启动构建
+            val buildId = client.get(ServiceBuildResource::class).manualStartup(
+            userId = event.userId,
+            projectId = gitProjectConf.projectCode!!,
+            pipelineId = pipelineId,
+            values = mapOf(),
+            channelCode = channelCode
+        ).data!!.id
         gitRequestEventBuildDao.update(dslContext, event.id!!, pipelineId, buildId)
         logger.info("buildId: $buildId")
 
@@ -151,6 +197,7 @@ class GitCIBuildService @Autowired constructor(
                 buildId,
                 event.userId,
                 "pending",
+                yaml.pipelineName ?: "",
                 gitProjectConf
             )
         }
@@ -168,7 +215,7 @@ class GitCIBuildService @Autowired constructor(
 
         // 第一个stage，触发类
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
-        val params: List<BuildFormProperty> = createPipelineParams(gitProjectConf, yaml)
+        val params = createPipelineParams(gitProjectConf, yaml, event)
         val triggerContainer = TriggerContainer("0", "构建触发", listOf(manualTriggerElement), null, null, null, null, params)
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
@@ -217,11 +264,40 @@ class GitCIBuildService @Autowired constructor(
     }
 
     private fun addVmBuildContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>, jobIndex: Int) {
+        var osType = VMBaseOS.LINUX
         val containerPool =
-            if (job.job.pool?.container == null) {
-                Pool(buildConfig.registryImage, Credential("", ""))
-            } else {
-                Pool(job.job.pool!!.container, Credential(job.job.pool!!.credential?.user ?: "", job.job.pool!!.credential?.password ?: ""))
+            when {
+                // 有container配置时优先使用
+                job.job.pool?.container != null -> {
+                    Pool(
+                        container = job.job.pool!!.container,
+                        credential = Credential(
+                            user = job.job.pool!!.credential?.user ?: "",
+                            password = job.job.pool!!.credential?.password ?: ""
+                        ),
+                        macOS = null,
+                        third = null
+                    )
+                }
+
+                // 没有container配置时，优先使用macOS配置
+                job.job.pool?.macOS != null -> {
+                    osType = VMBaseOS.MACOS
+                    Pool(
+                        container = null,
+                        credential = null,
+                        macOS = MacOS(
+                            systemVersion = job.job.pool!!.macOS?.systemVersion ?: "",
+                            xcodeVersion = job.job.pool!!.macOS?.xcodeVersion ?: ""
+                        ),
+                        third = null
+                    )
+                }
+
+                // 假设都没有配置，使用默认镜像
+                else -> {
+                    Pool(buildConfig.registryImage, Credential("", ""), null, null)
+                }
             }
 
         val vmContainer = VMBuildContainer(
@@ -232,7 +308,7 @@ class GitCIBuildService @Autowired constructor(
             startEpoch = null,
             systemElapsed = null,
             elementElapsed = null,
-            baseOS = VMBaseOS.LINUX,
+            baseOS = osType,
             vmNames = setOf(),
             maxQueueMinutes = 60,
             maxRunningMinutes = 900,
@@ -243,7 +319,15 @@ class GitCIBuildService @Autowired constructor(
             thirdPartyWorkspace = null,
             dockerBuildVersion = null,
             tstackAgentId = null,
-            dispatchType = GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
+            dispatchType = if (containerPool.macOS != null) {
+                MacOSDispatchType(
+                    macOSEvn = containerPool.macOS!!.systemVersion!! + ":" + containerPool.macOS!!.xcodeVersion!!,
+                    systemVersion = containerPool.macOS!!.systemVersion!!,
+                    xcodeVersion = containerPool.macOS!!.xcodeVersion!!
+                )
+            } else {
+                GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
+            }
         )
         containerList.add(vmContainer)
     }
@@ -279,52 +363,52 @@ class GitCIBuildService @Autowired constructor(
         val gitCiCodeRepoInput = when (event.objectKind) {
             OBJECT_KIND_PUSH -> {
                 GitCiCodeRepoInput(
-                        gitProjectConf.name,
-                        gitProjectConf.gitHttpUrl,
-                        gitToken.accessToken,
-                        null,
-                        CodePullStrategy.REVERT_UPDATE,
-                        GitPullModeType.COMMIT_ID,
-                        event.commitId
+                    repositoryName = gitProjectConf.name,
+                    repositoryUrl = gitProjectConf.gitHttpUrl,
+                    oauthToken = gitToken.accessToken,
+                    localPath = null,
+                    strategy = CodePullStrategy.REVERT_UPDATE,
+                    pullType = GitPullModeType.COMMIT_ID,
+                    refName = event.commitId
                 )
             }
             OBJECT_KIND_TAG_PUSH -> {
                 GitCiCodeRepoInput(
-                        gitProjectConf.name,
-                        gitProjectConf.gitHttpUrl,
-                        gitToken.accessToken,
-                        null,
-                        CodePullStrategy.REVERT_UPDATE,
-                        GitPullModeType.TAG,
-                        event.branch.removePrefix("refs/tags/")
+                    repositoryName = gitProjectConf.name,
+                    repositoryUrl = gitProjectConf.gitHttpUrl,
+                    oauthToken = gitToken.accessToken,
+                    localPath = null,
+                    strategy = CodePullStrategy.REVERT_UPDATE,
+                    pullType = GitPullModeType.TAG,
+                    refName = event.branch.removePrefix("refs/tags/")
                 )
             }
             OBJECT_KIND_MERGE_REQUEST -> {
                 GitCiCodeRepoInput(
-                        gitProjectConf.name,
-                        gitProjectConf.gitHttpUrl,
-                        gitToken.accessToken,
-                        null,
-                        CodePullStrategy.REVERT_UPDATE,
-                        GitPullModeType.BRANCH,
-                        "",
-                        StartType.MANUAL,
-                        CodeEventType.MERGE_REQUEST.name,
-                        event.branch,
-                        event.targetBranch,
-                        gitProjectConf.gitHttpUrl,
-                        gitProjectConf.gitHttpUrl
+                    repositoryName = gitProjectConf.name,
+                    repositoryUrl = gitProjectConf.gitHttpUrl,
+                    oauthToken = gitToken.accessToken,
+                    localPath = null,
+                    strategy = CodePullStrategy.REVERT_UPDATE,
+                    pullType = GitPullModeType.BRANCH,
+                    refName = "",
+                    pipelineStartType = StartType.WEB_HOOK,
+                    hookEventType = CodeEventType.MERGE_REQUEST.name,
+                    hookSourceBranch = event.branch,
+                    hookTargetBranch = event.targetBranch,
+                    hookSourceUrl = gitProjectConf.gitHttpUrl,
+                    hookTargetUrl = gitProjectConf.gitHttpUrl
                 )
             }
             OBJECT_KIND_MANUAL -> {
                 GitCiCodeRepoInput(
-                        gitProjectConf.name,
-                        gitProjectConf.gitHttpUrl,
-                        gitToken.accessToken,
-                        null,
-                        CodePullStrategy.REVERT_UPDATE,
-                        GitPullModeType.BRANCH,
-                        event.branch.removePrefix("refs/heads/")
+                    repositoryName = gitProjectConf.name,
+                    repositoryUrl = gitProjectConf.gitHttpUrl,
+                    oauthToken = gitToken.accessToken,
+                    localPath = null,
+                    strategy = CodePullStrategy.REVERT_UPDATE,
+                    pullType = GitPullModeType.BRANCH,
+                    refName = event.branch.removePrefix("refs/heads/")
                 )
             }
             else -> {
@@ -334,12 +418,12 @@ class GitCIBuildService @Autowired constructor(
         }
 
         return MarketBuildAtomElement(
-                "拉代码",
-                null,
-                null,
-                GitCiCodeRepoTask.atomCode,
-                "1.*",
-                mapOf("input" to gitCiCodeRepoInput!!)
+            name = "拉代码",
+            id = null,
+            status = null,
+            atomCode = GitCiCodeRepoTask.atomCode,
+            version = "1.*",
+            data = mapOf("input" to gitCiCodeRepoInput!!)
         )
     }
 
@@ -385,41 +469,105 @@ class GitCIBuildService @Autowired constructor(
         }
     }
 
-    private fun createPipelineParams(gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml): List<BuildFormProperty> {
+    private fun createPipelineParams(gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml, event: GitRequestEvent): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
         gitProjectConf.env?.forEach {
             val value = gitCIParameterUtils.encrypt(it.value)
-            result.add(BuildFormProperty(
-                    it.name,
-                    false,
-                    BuildFormPropertyType.PASSWORD,
-                    value,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-                    ))
+            result.add(
+                BuildFormProperty(
+                    id = it.name,
+                    required = false,
+                    type = BuildFormPropertyType.PASSWORD,
+                    defaultValue = value,
+                    options = null,
+                    desc = null,
+                    repoHashId = null,
+                    relativePath = null,
+                    scmType = null,
+                    containerType = null,
+                    glob = null,
+                    properties = null
+                )
+            )
         }
-        yaml.variables?.forEach {
+
+        val startParams = mutableMapOf<String, String>()
+
+        // 通用参数
+        startParams[CI_STATUS] = "true"
+        startParams[CI_EVENT_TYPE] = event.objectKind
+        startParams[CI_BRANCH] = event.branch
+        startParams[CI_BUILD_USER] = event.userId
+        startParams[CI_COMMIT_ID] = event.commitId
+        startParams[CI_REPOSITORY_NAME] = gitProjectConf.name
+        startParams[CI_BUILD_WEB_URL] = gitProjectConf.url
+        startParams[CI_COMMIT_MESSAGE] = event.commitMsg.toString()
+
+        // 写入WEBHOOK触发环境变量
+        val originEvent = try {
+            objectMapper.readValue<GitEvent>(event.event)
+        } catch (e: Exception) {
+            logger.warn("Fail to parse the git web hook commit event, errMsg: ${e.message}")
+        }
+
+        when (originEvent) {
+            is GitPushEvent -> {
+                startParams[CI_BUILD_USER] = originEvent.user_name
+                startParams[CI_PUSH_BEFORE_COMMIT] = originEvent.before
+                startParams[CI_PUSH_AFTER_COMMIT] = originEvent.after
+                startParams[CI_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
+                startParams[CI_PUSH_OPERATION_KIND] = originEvent.operation_kind
+                startParams[CI_REF] = originEvent.ref
+            }
+            is GitTagPushEvent -> {
+                startParams[CI_TAG_NAME] = event.branch
+                startParams[CI_TAG_OPERATION] = originEvent.operation_kind ?: ""
+                startParams[CI_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
+                startParams[CI_TAG_USERNAME] = event.userId
+                startParams[CI_REF] = originEvent.ref
+            }
+            is GitMergeRequestEvent -> {
+                startParams[CI_MR_ACTION] = originEvent.object_attributes.action
+                startParams[CI_MR_AUTHOR] = originEvent.user.username
+                startParams[CI_MR_TARGET_BRANCH] = originEvent.object_attributes.target_branch
+                startParams[CI_MR_SOURCE_BRANCH] = originEvent.object_attributes.source_branch
+                startParams[CI_MR_TARGET_REPOSITORY] = originEvent.object_attributes.target.name
+                startParams[CI_MR_SOURCE_REPOSITORY] = originEvent.object_attributes.source.name
+                startParams[CI_MR_CREATE_TIME] = originEvent.object_attributes.created_at
+                startParams[CI_MR_CREATE_TIME_TIMESTAMP] =
+                    DateTimeUtil.zoneDateToTimestamp(originEvent.object_attributes.created_at).toString()
+                startParams[CI_MR_UPDATE_TIME] = originEvent.object_attributes.updated_at
+                startParams[CI_MR_UPDATE_TIME_TIMESTAMP] =
+                    DateTimeUtil.zoneDateToTimestamp(originEvent.object_attributes.updated_at).toString()
+                startParams[CI_MR_ID] = originEvent.object_attributes.iid.toString()
+                startParams[CI_MR_TITLE] = originEvent.object_attributes.title
+                startParams[CI_MR_URL] = originEvent.object_attributes.url
+                startParams[CI_MR_NUMBER] = originEvent.object_attributes.id.toString()
+                startParams[CI_MR_DESC] = originEvent.object_attributes.description
+                startParams[CI_MR_ASSIGNEE] = originEvent.object_attributes.assignee_id.toString()
+            }
+        }
+
+        // 用户自定义变量
+        startParams.putAll(yaml.variables ?: mapOf())
+
+        startParams.forEach {
             result.add(BuildFormProperty(
-                    it.key,
-                    false,
-                    BuildFormPropertyType.STRING,
-                    it.value,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
+                id = it.key,
+                required = false,
+                type = BuildFormPropertyType.STRING,
+                defaultValue = it.value,
+                options = null,
+                desc = null,
+                repoHashId = null,
+                relativePath = null,
+                scmType = null,
+                containerType = null,
+                glob = null,
+                properties = null
             ))
         }
+
         return result
     }
 

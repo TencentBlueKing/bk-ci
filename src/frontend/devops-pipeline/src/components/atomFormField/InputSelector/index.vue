@@ -6,7 +6,7 @@
             autocomplete="off"
             :name="name"
             :value="value"
-            :placeholder="placeholder"
+            :placeholder="placeholder || defaultPlace"
             @input="input"
             @mousedown="focus"
             @blur="hideAll" />
@@ -39,8 +39,7 @@
                 type: String
             },
             placeholder: {
-                type: String,
-                default: '请输入'
+                type: String
             },
             datalist: {
                 type: Array,
@@ -51,7 +50,8 @@
             return {
                 showList: false,
                 focusList: '',
-                list: []
+                list: [],
+                defaultPlace: this.$t('editPage.atomForm.inputTips')
             }
         },
         watch: {

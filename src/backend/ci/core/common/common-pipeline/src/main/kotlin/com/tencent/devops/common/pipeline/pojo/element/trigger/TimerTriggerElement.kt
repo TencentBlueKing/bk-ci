@@ -30,6 +30,7 @@ import com.cronutils.mapper.CronMapper
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -44,7 +45,8 @@ data class TimerTriggerElement(
     override var status: String? = null,
     // express是老的接口数据， 后面要废弃掉
     @ApiModelProperty("定时表达式", required = false)
-    val expression: String?,
+    @Deprecated(message = "@see advanceExpression")
+    val expression: String? = null,
     @ApiModelProperty("改进后的表达式", required = false)
     val newExpression: List<String>? = null,
     @ApiModelProperty("高级定时表达式", required = false)
@@ -86,7 +88,7 @@ data class TimerTriggerElement(
             val expressions = mutableSetOf<String>()
             if (newExpression != null && newExpression.isNotEmpty()) {
                 newExpression.forEach { expression ->
-                    expressions.add(convertExpression(expression))
+                    expressions.add(convertExpression(checkAndSetSecond(expression)))
                 }
             }
             if (advanceExpression != null && advanceExpression.isNotEmpty()) {
@@ -95,6 +97,30 @@ data class TimerTriggerElement(
                 }
             }
             expressions
+        }
+    }
+
+    private fun checkAndSetSecond(expression: String): String {
+        val newExpression = expression.trim()
+        val expressionParts = newExpression.split(" ")
+        return if (expressionParts[0] != "0") {
+            val newExpressionParts = expressionParts.toMutableList()
+            newExpressionParts[0] = "0"
+            newExpressionParts.joinToString(separator = " ")
+        } else {
+            newExpression
+        }
+    }
+
+    private fun checkLength(expression: String) {
+        val newExpression = expression.trim()
+        val expressionParts = newExpression.split(" ")
+        // minutes hours dayOfMonth month dayOfWeek
+        if (expressionParts.size != 5) {
+            throw InvalidParamException(
+                message = "Cron expression contains ${expressionParts.size} parts but we expect one of 5(minutes hours dayOfMonth month dayOfWeek)",
+                params = arrayOf(expression)
+            )
         }
     }
 }

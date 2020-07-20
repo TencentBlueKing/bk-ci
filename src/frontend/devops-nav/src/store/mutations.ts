@@ -15,10 +15,20 @@ import {
     SET_POPUP_SHOW,
     UPDATE_HEADER_CONFIG,
     CLOSE_PREVIEW_TIPS,
-    TOGGLE_MODULE_LOADING
+    TOGGLE_MODULE_LOADING,
+    UPDATE_CURRENT_PAGE,
+    TOGGLE_PERMISSION_DIALOG,
+    SET_CURRENT_NOTICE
 } from './constants'
 
 const mutations: MutationTree<RootState> = {
+    [TOGGLE_PERMISSION_DIALOG]: (state: RootState, visible: boolean) => {
+        Vue.set(state, 'isPermissionDialogShow', visible)
+    },
+    [UPDATE_CURRENT_PAGE]: (state: RootState, page: object) => {
+        Vue.set(state, 'currentPage', page)
+        return state
+    },
     [UPDATE_HEADER_CONFIG]: (state: RootState, headerConfig: object) => {
         Vue.set(state, 'headerConfig', {
             ...state.headerConfig,
@@ -48,8 +58,8 @@ const mutations: MutationTree<RootState> = {
     },
     [SET_DEMO_PROJECT]: (state: RootState, { project }: any) => {
         Vue.set(state, 'demo', {
-            projectId: project.project_code,
-            projectName: project.project_name
+            projectId: project.projectCode,
+            projectName: project.projectName
         })
         return state
     },
@@ -84,6 +94,9 @@ const mutations: MutationTree<RootState> = {
     },
     [TOGGLE_MODULE_LOADING]: (state: RootState, moduleLoading: boolean) => {
         Vue.set(state, 'moduleLoading', moduleLoading)
+    },
+    [SET_CURRENT_NOTICE]: (state: RootState, notice: object) => {
+        Vue.set(state, 'currentNotice', notice)
     }
 }
 

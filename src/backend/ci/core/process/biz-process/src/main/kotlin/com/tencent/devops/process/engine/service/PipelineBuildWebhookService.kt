@@ -54,6 +54,7 @@ import com.tencent.devops.process.engine.service.code.SvnWebHookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.WebHookParams
 import com.tencent.devops.process.pojo.code.WebhookCommit
+import com.tencent.devops.process.pojo.code.git.GitCommit
 import com.tencent.devops.process.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.pojo.code.git.GitPushEvent
@@ -65,7 +66,7 @@ import com.tencent.devops.process.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
 import com.tencent.devops.process.service.scm.GitScmService
-import com.tencent.devops.process.util.DateTimeUtils
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.process.utils.PIPELINE_REPO_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
@@ -107,6 +108,8 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ID
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LABELS
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_NUMBER
@@ -119,6 +122,21 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TITLE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ACTION_KIND
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_COUNT
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_PREFIX
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_AUTHOR_PREFIX
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_MSG_PREFIX
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_PREFIX
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_TIMESTAMP_PREFIX
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_COUNT
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_PREFIX
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_COUNT
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_PREFIX
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_USERNAME
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_NAME
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_OPERATION
@@ -152,6 +170,10 @@ class PipelineBuildWebhookService @Autowired constructor(
 ) {
 
     private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
+
+    companion object {
+        private const val MAX_VARITABLE_COUNT = 32
+    }
 
     fun externalCodeSvnBuild(e: String): Boolean {
         logger.info("Trigger code svn build - $e")
@@ -352,7 +374,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             val repo = client.get(ServiceRepositoryResource::class)
                 .get(projectId, repositoryConfig.getURLEncodeRepositoryId(), repositoryConfig.repositoryType).data
             if (repo == null) {
-                logger.error("repo[$repositoryConfig] does not exist")
+                logger.warn("repo[$repositoryConfig] does not exist")
                 return@elements
             }
 
@@ -449,6 +471,10 @@ class PipelineBuildWebhookService @Autowired constructor(
                 params.includePaths = EnvUtils.parseEnv(element.includePaths ?: "", variables)
                 params.excludePaths = EnvUtils.parseEnv(element.excludePaths ?: "", variables)
                 params.codeType = CodeType.GIT
+                params.tagName = EnvUtils.parseEnv(element.tagName ?: "", variables)
+                params.excludeTagName = EnvUtils.parseEnv(element.excludeTagName ?: "", variables)
+                params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)
+                params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
             }
             is CodeGithubWebHookTriggerElement -> {
                 params = WebHookParams(
@@ -577,9 +603,9 @@ class PipelineBuildWebhookService @Autowired constructor(
                 startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = mrInfo?.createTime ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = mrInfo?.updateTime ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] =
-                    DateTimeUtils.zoneDateToTimestamp(mrInfo?.createTime)
+                    DateTimeUtil.zoneDateToTimestamp(mrInfo?.createTime)
                 startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] =
-                    DateTimeUtils.zoneDateToTimestamp(mrInfo?.updateTime)
+                    DateTimeUtil.zoneDateToTimestamp(mrInfo?.updateTime)
                 startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = mrInfo?.mrId ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = mrInfo?.mrNumber ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = mrInfo?.description ?: ""
@@ -590,18 +616,31 @@ class PipelineBuildWebhookService @Autowired constructor(
                 startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = mrInfo?.milestone?.title ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] = mrInfo?.milestone?.dueDate ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = mrInfo?.labels?.joinToString(",") ?: ""
+
+                val lastCommit = gitMatcher.event.object_attributes.last_commit
+                startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT] = lastCommit.id
+                startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG] = lastCommit.message
             }
 
             if (params.eventType == CodeEventType.TAG_PUSH) {
                 val gitTagPushEvent = gitMatcher.event as GitTagPushEvent
                 startParams[BK_REPO_GIT_WEBHOOK_TAG_NAME] = matcher.getBranchName()
                 startParams[BK_REPO_GIT_WEBHOOK_TAG_OPERATION] = gitTagPushEvent.operation_kind ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = gitTagPushEvent.total_commits_count
                 startParams[BK_REPO_GIT_WEBHOOK_TAG_USERNAME] = matcher.getUsername()
+                genCommitsParam(startParams, gitTagPushEvent.commits)
             }
 
             if (params.eventType == CodeEventType.PUSH) {
+                val gitPushEvent = gitMatcher.event as GitPushEvent
                 startParams[BK_REPO_GIT_WEBHOOK_PUSH_USERNAME] = matcher.getUsername()
+                startParams[BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT] = gitPushEvent.before
+                startParams[BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT] = gitPushEvent.after
+                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = gitPushEvent.total_commits_count
+                startParams[BK_REPO_GIT_WEBHOOK_PUSH_ACTION_KIND] = gitPushEvent.action_kind ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND] = gitPushEvent.operation_kind ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = matcher.getBranchName()
+                genCommitsParam(startParams, gitPushEvent.commits)
             }
         }
 
@@ -661,6 +700,45 @@ class PipelineBuildWebhookService @Autowired constructor(
         return startParams
     }
 
+    private fun genCommitsParam(startParams: MutableMap<String, Any>, commits: List<GitCommit>) {
+        commits.forEachIndexed { index, gitCommit ->
+            val curIndex = index + 1
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_PREFIX + curIndex] = gitCommit.id
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_MSG_PREFIX + curIndex] = gitCommit.message
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_TIMESTAMP_PREFIX + curIndex] =
+                DateTimeUtil.zoneDateToTimestamp(gitCommit.timestamp)
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_AUTHOR_PREFIX + curIndex] = gitCommit.author
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_COUNT] = gitCommit.added?.size ?: 0
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_COUNT] = gitCommit.modified?.size ?: 0
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_COUNT] = gitCommit.removed?.size ?: 0
+
+            var count = 0
+            run {
+                gitCommit.added?.forEachIndexed { innerIndex, file ->
+                    startParams[BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
+                    count++
+                    if (count > MAX_VARITABLE_COUNT) return@run
+                }
+            }
+
+            run {
+                gitCommit.modified?.forEachIndexed { innerIndex, file ->
+                    startParams[BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
+                    count++
+                    if (count > MAX_VARITABLE_COUNT) return@run
+                }
+            }
+
+            run {
+                gitCommit.removed?.forEachIndexed { innerIndex, file ->
+                    startParams[BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
+                    count++
+                    if (count > MAX_VARITABLE_COUNT) return@run
+                }
+            }
+        }
+    }
+
     /**
      * webhookCommitTriggerPipelineBuild 方法是webhook事件触发最后执行方法
      * @link webhookTriggerPipelineBuild 方法接收webhook事件后通过调用网关接口进行分发，从而区分正式和灰度服务
@@ -690,15 +768,19 @@ class PipelineBuildWebhookService @Autowired constructor(
         // 添加质量红线原子
         val fullModel = pipelineBuildQualityService.fillingRuleInOutElement(projectId, pipelineId, startParams, model)
         // 兼容从旧v1版本下发过来的请求携带旧的变量命名
-        val params = startParams.map { (PipelineVarUtil.oldVarToNewVar(it.key) ?: it.key) to it.value }.toMap()
-
+        val params = mutableMapOf<String, Any>()
         val startParamsWithType = mutableListOf<BuildParameters>()
-        params.forEach { t, u -> startParamsWithType.add(
-            BuildParameters(
-                t,
-                u
-            )
-        ) }
+        startParams.forEach {
+            // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
+            val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
+            if (newVarName == null) { // 为空表示该变量是新的，或者不需要兼容，直接加入，能会覆盖旧变量转换而来的新变量
+                params[it.key] = it.value
+                startParamsWithType.add(BuildParameters(it.key, it.value))
+            } else if (!params.contains(newVarName)) { // 新变量还不存在，加入
+                params[newVarName] = it.value
+                startParamsWithType.add(BuildParameters(newVarName, it.value))
+            }
+        }
 
         try {
             val buildId = pipelineBuildService.startPipeline(

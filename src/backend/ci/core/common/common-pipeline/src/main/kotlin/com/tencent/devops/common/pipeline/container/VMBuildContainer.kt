@@ -28,6 +28,7 @@ package com.tencent.devops.common.pipeline.container
 
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.type.DispatchType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -39,7 +40,7 @@ data class VMBuildContainer(
     @ApiModelProperty("容器名称", required = true)
     override var name: String = "构建环境",
     @ApiModelProperty("任务集合", required = true)
-    override val elements: List<Element> = listOf(),
+    override var elements: List<Element> = listOf(),
     override var status: String? = null,
     override var startEpoch: Long? = null,
     @ApiModelProperty("系统运行时间", required = false, hidden = true)
@@ -57,21 +58,22 @@ data class VMBuildContainer(
     @Deprecated(message = "@see JobControlOption.timeout")
     val maxRunningMinutes: Int = 480,
     @ApiModelProperty("构建机环境变量", required = false)
-    val buildEnv: Map<String, String>?,
+    val buildEnv: Map<String, String>? = null,
     @ApiModelProperty("用户自定义环境变量", required = false)
-    val customBuildEnv: Map<String, String>?,
+    val customBuildEnv: Map<String, String>? = null,
     @ApiModelProperty("第三方构建Hash ID", required = false)
-    val thirdPartyAgentId: String?,
+    val thirdPartyAgentId: String? = null,
     @ApiModelProperty("第三方构建环境ID", required = false)
-    val thirdPartyAgentEnvId: String?,
+    val thirdPartyAgentEnvId: String? = null,
     @ApiModelProperty("第三方构建环境工作空间", required = false)
-    val thirdPartyWorkspace: String?,
+    val thirdPartyWorkspace: String? = null,
     @ApiModelProperty("Docker构建机", required = false)
-    val dockerBuildVersion: String?,
+    val dockerBuildVersion: String? = null,
     @ApiModelProperty("TStackHashId", required = false)
-    val tstackAgentId: String?,
+    @Deprecated("do not used")
+    val tstackAgentId: String? = null,
     @ApiModelProperty("新的选择构建机环境", required = false)
-    val dispatchType: DispatchType?,
+    val dispatchType: DispatchType? = null,
     @ApiModelProperty("是否显示构建资源信息", required = false)
     var showBuildResource: Boolean? = false,
     @ApiModelProperty("是否可重试", required = false, hidden = true)
@@ -82,7 +84,11 @@ data class VMBuildContainer(
     @ApiModelProperty("流程控制选项", required = true)
     var jobControlOption: JobControlOption? = null, // 为了兼容旧数据，所以定义为可空以及var
     @ApiModelProperty("互斥组", required = false)
-    var mutexGroup: MutexGroup? = null // 为了兼容旧数据，所以定义为可空以及var
+    var mutexGroup: MutexGroup? = null, // 为了兼容旧数据，所以定义为可空以及var
+    @ApiModelProperty("构建环境启动状态", required = false, hidden = true)
+    override var startVMStatus: String? = null,
+    @ApiModelProperty("容器运行次数", required = false, hidden = true)
+    override var executeCount: Int? = 0
 ) : Container {
     companion object {
         const val classType = "vmBuild"

@@ -19,7 +19,7 @@
         mixins: [atomMixin, validMixins],
         data () {
             return {
-                tips: '当前流水线存在多个代码拉取插件，你需设置此字段以解决冲突问题',
+                tips: this.$t('editPage.repoConflict'),
                 noUsePermission: true,
                 list: [],
                 newModel: {}

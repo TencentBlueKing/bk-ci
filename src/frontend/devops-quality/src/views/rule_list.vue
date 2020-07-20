@@ -13,7 +13,7 @@
                 <div class="rule-main-container">
                     <div class="rule-main-header">
                         <button class="bk-button bk-primary" @click="toCreateRule">
-                            <i class="bk-icon icon-plus"></i>
+                            <i class="devops-icon icon-plus"></i>
                             <span style="margin-left: 0;">创建规则</span>
                         </button>
                     </div>
@@ -148,7 +148,7 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td class="item-label">生效范围：</td>
+                                                <td class="item-label">生效流水线：</td>
                                                 <td class="item-value">
                                                     <span v-if="ruleDetail.range">{{ ruleDetail.pipelineCount }}条流水线</span>
                                                 </td>
@@ -337,7 +337,7 @@
         watch: {
             projectId (val) {
                 this.$router.push({
-                    name: 'overview',
+                    name: 'qualityOverview',
                     params: {
                         projectId: this.projectId
                     }
@@ -517,7 +517,7 @@
                         noPermissionList: [
                             { resource: '质量红线', option: '删除规则' }
                         ],
-                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=rule:${row.ruleHashId}`
+                        applyPermissionUrl: PERM_URL_PREFIX
                     }
                     this.$showAskPermissionDialog(params)
                 }
@@ -648,7 +648,7 @@
                         noPermissionList: [
                             { resource: '质量红线', option: '编辑规则' }
                         ],
-                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=rule:${row.ruleHashId}`
+                        applyPermissionUrl: PERM_URL_PREFIX
                     }
                     this.$showAskPermissionDialog(params)
                 }
@@ -675,7 +675,7 @@
                         noPermissionList: [
                             { resource: '质量红线', option: '启用和停用规则' }
                         ],
-                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=rule:${row.ruleHashId}`
+                        applyPermissionUrl: PERM_URL_PREFIX
                     }
                     this.$showAskPermissionDialog(params)
                 }
@@ -768,7 +768,7 @@
             .bk-button {
                 padding: 0 10px 0 8px;
                 width: 106px;
-                .bk-icon {
+                .devops-icon {
                     font-size: 12px;
                 }
             }

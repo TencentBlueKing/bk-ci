@@ -25,13 +25,13 @@ function _M:isAccess()
     -- 外部请求频率50,浮动20；构建机类请求频率20，浮动20
     local lim = nil
     if ngx.var.access_type == 'external' then
-        lim, err = limit_req.new("build_limit_req_store", 50, 20)
+        lim, err = limit_req.new("build_limit_req_store", 100, 50)
     else
-        lim, err = limit_req.new("build_limit_req_store", 20, 20)
+        lim, err = limit_req.new("build_limit_req_store", 100, 20)
     end
     -- 创建req_limit实例失败时
     if not lim then
-        ngx.log(ngx.ERR, "failed to instantiate a resty.limit.req object: ", err)
+        ngx.log(ngx.STDERR, "failed to instantiate a resty.limit.req object: ", err)
         return false
     end
     -- 获取4字节的IP的KEY
@@ -42,7 +42,7 @@ function _M:isAccess()
         if err == "rejected" then
             return false
         end
-        ngx.log(ngx.ERR, "failed to limit req: ", err)
+        ngx.log(ngx.STDERR, "failed to limit req: ", err)
         return false
     end 
     if delay >= 0.001 then

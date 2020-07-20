@@ -14,16 +14,26 @@ const getters: GetterTree<RootState, any> = {
         }, [])
     },
 
-    isEmptyProject: (state: RootState) => (project: Project): boolean => {
+    isEmptyProject: () => (project: Project): boolean => {
         return isShallowEqual(project, EMPTY_PROJECT)
     },
 
-    onlineProjectList: (state: RootState) => {
-        return state.projectList.filter((project: ObjectMap) => project.approval_status === 2 && !project.is_offlined)
+    enableProjectList: (state: RootState) => {
+        return state.projectList.filter((project: ObjectMap) => (project.approvalStatus === 1 || project.approvalStatus === 2) && project.enabled)
+    },
+
+    disableProjectList: (state: RootState) => {
+        return state.projectList.filter((project: ObjectMap) => (project.approvalStatus === 1 || project.approvalStatus === 2) && !project.enabled)
     },
 
     approvalingProjectList: (state: RootState) => {
-        return state.projectList.filter((project: ObjectMap) => project.approval_status === 1)
+        return state.projectList.filter((project: ObjectMap) => project.approvalStatus === 1)
+    },
+
+    // 是否显示跑马灯类型公告
+    showAnnounce (state: RootState) {
+        // @ts-ignore
+        return state.currentNotice && state.currentNotice.id && state.currentNotice.noticeType === 1
     }
     
 }

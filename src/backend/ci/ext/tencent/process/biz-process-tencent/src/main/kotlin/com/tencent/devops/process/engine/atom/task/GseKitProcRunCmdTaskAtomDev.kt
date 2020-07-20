@@ -31,6 +31,8 @@ package com.tencent.devops.process.engine.atom.task
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -38,11 +40,9 @@ import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.common.pipeline.element.GseKitProcRunCmdElementDev
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.ErrorType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -86,7 +86,7 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "envId is not validate"
             )
         }
@@ -100,7 +100,7 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "Gsekit create sesssion failed, msg: ${sessionRs.message}"
             )
         }
@@ -111,7 +111,7 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "Gsekit proc run cmd failed, msg: ${runProcRs.message}"
             )
         }
@@ -135,7 +135,7 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND,
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                 errorMsg = "找不到GseKit任务ID，请联系管理员"
             )
         }
@@ -148,7 +148,7 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
         return if (result == BuildStatus.FAILED) AtomResponse(
             buildStatus = BuildStatus.FAILED,
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
             errorMsg = "Gsekit proc run cmd failed"
         ) else AtomResponse(result)
     }
@@ -269,7 +269,6 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
                 //            val responseStr = HttpUtils.postJson(url, requestStr)
                 val response: Map<String, Any> = JsonUtil.getObjectMapper().readValue(responseStr)
                 if (response["result"] == false) {
-                    logger.error("request failed")
                     val msg = response["msg"].toString()
                     logger.error("Request gsekit proc_run_command failed, response: $msg")
                     return CallResult(false, "", msg)
@@ -277,7 +276,6 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
                     val data = response["data"] as Map<*, *>
                     val errorCode = data["error_code"] as Int
                     return if (0 != errorCode) {
-                        logger.error("request failed")
                         val msg = data["error_msg"].toString()
                         logger.error("Request gsekit proc_run_command failed, error msg: $msg")
                         CallResult(false, "", msg)
@@ -316,7 +314,6 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
 //            val responseStr = HttpUtils.postJson(url, requestStr)
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 if (response["result"] == false) {
-                    logger.error("request failed")
                     val msg = response["msg"].toString()
                     logger.error("Request gsekit proc_create_session failed, response: $msg")
                     return CallResult(false, "", msg)
@@ -324,7 +321,6 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
                     val data = response["data"] as Map<*, *>
                     val errorCode = data["error_code"] as Int
                     return if (0 != errorCode) {
-                        logger.error("request failed")
                         val msg = data["error_msg"].toString()
                         logger.error("Request gsekit proc_create_session failed, error msg: $msg")
                         CallResult(false, "", msg)

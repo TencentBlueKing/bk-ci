@@ -20,8 +20,8 @@ const artifactoryRecent = () => import(/* webpackChunkName: 'artifactoryRecent' 
 const artifactoryRecycle = () => import(/* webpackChunkName: 'artifactoryRecycle' */'../views/recycle.vue')
 
 const meta = {
-    title: '版本仓库',
-    header: '版本仓库',
+    title: '制品库',
+    header: 'artifactory',
     logo: 'artifactory',
     to: 'artifactory'
 }

@@ -2,13 +2,13 @@
     <bk-select v-bind="dropdownConf"
         :name="name"
         :loading="isLoading"
-        :placeholder="isLoading ? &quot;获取数据中...&quot; : placeholder"
+        :placeholder="isLoading ? $t('editPage.loadingData') : placeholder"
         :value="value"
         :disabled="disabled || isLoading"
-        @edit="edit"
         @selected="handleSelect"
         @toggle="toggleVisible"
         @clear="handleClear"
+        :popover-options="popoverOptions"
     >
         <bk-option
             v-for="item in list"
@@ -20,7 +20,7 @@
         <template v-if="mergedOptionsConf.hasAddItem">
             <div slot="extension" class="bk-selector-create-item">
                 <a :href="addItemUrl" target="_blank">
-                    <i class="bk-icon icon-plus-circle" />
+                    <i class="devops-icon icon-plus-circle" />
                     {{ mergedOptionsConf.itemText }}
                 </a>
             </div>
@@ -30,75 +30,49 @@
 
 <script>
     import mixins from '../mixins'
+    import selectorMixins from '../selectorMixins'
     export default {
-        mixins: [mixins],
+        mixins: [mixins, selectorMixins],
         props: {
             placeholder: {
-                type: String,
-                default: '请选择'
-            },
-            options: {
-                type: Array,
-                default: []
-            },
-            optionsConf: {
-                type: Object,
-                default: () => ({})
+                type: String
             }
         },
         data () {
             return {
                 isLoading: false,
-                list: this.options,
-                webUrl: WEB_URL_PIRFIX
+                list: this.options
             }
         },
         computed: {
-            projectId () {
-                return this.$route.params.projectId
-            },
-            mergedOptionsConf () {
-                return Object.assign({}, {
-                    hasAddItem: false,
-                    itemText: '关联代码库',
-                    itemTargetUrl: `/codelib/{projectId}/`,
-                    url: '',
-                    paramId: 'id',
-                    paramName: 'name',
-                    tools: { 'edit': false, 'del': false },
-                    searchable: false,
-                    clearable: false,
-                    multiple: false
-                }, this.optionsConf)
-            },
-            hasUrl () {
-                return this.mergedOptionsConf && this.mergedOptionsConf.url && typeof this.mergedOptionsConf.url === 'string'
+            popoverOptions () {
+                return {
+                    popperOptions: {
+                        modifiers: {
+                            preventOverflow: {
+                                boundariesElement: 'window'
+                            }
+                        }
+                    }
+                }
             },
             dropdownConf () {
-                const { searchable, tools, multiple, clearable } = this.mergedOptionsConf
+                const { searchable, multiple, clearable } = this.mergedOptionsConf
                 return {
-                    tools,
                     searchable,
                     multiple,
                     clearable
                 }
-            },
-            addItemUrl () {
-                const { webUrl, urlParse, mergedOptionsConf: { itemTargetUrl }, $route: { params } } = this
-                const originUrl = /^http:\/\//.test(itemTargetUrl) ? itemTargetUrl : webUrl + itemTargetUrl
-
-                return urlParse(originUrl, params)
             }
         },
         watch: {
-            atomValue: {
-                deep: true,
-                handler: function (params) {
-                    // this.freshList()
-                }
-            },
             options (newOptions) {
                 this.list = newOptions
+            },
+            queryParams (newQueryParams, oldQueryParams) {
+                if (this.urlParamKeys.some(key => newQueryParams[key] !== oldQueryParams[key])) {
+                    this.handleClear()
+                }
             }
         },
         created () {
@@ -115,36 +89,12 @@
 
                 this.handleChange(this.name, val)
             },
-            edit (index) {
-                const hashId = this.list[index].repositoryHashId || ''
-                const type = this.list[index].type || ''
-                const groupId = this.list[index].groupHashId || ''
-                if (hashId) {
-                    const href = `${WEB_URL_PIRFIX}/codelib/${this.projectId}/${hashId}/${type}`
-                    window.open(href, '_blank')
-                } else if (groupId) {
-                    const groupHref = `${WEB_URL_PIRFIX}/experience/${this.projectId}/setting/?groupId=${groupId}`
-                    window.open(groupHref, '_blank')
-                }
-            },
             toggleVisible (open) {
                 open && this.hasUrl && this.freshList()
             },
-            urlParse (originUrl, query) {
-                /* eslint-disable */
-                return new Function('ctx', `return '${originUrl.replace(/\{(.*?)\}/g, '\'\+ ctx.$1 \+\'')}'`)(query)
-                /* eslint-enable */
-            },
-            getUrlParamKey (url) {
-                if (this.hasUrl) {
-                    const paramKey = url.match(/\{(.*?)\}/g)
-                    return paramKey || []
-                }
-                return []
-            },
             transformList (res) {
-                // 正常情况
-                return (res.data.records || res.data || []).map(item => {
+                const list = this.getResponseData(res, this.mergedOptionsConf.dataPath)
+                return list.map(item => {
                     if (typeof item === 'string') {
                         return {
                             id: item,
@@ -159,6 +109,10 @@
                 })
             },
             async freshList () {
+                if (this.isLackParam) { // 缺少参数时，选择列表置空
+                    this.list = []
+                    return
+                }
                 try {
                     const { atomValue = {}, transformList, $route: { params = {} }, mergedOptionsConf } = this
                     const changeUrl = this.urlParse(mergedOptionsConf.url, {
@@ -181,7 +135,7 @@
                         if (typeof value !== 'undefined' && value !== '' && !listMap[value]) {
                             this.list.splice(0, 0, {
                                 id: value,
-                                name: '******（无权限查看）'
+                                name: `******（${this.$t('editPage.noPermToView')}）`
                             })
                         }
                     })

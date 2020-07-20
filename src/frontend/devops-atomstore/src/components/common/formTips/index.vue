@@ -1,13 +1,13 @@
 <template>
     <div class="form-tips">
         <div class="tips-icon">
-            <i class="bk-icon icon-info-circle-shape"></i>
+            <i class="devops-icon icon-info-circle-shape"></i>
         </div>
         <div class="tips-content">
             <p class="tips-row">
                 <span class="tips main-tips">{{ tipsContent }}</span>
             </p>
-            <p class="tips-body" v-for="(row, index) in promptList" :key="index">
+            <p class="tips-body" v-if="promptList.length" v-for="(row, index) in promptList" :key="index">
                 <span class="tips">{{ row }}</span>
             </p>
         </div>

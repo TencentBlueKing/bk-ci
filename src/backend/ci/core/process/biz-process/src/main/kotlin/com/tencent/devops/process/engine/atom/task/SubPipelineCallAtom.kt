@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -44,8 +46,6 @@ import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
@@ -65,69 +65,86 @@ class SubPipelineCallAtom constructor(
         return JsonUtil.mapTo(task.taskParams, SubPipelineCallElement::class.java)
     }
 
-    override fun tryFinish(task: PipelineBuildTask, param: SubPipelineCallElement, runVariables: Map<String, String>, force: Boolean): AtomResponse {
-        logger.info("[${task.buildId}]|ATOM_SUB_PIPELINE_FINISH|status=${task.status}")
-        if (BuildStatus.isFinish(task.status)) {
-            return AtomResponse(task.status)
-        }
+    override fun tryFinish(
+        task: PipelineBuildTask,
+        param: SubPipelineCallElement,
+        runVariables: Map<String, String>,
+        force: Boolean
+    ): AtomResponse {
+        logger.info("[${task.buildId}]|[${task.taskId}]|ATOM_SUB_PIPELINE_TRY_FINISH|status=${task.status}")
 
-        return if (task.subBuildId == null || task.subBuildId.isNullOrBlank()) {
+        return if (task.subBuildId.isNullOrBlank()) {
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND,
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                 errorMsg = "找不到对应子流水线"
             )
         } else {
-            val buildInfo = pipelineRuntimeService.getBuildInfo(task.subBuildId!!)
-            return if (buildInfo == null) {
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "找不到对应子流水线", task.taskId, task.containerHashId, task.executeCount ?: 1)
+            val subBuildId = task.subBuildId!!
+            val subBuildInfo = pipelineRuntimeService.getBuildInfo(subBuildId)
+            return if (subBuildInfo == null) {
+                LogUtils.addRedLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = task.buildId,
+                    message = "Can not found sub pipeline build record(${task.subBuildId})",
+                    tag = task.taskId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
+                )
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND,
-                    errorMsg = "找不到对应子流水线"
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorMsg = "找不到对应子流水线的构建记录"
                 )
-            } else {
-                when {
-                    BuildStatus.isCancel(buildInfo.status) ->
-                        LogUtils.addYellowLine(rabbitTemplate, task.buildId, "子流水线被取消", task.taskId, task.containerHashId, task.executeCount ?: 1)
-                    BuildStatus.isFailure(buildInfo.status) ->
-                        LogUtils.addYellowLine(rabbitTemplate, task.buildId, "子流水线执行失败", task.taskId, task.containerHashId, task.executeCount ?: 1)
-                    BuildStatus.isSuccess(buildInfo.status) ->
-                        LogUtils.addLine(rabbitTemplate, task.buildId, "子流水线执行成功", task.taskId, task.containerHashId, task.executeCount ?: 1)
-                    else ->
-                        return AtomResponse(
-                            buildStatus = task.status,
-                            errorType = task.errorType,
-                            errorCode = task.errorCode,
-                            errorMsg = task.errorMsg
-                        )
+            } else { // 此处逻辑与 研发商店上架的BuildSubPipelineResourceImpl.getSubPipelineStatus 不同，
+                // 原因是后者在插件实现上检测这种情况并判断，本处为内置的子流水线插件，需在此增加判断处理
+                val status: BuildStatus = when {
+                    subBuildInfo.isSuccess() && subBuildInfo.isStageSuccess() -> BuildStatus.SUCCEED
+                    subBuildInfo.isFinish() -> subBuildInfo.status
+                    subBuildInfo.isReadyToRun() -> BuildStatus.RUNNING // QUEUE状态
+                    subBuildInfo.isStageSuccess() -> BuildStatus.RUNNING // stage 特性， 未结束，只是卡在Stage审核中
+                    else -> subBuildInfo.status
                 }
+
+                LogUtils.addYellowLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = task.buildId,
+                    message = "sub pipeline status: ${status.name}",
+                    tag = task.taskId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
+                )
+
                 AtomResponse(
-                    buildStatus = buildInfo.status,
-                    errorType = buildInfo.errorType,
-                    errorCode = buildInfo.errorCode,
-                    errorMsg = buildInfo.errorMsg
+                    buildStatus = status,
+                    errorType = subBuildInfo.errorType,
+                    errorCode = subBuildInfo.errorCode,
+                    errorMsg = subBuildInfo.errorMsg
                 )
             }
         }
     }
 
-    // TODO Exception中的错误码对应提示信息修改提取
-    override fun execute(task: PipelineBuildTask, param: SubPipelineCallElement, runVariables: Map<String, String>): AtomResponse {
+    override fun execute(
+        task: PipelineBuildTask,
+        param: SubPipelineCallElement,
+        runVariables: Map<String, String>
+    ): AtomResponse {
         logger.info("Enter SubPipelineCallAtom run...")
 
         val projectId = task.projectId
         val pipelineId = task.pipelineId
         val buildId = task.buildId
         val taskId = task.taskId
-        val subPipelineId = if (param.subPipelineType == SubPipelineType.NAME && !param.subPipelineName.isNullOrBlank()) {
-            val subPipelineRealName = parseVariable(param.subPipelineName, runVariables)
-            pipelineService.getPipelineIdByNames(projectId, setOf(subPipelineRealName), true)[subPipelineRealName]
-        } else {
-            parseVariable(param.subPipelineId, runVariables)
-        }
+        val subPipelineId =
+            if (param.subPipelineType == SubPipelineType.NAME && !param.subPipelineName.isNullOrBlank()) {
+                val subPipelineRealName = parseVariable(param.subPipelineName, runVariables)
+                pipelineService.getPipelineIdByNames(projectId, setOf(subPipelineRealName), true)[subPipelineRealName]
+            } else {
+                parseVariable(param.subPipelineId, runVariables)
+            }
 
         if (subPipelineId.isNullOrBlank())
             throw BuildTaskException(
@@ -149,7 +166,7 @@ class SubPipelineCallAtom constructor(
                 buildId = buildId,
                 taskId = taskId
             )
-        )
+            )
 
         val channelCode = ChannelCode.valueOf(runVariables[PIPELINE_START_CHANNEL]!!)
 
@@ -172,15 +189,34 @@ class SubPipelineCallAtom constructor(
             }
         }
         val subBuildId = pipelineBuildService.subpipelineStartup(
-            userId, StartType.PIPELINE, projectId, pipelineId, buildId, taskId,
-            subPipelineId, channelCode, startParams, false, false)
-        LogUtils.addLine(rabbitTemplate, buildId, "已启动子流水线 - ${pipelineInfo.pipelineName}", taskId, task.containerHashId, task.executeCount ?: 1)
-        LogUtils.addLine(rabbitTemplate,
-            buildId,
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$subPipelineId/detail/$subBuildId'>查看子流水线执行详情</a>",
-            taskId,
-            task.containerHashId,
-            task.executeCount ?: 1)
+            userId = userId,
+            startType = StartType.PIPELINE,
+            projectId = projectId,
+            parentPipelineId = pipelineId,
+            parentBuildId = buildId,
+            parentTaskId = taskId,
+            pipelineId = subPipelineId,
+            channelCode = channelCode,
+            parameters = startParams,
+            checkPermission = false,
+            isMobile = false
+        )
+        LogUtils.addLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            message = "SubPipeline - ${pipelineInfo.pipelineName}",
+            tag = taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
+        LogUtils.addLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            message = "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$subPipelineId/detail/$subBuildId'>Click Link</a>",
+            tag = taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
 
         return AtomResponse(if (param.asynchronous) BuildStatus.SUCCEED else BuildStatus.CALL_WAITING)
     }

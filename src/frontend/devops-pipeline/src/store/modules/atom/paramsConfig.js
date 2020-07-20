@@ -22,8 +22,11 @@ export const BOOLEAN = 'BOOLEAN'
 export const ENUM = 'ENUM'
 export const MULTIPLE = 'MULTIPLE'
 export const SVN_TAG = 'SVN_TAG'
+export const GIT_REF = 'GIT_REF'
 export const CODE_LIB = 'CODE_LIB'
 export const CONTAINER_TYPE = 'CONTAINER_TYPE'
+export const ARTIFACTORY = 'ARTIFACTORY'
+export const SUB_PIPELINE = 'SUB_PIPELINE'
 
 function paramType (typeConst) {
     return type => type === typeConst
@@ -35,7 +38,7 @@ export const DEFAULT_PARAM = {
         defaultValue: 'value',
         desc: '',
         type: STRING,
-        typeDesc: '字符串',
+        typeDesc: 'string',
         required: true
     },
     [BOOLEAN]: {
@@ -43,7 +46,7 @@ export const DEFAULT_PARAM = {
         defaultValue: true,
         desc: '',
         type: BOOLEAN,
-        typeDesc: '布尔值',
+        typeDesc: 'bool',
         required: true
     },
     [ENUM]: {
@@ -51,17 +54,17 @@ export const DEFAULT_PARAM = {
         defaultValue: '',
         desc: '',
         type: ENUM,
-        typeDesc: '单选框',
+        typeDesc: 'enum',
         options: [],
         required: true
     },
     [MULTIPLE]: {
         id: 'multiple',
-        defaultValue: [],
+        defaultValue: '',
         desc: '',
         options: [],
         type: MULTIPLE,
-        typeDesc: '复选框',
+        typeDesc: 'multiple',
         required: true
     },
     [SVN_TAG]: {
@@ -72,7 +75,17 @@ export const DEFAULT_PARAM = {
         desc: '',
         options: [],
         type: SVN_TAG,
-        typeDesc: 'SVN分支或TAG',
+        typeDesc: 'svntag',
+        required: true
+    },
+    [GIT_REF]: {
+        id: 'gitref',
+        defaultValue: '',
+        repoHashId: '',
+        desc: '',
+        options: [],
+        type: GIT_REF,
+        typeDesc: 'gitref',
         required: true
     },
     [CODE_LIB]: {
@@ -82,7 +95,7 @@ export const DEFAULT_PARAM = {
         desc: '',
         options: [],
         type: CODE_LIB,
-        typeDesc: '代码库',
+        typeDesc: 'codelib',
         required: true
     },
     [CONTAINER_TYPE]: {
@@ -95,7 +108,27 @@ export const DEFAULT_PARAM = {
         desc: '',
         options: [],
         type: CONTAINER_TYPE,
-        typeDesc: '构建资源',
+        typeDesc: 'buildResource',
+        required: true
+    },
+    [ARTIFACTORY]: {
+        id: 'artifactory',
+        defaultValue: '',
+        desc: '',
+        options: [],
+        glob: '*',
+        properties: {},
+        type: ARTIFACTORY,
+        typeDesc: 'artifactory',
+        required: true
+    },
+    [SUB_PIPELINE]: {
+        id: 'subPipeline',
+        defaultValue: '',
+        desc: '',
+        options: [],
+        type: SUB_PIPELINE,
+        typeDesc: 'subPipeline',
         required: true
     }
 }
@@ -111,8 +144,11 @@ export const ParamComponentMap = {
     [ENUM]: 'Selector',
     [MULTIPLE]: 'Selector',
     [SVN_TAG]: 'Selector',
+    [GIT_REF]: 'Selector',
     [CODE_LIB]: 'Selector',
-    [CONTAINER_TYPE]: 'Selector'
+    [CONTAINER_TYPE]: 'Selector',
+    [ARTIFACTORY]: 'Selector',
+    [SUB_PIPELINE]: 'Selector'
 }
 
 export const BOOLEAN_LIST = [
@@ -126,12 +162,14 @@ export const BOOLEAN_LIST = [
     }
 ]
 
-export const SVN_PATH_OPTION = {
-    url: '/repository/api/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=CODE_SVN&page=1&pageSize=100',
-    paramId: 'repositoryHashId',
-    paramName: 'aliasName',
-    searchable: true,
-    hasAddItem: true
+export function getRepoOption (type = 'CODE_SVN') {
+    return {
+        url: `/repository/api/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=500`,
+        paramId: 'repositoryHashId',
+        paramName: 'aliasName',
+        searchable: true,
+        hasAddItem: true
+    }
 }
 
 export const CODE_LIB_OPTION = {
@@ -139,6 +177,13 @@ export const CODE_LIB_OPTION = {
     paramName: 'aliasName',
     searchable: true,
     hasAddItem: true
+}
+
+export const SUB_PIPELINE_OPTION = {
+    url: '/process/api/user/pipelines/{projectId}/hasPermissionList?permission=EXECUTE&excludePipelineId={pipelineId}&limit=-1',
+    paramId: 'pipelineName',
+    paramName: 'pipelineName',
+    searchable: true
 }
 
 export const CODE_LIB_TYPE = [
@@ -161,5 +206,8 @@ export const isBooleanParam = paramType(BOOLEAN)
 export const isEnumParam = paramType(ENUM)
 export const isMultipleParam = paramType(MULTIPLE)
 export const isSvnParam = paramType(SVN_TAG)
+export const isGitParam = paramType(GIT_REF)
 export const isCodelibParam = paramType(CODE_LIB)
 export const isBuildResourceParam = paramType(CONTAINER_TYPE)
+export const isArtifactoryParam = paramType(ARTIFACTORY)
+export const isSubPipelineParam = paramType(SUB_PIPELINE)

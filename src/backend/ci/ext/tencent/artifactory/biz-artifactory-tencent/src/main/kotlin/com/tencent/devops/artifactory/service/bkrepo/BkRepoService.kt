@@ -26,7 +26,6 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
-import com.tencent.bkrepo.repository.pojo.node.NodeInfo
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
 import com.tencent.devops.artifactory.pojo.Count
@@ -40,35 +39,59 @@ import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoService
+import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
+import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.nio.file.FileSystems
-import java.nio.file.Paths
+import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.regex.Pattern
+import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 
 @Service
 class BkRepoService @Autowired constructor(
     val pipelineService: PipelineService,
+    val bkRepoCustomDirService: BkRepoCustomDirService,
+    val bkRepoPipelineDirService: BkRepoPipelineDirService,
     val shortUrlApi: ShortUrlApi,
-    val bkRepoClient: BkRepoClient
+    val bkRepoClient: BkRepoClient,
+    val commonConfig: CommonConfig,
+    val authProjectApi: BSAuthProjectApi,
+    val client: Client,
+    val artifactoryAuthServiceCode: BSRepoAuthServiceCode
 ) : RepoService {
 
     override fun list(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): List<FileInfo> {
-        logger.info("list, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
-        return bkRepoClient.listFile(userId, projectId, RepoUtils.getRepoByType(artifactoryType), path, includeFolders = true, deep = false).map {
-            RepoUtils.toFileInfo(it)
+        return when (artifactoryType) {
+            ArtifactoryType.PIPELINE -> {
+                bkRepoPipelineDirService.list(userId, projectId, path)
+            }
+            ArtifactoryType.CUSTOM_DIR -> {
+                bkRepoCustomDirService.list(userId, projectId, path)
+            }
         }
     }
 
@@ -136,8 +159,66 @@ class BkRepoService @Autowired constructor(
         logger.info("getPropertiesByRegex, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, " +
             "artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
             "crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo")
-        // todo 实现
-        throw OperationException("not implemented")
+
+        var targetProjectId = projectId
+        var targetPipelineId = pipelineId
+        var targetBuildId = buildId
+        if (!crossProjectId.isNullOrBlank()) {
+            val lastModifyUser = client.get(ServicePipelineResource::class)
+                .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+
+            targetProjectId = crossProjectId!!
+            if (artifactoryType == ArtifactoryType.CUSTOM_DIR &&
+                !authProjectApi.getProjectUsers(artifactoryAuthServiceCode, targetProjectId).contains(lastModifyUser)) {
+                throw BadRequestException("用户（$lastModifyUser) 没有项目（$targetProjectId）下载权限)")
+            }
+            if (artifactoryType == ArtifactoryType.PIPELINE) {
+                targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
+                pipelineService.validatePermission(
+                    lastModifyUser,
+                    targetProjectId,
+                    targetPipelineId,
+                    AuthPermission.DOWNLOAD,
+                    "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限")
+
+                val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
+                    targetProjectId,
+                    targetPipelineId,
+                    crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
+                    ChannelCode.BS
+                ).data
+                targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
+            }
+        }
+        logger.info("targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
+
+        val regex = Pattern.compile(",|;")
+        val pathArray = regex.split(argPath)
+
+        val resultList = mutableListOf<FileDetail>()
+        pathArray.forEach { path ->
+            val absPath = "/${JFrogUtil.normalize(path).removePrefix("/")}"
+            val filePath = if (artifactoryType == ArtifactoryType.PIPELINE) {
+                "/$targetPipelineId/$targetBuildId/${JFrogUtil.getParentFolder(absPath).removePrefix("/")}" // /$projectId/$pipelineId/$buildId/path/
+            } else {
+                "/${JFrogUtil.getParentFolder(absPath).removePrefix("/")}" // /path/
+            }
+            val fileName = JFrogUtil.getFileName(path) // *.txt
+
+            bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
+                userId = "",
+                projectId = projectId,
+                repoNames = listOf(RepoUtils.getRepoByType(artifactoryType)),
+                filePaths = listOf(filePath),
+                fileNames = listOf(fileName),
+                metadata = mapOf(),
+                page = 0,
+                pageSize = 10000
+            ).forEach {
+                resultList.add(RepoUtils.toFileDetail(it))
+            }
+        }
+        return resultList
     }
 
     override fun getOwnFileList(userId: String, projectId: String, offset: Int, limit: Int): Pair<Long, List<FileInfo>> {
@@ -148,8 +229,89 @@ class BkRepoService @Autowired constructor(
 
     override fun getBuildFileList(userId: String, projectId: String, pipelineId: String, buildId: String): List<AppFileInfo> {
         logger.info("getBuildFileList, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId")
-        // todo 实现
-        return listOf()
+
+        val startTimestamp = System.currentTimeMillis()
+        try {
+            val nodeList = bkRepoClient.queryByNameAndMetadata(
+                userId,
+                projectId,
+                listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
+                listOf(),
+                mapOf(
+                    ARCHIVE_PROPS_PIPELINE_ID to pipelineId,
+                    ARCHIVE_PROPS_BUILD_ID to buildId
+                ),
+                0,
+                10000
+            )
+
+            val fileInfoList = transferFileInfo(projectId, nodeList, listOf(), false)
+            val pipelineCanDownloadList = pipelineService.filterPipeline(userId, projectId, AuthPermission.DOWNLOAD)
+            return fileInfoList.map {
+                val show = when {
+                    it.name.endsWith(".apk") && !it.name.endsWith(".shell.apk") -> {
+                        val shellFileName = "${it.path.removeSuffix(".apk")}.shell.apk"
+                        var flag = true
+                        fileInfoList.forEach { file ->
+                            if (file.path == shellFileName) {
+                                flag = false
+                            }
+                        }
+                        flag
+                    }
+                    it.name.endsWith(".shell.apk") -> {
+                        true
+                    }
+                    it.name.endsWith(".ipa") && !it.name.endsWith("_enterprise_sign.ipa") -> {
+                        val enterpriseSignFileName = "${it.path.removeSuffix(".ipa")}_enterprise_sign.ipa"
+                        var flag = true
+                        fileInfoList.forEach { file ->
+                            if (file.path == enterpriseSignFileName) {
+                                flag = false
+                            }
+                        }
+                        flag
+                    }
+                    it.name.endsWith("_enterprise_sign.ipa") -> {
+                        true
+                    }
+                    else -> {
+                        false
+                    }
+                }
+
+                var canDownload = false
+                if (it.properties != null) {
+                    kotlin.run checkProperty@{
+                        it.properties!!.forEach {
+                            if (it.key == ARCHIVE_PROPS_PIPELINE_ID && pipelineCanDownloadList.contains(it.value)) {
+                                canDownload = true
+                                return@checkProperty
+                            }
+                        }
+                    }
+                }
+
+                var appVersion: String? = null
+                appVersion = it.appVersion
+
+                AppFileInfo(
+                    name = it.name,
+                    fullName = it.fullName,
+                    path = it.path,
+                    fullPath = it.fullPath,
+                    size = it.size,
+                    folder = it.folder,
+                    modifiedTime = it.modifiedTime,
+                    artifactoryType = it.artifactoryType,
+                    show = show,
+                    canDownload = canDownload,
+                    version = appVersion
+                )
+            }
+        } finally {
+            logger.info("getBuildFileList cost ${System.currentTimeMillis() - startTimestamp}ms")
+        }
     }
 
     override fun getFilePipelineInfo(
@@ -181,14 +343,14 @@ class BkRepoService @Autowired constructor(
 
     override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Boolean {
         logger.info("check, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
-        bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(ArtifactoryType.CUSTOM_DIR), path)
+        bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(artifactoryType), path)
             ?: return false
         return true
     }
 
     fun transferFileInfo(
         projectId: String,
-        fileList: List<NodeInfo>,
+        fileList: List<QueryNodeInfo>,
         pipelineHasPermissionList: List<String>,
         checkPermission: Boolean = true
     ): List<FileInfo> {
@@ -207,21 +369,22 @@ class BkRepoService @Autowired constructor(
 
             val fileInfoList = mutableListOf<FileInfo>()
             fileList.forEach {
-
-                //                var appVersion: String? = null
-//                val properties = it.properties!!.map { itp ->
-//                    if (itp.key == "appVersion") {
-//                        appVersion = itp.value ?: ""
-//                    }
-//                    Property(itp.key, itp.value ?: "")
-//                }
+                var appVersion: String? = null
+                val properties = it.metadata.map { itp ->
+                    if (itp.key == "appVersion") {
+                        appVersion = itp.value ?: ""
+                    }
+                    Property(itp.key, itp.value ?: "")
+                }
                 if (RepoUtils.isPipelineFile(it)) {
                     val pipelineId = pipelineService.getPipelineId(it.path)
                     val buildId = pipelineService.getBuildId(it.path)
-//                    外部URL?
-//                    val url =
-//                        "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
-//                    val shortUrl = shortUrlApi.getShortUrl(url, 300)
+                    val shortUrl = if (it.name.endsWith(".ipa") || it.name.endsWith(".apk")) {
+                        val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
+                        shortUrlApi.getShortUrl(url, 300)
+                    } else {
+                        ""
+                    }
 
                     if ((!checkPermission || pipelineHasPermissionList.contains(pipelineId)) &&
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
@@ -238,9 +401,9 @@ class BkRepoService @Autowired constructor(
                                 folder = it.folder,
                                 modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                                 artifactoryType = RepoUtils.getTypeByRepo(it.repoName),
-                                properties = listOf() //
-                                // appVersion?
-                                // shortUrl?
+                                properties = properties,
+                                appVersion = appVersion,
+                                shortUrl = shortUrl
                             )
                         )
                     }
@@ -255,55 +418,49 @@ class BkRepoService @Autowired constructor(
                             folder = it.folder,
                             modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                             artifactoryType = RepoUtils.getTypeByRepo(it.repoName),
-                            properties = listOf() //
-                            // appVersion?
+                            properties = properties,
+                            appVersion = appVersion
                         )
                     )
                 }
             }
             return fileInfoList
         } finally {
-            logger.info("transferJFrogAQLFileInfo cost: ${System.currentTimeMillis() - startTimestamp}ms")
+            logger.info("transferFileInfo cost: ${System.currentTimeMillis() - startTimestamp}ms")
         }
     }
 
-    override fun createDockerUser(projectId: String): DockerUser {
-        logger.info("createDockerUser, projectId: $projectId")
+    override fun createDockerUser(projectCode: String): DockerUser {
+        logger.info("createDockerUser, projectCode: $projectCode")
         throw OperationException("Not Supported")
     }
 
     override fun listCustomFiles(projectId: String, condition: CustomFileSearchCondition): List<String> {
         logger.info("listCustomFiles, projectId: $projectId, condition: $condition")
-        val allFiles = bkRepoClient.searchFile(
-            "",
-            projectId,
-            listOf(RepoUtils.CUSTOM_REPO),
-            listOf(),
-            condition.properties,
-            0,
-            10000
-        ).records
-
-        if (condition.glob.isNullOrEmpty()) {
-            return allFiles.map { it.path }
-        }
-
-        val globs = condition.glob!!.split(",").map {
-            it.trim().removePrefix("/").removePrefix("./")
-        }.filter { it.isNotEmpty() }
-        val matchers = globs.map {
-            FileSystems.getDefault().getPathMatcher("glob:$it")
-        }
-        val matchedFiles = mutableListOf<NodeInfo>()
-        matchers.forEach { matcher ->
-            allFiles.forEach {
-                if (matcher.matches(Paths.get(it.path.removePrefix("/")))) {
-                    matchedFiles.add(it)
+        var pathNamePairs = mutableListOf<Pair<String, String>>()
+        if (!condition.glob.isNullOrEmpty()) {
+            condition.glob!!.split(",").map { globItem ->
+                val absPath = "/${JFrogUtil.normalize(globItem).removePrefix("/")}"
+                if (absPath.endsWith("/")) {
+                    pathNamePairs.add(Pair(absPath, "*"))
+                } else {
+                    val fileName = absPath.split("/").last()
+                    val filePath = absPath.removeSuffix(fileName)
+                    pathNamePairs.add(Pair(filePath, fileName))
                 }
             }
         }
+        val fileList = bkRepoClient.queryByPathNamePairOrMetadataEqAnd(
+            userId = "",
+            projectId = projectId,
+            repoNames = listOf(RepoUtils.CUSTOM_REPO),
+            pathNamePairs = pathNamePairs,
+            metadata = condition.properties,
+            page = 0,
+            pageSize = 10000
+        )
 
-        return matchedFiles.toSet().toList().sortedByDescending { it.lastModifiedDate }.map { it.path }
+        return fileList.sortedByDescending { it.lastModifiedDate }.map { it.fullPath }
     }
 
     override fun copyToCustom(userId: String, projectId: String, pipelineId: String, buildId: String, copyToCustomReq: CopyToCustomReq) {
@@ -370,38 +527,34 @@ class BkRepoService @Autowired constructor(
                 srcFile,
                 targetProjectId,
                 RepoUtils.CUSTOM_REPO,
-                destPathFolder
+                "$destPathFolder/${File(srcFile).name}"
             )
         }
         return Count(srcFiles.size)
     }
 
     fun getFileDownloadUrl(param: ArtifactorySearchParam): List<String> {
-        logger.info("getFileDownloadUrl, param: $param")
-        // todo
-        throw OperationException("not implemented")
+        return bkRepoClient.getFileDownloadUrl(param)
     }
 
     fun externalDownloadUrl(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String,
-        ttl: Int,
-        directed: Boolean
+        fullPath: String,
+        ttl: Int
     ): String {
-        logger.info("externalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "path: $path, ttl: $ttl, directed: $directed")
-
-        return bkRepoClient.externalDownloadUrl(
+        logger.info("externalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl")
+        val shareUri = bkRepoClient.createShareUri(
             userId = userId,
             projectId = projectId,
             repoName = RepoUtils.getRepoByType(artifactoryType),
-            path = path,
-            downloadUser = userId,
-            ttl = ttl,
-            directed = directed
+            fullPath = fullPath,
+            downloadUsers = listOf(),
+            downloadIps = listOf(),
+            timeoutInSeconds = ttl.toLong()
         )
+        return StringUtil.chineseUrlEncode("${HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)}/bkrepo/api/external/repository$shareUri")
     }
 
     fun internalDownloadUrl(
@@ -409,13 +562,19 @@ class BkRepoService @Autowired constructor(
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ttl: Int,
-        directed: Boolean
+        ttl: Int
     ): String {
-        logger.info("internalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "path: $path, ttl: $ttl, directed: $directed")
-        // todo
-        throw OperationException("not implemented")
+        logger.info("internalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, ttl: $ttl")
+        val shareUri = bkRepoClient.createShareUri(
+            userId = userId,
+            projectId = projectId,
+            repoName = RepoUtils.getRepoByType(artifactoryType),
+            fullPath = path,
+            downloadUsers = listOf(),
+            downloadIps = listOf(),
+            timeoutInSeconds = ttl.toLong()
+        )
+        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/bkrepo/api/external/repository$shareUri"
     }
 
     companion object {

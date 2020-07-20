@@ -13,7 +13,7 @@ const commonModules = {
     mutations: {},
     actions: {
         requestProjectDetail: async ({ commit, state }, { projectCode }) => {
-            return vue.$ajax.get(`/backend/api/projects/${projectCode}/`).then(response => {
+            return vue.$ajax.get(`/project/api/user/projects/${projectCode}/`).then(response => {
                 if (response.data) {
                     state.project = response
                 }
@@ -23,8 +23,8 @@ const commonModules = {
     getters: {
         getProjectId: state => () => {
             let projectId = ''
-            if (state.project && state.project.project_id) {
-                projectId = state.project.project_id
+            if (state.project && state.project.projectId) {
+                projectId = state.project.projectId
             }
             return projectId
         }

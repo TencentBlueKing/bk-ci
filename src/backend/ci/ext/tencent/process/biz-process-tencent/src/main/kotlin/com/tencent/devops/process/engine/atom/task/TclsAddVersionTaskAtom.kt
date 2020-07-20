@@ -29,7 +29,9 @@ package com.tencent.devops.process.engine.atom.task
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -42,9 +44,7 @@ import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.atom.defaultSuccessAtomResponse
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import okhttp3.MediaType
@@ -79,35 +79,35 @@ class TclsAddVersionTaskAtom @Autowired constructor(
 
         if (isMtclsApp) {
             if (param.serviceId.isNullOrBlank()) {
-                logger.error("TCLS serviceId is not init of build($buildId)")
+                logger.warn("TCLS serviceId is not init of build($buildId)")
                 LogUtils.addRedLine(rabbitTemplate, buildId, "TCLS serviceId is not init", elementId, task.containerHashId, task.executeCount ?: 1)
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                    errorCode = ErrorCode.USER_INPUT_INVAILD,
                     errorMsg = "TCLS serviceId is not init"
                 )
             }
         } else {
             if (param.tclsAppId.isNullOrBlank()) {
-                logger.error("TCLS appId is not init of build($buildId)")
+                logger.warn("TCLS appId is not init of build($buildId)")
                 LogUtils.addRedLine(rabbitTemplate, buildId, "TCLS appId is not init", elementId, task.containerHashId, task.executeCount ?: 1)
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                    errorCode = ErrorCode.USER_INPUT_INVAILD,
                     errorMsg = "TCLS appId is not init"
                 )
             }
         }
 
         if (param.ticketId.isBlank()) {
-            logger.error("ticketId is not init of build($buildId)")
+            logger.warn("ticketId is not init of build($buildId)")
             LogUtils.addRedLine(rabbitTemplate, buildId, "ticketId is not init", elementId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "ticketId is not init"
             )
         }
@@ -210,13 +210,21 @@ class TclsAddVersionTaskAtom @Autowired constructor(
                 encoder.encodeToString(pair.publicKey))
         if (credentialResult.isNotOk() || credentialResult.data == null) {
             logger.error("Fail to get the credential($credentialId) of project($projectId) because of ${credentialResult.message}")
-            throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
+            throw throw TaskExecuteException(
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER,
+                errorMsg = "Fail to get the credential($credentialId) of project($projectId)"
+            )
         }
 
         val credential = credentialResult.data!!
         if (type != credential.credentialType) {
             logger.error("CredentialId is invalid, expect:${type.name}, but real:${credential.credentialType.name}")
-            throw ParamBlankException("Fail to get the credential($credentialId) of project($projectId)")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
+                errorType = ErrorType.USER,
+                errorMsg = "Fail to get the credential($credentialId) of project($projectId)"
+            )
         }
 
         val ticketMap = mutableMapOf<String, String>()

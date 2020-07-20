@@ -115,23 +115,23 @@
             handleFileSelect (file) {
                 this.selectedFile.file = file
             },
-            changeBuildNo () {
-                if (this.selectInfo.constructId) {
-                    this.requestList()
+            changeBuildNo (id) {
+                if (id) {
+                    this.requestList(id)
                 }
             },
             /**
              获取文件列表
              *
              */
-            async requestList () {
+            async requestList (buildId) {
                 this.listLoading.isLoading = true
 
                 const params = {
                     fileNames: ['*.ipa', '*.apk'],
                     props: {
                         pipelineId: this.selectInfo.pipelineId,
-                        buildId: this.selectInfo.constructId === 'all' ? undefined : this.selectInfo.constructId
+                        buildId: buildId === 'all' ? undefined : buildId
                     }
                 }
 
@@ -228,7 +228,7 @@
                         this.constructList.unshift({ id: 'all', buildNum: '全部' })
                         if (this.constructList.length) {
                             this.selectInfo.constructId = this.constructList[0].id
-                            this.changeBuildNo()
+                            this.changeBuildNo(this.constructList[0].id)
                         }
                     } catch (err) {
                         this.$bkMessage({

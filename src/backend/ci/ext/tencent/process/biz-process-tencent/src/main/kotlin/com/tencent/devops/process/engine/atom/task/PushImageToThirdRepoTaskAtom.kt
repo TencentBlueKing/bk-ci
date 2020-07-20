@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.element.PushImageToThirdRepoElement
@@ -38,8 +40,6 @@ import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultSuccessAtomResponse
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.process.utils.PIPELINE_MATERIAL_URL
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -150,7 +150,7 @@ class PushImageToThirdRepoTaskAtom @Autowired constructor(
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "推送镜像失败"
                 )
             }
@@ -185,7 +185,7 @@ class PushImageToThirdRepoTaskAtom @Autowired constructor(
                     return AtomResponse(
                         buildStatus = BuildStatus.FAILED,
                         errorType = ErrorType.USER,
-                        errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                        errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                         errorMsg = "推送镜像失败: ${pushImageTask.taskMessage}"
                     )
                 }

@@ -25,7 +25,6 @@
  */
 
 dependencies {
-    compile project(":core:common:common-auth:common-auth-sample")
     compile project(":ext:tencent:external:biz-external")
 }
 

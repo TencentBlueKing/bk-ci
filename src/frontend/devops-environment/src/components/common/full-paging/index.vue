@@ -71,7 +71,7 @@
                     perPageCountSelected: perPageCount,
                     totalCount: pageCountConfig.totalCount
                 })
-                
+
                 this.$nextTick(() => {
                     this.$emit('page-count-changed', perPageCount, this.changed())
                 })

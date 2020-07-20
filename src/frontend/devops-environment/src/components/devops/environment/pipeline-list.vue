@@ -5,8 +5,11 @@
             class="pipeline-table"
             :outer-border="false"
             :data="pipelineList"
-            :empty-text="'暂无数据'">
-            <bk-table-column label="流水线" prop="pipelineName" min-width="200">
+            :pagination="pagination"
+            @page-change="handlePageChange"
+            @page-limit-change="handlePageLimitChange"
+            :empty-text="$t('environment.noData')">
+            <bk-table-column :label="$t('environment.pipeline')" prop="pipelineName" min-width="200">
                 <template slot-scope="props">
                     <a class="item-pipelinename" :title="props.row.pipelineName"
                         target="_blank"
@@ -14,78 +17,59 @@
                     </a>
                 </template>
             </bk-table-column>
-            <bk-table-column label="构建号" prop="buildNumber">
+            <bk-table-column :label="$t('environment.nodeInfo.buildNo')" prop="buildNumber">
                 <template slot-scope="props">
                     <span>{{ props.row.buildNumber }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column label="所属Job" prop="taskName" min-width="160">
+            <bk-table-column :label="$t('environment.nodeInfo.ownJob')" prop="taskName" min-width="160">
                 <template slot-scope="props">
                     <span :title="props.row.taskName">{{ props.row.taskName }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column label="构建任务状态" prop="status">
+            <bk-table-column :label="$t('environment.nodeInfo.buildTaskStatus')" prop="status">
                 <template slot-scope="props">
                     <span :class="{
                         'is-success': props.row.status === 'DONE',
                         'is-fail': props.row.status === 'FAIL'
                     }">{{ statusMap[props.row.status] }}</span>
-                    <span v-if="props.row.agentTask && props.row.agentTask.status === 'RUNNING'">（agent任务运行中）</span>
+                    <span v-if="props.row.agentTask && props.row.agentTask.status === 'RUNNING'">{{`（${$t('environment.nodeInfo.agentTaskRunning')}）`}}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column label="创建时间" prop="createdTime" min-width="160">
+            <bk-table-column :label="$t('environment.envInfo.creationTime')" prop="createdTime" min-width="160">
                 <template slot-scope="props">
                     {{ localConvertTime(props.row.createdTime) }}
                 </template>
             </bk-table-column>
-            <bk-table-column label="更新时间" prop="updatedTime" min-width="160">
+            <bk-table-column :label="$t('environment.updateTime')" prop="updatedTime" min-width="160">
                 <template slot-scope="props">
                     {{ localConvertTime(props.row.updatedTime) }}
                 </template>
             </bk-table-column>
         </bk-table>
-        <full-paging v-if="pipelineList.length"
-            :size="'small'"
-            :page-count-config.sync="pageCountConfig"
-            :paging-config.sync="pagingConfig"
-            @page-count-changed="pageCountChanged"
-            @page-changed="pageChanged">
-        </full-paging>
     </div>
 </template>
 
 <script>
-    import fullPaging from '@/components/common/full-paging'
     import { convertTime } from '@/utils/util'
     import { bus } from '@/utils/bus'
 
     export default {
-        components: {
-            fullPaging
-        },
         data () {
             return {
                 loopTimer: '',
                 pipelineList: [],
-                pageCountConfig: {
-                    totalCount: 30,
-                    list: [
-                        { id: 10, name: 10 },
-                        { id: 20, name: 20 },
-                        { id: 50, name: 50 },
-                        { id: 100, name: 100 }
-                    ],
-                    perPageCountSelected: 10
-                },
-                pagingConfig: {
-                    totalPage: 10,
-                    curPage: 1
+                pagination: {
+                    current: 1,
+                    count: 30,
+                    limitList: [10, 20, 50, 100],
+                    limit: 10
                 },
                 statusMap: {
-                    'QUEUE': '排队中',
-                    'RUNNING': '执行中',
-                    'DONE': '已完成',
-                    'FAIL': '执行失败'
+                    'QUEUE': this.$t('environment.nodeInfo.queuing'),
+                    'RUNNING': this.$t('environment.nodeInfo.running'),
+                    'DONE': this.$t('environment.nodeInfo.succeed'),
+                    'FAIL': this.$t('environment.nodeInfo.fail')
                 }
             }
         },
@@ -100,12 +84,12 @@
         created () {
             bus.$off('refreshBuild')
             bus.$on('refreshBuild', () => {
-                this.requestBuildList(this.pagingConfig.curPage, this.pageCountConfig.perPageCountSelected)
+                this.requestBuildList(this.pagination.current, this.pagination.limit)
                 this.loopCheck()
             })
         },
         async mounted () {
-            await this.requestBuildList(1, 10)
+            await this.requestBuildList(this.pagination.current, this.pagination.limit)
             this.loopCheck()
         },
         beforeDestroy () {
@@ -122,8 +106,7 @@
                         pageSize: pageSize
                     })
                     this.pipelineList.splice(0, this.pipelineList.length, ...res.records || [])
-                    this.pageCountConfig.totalCount = res.count
-                    this.pagingConfig.totalPage = Math.ceil(this.pageCountConfig.totalCount / pageSize)
+                    this.pagination.count = res.count
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -134,13 +117,15 @@
                     })
                 }
             },
-            async pageCountChanged () {
-                this.pagingConfig.curPage = 1
-                await this.requestBuildList(this.pagingConfig.curPage, this.pageCountConfig.perPageCountSelected)
+            async handlePageLimitChange (limit) {
+                this.pagination.current = 1
+                this.pagination.limit = limit
+                await this.requestBuildList(1, limit)
                 this.loopCheck()
             },
-            async pageChanged () {
-                await this.requestBuildList(this.pagingConfig.curPage, this.pageCountConfig.perPageCountSelected)
+            async handlePageChange (curPage) {
+                this.pagination.current = curPage
+                await this.requestBuildList(curPage, this.pagination.limit)
                 this.loopCheck()
             },
             /**
@@ -153,7 +138,7 @@
                 if (needLoop) {
                     this.loopTimer = setTimeout(async () => {
                         try {
-                            await this.requestBuildList(this.pagingConfig.curPage, this.pageCountConfig.perPageCountSelected)
+                            await this.requestBuildList(this.pagination.current, this.pagination.limit)
                             this.loopCheck()
                         } catch (err) {
                             this.$bkMessage({

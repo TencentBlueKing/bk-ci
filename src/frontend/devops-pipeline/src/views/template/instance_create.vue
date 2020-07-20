@@ -6,49 +6,50 @@
         }">
         <inner-header>
             <div class="instance-header" slot="left">
-                <span class="inner-header-title" slot="left"><i class="bk-icon icon-angle-left" @click="toInstanceManage()"></i>模板实例化</span>
+                <span class="inner-header-title" slot="left"><i class="devops-icon icon-angle-left" @click="toInstanceManage()"></i>{{ $t('template.templateInstantiation') }}</span>
             </div>
         </inner-header>
         <div class="sub-view-port" v-if="showContent">
             <div class="template-information">
                 <div class="template-introduction">
-                    <!--<img src="@/scss/logo/pipeline.svg" class="template-logo">-->
                     <logo name="pipeline" class="template-logo"></logo>
                     <div class="template-name">{{ template.templateName }}</div>
-                    <div class="template-creator"><span>创建人：</span>{{ template.creator }}</div>
+                    <div class="template-creator"><span>{{ $t('creator') }}：</span>{{ template.creator }}</div>
                     <div class="template-brief">
-                        <label>简介：</label>
+                        <label>{{ $t('desc') }}：</label>
                         <p>{{ template.description }}</p>
                     </div>
                 </div>
                 <div class="template-pipeline-conf">
                     <div class="template-version-handler">
-                        <label class="conf-title">模板集版本</label>
+                        <label class="conf-title">{{ $t('template.templateVersion') }}</label>
                         <div class="select-row">
                             <bk-select
                                 v-model="instanceVersion"
+                                @change="changeVersion"
                                 style="width: 320px"
                             >
-                                <bk-option v-for="(option, oindex) in versionList" :key="oindex" :id="option.version" :name="option.versionName">
+                                <bk-option v-for="option in versionList" :key="option.version" :id="option.version" :name="option.versionName">
                                 </bk-option>
                             </bk-select>
-                            <label class="bk-form-checkbox template-setting-checkbox" v-if="!hashVal">
+                            <label class="bk-form-checkbox template-setting-checkbox">
                                 <bk-checkbox
                                     v-model="isTemplateSetting">
-                                    同时应用模板设置
+                                    {{ $t('template.applyTemplateSetting') }}
                                 </bk-checkbox>
                                 <bk-popover placement="top">
                                     <i class="bk-icon icon-info-circle"></i>
                                     <div slot="content" style="white-space: pre-wrap; min-width: 200px">
-                                        <div>勾选则表示把模板的设置应用到实例化的流水线</div>
+                                        <div>{{ $t('template.applySettingTips') }}</div>
                                     </div>
                                 </bk-popover>
                             </label>
                         </div>
+                        <div v-if="!instanceVersion" class="error-tips">{{ $t('template.templateVersionErrTips') }}</div>
                     </div>
                     <div class="cut-line"></div>
                     <div class="instance-pipeline">
-                        <label class="conf-title">实例化流水线名称</label>
+                        <label class="conf-title">{{ $t('template.newPipelineName') }}</label>
                         <div class="pipeline-name-box">
                             <div :class="{ &quot;pipeline-item&quot;: true, &quot;active-item&quot;: entry.selected, &quot;unselect-hover&quot;: !entry.selected }"
                                 v-for="(entry, index) in pipelineNameList" :key="index" @click="lastCilckPipeline(index)">{{ entry.pipelineName }}
@@ -56,40 +57,18 @@
                             </div>
                             <div class="pipeline-item add-item" @click="addPipelineName()" v-if="!hashVal">
                                 <i class="plus-icon"></i>
-                                <span>新建流水线实例</span>
+                                <span>{{ $t('template.addPipelineInstance') }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- <div class="pipeline-instance-conf" v-if="pipelineNameList.length && (buildParams.buildNo || paramList)">
-                <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>的详细配置</div>
-                <div v-if='currentPipelineParams.buildParams.buildNoType'>
-                    <div class='params-flex-col' ref='buildForm'>
-                        <form-field :required='true' label='构建号'>
-                            <vuex-input :disabled='disabled' inputType='number' name='buildNo' placeholder='BuildNo' v-validate.initial='"required|numeric"' :value='currentPipelineParams.buildParams.buildNo' :handleChange='handleBuildNoChange' />
-                            <p v-if="errors.has('buildNo')" :class="errors.has('buildNo') ? 'error-tips' : 'normal-tips'">构建号不能为空</p>
-                        </form-field>
-                        <form-field class='flex-colspan-2' :required='true' :is-error='errors.has("buildNoType")' :errorMsg='errors.first("buildNoType")'>
-                            <enum-input :list='buildNoRules' :disabled='disabled' name='buildNoType' v-validate.initial='"required|string"' :value='currentPipelineParams.buildParams.buildNoType' :handleChange='handleBuildNoChange' />
-                        </form-field>
-                    </div>
-                </div>
-                <div class="pipeline-params-content">
-                    <pipeline-params-form ref='paramsForm'
-                        :paramValues='currentPipelineParams.paramValues'
-                        :handleParamChange='handleParamChange'
-                        :params='currentPipelineParams.params'>
-                    </pipeline-params-form>
-                </div>
-            </div> -->
-
-            <div class="pipeline-instance-conf" v-if="pipelineNameList.length">
+            <div class="pipeline-instance-conf" v-if="pipelineNameList.length && instanceVersion ">
                 <section v-for="(param, index) in pipelineNameList" :key="index">
                     <template v-if="param.pipelineName === currentPipelineParams.pipelineName">
                         <section class="params-item" v-if="param.buildParams">
-                            <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>的版本号设置</div>
+                            <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>：{{ $t('template.newPipelineName') }}</div>
                             <div v-if="param.buildParams" class="build-params-content">
                                 <div class="buildNo-params-content">
                                     <pipeline-params-form
@@ -100,9 +79,9 @@
                                     </pipeline-params-form>
                                 </div>
                                 <div class="params-flex-col" ref="buildForm">
-                                    <form-field :required="true" label="构建号">
+                                    <form-field :required="true" :label="$t('buildNum')">
                                         <vuex-input :disabled="disabled" input-type="number" name="buildNo" placeholder="BuildNo" v-validate.initial="&quot;required|numeric&quot;" :value="param.buildParams.buildNo" :handle-change="handleBuildNoChange" />
-                                        <p v-if="errors.has('buildNo')" :class="errors.has('buildNo') ? 'error-tips' : 'normal-tips'">构建号不能为空</p>
+                                        <p v-if="errors.has('buildNo')" :class="errors.has('buildNo') ? 'error-tips' : 'normal-tips'">{{ $t('template.buildNumErrTips') }}</p>
                                     </form-field>
                                     <form-field class="flex-colspan-2" :required="true" :is-error="errors.has(&quot;buildNoType&quot;)" :error-msg="errors.first(&quot;buildNoType&quot;)">
                                         <enum-input :list="buildNoRules" :disabled="disabled" name="buildNoType" v-validate.initial="&quot;required|string&quot;" :value="param.buildParams.buildNoType" :handle-change="handleBuildNoChange" />
@@ -111,7 +90,7 @@
                             </div>
                         </section>
                         <section class="params-item" v-if="param.params && param.params.filter(item => buildNoParams.indexOf(item.id) === -1 ).length">
-                            <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>的流水线变量</div>
+                            <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>：{{ $t('template.pipelineVar') }}</div>
                             <div class="pipeline-params-content">
                                 <pipeline-params-form
                                     :ref="`paramsForm${index}`"
@@ -122,7 +101,7 @@
                             </div>
                         </section>
                         <section class="params-item" v-if="templateParamList.length">
-                            <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>的模板常量</div>
+                            <div class="info-title"><span>{{ currentPipelineParams.pipelineName }}</span>：{{ $t('template.templateConst') }}</div>
                             <div class="pipeline-params-content template-params-content">
                                 <pipeline-params-form
                                     :disabled="true"
@@ -136,8 +115,8 @@
                 </section>
             </div>
             <div class="create-instance-footer">
-                <bk-button theme="primary" size="normal" @click="submit()"><span>实例化</span></bk-button>
-                <span class="cancel-btn" @click="toInstanceManage()">取消</span>
+                <bk-button theme="primary" size="normal" @click="submit()"><span>{{ $t('template.instantiate') }}</span></bk-button>
+                <span class="cancel-btn" @click="toInstanceManage()">{{ $t('cancel') }}</span>
             </div>
         </div>
         <instance-pipeline-name :show-instance-create="showInstanceCreate"
@@ -161,6 +140,7 @@
     import EnumInput from '@/components/atomFormField/EnumInput'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import Logo from '@/components/Logo'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -176,7 +156,6 @@
         data () {
             return {
                 instanceVersion: '',
-                isInit: false,
                 showContent: false,
                 isTemplateSetting: false,
                 showInstanceCreate: false,
@@ -190,9 +169,7 @@
                 failList: [],
                 failMessage: {},
                 buildNoParams: [
-                    'MajorVersion',
-                    'MinorVersion',
-                    'FixVersion'
+                    ...allVersionKeyList
                 ],
                 loading: {
                     isLoading: false,
@@ -229,18 +206,9 @@
                 return ''
             }
         },
-        watch: {
-            instanceVersion (newVal) {
-                if (newVal && !this.isInit) {
-                    this.requestTemplateDatail(newVal)
-                    if (this.hashVal) {
-                        this.requestPipelineParams(this.hashVal, newVal)
-                    }
-                }
-            }
-        },
         async mounted () {
             this.requestTemplateDatail(this.curVersionId)
+            this.handlePipeLineName()
             if (this.hashVal) {
                 this.requestPipelineParams(this.hashVal, this.curVersionId)
             }
@@ -248,8 +216,6 @@
         methods: {
             async requestTemplateDatail (versionId) {
                 const { $store, loading } = this
-
-                this.isInit = true
                 loading.isLoading = true
 
                 try {
@@ -263,12 +229,6 @@
                     this.template.description = res.description
                     this.versionList = res.versions
                     this.handleParams(res.template.stages)
-                    this.handlePipeLineName()
-
-                    const curVersion = this.versionList.filter(val => {
-                        return val.version === parseInt(versionId)
-                    })
-                    this.instanceVersion = curVersion[0].version
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -373,11 +333,19 @@
             toInstanceManage () {
                 this.$router.back()
             },
-            changeVersion (data) {
-                this.isInit = false
+            changeVersion (newVal) {
+                this.requestTemplateDatail(newVal)
+                if (this.hashVal && newVal) this.requestPipelineParams(this.hashVal, newVal)
             },
             addPipelineName () {
-                this.showInstanceCreate = true
+                if (!this.instanceVersion) {
+                    this.$showTips({
+                        message: this.$t('template.templateVersionErrTips'),
+                        theme: 'error'
+                    })
+                } else {
+                    this.showInstanceCreate = true
+                }
             },
             handleParamChange (name, value) {
                 this.pipelineNameList.forEach(item => {
@@ -442,21 +410,16 @@
             // 对象深拷贝
             deepCopy (value, target) {
                 return JSON.parse(JSON.stringify(value))
-                // var target = target || {}
-                // for (let i in value) {
-                //     if (typeof value[i] === 'object') {
-                //         target[i] = (value[i].constructor === Array) ? [] : {}
-                //         this.deepCopy(value[i], target[i])
-                //     } else {
-                //         target[i] = value[i]
-                //     }
-                // }
-                // return target
             },
             async submit () {
                 if (!this.pipelineNameList.length) {
                     this.$showTips({
-                        message: '请添加流水线实例名称',
+                        message: this.$t('template.submitErrTips'),
+                        theme: 'error'
+                    })
+                } else if (!this.instanceVersion) {
+                    this.$showTips({
+                        message: this.$t('template.templateVersionErrTips'),
                         theme: 'error'
                     })
                 } else {
@@ -481,7 +444,7 @@
                             projectId: this.projectId,
                             templateId: this.templateId,
                             versionId: this.instanceVersion,
-                            useTemplateSettings: !this.hashVal ? this.isTemplateSetting : undefined,
+                            useTemplateSettings: this.isTemplateSetting,
                             params
                         }
                         if (this.hashVal) {
@@ -495,7 +458,7 @@
                             const failCount = res.failurePipelines.length
 
                             if (successCount && !failCount) {
-                                message = `你已成功实例化${successCount}条流水线`
+                                message = this.$t('template.submitSucTips', [successCount])
                                 theme = 'success'
 
                                 this.$showTips({
@@ -752,10 +715,14 @@
             padding-left: 20px;
             .bk-form-item {
                 float: left;
-                width: 300px;
+                width: 320px;
                 margin-top: 20px;
+                margin-left: 10px;
+                .bk-label {
+                    width: 160px;
+                }
                 .bk-form-input {
-                    width: 145px;
+                    width: 145px !important;
                 }
             }
         }
@@ -765,8 +732,7 @@
             background: #fff;
             .bk-form-item {
                 display: flex;
-                margin-top: 20px;
-                margin-right: 30px;
+                margin: 20px 30px 0 20px;
                 font-size: 14px;
                 .bk-label {
                     width: 108px;

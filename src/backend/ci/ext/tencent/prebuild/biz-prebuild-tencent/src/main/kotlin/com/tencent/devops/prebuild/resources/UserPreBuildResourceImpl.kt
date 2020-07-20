@@ -26,6 +26,7 @@
 
 package com.tencent.devops.prebuild.resources
 
+import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
@@ -33,6 +34,7 @@ import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.log.model.pojo.QueryLogs
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.prebuild.api.UserPreBuildResource
@@ -58,6 +60,10 @@ class UserPreBuildResourceImpl @Autowired constructor(
         return Result(preBuildService.getOrCreatePreAgent(userId, os, ip, hostName))
     }
 
+    override fun getAgentStatus(userId: String, os: OS, ip: String, hostName: String): Result<AgentStatus> {
+        return Result(preBuildService.getAgentStatus(userId, os, ip, hostName))
+    }
+
     override fun listPreProject(userId: String): Result<List<PreProject>> {
         return Result(preBuildService.listPreProject(userId))
     }
@@ -81,7 +87,7 @@ class UserPreBuildResourceImpl @Autowired constructor(
             return Result(2, "Agent not install")
         }
 
-        return Result(preBuildService.startBuild(userId, preProjectId, startUpReq.workspace, startUpReq.yaml, yaml, agentInfo))
+        return Result(preBuildService.startBuild(userId, preProjectId, startUpReq, yaml, agentInfo))
     }
 
     override fun manualShutdown(userId: String, accessToken: String, preProjectId: String, buildId: String): Result<Boolean> {
@@ -110,6 +116,10 @@ class UserPreBuildResourceImpl @Autowired constructor(
 
     override fun getBuildLink(userId: String, preProjectId: String, buildId: String): Result<String> {
         return Result(preBuildService.getBuildLink(userId, preProjectId, buildId))
+    }
+
+    override fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
+        return preBuildService.checkYaml(userId, yaml)
     }
 
     companion object {

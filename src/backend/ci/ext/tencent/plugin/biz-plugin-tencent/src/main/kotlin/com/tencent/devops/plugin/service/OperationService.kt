@@ -147,7 +147,7 @@ class OperationService @Autowired constructor(
         val client = Dsl.asyncHttpClient()
         var response = ""
         try {
-            val res = client.prepareGet("http://gcloud.apigw.o.oa.com/prod/api/get_template_list/$ccId/custom/")
+            val res = client.prepareGet("http://gcloud.apigw.o.oa.com/prod/api/get_template_list/$ccId/custom/?custom_type=cicd")
                     .setBody(requestStr)
                     .execute()
                     .get()
@@ -160,12 +160,10 @@ class OperationService @Autowired constructor(
         val list = jacksonObjectMapper().readValue<List<Map<String, Any>>>(response)
         val records = mutableListOf<Map<String, String>>()
         list.forEach {
-            if (it["creator"] == username) {
                 val map = mutableMapOf<String, String>()
                 map["template_name"] = it["template_name"] as String
                 map["template_id"] = it["template_id"] as String
                 records.add(map)
-            }
         }
         return Result(Page(0, records.size, records.size.toLong(), records))
     }

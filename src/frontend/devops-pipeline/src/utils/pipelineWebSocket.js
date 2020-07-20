@@ -38,7 +38,7 @@ class PipelineWebSocket {
     }
 
     build (projectId, subscribeUrl, { success, error }) {
-        const socket = new SockJS(`${WS_URL_PREFIX}/process/websocket/user/pipelines/pipelineStatus?projectId=${projectId}`)
+        const socket = new SockJS(`${WS_URL_PREFIX}/websocket/ws/user/pipelines/pipelineStatus?projectId=${projectId}`)
         this.stompClient = Stomp.over(socket)
         this.stompClient.debug = null
         this.stompClient.connect({}, () => {
@@ -52,7 +52,7 @@ class PipelineWebSocket {
                 this.errTime++
                 setTimeout(() => this.connect(projectId, subscribeUrl, { success, error }), 10000)
             } else {
-                error(err.message || 'websocket异常')
+                error(err.message || 'websocket abnormal')
             }
         })
     }

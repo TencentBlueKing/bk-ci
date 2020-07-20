@@ -27,6 +27,9 @@
 package com.tencent.devops.process.engine.atom.task.deploy
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.gcloud.GcloudClient
@@ -75,7 +78,10 @@ class GcloudDeleteVersionTaskAtom @Autowired constructor(
 
             val commonParam = CommonParam(gameId, accessId, accessKey)
             val host = client.get(ServiceGcloudConfResource::class).getByConfigId(configId.toInt()).data
-                    ?: throw RuntimeException("unknown configId($configId)")
+                    ?: throw TaskExecuteException(
+                        errorCode = ErrorCode.USER_INPUT_INVAILD,
+                        errorType = ErrorType.USER,
+                        errorMsg = "unknown configId($configId)")
             val gcloudClient = GcloudClient(objectMapper, host.address, host.fileAddress)
 
             // step1

@@ -43,22 +43,24 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.CodeCCException
 import com.tencent.devops.common.api.exception.StreamException
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.CodeCCResult
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.constant.CommonMessageCode
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.*
 import com.tencent.devops.common.pipeline.enums.*
+import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.*
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
-import com.tencent.devops.plugin.codecc.api.ServiceCodeccResource
+import com.tencent.devops.plugin.api.ServiceCodeccResource
 import com.tencent.devops.plugin.codecc.pojo.CodeccBuildInfo
-import com.tencent.devops.process.api.ServiceBuildResource
-import com.tencent.devops.process.api.ServicePipelineResource
+import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.pojo.Repository
@@ -78,11 +80,11 @@ import java.util.*
  */
 @Service
 class PipelineServiceImpl @Autowired constructor(
-        private val client: Client,
-        private val baseDataRepository: BaseDataRepository,
-        private val toolMetaCache: ToolMetaCache,
-        private val objectMapper: ObjectMapper,
-        private val metaService: MetaService
+    private val client: Client,
+    private val baseDataRepository: BaseDataRepository,
+    private val toolMetaCache: ToolMetaCache,
+    private val objectMapper: ObjectMapper,
+    private val metaService: MetaService
 ) : PipelineService {
 
     @Value("\${devops.retry.attempt:#{1}}")
@@ -100,41 +102,41 @@ class PipelineServiceImpl @Autowired constructor(
          * 第一个stage的内容
          */
         val elementFirst = ManualTriggerElement(
-                name = "手动触发",
-                id = null,
-                status = null,
-                canElementSkip = false,
-                useLatestParameters = false
+            name = "手动触发",
+            id = null,
+            status = null,
+            canElementSkip = false,
+            useLatestParameters = false
         )
 
         val elementSecond = TimerTriggerElement(
-                name = "定时触发",
-                id = null,
-                status = null,
-                expression = getCrontabTimingStr(defaultExecuteTime, defaultExecuteDate),
-                newExpression = null,
-                advanceExpression = null,
-                noScm = null
+            name = "定时触发",
+            id = null,
+            status = null,
+            expression = getCrontabTimingStr(defaultExecuteTime, defaultExecuteDate),
+            newExpression = null,
+            advanceExpression = null,
+            noScm = null
         )
 
         val containerFirst = TriggerContainer(
-                id = null,
-                name = "demo",
-                elements = arrayListOf(elementFirst, elementSecond),
-                status = null,
-                startEpoch = null,
-                systemElapsed = null,
-                elementElapsed = null,
-                params = emptyList(),
-                templateParams = null,
-                buildNo = null,
-                canRetry = null,
-                containerId = null
+            id = null,
+            name = "demo",
+            elements = arrayListOf(elementFirst, elementSecond),
+            status = null,
+            startEpoch = null,
+            systemElapsed = null,
+            elementElapsed = null,
+            params = emptyList(),
+            templateParams = null,
+            buildNo = null,
+            canRetry = null,
+            containerId = null
         )
 
         val stageFirst = Stage(
-                containers = arrayListOf(containerFirst),
-                id = null
+            containers = arrayListOf(containerFirst),
+            id = null
         )
 
         /**
@@ -143,59 +145,61 @@ class PipelineServiceImpl @Autowired constructor(
         val elementThird = getCodeElement(registerVO, null)
 
         val elementFourth: Element =
-                LinuxCodeCCScriptElement(
-                        name = "执行扫描脚本",
-                        id = null,
-                        status = null,
-                        scriptType = BuildScriptType.valueOf(if (registerVO.buildScriptType.isNullOrBlank()) "SHELL" else registerVO.buildScriptType),
-                        script = if (registerVO.scriptContent.isNullOrBlank()) "echo" else registerVO.scriptContent,
-                        codeCCTaskName = taskInfoEntity.nameEn,
-                        codeCCTaskCnName = null,
-                        languages = convertCodeLangToBs(taskInfoEntity.codeLang),
-                        asynchronous = true,
-                        scanType = null,
-                        path = null,
-                        compilePlat = null,
-                        tools = if (registerVO.tools.isNullOrEmpty()) listOf("OTHERS") else registerVO.tools.map { it.toolName },
-                        pyVersion = null,
-                        eslintRc = null,
-                        phpcsStandard = null,
-                        goPath = null)
+            LinuxCodeCCScriptElement(
+                name = "执行扫描脚本",
+                id = null,
+                status = null,
+                scriptType = BuildScriptType.valueOf(if (registerVO.buildScriptType.isNullOrBlank()) "SHELL" else registerVO.buildScriptType),
+                script = if (registerVO.scriptContent.isNullOrBlank()) "echo" else registerVO.scriptContent,
+                codeCCTaskName = taskInfoEntity.nameEn,
+                codeCCTaskCnName = null,
+                languages = convertCodeLangToBs(taskInfoEntity.codeLang),
+                asynchronous = true,
+                scanType = null,
+                path = null,
+                compilePlat = null,
+                tools = if (registerVO.tools.isNullOrEmpty()) listOf("OTHERS") else registerVO.tools.map { it.toolName },
+                pyVersion = null,
+                eslintRc = null,
+                phpcsStandard = null,
+                goPath = null)
 
         val containerSecond = VMBuildContainer(
-                id = null,
-                name = "demo",
-                elements = listOf(elementThird, elementFourth),
-                status = null,
-                startEpoch = null,
-                systemElapsed = null,
-                elementElapsed = null,
-                baseOS = VMBaseOS.valueOf("LINUX"),
-                vmNames = emptySet(),
-                maxQueueMinutes = null,
-                maxRunningMinutes = 80,
-                buildEnv = registerVO.buildEnv,
-                customBuildEnv = null,
-                thirdPartyAgentId = null,
-                thirdPartyAgentEnvId = null,
-                thirdPartyWorkspace = null,
-                dockerBuildVersion = imageName,
-                dispatchType = null,
-                canRetry = null,
-                enableExternal = null,
-                containerId = null,
-                jobControlOption = JobControlOption(
-                        enable = true,
-                        timeout = 900,
-                        runCondition = JobRunCondition.STAGE_RUNNING,
-                        customVariables = null,
-                        customCondition = null
-                ),
-                mutexGroup = null
+            id = null,
+            name = "demo",
+            elements = listOf(elementThird, elementFourth),
+            status = null,
+            startEpoch = null,
+            systemElapsed = null,
+            elementElapsed = null,
+            baseOS = VMBaseOS.valueOf("LINUX"),
+            vmNames = emptySet(),
+            maxQueueMinutes = null,
+            maxRunningMinutes = 80,
+            buildEnv = registerVO.buildEnv,
+            customBuildEnv = null,
+            thirdPartyAgentId = null,
+            thirdPartyAgentEnvId = null,
+            thirdPartyWorkspace = null,
+            dockerBuildVersion = imageName,
+            dispatchType = null,
+            canRetry = null,
+            enableExternal = null,
+            containerId = null,
+            jobControlOption = JobControlOption(
+                enable = true,
+                timeout = 900,
+                runCondition = JobRunCondition.STAGE_RUNNING,
+                customVariables = null,
+                customCondition = null
+            ),
+            mutexGroup = null,
+            tstackAgentId = null
+
         )
         val stageSecond = Stage(
-                containers = arrayListOf(containerSecond),
-                id = null
+            containers = arrayListOf(containerSecond),
+            id = null
         )
 
         logger.info("assemble pipeline parameter successfully! task id: ${taskInfoEntity.taskId}")
@@ -203,13 +207,13 @@ class PipelineServiceImpl @Autowired constructor(
          * 总流水线拼装
          */
         return Model(
-                name = taskInfoEntity.taskId.toString(),
-                desc = taskInfoEntity.projectName,
-                stages = arrayListOf(stageFirst, stageSecond),
-                labels = emptyList(),
-                instanceFromTemplate = null,
-                pipelineCreator = null,
-                srcTemplateId = null
+            name = taskInfoEntity.taskId.toString(),
+            desc = taskInfoEntity.projectName,
+            stages = arrayListOf(stageFirst, stageSecond),
+            labels = emptyList(),
+            instanceFromTemplate = null,
+            pipelineCreator = null,
+            srcTemplateId = null
         )
 
     }
@@ -218,62 +222,62 @@ class PipelineServiceImpl @Autowired constructor(
     override fun getCodeElement(registerVO: BatchRegisterVO, relPath: String?): Element {
         return when (registerVO.scmType) {
             "CODE_GIT" -> CodeGitElement(
-                    name = "下载代码",
-                    id = null,
-                    status = null,
-                    repositoryHashId = registerVO.repositoryHashId,
-                    branchName = if (registerVO.branchName.isNullOrBlank()) "" else registerVO.branchName,
-                    revision = null,
-                    strategy = CodePullStrategy.FRESH_CHECKOUT,
-                    path = relPath,
-                    enableSubmodule = null,
-                    gitPullMode = null,
-                    repositoryType = null,
-                    repositoryName = null
+                name = "下载代码",
+                id = null,
+                status = null,
+                repositoryHashId = registerVO.repositoryHashId,
+                branchName = if (registerVO.branchName.isNullOrBlank()) "" else registerVO.branchName,
+                revision = null,
+                strategy = CodePullStrategy.FRESH_CHECKOUT,
+                path = relPath,
+                enableSubmodule = null,
+                gitPullMode = null,
+                repositoryType = null,
+                repositoryName = null
             )
             "CODE_GITLAB" -> CodeGitlabElement(
-                    name = "下载代码",
-                    id = null,
-                    status = null,
-                    repositoryHashId = registerVO.repositoryHashId,
-                    branchName = if (registerVO.branchName.isNullOrBlank()) "" else registerVO.branchName,
-                    revision = null,
-                    strategy = CodePullStrategy.FRESH_CHECKOUT,
-                    path = relPath,
-                    enableSubmodule = null,
-                    gitPullMode = null,
-                    repositoryType = null,
-                    repositoryName = null
+                name = "下载代码",
+                id = null,
+                status = null,
+                repositoryHashId = registerVO.repositoryHashId,
+                branchName = if (registerVO.branchName.isNullOrBlank()) "" else registerVO.branchName,
+                revision = null,
+                strategy = CodePullStrategy.FRESH_CHECKOUT,
+                path = relPath,
+                enableSubmodule = null,
+                gitPullMode = null,
+                repositoryType = null,
+                repositoryName = null
             )
             "GITHUB" -> GithubElement(
-                    name = "下载代码",
-                    id = null,
-                    status = null,
-                    repositoryHashId = registerVO.repositoryHashId,
-                    strategy = CodePullStrategy.FRESH_CHECKOUT,
-                    path = relPath,
-                    enableSubmodule = null,
-                    revision = null,
-                    gitPullMode = null,
-                    enableVirtualMergeBranch = null,
-                    repositoryType = null,
-                    repositoryName = null
+                name = "下载代码",
+                id = null,
+                status = null,
+                repositoryHashId = registerVO.repositoryHashId,
+                strategy = CodePullStrategy.FRESH_CHECKOUT,
+                path = relPath,
+                enableSubmodule = null,
+                revision = null,
+                gitPullMode = null,
+                enableVirtualMergeBranch = null,
+                repositoryType = null,
+                repositoryName = null
             )
             else -> CodeSvnElement(
-                    name = "下载代码",
-                    id = null,
-                    status = null,
-                    repositoryHashId = registerVO.repositoryHashId,
-                    revision = null,
-                    strategy = CodePullStrategy.FRESH_CHECKOUT,
-                    path = relPath,
-                    enableSubmodule = null,
-                    specifyRevision = null,
-                    svnDepth = null,
-                    svnPath = null,
-                    svnVersion = null,
-                    repositoryType = null,
-                    repositoryName = null
+                name = "下载代码",
+                id = null,
+                status = null,
+                repositoryHashId = registerVO.repositoryHashId,
+                revision = null,
+                strategy = CodePullStrategy.FRESH_CHECKOUT,
+                path = relPath,
+                enableSubmodule = null,
+                specifyRevision = null,
+                svnDepth = null,
+                svnPath = null,
+                svnVersion = null,
+                repositoryType = null,
+                repositoryName = null
             )
         }
     }
@@ -290,14 +294,14 @@ class PipelineServiceImpl @Autowired constructor(
         if (executeTime.isBlank() || executeDateList.isNullOrEmpty()) {
             logger.error("execute date and time is empty!")
             throw CodeCCException(
-                    errCode = CommonMessageCode.PARAMETER_IS_NULL,
-                    msgParam = arrayOf("定时执行时间"),
-                    errorCause = null)
+                errCode = CommonMessageCode.PARAMETER_IS_NULL,
+                msgParam = arrayOf("定时执行时间"),
+                errorCause = null)
         }
         val hour = executeTime.substring(0, executeTime.indexOf(":"))
         val min = executeTime.substring(executeTime.indexOf(":") + 1)
 
-        var weekDayListStr = executeDateList.reduce { acc, s -> "$acc,$s" }
+        val weekDayListStr = executeDateList.reduce { acc, s -> "$acc,$s" }
         return String.format("0 %s %s ? * %s", min, hour, weekDayListStr)
     }
 
@@ -338,67 +342,68 @@ class PipelineServiceImpl @Autowired constructor(
                 }
                 newStage.containers.forEach { container ->
                     val newContainer: Container =
-                            if (container is VMBuildContainer &&
-                                    container.elements.any { it is LinuxCodeCCScriptElement }) {
-                                val elementList = mutableListOf<Element>()
-                                container.elements.forEach { element ->
-                                    val newElement: Element =
-                                            if (element is LinuxCodeCCScriptElement) {
-                                                val tools = element.tools
-                                                if (!tools.isNullOrEmpty()) {
-                                                    currentToolSet.addAll(tools)
-                                                }
-                                                when (updateType) {
-                                                    ComConstants.PipelineToolUpdateType.ADD ->
-                                                        currentToolSet.addAll(toolList)
-                                                    ComConstants.PipelineToolUpdateType.REMOVE ->
-                                                        currentToolSet.removeAll(toolList)
-                                                    ComConstants.PipelineToolUpdateType.REPLACE ->
-                                                        currentToolSet = toolList.toMutableSet()
-                                                    ComConstants.PipelineToolUpdateType.GET ->
-                                                        currentToolSet
-                                                }
-                                                element.tools = currentToolSet.toList()
-                                                element
-                                            } else if (null != codeElement &&
-                                                    (element is CodeGitElement ||
-                                                            element is CodeGitlabElement ||
-                                                            element is GithubElement ||
-                                                            element is CodeSvnElement)) {
-                                                codeElement
-                                            } else {
-                                                element
-                                            }
-                                    elementList.add(newElement)
-                                }
-                                VMBuildContainer(
-                                        containerId = container.containerId,
-                                        id = container.id,
-                                        name = container.name,
-                                        elements = elementList,
-                                        status = container.status,
-                                        startEpoch = container.startEpoch,
-                                        systemElapsed = container.systemElapsed,
-                                        elementElapsed = container.elementElapsed,
-                                        baseOS = container.baseOS,
-                                        vmNames = container.vmNames,
-                                        maxQueueMinutes = container.maxQueueMinutes,
-                                        maxRunningMinutes = container.maxRunningMinutes,
-                                        buildEnv = container.buildEnv,
-                                        customBuildEnv = container.customBuildEnv,
-                                        thirdPartyAgentId = container.thirdPartyAgentId,
-                                        thirdPartyAgentEnvId = container.thirdPartyAgentEnvId,
-                                        thirdPartyWorkspace = container.thirdPartyWorkspace,
-                                        dockerBuildVersion = container.dockerBuildVersion,
-                                        canRetry = container.canRetry,
-                                        enableExternal = container.enableExternal,
-                                        jobControlOption = container.jobControlOption,
-                                        mutexGroup = container.mutexGroup,
-                                        dispatchType = container.dispatchType
-                                )
-                            } else {
-                                container
+                        if (container is VMBuildContainer &&
+                            container.elements.any { it is LinuxCodeCCScriptElement }) {
+                            val elementList = mutableListOf<Element>()
+                            container.elements.forEach { element ->
+                                val newElement: Element =
+                                    if (element is LinuxCodeCCScriptElement) {
+                                        val tools = element.tools
+                                        if (!tools.isNullOrEmpty()) {
+                                            currentToolSet.addAll(tools)
+                                        }
+                                        when (updateType) {
+                                            ComConstants.PipelineToolUpdateType.ADD ->
+                                                currentToolSet.addAll(toolList)
+                                            ComConstants.PipelineToolUpdateType.REMOVE ->
+                                                currentToolSet.removeAll(toolList)
+                                            ComConstants.PipelineToolUpdateType.REPLACE ->
+                                                currentToolSet = toolList.toMutableSet()
+                                            ComConstants.PipelineToolUpdateType.GET ->
+                                                currentToolSet
+                                        }
+                                        element.tools = currentToolSet.toList()
+                                        element
+                                    } else if (null != codeElement &&
+                                        (element is CodeGitElement ||
+                                            element is CodeGitlabElement ||
+                                            element is GithubElement ||
+                                            element is CodeSvnElement)) {
+                                        codeElement
+                                    } else {
+                                        element
+                                    }
+                                elementList.add(newElement)
                             }
+                            VMBuildContainer(
+                                containerId = container.containerId,
+                                id = container.id,
+                                name = container.name,
+                                elements = elementList,
+                                status = container.status,
+                                startEpoch = container.startEpoch,
+                                systemElapsed = container.systemElapsed,
+                                elementElapsed = container.elementElapsed,
+                                baseOS = container.baseOS,
+                                vmNames = container.vmNames,
+                                maxQueueMinutes = container.maxQueueMinutes,
+                                maxRunningMinutes = container.maxRunningMinutes,
+                                buildEnv = container.buildEnv,
+                                customBuildEnv = container.customBuildEnv,
+                                thirdPartyAgentId = container.thirdPartyAgentId,
+                                thirdPartyAgentEnvId = container.thirdPartyAgentEnvId,
+                                thirdPartyWorkspace = container.thirdPartyWorkspace,
+                                dockerBuildVersion = container.dockerBuildVersion,
+                                canRetry = container.canRetry,
+                                enableExternal = container.enableExternal,
+                                jobControlOption = container.jobControlOption,
+                                mutexGroup = container.mutexGroup,
+                                dispatchType = container.dispatchType,
+                                tstackAgentId = null
+                            )
+                        } else {
+                            container
+                        }
                     containerList.add(newContainer)
                 }
                 stageList.add(Stage(containerList, newStage.id))
@@ -438,32 +443,34 @@ class PipelineServiceImpl @Autowired constructor(
                     //params肯定不会为空
                     if (!containParams) {
                         val param = BuildFormProperty(
-                                id = "_CODECC_FILTER_TOOLS",
-                                required = false,
-                                type = BuildFormPropertyType.STRING,
-                                defaultValue = "",
-                                options = null,
-                                desc = "",
-                                repoHashId = null,
-                                relativePath = null,
-                                scmType = null,
-                                containerType = null
+                            id = "_CODECC_FILTER_TOOLS",
+                            required = false,
+                            type = BuildFormPropertyType.STRING,
+                            defaultValue = "",
+                            options = null,
+                            desc = "",
+                            repoHashId = null,
+                            relativePath = null,
+                            scmType = null,
+                            containerType = null,
+                            glob = null,
+                            properties = null
                         )
                         params.add(param)
                     }
                     TriggerContainer(
-                            id = container.id,
-                            name = container.name,
-                            elements = container.elements,
-                            status = container.status,
-                            startEpoch = container.startEpoch,
-                            systemElapsed = container.systemElapsed,
-                            elementElapsed = container.elementElapsed,
-                            params = params,
-                            templateParams = container.templateParams,
-                            buildNo = container.buildNo,
-                            canRetry = container.canRetry,
-                            containerId = container.containerId
+                        id = container.id,
+                        name = container.name,
+                        elements = container.elements,
+                        status = container.status,
+                        startEpoch = container.startEpoch,
+                        systemElapsed = container.systemElapsed,
+                        elementElapsed = container.elementElapsed,
+                        params = params,
+                        templateParams = container.templateParams,
+                        buildNo = container.buildNo,
+                        canRetry = container.canRetry,
+                        containerId = container.containerId
                     )
                 } else {
                     container
@@ -501,13 +508,13 @@ class PipelineServiceImpl @Autowired constructor(
     override fun startPipeline(taskInfoEntity: TaskInfoEntity, toolName: List<String>, userName: String): String {
         val buildId: String
         val valueMap = mapOf(
-                "_CODECC_FILTER_TOOLS" to toolName.joinToString(",")
+            "_CODECC_FILTER_TOOLS" to toolName.joinToString(",")
         )
         val buildIdResult = client.get(ServiceBuildResource::class.java).manualStartup(userName, taskInfoEntity.projectId,
-                taskInfoEntity.pipelineId, valueMap, ChannelCode.CODECC)
+            taskInfoEntity.pipelineId, valueMap, ChannelCode.CODECC)
         if (buildIdResult.isNotOk() || null == buildIdResult.data) {
             logger.error("start pipeline fail! project id: {}, pipeline id: {}, msg is: {}", taskInfoEntity.projectId,
-                    taskInfoEntity.pipelineId, buildIdResult.message)
+                taskInfoEntity.pipelineId, buildIdResult.message)
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
         }
         buildId = buildIdResult.data?.id ?: ""
@@ -517,7 +524,6 @@ class PipelineServiceImpl @Autowired constructor(
         //根据构件号获取构建number, 设置7s超时
         var buildNo: String? = null
 
-        var buildInfoResult: Result<Map<String, CodeccBuildInfo>>
         var realRetryAttempt = retryAttempt
         while (realRetryAttempt > 0 && null == buildNo) {
             try {
@@ -528,17 +534,17 @@ class PipelineServiceImpl @Autowired constructor(
             }
 
             realRetryAttempt--
-            buildInfoResult = client.get(ServiceCodeccResource::class.java).getCodeccBuildInfo(setOf(buildId))
+            val buildInfoResult = client.get(ServiceCodeccResource::class.java).getCodeccBuildInfo(setOf(buildId))
             if (buildInfoResult.isOk() &&
-                    null != buildInfoResult.data &&
-                    buildInfoResult.data!!.containsKey(buildId)) {
+                null != buildInfoResult.data &&
+                buildInfoResult.data!!.containsKey(buildId)) {
                 buildNo = buildInfoResult.data!![buildId]?.buildNo
             }
         }
 
         if (buildId.isBlank() || buildNo.isNullOrBlank()) {
             logger.error("start devops pipeline failed! project id: {}, codecc task id: {}, pipeline id: {}, build id: {}",
-                    taskInfoEntity.projectId, taskInfoEntity.taskId, taskInfoEntity.pipelineId, buildId)
+                taskInfoEntity.projectId, taskInfoEntity.taskId, taskInfoEntity.pipelineId, buildId)
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
         }
         return buildId
@@ -547,7 +553,7 @@ class PipelineServiceImpl @Autowired constructor(
 
     @Throws(StreamException::class)
     override fun convertDevopsCodeLangToCodeCC(codeLang: String): Long? {
-        if (codeLang.isNullOrBlank()) {
+        if (codeLang.isBlank()) {
             return 0L
         }
         val metaLangList = baseDataRepository.findAllByParamType(ComConstants.KEY_CODE_LANG)
@@ -586,7 +592,7 @@ class PipelineServiceImpl @Autowired constructor(
         val uploadResult = client.get(ServiceTaskLogRestResource::class.java).uploadTaskLog(uploadTaskLogStepVO)
         if (uploadResult.isNotOk()) {
             logger.error("upload task analysis log fail! stream name: {}, tool name: {}",
-                    taskInfoEntity.nameEn, toolName)
+                taskInfoEntity.nameEn, toolName)
             throw CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL)
         }
         logger.info("update task log step status success! task id: ${taskInfoEntity.taskId}, tool name: $toolName")
@@ -644,7 +650,7 @@ class PipelineServiceImpl @Autowired constructor(
         val projectId = taskInfoEntity.projectId
         val pipelineId = taskInfoEntity.pipelineId
         val data = client.get(ServicePipelineResource::class.java)
-                .get(userName, projectId, pipelineId, ChannelCode.CODECC).data
+            .get(userName, projectId, pipelineId, ChannelCode.CODECC).data
 
         if (Objects.isNull(data)) {
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
@@ -652,13 +658,13 @@ class PipelineServiceImpl @Autowired constructor(
 
         //定位到第二个stage下面的第一个container，下面的第二个element
         val element = data!!.stages[1].containers[0]
-                .elements[1] as LinuxCodeCCScriptElement
+            .elements[1] as LinuxCodeCCScriptElement
 
         // 设置语言
         element.languages = convertCodeLangToBs(codeLang)
 
         val edit = client.get(ServicePipelineResource::class.java)
-                .edit(userName, projectId, pipelineId, data, ChannelCode.CODECC)
+            .edit(userName, projectId, pipelineId, data, ChannelCode.CODECC)
         if (Objects.nonNull(edit) && edit.data != true) {
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
         }
@@ -682,7 +688,7 @@ class PipelineServiceImpl @Autowired constructor(
         val pipelineId = taskInfoEntity.pipelineId
 
         val modelResult = client.get(ServicePipelineResource::class.java)
-                .get(userName, projectId, pipelineId, ChannelCode.BS)
+            .get(userName, projectId, pipelineId, ChannelCode.BS)
 
         if (Objects.isNull(modelResult) || Objects.isNull(modelResult.data)) {
             logger.error("get pipeline model info fail! project id: $projectId, pipeline id: $pipelineId")
@@ -691,9 +697,9 @@ class PipelineServiceImpl @Autowired constructor(
 
         //在Model中定位到代码检查原子的element，并修改语言
         val linuxElement = modelResult.data!!.stages
-                .flatMap { stage -> stage.containers }
-                .flatMap { container -> container.elements }
-                .firstOrNull { element -> element is LinuxPaasCodeCCScriptElement } as LinuxPaasCodeCCScriptElement
+            .flatMap { stage -> stage.containers }
+            .flatMap { container -> container.elements }
+            .firstOrNull { element -> element is LinuxPaasCodeCCScriptElement } as LinuxPaasCodeCCScriptElement
         if (linuxElement.codeCCTaskName.isNullOrBlank()) {
             logger.error("can not find qualified element! project id: $projectId, pipeline id: $pipelineId")
             throw CodeCCException(TaskMessageCode.ELEMENT_NOT_FIND)
@@ -703,7 +709,7 @@ class PipelineServiceImpl @Autowired constructor(
         linuxElement.languages = convertCodeLangToBs(codeLang)
 
         val edit = client.get(ServicePipelineResource::class.java)
-                .edit(userName, projectId, pipelineId, modelResult.data!!, ChannelCode.BS)
+            .edit(userName, projectId, pipelineId, modelResult.data!!, ChannelCode.BS)
         if (Objects.nonNull(edit) && edit.data != true) {
             logger.error("update pipeline info fail! project id: $projectId, pipeline id: $pipelineId")
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
@@ -715,15 +721,15 @@ class PipelineServiceImpl @Autowired constructor(
      * 将codecc平台的项目语言转换为蓝盾平台的codecc原子语言
      */
     @Suppress("CAST_NEVER_SUCCEEDS")
-    fun convertCodeLangToBs(langCode: Long): List<LinuxCodeCCScriptElement.ProjectLanguage> {
+    fun convertCodeLangToBs(langCode: Long): List<ProjectLanguage> {
         val metadataList = metaService.queryMetadatas(ComConstants.METADATA_TYPE)[ComConstants.METADATA_TYPE]
         val languageList = metadataList?.filter { metadataVO ->
             (metadataVO.key.toLong() and langCode) != 0L
         }
-                ?.map { metadataVO ->
-                    LinuxCodeCCScriptElement.ProjectLanguage.valueOf(JSONArray.fromObject(metadataVO.aliasNames)[0].toString())
-                }
-        return if (languageList.isNullOrEmpty()) listOf(LinuxCodeCCScriptElement.ProjectLanguage.OTHERS) else languageList
+            ?.map { metadataVO ->
+                ProjectLanguage.valueOf(JSONArray.fromObject(metadataVO.aliasNames)[0].toString())
+            }
+        return if (languageList.isNullOrEmpty()) listOf(ProjectLanguage.OTHERS) else languageList
     }
 
 
@@ -747,47 +753,47 @@ class PipelineServiceImpl @Autowired constructor(
             val stageList = mutableListOf<Stage>()
             stages.forEachIndexed { stageIndex, stage ->
                 val newStage =
-                        if (stageIndex == 0) {
-                            val containerList = mutableListOf<Container>()
-                            stage.containers.forEachIndexed { containerIndex, container ->
-                                val newContainer: Container = if (container is TriggerContainer &&
-                                        containerIndex == 0) {
-                                    val newElements = container.elements.toMutableList()
-                                    if (newElements.size > 1) {
-                                        newElements.removeAt(1)
-                                    }
-                                    //定时时间或者日期为空则删除定时任务编排
-                                    if (!executeTime.isBlank() && !executeDate.isNullOrEmpty()) {
-                                        //无论原来是否有定时任务原子，都新建更新
-                                        val timerTriggerElement = TimerTriggerElement(
-                                                "定时触发", null, null,
-                                                getCrontabTimingStr(executeTime, executeDate), null, null, null
-                                        )
-                                        newElements.add(timerTriggerElement)
-                                    }
-                                    TriggerContainer(
-                                            id = container.id,
-                                            name = container.name,
-                                            elements = newElements,
-                                            status = container.status,
-                                            startEpoch = container.startEpoch,
-                                            systemElapsed = container.systemElapsed,
-                                            elementElapsed = container.elementElapsed,
-                                            params = container.params,
-                                            templateParams = container.templateParams,
-                                            buildNo = container.buildNo,
-                                            canRetry = container.canRetry,
-                                            containerId = container.containerId
-                                    )
-                                } else {
-                                    container
+                    if (stageIndex == 0) {
+                        val containerList = mutableListOf<Container>()
+                        stage.containers.forEachIndexed { containerIndex, container ->
+                            val newContainer: Container = if (container is TriggerContainer &&
+                                containerIndex == 0) {
+                                val newElements = container.elements.toMutableList()
+                                if (newElements.size > 1) {
+                                    newElements.removeAt(1)
                                 }
-                                containerList.add(newContainer)
+                                //定时时间或者日期为空则删除定时任务编排
+                                if (!executeTime.isBlank() && !executeDate.isNullOrEmpty()) {
+                                    //无论原来是否有定时任务原子，都新建更新
+                                    val timerTriggerElement = TimerTriggerElement(
+                                        "定时触发", null, null,
+                                        getCrontabTimingStr(executeTime, executeDate), null, null, null
+                                    )
+                                    newElements.add(timerTriggerElement)
+                                }
+                                TriggerContainer(
+                                    id = container.id,
+                                    name = container.name,
+                                    elements = newElements,
+                                    status = container.status,
+                                    startEpoch = container.startEpoch,
+                                    systemElapsed = container.systemElapsed,
+                                    elementElapsed = container.elementElapsed,
+                                    params = container.params,
+                                    templateParams = container.templateParams,
+                                    buildNo = container.buildNo,
+                                    canRetry = container.canRetry,
+                                    containerId = container.containerId
+                                )
+                            } else {
+                                container
                             }
-                            Stage(containerList, stage.id)
-                        } else {
-                            stage
+                            containerList.add(newContainer)
                         }
+                        Stage(containerList, stage.id)
+                    } else {
+                        stage
+                    }
                 stageList.add(newStage)
             }
             Model(name, desc, stageList, labels, instanceFromTemplate, pipelineCreator)
@@ -828,36 +834,36 @@ class PipelineServiceImpl @Autowired constructor(
             val stageList = mutableListOf<Stage>()
             stages.forEachIndexed { stageIndex, stage ->
                 val newStage =
-                        if (stageIndex == 0) {
-                            val containerList = mutableListOf<Container>()
-                            stage.containers.forEachIndexed { containerIndex, container ->
-                                val newContainer: Container = if (container is TriggerContainer &&
-                                        containerIndex == 0) {
-                                    val newElements = container.elements.toMutableList()
-                                    newElements.removeAt(1)
-                                    TriggerContainer(
-                                            id = container.id,
-                                            name = container.name,
-                                            elements = newElements,
-                                            status = container.status,
-                                            startEpoch = container.startEpoch,
-                                            systemElapsed = container.systemElapsed,
-                                            elementElapsed = container.elementElapsed,
-                                            params = container.params,
-                                            templateParams = container.templateParams,
-                                            buildNo = container.buildNo,
-                                            canRetry = container.canRetry,
-                                            containerId = container.containerId
-                                    )
-                                } else {
-                                    container
-                                }
-                                containerList.add(newContainer)
+                    if (stageIndex == 0) {
+                        val containerList = mutableListOf<Container>()
+                        stage.containers.forEachIndexed { containerIndex, container ->
+                            val newContainer: Container = if (container is TriggerContainer &&
+                                containerIndex == 0) {
+                                val newElements = container.elements.toMutableList()
+                                newElements.removeAt(1)
+                                TriggerContainer(
+                                    id = container.id,
+                                    name = container.name,
+                                    elements = newElements,
+                                    status = container.status,
+                                    startEpoch = container.startEpoch,
+                                    systemElapsed = container.systemElapsed,
+                                    elementElapsed = container.elementElapsed,
+                                    params = container.params,
+                                    templateParams = container.templateParams,
+                                    buildNo = container.buildNo,
+                                    canRetry = container.canRetry,
+                                    containerId = container.containerId
+                                )
+                            } else {
+                                container
                             }
-                            Stage(containerList, stage.id)
-                        } else {
-                            stage
+                            containerList.add(newContainer)
                         }
+                        Stage(containerList, stage.id)
+                    } else {
+                        stage
+                    }
                 stageList.add(newStage)
             }
             Model(name, desc, stageList, labels, instanceFromTemplate, pipelineCreator)

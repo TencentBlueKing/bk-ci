@@ -1,75 +1,61 @@
 <template>
-    <div class="build-history-tab-content" v-bkloading="{ isLoading }">
-        <filter-bar v-if="showFilterBar" @query="queryBuildHistory" :set-history-page-status="setHistoryPageStatus" :reset-query-condition="resetQueryCondition" v-bind="historyPageStatus.queryMap"></filter-bar>
-        <build-history-table :loading-more="isLoadingMore" :current-pipeline-version="currentPipelineVersion" @update-table="updateBuildHistoryList" :build-list="buildList" :columns="shownColumns" :empty-tips-config="emptyTipsConfig" :show-log="showLog"></build-history-table>
+    <infinite-scroll class="build-history-tab-content" ref="infiniteScroll" :data-fetcher="requestHistory" scroll-box-class-name="bkdevops-pipeline-history" v-slot="slotProps">
+        <filter-bar v-if="showFilterBar" @query="slotProps.queryList" :set-history-page-status="setHistoryPageStatus" :reset-query-condition="resetQueryCondition" v-bind="historyPageStatus.queryMap"></filter-bar>
+        <build-history-table :loading-more="slotProps.isLoadingMore" :current-pipeline-version="currentPipelineVersion" @update-table="updateBuildHistoryList" :build-list="slotProps.list" :columns="shownColumns" :empty-tips-config="emptyTipsConfig" :show-log="showLog"></build-history-table>
         <bk-dialog
             width="567"
-            title="设置显示列"
+            :title="$t('history.settingCols')"
             ext-cls="create-view-dialog"
             :value="isColumnsSelectPopupVisible"
             @confirm="updateTableColumns"
             @cancel="resetColumns">
-            <bk-transfer :source-list="sourceColumns" display-key="label" setting-key="prop" :sortable="true" :target-list="shownColumns" :title="['可选列表', '已选列表']" @change="handleColumnsChange"></bk-transfer>
+            <bk-transfer :source-list="sourceColumns" display-key="label" setting-key="prop" :sortable="true" :target-list="shownColumns" :title="[$t('history.canChooseList'), $t('history.choosedList')]" @change="handleColumnsChange"></bk-transfer>
         </bk-dialog>
-        <bk-sideslider
-            class="pipeline-history-side-slider"
-            :is-show.sync="isLogSliderShow"
-            :title="`查看日志${currentBuildNum ? `（#${currentBuildNum}）` : ''}`"
-            :quick-close="true"
-            :width="820">
-            <template slot="content">
-                <pipeline-log v-if="currentBuildNo" :build-no="currentBuildNo" :build-num="currentBuildNum" :show-export="currentShowStatus" />
-            </template>
-        </bk-sideslider>
-
-    </div>
+    </infinite-scroll>
 </template>
 
 <script>
-    import pipelineWebsocket from '@/utils/pipelineWebSocket'
-    import PipelineLog from '@/components/Log'
+    import webSocketMessage from '@/utils/webSocketMessage'
     import BuildHistoryTable from '@/components/BuildHistoryTable/'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
-    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS, BUILD_HISTORY_TABLE_COLUMNS_MAP } from '@/utils/pipelineConst'
-    import { mapGetters, mapActions } from 'vuex'
-    import { throttle } from '@/utils/util'
+    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS } from '@/utils/pipelineConst'
+    import { mapGetters, mapActions, mapState } from 'vuex'
+    import { coverStrTimer } from '@/utils/util'
     import { bus } from '@/utils/bus'
-    import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
+    import InfiniteScroll from '@/components/InfiniteScroll'
 
     const LS_COLUMNS_KEYS = 'shownColumns'
-    const SCROLL_BOX_CLASS_NAME = 'bkdevops-pipeline-history'
-    const SCROLL_THRESHOLD = 250
     export default {
         name: 'build-history-tab',
         components: {
             BuildHistoryTable,
-            FilterBar,
-            PipelineLog
+            InfiniteScroll,
+            FilterBar
         },
 
-        mixins: [pipelineOperateMixin],
+        mixins: [pipelineConstMixin],
 
         props: {
             isColumnsSelectPopupVisible: Boolean,
-            showFilterBar: Boolean
+            showFilterBar: Boolean,
+            toggleFilterBar: Function
         },
 
         data () {
             const lsColumns = localStorage && localStorage.getItem(LS_COLUMNS_KEYS)
             const initShownColumns = lsColumns ? JSON.parse(lsColumns) : BUILD_HISTORY_TABLE_DEFAULT_COLUMNS
             return {
-                sourceColumns: Object.values(BUILD_HISTORY_TABLE_COLUMNS_MAP).sort((c1, c2) => c1.index > c2.index),
                 shownColumns: initShownColumns,
                 tempColumns: initShownColumns,
-                isLoading: false,
-                isLoadingMore: false,
                 hasNoPermission: false,
                 currentPipelineVersion: '',
                 currentBuildNo: '',
                 currentBuildNum: '',
                 currentShowStatus: false,
-                isLogSliderShow: false,
-                buildList: []
+                triggerList: [],
+                queryStrMap: ['status', 'materialAlias', 'materialBranch', 'startTimeStartTime', 'endTimeEndTime']
             }
         },
 
@@ -77,26 +63,61 @@
             ...mapGetters({
                 'historyPageStatus': 'pipelines/getHistoryPageStatus'
             }),
+            ...mapState('atom', [
+                'isPropertyPanelVisible'
+            ]),
             projectId () {
                 return this.$route.params.projectId
             },
             pipelineId () {
                 return this.$route.params.pipelineId
             },
+            queryStr () {
+                return this.historyPageStatus.queryStr
+            },
+            filterData () {
+                return [
+                    {
+                        value: 'commitid',
+                        id: 'materialCommitId'
+                    },
+                    {
+                        value: 'commitMessage',
+                        id: 'materialCommitMessage'
+                    },
+                    {
+                        value: this.$t('history.triggerType'),
+                        id: 'trigger',
+                        remote: true,
+                        multiable: true,
+                        children: this.triggerList
+                    },
+                    {
+                        value: this.$t('history.remark'),
+                        id: 'remark'
+                    }
+                ]
+            },
+            sourceColumns () {
+                const historyTableColumns = Object.values(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).sort((c1, c2) => c1.index > c2.index)
+                return historyTableColumns.filter(x => !x.hiddenInHistory)
+            },
             emptyTipsConfig () {
-                const { hasNoPermission, buildList, isLoading, historyPageStatus: { isQuerying } } = this
-                const title = hasNoPermission ? '没有权限' : '构建记录为空'
-                const desc = hasNoPermission ? '你没有查看该流水线的权限，请切换项目或申请相应权限' : '定义了流水线之后，你可以手动触发执行一次构建任务，我们会给每个构建分配一个唯一ID，所有的构建记录都会在这里'
+                const list = this.$refs.infiniteScroll ? this.$refs.infiniteScroll.list : []
+                const isLoading = this.$refs.infiniteScroll ? this.$refs.infiniteScroll.isLoading : []
+                const { hasNoPermission, historyPageStatus: { isQuerying } } = this
+                const title = hasNoPermission ? this.$t('noPermission') : this.$t('history.noBuildRecords')
+                const desc = hasNoPermission ? this.$t('history.noPermissionTips') : this.$t('history.buildEmptyDesc')
                 const btns = hasNoPermission ? [{
                     theme: 'primary',
                     size: 'normal',
                     handler: this.changeProject,
-                    text: '切换项目'
+                    text: this.$t('changeProject')
                 }, {
                     theme: 'success',
                     size: 'normal',
                     handler: this.goToApplyPerm,
-                    text: '申请权限'
+                    text: this.$t('applyPermission')
                 }] : [{
                     theme: 'primary',
                     size: 'normal',
@@ -105,10 +126,9 @@
                     handler: () => {
                         !this.executeStatus && bus.$emit('trigger-excute')
                     },
-                    text: '开始构建流水线'
+                    text: this.$t('history.startBuildTips')
                 }]
-
-                return buildList.length === 0 && !isLoading && !isQuerying ? {
+                return list.length === 0 && !isLoading && !isQuerying ? {
                     title,
                     desc,
                     btns
@@ -118,49 +138,37 @@
 
         watch: {
             pipelineId () {
-                this.setHistoryPageStatus({
-                    scrollTop: 0
-                })
-                this.$nextTick(() => {
-                    const scrollTable = document.querySelector(`.${SCROLL_BOX_CLASS_NAME}`)
-                    if (scrollTable) {
-                        scrollTable.scrollTo(0, 0)
-                    }
-                    this.requestHistory(1)
-                    this.initWebSocket()
-                })
-            },
-            buildList (list, oldList) {
-                if (list.length !== oldList.length) {
-                    this.$nextTick(() => {
-                        const { historyPageStatus: { scrollTop } } = this
-                        this.animateScroll(scrollTop)
+                if (this.$refs.infiniteScroll) {
+                    this.$refs.infiniteScroll.setScrollTop(0)
+                    this.$nextTick(async () => {
+                        this.$refs.infiniteScroll.animateScroll(0)
+                        await this.$refs.infiniteScroll.queryList(1)
+                        // this.initWebSocket()
                     })
                 }
+            },
+            queryStr (newStr) {
+                let hashParam = ''
+                if (this.$route.hash && /^#b-+/.test(this.$route.hash)) hashParam = this.$route.hash
+                this.$router.push(`${this.$route.path}?${newStr}${hashParam}`)
             }
         },
 
-        created () {
-            const { historyPageStatus: { currentPage, pageSize } } = this
-            const len = currentPage * pageSize
-            this.queryBuildHistory(1, len)
+        async created () {
+            await this.handlePathQuery()
         },
 
-        mounted () {
-            const scrollTable = document.querySelector(`.${SCROLL_BOX_CLASS_NAME}`)
-            this.throttleScroll = throttle(this.handleScroll, 500)
-            if (scrollTable) {
-                scrollTable.addEventListener('scroll', this.throttleScroll)
-            }
+        async mounted () {
+            await this.handleRemoteMethod()
             if (this.$route.hash) { // 带上buildId时，弹出日志弹窗
                 const isBuildId = /^#b-+/.test(this.$route.hash) // 检查是否是合法的buildId
                 isBuildId && this.showLog(this.$route.hash.slice(1), '', true)
             }
-            this.initWebSocket()
+            webSocketMessage.installWsMessage(this.updateBuildHistoryList)
         },
 
         updated () {
-            if (!this.isLogSliderShow) {
+            if (!this.isPropertyPanelVisible) {
                 this.currentBuildNo = ''
                 this.currentBuildNum = ''
                 this.currentShowStatus = false
@@ -168,12 +176,8 @@
         },
 
         beforeDestroy () {
-            pipelineWebsocket.disconnect()
-            const scrollTable = document.querySelector(`.${SCROLL_BOX_CLASS_NAME}`)
-            if (scrollTable) {
-                scrollTable.removeEventListener('scroll', this.throttleScroll)
-            }
             this.resetHistoryFilterCondition()
+            webSocketMessage.unInstallWsMessage()
         },
 
         methods: {
@@ -183,14 +187,11 @@
                 'setHistoryPageStatus',
                 'resetHistoryFilterCondition'
             ]),
-            animateScroll (scrollTop, speed = 0) {
-                const scrollTable = document.querySelector(`.${SCROLL_BOX_CLASS_NAME}`)
-                if (scrollTable && scrollTop !== scrollTable.scrollTop) {
-                    scrollTable.scrollTo(0, scrollTop)
-                }
-            },
+            ...mapActions('atom', [
+                'togglePropertyPanel'
+            ]),
             handleColumnsChange (source, target, tagetValueList) {
-                this.tempColumns = tagetValueList.sort((v1, v2) => BUILD_HISTORY_TABLE_COLUMNS_MAP[v1].index - BUILD_HISTORY_TABLE_COLUMNS_MAP[v2].index)
+                this.tempColumns = tagetValueList.sort((v1, v2) => this.BUILD_HISTORY_TABLE_COLUMNS_MAP[v1].index - this.BUILD_HISTORY_TABLE_COLUMNS_MAP[v2].index)
             },
 
             updateTableColumns () {
@@ -203,28 +204,6 @@
                 this.tempColumns = [...this.shownColumns]
                 this.shownColumns = [...this.shownColumns]
                 this.$emit('hideColumnPopup')
-            },
-
-            handleScroll (e) {
-                const { target } = e
-                const { historyPageStatus, setHistoryPageStatus, scrollLoadMore, isLoadingMore } = this
-                setHistoryPageStatus({
-                    scrollTop: e.target.scrollTop
-                })
-
-                const offset = e.target.scrollHeight - (e.target.offsetHeight + e.target.scrollTop)
-                if (offset <= SCROLL_THRESHOLD && historyPageStatus.hasNext && !isLoadingMore) { // scroll to end
-                    scrollLoadMore(target.scrollTop)
-                }
-            },
-
-            initWebSocket () {
-                const subscribe = `/topic/pipelineHistory/${this.pipelineId}`
-
-                pipelineWebsocket.connect(this.projectId, subscribe, {
-                    success: () => this.updateBuildHistoryList(),
-                    error: (message) => this.$showTips({ message, theme: 'error' })
-                })
             },
 
             changeProject () {
@@ -248,53 +227,92 @@
 
             resetQueryCondition () {
                 this.resetHistoryFilterCondition()
-                this.queryBuildHistory()
+                this.$refs.infiniteScroll.queryList()
             },
 
             showLog (buildId, buildNum, status) {
-                this.isLogSliderShow = true
+                this.togglePropertyPanel({
+                    isShow: true
+                })
+
                 this.currentBuildNo = buildId
                 this.currentBuildNum = buildNum
                 this.currentShowStatus = status
             },
 
-            async queryBuildHistory (page = 1, pageSize) {
-                try {
-                    this.isLoading = true
-                    await this.requestHistory(page, pageSize)
-                } catch (e) {
-                    console.error(e)
-                } finally {
-                    this.isLoading = false
+            async handlePathQuery () {
+                // TODO 筛选参数目前不支持带#字符串回填
+                const { $route, historyPageStatus: { queryMap } } = this
+                const pathQuery = $route.query
+                const newSearchKey = []
+                const queryArr = Object.keys(pathQuery)
+                const searchKeyArr = queryArr.filter(item => !this.queryStrMap.includes(item))
+
+                if (queryArr.includes('trigger')) await this.handleRemoteMethod()
+                if (queryArr.length) {
+                    const newQuery = {}
+                    queryArr.map(item => {
+                        if (['status', 'materialAlias'].includes(item)) {
+                            newQuery[item] = pathQuery[item].split(',')
+                        } else if (pathQuery.startTimeStartTime && pathQuery.endTimeEndTime) {
+                            newQuery.startTimeStartTime = pathQuery.startTimeStartTime
+                            newQuery.endTimeEndTime = pathQuery.endTimeEndTime
+                            newQuery.dateTimeRange = [coverStrTimer(parseInt($route.query.startTimeStartTime)), coverStrTimer(parseInt($route.query.endTimeEndTime))]
+                        } else {
+                            newQuery[item] = pathQuery[item]
+                        }
+                    })
+
+                    searchKeyArr.map(val => {
+                        const newItem = this.filterData.filter(item => item.id === val)
+                        if (newItem[0]) {
+                            newItem[0].values = [{ id: pathQuery[val] }]
+                            if (val === 'trigger') {
+                                newItem[0].values = []
+                                pathQuery[val].split(',').map(item => {
+                                    newItem[0].values.push({
+                                        id: item,
+                                        value: this.triggerList.find(val => val.id === item) && this.triggerList.find(val => val.id === item).value
+                                    })
+                                })
+                            } else {
+                                newItem[0].values[0].value = pathQuery[val]
+                            }
+                            newSearchKey.push(newItem[0])
+                        }
+                    })
+                    this.setHistoryPageStatus({
+                        queryMap: {
+                            ...queryMap,
+                            query: {
+                                ...queryMap.query,
+                                ...newQuery
+                            },
+                            searchKey: newSearchKey
+                        }
+                    })
+                    this.toggleFilterBar()
                 }
             },
 
-            async scrollLoadMore () {
+            async handleRemoteMethod () {
                 try {
-                    this.isLoadingMore = true
-                    await this.requestHistory(this.historyPageStatus.currentPage + 1)
+                    const { $route: { params }, $ajax } = this
+                    const url = `${PROCESS_API_URL_PREFIX}/user/builds/${params.projectId}/${params.pipelineId}/historyCondition/trigger`
+                    const res = await $ajax.get(url)
+                    this.triggerList = res.data
                 } catch (e) {
-                    this.$showTips({
-                        message: '加载出错',
-                        theme: 'error'
-                    })
-                } finally {
-                    this.isLoadingMore = false
+
                 }
             },
 
             async updateBuildHistoryList () {
                 try {
-                    const { projectId, pipelineId, buildList, historyPageStatus: { pageSize } } = this
-                    const oldlen = buildList.length
-                    const res = await this.requestPipelinesHistory({
-                        projectId,
-                        pipelineId,
-                        page: 1,
-                        pageSize: oldlen > pageSize ? oldlen : pageSize
-                    })
-
-                    this.buildList = res.records
+                    if (!this.pipelineId || !this.projectId || !this.$refs.infiniteScroll) {
+                        webSocketMessage.unInstallWsMessage()
+                        return
+                    }
+                    const res = await this.$refs.infiniteScroll.updateList()
                     this.currentPipelineVersion = res.pipelineVersion || ''
                 } catch (err) {
                     if (err.code === 403) {
@@ -323,17 +341,8 @@
                         page,
                         pageSize: pageLen
                     })
-
-                    this.buildList = page === 1 ? res.records : [
-                        ...this.buildList,
-                        ...res.records
-                    ]
-                    const currentPage = Math.ceil(this.buildList.length / defaultPageSize)
-                    this.setHistoryPageStatus({
-                        currentPage,
-                        hasNext: currentPage < res.totalPages
-                    })
                     this.currentPipelineVersion = res.pipelineVersion || ''
+                    return res
                 } catch (err) {
                     if (err.code === 403) {
                         this.hasNoPermission = true

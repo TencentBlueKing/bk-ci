@@ -41,6 +41,8 @@ import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_AGENT_TYPE_SCOPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_DOCKER_FILE_CONTENT
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_DOCKER_FILE_TYPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_CERTIFICATION_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_RECOMMEND_FLAG
@@ -80,9 +82,9 @@ import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.service.image.SupportService
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Record18
-import org.jooq.Record21
 import org.jooq.Result
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
@@ -103,7 +105,7 @@ class MarketImageDao @Autowired constructor(
      */
     fun count(
         dslContext: DSLContext,
-        imageName: String?,
+        keyword: String?,
         classifyCodeList: List<String>?,
         labelCodeList: List<String>?,
         rdType: ImageRDTypeEnum?,
@@ -111,7 +113,7 @@ class MarketImageDao @Autowired constructor(
         imageSourceType: ImageType?
     ): Int {
         val (tImage, tImageFeature, conditions) = formatConditions(
-            imageName = imageName,
+            keyword = keyword,
             imageSourceType = imageSourceType,
             classifyCodeList = classifyCodeList,
             rdType = rdType,
@@ -156,7 +158,7 @@ class MarketImageDao @Autowired constructor(
     }
 
     private fun formatConditions(
-        imageName: String?,
+        keyword: String?,
         imageSourceType: ImageType?,
         classifyCodeList: List<String>?,
         rdType: ImageRDTypeEnum?,
@@ -169,8 +171,8 @@ class MarketImageDao @Autowired constructor(
         // 隐含条件
         conditions.add(tImage.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())) // 已发布的
         conditions.add(tImage.LATEST_FLAG.eq(true)) // 最新版本
-        if (!imageName.isNullOrEmpty()) {
-            conditions.add(tImage.IMAGE_NAME.contains(imageName))
+        if (!keyword.isNullOrEmpty()) {
+            conditions.add(tImage.IMAGE_NAME.contains(keyword).or(tImage.SUMMARY.contains(keyword)))
         }
         if (imageSourceType != null) {
             conditions.add(tImage.IMAGE_SOURCE_TYPE.eq(imageSourceType.type))
@@ -198,8 +200,8 @@ class MarketImageDao @Autowired constructor(
      */
     fun list(
         dslContext: DSLContext,
-        // 镜像名称，模糊匹配
-        imageName: String?,
+        // 搜索关键字，模糊匹配
+        keyword: String?,
         // 分类代码，精确匹配
         classifyCodeList: List<String>?,
         // 标签，精确匹配
@@ -220,7 +222,7 @@ class MarketImageDao @Autowired constructor(
         pageSize: Int?
     ): Result<Record18<String, String, String, Byte, String, String, String, String, String, String, Boolean, Boolean, String, LocalDateTime, String, String, LocalDateTime, LocalDateTime>>? {
         val (tImage, tImageFeature, conditions) = formatConditions(
-            imageName = imageName,
+            keyword = keyword,
             imageSourceType = imageSourceType,
             classifyCodeList = classifyCodeList,
             rdType = rdType,
@@ -328,8 +330,8 @@ class MarketImageDao @Autowired constructor(
 
     fun count(
         dslContext: DSLContext,
-        // 镜像名称，模糊匹配
-        imageName: String?,
+        // 搜索关键字，模糊匹配
+        keyword: String?,
         // 分类代码，精确匹配
         classifyCodeList: List<String>?,
         // 标签，精确匹配
@@ -344,7 +346,7 @@ class MarketImageDao @Autowired constructor(
         imageSourceType: ImageType?
     ): Int {
         val (tImage, tImageFeature, conditions) = formatConditions(
-            imageName = imageName,
+            keyword = keyword,
             imageSourceType = imageSourceType,
             classifyCodeList = classifyCodeList,
             rdType = rdType,
@@ -455,7 +457,7 @@ class MarketImageDao @Autowired constructor(
             .fetchOne(0, String::class.java)
             ?: throw ClassifyNotExistException("classifyCode=${marketImageUpdateRequest.classifyCode}")
         with(TImage.T_IMAGE) {
-            dslContext.update(this)
+            val steps = dslContext.update(this)
                 .set(IMAGE_NAME, marketImageUpdateRequest.imageName)
                 .set(CLASSIFY_ID, classifyId)
                 .set(LOGO_URL, marketImageUpdateRequest.logoUrl)
@@ -463,10 +465,16 @@ class MarketImageDao @Autowired constructor(
                 .set(IMAGE_STATUS, ImageStatusEnum.COMMITTING.status.toByte())
                 .set(IMAGE_SIZE, imageSize)
                 .set(IMAGE_SOURCE_TYPE, marketImageUpdateRequest.imageSourceType.type)
-                .set(IMAGE_REPO_URL, marketImageUpdateRequest.imageRepoUrl)
-                .set(IMAGE_REPO_NAME, marketImageUpdateRequest.imageRepoName)
-                .set(IMAGE_TAG, marketImageUpdateRequest.imageTag)
-                .set(TICKET_ID, marketImageUpdateRequest.ticketId)
+                .set(IMAGE_REPO_URL, marketImageUpdateRequest.imageRepoUrl?.trim())
+                .set(IMAGE_REPO_NAME, marketImageUpdateRequest.imageRepoName.trim())
+                .set(IMAGE_TAG, marketImageUpdateRequest.imageTag.trim())
+            if (!marketImageUpdateRequest.dockerFileType.isNullOrBlank()) {
+                steps.set(DOCKER_FILE_TYPE, marketImageUpdateRequest.dockerFileType)
+            }
+            if (marketImageUpdateRequest.dockerFileContent != null) {
+                steps.set(DOCKER_FILE_CONTENT, marketImageUpdateRequest.dockerFileContent)
+            }
+            steps.set(TICKET_ID, marketImageUpdateRequest.ticketId)
                 .set(AGENT_TYPE_SCOPE, JsonUtil.toJson(marketImageUpdateRequest.agentTypeScope))
                 .set(SUMMARY, marketImageUpdateRequest.summary)
                 .set(DESCRIPTION, marketImageUpdateRequest.description)
@@ -506,6 +514,8 @@ class MarketImageDao @Autowired constructor(
                 IMAGE_REPO_URL,
                 IMAGE_REPO_NAME,
                 IMAGE_TAG,
+                DOCKER_FILE_TYPE,
+                DOCKER_FILE_CONTENT,
                 TICKET_ID,
                 AGENT_TYPE_SCOPE,
                 LOGO_URL,
@@ -527,9 +537,11 @@ class MarketImageDao @Autowired constructor(
                     ImageStatusEnum.COMMITTING.status.toByte(),
                     imageSize,
                     marketImageUpdateRequest.imageSourceType.type,
-                    marketImageUpdateRequest.imageRepoUrl,
-                    marketImageUpdateRequest.imageRepoName,
-                    marketImageUpdateRequest.imageTag,
+                    marketImageUpdateRequest.imageRepoUrl?.trim(),
+                    marketImageUpdateRequest.imageRepoName.trim(),
+                    marketImageUpdateRequest.imageTag.trim(),
+                    marketImageUpdateRequest.dockerFileType ?: "INPUT",
+                    marketImageUpdateRequest.dockerFileContent ?: "",
                     marketImageUpdateRequest.ticketId,
                     JsonUtil.toJson(marketImageUpdateRequest.agentTypeScope),
                     marketImageUpdateRequest.logoUrl,
@@ -738,6 +750,14 @@ class MarketImageDao @Autowired constructor(
         if (!imageSize.isNullOrBlank()) {
             baseStep.set(IMAGE_SIZE, imageSize)
         }
+        val dockerFileType = imageBaseInfoUpdateRequest.dockerFileType
+        if (!dockerFileType.isNullOrBlank()) {
+            baseStep.set(DOCKER_FILE_TYPE, dockerFileType)
+        }
+        val dockerFileContent = imageBaseInfoUpdateRequest.dockerFileContent
+        if (dockerFileContent != null) {
+            baseStep.set(DOCKER_FILE_CONTENT, dockerFileContent)
+        }
         val deleteFlag = imageBaseInfoUpdateRequest.deleteFlag
         if (null != deleteFlag) {
             baseStep.set(DELETE_FLAG, deleteFlag)
@@ -824,7 +844,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: Collection<String>?,
         notInImageCodes: Collection<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?
@@ -842,8 +862,8 @@ class MarketImageDao @Autowired constructor(
         if (recommendFlag != null) {
             conditions.add(tImageFeature.RECOMMEND_FLAG.eq(recommendFlag))
         }
-        if (!imageNamePart.isNullOrBlank()) {
-            conditions.add(tImage.IMAGE_NAME.contains(imageNamePart))
+        if (!keyword.isNullOrBlank()) {
+            conditions.add(tImage.IMAGE_NAME.contains(keyword).or(tImage.SUMMARY.contains(keyword)))
         }
         if (!classifyId.isNullOrBlank()) {
             conditions.add(tImage.CLASSIFY_ID.eq(classifyId))
@@ -863,7 +883,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: List<String>?,
         notInImageCodes: List<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
@@ -871,7 +891,7 @@ class MarketImageDao @Autowired constructor(
         visibleImageCodes: List<String>,
         offset: Int? = 0,
         limit: Int? = -1
-    ): Result<Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>>? {
+    ): Result<Record>? {
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
         val extraConditions = mutableListOf<Condition>()
         extraConditions.add(tImageFeature.IMAGE_CODE.`in`(visibleImageCodes.subtract(installedImageCodes)))
@@ -880,7 +900,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType,
@@ -898,7 +918,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: List<String>?,
         notInImageCodes: List<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
@@ -913,7 +933,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType,
@@ -929,14 +949,14 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: List<String>?,
         notInImageCodes: List<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
         installedImageCodes: List<String>,
         offset: Int? = 0,
         limit: Int? = -1
-    ): Result<Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>>? {
+    ): Result<Record>? {
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
         val extraConditions = mutableListOf<Condition>()
         extraConditions.add(tImageFeature.IMAGE_CODE.`in`(installedImageCodes))
@@ -945,7 +965,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType,
@@ -963,7 +983,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: List<String>?,
         notInImageCodes: List<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
@@ -977,7 +997,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType,
@@ -993,14 +1013,14 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: List<String>?,
         notInImageCodes: List<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
         visibleImageCodes: List<String>,
         offset: Int? = 0,
         limit: Int? = -1
-    ): Result<Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>>? {
+    ): Result<Record>? {
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
         val extraConditions = mutableListOf<Condition>()
         extraConditions.add(tImageFeature.IMAGE_CODE.notIn(visibleImageCodes))
@@ -1009,7 +1029,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType,
@@ -1027,7 +1047,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: List<String>?,
         notInImageCodes: List<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
@@ -1043,7 +1063,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType,
@@ -1059,13 +1079,13 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: Collection<String>?,
         notInImageCodes: Collection<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
         offset: Int? = 0,
         limit: Int? = -1
-    ): Result<Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>>? {
+    ): Result<Record>? {
         val validOffset = if (offset == null || offset < 0) 0 else offset
         val validLimit = if (limit == null || limit <= 0) null else limit
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
@@ -1078,7 +1098,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType
@@ -1103,6 +1123,8 @@ class MarketImageDao @Autowired constructor(
             tImage.IMAGE_REPO_URL.`as`(KEY_IMAGE_REPO_URL),
             tImage.IMAGE_REPO_NAME.`as`(KEY_IMAGE_REPO_NAME),
             tImage.IMAGE_TAG.`as`(KEY_IMAGE_TAG),
+            tImage.DOCKER_FILE_TYPE.`as`(KEY_IMAGE_DOCKER_FILE_TYPE),
+            tImage.DOCKER_FILE_CONTENT.`as`(KEY_IMAGE_DOCKER_FILE_CONTENT),
             tCategory.CATEGORY_CODE.`as`(KEY_CATEGORY_CODE),
             tCategory.CATEGORY_NAME.`as`(KEY_CATEGORY_NAME),
             tImage.PUBLISHER.`as`(KEY_PUBLISHER),
@@ -1136,7 +1158,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: Collection<String>?,
         notInImageCodes: Collection<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?
@@ -1151,7 +1173,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType
@@ -1179,14 +1201,14 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: List<String>?,
         notInImageCodes: List<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
         extraConditions: List<Condition>?,
         offset: Int? = 0,
         limit: Int? = -1
-    ): Result<Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>>? {
+    ): Result<Record>? {
         val validOffset = if (offset == null || offset < 0) 0 else offset
         val validLimit = if (limit == null || limit <= 0) null else limit
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
@@ -1199,7 +1221,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType
@@ -1229,6 +1251,8 @@ class MarketImageDao @Autowired constructor(
             tImage.IMAGE_REPO_URL.`as`(KEY_IMAGE_REPO_URL),
             tImage.IMAGE_REPO_NAME.`as`(KEY_IMAGE_REPO_NAME),
             tImage.IMAGE_TAG.`as`(KEY_IMAGE_TAG),
+            tImage.DOCKER_FILE_TYPE.`as`(KEY_IMAGE_DOCKER_FILE_TYPE),
+            tImage.DOCKER_FILE_CONTENT.`as`(KEY_IMAGE_DOCKER_FILE_CONTENT),
             tCategory.CATEGORY_CODE.`as`(KEY_CATEGORY_CODE),
             tCategory.CATEGORY_NAME.`as`(KEY_CATEGORY_NAME),
             tImage.PUBLISHER.`as`(KEY_PUBLISHER),
@@ -1264,7 +1288,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: List<String>?,
         notInImageCodes: List<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
@@ -1281,7 +1305,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType

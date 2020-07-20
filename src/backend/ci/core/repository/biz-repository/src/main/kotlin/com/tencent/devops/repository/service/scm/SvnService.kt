@@ -83,7 +83,7 @@ class SvnService : ISvnService {
             }
             val basicAuthenticationManager = BasicAuthenticationManager(arrayOf(auth))
             repository.authenticationManager = basicAuthenticationManager
-            repository.getFile(filePath, reversion, SVNProperties(), bos)
+            repository.getFile(filePath.removePrefix("/"), reversion, SVNProperties(), bos)
             return bos.toString()
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get svn file content")
@@ -134,6 +134,9 @@ class SvnService : ISvnService {
                 val name = it.name
                 SvnFileInfo(type, name)
             }
+        } catch (e: Exception) {
+            logger.error("getDirectories error, msg:$e")
+            throw e
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the directories")
         }

@@ -3,9 +3,7 @@
         v-bkloading="{
             isLoading: pageLoading
         }">
-        <pipeline-header
-            :title="header.title"
-            :links="header.links">
+        <pipeline-header :title="header.title">
             <span class="default-subheader-icon"
                 slot="logo">
                 <logo size="32" name="pipeline"></logo>
@@ -19,7 +17,7 @@
                 </li>
                 <li>
                     <div class="manage-view-btn" v-show="currentViewId">
-                        <i class="bk-icon icon-plus" @click="toggleShowViewManage()"></i>
+                        <i class="devops-icon icon-plus" @click="toggleShowViewManage()"></i>
                         <view-manage v-if="showViewManage"></view-manage>
                     </div>
                 </li>
@@ -27,8 +25,8 @@
 
             <div class="default-link-list" slot="right">
                 <div class="dropdown-trigger" @click.stop="toggleIsMoreHandler">
-                    <span class="more-handler" id="moreHeaderHandler" :class="{ 'selectde-title': dropdownTitle !== '更多' }">{{ dropdownTitle }}
-                        <i :class="['bk-icon icon-angle-down', { 'icon-flip': toggleIsMore }, { 'selectde-title': dropdownTitle !== '更多' }]"
+                    <span class="more-handler" id="moreHeaderHandler" :class="{ 'selectde-title': dropdownTitle !== $t('more') }">{{ dropdownTitle }}
+                        <i :class="['devops-icon icon-angle-down', { 'icon-flip': toggleIsMore }, { 'selectde-title': dropdownTitle !== $t('more') }]"
                             id="toggleHeaderIcon"></i>
                     </span>
                 </div>
@@ -37,17 +35,27 @@
                         <li>
                             <a href="javascript:;" class="text-link" id="toggleLabels"
                                 :class="{ 'selected-item': routeName === 'pipelinesGroup' }"
-                                @click="routerToManage('pipelinesGroup')">标签管理</a>
+                                @click="routerToManage('pipelinesGroup')">{{$t('labelManage')}}</a>
                         </li>
                         <li>
                             <a href="javascript:;" class="text-link" id="toggleViews"
                                 :class="{ 'selected-item': routeName === 'pipelinesView' }"
-                                @click="routerToManage('pipelinesView')">视图管理</a>
+                                @click="routerToManage('pipelinesView')">{{$t('viewManage')}}</a>
                         </li>
                         <li>
                             <a href="javascript:;" class="text-link" id="toggleTemplates"
                                 :class="{ 'selected-item': routeName === 'pipelinesTemplate' }"
-                                @click="routerToManage('pipelinesTemplate')">模板管理</a>
+                                @click="routerToManage('pipelinesTemplate')">{{$t('templateManage')}}</a>
+                        </li>
+                        <li>
+                            <a href="javascript:;" class="text-link" id="toggleManage"
+                                :class="{ 'selected-item': routeName === 'atomManage' }"
+                                @click="routerToManage('atomManage')">{{$t('pluginManage')}}</a>
+                        </li>
+                        <li>
+                            <a href="javascript:;" class="text-link" id="toggleManage"
+                                :class="{ 'selected-item': routeName === 'pipelinesRestore' }"
+                                @click="routerToManage('pipelinesRestore')">{{$t('restore.recycleBin')}}</a>
                         </li>
                     </ul>
                 </div>
@@ -78,13 +86,7 @@
                 isLoading: false,
                 toggleIsMore: false,
                 header: {
-                    title: '流水线',
-                    links: [
-                        {
-                            title: '入门指南',
-                            handler: this.tutorial
-                        }
-                    ]
+                    title: this.$t('pipeline')
                 }
             }
         },
@@ -100,14 +102,25 @@
             },
             dropdownTitle () {
                 let title
-                if (this.routeName === 'pipelinesGroup') {
-                    title = '标签管理'
-                } else if (this.routeName === 'pipelinesView') {
-                    title = '视图管理'
-                } else if (this.routeName === 'pipelinesTemplate') {
-                    title = '模板管理'
-                } else {
-                    title = '更多'
+                switch (this.routeName) {
+                    case 'pipelinesGroup':
+                        title = this.$t('labelManage')
+                        break
+                    case 'pipelinesView':
+                        title = this.$t('viewManage')
+                        break
+                    case 'pipelinesTemplate':
+                        title = this.$t('templateManage')
+                        break
+                    case 'atomManage':
+                        title = this.$t('pluginManage')
+                        break
+                    case 'pipelinesRestore':
+                        title = this.$t('restore.recycleBin')
+                        break
+                    default:
+                        title = this.$t('more')
+                        break
                 }
                 return title
             },
@@ -164,7 +177,7 @@
                 }
             },
             tutorial () {
-                window.open(`${DOCS_URL_PREFIX}/所有服务/流水线/什么是流水线/summary.html`, '_blank')
+                window.open(`${DOCS_URL_PREFIX}/x/RY6j`, '_blank')
             },
             routerToManage (type) {
                 this.$router.push({ name: type })
@@ -273,7 +286,7 @@
                 font-size: 14px;
                 cursor: pointer;
             }
-            .bk-icon {
+            .devops-icon {
                 display: inline-block;
                 transition: all ease 0.2s;
                 margin-left: 4px;

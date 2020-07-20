@@ -27,13 +27,14 @@
 package com.tencent.devops.process.engine.bean
 
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 
 class DefaultPipelineUrlBeanImpl constructor(private val commonConfig: CommonConfig) : PipelineUrlBean {
     override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
-        return "${commonConfig.devopsHostGateway}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
     }
 
     override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
-        return "${commonConfig.devopsHostGateway}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
+        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
     }
 }

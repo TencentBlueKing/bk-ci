@@ -2,24 +2,25 @@
     <table class="bk-table pipeline-list-table">
         <thead>
             <tr>
-                <th width="20%" class="pl30">任务名称</th>
-                <th width="30%"></th>
-                <th width="8%">插件总数</th>
-                <th width="8%">已执行次数</th>
-                <th width="8%">最新构建号</th>
-                <th width="15%">执行开始时间</th>
-                <th width="10%">操作</th>
+                <th width="20%" class="pl30">{{ $t('pipelineName') }}</th>
+                <th width="25%"></th>
+                <th width="8%">{{ $t('newlist.totalAtomNums') }}</th>
+                <th width="8%">{{ $t('newlist.execTimes') }}</th>
+                <th width="8%">{{ $t('lastBuildNum') }}</th>
+                <th width="12%">{{ $t('lastExecTime') }}</th>
+                <th width="8%">{{ $t('creator') }}</th>
+                <th width="10%">{{ $t('operate') }}</th>
             </tr>
         </thead>
         <tbody>
             <template
-                v-for="(row, index) of list">
+                v-for="(row, index) of listWithConfig">
                 <tr
                     style="position: relative"
                     :key="`taskTable${index}_re`">
                     <td class="table-list-name text-overflow"
                         :class="row.feConfig && row.feConfig.status">
-                        <a v-if="row.hasPermission" href="javascript:;" class="text-link" @click="emitEventHandler('title-click', row.pipelineId)">
+                        <a v-if="row.hasPermission" :href="getHistoryURL(row.pipelineId)" :title="row.pipelineName" class="text-link" @click.prevent.stop="e => goHistory(e, row.pipelineId)">
                             {{ row.pipelineName }}
                         </a>
                         <span v-else>{{ row.pipelineName }}</span>
@@ -45,13 +46,13 @@
                         <a href="javascript:;" class="text-link item-text-btn"
                             v-if="row.feConfig && row.feConfig.status === 'running'"
                             @click.stop.prevent="emitEventHandler('terminate-pipeline', row.pipelineId)">
-                            终止
+                            {{ $t('terminate') }}
                         </a>
                         <a href="javascript:;" class="text-link item-text-btn noticed"
                             v-if="row.feConfig && row.feConfig.status === 'error'"
                             @click.stop.prevent="emitEventHandler('error-noticed', row.pipelineId)">
-                            知道了
-                            <i class="bk-icon icon-check-1"></i>
+                            {{ $t('newlist.known') }}
+                            <i class="devops-icon icon-check-1"></i>
                         </a>
                     </td>
                     <td v-else></td>
@@ -81,14 +82,15 @@
                     </td>
                     <td>{{ row.feConfig && row.feConfig.content[0].value }}</td>
                     <td>{{ calcLatestStartBuildTime(row) }}</td>
+                    <td>{{ row.creator }}</td>
                     <td>
                         <ext-menu
                             v-if="row.hasPermission"
                             :config="row.feConfig">
                         </ext-menu>
                         <a v-else href="javascript:;" class="text-link"
-                            @click.stop.prevent="applyPermission(row.pipelineName, row.pipelineId)">
-                            申请权限
+                            @click.stop.prevent="applyPermission(row)">
+                            {{ $t('newlist.applyPerm') }}
                         </a>
                     </td>
                 </tr>
@@ -98,26 +100,31 @@
 </template>
 
 <script>
-    import progressBar from '@/components/devops/progressBar'
-    import triggers from '@/components/pipeline/triggers'
-    import extMenu from '@/components/pipelineList/extMenu'
-    import { bus } from '@/utils/bus'
     import { convertMStoString } from '@/utils/util'
+    import mixins from '../pipeline-list-mixins'
     export default {
-        components: {
-            progressBar,
-            triggers,
-            extMenu
-        },
+        mixins: [mixins],
         props: {
             list: {
                 type: Array,
-                default: []
+                default: () => []
+            },
+            pipelineFeConfMap: {
+                type: Object,
+                deafult: () => ({})
             }
         },
         data () {
             return {
                 isShowExtMenu: false
+            }
+        },
+        computed: {
+            listWithConfig () {
+                return this.list.map(item => ({
+                    ...item,
+                    feConfig: this.pipelineFeConfMap[item.pipelineId] || {}
+                }))
             }
         },
         methods: {
@@ -138,18 +145,6 @@
                 } else {
                     return '--'
                 }
-            },
-            triggersExec ({ pipelineId, ...params }) {
-                bus.$emit('triggers-exec', params, pipelineId)
-            },
-            /**
-             *  参数为pipelineId的触发全局bus事件
-             */
-            emitEventHandler (eventName, pipelineId) {
-                bus.$emit(eventName, pipelineId)
-            },
-            applyPermission (pipelineName, pipelineId) {
-                bus.$emit('set-permission', `流水线：${pipelineName}`, '查看', pipelineId)
             }
         }
     }

@@ -53,21 +53,21 @@ class VMCache @Autowired constructor(
     private val cache = CacheBuilder.newBuilder()
             .maximumSize(3000)
             .expireAfterWrite(30, TimeUnit.MINUTES)
-            .build<Int/*vmId*/, VirtualMachine>(
-                    object : CacheLoader<Int, VirtualMachine>() {
+            .build<Long/*vmId*/, VirtualMachine>(
+                    object : CacheLoader<Long, VirtualMachine>() {
                         @Throws(Exception::class)
-                        override fun load(vmId: Int) = queryMachine(
+                        override fun load(vmId: Long) = queryMachine(
                                 vmDao.parseVM(vmDao.findVMById(dslContext, vmId)))
                     }
             )
 
-    private val machine2VMMap = ConcurrentHashMap<Int/*machineId*/, ArrayList<Int>/*vmIds*/>()
+    private val machine2VMMap = ConcurrentHashMap<Int/*machineId*/, ArrayList<Long>/*vmIds*/>()
 
-    fun getVM(vmId: Int): VirtualMachine? {
+    fun getVM(vmId: Long): VirtualMachine? {
         return cache.get(vmId)
     }
 
-    fun expire(vmId: Int) {
+    fun expire(vmId: Long) {
         cache.invalidate(vmId)
     }
 

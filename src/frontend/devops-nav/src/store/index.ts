@@ -1,5 +1,4 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+import { Store } from 'vuex'
 import getters from './getters'
 import actions from './actions'
 import mutations from './mutations'
@@ -16,18 +15,19 @@ const modules:ObjectMap = {}
 for (const key in window.Pages) {
     modules[key] = window.Pages[key].store
 }
-Vue.use(Vuex)
-export default new Vuex.Store<RootState>({
+export default new Store<RootState>({
     modules,
     mutations,
     actions,
     getters,
     state: {
+        isPermissionDialogShow: false,
         projectList,
         fetchError: null,
         moduleLoading: false,
         user: userInfo,
         services: allServices,
+        currentPage: window.currentPage,
         related: null,
         news: null,
         demo: null,
@@ -40,6 +40,7 @@ export default new Vuex.Store<RootState>({
         headerConfig: {
             showProjectList: false,
             showNav: true
-        }
+        },
+        currentNotice: {}
     }
 })

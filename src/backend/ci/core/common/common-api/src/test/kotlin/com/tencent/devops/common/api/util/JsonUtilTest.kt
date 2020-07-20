@@ -28,6 +28,7 @@ package com.tencent.devops.common.api.util
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.annotation.SkipLogField
 import org.junit.Assert
 import org.junit.Test
 
@@ -61,7 +62,7 @@ class JsonUtilTest {
 
     @Test
     fun to1() {
-        val expect: List<NameAndValue> = listOf(NameAndValue("a", "1"))
+        val expect: List<NameAndValue> = listOf(NameAndValue(key = "ai", value = "1", type = TestType.INT))
         val toJson = JsonUtil.toJson(expect)
         val actual = JsonUtil.to(toJson, object : TypeReference<List<NameAndValue>>() {})
         Assert.assertEquals(expect.size, actual.size)
@@ -74,26 +75,55 @@ class JsonUtilTest {
 
     @Test
     fun isBoolean() {
-        val p = IsBoolean(true, false, true, 3)
+        val p = IsBoolean(helmChartEnabled = true, offlined = true, isSecrecy = true, exactResource = 999)
         val json = JsonUtil.toJson(p)
-        println(json)
         println(JsonUtil.to(json, IsBoolean::class.java))
+    }
+
+    @Test
+    fun skipLogFields() {
+
+        val bean = NameAndValue(key = "name", value = "this is password 123456", type = TestType.STRING)
+        val allJsonData = JsonUtil.toJson(bean)
+
+        println("正常的Json序列化不受影响: $allJsonData")
+
+        val allFieldsMap = JsonUtil.to<Map<String, Any>>(allJsonData)
+        // 所有字段都存在，否则就是有问题
+        Assert.assertNotNull(allFieldsMap["key"])
+        Assert.assertNotNull(allFieldsMap["value"])
+        Assert.assertNotNull(allFieldsMap["valueType"])
+
+        val logJsonString = JsonUtil.skipLogFields(bean)
+
+        Assert.assertNotNull(logJsonString)
+        println("脱密后的Json不会有skipLogField的敏感log信息: $logJsonString")
+
+        val haveNoSkipLogFieldsMap = JsonUtil.to<Map<String, Any>>(logJsonString!!)
+        // 以下字段受SkipLogField注解影响，是不会出现的，如果有则说明有问题
+        Assert.assertNull(haveNoSkipLogFieldsMap["value"])
+        Assert.assertNull(haveNoSkipLogFieldsMap["valueType"])
+        // 未受SkipLogField注解影响的字段是存在的
+        Assert.assertNotNull(haveNoSkipLogFieldsMap["key"])
     }
 
     data class NameAndValue(
         val key: String,
-        val value: String
+        @SkipLogField
+        val value: String,
+        @SkipLogField("valueType") // 如果字段序列化输出命名与字段不一致，则需要填写
+        @get:JsonProperty("valueType")
+        val type: TestType
     )
 
+    enum class TestType { STRING, INT }
+
     data class IsBoolean(
-        @get:JsonProperty("is_helm_chart_enabled")
-        val isHelmChartEnabled: Boolean?,
-        @get:JsonProperty("is_offlined")
-        @set:JsonProperty("is_offlined")
-        var offlined: Boolean?,
-        @get:JsonProperty("is_secrecy")
-        @set:JsonProperty("is_secrecy")
-        var isSecrecy: Boolean?,
+        val helmChartEnabled: Boolean?, // 正确的命名
+        @get:JsonProperty("offlined") // 正确的json命名
+        val offlined: Boolean?, // 正确的命名
+        @get:JsonProperty("is_secrecy") // 错误的json命名
+        val isSecrecy: Boolean?, // 错误的字段示例命名，会导致反序列化的空值
         @get:JsonProperty("is_exact_resource")
         val exactResource: Int = 1
     )

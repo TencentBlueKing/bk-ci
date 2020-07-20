@@ -34,8 +34,7 @@ module.exports = (env = {}, argv) => {
             'echarts/lib/component/title',
             'echarts/lib/component/legend',
             'jquery',
-            'moment',
-            'xterm'
+            'moment'
         ],
         output: {
             filename: '[name].dll.js',

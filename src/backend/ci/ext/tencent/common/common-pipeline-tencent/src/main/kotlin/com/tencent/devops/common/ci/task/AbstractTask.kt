@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
     JsonSubTypes.Type(value = DockerRunDevCloudTask::class, name = DockerRunDevCloudTask.taskType + DockerRunDevCloudTask.taskVersion),
     JsonSubTypes.Type(value = DockerBuildAndPushImageTask::class, name = DockerBuildAndPushImageTask.taskType + DockerBuildAndPushImageTask.taskVersion),
     JsonSubTypes.Type(value = MarketBuildTask::class, name = MarketBuildTask.taskType + MarketBuildTask.taskVersion),
+    JsonSubTypes.Type(value = MarketBuildLessTask::class, name = MarketBuildLessTask.taskType + MarketBuildLessTask.taskVersion),
     JsonSubTypes.Type(value = CodeCCScanInContainerTask::class, name = CodeCCScanInContainerTask.taskType + CodeCCScanInContainerTask.taskVersion)
 )
 
@@ -48,9 +49,6 @@ abstract class AbstractTask(
     open val inputs: AbstractInput?,
     open val condition: String?
 ) {
-    abstract fun getTaskType(): String
-    abstract fun getTaskVersion(): String
-
     abstract fun covertToElement(config: CiBuildConfig): Element
 }
 

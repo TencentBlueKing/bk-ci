@@ -26,13 +26,13 @@
 
 package com.tencent.devops.quality.service.v2
 
+import com.google.common.collect.Maps
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
+import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
@@ -55,7 +55,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Base64
-import kotlin.Comparator
 
 @Service
 class QualityIndicatorService @Autowired constructor(
@@ -96,23 +95,31 @@ class QualityIndicatorService @Autowired constructor(
                 val elementType = controlPoint.key
 
                 // 根据codeccToolNameMap的key顺序排序
-                if (isCodeccControlPoint(elementType)) {
+                val detailIndicatorSortedMap = Maps.newLinkedHashMap<String /*detail*/, MutableList<QualityIndicator>>()
+                if (CodeccUtils.isCodeccAtom(elementType)) {
                     val propertyMap = codeccToolNameMap.entries.mapIndexed { index, entry ->
                         entry.key to index
                     }.toMap()
-                    detailIndicatorMap = detailIndicatorMap.toSortedMap(Comparator { o1, o2 ->
-                        (propertyMap[o1] ?: Int.MAX_VALUE) - (propertyMap[o2] ?: Int.MAX_VALUE)
+
+                    // toSortedMap 在key值相等会互相覆盖，所以要分开处理
+                    val originMap = detailIndicatorMap.filter { propertyMap.containsKey(it.key) }.toSortedMap(Comparator { o1, o2 ->
+                        propertyMap[o1]!! - propertyMap[o2]!!
                     })
+                    val dynamicMap = detailIndicatorMap.filter { !propertyMap.containsKey(it.key) }
+                    detailIndicatorSortedMap.putAll(originMap)
+                    detailIndicatorSortedMap.putAll(dynamicMap)
+                } else {
+                    detailIndicatorSortedMap.putAll(detailIndicatorMap)
                 }
 
                 // 按elementDetail做分组
-                val detailGroups = detailIndicatorMap.map { detailEntry ->
+                val detailGroups = detailIndicatorSortedMap.map { detailEntry ->
                     val elementDetail = detailEntry.key
                     var detailCnName = elementDetail
                     val indicatorList: List<QualityIndicator> = detailEntry.value
 
                     // codecc的指标要排序和中文特殊处理
-                    if (isCodeccControlPoint(elementType)) {
+                    if (CodeccUtils.isCodeccAtom(elementType)) {
                         detailCnName = codeccToolNameMap[elementDetail] ?: elementDetail
                     }
 
@@ -130,10 +137,6 @@ class QualityIndicatorService @Autowired constructor(
                 controlPoints = stageGroup
             )
         }
-    }
-
-    private fun isCodeccControlPoint(elementType: String): Boolean {
-        return elementType == LinuxCodeCCScriptElement.classType || elementType == LinuxPaasCodeCCScriptElement.classType
     }
 
     fun serviceList(indicatorIds: Collection<Long>): List<QualityIndicator> {
@@ -294,7 +297,10 @@ class QualityIndicatorService @Autowired constructor(
         val systemIndicators = mutableListOf<IndicatorListResponse.IndicatorListItem>()
         val marketIndicators = mutableListOf<IndicatorListResponse.IndicatorListItem>()
 
-        listIndicatorByProject(projectId).groupBy { it.elementType }.forEach { elementType, indicators ->
+        listIndicatorByProject(projectId).filter {
+            if (keyword.isNullOrBlank()) true
+            else it.cnName.contains(keyword!!)
+        }.groupBy { it.elementType }.forEach { elementType, indicators ->
             indicators.map { indicator ->
                 val metadataIds = convertMetaIds(indicator.metadataIds)
                 val metadata = metadataService.serviceListMetadata(metadataIds).map {
@@ -563,34 +569,37 @@ class QualityIndicatorService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(QualityIndicatorService::class.java)
 
         val codeccToolNameMap = mapOf(
-                "COVERITY" to "Coverity",
-                "KLOCWORK" to "Klocwork",
-                "CPPLINT" to "CppLint",
-                "ESLINT" to "ESLint",
-                "PYLINT" to "PyLint",
-                "GOML" to "Gometalinter",
-                "CHECKSTYLE" to "Checkstyle",
-                "STYLECOP" to "StyleCop",
-                "DETEKT" to "detekt",
-                "PHPCS" to "PHPCS",
-                "SENSITIVE" to "敏感信息",
-                "CCN" to "圈复杂度",
-                "DUPC" to "重复率")
+            "COVERITY" to "Coverity",
+            "KLOCWORK" to "Klocwork",
+            "CPPLINT" to "CppLint",
+            "ESLINT" to "ESLint",
+            "PYLINT" to "PyLint",
+            "GOML" to "Gometalinter",
+            "CHECKSTYLE" to "Checkstyle",
+            "STYLECOP" to "StyleCop",
+            "DETEKT" to "detekt",
+            "PHPCS" to "PHPCS",
+            "SENSITIVE" to "敏感信息",
+            "CCN" to "圈复杂度",
+            "DUPC" to "重复率",
+            "OCCHECK" to "OCCheck",
+            "RIPS" to "啄木鸟漏洞扫描-PHP",
+            "WOODPECKER_SENSITIVE" to "啄木鸟敏感信息")
 
         private val codeccToolDescMap = mapOf(
-                "COVERITY" to "斯坦福大学科学家研究成果，静态源代码分析领域的领导者",
-                "KLOCWORK" to "业界广泛使用的商用代码检查工具，与Coverity互补",
-                "CPPLINT" to "谷歌开源的C++代码风格检查工具",
-                "ESLINT" to "JavaScript代码检查工具",
-                "PYLINT" to "Python代码风格检查工具",
-                "GOML" to "Golang静态代码分析工具",
-                "CHECKSTYLE" to "Java代码风格检查工具",
-                "STYLECOP" to "微软开源的C#静态代码分析工具",
-                "DETEKT" to "Kotlin静态代码分析工具 ",
-                "PHPCS" to "PHP代码风格检查工具",
-                "SENSITIVE" to "可扫描代码中有安全风险的敏感信息",
-                "CCN" to "通过计算函数的节点个数来衡量代码复杂性",
-                "DUPC" to "可以检测项目中复制粘贴和重复开发相同功能等问题",
-                "OCCHECK" to "OC代码风格检查工具")
+            "COVERITY" to "斯坦福大学科学家研究成果，静态源代码分析领域的领导者",
+            "KLOCWORK" to "业界广泛使用的商用代码检查工具，与Coverity互补",
+            "CPPLINT" to "谷歌开源的C++代码风格检查工具",
+            "ESLINT" to "JavaScript代码检查工具",
+            "PYLINT" to "Python代码风格检查工具",
+            "GOML" to "Golang静态代码分析工具",
+            "CHECKSTYLE" to "Java代码风格检查工具",
+            "STYLECOP" to "微软开源的C#静态代码分析工具",
+            "DETEKT" to "Kotlin静态代码分析工具 ",
+            "PHPCS" to "PHP代码风格检查工具",
+            "SENSITIVE" to "可扫描代码中有安全风险的敏感信息",
+            "CCN" to "通过计算函数的节点个数来衡量代码复杂性",
+            "DUPC" to "可以检测项目中复制粘贴和重复开发相同功能等问题",
+            "OCCHECK" to "OC代码风格检查工具")
     }
 }

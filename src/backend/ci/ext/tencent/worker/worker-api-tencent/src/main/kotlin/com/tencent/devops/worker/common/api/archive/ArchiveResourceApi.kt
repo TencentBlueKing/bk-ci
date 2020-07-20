@@ -30,6 +30,9 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
@@ -45,6 +48,7 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.IosUtils
 import net.dongliu.apk.parser.ApkFile
 import okhttp3.MediaType
+import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import java.io.File
 import java.net.URLEncoder
@@ -64,7 +68,11 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildGet(path)
         val resultData: Result<Boolean> = objectMapper.readValue(request(request, "Fail to record the agent shutdown events"))
         if (resultData.isNotOk()) {
-            throw RuntimeException("检查仓库灰度失败, message: ${resultData.message}")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                errorType = ErrorType.SYSTEM,
+                errorMsg = "检查仓库灰度失败, message: ${resultData.message}"
+            )
         }
         return resultData.data!!
     }
@@ -141,7 +149,11 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             if (obj.has("code") && obj["code"].asString != "200") throw RuntimeException()
         } catch (e: Exception) {
             LoggerService.addNormalLine(e.message ?: "")
-            throw RuntimeException("archive fail: $response")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER,
+                errorMsg = "archive fail: $response"
+            )
         }
     }
 
@@ -170,7 +182,11 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
         } catch (e: Exception) {
             logger.error(e.message ?: "")
-            throw RuntimeException("archive fail: $response")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER,
+                errorMsg = "archive fail: $response"
+            )
         }
     }
 
@@ -377,5 +393,23 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         } else {
             URLEncoder.encode(str, "UTF-8")
         }
+    }
+
+    override fun uploadFile(
+        url: String,
+        destPath: String,
+        file: File,
+        headers: Map<String, String>?
+    ): Result<Boolean> {
+        LoggerService.addNormalLine("upload file url >>> $url")
+        val fileBody = RequestBody.create(MultipartFormData, file)
+        val fileName = file.name
+        val requestBody = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("file", fileName, fileBody)
+            .build()
+        val request = buildPost(url, requestBody, headers ?: emptyMap())
+        val responseContent = request(request, "upload file:$fileName fail")
+        return objectMapper.readValue(responseContent)
     }
 }

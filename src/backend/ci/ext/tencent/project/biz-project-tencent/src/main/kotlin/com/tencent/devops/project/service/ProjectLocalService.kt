@@ -40,6 +40,7 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
@@ -65,7 +66,6 @@ import com.tencent.devops.project.pojo.UserRole
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.tof.Response
@@ -83,14 +83,15 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.MessageProperties
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import org.springframework.util.StopWatch
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
 import java.util.ArrayList
 import java.util.regex.Pattern
 import javax.ws.rs.NotFoundException
+import org.springframework.dao.DuplicateKeyException as DuplicateKeyException1
 
 @Service
 class ProjectLocalService @Autowired constructor(
@@ -107,6 +108,7 @@ class ProjectLocalService @Autowired constructor(
     private val projectDispatcher: ProjectDispatcher,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val projectPermissionService: ProjectPermissionService,
+    private val projectPaasCCService: ProjectPaasCCService,
     private val gray: Gray,
     private val jmxApi: ProjectJmxApi
 ) {
@@ -121,13 +123,19 @@ class ProjectLocalService @Autowired constructor(
         validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
         logger.info("createProject user:$userId, accessToken:$accessToken, projectCreateInfo:$projectCreateInfo")
         val startEpoch = System.currentTimeMillis()
+        val watch = StopWatch()
         var success = false
         try {
+            watch.start("drawImage")
             // 随机生成图片
             val logoFile = drawImage(projectCreateInfo.englishName.substring(0, 1).toUpperCase())
+            watch.stop()
             try {
                 // 发送服务器
+                watch.start("saveLogo")
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
+                watch.stop()
+                watch.start("create auth")
                 val projectId = projectPermissionService.createResources(
                     userId = userId,
                     accessToken = accessToken,
@@ -135,10 +143,13 @@ class ProjectLocalService @Autowired constructor(
                         projectCreateInfo.englishName,
                         projectCreateInfo.projectName
                     )
-
                 )
+                watch.stop()
+                watch.start("tof get")
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
+                watch.stop()
                 try {
+                    watch.start("create dao")
                     projectDao.create(
                         dslContext = dslContext,
                         userId = userId,
@@ -148,15 +159,25 @@ class ProjectLocalService @Autowired constructor(
                         projectId = projectId,
                         channelCode = ProjectChannelCode.BS
                     )
-                    projectDispatcher.dispatch(
-                        ProjectCreateBroadCastEvent(
+                    watch.stop()
+
+                    try {
+                        watch.start("create paasCC")
+                        projectPaasCCService.createPaasCCProject(
                             userId = userId,
                             projectId = projectId,
-                            projectInfo = projectCreateInfo
+                            accessToken = accessToken,
+                            projectCreateInfo = projectCreateInfo
                         )
-                    )
-                } catch (e: DuplicateKeyException) {
+                        watch.stop()
+                    } catch (e: Throwable) {
+                        logger.warn("Fail to create the paasCC $projectCreateInfo", e)
+                        projectDao.delete(dslContext, projectId)
+                        throw e
+                    }
+                } catch (e: DuplicateKeyException1) {
                     logger.warn("Duplicate project $projectCreateInfo", e)
+                    deleteProjectFromAuth(projectId, accessToken)
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
                 } catch (t: Throwable) {
                     logger.warn("Fail to create the project ($projectCreateInfo)", t)
@@ -172,7 +193,7 @@ class ProjectLocalService @Autowired constructor(
                 }
             }
         } finally {
-//            jmxApi.execute(PROJECT_CREATE, System.currentTimeMillis() - startEpoch, success)
+            logger.info("createProject $projectCreateInfo| watch:$watch")
         }
     }
 
@@ -319,7 +340,7 @@ class ProjectLocalService @Autowired constructor(
                         projectId = projectId,
                         channelCode = ProjectChannelCode.BS
                     )
-                } catch (e: DuplicateKeyException) {
+                } catch (e: DuplicateKeyException1) {
                     logger.warn("Duplicate project $projectCreateInfo", e)
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
                 } catch (t: Throwable) {
@@ -525,7 +546,7 @@ class ProjectLocalService @Autowired constructor(
                 )
             )
             success = true
-        } catch (e: DuplicateKeyException) {
+        } catch (e: DuplicateKeyException1) {
             logger.warn("Duplicate project $projectUpdateInfo", e)
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
         } finally {
@@ -574,6 +595,9 @@ class ProjectLocalService @Autowired constructor(
         try {
             val projectIdList = getAuthProjectIds(accessToken).toSet()
             val list = ArrayList<ProjectVO>()
+            if (projectIdList == null || projectIdList.isEmpty()) {
+                return emptyList()
+            }
 
             val grayProjectSet = grayProjectSet()
 
@@ -623,8 +647,7 @@ class ProjectLocalService @Autowired constructor(
         }.toList()
     }
 
-    private fun grayProjectSet() =
-        (redisOperation.getSetMembers(gray.getGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
+    private fun grayProjectSet() = gray.grayProjectSet(redisOperation)
 
     private fun convertFile(inputStream: InputStream): File {
         val logo = Files.createTempFile("default_", ".png").toFile()
@@ -715,7 +738,8 @@ class ProjectLocalService @Autowired constructor(
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 return if (response["code"] as Int == 0) {
-                    response["project_id"] as String
+                    val responseData = response["data"] as Map<String, Any>
+                    return responseData["project_id"] as String
                 } else {
                     null
                 }
@@ -778,21 +802,29 @@ class ProjectLocalService @Autowired constructor(
         return ProjectUtils.packagingBean(gitCiProject!!, setOf())
     }
 
-    fun createUser2ProjectByUser(createUser: String, userId: String, projectCode: String): Boolean {
+    fun createUser2ProjectByUser(
+        createUser: String,
+        userId: String,
+        projectCode: String,
+        roleId: Int?,
+        roleName: String?
+    ): Boolean {
         logger.info("[createUser2ProjectByUser] createUser[$createUser] userId[$userId] projectCode[$projectCode]")
 
         if (!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectCode, BkAuthGroup.MANAGER)) {
             logger.error("$createUser is not manager for project[$projectCode]")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NOT_MANAGER))
         }
-        return createUser2Project(userId, projectCode)
+        return createUser2Project(userId, projectCode, roleId, roleName)
     }
 
     fun createUser2ProjectByApp(
         organizationType: String,
         organizationId: Long,
         userId: String,
-        projectCode: String
+        projectCode: String,
+        roleId: Int?,
+        roleName: String?
     ): Boolean {
         logger.info("[createUser2ProjectByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId] projectCode[$projectCode]")
         var bgId: Long? = null
@@ -820,7 +852,7 @@ class ProjectLocalService @Autowired constructor(
             }
         }
         if (isCreate) {
-            return createUser2Project(userId, projectCode)
+            return createUser2Project(userId, projectCode, roleId, roleName)
         } else {
             logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
@@ -832,20 +864,32 @@ class ProjectLocalService @Autowired constructor(
         projectId: String,
         userId: String,
         permission: String,
-        resourceType: String
+        resourceType: String,
+        resourceTypeCode: String
     ): Boolean {
         logger.info("createPipelinePermission createUser[$createUser] projectId[$projectId] userId[$userId] permissionList[$permission]")
         if (!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)) {
             logger.info("createPipelinePermission createUser is not project manager,createUser[$createUser] projectId[$projectId]")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NOT_MANAGER)))
         }
+        val createUserList = userId.split(",")
 
-        if (!bkAuthProjectApi.isProjectUser(userId, bsPipelineAuthServiceCode, projectId, null)) {
-            logger.info("createPipelinePermission userId is not project manager,userId[$userId] projectId[$projectId]")
-            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
+        createUserList?.forEach {
+            if (!bkAuthProjectApi.isProjectUser(it, bsPipelineAuthServiceCode, projectId, null)) {
+                logger.info("createPipelinePermission userId is not project manager,userId[$userId] projectId[$projectId]")
+                throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
+            }
         }
 
-        return createPermission(userId, projectId, permission, resourceType, bsPipelineAuthServiceCode)
+        return createPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = permission,
+            resourceType = resourceType,
+            authServiceCode = bsPipelineAuthServiceCode,
+            resourceTypeCode = resourceTypeCode,
+            userList = createUserList
+        )
     }
 
     fun createPipelinePermissionByApp(
@@ -854,32 +898,18 @@ class ProjectLocalService @Autowired constructor(
         userId: String,
         projectId: String,
         permission: String,
-        resourceType: String
+        resourceType: String,
+        resourceTypeCode: String
     ): Boolean {
-        logger.info("[createPipelinePermissionByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId] projectCode[$projectId], permission[$permission]")
-        var bgId: Long? = null
-        var deptId: Long? = null
-        var centerId: Long? = null
-        if (!bkAuthProjectApi.isProjectUser(userId, bsPipelineAuthServiceCode, projectId, null)) {
-            logger.info("createPipelinePermission userId is not project manager,userId[$userId] projectId[$projectId]")
-            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
-        }
-        when (organizationType) {
-            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG -> bgId = organizationId
-            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> deptId = organizationId
-            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> centerId = organizationId
-            else -> {
-                throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_TYPE_ERROR)))
-            }
-        }
-        val projectList = getProjectByGroupId(userId, bgId, deptId, centerId)
+        logger.info("[createPipelinePermissionByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId] projectCode[$projectId], permission[$permission], resourceType[$resourceType],resourceTypeCode[$resourceTypeCode]")
+        val projectList = getProjectListByOrg(userId, organizationType, organizationId)
         if (projectList.isEmpty()) {
             logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectId] permission ")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
         }
         var isCreate = false
         projectList.forEach { project ->
-            if (project.projectCode.equals(projectId)) {
+            if (project.projectCode == projectId) {
                 isCreate = true
                 return@forEach
             }
@@ -887,16 +917,68 @@ class ProjectLocalService @Autowired constructor(
         if (!isCreate) {
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
         }
+        val createUserList = userId.split(",")
+
+        createUserList?.forEach {
+            if (!bkAuthProjectApi.isProjectUser(it, bsPipelineAuthServiceCode, projectId, null)) {
+                logger.error("createPipelinePermission userId is not project user,userId[$it] projectId[$projectId]")
+                throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
+            }
+        }
+
         // TODO:此处bsPipelineAuthServiceCode 也需写成配置化
-        return createPermission(userId, projectId, permission, resourceType, bsPipelineAuthServiceCode)
+        return createPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = permission,
+            resourceType = resourceType,
+            authServiceCode = bsPipelineAuthServiceCode,
+            resourceTypeCode = resourceTypeCode,
+            userList = createUserList
+        )
+    }
+
+    fun getProjectRole(
+        organizationType: String,
+        organizationId: Long,
+        projectId: String
+    ): List<BKAuthProjectRolesResources> {
+        logger.info("[getProjectRole] organizationType[$organizationType], organizationId[$organizationId] projectCode[$projectId]")
+        val projectList = getProjectListByOrg("", organizationType, organizationId)
+        if (projectList.isEmpty()) {
+            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectId] permission ")
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
+        }
+        if (projectList.isEmpty()) {
+            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectId] permission ")
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
+        }
+        var queryProject: ProjectVO? = null
+        projectList.forEach { project ->
+            if (project.projectCode == projectId) {
+                queryProject = project
+                return@forEach
+            }
+        }
+        var roles = mutableListOf<BKAuthProjectRolesResources>()
+        if (queryProject != null) {
+            roles = bkAuthProjectApi.getProjectRoles(
+                bsPipelineAuthServiceCode,
+                queryProject!!.englishName,
+                queryProject!!.projectId
+            ).toMutableList()
+        }
+        return roles
     }
 
     private fun createPermission(
         userId: String,
+        userList: List<String>?,
         projectId: String,
         permission: String,
         resourceType: String,
-        authServiceCode: AuthServiceCode
+        authServiceCode: AuthServiceCode,
+        resourceTypeCode: String
     ): Boolean {
         projectDao.getByEnglishName(dslContext, projectId)
             ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
@@ -910,24 +992,58 @@ class ProjectLocalService @Autowired constructor(
             permission = authPermission,
             serviceCode = authServiceCode,
             resourceType = authResourceType,
-            resourceCode = authResourceType.value,
-            userIdList = emptyList(),
+            resourceCode = resourceTypeCode,
+            userIdList = userList ?: emptyList(),
             supplier = null
         )
     }
 
-    private fun createUser2Project(userId: String, projectId: String): Boolean {
-        logger.info("[createUser2Project]  userId[$userId] projectCode[$projectId]")
+    private fun createUser2Project(userId: String, projectId: String, roleId: Int?, roleName: String?): Boolean {
+        logger.info("[createUser2Project]  userId[$userId] projectCode[$projectId], roleId[$roleId], roleName[$roleName]")
         val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw RuntimeException()
-        val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.projectName)
-        var roleId: String? = null
+        val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.englishName)
+        var authRoleId: String? = null
         roleList.forEach {
-            if (it.roleName.equals(BkAuthGroup.DEVELOPER.value)) {
-                roleId = it.roleId.toString()
-                return@forEach
+            if (roleId == null && roleName.isNullOrEmpty()) {
+                if (it.roleName == BkAuthGroup.DEVELOPER.value) {
+                    authRoleId = it.roleId.toString()
+                    return@forEach
+                }
+            }
+            if (roleId != null) {
+                if (it.roleId == roleId) {
+                    authRoleId = it.roleId.toString()
+                    return@forEach
+                }
+            }
+            if (roleName != null) {
+                if (it.roleName == roleName) {
+                    authRoleId = it.roleId.toString()
+                    return@forEach
+                }
             }
         }
-        return bkAuthProjectApi.createProjectUser(userId, bsPipelineAuthServiceCode, projectInfo.projectId, roleId!!)
+        return bkAuthProjectApi.createProjectUser(
+            userId,
+            bsPipelineAuthServiceCode,
+            projectInfo.projectId,
+            authRoleId!!
+        )
+    }
+
+    private fun getProjectListByOrg(userId: String, organizationType: String, organizationId: Long): List<ProjectVO> {
+        var bgId: Long? = null
+        var deptId: Long? = null
+        var centerId: Long? = null
+        when (organizationType) {
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG -> bgId = organizationId
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> deptId = organizationId
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> centerId = organizationId
+            else -> {
+                throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_TYPE_ERROR)))
+            }
+        }
+        return getProjectByGroupId(userId, bgId, deptId, centerId)
     }
 
     private fun synAuthProject(

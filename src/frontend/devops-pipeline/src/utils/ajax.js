@@ -51,7 +51,7 @@ instance.interceptors.request.use(config => {
 
 instance.interceptors.response.use(response => {
     if (!response.data || typeof response.data === 'string') {
-        const msg = '后端接口数据返回为空'
+        const msg = (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('nullDataErr')) || '后端接口数据返回为空'
         console.warn('接口异常，', 'HTTP状态码：', response.status)
         if (!response.data) {
             console.error(msg)

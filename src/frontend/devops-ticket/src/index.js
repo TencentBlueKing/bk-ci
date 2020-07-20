@@ -23,7 +23,7 @@ import './scss/app.scss'
 
 window.Pages = window.Pages || {}
 window.Pages['ticket'] = {
-    title: '凭证管理',
+    title: 'credentialManage',
     routes,
     store
 }

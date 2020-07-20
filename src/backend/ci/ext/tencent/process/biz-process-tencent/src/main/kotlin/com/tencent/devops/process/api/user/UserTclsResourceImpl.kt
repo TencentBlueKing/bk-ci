@@ -119,7 +119,7 @@ class UserTclsResourceImpl @Autowired constructor(
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)
                 if (responseData["result"] == false) {
                     val msg = responseData["message"]
-                    logger.error("get env list failed: $msg")
+                    logger.warn("get env list failed: $msg")
                     throw OperationException("获取 TCLS 环境失败，请检查用户名密码是否正确，错误信息：$msg")
                 }
 
@@ -153,7 +153,7 @@ class UserTclsResourceImpl @Autowired constructor(
 
         val credential = credentialResult.data!!
         if (type != credential.credentialType) {
-            logger.error("CredentialId is invalid, expect:${type.name}, but real:${credential.credentialType.name}")
+            logger.warn("CredentialId is invalid, expect:${type.name}, but real:${credential.credentialType.name}")
             throw ParamBlankException("Fail to get the credential($credentialId) of project($projectId)")
         }
 

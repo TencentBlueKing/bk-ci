@@ -9,8 +9,8 @@
             <div class="filter-content">
                 <div>
                     <div class="form-group">
-                        <label for="pipelineName" class="filter-label">流水线名称</label>
-                        <input type="text" class="bk-form-input input-text" name="pipelineName" id="pipelineName" placeholder="支持模糊匹配"
+                        <label for="pipelineName" class="filter-label">{{ $t('pipelineName') }}：</label>
+                        <input type="text" class="bk-form-input input-text" name="pipelineName" id="pipelineName" :placeholder="$t('newlist.filterByNameTips')"
                             v-validate.initial="'max:40'"
                             :class="{
                                 'is-danger': errors.has('pipelineName')
@@ -19,16 +19,16 @@
                         <p :class="errors.has('pipelineName') ? 'error-tips' : 'normal-tips'">{{errors.first("pipelineName")}}</p>
                     </div>
                     <div class="form-group">
-                        <form-field label="创建人">
-                            <user-input :handle-change="handleChange"
+                        <form-field :label="$t('creator')">
+                            <staff-input :handle-change="handleChange"
                                 name="users"
                                 v-model="currentFilter.filterByCreator">
-                            </user-input>
+                            </staff-input>
                         </form-field>
                     </div>
                     <div class="form-group"
                         v-for="(group, index) in tagGroupList" :key="index">
-                        <label class="filter-label">{{group.name}}</label>
+                        <label class="filter-label">{{group.name}}：</label>
                         <bk-select
                             v-model="currentFilter[group.id]"
                             multiple="true">
@@ -37,9 +37,9 @@
                         </bk-select>
                     </div>
                     <div class="form-group filter-modify">
-                        <bk-button theme="primary" size="small" :disabled="isDisabled" @click.stop.prevent="filterCommit">过滤</bk-button>
+                        <bk-button theme="primary" size="small" :disabled="isDisabled" @click.stop.prevent="filterCommit">{{ $t('newlist.filter') }}</bk-button>
                         <a class="btn"
-                            @click="empty">清空</a>
+                            @click="empty">{{ $t('newlist.reset') }}</a>
                     </div>
                 </div>
             </div>
@@ -50,12 +50,13 @@
 <script>
     import { mapGetters } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
-    import UserInput from '@/components/atomFormField/UserInput/index.vue'
+    // import UserInput from '@/components/atomFormField/UserInput/index.vue'
+    import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
 
     export default {
         components: {
             FormField,
-            UserInput
+            StaffInput
         },
         props: {
             isDisabled: {
@@ -73,7 +74,7 @@
         data () {
             return {
                 sliderOpt: {
-                    title: '筛选',
+                    title: this.$t('newlist.filterTitle'),
                     quickClose: true,
                     width: 360
                 },
@@ -186,7 +187,7 @@
                 line-height: 20px;
                 font-size: 14px;
                 color: $fontWeightColor;
-                .bk-icon {
+                .devops-icon {
                     font-size: 10px;
                     color: $fontLigtherColor;
                 }
@@ -201,7 +202,7 @@
                     text-overflow: ellipsis;
                     overflow: hidden;
                     cursor: pointer;
-                    .bk-icon {
+                    .devops-icon {
                         position: absolute;
                         right: 0;
                         top: 4px;
@@ -262,7 +263,7 @@
                         padding: 0 21px;
                         line-height: 36px;
                     }
-                    .bk-icon {
+                    .devops-icon {
                         display: none;
                         position: absolute;
                         top: 12px;
@@ -276,7 +277,7 @@
                     }
                     &:hover {
                         background-color: #ebf4ff;
-                        .bk-icon {
+                        .devops-icon {
                             display: inline-block;
                         }
                     }
@@ -301,7 +302,7 @@
                 .input-text {
                     cursor: text;
                 }
-                .bk-icon {
+                .devops-icon {
                     color: $fontLigtherColor;
                     &:hover {
                         color:$fontWeightColor;
@@ -341,7 +342,7 @@
                                 width: 228px;
                                 vertical-align: initial;
                             }
-                            .bk-icon {
+                            .devops-icon {
                                 margin-left: 10px;
                                 font-size: 10px;
                                 cursor: pointer;

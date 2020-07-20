@@ -29,12 +29,14 @@ package com.tencent.devops.common.job
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.job.api.pojo.BkJobProperties
 import com.tencent.devops.common.job.api.pojo.ExecuteTaskRequest
 import com.tencent.devops.common.job.api.pojo.FastExecuteScriptRequest
 import com.tencent.devops.common.job.api.pojo.FastPushFileRequest
-import com.tencent.devops.common.job.api.pojo.JobException
 import com.tencent.devops.common.job.api.pojo.OpenStateFastPushFileRequest
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -56,7 +58,11 @@ class JobClient @Autowired constructor(
         if (taskInstanceId <= 0) {
             // 失败处理
             logger.error("start jobDevOpsFastExecuteScript failed")
-            throw JobException("start jobDevOpsFastExecuteScript failed")
+            throw TaskExecuteException(
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorMsg = "start jobDevOpsFastExecuteScript failed"
+            )
         }
         return taskInstanceId
     }
@@ -68,7 +74,11 @@ class JobClient @Autowired constructor(
         if (taskInstanceId <= 0) {
             // 失败处理
             logger.error("start jobDevOpsFastPushfile failed")
-            throw JobException("start jobDevOpsFastPushfile failed")
+            throw TaskExecuteException(
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorMsg = "start jobDevOpsFastPushfile failed"
+            )
         }
         return taskInstanceId
     }
@@ -80,7 +90,11 @@ class JobClient @Autowired constructor(
         if (taskInstanceId <= 0) {
             // 失败处理
             logger.error("start openStateFastPushFileDevops failed")
-            throw JobException("start openStateFastPushFileDevops failed")
+            throw TaskExecuteException(
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorMsg = "start openStateFastPushFileDevops failed"
+            )
         }
         return taskInstanceId
     }
@@ -92,7 +106,11 @@ class JobClient @Autowired constructor(
         if (taskInstanceId <= 0) {
             // 失败处理
             logger.error("start jobDevOpsFastPushfile failed")
-            throw JobException("start jobDevOpsFastPushfile failed")
+            throw TaskExecuteException(
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorMsg = "start jobDevOpsFastPushfile failed"
+            )
         }
         return taskInstanceId
     }
@@ -112,7 +130,11 @@ class JobClient @Autowired constructor(
                 } else {
                     val msg = response["message"] as String
                     logger.error("Get job lastModifyUser failed, msg: $msg")
-                    throw JobException("Get job lastModifyUser failed, msg: $msg")
+                    throw TaskExecuteException(
+                        errorType = ErrorType.USER,
+                        errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                        errorMsg = "Get job lastModifyUser failed, msg: $msg"
+                    )
                 }
             }
         } catch (e: Exception) {
@@ -150,7 +172,11 @@ class JobClient @Autowired constructor(
                 } else {
                     val msg = response["message"] as String
                     logger.error("job execute failed, msg: $msg")
-                    throw JobException("job execute failed, msg: $msg")
+                    throw TaskExecuteException(
+                        errorType = ErrorType.USER,
+                        errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                        errorMsg = "job execute failed, msg: $msg"
+                    )
                 }
             }
         } catch (e: Exception) {
@@ -180,7 +206,11 @@ class JobClient @Autowired constructor(
             } else {
                 val msg = response["message"] as String
                 logger.error("start job failed, msg: $msg")
-                throw JobException("start job failed, msg: $msg")
+                throw TaskExecuteException(
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorMsg = "start job failed, msg: $msg"
+                )
             }
         }
     }

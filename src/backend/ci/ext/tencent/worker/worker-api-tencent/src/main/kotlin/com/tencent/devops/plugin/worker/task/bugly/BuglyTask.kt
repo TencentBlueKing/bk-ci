@@ -26,14 +26,14 @@
 
 package com.tencent.devops.plugin.worker.task.bugly
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.element.BuglyElement
 import com.tencent.devops.common.pipeline.enums.Platform
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.worker.common.api.bugly.BuglyResourceApi
-import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -111,7 +111,7 @@ class BuglyTask : ITask() {
             else -> throw TaskExecuteException(
                 errorMsg = "not platform found",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
     }
@@ -120,11 +120,10 @@ class BuglyTask : ITask() {
         // search apk file
         val apkFiles = folderFile.walk().filter { return@filter it.name.endsWith(".apk") }
         // 允许有多个apk的存在
-//        if (apkFiles.count() > 1) throw RuntimeException("more than 1 apk file found in ${workspace.canonicalPath}")
         if (apkFiles.count() == 0) throw TaskExecuteException(
             errorMsg = "no apk file found in ${folderFile.canonicalPath}",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
         )
         apkFiles.forEach { apk ->
             LoggerService.addNormalLine("apk file: ${apk.canonicalPath}")
@@ -157,11 +156,10 @@ class BuglyTask : ITask() {
         val ipaFiles = folderFile.walk().filter { return@filter it.name.endsWith(".ipa") }
 
         // 允许有多个ipa文件存在
-//        if (ipaFiles.count() > 1) throw RuntimeException("more than 1 ipa file found")
         if (ipaFiles.count() == 0) TaskExecuteException(
             errorMsg = "no ipa file found in ${folderFile.canonicalPath}",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
         )
 //        LoggerService.addNormalLine("ipa file: ${ipaFile.canonicalPath}")
         ipaFiles.forEach { ipa ->
@@ -196,7 +194,7 @@ class BuglyTask : ITask() {
         if (dsymFiles.count() == 0) throw TaskExecuteException(
             errorMsg = "no dSYM file found",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
         )
         dsymFiles.forEach { dsymFile ->
 
@@ -224,11 +222,6 @@ class BuglyTask : ITask() {
             LoggerService.addNormalLine("no mapping.txt found")
             return
         }
-        // 允许上传多个mapping.txt
-//        if (mappingFile.count() > 1) {
-//            throw RuntimeException("more than 1 mapping.txt found")
-//        }
-//        val file = mappingFiles.elementAt(0)
         mappingFiles.forEach { mappingFile ->
             LoggerService.addNormalLine("mappingFile: ${mappingFile.canonicalPath}")
             postBuglyFile(mappingFile, appId, appKey, "1", buildId)
@@ -254,7 +247,7 @@ class BuglyTask : ITask() {
         if (!sourceFolder.isDirectory) throw TaskExecuteException(
             errorMsg = "$folder is not a directory",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorCode = ErrorCode.USER_INPUT_INVAILD
         )
         // transfer .so
         // 按照目录来压缩
@@ -316,7 +309,7 @@ class BuglyTask : ITask() {
 
     // 转化so文件
     private fun outputBuglyTool(jarName: String): URL {
-        val buglyToolInputMD5Stream = Thread.currentThread().contextClassLoader.getResourceAsStream(jarName)
+        val buglyToolInputMD5Stream = Thread.currentThread().contextClassLoader.getResourceAsStream("$jarName.file")
         val inputMD5 = DigestUtils.md5Hex(buglyToolInputMD5Stream)
         val outputFile = File(jarName)
         // 是否执行输出
@@ -335,15 +328,15 @@ class BuglyTask : ITask() {
             var buglyToolInputStream: InputStream? = null
             var buglyToolOutputStream: OutputStream? = null
             try {
-                buglyToolInputStream = Thread.currentThread().contextClassLoader.getResourceAsStream(jarName)
+                buglyToolInputStream = Thread.currentThread().contextClassLoader.getResourceAsStream("$jarName.file")
                 buglyToolOutputStream = outputFile.outputStream()
                 buglyToolInputStream.copyTo(buglyToolOutputStream)
             } catch (e: Exception) {
-                LoggerService.addNormalLine("Failed to export bugly tool $jarName")
+                LoggerService.addNormalLine("Failed to export bugly tool $jarName:$e")
                 throw TaskExecuteException(
-                    errorMsg = "Failed to export bugly tool $jarName",
+                    errorMsg = "Failed to export bugly tool $jarName:$e",
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD
+                    errorCode = ErrorCode.USER_INPUT_INVAILD
                 )
             } finally {
                 // 关闭输入输出流
@@ -384,7 +377,7 @@ class BuglyTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "post bugly file fail. ${result.data}",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
             )
         }
     }

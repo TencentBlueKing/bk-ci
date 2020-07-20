@@ -32,10 +32,14 @@ import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.SVNVersion
 import com.tencent.devops.plugin.worker.task.scm.util.RepoCommitUtil
 import com.tencent.devops.plugin.worker.task.scm.util.SvnUtil
+import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_COMMENT
 import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_ID
 import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_TIMES
+import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
+import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.scm.CommitSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.slf4j.LoggerFactory
 import org.tmatesoft.svn.core.SVNDepth
@@ -71,7 +75,8 @@ open class SvnUpdateTask constructor(
     protected open val pipelineId: String,
     protected open val buildId: String,
     protected open val repositoryConfig: RepositoryConfig,
-    protected open val svnVersion: SVNVersion?
+    protected open val svnVersion: SVNVersion?,
+    protected open val svnRepo: CodeSvnRepository
 ) {
     companion object {
         private val SVN_ERROR_CODES_SHOULD_RETRY = HashSet<Int>()
@@ -94,6 +99,8 @@ open class SvnUpdateTask constructor(
 
         private val logger = LoggerFactory.getLogger(SvnUpdateTask::class.java)
     }
+
+    private val commitResourceApi = ApiFactory.create(CommitSDKApi::class)
 
     protected open fun preUpdate() {}
 
@@ -200,6 +207,16 @@ open class SvnUpdateTask constructor(
                 commitMaterial.commitTimes.toString()
         }
 
+        commitResourceApi.saveBuildMaterial(listOf(
+            PipelineBuildMaterial(
+                aliasName = svnRepo.aliasName,
+                url = svnRepo.url,
+                branchName = "",
+                newCommitId = commitMaterial.newCommitId ?: commitMaterial.lastCommitId,
+                newCommitComment = commitMaterial.newCommitComment,
+                commitTimes = commitMaterial.commitTimes
+            )
+        ))
         return env
     }
 

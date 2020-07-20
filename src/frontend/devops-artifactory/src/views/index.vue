@@ -34,8 +34,7 @@
                 },
                 sideMenuNav: {
                     icon: 'artifactory',
-                    title: '版本仓库',
-                    url: `${DOCS_URL_PREFIX}/所有服务/版本仓库/summary.html`
+                    title: '制品库'
                 },
                 baseObj: {
                     icon: 'icon-folder',
@@ -89,7 +88,6 @@
             }
         },
         created () {
-            this.$store.dispatch('artifactory/requestProjectList')
             bus.$off('get-item')
             bus.$on('get-item', (data) => {
                 this.getItems(data.roadMap, data.list, data.noLoading)

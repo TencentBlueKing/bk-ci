@@ -18,11 +18,92 @@
  */
 
 import Vue from 'vue'
-import { SET_TEMPLATE, SET_ATOMS, SET_ATOM_MODAL_FETCHING, SET_ATOM_MODAL, SET_CONTAINER_FETCHING, UPDATE_ATOM_TYPE, SET_CONTAINER_DETAIL, ADD_CONTAINER, PROPERTY_PANEL_VISIBLE, INSERT_ATOM, DELETE_ATOM, DELETE_CONTAINER, UPDATE_CONTAINER, DELETE_STAGE, ADD_STAGE, CONTAINER_TYPE_SELECTION_VISIBLE, SET_INSERT_STAGE_INDEX, UPDATE_ATOM, SET_PIPELINE_EDITING, SET_PIPELINE, SET_BUILD_PARAM, DELETE_ATOM_PROP, SET_PIPELINE_EXEC_DETAIL, SET_REMOTE_TRIGGER_TOKEN, SET_GLOBAL_ENVS, TOGGLE_ATOM_SELECTOR_POPUP, UPDATE_ATOM_INPUT, UPDATE_ATOM_OUTPUT, UPDATE_ATOM_OUTPUT_NAMESPACE, FETCHING_ATOM_LIST, SET_STORE_DATA, SET_STORE_LOADING, SET_STORE_SEARCH, FETCHING_ATOM_VERSION, SET_ATOM_VERSION_LIST, SET_EXECUTE_STATUS, SET_SAVE_STATUS } from './constants'
-import { getAtomModalKey, getAtomDefaultValue, getAtomOutputObj, isNewAtomTemplate } from './atomUtil'
+import {
+    SET_STAGE_TAG_LIST,
+    SET_PIPELINE_STAGE,
+    SET_PIPELINE_CONTAINER,
+    SET_TEMPLATE,
+    SET_ATOMS,
+    SET_ATOM_MODAL_FETCHING,
+    SET_ATOM_MODAL,
+    SET_CONTAINER_FETCHING,
+    UPDATE_ATOM_TYPE,
+    SET_CONTAINER_DETAIL,
+    ADD_CONTAINER,
+    PROPERTY_PANEL_VISIBLE,
+    INSERT_ATOM,
+    DELETE_ATOM,
+    DELETE_CONTAINER,
+    UPDATE_CONTAINER,
+    DELETE_STAGE,
+    UPDATE_STAGE,
+    ADD_STAGE,
+    CONTAINER_TYPE_SELECTION_VISIBLE,
+    SET_INSERT_STAGE_INDEX,
+    UPDATE_ATOM,
+    SET_PIPELINE_EDITING,
+    SET_PIPELINE,
+    SET_BUILD_PARAM,
+    DELETE_ATOM_PROP,
+    SET_PIPELINE_EXEC_DETAIL,
+    SET_REMOTE_TRIGGER_TOKEN,
+    SET_GLOBAL_ENVS,
+    TOGGLE_ATOM_SELECTOR_POPUP,
+    UPDATE_ATOM_INPUT,
+    UPDATE_WHOLE_ATOM_INPUT,
+    UPDATE_ATOM_OUTPUT,
+    UPDATE_ATOM_OUTPUT_NAMESPACE,
+    FETCHING_ATOM_LIST,
+    SET_STORE_DATA,
+    SET_STORE_LOADING,
+    SET_STORE_SEARCH,
+    FETCHING_ATOM_VERSION,
+    SET_ATOM_VERSION_LIST,
+    SET_EXECUTE_STATUS,
+    SET_SAVE_STATUS,
+    SET_DEFAULT_STAGE_TAG,
+    TOGGLE_REVIEW_DIALOG,
+    TOGGLE_STAGE_REVIEW_PANEL
+} from './constants'
+import {
+    getAtomModalKey,
+    getAtomDefaultValue,
+    getAtomOutputObj,
+    getAtomPreviousVal,
+    isNewAtomTemplate
+} from './atomUtil'
 import { hashID } from '@/utils/util'
 
 export default {
+    [TOGGLE_STAGE_REVIEW_PANEL]: (state, { isShow, editingElementPos = null }) => {
+        Object.assign(state, {
+            showStageReviewPanel: isShow,
+            editingElementPos
+        })
+    },
+    [TOGGLE_REVIEW_DIALOG]: (state, { isShow: showReviewDialog, reviewInfo }) => {
+        Vue.set(state, 'showReviewDialog', showReviewDialog)
+        Vue.set(state, 'reviewInfo', reviewInfo)
+    },
+    [SET_DEFAULT_STAGE_TAG]: (state, defaultStageTags) => {
+        Vue.set(state, 'defaultStageTags', defaultStageTags)
+    },
+    [SET_STAGE_TAG_LIST]: (state, stageTagList) => {
+        Vue.set(state, 'stageTagList', stageTagList)
+    },
+    [SET_PIPELINE_STAGE]: (state, stages) => {
+        state.pipeline.stages = stages
+    },
+    [SET_PIPELINE_CONTAINER]: (state, { oldContainers, containers }) => {
+        const stages = state.pipeline.stages || []
+        const stageIndex = stages.findIndex(stage => stage.containers === oldContainers)
+        if (containers.length > 0) {
+            const currentStage = state.pipeline.stages[stageIndex] || {}
+            currentStage.containers = containers
+        } else {
+            state.pipeline.stages.splice(stageIndex, 1)
+        }
+    },
     [SET_EXECUTE_STATUS]: (state, status) => {
         return Object.assign(state, {
             executeStatus: status
@@ -47,7 +128,7 @@ export default {
         return state
     },
     [SET_PIPELINE_EDITING]: (state, editing) => {
-        Vue.set(state.pipeline, 'editing', editing)
+        if (state.pipeline) Vue.set(state.pipeline, 'editing', editing)
         return state
     },
     [SET_CONTAINER_DETAIL]: (state, { containerTypeList, containerModalMap }) => {
@@ -109,29 +190,40 @@ export default {
     [UPDATE_ATOM_TYPE]: (state, { container, atomCode, version, atomIndex }) => {
         const key = getAtomModalKey(atomCode, version)
         const atomModal = state.atomModalMap[key]
+        const preVerEle = container.elements[atomIndex]
+        const preVerkey = getAtomModalKey(preVerEle.atomCode, preVerEle.version)
+        const preVerAtomModal = state.atomModalMap[preVerkey] || { props: {} }
+        const isChangeAtom = atomModal.atomCode !== preVerAtomModal.atomCode
         let atom = null
         if (isNewAtomTemplate(atomModal.htmlTemplateVersion)) {
+            const preVerData = preVerEle.data || {}
+            const preVerModelProps = preVerAtomModal.props || {}
             atom = {
+                id: `e-${hashID(32)}`,
                 '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
                 atomCode,
                 name: atomModal.name,
                 version,
                 data: {
                     input: {
-                        ...getAtomDefaultValue(atomModal.props.input)
+                        ...getAtomDefaultValue(atomModal.props.input),
+                        ...getAtomPreviousVal(preVerData.input, preVerModelProps.input, atomModal.props.input, isChangeAtom)
                     },
                     output: {
                         ...getAtomOutputObj(atomModal.props.output)
-                    }
+                    },
+                    namespace: isChangeAtom ? '' : preVerData.namespace || ''
                 }
             }
         } else {
             atom = {
+                id: `e-${hashID(32)}`,
                 '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
                 atomCode,
                 version,
                 name: atomModal.name,
-                ...getAtomDefaultValue(atomModal.props)
+                ...getAtomDefaultValue(atomModal.props),
+                ...getAtomPreviousVal(preVerEle, preVerAtomModal.props, atomModal.props, isChangeAtom)
             }
         }
         container.elements.splice(atomIndex, 1, atom)
@@ -156,6 +248,14 @@ export default {
         }
     },
 
+    [UPDATE_WHOLE_ATOM_INPUT]: (state, { atom, newInput }) => {
+        try {
+            Vue.set(atom.data, 'input', newInput)
+        } catch (e) {
+            console.warn(e, 'update atom input error', atom)
+        }
+    },
+
     [UPDATE_ATOM_OUTPUT]: (state, { atom, newParam }) => {
         try {
             for (const key in newParam) {
@@ -174,13 +274,18 @@ export default {
             console.warn(e, 'update atom input error', atom)
         }
     },
-    [DELETE_STAGE]: (state, { stages, stageIndex }) => {
-        stages.splice(stageIndex, 1)
+    [DELETE_STAGE]: (state, { stageIndex }) => {
+        state.pipeline.stages.splice(stageIndex, 1)
         return state
+    },
+    [UPDATE_STAGE]: (state, { stage, newParam }) => {
+        Object.assign(stage, newParam)
     },
     [ADD_STAGE]: (state, { stages, insertStageIndex }) => {
         stages.splice(insertStageIndex, 0, {
-            id: hashID(8),
+            id: `s-${hashID(32)}`,
+            name: `stage-${insertStageIndex + 1}`,
+            tag: [...state.defaultStageTags],
             containers: []
         })
         return state
@@ -188,8 +293,9 @@ export default {
     [ADD_CONTAINER]: (state, { containers, newContainer }) => {
         containers.push(newContainer)
     },
-    [DELETE_CONTAINER]: (state, { containers, containerIndex }) => {
-        containers.splice(containerIndex, 1)
+    [DELETE_CONTAINER]: (state, { stageIndex, containerIndex }) => {
+        const currentStage = state.pipeline.stages[stageIndex] || {}
+        currentStage.containers.splice(containerIndex, 1)
     },
     [UPDATE_CONTAINER]: (state, { container, newParam }) => {
         Object.assign(container, newParam)
@@ -202,9 +308,10 @@ export default {
     [DELETE_ATOM]: (state, { elements, atomIndex }) => {
         elements.splice(atomIndex, 1)
     },
-    [PROPERTY_PANEL_VISIBLE]: (state, { isShow, editingElementPos = null }) => {
+    [PROPERTY_PANEL_VISIBLE]: (state, { isShow, isComplete, editingElementPos = null }) => {
         return Object.assign(state, {
             isPropertyPanelVisible: isShow,
+            isShowCompleteLog: isComplete,
             editingElementPos
         })
     },
@@ -245,6 +352,6 @@ export default {
         state.storeAtomData.loading = data
     },
     [SET_STORE_SEARCH]: (state, str) => {
-        state.storeAtomData.atomName = str
+        state.storeAtomData.keyword = str
     }
 }

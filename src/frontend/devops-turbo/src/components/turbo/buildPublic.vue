@@ -152,7 +152,7 @@
                 'getDialogOpt'
             ]),
             ...mapGetters([
-                'onlineProjectList'
+                'enableProjectList'
             ])
         },
         watch: {
@@ -183,9 +183,9 @@
                 this.isBtnDisabled = true
                 try {
                     let projectName = ''
-                    this.onlineProjectList.forEach(project => {
-                        if (project.project_code === this.projectId) {
-                            projectName = project.project_name
+                    this.enableProjectList.forEach(project => {
+                        if (project.projectCode === this.projectId) {
+                            projectName = project.projectName
                         }
                     })
                     const { taskId, taskName, ccacheEnabled, banDistcc, bsPipelineId, bsPipelineName, bsVmSeqId, bsElementId, gccVersion, machineNum, cpuNum, cacheSize } = this.taskParam

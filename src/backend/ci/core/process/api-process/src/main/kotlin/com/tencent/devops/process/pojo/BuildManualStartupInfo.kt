@@ -27,6 +27,7 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildNo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -37,5 +38,7 @@ data class BuildManualStartupInfo(
     @ApiModelProperty("是否可跳过插件", required = true)
     val canElementSkip: Boolean,
     @ApiModelProperty("启动表单元素列表", required = true)
-    val properties: List<BuildFormProperty> = listOf()
+    val properties: List<BuildFormProperty> = listOf(),
+    @ApiModelProperty("指定的构建号", required = true)
+    val buildNo: BuildNo?
 )

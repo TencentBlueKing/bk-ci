@@ -3,35 +3,37 @@
         <h3 class="market-home-title ">
             <icon class="title-icon" name="color-logo-store" size="25" />
             <p class="title-name">
-                <router-link :to="{ name: 'atomHome', query: { pipeType: filterData.pipeType } }" class="back-home">研发商店</router-link>
+                <router-link :to="{ name: 'atomHome', query: { pipeType: filterData.pipeType } }" class="back-home"> {{ $t('store.研发商店') }} </router-link>
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des">{{filterData.pipeType|pipeTypeFilter}}</span>
             </p>
-            <router-link :to="{ name: 'atomList', params: { type: 'atom' } }" class="title-work">工作台</router-link>
+            <router-link :to="{ name: 'workList', params: { type: filterData.pipeType || 'atom' } }" class="title-work"> {{ $t('store.工作台') }} </router-link>
         </h3>
 
         <main class="store-main" @scroll.passive="mainScroll">
             <section class="home-main">
                 <nav class="home-nav">
-                    <section :class="[{ 'control-active': isInputFocus }, 'g-input-search']">
-                        <input class="g-input-border" type="text" placeholder="请输入名称" v-model="inputValue" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="filterData.searchStr = inputValue" />
-                        <i class="bk-icon icon-search" v-if="!inputValue"></i>
-                        <i class="bk-icon icon-close-circle-shape clear-icon" v-else @click="(inputValue = '', filterData.searchStr = '')"></i>
-                    </section>
-
+                    <bk-input class="nav-input"
+                        :placeholder="$t('store.请输入关键字')"
+                        :clearable="true"
+                        right-icon="bk-icon icon-search"
+                        :value="filterData.searchStr"
+                        @change="changeSearchStr"
+                    ></bk-input>
                     <section class="nav-pipetype">
-                        <p class="pipe-type" :class="{ 'active-tab': filterData.pipeType === 'atom' }" @click="changePipeType('atom')">
-                            <i class="bk-icon icon-atom"></i>
-                            <span>流水线插件</span>
-                        </p>
-                        <p class="pipe-type" :class="{ 'active-tab': filterData.pipeType === 'template' }" @click="changePipeType('template')">
-                            <i class="bk-icon icon-template"></i>
-                            <span>流水线模板</span>
+                        <p v-for="storeType in storeTypes"
+                            :key="storeType.type"
+                            class="pipe-type"
+                            :class="{ 'active-tab': filterData.pipeType === storeType.type }"
+                            @click="changePipeType(storeType.type)"
+                        >
+                            <icon class="title-icon" :name="`store-${storeType.type}`" size="18" />
+                            <span>{{storeType.des}}</span>
                         </p>
                     </section>
 
                     <section class="nav-fliter">
-                        <h3>分类</h3>
+                        <h3> {{ $t('store.分类') }} </h3>
                         <bk-select :value="`${filterData.classifyValue}${filterData.classifyKey || ''}`"
                             class="filter-select"
                             :scroll-height="500"
@@ -51,20 +53,20 @@
                             </bk-option-group>
                         </bk-select>
 
-                        <h3>特性<span @click="clearFliterData('features')" v-show="showFeatureClear">清除</span></h3>
+                        <h3> {{ $t('store.特性') }} <span @click="clearFliterData('features')" v-show="filterData.features.length"> {{ $t('store.清除') }} </span></h3>
                         <ul class="market-check-group">
-                            <li v-for="(feature, index) in features" :key="index" class="market-checkbox-li" @click="chooseFeature(feature)">
-                                <span :class="[feature.checked ? 'checked' : '', 'market-checkbox']"></span>
+                            <li v-for="(feature, index) in features.filter(x => !x.hidden)" :key="index" class="market-checkbox-li" @click="chooseFeature(feature)">
+                                <span :class="[filterData.features.some((x) => (x.key === feature.key && String(x.value) === String(feature.value))) ? 'checked' : '', 'market-checkbox']"></span>
                                 <span>{{ feature.name }}</span>
                             </li>
                         </ul>
 
-                        <h3>评分<span @click="clearFliterData('rates')" v-show="showRateClear">清除</span></h3>
+                        <h3> {{ $t('store.评分') }} <span @click="clearFliterData('rates')" v-show="showRateClear"> {{ $t('store.清除') }} </span></h3>
                         <ul class="rate-ul">
                             <li v-for="(rate, index) in rates" :key="rate.value" class="rate-li" @click="chooseRate(rate)">
                                 <span :class="[{ checked: rate.checked }, 'rate-radio']"></span>
                                 <comment-rate :rate="rate.value" class="rate-star"></comment-rate>
-                                <span class="rate-above" v-if="index !== 0">及以上</span>
+                                <span class="rate-above" v-if="index !== 0"> {{ $t('store.及以上') }} </span>
                             </li>
                         </ul>
                     </section>
@@ -82,6 +84,7 @@
 </template>
 
 <script>
+    import { debounce } from '@/utils/index'
     import { mapActions } from 'vuex'
     import commentRate from '@/components/common/comment-rate'
 
@@ -89,16 +92,20 @@
         components: {
             commentRate
         },
-        
+
         filters: {
             pipeTypeFilter (val) {
+                const bkLocale = window.devops || {}
                 let res = ''
                 switch (val) {
                     case 'template':
-                        res = '流水线模板'
+                        res = bkLocale.$t('store.流水线模板')
+                        break
+                    case 'image':
+                        res = bkLocale.$t('store.容器镜像')
                         break
                     default:
-                        res = '流水线插件'
+                        res = bkLocale.$t('store.流水线插件')
                         break
                 }
                 return res
@@ -111,17 +118,13 @@
                     searchStr: undefined,
                     classifyKey: undefined,
                     classifyValue: 'all',
-                    rdType: undefined,
+                    features: [],
                     score: undefined,
                     sortType: undefined,
                     pipeType: undefined
                 },
-                inputValue: '',
                 isInputFocus: false,
-                categories: [{ name: '所有', children: [{ name: '所有', id: 'all', classifyValue: 'all' }] }],
-                features: [
-                    { name: '蓝鲸官方', value: 'SELF_DEVELOPED', checked: false }
-                ],
+                categories: [{ name: this.$t('store.所有'), children: [{ name: this.$t('store.所有'), id: 'all', classifyValue: 'all' }] }],
                 rates: [
                     { value: 5, checked: false },
                     { value: 4, checked: false },
@@ -129,21 +132,28 @@
                     { value: 2, checked: false },
                     { value: 1, checked: false }
                 ],
-                showToTop: false
+                showToTop: false,
+                storeTypes: [
+                    { type: 'atom', des: this.$t('store.流水线插件') },
+                    { type: 'template', des: this.$t('store.流水线模板') },
+                    { type: 'image', des: this.$t('store.容器镜像') }
+                ]
             }
         },
 
         computed: {
-            showFeatureClear () {
-                const features = this.features || []
-                const index = features.findIndex((feature) => (feature.checked === true))
-                return index > -1
-            },
-
             showRateClear () {
                 const rates = this.rates || []
                 const index = rates.findIndex((rate) => (rate.checked === true))
                 return index > -1
+            },
+
+            features () {
+                return [
+                    { name: this.$t('store.蓝鲸官方'), key: 'rdType', value: 'SELF_DEVELOPED' },
+                    { name: this.$t('store.YAML可用'), key: 'yamlFlag', value: true, hidden: this.filterData.pipeType !== 'atom' },
+                    { name: this.$t('store.推荐使用'), key: 'recommendFlag', value: true }
+                ]
             }
         },
 
@@ -164,24 +174,38 @@
             },
 
             'filterData.pipeType': {
-                handler () {
-                    this.getClassifys()
+                handler (val) {
+                    this.getClassifys(val)
                 },
                 immediate: true
             }
         },
 
         methods: {
-            ...mapActions('store', ['requestAtomClassifys', 'requestAtomLables', 'requestTemplateList', 'requestTplCategorys', 'requestTplLabel', 'setMarketQuery']),
+            ...mapActions('store', [
+                'requestAtomClassifys',
+                'requestAtomLables',
+                'requestTemplateList',
+                'requestTplCategorys',
+                'requestTplLabel',
+                'requestTplClassify',
+                'requestImageClassifys',
+                'requestImageCategorys',
+                'requestImageLabel',
+                'setMarketQuery'
+            ]),
 
             initData () {
-                const { searchStr, classifyKey, classifyValue = 'all', rdType, score, sortType, pipeType = 'atom' } = this.$route.query
-                Object.assign(this.filterData, { searchStr, classifyKey, classifyValue, rdType, score, sortType, pipeType })
-
-                this.features.forEach((item) => {
-                    if (item.value === this.filterData.rdType) item.checked = true
-                    else item.checked = false
-                })
+                const { searchStr, classifyKey, classifyValue = 'all', features, score, sortType, pipeType = 'atom' } = this.$route.query
+                Object.assign(this.filterData, { searchStr, classifyKey, classifyValue, score, sortType, pipeType })
+                this.filterData.features = []
+                if (features) {
+                    const featuresArray = features.split(',')
+                    featuresArray.forEach((feature) => {
+                        feature = feature.split('-')
+                        this.filterData.features.push({ key: feature[0], value: feature[1] })
+                    })
+                }
 
                 this.rates.forEach((item) => {
                     if (+item.value === +this.filterData.score) item.checked = true
@@ -193,8 +217,7 @@
                 keys.forEach((key) => {
                     switch (key) {
                         case 'features':
-                            (this[key] || []).forEach((data) => (data.checked = false))
-                            this.filterData.rdType = undefined
+                            this.filterData.features = []
                             break
                         case 'rates':
                             (this[key] || []).forEach((data) => (data.checked = false))
@@ -205,7 +228,6 @@
                             break
                         case 'searchStr':
                             this.filterData[key] = undefined
-                            this.inputValue = undefined
                             break
                         default:
                             this.filterData[key] = undefined
@@ -219,9 +241,16 @@
                 this.clearFliterData('features', 'rates', 'classifyValue', 'classifyKey', 'searchStr', 'sortType')
             },
 
+            changeSearchStr (val) {
+                debounce(() => {
+                    this.filterData.searchStr = val
+                })
+            },
+
             chooseFeature (feature) {
-                feature.checked = !feature.checked
-                this.filterData.rdType = feature.checked ? feature.value : undefined
+                const index = this.filterData.features.findIndex((item) => (feature.key === item.key && String(feature.value) === String(item.value)))
+                if (index > -1) this.filterData.features.splice(index, 1)
+                else this.filterData.features.push(feature)
             },
 
             chooseRate (rate) {
@@ -242,35 +271,42 @@
             },
 
             setClassifyValue (key) {
-                const categories = this.categories[1] || {}
+                let categories = this.categories[2] || {}
+                if (this.filterData.pipeType === 'atom') categories = this.categories[1] || {}
                 const selected = (categories.children || []).find((category) => category.classifyCode === key) || {}
                 this.filterData.classifyValue = selected.classifyValue
                 this.filterData.classifyKey = 'classifyCode'
             },
 
             changeRoute () {
-                const { searchStr, classifyValue, rdType, score, sortType, pipeType } = this.filterData
-                const hasFilter = searchStr || classifyValue !== 'all' || rdType || score || sortType
+                const { searchStr, classifyValue, features, score, sortType, pipeType } = this.filterData
+                const hasFilter = searchStr || classifyValue !== 'all' || features.length || score || sortType
 
                 const query = JSON.parse(JSON.stringify(this.filterData), (key, value) => {
                     const validate = ((key === '' || key !== 'classifyValue') && key !== 'classifyKey') || classifyValue !== 'all'
+                    if (key === 'features') value = value.map(x => `${x.key}-${x.value}`).join(';')
                     if (validate) return value
                 })
+
                 this.setMarketQuery(query)
 
                 if (hasFilter) this.$router.push({ name: 'list', query })
                 else this.$router.push({ name: 'atomHome', query: { pipeType } })
             },
 
-            getClassifys () {
-                const fun = { atom: () => this.getAtomClassifys(), template: () => this.getTemplateClassifys() }
-                const type = this.$route.query.pipeType || 'atom'
+            getClassifys (val) {
+                const fun = {
+                    atom: () => this.getAtomClassifys(),
+                    template: () => this.getTemplateClassifys(),
+                    image: () => this.getImageClassifys()
+                }
+                const type = val || 'atom'
                 const method = fun[type]
                 method().then((arr) => {
                     const query = this.$route.query || {}
                     this.filterData.classifyValue = query.classifyValue || 'all'
                     this.filterData.classifyKey = query.classifyKey
-                    this.categories = [{ name: '所有', children: [{ name: '所有', id: 'all', classifyValue: 'all' }] }]
+                    this.categories = [{ name: this.$t('store.所有'), children: [{ name: this.$t('store.所有'), id: 'all', classifyValue: 'all' }] }]
 
                     arr.forEach((item) => {
                         const key = item.key
@@ -292,18 +328,28 @@
             getAtomClassifys () {
                 return Promise.all([this.requestAtomClassifys(), this.requestAtomLables()]).then(([classifys, lables]) => {
                     const res = []
-                    if (classifys.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: '按分类', data: classifys })
-                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: '按功能', data: lables })
+                    if (classifys.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('store.按分类'), data: classifys })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('store.按功能'), data: lables })
                     return res
                 })
             },
 
             getTemplateClassifys () {
-                return Promise.all([this.requestTplCategorys(), this.requestTplLabel()]).then(([categorys, lables]) => {
+                return Promise.all([this.requestTplCategorys(), this.requestTplLabel(), this.requestTplClassify()]).then(([categorys, lables, classify]) => {
                     const res = []
+                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: this.$t('store.按应用范畴'), data: categorys })
+                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('store.按分类'), data: classify })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('store.按功能'), data: lables })
+                    return res
+                })
+            },
 
-                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: '按应用范畴', data: categorys })
-                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: '按功能', data: lables })
+            getImageClassifys () {
+                return Promise.all([this.requestImageCategorys(), this.requestImageLabel(), this.requestImageClassifys()]).then(([categorys, lables, classify]) => {
+                    const res = []
+                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: this.$t('store.按应用范畴'), data: categorys })
+                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('store.按分类'), data: classify })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('store.按功能'), data: lables })
                     return res
                 })
             },
@@ -341,21 +387,24 @@
     }
 
     .store-main {
-        margin-left: calc(100vw - 100%);
         overflow-y: scroll;
     }
 
     .home-main {
         height: calc(100vh - 114px);
+        min-height: 600px;
         width: 1200px;
         margin: 21px auto 0;
         display: flex;
         flex-direction: row;
         .home-nav {
             width: 240px;
-            height: 886px;
             background: $white;
             border: 1px solid $borderWeightColor;
+            .nav-input {
+                margin: 20px 15px 0;
+                width: 210px;
+            }
             .nav-pipetype {
                 margin: 20px 0 15px;
                 .pipe-type {
@@ -364,7 +413,7 @@
                     line-height: 18px;
                     display: flex;
                     align-items: center;
-                    i {
+                    .title-icon {
                         margin: 0 15px;
                         font-size: 18px;
                     }

@@ -26,10 +26,7 @@
 
 package com.tencent.bk.codecc.task.service;
 
-import com.tencent.bk.codecc.task.vo.DevopsProjectVO;
-import com.tencent.devops.common.api.pojo.Result;
-
-import java.util.List;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
 
 /**
  * 用户管理逻辑处理
@@ -39,7 +36,7 @@ import java.util.List;
  */
 public interface UserManageService
 {
-    Result getInfo();
+    CodeCCResult getInfo();
 
     /**
      * 获取项目信息

@@ -51,7 +51,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         customFilePath: String?
     ): List<String> {
         val purePath = if (customFilePath != null) {
-            purePath(customFilePath).toString()
+            purePath(customFilePath)
         } else {
             customFilePath
         }
@@ -80,7 +80,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
     override fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
         // 过滤掉用../尝试遍历上层目录的操作
-        val purePath = purePath(destPath).toString()
+        val purePath = purePath(destPath)
         val path = purePath + "/" + file.name
         LoggerService.addNormalLine("upload file >>> $path")
 
@@ -146,5 +146,23 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
     override fun dockerBuildCredential(projectId: String): Map<String, String> {
         return hashMapOf()
+    }
+
+    override fun uploadFile(
+        url: String,
+        destPath: String,
+        file: File,
+        headers: Map<String, String>?
+    ): Result<Boolean> {
+        LoggerService.addNormalLine("upload file url >>> $url")
+        val fileBody = RequestBody.create(MultipartFormData, file)
+        val fileName = file.name
+        val requestBody = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("file", fileName, fileBody)
+            .build()
+        val request = buildPost(url, requestBody, headers ?: emptyMap())
+        val responseContent = request(request, "upload file:$fileName fail")
+        return objectMapper.readValue(responseContent)
     }
 }

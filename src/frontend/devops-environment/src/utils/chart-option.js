@@ -19,6 +19,7 @@
 
 import { convertTime } from '@/utils/util'
 
+const localeEnvObj = window.devops.$i18n.t('environment')
 export const nodeOverview = {
     // cpu 使用率图表
     cpu: {
@@ -34,13 +35,13 @@ export const nodeOverview = {
             },
             formatter (params, ticket, callback) {
                 let ret
-                
+
                 if (params[0].value[1] === undefined) {
-                    ret = '<div>没有数据</div>'
+                    ret = `<div>${localeEnvObj.noDate}</div>`
                 } else {
                     ret = `
                         <div>${convertTime(Date.parse(params[0].value[0]))}</div>
-                        <div>${params[0].marker}CPU使用率：${params[0].value[1]}%</div>
+                        <div>${params[0].marker}${localeEnvObj.nodeInfo.cpuUsageRate}：${params[0].value[1]}%</div>
                     `
                 }
 
@@ -122,7 +123,7 @@ export const nodeOverview = {
         series: [
             {
                 type: 'line',
-                name: 'CPU使用率',
+                name: `${localeEnvObj.nodeInfo.cpuUsageRate}`,
                 showSymbol: false,
                 smooth: true,
                 hoverAnimation: false,
@@ -170,11 +171,11 @@ export const nodeOverview = {
                 let ret
 
                 if (params[0].value[1] === undefined) {
-                    ret = '<div>没有数据</div>'
+                    ret = `<div>${localeEnvObj.noDate}</div>`
                 } else {
                     ret = `
                         <div>${convertTime(Date.parse(params[0].value[0]))}</div>
-                        <div>${params[0].marker}内存使用率：${params[0].value[1]}%</div>
+                        <div>${params[0].marker}${localeEnvObj.nodeInfo.ramUsageRate}：${params[0].value[1]}%</div>
                     `
                 }
 
@@ -337,11 +338,11 @@ export const nodeOverview = {
             },
             formatter (params, ticket, callback) {
                 let ret
-                
+
                 ret = `<div>${convertTime(Date.parse(params[0].value[0]))}</div>`
                 params.forEach(item => {
                     let displayTime
-                    
+
                     if ((item.value[1]) / (8 * 1024 * 1024 * 1024) >= 1) {
                         displayTime = `${((item.value[1]) / (8 * 1024 * 1024 * 1024) || 0).toFixed(2)}G`
                     } else if ((item.value[1]) / (8 * 1024 * 1024) >= 1) {

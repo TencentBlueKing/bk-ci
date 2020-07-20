@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
+import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
@@ -50,7 +51,6 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URLEncoder
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
@@ -79,7 +79,12 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             builder.writeTimeout(writeTimeoutInSec, TimeUnit.SECONDS)
         }
         val httpClient = builder.build()
-        val response = httpClient.newCall(request).execute()
+        val response = try {
+            httpClient.newCall(request).execute()
+        } catch (e: Exception) {
+            logger.error("Fail to request($request),error is :$e", e)
+            throw ClientException("Fail to request($request),error is:${e.message}")
+        }
 
         if (retryCodes.contains(response.code()) && retryCount > 0) {
             logger.warn(
@@ -100,17 +105,22 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         writeTimeoutInSec: Long? = null
     ): String {
 
-        requestForResponse(request, connectTimeoutInSec, readTimeoutInSec, writeTimeoutInSec)
-            .use { response ->
-                if (!response.isSuccessful) {
-                    logger.warn(
-                        "Fail to request($request) with code ${response.code()} ," +
-                            " message ${response.message()} and response (${response.body()?.string()})"
-                    )
-                    throw RemoteServiceException(errorMessage)
-                }
-                return response.body()!!.string()
+        requestForResponse(
+            request = request,
+            connectTimeoutInSec = connectTimeoutInSec,
+            readTimeoutInSec = readTimeoutInSec,
+            writeTimeoutInSec = writeTimeoutInSec
+        ).use { response ->
+            if (!response.isSuccessful) {
+                val responseContent = response.body()?.string()
+                logger.warn(
+                    "Fail to request($request) with code ${response.code()} ," +
+                        " message ${response.message()} and response ($responseContent)"
+                )
+                throw RemoteServiceException(errorMessage, response.code(), responseContent)
             }
+            return response.body()!!.string()
+        }
     }
 
     protected fun download(request: Request, destPath: File) {
@@ -293,12 +303,12 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             .replace("=", "%5C=")
     }
 
-    fun purePath(destPath: String): Path {
+    fun purePath(destPath: String): String {
         return Paths.get(
             destPath.removeSuffix("/")
                 .replace("./", "/")
                 .replace("../", "/")
                 .replace("//", "/")
-        )!!
+        ).toString().replace("\\", "/") // 保证win/Unix平台兼容性统一转为/分隔文件路径
     }
 }

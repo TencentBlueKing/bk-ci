@@ -137,8 +137,8 @@ interface UserGitResource {
         @ApiParam("重定向url类型", required = false)
         @QueryParam("redirectUrlType")
         redirectUrlType: RedirectUrlTypeEnum?,
-        @ApiParam(value = "插件代码", required = false)
-        @QueryParam("atomCode")
-        atomCode: String?
+        @ApiParam(value = "oauth认证成功后重定向到前端的地址", required = false)
+        @QueryParam("redirectUrl")
+        redirectUrl: String?
     ): Result<AuthorizeResult>
 }

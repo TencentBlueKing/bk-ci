@@ -29,7 +29,6 @@ package com.tencent.devops.process.service.app
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BSCCProjectApi
-import com.tencent.devops.common.auth.api.pojo.BkAuthProject
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -45,8 +44,6 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
 
 @Service
 class AppPipelineService @Autowired constructor(
@@ -61,7 +58,7 @@ class AppPipelineService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(AppPipelineService::class.java)
     }
 
-    private val executor = Executors.newFixedThreadPool(16)
+//    private val executor = Executors.newFixedThreadPool(16)
 
     fun listProjects(
         userId: String,
@@ -80,11 +77,28 @@ class AppPipelineService @Autowired constructor(
         logger.info("get project info: ${System.currentTimeMillis() - beginTime}")
         beginTime = System.currentTimeMillis()
 
+        val projects = mutableListOf<AppProject>()
+        bkProjectInfos.values.forEach { project ->
+            projects.add(
+                AppProject(
+                    projectId = project.projectCode,
+                    activePipelineCount = 0,
+                    projectName = project.projectName,
+                    projectLogo = if (project.logoAddr.startsWith("http://radosgw.open.oa.com")) {
+                        "https://dev-download.bkdevops.qq.com/images" + project.logoAddr.removePrefix("http://radosgw.open.oa.com")
+                    } else {
+                        project.logoAddr
+                    },
+                    approvalStatus = project.approvalStatus
+                )
+            )
+        }
+
         // 获取名字和logo
-        val tasks = executor.invokeAll(bkProjectInfos.values.filter { it.approvalStatus == "2" }.map { project ->
-            AppProjectTask(pipelineService, project, userId)
-        })
-        val projects = tasks.map { it.get() }
+//        val tasks = executor.invokeAll(bkProjectInfos.values.filter { it.approvalStatus == "2" }.map { project ->
+//            AppProjectTask(pipelineService, project, userId)
+//        })
+//        val projects = tasks.map { it.get() }
         logger.info("get project name & logo: ${System.currentTimeMillis() - beginTime}")
 
         return Page(projects.count().toLong(), -1, -1, 1, projects)
@@ -122,23 +136,23 @@ class AppPipelineService @Autowired constructor(
             with(it) {
                 appPipelines.add(
                     AppPipeline(
-                        projectId,
-                        projectName,
-                        pipelineId,
-                        pipelineName,
-                        pipelineDesc ?: "",
-                        latestBuildStatus,
-                        latestBuildNum,
-                        latestBuildId,
-                        latestBuildStartTime,
-                        latestBuildEndTime,
-                        latestBuildUserId,
-                        pipelineVersion,
-                        canManualStartup,
-                        hasCollect,
-                        deploymentTime,
-                        createTime,
-                        logoAddr
+                        projectId = projectId,
+                        projectName = projectName,
+                        pipelineId = pipelineId,
+                        pipelineName = pipelineName,
+                        pipelineDesc = pipelineDesc ?: "",
+                        latestBuildStatus = latestBuildStatus,
+                        latestBuildNum = latestBuildNum,
+                        latestBuildId = latestBuildId,
+                        latestBuildStartTime = latestBuildStartTime,
+                        latestBuildEndTime = latestBuildEndTime,
+                        latestBuildUser = latestBuildUserId,
+                        pipelineVersion = pipelineVersion,
+                        canManualStartup = canManualStartup,
+                        hasCollect = hasCollect,
+                        deploymentTime = deploymentTime,
+                        createTime = createTime,
+                        logoUrl = logoAddr
                     )
                 )
             }
@@ -169,43 +183,46 @@ class AppPipelineService @Autowired constructor(
     ): Page<AppPipelineHistory> {
 
         val result = buildService.getHistoryBuild(
-            userId,
-            projectId,
-            pipelineId,
-            page,
-            pageSize,
-            null,
-            null,
-            materialBranch,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize,
+            materialAlias = null,
+            materialUrl = null,
+            materialBranch = materialBranch,
+            materialCommitId = null,
+            materialCommitMessage = null,
+            status = null,
+            trigger = null,
+            queueTimeStartTime = null,
+            queueTimeEndTime = null,
+            startTimeStartTime = null,
+            startTimeEndTime = null,
+            endTimeStartTime = null,
+            endTimeEndTime = null,
+            totalTimeMin = null,
+            totalTimeMax = null,
+            remark = null,
+            buildNoStart = null,
+            buildNoEnd = null
         )
         val histories = result.records.map { h ->
+            val packageVersion = StringBuilder()
+            h.artifactList?.forEach { packageVersion.append(it.appVersion).append(";") }
             AppPipelineHistory(
-                projectId,
-                pipelineId,
-                h.id,
-                h.userId,
-                StartType.toStartType(h.trigger),
-                h.buildNum,
-                h.startTime,
-                h.endTime,
-                h.status,
-                h.currentTimestamp,
-                h.pipelineVersion
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = h.id,
+                userId = h.userId,
+                trigger = StartType.toStartType(h.trigger),
+                buildNum = h.buildNum,
+                startTime = h.startTime,
+                endTime = h.endTime,
+                status = h.status,
+                curTimestamp = h.currentTimestamp,
+                pipelineVersion = h.pipelineVersion,
+                packageVersion = packageVersion.toString().removeSuffix(";")
             ).apply {
                 isMobileStart = h.isMobileStart
             }
@@ -216,19 +233,19 @@ class AppPipelineService @Autowired constructor(
     fun getHistoryConditionBranch(userId: String, projectId: String, pipelineId: String, alias: List<String>?) =
         buildService.getHistoryConditionBranch(userId, projectId, pipelineId, alias)
 
-    class AppProjectTask(
-        private val pipelineService: PipelineService,
-        private val project: BkAuthProject,
-        private val userId: String
-    ) : Callable<AppProject> {
-        override fun call(): AppProject {
-            val count = pipelineService.listPermissionPipelineCount(userId, project.projectCode)
-            val logoAddr = if (project.logoAddr.startsWith("http://radosgw.open.oa.com")) {
-                "https://dev-download.bkdevops.qq.com/images" + project.logoAddr.removePrefix("http://radosgw.open.oa.com")
-            } else {
-                project.logoAddr
-            }
-            return AppProject(project.projectCode, count, project.projectName, logoAddr, project.approvalStatus)
-        }
-    }
+//    class AppProjectTask(
+//        private val pipelineService: PipelineService,
+//        private val project: BkAuthProject,
+//        private val userId: String
+//    ) : Callable<AppProject> {
+//        override fun call(): AppProject {
+//            val count = pipelineService.listPermissionPipelineCount(userId, project.projectCode)
+//            val logoAddr = if (project.logoAddr.startsWith("http://radosgw.open.oa.com")) {
+//                "https://dev-download.bkdevops.qq.com/images" + project.logoAddr.removePrefix("http://radosgw.open.oa.com")
+//            } else {
+//                project.logoAddr
+//            }
+//            return AppProject(project.projectCode, count, project.projectName, logoAddr, project.approvalStatus)
+//        }
+//    }
 }

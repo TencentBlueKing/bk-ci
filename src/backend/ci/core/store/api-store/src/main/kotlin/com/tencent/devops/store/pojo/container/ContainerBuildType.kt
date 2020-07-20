@@ -30,5 +30,6 @@ data class ContainerBuildType(
     val type: String,
     val name: String,
     val enableApp: Boolean /*是否支持选择对应的构建依赖*/,
-    val disabled: Boolean /*是否可点击*/
+    val disabled: Boolean /*是否可点击*/,
+    val defaultBuildResource: Any?
 )

@@ -36,6 +36,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import kotlin.math.ceil
+import kotlin.math.min
 
 @Component
 class UpdateCcNodeStatus @Autowired constructor(
@@ -85,12 +87,12 @@ class UpdateCcNodeStatus @Autowired constructor(
         }
 
         // 分页处理
-        val pageSize = 1000
+        val pageSize = 100
         val totalCount = allCmdbNodes.size
-        val totalPage = Math.ceil(totalCount * 1.0 / pageSize).toInt()
+        val totalPage = ceil(totalCount * 1.0 / pageSize).toInt()
         for (page in 0 until totalPage) {
             val from = pageSize * page
-            val end = from + Math.min(pageSize, totalCount - from)
+            val end = from + min(pageSize, totalCount - from)
             val nodes = allCmdbNodes.subList(from, end)
             updateCmdbNodes(nodes)
         }
@@ -118,6 +120,19 @@ class UpdateCcNodeStatus @Autowired constructor(
             return
         }
 
+        // 分页处理
+        val pageSize = 100
+        val totalCount = allCcNodes.size
+        val totalPage = ceil(totalCount * 1.0 / pageSize).toInt()
+        for (page in 0 until totalPage) {
+            val from = pageSize * page
+            val end = from + min(pageSize, totalCount - from)
+            val nodes = allCcNodes.subList(from, end)
+            updateCcStatus(nodes)
+        }
+    }
+
+    private fun updateCcStatus(allCcNodes: List<TNodeRecord>) {
         val rawCcNodes = esbAgentClient.getCcNodeByIps("devops", allCcNodes.map { it.nodeIp })
         val ipToNodeMap = rawCcNodes.associateBy { it.ip }
 

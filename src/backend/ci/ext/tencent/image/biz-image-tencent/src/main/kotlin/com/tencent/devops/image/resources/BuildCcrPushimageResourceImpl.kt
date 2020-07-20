@@ -42,7 +42,7 @@ class BuildCcrPushimageResourceImpl @Autowired constructor(
         return Result(pushImageService.pushImage(pushParam))
     }
 
-    override fun queryUploadTask(userId: String, taskId: String): Result<PushImageTask?> {
+    override fun queryUploadTask(taskId: String): Result<PushImageTask?> {
         return Result(pushImageService.getPushImageTask(taskId))
     }
 }

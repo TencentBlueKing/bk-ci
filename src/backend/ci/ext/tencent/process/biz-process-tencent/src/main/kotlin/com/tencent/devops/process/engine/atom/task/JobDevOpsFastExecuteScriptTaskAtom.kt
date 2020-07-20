@@ -28,6 +28,8 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.job.JobClient
@@ -49,8 +51,6 @@ import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.service.PipelineUserService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -122,12 +122,12 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         val containerId = task.containerHashId
 
         if (param.content.isBlank()) {
-            logger.error("content is not init of build($buildId)")
+            logger.warn("content is not init of build($buildId)")
             LogUtils.addRedLine(rabbitTemplate, buildId, "content is not init", taskId, containerId, executeCount)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "content is not validate"
             )
         }
@@ -139,7 +139,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "type is not validate"
             )
         }
@@ -149,7 +149,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "envType is not validate"
             )
         }
@@ -161,7 +161,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "EnvId is not validate"
             )
         }
@@ -171,7 +171,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "EnvName is not validate"
             )
         }
@@ -181,7 +181,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "NodeId is not validate"
             )
         }
@@ -193,7 +193,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "account is not validate"
             )
         }
@@ -227,7 +227,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "Invalid content, it's not in valid Base64 scheme"
             )
         }
@@ -297,7 +297,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD.toInt(),
+                    errorCode = ErrorCode.USER_INPUT_INVAILD.toInt(),
                     errorMsg = "Unsupported EnvType: $type"
                 )
             }
@@ -398,7 +398,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         }
         val noExistsEnvNames = envNameList.subtract(envNameExistsList)
         if (noExistsEnvNames.isNotEmpty()) {
-            logger.error("The envNames not exists, name:$noExistsEnvNames")
+            logger.warn("The envNames not exists, name:$noExistsEnvNames")
             LogUtils.addRedLine(rabbitTemplate, buildId, "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames", taskId, containerId, executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
@@ -416,7 +416,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
 
         val noAuthEnvIds = envIdList.subtract(userEnvIdList)
         if (noAuthEnvIds.isNotEmpty()) {
-            logger.error("User does not permit to access the env: $noAuthEnvIds")
+            logger.warn("User does not permit to access the env: $noAuthEnvIds")
             LogUtils.addRedLine(rabbitTemplate, buildId, "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds", taskId, containerId, executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
@@ -446,7 +446,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             }
             val noExistsEnvIds = envSet.envHashIds.subtract(envIdList)
             if (noExistsEnvIds.isNotEmpty()) {
-                logger.error("The envIds not exists, id:$noExistsEnvIds")
+                logger.warn("The envIds not exists, id:$noExistsEnvIds")
                 LogUtils.addRedLine(
                     rabbitTemplate,
                     buildId,
@@ -471,7 +471,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             }
             val noExistsNodeIds = envSet.nodeHashIds.subtract(nodeIdList)
             if (noExistsNodeIds.isNotEmpty()) {
-                logger.error("The nodeIds not exists, id:$noExistsNodeIds")
+                logger.warn("The nodeIds not exists, id:$noExistsNodeIds")
                 LogUtils.addRedLine(
                     rabbitTemplate,
                     buildId,

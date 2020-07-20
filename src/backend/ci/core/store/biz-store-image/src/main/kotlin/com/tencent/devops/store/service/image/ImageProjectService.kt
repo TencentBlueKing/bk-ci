@@ -41,6 +41,8 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_AGENT_TYPE_SCOPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_DOCKER_FILE_CONTENT
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_DOCKER_FILE_TYPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_CERTIFICATION_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_RECOMMEND_FLAG
@@ -79,7 +81,6 @@ import com.tencent.devops.store.util.MultiSourceDataPaginator
 import com.tencent.devops.store.util.PagableDataSource
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record21
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -433,7 +434,7 @@ class ImageProjectService @Autowired constructor(
         val imagesResult = imageService.doList(
             userId = userId,
             userDeptList = userDeptList,
-            imageName = imageNamePart,
+            keyword = imageNamePart,
             classifyCodeList = classifyCodeList,
             categoryCodeList = if (null != categoryCode) listOf(categoryCode) else null,
             rdType = rdType,
@@ -460,7 +461,7 @@ class ImageProjectService @Autowired constructor(
         }
         val count = marketImageDao.count(
             dslContext = dslContext,
-            imageName = imageNamePart,
+            keyword = imageNamePart,
             classifyCodeList = classifyCodeList,
             labelCodeList = null,
             rdType = rdType,
@@ -498,7 +499,7 @@ class ImageProjectService @Autowired constructor(
             projectCode = projectCode,
             agentType = agentType,
             recommendFlag = recommendFlag,
-            imageNamePart = null,
+            keyword = null,
             classifyId = null,
             categoryCode = null,
             rdType = null,
@@ -514,7 +515,7 @@ class ImageProjectService @Autowired constructor(
         projectCode: String,
         agentType: ImageAgentTypeEnum,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
@@ -522,7 +523,7 @@ class ImageProjectService @Autowired constructor(
         pageSize: Int?,
         interfaceName: String? = "Anon interface"
     ): Page<JobMarketImageItem?>? {
-        logger.info("$interfaceName:searchMarketImages:Input:($accessToken,$userId,$projectCode,$imageNamePart,$page,$pageSize)")
+        logger.info("$interfaceName:searchMarketImages:Input:($accessToken,$userId,$projectCode,$keyword,$page,$pageSize)")
         val watch = StopWatch()
         // 1.参数校验
         val validPage = PageUtil.getValidPage(page)
@@ -535,7 +536,7 @@ class ImageProjectService @Autowired constructor(
         val userDeptList = storeUserService.getUserDeptList(userId)
         logger.info("$interfaceName:searchMarketImages:Inner:userDeptList=$userDeptList")
         val installImageCodes = marketImageDao.getInstalledImageCodes(dslContext, projectCode)
-        var testImageCodes = storeProjectRelDao.getTestImageCodes(dslContext, projectCode, StoreTypeEnum.IMAGE)?.map { it.value1() }
+        var testImageCodes = storeProjectRelDao.getTestStoreCodes(dslContext, projectCode, StoreTypeEnum.IMAGE)?.map { it.value1() }
             ?: emptyList()
         testImageCodes = marketImageDao.getTestingImageCodes(dslContext, testImageCodes)?.map {
             it.value1()
@@ -552,7 +553,7 @@ class ImageProjectService @Autowired constructor(
                     inImageCodes = agentTypeImageCodes,
                     notInImageCodes = null,
                     recommendFlag = recommendFlag,
-                    imageNamePart = imageNamePart,
+                    keyword = keyword,
                     classifyId = classifyId,
                     categoryCode = categoryCode,
                     rdType = rdType,
@@ -580,7 +581,7 @@ class ImageProjectService @Autowired constructor(
                     inImageCodes = agentTypeImageCodes,
                     notInImageCodes = null,
                     recommendFlag = recommendFlag,
-                    imageNamePart = imageNamePart,
+                    keyword = keyword,
                     classifyId = classifyId,
                     categoryCode = categoryCode,
                     rdType = rdType,
@@ -601,7 +602,7 @@ class ImageProjectService @Autowired constructor(
                     inImageCodes = null,
                     notInImageCodes = agentTypeImageCodes,
                     recommendFlag = recommendFlag,
-                    imageNamePart = imageNamePart,
+                    keyword = keyword,
                     classifyId = classifyId,
                     categoryCode = categoryCode,
                     rdType = rdType,
@@ -629,7 +630,7 @@ class ImageProjectService @Autowired constructor(
                     inImageCodes = null,
                     notInImageCodes = agentTypeImageCodes,
                     recommendFlag = recommendFlag,
-                    imageNamePart = imageNamePart,
+                    keyword = keyword,
                     classifyId = classifyId,
                     categoryCode = categoryCode,
                     rdType = rdType,
@@ -652,7 +653,7 @@ class ImageProjectService @Autowired constructor(
                     inImageCodes = agentTypeTestImageCodes,
                     notInImageCodes = null,
                     recommendFlag = recommendFlag,
-                    imageNamePart = imageNamePart,
+                    keyword = keyword,
                     classifyId = classifyId,
                     categoryCode = categoryCode,
                     rdType = rdType,
@@ -678,7 +679,7 @@ class ImageProjectService @Autowired constructor(
                     inImageCodes = agentTypeTestImageCodes,
                     notInImageCodes = null,
                     recommendFlag = recommendFlag,
-                    imageNamePart = imageNamePart,
+                    keyword = keyword,
                     classifyId = classifyId,
                     categoryCode = categoryCode,
                     rdType = rdType
@@ -698,7 +699,7 @@ class ImageProjectService @Autowired constructor(
                     inImageCodes = testImageCodes,
                     notInImageCodes = agentTypeImageCodes,
                     recommendFlag = recommendFlag,
-                    imageNamePart = imageNamePart,
+                    keyword = keyword,
                     classifyId = classifyId,
                     categoryCode = categoryCode,
                     rdType = rdType,
@@ -724,7 +725,7 @@ class ImageProjectService @Autowired constructor(
                     inImageCodes = testImageCodes,
                     notInImageCodes = agentTypeImageCodes,
                     recommendFlag = recommendFlag,
-                    imageNamePart = imageNamePart,
+                    keyword = keyword,
                     classifyId = classifyId,
                     categoryCode = categoryCode,
                     rdType = rdType
@@ -743,7 +744,7 @@ class ImageProjectService @Autowired constructor(
                     inImageCodes = agentTypeImageCodes,
                     notInImageCodes = testImageCodes,
                     recommendFlag = recommendFlag,
-                    imageNamePart = imageNamePart,
+                    keyword = keyword,
                     classifyId = classifyId,
                     categoryCode = categoryCode,
                     rdType = rdType,
@@ -770,7 +771,7 @@ class ImageProjectService @Autowired constructor(
                     inImageCodes = agentTypeImageCodes,
                     notInImageCodes = null,
                     recommendFlag = recommendFlag,
-                    imageNamePart = imageNamePart,
+                    keyword = keyword,
                     classifyId = classifyId,
                     categoryCode = categoryCode,
                     rdType = rdType,
@@ -790,7 +791,7 @@ class ImageProjectService @Autowired constructor(
                     inImageCodes = null,
                     notInImageCodes = agentTypeImageCodes,
                     recommendFlag = recommendFlag,
-                    imageNamePart = imageNamePart,
+                    keyword = keyword,
                     classifyId = classifyId,
                     categoryCode = categoryCode,
                     rdType = rdType,
@@ -817,7 +818,7 @@ class ImageProjectService @Autowired constructor(
                     inImageCodes = null,
                     notInImageCodes = agentTypeImageCodes,
                     recommendFlag = recommendFlag,
-                    imageNamePart = imageNamePart,
+                    keyword = keyword,
                     classifyId = classifyId,
                     categoryCode = categoryCode,
                     rdType = rdType,
@@ -837,7 +838,7 @@ class ImageProjectService @Autowired constructor(
                     inImageCodes = agentTypeImageCodes,
                     notInImageCodes = null,
                     recommendFlag = recommendFlag,
-                    imageNamePart = imageNamePart,
+                    keyword = keyword,
                     classifyId = classifyId,
                     categoryCode = categoryCode,
                     rdType = rdType,
@@ -864,7 +865,7 @@ class ImageProjectService @Autowired constructor(
                     inImageCodes = agentTypeImageCodes,
                     notInImageCodes = null,
                     recommendFlag = recommendFlag,
-                    imageNamePart = imageNamePart,
+                    keyword = keyword,
                     classifyId = classifyId,
                     categoryCode = categoryCode,
                     rdType = rdType,
@@ -884,7 +885,7 @@ class ImageProjectService @Autowired constructor(
                     inImageCodes = null,
                     notInImageCodes = agentTypeImageCodes,
                     recommendFlag = recommendFlag,
-                    imageNamePart = imageNamePart,
+                    keyword = keyword,
                     classifyId = classifyId,
                     categoryCode = categoryCode,
                     rdType = rdType,
@@ -911,7 +912,7 @@ class ImageProjectService @Autowired constructor(
                     inImageCodes = null,
                     notInImageCodes = agentTypeImageCodes,
                     recommendFlag = recommendFlag,
-                    imageNamePart = imageNamePart,
+                    keyword = keyword,
                     classifyId = classifyId,
                     categoryCode = categoryCode,
                     rdType = rdType,
@@ -954,7 +955,7 @@ class ImageProjectService @Autowired constructor(
     }
 
     fun genJobMarketImageItem(
-        it: Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>,
+        it: Record,
         canInstallFlag: Boolean,
         installFlag: Boolean,
         availableFlag: Boolean
@@ -992,6 +993,8 @@ class ImageProjectService @Autowired constructor(
         val certificationFlag = it.get(KEY_IMAGE_FEATURE_CERTIFICATION_FLAG) as Boolean
         val modifier = it.get(KEY_MODIFIER) as String?
         val updateTime = (it.get(KEY_UPDATE_TIME) as LocalDateTime).timestampmilli()
+        val dockerFileType = it.get(KEY_IMAGE_DOCKER_FILE_TYPE) as String? ?: "INPUT"
+        val dockerFileContent = it.get(KEY_IMAGE_DOCKER_FILE_CONTENT) as String? ?: ""
         return JobMarketImageItem(
             imageId = id,
             id = id,
@@ -1011,6 +1014,8 @@ class ImageProjectService @Autowired constructor(
             imageRepoUrl = imageRepoUrl ?: "",
             imageRepoName = imageRepoName,
             imageTag = imageTag,
+            dockerFileType = dockerFileType,
+            dockerFileContent = dockerFileContent,
             labelNames = labelList?.map { it.labelName }?.joinToString { it } ?: "",
             category = category ?: "",
             categoryName = categoryLanName,

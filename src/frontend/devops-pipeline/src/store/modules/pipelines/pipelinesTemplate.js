@@ -19,7 +19,8 @@
 
 import ajax from '@/utils/request'
 import {
-    PROCESS_API_URL_PREFIX
+    PROCESS_API_URL_PREFIX,
+    STORE_API_URL_PREFIX
 } from '@/store/constants'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user`
@@ -37,13 +38,18 @@ const mutations = {
 }
 
 const actions = {
+    requestInstallTemplate (_, params) {
+        return ajax.post(`${STORE_API_URL_PREFIX}/user/market/template/install`, params).then(response => {
+            return response.data
+        })
+    },
     requestTemplatePermission: async (_, projectId) => {
         return ajax.get(`${prefix}/templates/projects/${projectId}/templates/hasManagerPermission`).then(response => {
             return response.data
         })
     },
-    requestInstanceList (_, { projectId, templateId }) {
-        return ajax.get(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}`).then(response => {
+    requestInstanceList (_, { projectId, templateId, params }) {
+        return ajax.get(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}`, { params }).then(response => {
             return response.data
         })
     },
@@ -67,8 +73,8 @@ const actions = {
             return response.data
         })
     },
-    updateTemplateInstance (_, { projectId, templateId, versionId, params }) {
-        return ajax.put(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}?version=${versionId}`, params).then(response => {
+    updateTemplateInstance (_, { projectId, templateId, versionId, useTemplateSettings, params }) {
+        return ajax.put(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}?version=${versionId}&useTemplateSettings=${useTemplateSettings}`, params).then(response => {
             return response.data
         })
     },

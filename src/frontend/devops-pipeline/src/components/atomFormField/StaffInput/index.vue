@@ -65,7 +65,7 @@
         },
         methods: {
             async getList () {
-                const url = `/backend/api/ci/projects/users/${this.projectId}/`
+                const url = `/project/api/user/users/projects/${this.projectId}/list`
 
                 try {
                     const res = await ajax.get(`${AJAX_URL_PIRFIX}${url}`).then(response => {

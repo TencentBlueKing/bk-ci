@@ -49,5 +49,7 @@ data class BuildTask(
     @ApiModelProperty("任务参数", required = false)
     val params: Map<String, String>? = null,
     @ApiModelProperty("环境参数", required = false)
-    val buildVariable: Map<String, String>? = null
+    val buildVariable: Map<String, String>? = null,
+    @ApiModelProperty("容器类型", required = false)
+    val containerType: String? = null
 )

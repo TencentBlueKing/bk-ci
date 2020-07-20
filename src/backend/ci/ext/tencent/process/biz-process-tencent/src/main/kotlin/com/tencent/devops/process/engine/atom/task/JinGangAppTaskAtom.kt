@@ -26,6 +26,9 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -39,8 +42,6 @@ import com.tencent.devops.common.pipeline.element.JinGangAppElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -81,7 +82,7 @@ class JinGangAppTaskAtom @Autowired constructor(
             else -> return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "unsupported srcType : $srcType"
             )
         }
@@ -90,7 +91,11 @@ class JinGangAppTaskAtom @Autowired constructor(
             val path = if (isCustom) "/${it.removePrefix("/")}" else "/$pipelineId/$buildId/${it.removePrefix("/")}"
             val data = client.get(ServiceJinGangAppResource::class).scanApp(userId, projectId, pipelineId, buildId, buildNo, taskId, path, isCustom, runType)
             val resourceName = File(it).name + "($buildNo)"
-            val jinGangTaskId = data.data ?: throw RuntimeException("task id is null for ($it)")
+            val jinGangTaskId = data.data ?: throw TaskExecuteException(
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                errorType = ErrorType.USER,
+                errorMsg = "task id is null for ($it)"
+            )
             // 权限中心注册资源
             bkAuthResourceApi.createResource(userId, serviceCode, AuthResourceType.SCAN_TASK,
                     projectId, HashUtil.encodeLongId(jinGangTaskId.toLong()), resourceName)

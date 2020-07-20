@@ -33,6 +33,8 @@ import com.tencent.devops.log.api.BuildLogResource
 import com.tencent.devops.log.model.message.LogMessage
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.log.utils.LogUtils.addLines
+import com.tencent.devops.log.utils.LogUtils.addRedLine
+import com.tencent.devops.log.utils.LogUtils.addYellowLine
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -53,6 +55,36 @@ class BuildLogResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun addRedLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("无效的构建ID")
+        }
+        addRedLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            message = logMessage.message,
+            tag = logMessage.tag,
+            jobId = logMessage.jobId,
+            executeCount = logMessage.executeCount ?: 1
+        )
+        return Result(true)
+    }
+
+    override fun addYellowLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("无效的构建ID")
+        }
+        addYellowLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            message = logMessage.message,
+            tag = logMessage.tag,
+            jobId = logMessage.jobId,
+            executeCount = logMessage.executeCount ?: 1
+        )
+        return Result(true)
+    }
+
     override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
@@ -66,12 +98,12 @@ class BuildLogResourceImpl @Autowired constructor(
             throw ParamBlankException("无效的构建ID")
         }
         LogUtils.updateLogStatus(
-                rabbitTemplate = rabbitTemplate,
-                buildId = buildId,
-                finished = false,
-                tag = tag ?: "",
-                jobId = jobId ?: "",
-                executeCount = executeCount
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            finished = false,
+            tag = tag ?: "",
+            jobId = jobId ?: "",
+            executeCount = executeCount
         )
         return Result(true)
     }
@@ -81,12 +113,12 @@ class BuildLogResourceImpl @Autowired constructor(
             throw ParamBlankException("无效的构建ID")
         }
         LogUtils.updateLogStatus(
-                rabbitTemplate = rabbitTemplate,
-                buildId = buildId,
-                finished = finished,
-                tag = tag ?: "",
-                jobId = jobId ?: "",
-                executeCount = executeCount
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            finished = finished,
+            tag = tag ?: "",
+            jobId = jobId ?: "",
+            executeCount = executeCount
         )
         return Result(true)
     }

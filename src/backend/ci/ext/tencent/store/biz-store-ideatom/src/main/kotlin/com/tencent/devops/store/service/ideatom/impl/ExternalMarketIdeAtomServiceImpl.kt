@@ -71,7 +71,7 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
     @Suppress("UNCHECKED_CAST")
     private fun doList(
         categoryCode: String,
-        ideAtomName: String?,
+        keyword: String?,
         classifyCode: String?,
         labelCode: String?,
         score: Int?,
@@ -81,7 +81,7 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): ExternalIdeAtomResp {
-        logger.info("[list]categoryCode=$categoryCode, ideAtomName=$ideAtomName, classifyCode=$classifyCode, " +
+        logger.info("[list]categoryCode=$categoryCode, keyword=$keyword, classifyCode=$classifyCode, " +
                 "labelCode=$labelCode, score=$score, page=$page, pageSize=$pageSize")
 
         val results = mutableListOf<ExternalIdeAtomItem>()
@@ -89,7 +89,7 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
 
         val count = marketIdeAtomDao.count(
                 dslContext = dslContext,
-                ideAtomName = ideAtomName,
+                keyword = keyword,
                 categoryCode = categoryCode,
                 classifyCode = classifyCode,
                 labelCodeList = labelCodeList,
@@ -98,7 +98,7 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
                 )
         val atoms = marketIdeAtomDao.list(
                 dslContext = dslContext,
-                ideAtomName = ideAtomName,
+                keyword = keyword,
                 categoryCode = categoryCode,
                 classifyCode = classifyCode,
                 labelCodeList = labelCodeList,
@@ -163,7 +163,7 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
                 "score=$score, sortType=$sortType, page=$page, pageSize=$pageSize")
 
         return doList(
-                ideAtomName = atomName,
+                keyword = atomName,
                 categoryCode = categoryCode,
                 classifyCode = classifyCode,
                 labelCode = labelCode,

@@ -28,6 +28,6 @@ module.exports = (env, argv) => {
         },
         publicPath: '/artifactory/',
         dist: '/artifactory',
-        port: 8001
+        port: 8008
     })
 }

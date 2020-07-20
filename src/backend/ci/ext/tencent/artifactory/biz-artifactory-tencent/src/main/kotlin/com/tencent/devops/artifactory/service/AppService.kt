@@ -34,7 +34,7 @@ interface AppService {
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String,
+        argPath: String,
         ttl: Int,
         directed: Boolean = false
     ): Url
@@ -43,7 +43,7 @@ interface AppService {
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String,
+        argPath: String,
         ttl: Int
     ): Url
 
@@ -51,7 +51,7 @@ interface AppService {
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String,
+        argPath: String,
         ttl: Int,
         directed: Boolean = false
     ): Url
@@ -60,7 +60,7 @@ interface AppService {
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String,
+        argPath: String,
         ttl: Int,
         directed: Boolean = false,
         experienceHashId: String?

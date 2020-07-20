@@ -3,10 +3,30 @@
         <p class="title">{{ emptyInfo.title }}</p>
         <p class="intro-prompt">{{ emptyInfo.desc }}</p>
         <div class="create-node-row" v-if="isEnv">
-            <bk-button theme="primary" class="create-env-btn" @click="toCreateNode">创建</bk-button>
+            <bk-button theme="primary" class="create-env-btn" @click="toCreateNode">{{ $t('environment.create') }}</bk-button>
         </div>
         <div class="create-node-row" v-else>
-            <bk-button theme="primary" class="import-node-btn" @click="toImportNode('construct')">导入节点</bk-button>
+            <template v-if="isExtendTx">
+                <bk-button theme="primary" class="create-node-btn" @click="toCreateNode">{{ $t('environment.create') }}</bk-button>
+                <bk-dropdown-menu :align="'right'"
+                    @show="dropdownShow"
+                    @hide="dropdownHide"
+                    ref="dropdown">
+                    <bk-button slot="dropdown-trigger">
+                        <span>{{ $t('environment.import') }}</span>
+                        <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
+                    </bk-button>
+                    <ul class="bk-dropdown-list" slot="dropdown-content">
+                        <li>
+                            <a href="javascript:;" @click="toImportNode('cmdb')">{{ $t('environment.nodeInfo.idcTestMachine') }}</a>
+                        </li>
+                        <li>
+                            <a href="javascript:;" @click="toImportNode('construct')">{{ $t('environment.thirdPartyBuildMachine') }}</a>
+                        </li>
+                    </ul>
+                </bk-dropdown-menu>
+            </template>
+            <bk-button theme="primary" class="import-node-btn" v-else @click="toImportNode('construct')">{{ $t('environment.nodeInfo.importNode') }}</bk-button>
         </div>
     </div>
 </template>
@@ -25,6 +45,11 @@
         data () {
             return {
                 isDropdownShow: false
+            }
+        },
+        computed: {
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         methods: {
@@ -68,10 +93,6 @@
 
             .create-env-btn {
                 margin-left: 4px;
-            }
-
-            .import-node-btn {
-                width: 150px;
             }
         }
     }

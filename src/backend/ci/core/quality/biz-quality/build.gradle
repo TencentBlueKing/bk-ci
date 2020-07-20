@@ -26,23 +26,18 @@
 
 dependencies {
     compile project(":core:quality:api-quality")
-
     compile project(":core:quality:model-quality")
-
     compile project(":core:process:api-process")
 
     compile project(":core:common:common-service")
     compile project(":core:common:common-auth:common-auth-api")
     compile project(":core:common:common-db")
     compile project(":core:common:common-client")
+    compile project(":core:common:common-archive")
 
     compile project(":core:plugin:codecc-plugin:common-codecc")
     compile project(":core:plugin:codecc-plugin:api-codecc")
 
-    compile project(":core:notify:api-notify")
-
     compile project(":core:project:api-project")
-    compile project(":core:common:common-archive")
+    compile project(":core:notify:api-notify")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

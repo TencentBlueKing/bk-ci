@@ -1,7 +1,7 @@
 <template>
     <section class="devops-empty-tips">
         <img v-if="imgType !== 'noCollect'" :src="noDataSrc" alt="" class="no-data-pic">
-        <img v-if="imgType === 'noCollect'" src="../../images/no-collect.png" alt="" class="no-collect-pic">
+        <img v-if="imgType === 'noCollect'" :src="noCollect" alt="" class="no-collect-pic">
         <p class="title">{{ title }}</p>
         <p class="desc">{{ desc }}</p>
         <p class="btns-row">
@@ -45,11 +45,14 @@
         },
         data () {
             return {
-                noDataSrc: ''
+                noDataSrc: '',
+                noCollect: ''
             }
         },
         created () {
             this.noDataSrc = noData
+            console.log(this.$i18n.locale)
+            this.noCollect = require(`../../images/${this.$i18n.locale}-no-collect.png`)
         }
     }
 </script>

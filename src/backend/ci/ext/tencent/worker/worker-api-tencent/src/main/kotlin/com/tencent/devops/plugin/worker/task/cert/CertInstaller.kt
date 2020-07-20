@@ -26,11 +26,11 @@
 
 package com.tencent.devops.plugin.worker.task.cert
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DHUtil
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.worker.common.api.ticket.CertResourceApi
-import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.ExecutorUtil.runCommand
@@ -109,7 +109,7 @@ object CertInstaller {
         if (uuid.isEmpty()) throw TaskExecuteException(
             errorMsg = "Fail to get uuid",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorCode = ErrorCode.USER_INPUT_INVAILD
         )
 
         // Copy the provision file
@@ -123,7 +123,7 @@ object CertInstaller {
                 throw TaskExecuteException(
                     errorMsg = "Fail to create provision folder",
                     errorType = ErrorType.SYSTEM,
-                    errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
                 )
             }
         }

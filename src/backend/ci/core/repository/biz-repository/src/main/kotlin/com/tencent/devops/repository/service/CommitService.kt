@@ -35,6 +35,7 @@ import com.tencent.devops.repository.pojo.commit.CommitData
 import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -45,26 +46,33 @@ class CommitService @Autowired constructor(
     private val dslContext: DSLContext
 ) {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(CommitService::class.java)
+    }
+
     fun getCommit(buildId: String): List<CommitResponse> {
-        val commits = commitDao.getBuildCommit(dslContext, buildId)
+        val commits = commitDao.getBuildCommit(dslContext, buildId) ?: return listOf()
 
-        val repos = repositoryDao.getRepoByIds(dslContext, commits?.map { it.repoId } ?: listOf())
-        val repoMap = repos?.map { it.repositoryId.toString() to it }?.toMap() ?: mapOf()
+        val repoIds = commits.filter { it.repoName.isNullOrBlank() }.map { it.repoId }
+        val repoNames = commits.filter { !it.repoName.isNullOrBlank() }.map { it.repoName }
 
-        return commits?.map {
-            val repoUrl = repoMap.get(it.repoId.toString())?.url
+        val idRepos = repositoryDao.getRepoByIds(dslContext, repoIds)?.map { it.repositoryId.toString() to it }?.toMap() ?: mapOf()
+        val nameRepos = repositoryDao.getRepoByNames(dslContext, repoNames)?.map { it.aliasName.toString() to it }?.toMap() ?: mapOf()
+
+        return commits.map {
+            val repoUrl = idRepos[it.repoId.toString()]?.url ?: nameRepos[it.repoName]?.url
             CommitData(
-                it.type,
-                it.pipelineId,
-                it.buildId,
-                it.commit,
-                it.committer,
-                it.commitTime.timestampmilli(),
-                it.comment,
-                it.repoId?.toString(),
-                it.repoName,
-                it.elementId,
-                if (it.type.toInt() == 2 && repoUrl != null) {
+                type = it.type,
+                pipelineId = it.pipelineId,
+                buildId = it.buildId,
+                commit = it.commit,
+                committer = it.committer,
+                commitTime = it.commitTime.timestampmilli(),
+                comment = it.comment,
+                repoId = it.repoId?.toString(),
+                repoName = it.repoName,
+                elementId = it.elementId,
+                url = if (it.type.toInt() == 2 && repoUrl != null) {
                     val urlAndRepo = GitUtils.getDomainAndRepoName(repoUrl)
                     "https://${urlAndRepo.first}/${urlAndRepo.second}/commit/${it.commit}"
                 } else null
@@ -72,14 +80,16 @@ class CommitService @Autowired constructor(
         }?.groupBy { it.elementId }?.map {
             val elementId = it.value[0].elementId
             val repoId = it.value[0].repoId
+            val repoName = it.value[0].repoName
             CommitResponse(
-                (repoMap[repoId]?.aliasName ?: "unknown repo"),
-                elementId,
-                it.value.filter { it.commit.isNotBlank() })
+                name = (idRepos[repoId]?.aliasName ?: nameRepos[repoName]?.aliasName ?: "unknown repo"),
+                elementId = elementId,
+                records = it.value.filter { it.commit.isNotBlank() })
         } ?: listOf()
     }
 
     fun addCommit(commits: List<CommitData>): Int {
+        logger.info("start to add commit: ${commits.firstOrNull()} ... ${commits.lastOrNull()}")
         return commitDao.addCommit(dslContext, commits).size
     }
 
@@ -92,24 +102,37 @@ class CommitService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): List<CommitData> {
-        val repoId = if (repositoryType == null || repositoryType == RepositoryType.ID) {
-            HashUtil.decodeOtherIdToLong(repositoryId)
+        val commitList = if (repositoryType == null || repositoryType == RepositoryType.ID) {
+            val repoId = HashUtil.decodeOtherIdToLong(repositoryId)
+            commitDao.getLatestCommitById(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                elementId = elementId,
+                repoId = repoId,
+                page = page,
+                pageSize = pageSize) ?: return listOf()
         } else {
-            repositoryDao.getByName(dslContext, projectId, repositoryId).repositoryId
+            val repoName = repositoryDao.getByName(dslContext, projectId, repositoryId).aliasName
+            commitDao.getLatestCommitByName(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                elementId = elementId,
+                repoName = repoName,
+                page = page,
+                pageSize = pageSize) ?: return listOf()
         }
-        val commitList = commitDao.getLatestCommitById(dslContext, pipelineId, elementId, repoId, page, pageSize) ?: return listOf()
         return commitList.map { data ->
             CommitData(
-                data.type,
-                pipelineId,
-                data.buildId,
-                data.commit,
-                data.committer,
-                data.commitTime.timestampmilli(),
-                data.comment,
-                data.repoId.toString(),
-                null,
-                data.elementId
+                type = data.type,
+                pipelineId = pipelineId,
+                buildId = data.buildId,
+                commit = data.commit,
+                committer = data.committer,
+                commitTime = data.commitTime.timestampmilli(),
+                comment = data.comment,
+                repoId = data.repoId.toString(),
+                repoName = null,
+                elementId = data.elementId
             )
         }
     }

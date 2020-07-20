@@ -9,6 +9,10 @@ spring:
       discovery:
         tags: local
 
+store:
+  templateApproveSwitch: close
+  imageApproveSwitch: close
+
 logo:
   allowUploadLogoTypes: jpg,png,svg
   allowUploadLogoWidth: 200

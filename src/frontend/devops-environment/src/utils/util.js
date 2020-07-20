@@ -258,31 +258,6 @@ export function convertMStoString (time) {
     return time ? getDays(Math.floor(time / 1000)) : '0秒'
 }
 
-/**
- *  将毫秒值转换成x时x分x秒的形式并使用格式化规则
- *  @param {Number} time - 时间的毫秒形式
- *  @return {String} str - 转换后的字符串
- */
-export function convertMStoStringByRule (time) {
-    const str = convertMStoString(time)
-    let res = str
-    const arr = str.match(/^\d{1,}([\u4e00-\u9fa5]){1,}/)
-    if (arr.length) {
-        switch (arr[1]) {
-            case '秒':
-                res = '1分钟内'
-                break
-            case '天':
-                res = `大于${arr[0]}`
-                break
-            case '时':
-                res = str.replace(/\d{1,}秒/, '')
-                break
-        }
-    }
-    return res
-}
-
 function prezero (num) {
     num = Number(num)
 
@@ -444,7 +419,7 @@ export const copyText = (text) => {
         document.body.removeChild(textarea)
         return true
     } else {
-        console.warn('浏览器不支持此功能，请使用谷歌浏览器。')
+        console.warn(window.devops.$i18n.t('environment.browserNotSupport'))
     }
     return false
 }

@@ -88,7 +88,7 @@ interface ScmWebhookMatcher {
     }
 
     fun getTag(ref: String): String {
-        return ref.removePrefix("refs/heads/")
+        return ref.removePrefix("refs/tags/")
     }
 
     fun getMergeRequestId(): Long? = null
@@ -97,6 +97,8 @@ interface ScmWebhookMatcher {
         val repositoryConfig: RepositoryConfig,
         var branchName: String? = null,
         var excludeBranchName: String? = null,
+        var tagName: String? = null,
+        var excludeTagName: String? = null,
         var includePaths: String? = null,
         var excludePaths: String? = null,
         var eventType: CodeEventType? = null,
@@ -104,7 +106,9 @@ interface ScmWebhookMatcher {
         var relativePath: String? = null,
         var excludeUsers: String? = "",
         var includeUsers: String? = null,
-        var codeType: CodeType = CodeType.GIT
+        var codeType: CodeType = CodeType.GIT,
+        var excludeSourceBranchName: String? = null,
+        var includeSourceBranchName: String? = null
     )
 
     data class MatchResult(

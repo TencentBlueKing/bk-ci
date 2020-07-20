@@ -28,15 +28,15 @@ package com.tencent.devops.process.engine.atom.task
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.pojo.ErrorCode.SYSTEM_SERVICE_ERROR
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.common.pipeline.element.AcrossProjectDistributionElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
-import com.tencent.devops.process.pojo.AtomErrorCode.SYSTEM_SERVICE_ERROR
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate

@@ -88,7 +88,7 @@
         },
         computed: {
             ...mapGetters([
-                'onlineProjectList'
+                'enableProjectList'
             ])
         },
         created () {
@@ -114,9 +114,9 @@
                 })
                 this.isBtnDisabled = true
                 let projectName = ''
-                this.onlineProjectList.forEach(project => {
-                    if (project.project_code === this.projectId) {
-                        projectName = project.project_name
+                this.enableProjectList.forEach(project => {
+                    if (project.projectCode === this.projectId) {
+                        projectName = project.projectName
                     }
                 })
                 try {

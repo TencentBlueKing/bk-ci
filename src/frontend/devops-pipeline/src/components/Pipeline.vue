@@ -1,5 +1,5 @@
 <template>
-    <div class="create-pipeline-wrapper" v-bkloading="{ isLoading: isSaving, title: '正在保存' }">
+    <div class="create-pipeline-wrapper" v-bkloading="{ isLoading: isSaving, title: $t('editPage.saving') }">
         <header v-if="showHeader" class="create-pipeline-header">
             <div>
                 <slot name="pipeline-name"><span style="cursor: default" :title="pipeline.name">{{ pipeline.name }}</span></slot>
@@ -10,14 +10,13 @@
         </header>
         <div v-if="pipeline" class="scroll-container">
             <div class="scroll-wraper">
-                <stages :stages="pipeline.stages" :editable="!pipeline.instanceFromTemplate && templateType !== &quot;CONSTRAINT&quot;"></stages>
+                <stages :stages="pipeline.stages" :editable="pipelineEditable" :can-skip-element="canSkipElement" :is-preview="isPreview"></stages>
             </div>
         </div>
 
         <bk-dialog v-model="isStageShow"
-            width="620"
-            ext-cls="pipeline-type-container"
-            title="请选择Job类型"
+            :width="stageTypeDialogWidth"
+            :title="$t('editPage.selectJob')"
             :show-footer="false"
             :esc-close="true"
             :mask-close="true"
@@ -25,34 +24,50 @@
             <section class="bk-form bk-form-vertical bk-form-wrapper">
                 <ul class="stage-type-list">
                     <li v-for="os in osList" :key="os.value" @click="insert(os.value)" :class="os.className">
-                        <i :class="`bk-icon icon-${os.value.toLowerCase()} stage-type-icon`" />
+                        <i :class="`devops-icon icon-${os.value.toLowerCase()} stage-type-icon`" />
                         <span class="stage-label">{{ os.label }}</span>
                     </li>
                 </ul>
             </section>
         </bk-dialog>
-
-        <atom-selector v-if="container" :container="container" :element="element" v-bind="editingElementPos" :fresh-atom-list="freshAtomList" />
-
-        <bk-sideslider v-if="editingElementPos" :title="panelTitle" :class="{ 'sodaci-property-panel': true, 'hide-title': !panelTitle }" width="640" :is-show.sync="isPropertyPanelShow" :quick-close="true">
-            <template slot="content">
+        <template v-if="container">
+            <atom-selector :container="container" :element="element" v-bind="editingElementPos" :fresh-atom-list="freshAtomList" />
+        </template>
+        <template v-if="editingElementPos">
+            <template v-if="typeof editingElementPos.elementIndex !== 'undefined'">
                 <atom-property-panel
-                    v-if="typeof editingElementPos.elementIndex !== &quot;undefined&quot;"
                     :element-index="editingElementPos.elementIndex"
                     :container-index="editingElementPos.containerIndex"
                     :stage-index="editingElementPos.stageIndex"
-                    :editable="!pipeline.instanceFromTemplate && templateType !== &quot;CONSTRAINT&quot;"
+                    :editable="pipelineEditable"
                     :stages="pipeline.stages"
+                    :is-instance-template="pipeline.instanceFromTemplate"
                 />
+            </template>
+            <template v-else-if="typeof editingElementPos.containerIndex !== 'undefined'">
                 <container-property-panel
-                    v-else-if="typeof editingElementPos.containerIndex !== &quot;undefined&quot;"
+                    :title="panelTitle"
                     :container-index="editingElementPos.containerIndex"
                     :stage-index="editingElementPos.stageIndex"
                     :stages="pipeline.stages"
-                    :editable="!pipeline.instanceFromTemplate && templateType !== &quot;CONSTRAINT&quot;"
+                    :editable="pipelineEditable"
                 />
             </template>
-        </bk-sideslider>
+            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined' && showStageReviewPanel">
+                <stage-review-panel
+                    :stage="stage"
+                    :stage-index="editingElementPos.stageIndex"
+                    :disabled="!pipelineEditable"
+                />
+            </template>
+            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined'">
+                <stage-property-panel
+                    :stage="stage"
+                    :stage-index="editingElementPos.stageIndex"
+                    :editable="pipelineEditable"
+                />
+            </template>
+        </template>
     </div>
 </template>
 
@@ -61,14 +76,18 @@
     import Stages from './Stages'
     import AtomPropertyPanel from './AtomPropertyPanel'
     import ContainerPropertyPanel from './ContainerPropertyPanel'
+    import StagePropertyPanel from './StagePropertyPanel'
+    import StageReviewPanel from './StagePropertyPanel/StageReviewPanel'
     import AtomSelector from './AtomSelector'
     import { isObject } from '../utils/util'
 
     export default {
         components: {
             Stages,
+            StagePropertyPanel,
             AtomPropertyPanel,
             ContainerPropertyPanel,
+            StageReviewPanel,
             AtomSelector
         },
         props: {
@@ -87,6 +106,18 @@
             showHeader: {
                 type: Boolean,
                 default: true
+            },
+            editable: {
+                type: Boolean,
+                default: true
+            },
+            canSkipElement: {
+                type: Boolean,
+                default: false
+            },
+            isPreview: {
+                type: Boolean,
+                default: false
             }
         },
         computed: {
@@ -102,10 +133,14 @@
                 'editingElementPos',
                 'isStagePopupShow',
                 'insertStageIndex',
-                'isAddParallelContainer'
+                'isAddParallelContainer',
+                'showStageReviewPanel'
             ]),
             routeParams () {
                 return this.$route.params
+            },
+            pipelineEditable () {
+                return this.editable && !this.pipeline.instanceFromTemplate && this.templateType !== 'CONSTRAINT' && !this.isPreview
             },
             isStageShow: {
                 get () {
@@ -117,16 +152,16 @@
                     })
                 }
             },
-            isPropertyPanelShow: {
-                get () {
-                    return this.isPropertyPanelVisible
-                },
-                set (value) {
-                    this.toggleAtomSelectorPopup(value)
-                    this.togglePropertyPanel({
-                        isShow: value
-                    })
+            stageTypeDialogWidth () {
+                return Array.isArray(this.osList) ? this.osList.length * 130 + 208 : 480
+            },
+            stage () {
+                if (isObject(this.editingElementPos)) {
+                    const { stageIndex } = this.editingElementPos
+                    const stage = this.getStageByIndex(stageIndex)
+                    return stage
                 }
+                return null
             },
             container () {
                 if (isObject(this.editingElementPos)) {
@@ -148,10 +183,9 @@
                 if (typeof elementIndex !== 'undefined') {
                     return ''
                 }
-
                 return typeof containerIndex !== 'undefined'
                     ? this.container.name + '： ' + (stageIndex + 1) + '-' + (containerIndex + 1)
-                    : '属性栏'
+                    : this.$t('propertyBar')
             },
             containerType () {
                 const { stageIndex, containerIndex } = this.editingElementPos
@@ -161,7 +195,10 @@
             }
         },
         beforeDestroy () {
-            this.isPropertyPanelShow = false
+            this.toggleAtomSelectorPopup(false)
+            this.togglePropertyPanel({
+                isShow: false
+            })
         },
         methods: {
             ...mapActions('atom', [
@@ -217,14 +254,6 @@
 
 <style lang='scss'>
     @import '../scss/conf.scss';
-    .pipeline-type-container {
-        .bk-dialog-header {
-            margin-top: 30px;
-        }
-        .bk-dialog-tool {
-            display: none;
-        }
-    }
     .create-pipeline-header {
         display: flex;
         align-items: center;
@@ -269,26 +298,19 @@
         overflow: auto;
         flex: 1;
         .scroll-wraper {
-            padding: 40px 0 40px 30px;
+            padding: 20px 0 40px 30px;
             min-height: 100%;
             overflow: auto;
         }
         &:before {
             position: absolute;
-            top: 61px;
+            top: 44px + $StagepaddingTop;
             content: '';
             height: 0;
             left: 30px;
             min-width: calc( 100% - 30px);
             border-top: 2px dashed #c3cdd7;
        }
-    }
-    .sodaci-property-panel {
-        &.hide-title {
-            .bk-sideslider-title {
-                display: none;
-            }
-        }
     }
 
     .stage-type-list {

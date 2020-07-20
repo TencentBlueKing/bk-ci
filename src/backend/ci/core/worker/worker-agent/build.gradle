@@ -33,6 +33,6 @@ dependencies {
     compile project(":core:worker:worker-api-sdk")
 
     compile project (":core:plugin:codecc-plugin:worker-plugin-codecc")
-
-    compile fileTree(dir: 'lib/KillProcessTree.jar', includes: ['*.jar'])
 }
+
+install.enabled = false

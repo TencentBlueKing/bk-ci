@@ -29,6 +29,9 @@
 package com.tencent.devops.process.engine.atom.task
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
@@ -58,7 +61,6 @@ import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.util.CommonUtils
 import okhttp3.Request
@@ -219,7 +221,11 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                 }
             }
         }
-        if (count == 0) throw RuntimeException("没有匹配到需要分发的文件")
+        if (count == 0) throw TaskExecuteException(
+            errorCode = ErrorCode.USER_INPUT_INVAILD,
+            errorType = ErrorType.USER,
+            errorMsg = "没有匹配到需要分发的文件"
+        )
         LogUtils.addLine(rabbitTemplate, buildId, "$count 个文件将被分发", taskId, containerId, executeCount)
 
         val fileSource = FastPushFileRequest.FileSource(
@@ -487,7 +493,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         }
         val noExistsEnvNames = envNameList.subtract(envNameExistsList)
         if (noExistsEnvNames.isNotEmpty()) {
-            logger.error("The envNames not exists, name:$noExistsEnvNames")
+            logger.warn("The envNames not exists, name:$noExistsEnvNames")
             LogUtils.addRedLine(rabbitTemplate, buildId, "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames", taskId, containerId, executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
@@ -505,7 +511,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
 
         val noAuthEnvIds = envIdList.subtract(userEnvIdList)
         if (noAuthEnvIds.isNotEmpty()) {
-            logger.error("User does not permit to access the env: $noAuthEnvIds")
+            logger.warn("User does not permit to access the env: $noAuthEnvIds")
             LogUtils.addRedLine(rabbitTemplate, buildId, "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds", taskId, containerId, executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
@@ -535,7 +541,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             }
             val noExistsEnvIds = envSet.envHashIds.subtract(envIdList)
             if (noExistsEnvIds.isNotEmpty()) {
-                logger.error("The envIds not exists, id:$noExistsEnvIds")
+                logger.warn("The envIds not exists, id:$noExistsEnvIds")
                 LogUtils.addRedLine(
                     rabbitTemplate,
                     buildId,
@@ -560,7 +566,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             }
             val noExistsNodeIds = envSet.nodeHashIds.subtract(nodeIdList)
             if (noExistsNodeIds.isNotEmpty()) {
-                logger.error("The nodeIds not exists, id:$noExistsNodeIds")
+                logger.warn("The nodeIds not exists, id:$noExistsNodeIds")
                 LogUtils.addRedLine(
                     rabbitTemplate,
                     buildId,
@@ -618,13 +624,21 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             val responseBody = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.error("get jfrog files($url) fail:\n $responseBody")
-                throw RuntimeException("构建分发获取文件失败")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                    errorType = ErrorType.SYSTEM,
+                    errorMsg = "构建分发获取文件失败"
+                )
             }
             try {
                 return JsonUtil.getObjectMapper().readValue(responseBody, JfrogFilesData::class.java)
             } catch (e: Exception) {
                 logger.error("get jfrog files($url) fail\n$responseBody")
-                throw RuntimeException("构建分发获取文件失败")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                    errorType = ErrorType.SYSTEM,
+                    errorMsg = "构建分发获取文件失败"
+                )
             }
         }
     }

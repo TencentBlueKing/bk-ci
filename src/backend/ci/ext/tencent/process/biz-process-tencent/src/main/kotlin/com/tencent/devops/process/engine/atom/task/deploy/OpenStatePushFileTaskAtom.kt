@@ -26,6 +26,9 @@
 
 package com.tencent.devops.process.engine.atom.task.deploy
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.client.JfrogService
@@ -51,7 +54,6 @@ import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -178,9 +180,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
 
         val srcPath = parseVariable(param.srcPath, runVariables)
         val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        if (isRepoGray) {
-            LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
-        }
+        LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
 
         // 下载所有文件
         var count = 0
@@ -192,7 +192,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
         }.forEach { path ->
             val files = if (isRepoGray) {
                 bkRepoClient.downloadFileByPattern(
-                    user = userId,
+                    userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
@@ -220,7 +220,11 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
             }
             count += files.size
         }
-        if (count == 0) throw RuntimeException("没有匹配到需要分发的文件/File not found")
+        if (count == 0) throw throw TaskExecuteException(
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+            errorType = ErrorType.USER,
+            errorMsg = "没有匹配到需要分发的文件/File not found"
+        )
         LogUtils.addLine(rabbitTemplate, buildId, "$count 个文件将被分发/$count files will be distribute", taskId, task.containerHashId, executeCount)
 
         val localIp = CommonUtils.getInnerIP()
@@ -425,7 +429,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
             }
             val noExistsEnvIds = envSet.envHashIds.subtract(envIdList)
             if (noExistsEnvIds.isNotEmpty()) {
-                logger.error("The envIds not exists, id:$noExistsEnvIds")
+                logger.warn("The envIds not exists, id:$noExistsEnvIds")
                 LogUtils.addRedLine(
                     rabbitTemplate = rabbitTemplate,
                     buildId = buildId,
@@ -450,7 +454,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
             }
             val noExistsNodeIds = envSet.nodeHashIds.subtract(nodeIdList)
             if (noExistsNodeIds.isNotEmpty()) {
-                logger.error("The nodeIds not exists, id:$noExistsNodeIds")
+                logger.warn("The nodeIds not exists, id:$noExistsNodeIds")
                 LogUtils.addRedLine(
                     rabbitTemplate = rabbitTemplate,
                     buildId = buildId,

@@ -105,6 +105,7 @@ import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.util.ImageUtil
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.impl.DSL
@@ -222,7 +223,7 @@ abstract class ImageService @Autowired constructor() {
     fun count(
         userId: String,
         userDeptList: List<Int>,
-        imageName: String?,
+        keyword: String?,
         classifyCodeList: List<String>?,
         categoryCodeList: List<String>?,
         rdType: ImageRDTypeEnum?,
@@ -235,7 +236,7 @@ abstract class ImageService @Autowired constructor() {
         val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
         return marketImageDao.count(
             dslContext = dslContext,
-            imageName = imageName,
+            keyword = keyword,
             classifyCodeList = classifyCodeList,
             categoryCodeList = categoryCodeList,
             rdType = rdType,
@@ -249,7 +250,7 @@ abstract class ImageService @Autowired constructor() {
     fun doList(
         userId: String,
         userDeptList: List<Int>,
-        imageName: String?,
+        keyword: String?,
         classifyCodeList: List<String>?,
         categoryCodeList: List<String>?,
         rdType: ImageRDTypeEnum?,
@@ -268,7 +269,7 @@ abstract class ImageService @Autowired constructor() {
         val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
         val images = marketImageDao.list(
             dslContext = dslContext,
-            imageName = imageName,
+            keyword = keyword,
             classifyCodeList = classifyCodeList,
             categoryCodeList = categoryCodeList,
             rdType = rdType,
@@ -370,7 +371,7 @@ abstract class ImageService @Autowired constructor() {
      */
     fun searchImage(
         userId: String,
-        imageName: String?,
+        keyword: String?,
         imageSourceType: ImageType?,
         classifyCode: String?,
         categoryCode: String?,
@@ -382,7 +383,7 @@ abstract class ImageService @Autowired constructor() {
         pageSize: Int?,
         interfaceName: String? = "Anon interface"
     ): Result<MarketImageResp> {
-        logger.info("$interfaceName:searchImage:Input:($userId,$imageName,$imageSourceType,$classifyCode,$categoryCode,$labelCode,$score,$sortType,$page,$pageSize)")
+        logger.info("$interfaceName:searchImage:Input:($userId,$keyword,$imageSourceType,$classifyCode,$categoryCode,$labelCode,$score,$sortType,$page,$pageSize)")
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
         logger.info("$interfaceName:searchImage:Inner:userDeptList=$userDeptList")
@@ -390,7 +391,7 @@ abstract class ImageService @Autowired constructor() {
             count = count(
                 userId = userId,
                 userDeptList = userDeptList,
-                imageName = imageName,
+                keyword = keyword,
                 classifyCodeList = if (null != classifyCode) listOf(classifyCode) else null,
                 categoryCodeList = if (null != categoryCode) listOf(categoryCode) else null,
                 rdType = rdType,
@@ -403,7 +404,7 @@ abstract class ImageService @Autowired constructor() {
             records = doList(
                 userId = userId,
                 userDeptList = userDeptList,
-                imageName = imageName,
+                keyword = keyword,
                 classifyCodeList = if (null != classifyCode) listOf(classifyCode) else null,
                 categoryCodeList = if (null != categoryCode) listOf(categoryCode) else null,
                 rdType = rdType,
@@ -466,7 +467,7 @@ abstract class ImageService @Autowired constructor() {
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
-                    imageName = null,
+                    keyword = null,
                     classifyCodeList = null,
                     categoryCodeList = null,
                     rdType = null,
@@ -488,7 +489,7 @@ abstract class ImageService @Autowired constructor() {
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
-                    imageName = null,
+                    keyword = null,
                     classifyCodeList = null,
                     categoryCodeList = null,
                     rdType = null,
@@ -518,7 +519,7 @@ abstract class ImageService @Autowired constructor() {
                         records = doList(
                             userId = userId,
                             userDeptList = userDeptList,
-                            imageName = null,
+                            keyword = null,
                             classifyCodeList = listOf(classifyCode),
                             categoryCodeList = null,
                             rdType = null,
@@ -665,14 +666,18 @@ abstract class ImageService @Autowired constructor() {
         logger.info("$interfaceName:getImageRepoInfoByCodeAndVersion:Input:($userId,$projectCode,$pipelineId,$buildId,$imageCode,$imageVersion)")
         // 区分是否为调试项目
         val imageStatusList = imageCommonService.generateImageStatusList(imageCode, projectCode)
-        val imageRecord =
-            imageDao.getLatestImageByBaseVersion(
+        val imageRecords =
+            imageDao.getImagesByBaseVersion(
                 dslContext = dslContext,
                 imageCode = imageCode,
                 imageStatusSet = imageStatusList.toSet(),
                 baseVersion = imageVersion?.replace("*", "")
             )
-        val imageRepoInfo = if (null == imageRecord) {
+        imageRecords?.sortWith(Comparator { o1, o2 ->
+            ImageUtil.compareVersion(o2.get(KEY_IMAGE_VERSION) as String?, o1.get(KEY_IMAGE_VERSION) as String?)
+        })
+        val latestImage = imageRecords?.get(0)
+        val imageRepoInfo = if (null == latestImage) {
             // 运行时异常情况兜底，通知管理员
             val titleParams = mutableMapOf<String, String>()
             titleParams["userId"] = userId
@@ -695,12 +700,24 @@ abstract class ImageService @Autowired constructor() {
             }
             getDefaultImageRepoInfo()
         } else {
-            getImageRepoInfoByRecord(imageRecord)
+            getImageRepoInfoByRecord(latestImage)
         }
         with(imageRepoInfo) {
             logger.info("getImageRepoInfoByCodeAndVersion:Output($sourceType,$repoUrl,$repoName,$repoTag,$ticketId,$ticketProject)")
         }
         return imageRepoInfo
+    }
+
+    fun getSelfDevelopPublicImages(
+        interfaceName: String? = "Anon interface"
+    ): List<ImageRepoInfo> {
+        logger.info("$interfaceName:Input()")
+        val records = imageDao.listRunnableSelfDevelopPublicImages(dslContext)
+        val resultList = records?.map {
+            getImageRepoInfoByRecord(it)
+        } ?: emptyList()
+        logger.info("$interfaceName:Output(resultList.size=${resultList.size},${resultList.map { it.repoUrl + "/" + it.repoName + ":" + it.repoTag }})")
+        return resultList
     }
 
     @Value("\${store.defaultImageSourceType}")
@@ -838,7 +855,6 @@ abstract class ImageService @Autowired constructor() {
             )
         val classifyRecord = classifyService.getClassify(imageRecord.classifyId).data
         val imageFeatureRecord = imageFeatureDao.getImageFeature(dslContext, imageRecord.imageCode)
-            ?: throw InvalidParamException("imageFeature is null,imageCode=${imageRecord.imageCode}")
         val imageVersionLog = imageVersionLogDao.getLatestImageVersionLogByImageId(dslContext, imageId)?.get(0)
         val imageCode = imageRecord.imageCode
         val publicFlag = imageFeatureRecord.publicFlag
@@ -922,6 +938,8 @@ abstract class ImageService @Autowired constructor() {
             imageSizeNum = imageSizeNum,
             imageStatus = ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt()),
             description = imageRecord.description ?: "",
+            dockerFileType = imageRecord.dockerFileType ?: "INPUT",
+            dockerFileContent = imageRecord.dockerFileContent ?: "",
             labelList = labelList ?: listOf(),
             category = category?.categoryCode ?: "",
             categoryName = category?.categoryName ?: "",
@@ -1052,7 +1070,6 @@ abstract class ImageService @Autowired constructor() {
         versionRecords?.forEach {
             // 通用处理
             val imageVersion = it["version"] as String
-            val imageTag = it["imageTag"] as String
             val index = imageVersion.indexOf(".")
             val versionPrefix = imageVersion.substring(0, index + 1)
             var versionName = imageVersion

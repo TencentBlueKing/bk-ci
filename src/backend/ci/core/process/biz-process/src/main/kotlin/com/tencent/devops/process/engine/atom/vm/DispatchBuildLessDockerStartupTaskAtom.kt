@@ -52,8 +52,10 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -114,7 +116,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
+                errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                 errorMsg = t.message
             )
         } finally {
@@ -160,7 +162,11 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 buildId = buildId,
                 taskId = taskId
             )
-
+        pipelineBuildDetailService.updateStartVMStatus(
+            buildId = buildId,
+            containerId = task.containerId,
+            buildStatus = BuildStatus.RUNNING
+        )
         // 读取原子市场中的原子信息，写入待构建处理
         val atoms = AtomUtils.parseContainerMarketAtom(container, task, client, rabbitTemplate)
 
@@ -196,6 +202,30 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         )
         logger.info("[$buildId]|STARTUP_DOCKER|($vmSeqId)|Dispatch startup")
         return BuildStatus.CALL_WAITING
+    }
+
+    override fun tryFinish(task: PipelineBuildTask, param: NormalContainer, runVariables: Map<String, String>, force: Boolean): AtomResponse {
+        return if (force) {
+            if (BuildStatus.isFinish(task.status)) {
+                AtomResponse(task.status)
+            } else { // 强制终止的设置为失败
+                logger.warn("[${task.buildId}]|[FORCE_STOP_BUILD_LESS_IN_START_TASK]")
+                pipelineEventDispatcher.dispatch(
+                    PipelineBuildLessShutdownDispatchEvent(
+                        source = "force_stop_startBuildLess",
+                        projectId = task.projectId,
+                        pipelineId = task.pipelineId,
+                        userId = task.starter,
+                        buildId = task.buildId,
+                        vmSeqId = task.containerId,
+                        buildResult = true
+                    )
+                )
+                defaultFailAtomResponse
+            }
+        } else {
+            AtomResponse(task.status)
+        }
     }
 
     private fun getBuildZone(container: Container): Zone? {
@@ -240,7 +270,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 containerHashId = container.containerId ?: "",
                 containerType = container.getClassType(),
                 taskSeq = taskSeq,
-                taskId = VMUtils.genStartVMTaskId(containerSeq, taskSeq),
+                taskId = VMUtils.genStartVMTaskId(container.id!!),
                 taskName = "Prepare_Job#${container.id!!}(N)",
                 taskType = EnvControlTaskType.NORMAL.name,
                 taskAtom = AtomUtils.parseAtomBeanName(DispatchBuildLessDockerStartupTaskAtom::class.java),

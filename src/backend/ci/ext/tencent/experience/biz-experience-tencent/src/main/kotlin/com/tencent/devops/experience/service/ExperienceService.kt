@@ -28,8 +28,9 @@ package com.tencent.devops.experience.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
-import com.tencent.devops.artifactory.api.service.ServicePipelineResource
+import com.tencent.devops.artifactory.api.service.ServicePipelineArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -125,7 +126,7 @@ class ExperienceService @Autowired constructor(
             )
         }
         val pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID]!!
-        return client.get(ServicePipelineResource::class).hasPermission(
+        return client.get(ServicePipelineArtifactoryResource::class).hasPermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -415,7 +416,7 @@ class ExperienceService @Autowired constructor(
         val appBundleIdentifier = propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
         val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
         val buildNo = propertyMap[ARCHIVE_PROPS_BUILD_NO]!!
-        val remark = "构建号#$buildNo"
+        val remark = if (experience.description.isNullOrBlank()) "构建号#$buildNo" else experience.description
 
         val experienceId = experienceDao.create(
             dslContext = dslContext,

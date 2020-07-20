@@ -29,7 +29,9 @@ package com.tencent.devops.process.engine.service.measure
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.MeasureRequest
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -44,13 +46,15 @@ import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
+@Suppress("UNUSED")
 class MeasureServiceImpl constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val templateService: TemplateService,
-    private val measureEventDispatcher: MeasureEventDispatcher
+    private val measureEventDispatcher: MeasureEventDispatcher,
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : MeasureService {
 
     override fun postPipelineData(
@@ -115,7 +119,7 @@ class MeasureServiceImpl constructor(
         }
     }
 
-    override fun postCancelData(projectId: String, pipelineId: String, buildId: String) {
+    override fun postCancelData(projectId: String, pipelineId: String, buildId: String, userId: String) {
         try {
             val tasks = pipelineRuntimeService.getAllBuildTask(buildId)
             if (tasks.isEmpty()) {
@@ -136,7 +140,8 @@ class MeasureServiceImpl constructor(
                             startTime = tStartTime,
                             status = BuildStatus.CANCELED,
                             type = taskType,
-                            executeCount = executeCount
+                            executeCount = executeCount,
+                            userId = userId
                         )
                     }
                 }
@@ -160,7 +165,8 @@ class MeasureServiceImpl constructor(
         extraInfo: Map<String, Any>?,
         errorType: String?,
         errorCode: Int?,
-        errorMsg: String?
+        errorMsg: String?,
+        userId: String
     ) {
         try {
 
@@ -193,6 +199,20 @@ class MeasureServiceImpl constructor(
                     buildId = buildId,
                     type = MeasureRequest.MeasureType.TASK,
                     request = requestBody
+                )
+            )
+
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildTaskFinishBroadCastEvent(
+                    source = "build-element-$taskId",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    errorType = errorType,
+                    errorCode = errorCode,
+                    errorMsg = errorMsg
                 )
             )
         } catch (e: Throwable) {

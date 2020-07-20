@@ -86,7 +86,7 @@ interface ServiceGitRepositoryResource {
         tokenType: TokenTypeEnum,
         @ApiParam(value = "前端UI渲染方式", required = false)
         @QueryParam("frontendType")
-        frontendType: FrontendTypeEnum?
+        frontendType: FrontendTypeEnum? = null
     ): Result<RepositoryInfo?>
 
     @ApiOperation("根据仓库ID更新git代码库信息")
@@ -251,4 +251,13 @@ interface ServiceGitRepositoryResource {
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<List<GitRepositoryDirItem>?>
+
+    @ApiOperation("获取授权路径")
+    @GET
+    @Path("/getAuthUrl")
+    fun getAuthUrl(
+        @ApiParam("参数json串", required = true)
+        @QueryParam("authParamJsonStr")
+        authParamJsonStr: String
+    ): Result<String>
 }

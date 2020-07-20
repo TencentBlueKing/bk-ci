@@ -137,7 +137,7 @@ class PipelineTemplateDao {
         }
     }
 
-    fun getTemplate(dslContext: DSLContext, templateId: Int): TPipelineTemplateRecord? {
+    fun getTemplate(dslContext: DSLContext, templateId: Long): TPipelineTemplateRecord? {
         with(TPipelineTemplate.T_PIPELINE_TEMPLATE) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(templateId))

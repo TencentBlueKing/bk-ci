@@ -27,6 +27,8 @@
 package com.tencent.devops.artifactory.util
 
 import com.tencent.devops.artifactory.service.pojo.FileShareInfo
+import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -56,6 +58,15 @@ object EmailUtil {
                 .replace(TABLE_COLUMN1_TITLE, "文件名")
                 .replace(TABLE_COLUMN2_TITLE, "所属项目")
                 .replace(TABLE_COLUMN3_TITLE, "操作")
+    }
+
+    fun makeEmailNotifyMessage(title: String, body: String, receivers: Set<String>): EmailNotifyMessage {
+        val emailNotifyMessage = EmailNotifyMessage()
+        emailNotifyMessage.addAllReceivers(receivers)
+        emailNotifyMessage.title = title
+        emailNotifyMessage.body = body
+        emailNotifyMessage.format = EnumEmailFormat.HTML
+        return emailNotifyMessage
     }
 
     private fun getShareEmailBodyRow(fileName: String, md5: String, projectName: String, downloadUrl: String): String {

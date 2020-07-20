@@ -41,6 +41,8 @@ import com.tencent.devops.artifactory.service.pojo.JFrogAQLFileInfo
 import com.tencent.devops.artifactory.util.EmailUtil
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
+import com.tencent.devops.artifactory.util.RegionUtil
+import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
@@ -51,11 +53,9 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
-import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -104,24 +104,23 @@ class ArtifactoryDownloadService @Autowired constructor(
         val url = serviceGetExternalDownloadUrl(userId, projectId, artifactoryType, path, 300).url
         val platform = if (path.endsWith(".ipa")) Platform.IOS else Platform.ANDROID
 
-        return DownloadUrl(url, platform)
+        return DownloadUrl(StringUtil.chineseUrlEncode(url), platform)
     }
 
     override fun serviceGetExternalDownloadUrl(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String,
+        argPath: String,
         ttl: Int,
         directed: Boolean
     ): Url {
         logger.info("serviceGetExternalDownloadUrl, userId: $userId, userId: $projectId, userId: $projectId, " +
-            "artifactoryType: $artifactoryType, path: $path, ttl: $ttl, directed: $directed")
-        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
-
-        val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
+            "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed")
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
+        val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, normalizedPath)
         val url = jFrogApiService.externalDownloadUrl(realPath, userId, ttl, directed)
-        return Url(url)
+        return Url(StringUtil.chineseUrlEncode(url))
     }
 
     override fun serviceGetInnerDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean): Url {
@@ -136,7 +135,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         return Url(url)
     }
 
-    override fun getDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url {
+    override fun getDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, channelCode: ChannelCode?): Url {
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
@@ -155,12 +154,13 @@ class ArtifactoryDownloadService @Autowired constructor(
                 throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
             }
             val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
-            pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
+            if (channelCode == null || channelCode != ChannelCode.GIT) {
+                pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
+            }
         }
 
-        val url = jFrogApiService.downloadUrl(realPath)
-        val url2 = url.replace("devgw.", "gw.")
-        return Url(url, url2)
+        val url = RegionUtil.replaceRegionServer(jFrogApiService.downloadUrl(realPath), RegionUtil.IDC)
+        return Url(url, url)
     }
 
     override fun getIoaUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url {
@@ -244,7 +244,7 @@ class ArtifactoryDownloadService @Autowired constructor(
             if (it.startsWith("g_")) throw BadRequestException("Invalid download users")
         }
 
-        val emailNotifyMessage = makeEmailNotifyMessage(title, body, receivers)
+        val emailNotifyMessage = EmailUtil.makeEmailNotifyMessage(title, body, receivers)
         client.get(ServiceNotifyResource::class).sendEmailNotify(emailNotifyMessage)
     }
 
@@ -257,31 +257,20 @@ class ArtifactoryDownloadService @Autowired constructor(
         ttl: Int?,
         crossProjectId: String?,
         crossPipineId: String?,
-        crossBuildNo: String?
+        crossBuildNo: String?,
+        region: String?,
+        userId: String?
     ): List<String> {
         logger.info("getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
             ", artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, ttl: $ttl" +
-            ", crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo")
+            ", crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo, region：$region, userId: $userId")
         var targetProjectId = projectId
         var targetPipelineId = pipelineId
         var targetBuildId = buildId
         if (!crossProjectId.isNullOrBlank()) {
-            val lastModifyUser = client.get(ServicePipelineResource::class)
-                .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
             targetProjectId = crossProjectId!!
-            if (artifactoryType == ArtifactoryType.CUSTOM_DIR &&
-                !authProjectApi.getProjectUsers(artifactoryAuthServiceCode, targetProjectId).contains(lastModifyUser)) {
-                throw BadRequestException("用户（$lastModifyUser) 没有项目（$targetProjectId）下载权限)")
-            }
             if (artifactoryType == ArtifactoryType.PIPELINE) {
                 targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
-                pipelineService.validatePermission(
-                    lastModifyUser,
-                    targetProjectId,
-                    targetPipelineId,
-                    AuthPermission.DOWNLOAD,
-                    "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限")
-
                 val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
                     targetProjectId,
                     targetPipelineId,
@@ -291,12 +280,40 @@ class ArtifactoryDownloadService @Autowired constructor(
                 targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
             }
         }
-        logger.info("targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
+
+        var accessUserId = when {
+            !userId.isNullOrBlank() -> {
+                userId!!
+            }
+            !crossProjectId.isNullOrBlank() -> {
+                client.get(ServicePipelineResource::class).getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+            }
+            else -> {
+                null
+            }
+        }
+        logger.info("accessUserId: $accessUserId, targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
+
+        // 校验用户权限
+        if (accessUserId != null) {
+            if (artifactoryType == ArtifactoryType.CUSTOM_DIR &&
+                !authProjectApi.getProjectUsers(artifactoryAuthServiceCode, targetProjectId).contains(accessUserId)) {
+                throw BadRequestException("用户（$accessUserId) 没有项目（$targetProjectId）下载权限)")
+            }
+            if (artifactoryType == ArtifactoryType.PIPELINE) {
+                pipelineService.validatePermission(
+                    accessUserId,
+                    targetProjectId,
+                    targetPipelineId,
+                    AuthPermission.DOWNLOAD,
+                    "用户($accessUserId)在项目($targetProjectId)下没有流水线($targetPipelineId)下载构件权限"
+                )
+            }
+        }
 
         val pathArray = regex.split(argPath)
         val repoPathPrefix = JFrogUtil.getRepoPath()
         val jFrogFileInfoList = mutableListOf<JFrogAQLFileInfo>()
-
         pathArray.forEach { path ->
             val normalizedPath = JFrogUtil.normalize(path)
             val realPath = if (path.startsWith("/")) normalizedPath else "/$normalizedPath"
@@ -321,16 +338,9 @@ class ArtifactoryDownloadService @Autowired constructor(
         val filePathList = fileInfoList.map {
             JFrogUtil.getRealPath(targetProjectId, artifactoryType, it.fullPath)
         }
-        return jFrogApiService.batchThirdPartyDownloadUrl(filePathList, ttl ?: 24 * 3600).map { it.value }
-    }
-
-    private fun makeEmailNotifyMessage(title: String, body: String, receivers: Set<String>): EmailNotifyMessage {
-        val emailNotifyMessage = EmailNotifyMessage()
-        emailNotifyMessage.addAllReceivers(receivers)
-        emailNotifyMessage.title = title
-        emailNotifyMessage.body = body
-        emailNotifyMessage.format = EnumEmailFormat.HTML
-        return emailNotifyMessage
+        return jFrogApiService.batchThirdPartyDownloadUrl(filePathList, ttl ?: 24 * 3600).map {
+            RegionUtil.replaceRegionServer(it.value, region)
+        }
     }
 
     companion object {

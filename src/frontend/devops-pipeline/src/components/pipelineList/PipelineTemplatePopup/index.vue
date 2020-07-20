@@ -11,24 +11,24 @@
             :position="{ top: '100' }">
             <div v-bkloading="{ isLoading }" class="pipeline-template">
                 <header>
-                    新建流水线
-                    <i class="bk-icon icon-close" @click="toggleTemplatePopup(false)" />
+                    {{ $t('newlist.addPipeline') }}
+                    <i class="devops-icon icon-close" @click="toggleTemplatePopup(false)" />
                 </header>
                 <div class="temp-type-tab">
                     <span v-for="(type, index) in tempTypeList" :key="type" :class="{ &quot;active&quot;: tempTypeIndex === index }" @click="selectTempType(index)">
                         {{ type.categoryName }}
-                        <i class="bk-icon icon-refresh" v-if="type.categoryCode === 'store' && tempTypeIndex === index" @click="refreshStoreTEmp"></i>
+                        <i class="devops-icon icon-refresh" v-if="type.categoryCode === 'store' && tempTypeIndex === index" @click.stop="refreshStoreTEmp"></i>
                     </span>
                 </div>
                 <div class="template-content" :style="{ height: viewHeight }">
                     <div v-show="!showPreview" v-if="tempList" class="left-temp-list">
                         <div class="search-row-content" v-if="(tempTypeIndex === tempTypeList.length - 1)">
                             <div class="search-input-row">
-                                <input class="bk-form-input" type="text" placeholder="请输入关键字"
+                                <input class="bk-form-input" type="text" :placeholder="$t('newlist.tempSearchTips')"
                                     name="searchInput"
                                     v-model="searchName"
                                     @keyup.enter="search()">
-                                <i class="bk-icon icon-search" @click="search()"></i>
+                                <i class="devops-icon icon-search" @click="search()"></i>
                             </div>
                             <div class="search-category">
                                 <span v-for="category in categoryList"
@@ -40,8 +40,9 @@
                                 </span>
                             </div>
                         </div>
-                        <h2>模板列表（{{ tempList.length }}）</h2>
-                        <ul>
+                        <h2 v-if="(tempTypeIndex === tempTypeList.length - 1)">{{ $t('newlist.templateList') }}（{{ storeTemplateNum }}）</h2>
+                        <h2 v-else>{{ $t('newlist.templateList') }}（{{ tempList.length }}）</h2>
+                        <ul @scroll.passive="scrollLoadMore">
                             <li v-for="(item, index) in tempList"
                                 :class="{
                                     'temp-item': true,
@@ -55,19 +56,19 @@
                                 <span
                                     v-if="(tempTypeIndex !== tempTypeList.length - 1) && item.templateType.toLowerCase() === 'constraint'"
                                     class="temp-tip"
-                                >商店</span>
-                                <i v-if="activeTempIndex === index && !item.isInstall" class="bk-icon icon-check-circle-shape"></i>
+                                >{{ $t('newlist.store') }}</span>
+                                <i v-if="activeTempIndex === index && !item.isInstall" class="devops-icon icon-check-circle-shape"></i>
                                 <p class="temp-logo">
                                     <logo size="50" :name="item.icon" v-if="item.icon"></logo>
                                     <img class="temp-img" :src="item.logoUrl" v-else-if="item.logoUrl">
-                                    <i class="bk-icon icon-placeholder" v-else></i>
+                                    <i class="devops-icon icon-placeholder" v-else></i>
                                 </p>
                                 <p class="temp-title" :title="item.name">
                                     {{ item.name }}
                                 </p>
-                                <p class="install-btn" v-if="item.isInstall && item.isFlag " @click="installTemplate(item)">安装</p>
-                                <p class="permission-tips" v-if="item.isInstall && !item.isFlag">无安装权限</p>
-                                <p class="permission-tips" v-if="!item.isInstall">已安装</p>
+                                <p class="install-btn" v-if="item.isInstall && item.isFlag " @click="installTemplate(item)" :title="item.name">{{ $t('editPage.install') }}</p>
+                                <p class="permission-tips" v-if="item.isInstall && !item.isFlag" :title="item.name">{{ $t('newlist.noInstallPerm') }}</p>
+                                <p class="permission-tips" v-if="!item.isInstall" :title="item.name">{{ $t('newlist.installed') }}</p>
                             </li>
                         </ul>
                     </div>
@@ -78,12 +79,12 @@
                         <div class="temp-info-detail">
                             <template v-if="!isActiveTempEmpty">
                                 <div class="pipeline-input">
-                                    <input type="text" ref="pipelineName" class="bk-form-input" placeholder="请输入流水线名称" maxlength="40" name="newPipelineName" v-model.trim="newPipelineName" v-validate="&quot;required&quot;" />
+                                    <input type="text" ref="pipelineName" class="bk-form-input" :placeholder="$t('pipelineNameInputTips')" maxlength="40" name="newPipelineName" v-model.trim="newPipelineName" v-validate.initial="&quot;required&quot;" />
                                     <span class="border-effect" v-show="!errors.has(&quot;newPipelineName&quot;)"></span>
                                     <span v-show="errors.has(&quot;newPipelineName&quot;)" class="validate-fail-border-effect"></span>
                                 </div>
                                 <div class="detail-form-item">
-                                    <label class="info-label">类型：</label>
+                                    <label class="info-label">{{ $t('type') }}：</label>
                                     <div class="info-value template-type">
                                         <bk-radio-group v-model="templateType">
                                             <bk-popover placement="bottom" v-for="(entry, key) in tplTypes" :key="key">
@@ -95,25 +96,25 @@
                                     <div class="from-group" v-for="(filter, index) in tagGroupList" :key="index">
                                         <label>{{filter.name}}</label>
                                         <bk-select
-                                            v-model="labelSelected"
+                                            v-model="filter.labelValue"
                                             multiple="true">
                                             <bk-option v-for="(option, oindex) in filter.labels" :key="oindex" :id="option.id" :name="option.name">
                                             </bk-option>
                                         </bk-select>
                                     </div>
-                                    <a class="view-pipeline" v-if="showPreview" @click="togglePreview(false)">关闭预览</a>
-                                    <a class="view-pipeline" v-if="!showPreview && !activeTemp.isInstall && !isActiveTempEmpty" @click="togglePreview(true)">查看模板详情</a>
-                                    <a class="view-pipeline disabled" v-if="!showPreview && (activeTemp.isInstall || isActiveTempEmpty)">查看模板详情</a>
+                                    <a class="view-pipeline" v-if="showPreview" @click="togglePreview(false)">{{ $t('newlist.closePreview') }}</a>
+                                    <a class="view-pipeline" v-if="!showPreview && !activeTemp.isInstall && !isActiveTempEmpty" @click="togglePreview(true)">{{ $t('newlist.tempDetail') }}</a>
+                                    <a class="view-pipeline disabled" v-if="!showPreview && (activeTemp.isInstall || isActiveTempEmpty)">{{ $t('newlist.tempDetail') }}</a>
                                 </div></template>
 
                             <section v-else class="choose-tips">
                                 <logo size="20" name="finger-left" style="fill:#3c96ff" />
-                                <span>请先在左侧选择模板</span>
+                                <span>{{ $t('newlist.tempDetail') }}</span>
                             </section>
                         </div>
                         <div class="temp-operation-bar">
-                            <bk-button theme="primary" :disabled="isConfirmDisable" size="small" @click="createNewPipeline">新建</bk-button>
-                            <bk-button size="small" @click="toggleTemplatePopup(false)">取消</bk-button>
+                            <bk-button theme="primary" :disabled="isConfirmDisable" size="small" @click="createNewPipeline">{{ $t('add') }}</bk-button>
+                            <bk-button size="small" @click="toggleTemplatePopup(false)">{{ $t('cancel') }}</bk-button>
                         </div>
                     </div>
                 </div>
@@ -160,24 +161,28 @@
                 searchName: '',
                 templateType: 'FREEDOM',
                 curCategory: '',
-                labelSelected: []
+                loadEnd: false,
+                isLoadingMore: false,
+                storeTemplate: [],
+                storeTemplateNum: 0,
+                page: 1,
+                pageSize: 50
             }
         },
 
         computed: {
             ...mapState('soda', [
                 'pipelineTemplate',
-                'templateCategory',
-                'storeTemplate'
+                'templateCategory'
             ]),
             ...mapGetters({
                 'tagGroupList': 'pipelines/getTagGroupList'
             }),
 
             tplTypes () {
-                const types = [{ label: '自由模式', value: 'FREEDOM', tip: '可以自由调整流水线编排，不受模版管控' }]
+                const types = [{ label: this.$t('newlist.freedomMode'), value: 'FREEDOM', tip: this.$t('newlist.freedomModeTips') }]
                 const currentType = this.activeTemp.templateType || ''
-                if (currentType.toLowerCase() !== 'public') types.push({ label: '约束模式', value: 'CONSTRAINT', tip: '不能自由调整流水线编排，可通过模版更新实例' })
+                if (currentType.toLowerCase() !== 'public') types.push({ label: this.$t('newlist.constraintMode'), value: 'CONSTRAINT', tip: this.$t('newlist.constraintModeTips') })
                 else this.templateType = 'FREEDOM'
                 return types
             },
@@ -200,16 +205,17 @@
                     list = (this.storeTemplate || []).map(item => {
                         return {
                             ...item,
-                            isInstall: !Object.keys(pipelineTemplate || []).includes(item.code),
+                            isInstall: !item.installed,
                             isFlag: item.flag,
                             stages: (pipelineTemplate[item.code] && pipelineTemplate[item.code].stages) || []
                         }
                     })
                 } else {
-                    Object.keys(pipelineTemplate || []).map(item => {
-                        if ((type === 'custom' && !pipelineTemplate[item].category.length) || pipelineTemplate[item].category.includes(type)) {
+                    Object.keys(pipelineTemplate || {}).map(item => {
+                        const curItem = pipelineTemplate[item] || {}
+                        if ((type === 'custom' && ['PUBLIC', 'CUSTOMIZE'].includes(curItem.templateType)) || curItem.category.includes(type)) {
                             list.push({
-                                ...pipelineTemplate[item],
+                                ...curItem,
                                 isInstall: false,
                                 isFlag: true
                             })
@@ -224,13 +230,6 @@
             },
             tempPipeline () {
                 return this.hasSelectTemp ? this.activeTemp : null
-            },
-            tempInfo () {
-                return {
-                    'author': '作者',
-                    'atomNum': '插件',
-                    'desc': '简介'
-                }
             },
             projectId () {
                 return this.$route.params.projectId
@@ -280,10 +279,20 @@
             ...mapActions('atom', [
                 'setPipeline'
             ]),
+            ...mapActions('pipelines', [
+                'requestInstallTemplate'
+            ]),
+
+            scrollLoadMore (event) {
+                if (this.tempTypeIndex !== this.tempTypeList.length - 1) return
+                const target = event.target
+                const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
+                if (bottomDis <= 500 && !this.loadEnd && !this.isLoadingMore) this.requestMarkTemplates()
+            },
 
             search () {
                 this.selectTemp(0)
-                this.requestMarkTemplates(this.searchName, this.curCategory)
+                this.requestMarkTemplates(true)
             },
             selectTemp (index) {
                 const target = this.tempList.length && this.tempList[index]
@@ -292,11 +301,22 @@
                 }
             },
             installTemplate (temp) {
-                const href = `${WEB_URL_PIRFIX}/store/${temp.code}/install/template?projectCode=${this.projectId}#MARKET`
-                window.open(href, '_blank')
+                const postData = {
+                    projectCodeList: [this.projectId],
+                    templateCode: temp.code
+                }
+                this.isLoading = true
+                this.requestInstallTemplate(postData).then((res) => {
+                    const currentStoreItem = this.storeTemplate.find(x => x.code === temp.code)
+                    currentStoreItem.installed = true
+                }).catch((err) => {
+                    this.$showTips({ message: err.message || err, theme: 'error' })
+                }).finally(() => {
+                    this.isLoading = false
+                })
             },
             selectTempType (index) {
-                if (index === this.tempTypeList.length - 1 && !this.storeTemplate) {
+                if (index === this.tempTypeList.length - 1 && this.storeTemplate.length <= 0) {
                     this.requestMarkTemplates()
                 }
                 setTimeout(() => {
@@ -312,7 +332,7 @@
                 this.requestPipelineTemplate({
                     projectId: this.projectId
                 })
-                this.requestMarkTemplates()
+                this.requestMarkTemplates(true)
             },
             selectCategory (category) {
                 if (this.curCategory === category) {
@@ -320,7 +340,7 @@
                 } else {
                     this.curCategory = category
                 }
-                this.requestMarkTemplates(this.searchName, this.curCategory)
+                this.requestMarkTemplates(true)
             },
             toggleTemplatePopup (isShow) {
                 this.togglePopup(isShow)
@@ -332,28 +352,52 @@
             togglePreview (showPreview) {
                 this.showPreview = showPreview
             },
-            requestMarkTemplates (name, category) {
-                this.requestStoreTemplate({
-                    templateName: name || undefined,
-                    category: category || undefined
+            requestMarkTemplates (isReload) {
+                this.isLoadingMore = true
+                if (isReload) {
+                    this.page = 1
+                    this.storeTemplate = []
+                }
+                const param = {
+                    page: this.page,
+                    pageSize: this.pageSize,
+                    templateName: this.searchName,
+                    categoryCode: this.curCategory,
+                    projectCode: this.projectId
+                }
+                this.requestStoreTemplate(param).then((res) => {
+                    this.page++
+                    const data = res.data || {}
+                    this.storeTemplateNum = data.count || 0
+                    this.storeTemplate.push(...data.records)
+                    this.loadEnd = data.count <= this.storeTemplate.length
+                }).catch(err => this.$bkMessage({ message: (err.message || err), theme: 'error' })).finally(() => {
+                    this.isLoadingMore = false
                 })
             },
             async createNewPipeline () {
-                const { author, atomNum, icon, ...pipeline } = this.activeTemp
-                Object.assign(pipeline, { name: this.newPipelineName, labels: this.labelSelected })
+                const { icon, ...pipeline } = this.activeTemp
+                let labels = []
+                this.tagGroupList.forEach((item) => {
+                    if (item.labelValue) labels = labels.concat(item.labelValue)
+                })
+                Object.assign(pipeline, { name: this.newPipelineName, labels })
 
                 const keys = Object.keys(this.activeTemp)
                 if (keys.length <= 0) {
-                    this.$showTips({ message: `流水线（${pipeline.name}）新增失败， 请先选择模板`, theme: 'error' })
+                    this.$showTips({ message: this.$t('newlist.noTemplateTips'), theme: 'error' })
                     return
                 }
 
                 if (this.templateType === 'CONSTRAINT') {
+                    const code = this.activeTemp.code || ''
+                    const currentTemplate = this.pipelineTemplate[code] || this.activeTemp
+
                     this.$router.push({
                         name: 'createInstance',
                         params: {
-                            templateId: this.activeTemp.templateId,
-                            curVersionId: this.activeTemp.version,
+                            templateId: currentTemplate.templateId,
+                            curVersionId: currentTemplate.version,
                             pipelineName: pipeline.name
                         }
                     })
@@ -364,7 +408,7 @@
                     this.isDisabled = true
                     const { data: { id } } = await this.$ajax.post(`/process/api/user/pipelines/${this.projectId}`, pipeline)
                     if (id) {
-                        this.$showTips({ message: `${pipeline.name}新增成功`, theme: 'success' })
+                        this.$showTips({ message: this.$t('addSuc'), theme: 'success' })
 
                         this.$router.push({
                             name: 'pipelinesEdit',
@@ -374,7 +418,7 @@
                         })
                     } else {
                         this.$showTips({
-                            message: `${pipeline.name}新增失败`,
+                            message: this.$t('addFail'),
                             theme: 'error'
                         })
                     }
@@ -382,8 +426,8 @@
                     if (e.code === 403) { // 没有权限创建
                         this.$showAskPermissionDialog({
                             noPermissionList: [{
-                                resource: '流水线',
-                                option: '创建'
+                                resource: this.$t('pipeline'),
+                                option: this.$t('create')
                             }],
                             applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.$route.params.projectId}&service_code=pipeline&role_creator=pipeline`
                         })
@@ -460,7 +504,7 @@
             .icon-refresh {
                 position: absolute;
                 top: 15px;
-                left: 80px;
+                padding-left: 10px;
                 font-size: 18px;
             }
         }
@@ -729,6 +773,7 @@
                         .validate-fail-border-effect {
                             position: absolute;
                             bottom: 0;
+                            left: 0;
                             content: '';
                             height:2px;
                             width: 100%;
@@ -754,6 +799,7 @@
                         }
                     }
                     .view-pipeline {
+                        display: inline-block;
                         color: $iconPrimaryColor;
                         cursor: pointer;
                         &.disabled {

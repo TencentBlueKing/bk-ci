@@ -26,16 +26,16 @@
 
 package com.tencent.devops.plugin.worker.task.xcode
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.pipeline.element.XcodeBuildElement2
 import com.tencent.devops.plugin.worker.task.xcode.pojo.XcodeMethod
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.ticket.pojo.CertIOS
 import com.tencent.devops.worker.common.api.ticket.CertResourceApi
-import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -74,17 +74,17 @@ class XcodeBuildTask2 : ITask() {
         val project = taskParams["project"] ?: throw TaskExecuteException(
             errorMsg = "project is empty",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorCode = ErrorCode.USER_INPUT_INVAILD
         )
         val certId = taskParams["certId"] ?: throw TaskExecuteException(
             errorMsg = "certId is empty",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorCode = ErrorCode.USER_INPUT_INVAILD
         )
         scheme = taskParams["scheme"] ?: throw TaskExecuteException(
             errorMsg = "scheme is empty",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorCode = ErrorCode.USER_INPUT_INVAILD
         )
         configuration = taskParams["configuration"] ?: ""
         val ipaPath = taskParams["ipaPath"] ?: "result"
@@ -114,7 +114,7 @@ class XcodeBuildTask2 : ITask() {
         if (projectBuildStr.isEmpty()) throw TaskExecuteException(
             errorMsg = "no .xcworkspace or .xcodeproj found in ($project)",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
         )
 
         // 列出scheme
@@ -188,7 +188,7 @@ class XcodeBuildTask2 : ITask() {
             throw TaskExecuteException(
                 errorMsg = "no application-identifier found",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
 
@@ -204,7 +204,7 @@ class XcodeBuildTask2 : ITask() {
             throw TaskExecuteException(
                 errorMsg = "no application-identifier found",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
 
@@ -220,7 +220,7 @@ class XcodeBuildTask2 : ITask() {
         throw TaskExecuteException(
             errorMsg = "no uuid found",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
         )
     }
 
@@ -233,7 +233,7 @@ class XcodeBuildTask2 : ITask() {
         throw TaskExecuteException(
             errorMsg = "no team id found",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
         )
     }
 

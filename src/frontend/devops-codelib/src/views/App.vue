@@ -3,7 +3,6 @@
         <header class="devops-codelib-header">
             <logo size="32" :name="logo" />
             <span>{{title}}</span>
-            <i class="bk-icon icon-question-circle" @click="gotoDoc()"></i>
         </header>
         <main>
             <router-view></router-view>
@@ -21,12 +20,6 @@
             },
             title () {
                 return this.$route.meta.title
-            }
-        },
-
-        methods: {
-            gotoDoc () {
-                window.open(`${DOCS_URL_PREFIX}/所有服务/代码库/summary.html`, '_blank')
             }
         }
     }

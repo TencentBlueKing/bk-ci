@@ -106,9 +106,8 @@ class UpdateDevCloudVmStatus @Autowired constructor(
         if (devCloudNodeList.isEmpty()) {
             return
         }
-        val grayProjectSet = gray.grayProjectSet(redisOperation)
         devCloudNodeList.forEach {
-            if (!gray.isGrayMatchProject(it.projectId, grayProjectSet)) {
+            if (!gray.isGrayMatchProject(it.projectId, redisOperation)) {
                 logger.info("The project[${it.projectId}] is not match the gray type[${gray.isGray()}], ignore")
                 return@forEach
             }

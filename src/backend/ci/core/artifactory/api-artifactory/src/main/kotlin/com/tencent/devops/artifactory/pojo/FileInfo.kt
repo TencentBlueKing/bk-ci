@@ -53,29 +53,28 @@ data class FileInfo(
     @ApiModelProperty("app版本", required = true)
     val appVersion: String? = null,
     @ApiModelProperty("下载短链接", required = true)
-    val shortUrl: String? = null
+    val shortUrl: String? = null,
+    @ApiModelProperty("下载链接", required = false)
+    var downloadUrl: String? = null
 ) : Comparable<FileInfo> {
     constructor(name: String, fullName: String, path: String, fullPath: String, size: Long, folder: Boolean, modifiedTime: Long, artifactoryType: ArtifactoryType) :
         this(name, fullName, path, fullPath, size, folder, modifiedTime, artifactoryType, null)
 
     override fun compareTo(other: FileInfo): Int {
-        // 都是加固的，则按名字排
-        return if ((this.name.endsWith(".apk") || this.name.endsWith(".ipa")) &&
-            (other.name.endsWith(".apk") || other.name.endsWith(".ipa"))) {
-            if ((this.name.endsWith(".shell.apk") || this.name.endsWith("_enterprise_sign.ipa")) &&
-                (other.name.endsWith(".shell.apk") || other.name.endsWith("_enterprise_sign.ipa"))) {
-                this.name.compareTo(other.name)
-            } else if ((this.name.endsWith(".shell.apk") || this.name.endsWith("_enterprise_sign.ipa")) &&
-                (!other.name.endsWith(".shell.apk") && !other.name.endsWith("_enterprise_sign.ipa"))) {
-                -1
-            } else {
-                1
-            }
-        } else if ((this.name.endsWith(".apk") || this.name.endsWith(".ipa")) &&
-            (!other.name.endsWith(".apk") && !other.name.endsWith(".ipa"))) {
-            -1
-        } else {
-            1
+        val thisLevel = level(this.name)
+        val otherLevel = level(other.name)
+        return when {
+            thisLevel > otherLevel -> 1
+            thisLevel < otherLevel -> -1
+            else -> this.name.toLowerCase().compareTo(other.name.toLowerCase())
+        }
+    }
+
+    private fun level(name: String): Int {
+        return when {
+            name.endsWith(".shell.apk") || name.endsWith("_enterprise_sign.ipa") -> -2
+            name.endsWith(".apk") || name.endsWith(".ipa") -> -1
+            else -> 0
         }
     }
 }

@@ -3,9 +3,9 @@
         <ul v-if="menuList.length">
             <li class="bkc-menu-item" v-for="(item, itemIndex) in menuList" :key="itemIndex">
                 <div v-if="(!item.children || !item.children.length || item.showChildren === false) && !item.childrenType" class="bkc-menu-title-wrapper"
-                    :class="[item.hide, item.disable, item.id === $route.name || (item.children && item.children.some(child => child.id === $route.name)) ? 'selected' : '']"
+                    :class="[item.hide, item.disable, item.selectId.includes($route.name) || (item.children && item.children.some(child => child.selectId.includes($route.name))) ? 'selected' : '']"
                     @click="(!item.disable && !item.hide) ? handleClick(item, itemIndex, $event) : () => {}">
-                    <i class="bk-icon left-icon" :class="[item.disable, item.icon]"></i>
+                    <i class="devops-icon left-icon" :class="[item.disable, item.icon]"></i>
                     <div class="bkc-menu-title">{{item.name}}</div>
                     <i class="biz-badge" v-if="item.badge !== undefined">{{item.badge}}</i>
                 </div>
@@ -13,9 +13,9 @@
                 <div v-else class="bkc-menu-title-wrapper"
                     :class="[item.hide, item.disable, item.isChildSelected ? 'child-selected' : '', item.isOpen ? 'open' : '']"
                     @click="(!item.disable && !item.hide) ? openChildren(item, itemIndex, $event) : () => {}">
-                    <i class="bk-icon left-icon" :class="[item.disable, item.icon]"></i>
+                    <i class="devops-icon left-icon" :class="[item.disable, item.icon]"></i>
                     <div class="bkc-menu-title">{{item.name}}</div>
-                    <i class="bk-icon right-icon icon-angle-down" :class="{ 'open': item.isOpen }"></i>
+                    <i class="devops-icon right-icon icon-angle-down" :class="{ 'open': item.isOpen }"></i>
                 </div>
                 <collapse-transition
                     v-if="item.childrenType === 'bk-tree'">
@@ -30,7 +30,7 @@
                     v-else>
                     <ul v-show="item.isOpen">
                         <li class="bkc-menu-child-item" v-for="(child, childIndex) in item.children" :key="childIndex">
-                            <div class="bkc-menu-child-title-wrapper" :class="child.id === $route.name ? 'selected' : ''"
+                            <div class="bkc-menu-child-title-wrapper" :class="child.selectId.includes($route.name) ? 'selected' : ''"
                                 @click="handleChildClick(item, itemIndex, child, childIndex, $event)">
                                 {{child.name}}
                             </div>
@@ -41,8 +41,8 @@
         </ul>
         <template v-else>
             <div class="biz-no-data" style="margin-top: 100px;">
-                <i class="bk-icon icon-empty"></i>
-                <p>暂时没数据!</p>
+                <i class="devops-icon icon-empty"></i>
+                <p> {{ $t('store.暂时没数据!') }} </p>
             </div>
         </template>
     </div>

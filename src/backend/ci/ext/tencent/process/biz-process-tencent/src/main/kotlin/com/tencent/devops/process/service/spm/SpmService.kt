@@ -27,11 +27,11 @@
 package com.tencent.devops.process.service.spm
 
 import com.google.gson.JsonParser
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_CDN_FAIL
 import com.tencent.devops.process.engine.exception.BuildTaskException
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.third.spm.SpmFileInfo
 import okhttp3.Request
 import org.slf4j.LoggerFactory
@@ -50,7 +50,7 @@ class SpmService {
     fun getFileInfo(projectId: String, globalDownloadUrl: String, downloadUrl: String, cmdbAppId: Int): Result<List<SpmFileInfo>> {
 
         if (!downloadUrl.startsWith(globalDownloadUrl)) {
-            logger.error("升级包在CDN的完整下载地址必须是以全局下载地址开头")
+            logger.warn("升级包在CDN的完整下载地址必须是以全局下载地址开头")
             throw RuntimeException("升级包在CDN的完整下载地址必须是以全局下载地址开头")
         }
 

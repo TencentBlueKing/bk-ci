@@ -28,19 +28,22 @@ package com.tencent.devops.project.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
-import javax.ws.rs.Path
 import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
+import javax.ws.rs.PUT
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_PROJECT"], description = "项目列表接口")
@@ -51,17 +54,8 @@ interface ServiceProjectResource {
 
     @GET
     @Path("/")
-    @ApiOperation("查询所有项目")
+    @ApiOperation("查询当前用户有权限的项目列表")
     fun list(
-        @ApiParam("用户ID", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String
-    ): Result<List<ProjectVO>>
-
-    @GET
-    @Path("/query_all")
-    @ApiOperation("查询所有项目")
-    fun listV2(
         @ApiParam("用户ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
@@ -96,27 +90,10 @@ interface ServiceProjectResource {
         projectCodes: List<String>
     ): Result<List<ProjectVO>>
 
-    @POST
-    @Path("/query")
-    @ApiOperation("查询指定项目")
-    fun listByProjectCodeV2(
-        @ApiParam(value = "项目id", required = true)
-        projectCodes: Set<String>
-    ): Result<List<ProjectVO>>
-
     @GET
     @Path("/getProjectByUser")
     @ApiOperation("查询所有项目")
     fun getProjectByUser(
-        @ApiParam("userId", required = true)
-        @QueryParam("userId")
-        userName: String
-    ): Result<List<ProjectVO>>
-
-    @GET
-    @Path("/query/by_username")
-    @ApiOperation("根据用户名查询项目")
-    fun getProjectByUserV2(
         @ApiParam("userId", required = true)
         @QueryParam("userId")
         userName: String
@@ -147,15 +124,6 @@ interface ServiceProjectResource {
     ): Result<HashMap<String, String>>
 
     @GET
-    @Path("/query/by_code")
-    @ApiOperation("根据项目Code获取对应的名称")
-    fun getNameByCodeV2(
-        @ApiParam("projectCodes，多个以英文逗号分隔", required = true)
-        @QueryParam("projectCodes")
-        projectCodes: String
-    ): Result<HashMap<String, String>>
-
-    @GET
     @Path("/{projectId}")
     @ApiOperation("查询指定EN项目")
     fun get(
@@ -164,12 +132,28 @@ interface ServiceProjectResource {
         englishName: String
     ): Result<ProjectVO?>
 
-    @GET
-    @Path("/names/{englishName}")
-    @ApiOperation("查询指定EN项目")
-    fun getV2(
+    @POST
+    @Path("/create")
+    @ApiOperation("创建项目")
+    fun create(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目信息", required = true)
+        projectCreateInfo: ProjectCreateInfo
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/{projectId}")
+    @ApiOperation("修改项目")
+    fun update(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
-        @PathParam("englishName")
-        englishName: String
-    ): Result<ProjectVO?>
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "项目信息", required = true)
+        projectUpdateInfo: ProjectUpdateInfo
+    ): Result<Boolean>
 }

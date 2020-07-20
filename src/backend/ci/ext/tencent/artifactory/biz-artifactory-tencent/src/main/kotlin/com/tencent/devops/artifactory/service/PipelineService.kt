@@ -69,14 +69,14 @@ class PipelineService @Autowired constructor(
                 val fullName = getFullName(fullPath, pipelineId, pipelineName)
                 fileInfoList.add(
                     FileInfo(
-                        pipelineName,
-                        fullName,
-                        it.uri,
-                        fullPath,
-                        it.size,
-                        it.folder,
-                        LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                        ArtifactoryType.PIPELINE
+                        name = pipelineName,
+                        fullName = fullName,
+                        path = it.uri,
+                        fullPath = fullPath,
+                        size = it.size,
+                        folder = it.folder,
+                        modifiedTime = LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                        artifactoryType = ArtifactoryType.PIPELINE
                     )
                 )
             }
@@ -99,14 +99,14 @@ class PipelineService @Autowired constructor(
                 val fullName = getFullName(fullPath, pipelineId, pipelineName, buildId, buildName)
                 fileInfoList.add(
                     FileInfo(
-                        buildName,
-                        fullName,
-                        it.uri,
-                        fullPath,
-                        it.size,
-                        it.folder,
-                        LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                        ArtifactoryType.PIPELINE
+                        name = buildName,
+                        fullName = fullName,
+                        path = it.uri,
+                        fullPath = fullPath,
+                        size = it.size,
+                        folder = it.folder,
+                        modifiedTime = LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                        artifactoryType = ArtifactoryType.PIPELINE
                     )
                 )
             }
@@ -125,14 +125,14 @@ class PipelineService @Autowired constructor(
             val fullName = getFullName(fullPath, pipelineId, pipelineName, buildId, buildName)
             val name = JFrogUtil.getFileName(fullPath)
             FileInfo(
-                name,
-                fullName,
-                it.uri,
-                fullPath,
-                it.size,
-                it.folder,
-                LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                ArtifactoryType.PIPELINE
+                name = name,
+                fullName = fullName,
+                path = it.uri,
+                fullPath = fullPath,
+                size = it.size,
+                folder = it.folder,
+                modifiedTime = LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                artifactoryType = ArtifactoryType.PIPELINE
             )
         }
         return JFrogUtil.sort(fileInfoList)

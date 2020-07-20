@@ -26,12 +26,12 @@
 
 package com.tencent.devops.plugin.worker.task.unity3d
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.pipeline.enums.Platform
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.worker.common.api.ticket.CertResourceApi
-import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.plugin.worker.task.unity3d.model.AndroidKey
 import com.tencent.devops.plugin.worker.task.unity3d.model.Argument
 import com.tencent.devops.worker.common.utils.CredentialUtils
@@ -68,14 +68,14 @@ object Validator {
             throw TaskExecuteException(
                 errorMsg = "The specified unity3d project root path '${rootDir.canonicalPath}' does not exist",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
         if (!rootDir.isDirectory) {
             throw TaskExecuteException(
                 errorMsg = "The specified unity3d project root path '${rootDir.canonicalPath}' is not a directory",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
         return rootDir
@@ -113,14 +113,14 @@ object Validator {
             throw TaskExecuteException(
                 errorMsg = "The specified android key store file name '$keyStoreName' does not exist",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
         if (!file.isFile) {
             throw TaskExecuteException(
                 errorMsg = "The specified android key store file name '$keyStoreName' is not a file",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
 

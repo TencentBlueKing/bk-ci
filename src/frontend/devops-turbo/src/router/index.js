@@ -16,7 +16,7 @@ const routes = [
                 component: Overviews,
                 meta: {
                     title: '总览',
-                    header: '编译加速',
+                    header: 'turbo',
                     logo: 'turbo',
                     to: 'turboOverview'
                 }
@@ -31,7 +31,7 @@ const routes = [
                 component: taskRegistration,
                 meta: {
                     title: '任务注册',
-                    header: '编译加速',
+                    header: 'turbo',
                     logo: 'turbo',
                     to: 'turboOverview'
                 }
@@ -42,7 +42,7 @@ const routes = [
                 component: acceleration,
                 meta: {
                     title: '加速任务',
-                    header: '编译加速',
+                    header: 'turbo',
                     logo: 'turbo',
                     to: 'turboOverview'
                 }
@@ -53,7 +53,7 @@ const routes = [
                 component: record,
                 meta: {
                     title: '加速记录',
-                    header: '编译加速',
+                    header: 'turbo',
                     logo: 'turbo',
                     to: 'turboOverview'
                 }

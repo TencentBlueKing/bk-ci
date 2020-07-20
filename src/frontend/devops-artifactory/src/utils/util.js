@@ -470,21 +470,3 @@ export function getWindowHeight () {
 
     return windowHeight
 }
-
-/**
- * 根据域名判断使用检测当前网络环境url域名
- *
- * @return {string}
- */
-export function getCheckEnvPrefix () {
-    const prefix = 'http://devgw.devops.oa.com'
-    // const hostName = window.location.hostname
-    // if (hostName === 'dev.devops.oa.com') {
-    //     prefix = 'http://dev.devgw.devops.oa.com'
-    // } else if (hostName === 'test.devops.oa.com') {
-    //     prefix = 'http://test.devgw.devops.oa.com'
-    // } else if (hostName === 'devops.oa.com') {
-    //     prefix = 'http://devgw.devops.oa.com'
-    // }
-    return prefix
-}

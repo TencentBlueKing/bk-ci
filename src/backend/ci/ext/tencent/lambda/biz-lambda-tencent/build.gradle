@@ -28,7 +28,7 @@ dependencies {
     compile project(":core:common:common-service")
     compile project(":core:common:common-web")
     compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:common:common-kafka")
+    compile project(":ext:tencent:common:common-kafka-tencent")
     compile project(":core:common:common-es")
     compile project(":core:common:common-event")
     compile project(":core:common:common-db")
@@ -40,5 +40,3 @@ dependencies {
     compile project(":ext:tencent:lambda:api-lambda-tencent")
     testCompile project(":core:common:common-test")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

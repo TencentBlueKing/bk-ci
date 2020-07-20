@@ -28,7 +28,7 @@ package com.tencent.devops.dispatch.controller
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.OpDockerBuildResource
+import com.tencent.devops.dispatch.api.op.OpDockerBuildResource
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import org.springframework.beans.factory.annotation.Autowired
 

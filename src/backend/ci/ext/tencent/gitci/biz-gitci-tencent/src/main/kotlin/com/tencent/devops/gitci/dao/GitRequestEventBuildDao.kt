@@ -146,7 +146,7 @@ class GitRequestEventBuildDao {
     ): Record? {
         val t1 = TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD.`as`("t1")
         val t2 = TGitRequestEvent.T_GIT_REQUEST_EVENT.`as`("t2")
-        return dslContext.select(t2.OBJECT_KIND, t2.COMMIT_ID, t2.GIT_PROJECT_ID, t2.MERGE_REQUEST_ID, t2.DESCRIPTION, t2.EVENT)
+        return dslContext.select(t2.OBJECT_KIND, t2.COMMIT_ID, t2.GIT_PROJECT_ID, t2.MERGE_REQUEST_ID, t2.DESCRIPTION, t2.EVENT, t1.NORMALIZED_YAML)
             .from(t2).leftJoin(t1).on(t1.EVENT_ID.eq(t2.ID))
             .where(t1.BUILD_ID.eq(buildId))
             .fetchOne()
@@ -154,7 +154,7 @@ class GitRequestEventBuildDao {
 
     fun getByEventIds(
         dslContext: DSLContext,
-        eventIds: Set<Long>
+        eventIds: Collection<Long>
     ): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
@@ -162,6 +162,16 @@ class GitRequestEventBuildDao {
                     .and(BUILD_ID.isNotNull)
                     .orderBy(EVENT_ID.desc())
                     .fetch()
+        }
+    }
+
+    fun getIdByEventIds(
+        dslContext: DSLContext,
+        eventIds: Collection<Long>
+    ): List<Long> {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.select(EVENT_ID).from(this)
+                .where(EVENT_ID.`in`(eventIds)).fetch(EVENT_ID)
         }
     }
 

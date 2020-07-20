@@ -77,8 +77,9 @@ class TOFService @Autowired constructor(
             return TOFResult("TOF error, generate signature failure")
         }
         logger.info("[$url] Start to request tof with body size: ${body.length}")
+        val finalUrl = String.format("%s%s", tofConf["host"], url)
         val request = Request.Builder()
-            .url(String.format("%s%s", tofConf["host"], url))
+            .url(finalUrl)
             .post(requestBody)
             .headers(headers)
             .build()
@@ -89,7 +90,8 @@ class TOFService @Autowired constructor(
                 responseBody = response.body()!!.string()
                 if (!response.isSuccessful) {
                     // logger.error("[id--${headers["timestamp"]}]request >>>> $body")
-                    logger.error(String.format("TOF error, post data response failure, url: %s, status code: %d, errorMsg: %s", url, response.code(), responseBody))
+                    logger.error("TOF error, post data response failure, url: $finalUrl, status code: ${response.code()}," +
+                        " errorMsg: $responseBody, request body: $body")
                     return TOFResult("TOF error, post data response failure")
                 }
             }

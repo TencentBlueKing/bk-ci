@@ -19,7 +19,7 @@
                 const { value, name } = e.target
                 const trimVal = isBlur ? value.trim() : value
 
-                if (trimVal !== this.value) {
+                if (trimVal !== String(this.value).trim() || trimVal !== '') {
                     this.$emit('input', trimVal)
                     this.handleChange(name, trimVal)
                 }
@@ -29,10 +29,10 @@
             }
         },
         render (h) {
-            const { inputType, value, name, handleInput, disabled, handleBlur } = this
+            const { inputType, value, name, handleInput, readOnly, handleBlur, title } = this
 
             return (
-                <input disabled={disabled} type={inputType} class='bk-form-input' name={name} value={value} onBlur={handleBlur} onInput={handleInput} />
+                <input title={title} disabled={readOnly} type={inputType} class='bk-form-input pointer-events-auto' name={name} value={value} onBlur={handleBlur} onInput={handleInput} />
             )
         }
     }

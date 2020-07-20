@@ -28,6 +28,7 @@ package com.tencent.devops.worker.common.api.scm
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.repository.pojo.commit.CommitData
 import com.tencent.devops.ticket.pojo.CertIOS
 import com.tencent.devops.worker.common.api.WorkerRestApiSDK
@@ -39,4 +40,5 @@ interface CommitSDKApi : WorkerRestApiSDK {
         elementId: String,
         repositoryConfig: RepositoryConfig
     ): Result<List<CommitData>>
+    fun saveBuildMaterial(materialList: List<PipelineBuildMaterial>): Result<Int>
 }

@@ -52,13 +52,14 @@ class ServiceTemplateResourceImpl @Autowired constructor(
         return Result(
             marketTemplateService.list(
                 userId = userId.trim(),
-                name = null,
+                keyword = null,
                 classifyCode = null,
                 category = null,
                 labelCode = null,
                 score = null,
                 rdType = null,
                 sortType = null,
+                projectCode = null,
                 page = null,
                 pageSize = 1
             )

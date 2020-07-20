@@ -35,7 +35,6 @@ import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
-import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.ContainerInfo
@@ -46,6 +45,8 @@ import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.services.LocalImageCache
 import com.tencent.devops.dockerhost.utils.CommonUtils
+import com.tencent.devops.dockerhost.utils.RandomUtil
+import com.tencent.devops.store.pojo.app.BuildEnv
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.io.File
@@ -183,30 +184,40 @@ class DockerHostDebugService(
             }
             logger.info("envList is: $envList; PATH is $PATH")
 
-            val binds = mutableListOf(Bind("${dockerHostConfig.hostPathMavenRepo}/${containerInfo.pipelineId}/${containerInfo.vmSeqId}/", volumeMavenRepo),
-                    Bind("${dockerHostConfig.hostPathNpmPrefix}/${containerInfo.pipelineId}/${containerInfo.vmSeqId}/", volumeNpmPrefix),
-                    Bind("${dockerHostConfig.hostPathNpmCache}/${containerInfo.pipelineId}/${containerInfo.vmSeqId}/", volumeNpmCache),
-                    Bind("${dockerHostConfig.hostPathCcache}/${containerInfo.pipelineId}/${containerInfo.vmSeqId}/", volumeCcache),
+            val tailPath = getTailPath(containerInfo)
+            val binds = mutableListOf(Bind("${dockerHostConfig.hostPathMavenRepo}/${containerInfo.pipelineId}/$tailPath/", volumeMavenRepo),
+                    Bind("${dockerHostConfig.hostPathNpmPrefix}/${containerInfo.pipelineId}/$tailPath/", volumeNpmPrefix),
+                    Bind("${dockerHostConfig.hostPathNpmCache}/${containerInfo.pipelineId}/$tailPath/", volumeNpmCache),
+                    Bind("${dockerHostConfig.hostPathCcache}/${containerInfo.pipelineId}/$tailPath/", volumeCcache),
                     Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
                     Bind(dockerHostConfig.hostPathSleep, volumeSleep, AccessMode.ro),
-                    Bind("${dockerHostConfig.hostPathGradleCache}/${containerInfo.pipelineId}/${containerInfo.vmSeqId}/", volumeGradleCache),
-                    Bind(getWorkspace(containerInfo.pipelineId, containerInfo.vmSeqId), volumeWs))
+                    Bind("${dockerHostConfig.hostPathGradleCache}/${containerInfo.pipelineId}/$tailPath/", volumeGradleCache),
+                    Bind(getWorkspace(containerInfo.pipelineId, tailPath), volumeWs))
             if (enableProjectShare(containerInfo.projectId)) {
                 binds.add(Bind(getProjectShareDir(containerInfo.projectId), volumeProjectShare))
             }
 
+            val containerName = "debug-${containerInfo.pipelineId}-${containerInfo.vmSeqId}-${RandomUtil.randomString()}"
             val container = dockerCli.createContainerCmd(imageName)
-                    .withCmd("/bin/sh", entryPointCmd)
-                    .withEnv(envList.plus(listOf("$envKeyProjectId=${containerInfo.projectId}",
+                .withName(containerName)
+                .withCmd("/bin/sh", entryPointCmd)
+                .withEnv(
+                    envList.plus(
+                        listOf(
+                            "$envKeyProjectId=${containerInfo.projectId}",
                             "$envKeyGateway=$gateway",
                             "TERM=xterm-256color",
+                            "pool_no=${containerInfo.poolNo}",
                             "landun_env=${dockerHostConfig.landunEnv ?: "prod"}",
                             "PATH=$PATH:$TURBO_PATH:$OS_PATH",
                             "$envDockerHostIP=${CommonUtils.getInnerIP()}",
-                            "$bkDistccLocalIp=${CommonUtils.getInnerIP()}")))
-                    .withVolumes(volumeWs).withVolumes(volumeApps).withVolumes(volumeSleep)
-                    .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge"))
-                    .exec()
+                            "$bkDistccLocalIp=${CommonUtils.getInnerIP()}"
+                        )
+                    )
+                )
+                .withVolumes(volumeWs).withVolumes(volumeApps).withVolumes(volumeSleep)
+                .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge"))
+                .exec()
 
             logger.info("Created container $container")
             dockerCli.startContainerCmd(container.id).exec()
@@ -231,7 +242,7 @@ class DockerHostDebugService(
             // docker stop
             val inspectInfo = dockerCli.inspectContainerCmd(containerInfo.containerId).exec()
             if ("exited" != inspectInfo.state.status) {
-                dockerCli.stopContainerCmd(containerInfo.containerId).withTimeout(30).exec()
+                dockerCli.stopContainerCmd(containerInfo.containerId).withTimeout(1).exec()
             }
         } catch (e: Throwable) {
             logger.error("Stop the container failed, containerId: ${containerInfo.containerId}, error msg: $e")
@@ -269,5 +280,13 @@ class DockerHostDebugService(
         }
         val whiteList = dockerHostConfig.shareProjectCodeWhiteList!!.split(",").map { it.trim() }
         return whiteList.contains(projectCode)
+    }
+
+    private fun getTailPath(containerInfo: ContainerInfo): String {
+        return if (containerInfo.poolNo > 1) {
+            "${containerInfo.vmSeqId}_${containerInfo.poolNo}"
+        } else {
+            containerInfo.vmSeqId
+        }
     }
 }

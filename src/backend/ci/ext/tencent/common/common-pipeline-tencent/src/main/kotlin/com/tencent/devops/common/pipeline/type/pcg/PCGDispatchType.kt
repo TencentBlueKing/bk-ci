@@ -52,14 +52,20 @@ import com.tencent.devops.common.pipeline.type.DispatchType
  * image:
  * tc/tlinux/qbgdev:3.2.2.3.rc:tlinux:C++
  */
-data class PCGDispatchType(@JsonProperty("value") var image: String)
-    : DispatchType(
+data class PCGDispatchType(
+    @JsonProperty("value") var image: String,
+    var useRoot: Boolean? = false
+) : DispatchType(
     image,
     DispatchRouteKeySuffix.PCG
 ) {
-    override fun replaceField(variables: Map<String, String>) {
-        image = EnvUtils.parseEnv(image, variables)
+    override fun cleanDataBeforeSave() {
+        this.image = this.image.trim()
     }
 
-    override fun buildType() = BuildType.THIRD_PARTY_PCG
+    override fun replaceField(variables: Map<String, String>) {
+        image = "${EnvUtils.parseEnv(image, variables)}:$useRoot"
+    }
+
+    override fun buildType() = BuildType.valueOf(BuildType.THIRD_PARTY_PCG.name)
 }

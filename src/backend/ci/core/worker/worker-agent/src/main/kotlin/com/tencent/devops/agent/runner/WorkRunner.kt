@@ -27,7 +27,6 @@
 package com.tencent.devops.agent.runner
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.agent.utils.KillBuildProcessTree
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.log.Ansi
@@ -52,8 +51,6 @@ object WorkRunner {
             val buildInfo = getBuildInfo(args)!!
 
             logger.info("[${buildInfo.buildId}]|Start worker for build| projectId=${buildInfo.projectId}")
-
-            addKillProcessTreeHook(buildInfo)
 
             val startFile = getStartFile()
             if (!startFile.isNullOrBlank()) {
@@ -99,21 +96,6 @@ object WorkRunner {
             logger.error("Encounter unknown exception", t)
             LoggerService.addNormalLine(Ansi().fgRed().a("Other unknown error has occurred: " + t.message).reset().toString())
             exitProcess(-1)
-        }
-    }
-
-    private fun addKillProcessTreeHook(buildInfo: ThirdPartyBuildInfo) {
-        try {
-            Runtime.getRuntime().addShutdownHook(object : Thread() {
-                override fun run() {
-                    logger.info("start kill process tree")
-                    val killedProcessIds =
-                        KillBuildProcessTree.killProcessTree(buildInfo.projectId, buildInfo.buildId, buildInfo.vmSeqId)
-                    logger.info("kill process tree done, ${killedProcessIds.size} process(s) killed, pid(s): $killedProcessIds")
-                }
-            })
-        } catch (t: Throwable) {
-            logger.warn("Fail to add shutdown hook", t)
         }
     }
 

@@ -6,7 +6,7 @@
             </form-field>
         </section>
         <section v-else>
-            <div class="empty-tips">第三方构建机暂不支持IOS证书安装插件</div>
+            <div class="empty-tips">{{ $t('editPage.certInstallTips') }}</div>
         </section>
     </div>
 </template>

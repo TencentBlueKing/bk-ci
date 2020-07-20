@@ -20,7 +20,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 --- 获取Cookie中bk_ticket
 local bk_ticket, err = cookieUtil:get_cookie("bk_ticket")
 if not bk_ticket then
-  ngx.log(ngx.ERR, "failed to read user request bk_ticket: ", err)
+  ngx.log(ngx.STDERR, "failed to read user request bk_ticket: ", err)
   ngx.exit(401)
   return
 end
@@ -31,13 +31,13 @@ local querysArgs = urlUtil:parseUrl(ngx.var.request_uri)
 
 local resource_code = querysArgs["pipelineId"]
 if (resource_code == "" or resource_code == nil) then
-  ngx.log(ngx.ERR, "Auth docker console resource_code not found: ")
+  ngx.log(ngx.STDERR, "Auth docker console resource_code not found: ")
   ngx.exit(403)
   return
 end
 local project_code = querysArgs["projectId"]
 if (project_code == "" or project_code == nil) then
-  ngx.log(ngx.ERR, "Auth docker console project_code not found: ")
+  ngx.log(ngx.STDERR, "Auth docker console project_code not found: ")
   ngx.exit(403)
   return
 end

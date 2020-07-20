@@ -1,6 +1,6 @@
 <template>
     <div class="bk-exception bk-exception-center devops-403">
-        <img :src='Img403'>
+        <img :src="Img403">
         <h2 class="exception-text">
             <slot></slot>
         </h2>

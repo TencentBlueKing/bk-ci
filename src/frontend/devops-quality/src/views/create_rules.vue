@@ -6,7 +6,7 @@
         }">
         <div class="info-header">
             <div class="title">
-                <!-- <i class="bk-icon icon-arrows-left" @click="toRuleList"></i> -->
+                <!-- <i class="devops-icon icon-arrows-left" @click="toRuleList"></i> -->
                 <span class="header-text">{{ title }}</span>
             </div>
         </div>
@@ -26,9 +26,9 @@
                             <icon v-if="entry.name === '版本转测'" name="version-test" size="14" />
                             <icon v-if="entry.name === '发布上线'" name="release-online" size="14" />
                         </div>
-                        <i :class="{ &quot;bk-icon&quot;: true, &quot;label-icon&quot;: true, &quot;icon-placeholder&quot;: true }" v-else></i>
+                        <i :class="{ &quot;devops-icon&quot;: true, &quot;label-icon&quot;: true, &quot;icon-placeholder&quot;: true }" v-else></i>
                         <span class="card-label">{{ entry.name }}</span>
-                        <i class="bk-icon icon-check-circle-shape" v-if="curFastType === entry.hashId"></i>
+                        <i class="devops-icon icon-check-circle-shape" v-if="curFastType === entry.hashId"></i>
                     </li>
                 </ul>
             </div>
@@ -47,15 +47,9 @@
                             </bk-input>
                         </devops-form-item>
                         <devops-form-item label="ID" :property="'id'" :is-error="errors.has('gatewayId')" :error-msg="errors.first('gatewayId')">
-                            <bk-popover placement="right" class="gateway-id-tips">
-                                <i class="bk-icon icon-info-circle"></i>
-                                <template slot="content">
-                                    <p style="width: 320px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">若设置了ID（例如gate1），红线将只对名称以ID加下划线开头的控制点生效（例如gate1_XX）</p>
-                                </template>
-                            </bk-popover>
                             <bk-input
                                 class="rule-name-input"
-                                placeholder="请输入由英文和数字组成的ID，例如gate1。可用于控制点有多个插件的场景。"
+                                placeholder="可不填。仅支持英文和数字，例如gate1。"
                                 name="gatewayId"
                                 v-model="createRuleForm.gatewayId"
                                 v-validate="{
@@ -64,6 +58,10 @@
                                 }">
                             </bk-input>
                         </devops-form-item>
+                        <p class="gateway-id-tips">
+                            <i class="devops-icon icon-info-circle-shape"></i>
+                            <span>若输入了ID（例如gate1），红线将只对名称以ID加下划线开头的控制点生效（例如gate1_XX）</span>
+                        </p>
                         <bk-form-item label="描述" :property="'desc'">
                             <bk-input
                                 type="text"
@@ -76,7 +74,7 @@
                     </bk-form>
                     <p class="info-title" style="margin-top: 28px;">指标
                         <bk-popover placement="right">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
                                 <p style="width: 200px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">选择关注的指标并设置范围，不满足的流水线将会在控制点位置停住</p>
                             </template>
@@ -146,9 +144,9 @@
                                 />
                             </td>
                             <td>
-                                <i class="bk-icon icon-plus-circle-shape"
+                                <i class="devops-icon icon-plus-circle-shape"
                                     @click="selectMetadata(index)"></i>
-                                <i class="bk-icon icon-minus-circle-shape"
+                                <i class="devops-icon icon-minus-circle-shape"
                                     @click="reduceMetadata(row, index)"></i>
                             </td>
                         </tr>
@@ -159,7 +157,7 @@
                     </div>
                     <p class="info-title" style="margin-top: 28px;">控制点
                         <bk-popover placement="right">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
                                 <p style="width: 200px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">控制点插件需要满足全部指标条件才能顺利执行</p>
                             </template>
@@ -198,8 +196,8 @@
                             :property="'controlPointPosition'">
                             <bk-dropdown-menu @show="isDropdownShow = true" @hide="isDropdownShow = false" ref="dropdown">
                                 <bk-button type="primary" slot="dropdown-trigger">
-                                    <i class="bk-icon icon-plus select-effect-btn"></i><span>选择流水线</span>
-                                    <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
+                                    <i class="devops-icon icon-plus select-effect-btn"></i><span>选择流水线</span>
+                                    <i :class="['devops-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
                                 </bk-button>
                                 <ul class="bk-dropdown-list" slot="dropdown-content">
                                     <li><a href="javascript:;" @click="triggerHandler('pipeline')">单流水线</a></li>
@@ -227,8 +225,8 @@
                                     </bk-table-column>
                                     <bk-table-column label="相关插件" min-width="260">
                                         <template slot-scope="props">
-                                            <p v-if="props.row.lackPointElement.length" class="atom-tips" :title="`缺少${getPipelineStatus(props.row.lackPointElement)}插件`">
-                                                <span class="mark-circle"></span>缺少{{ getPipelineStatus(props.row.lackPointElement) }}插件
+                                            <p v-if="props.row.lackPointElement.length" class="atom-tips" :title="`缺少指标所需的${getPipelineStatus(props.row.lackPointElement)}插件`">
+                                                <span class="mark-circle"></span>缺少指标所需的{{ getPipelineStatus(props.row.lackPointElement) }}插件
                                             </p>
                                             <p v-if="checkAtomAsync(props.row.existElement)" class="atom-tips" :title="`${getAsyncAtom(props.row.existElement)}插件不是同步，无法及时获取产出结果`">
                                                 <span class="mark-circle"></span>{{ getAsyncAtom(props.row.existElement) }}插件不是同步，无法及时获取产出结果</p>
@@ -287,7 +285,7 @@
                                                 <bk-checkbox :value="col.groupHashId" v-for="(col, index) in groupList" :key="index">
                                                     <span class="notice-name" :title="col.name">{{ col.name }}</span>
                                                     <bk-popover :delay="500" placement="top">
-                                                        <i class="bk-icon icon-member-list"></i>
+                                                        <i class="devops-icon icon-member-list"></i>
                                                         <template slot="content">
                                                             <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
                                                                 <span v-for="(entry, opIndex) in col.innerUsers" :key="opIndex">{{ entry.replace('"', '') }}<span v-if="opIndex !== (col.innerUsers.length - 1)">,</span></span>
@@ -296,19 +294,19 @@
                                                     </bk-popover>
                                                 </bk-checkbox>
                                                 <bk-checkbox class="add-group" :disabled="true" @click.native="toCreateGroup">
-                                                    <i class="bk-icon icon-plus-circle"></i>
+                                                    <i class="devops-icon icon-plus-circle"></i>
                                                     <span class="bk-checkbox-text create-group">新增通知组</span>
                                                 </bk-checkbox>
                                             </bk-checkbox-group>
                                         </bk-form-item>
                                         <bk-form-item label="附加通知人员">
-                                            <staff-input :name="'attacher'" :value="createRuleForm.notifyUserList" :handle-change="handleChange"></staff-input>
+                                            <user-input :handle-change="handleChange" name="attacher" :value="createRuleForm.notifyUserList" placeholder="请输入通知人员"></user-input>
                                         </bk-form-item>
                                     </bk-form>
 
                                     <bk-form v-else :label-width="120" :model="createRuleForm" class="user-audit-form">
                                         <bk-form-item label="审核人" :required="true">
-                                            <staff-input :name="'reviewer'" :value="createRuleForm.auditUserList" :handle-change="handleChange"></staff-input>
+                                            <user-input :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" placeholder="请输入通知人员"></user-input>
                                         </bk-form-item>
                                         <bk-form-item label="审核超时时间">
                                             <bk-input type="number"
@@ -348,9 +346,17 @@
         <bk-sideslider
             class="metadata-side-slider"
             :is-show.sync="sideSliderConfig.show"
-            :title="sideSliderConfig.title"
             :quick-close="sideSliderConfig.quickClose"
             :width="sideSliderConfig.width">
+            <header class="metadata-panel-header" slot="header">
+                <span>{{ sideSliderConfig.title }}</span>
+                <div class="search-input-row" :class="{ 'crtl-point-panel': isCtrPointPanel }">
+                    <input class="bk-form-input" type="text" placeholder="请输入..."
+                        v-model="searchKey"
+                        @keyup.enter="handleSearch()">
+                    <i class="bk-icon icon-search" @click="handleSearch()"></i>
+                </div>
+            </header>
             <template slot="content">
                 <div style="width: 100%; height: 100%"
                     v-bkloading="{
@@ -358,15 +364,17 @@
                         title: sideSliderConfig.loading.title
                     }">
                     <metadata-panel
+                        ref="metadataPanel"
                         :is-panel-show="sideSliderConfig.show"
                         :panel-type="panelType"
+                        :search-key="searchKey"
                         :selected-atom="createRuleForm.controlPoint"
                         :selected-meta="createRuleForm.indicators"
                         @comfireHandle="handleMetadata"
                     >
                     </metadata-panel>
                 </div>
-                
+
             </template>
         </bk-sideslider>
 
@@ -410,7 +418,7 @@
 <script>
     import { mapGetters } from 'vuex'
     import metadataPanel from '@/components/devops/metadata-panel'
-    import staffInput from '@/components/devops/StaffInput'
+    import UserInput from '@/components/devops/UserInput/index.vue'
     import pipelineList from '@/components/devops/pipeline-list'
     import templateList from '@/components/devops/template-list'
     import createGroup from '@/components/devops/create_group'
@@ -423,7 +431,7 @@
             pipelineList,
             templateList,
             metadataPanel,
-            staffInput,
+            UserInput,
             emptyTips
         },
         data () {
@@ -435,6 +443,7 @@
                 tableLoading: false,
                 isDropdownShow: false,
                 isInit: false,
+                searchKey: '',
                 panelType: '',
                 curFastType: '',
                 lastClickCount: '',
@@ -442,11 +451,6 @@
                 beforeSiteImg: require('@/images/admission-preview.png'),
                 afterSiteImg: require('@/images/prompt-preview.png'),
                 templateName: ['日常构建', '版本转测', '发布上线'],
-                noticeTypeList: [
-                    { name: 'work-wechat', value: 'RTX', isChecked: false },
-                    { name: 'wechat', value: 'WECHAT', isChecked: false },
-                    { name: 'email', value: 'EMAIL', isChecked: false }
-                ],
                 optionBoolean: [
                     { label: '是', value: 'true' },
                     { label: '否', value: 'false' }
@@ -544,8 +548,8 @@
                     ]
                 },
                 customRuleId: {
-                    getMessage: field => '开头必须是英文字母，中间可以包含英文，数字',
-                    validate: value => /^[a-zA-Z]([a-z|A-Z|0-9]+)*$/.test(value)
+                    getMessage: field => '开头必须是英文字母，中间可以包含英文，数字，中划线',
+                    validate: value => /^[a-zA-Z]([a-z|A-Z|0-9|-]+)*$/.test(value)
                 }
             }
         },
@@ -568,12 +572,18 @@
             currentINdicators () {
                 const target = this.createRuleForm.indicators.map(item => item.cnName)
                 return target.join('、')
+            },
+            noticeTypeList () {
+                const list = [
+                    { name: 'email', value: 'EMAIL', isChecked: false }
+                ]
+                return list
             }
         },
         watch: {
             projectId (val) {
                 this.$router.push({
-                    name: 'overview',
+                    name: 'qualityOverview',
                     params: {
                         projectId: this.projectId
                     }
@@ -636,8 +646,7 @@
                 this.iframeUtil.toggleProjectMenu(true)
             },
             goToApplyPerm () {
-                const host = GW_URL_PREFIX.replace('/console', '')
-                const url = `${host}/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_creator=rule`
+                const url = PERM_URL_PREFIX
                 window.open(url, '_blank')
             },
             addLeaveListenr () {
@@ -696,7 +705,7 @@
                         textAlign: 'center'
                     }
                 }, msg)
-                
+
                 this.$bkInfo({
                     title: title,
                     subHeader: content,
@@ -730,6 +739,7 @@
             selectMetadata (index) {
                 this.lastClickCount = index
                 this.sideSliderConfig.show = true
+                this.searchKey = ''
                 this.sideSliderConfig.title = '指标选择'
                 this.panelType = 'index'
             },
@@ -742,7 +752,7 @@
                             textAlign: 'center'
                         }
                     }, msg)
-                    
+
                     this.$bkInfo({
                         title: `删除${indicator.cnName}指标`,
                         subHeader: content,
@@ -756,6 +766,7 @@
             },
             selectControlPoint () {
                 this.sideSliderConfig.show = true
+                this.searchKey = ''
                 this.sideSliderConfig.title = '控制点选择'
                 this.panelType = 'controlPoint'
             },
@@ -955,7 +966,7 @@
 
                     this.createRuleForm = JSON.parse(JSON.stringify(this.baseForm))
                     Object.assign(this.createRuleForm, res)
-                    
+
                     // 指标处理
                     this.createRuleForm.indicators.forEach(item => {
                         item.operationList = item.operationList.map(operation => {
@@ -1030,9 +1041,10 @@
             },
             async checkPipelineAtom (data) {
                 this.selectedPipelines = JSON.parse(JSON.stringify(data))
-                
+
                 const params = {
                     projectId: this.projectId,
+                    gatewayId: this.createRuleForm.gatewayId,
                     pipelineIds: data,
                     controlPointType: this.createRuleForm.controlPoint || '',
                     indicatorIds: []
@@ -1077,6 +1089,7 @@
 
                 const params = {
                     projectId: this.projectId,
+                    gatewayId: this.createRuleForm.gatewayId,
                     templateIds: template,
                     controlPointType: this.createRuleForm.controlPoint || '',
                     indicatorIds: []
@@ -1091,7 +1104,7 @@
                     const res = await this.$store.dispatch('quality/requestRangeTemplate', { params })
 
                     this.createRuleForm.pipelineList = this.createRuleForm.pipelineList.filter(item => item.type !== 'template')
-                    
+
                     res.map(item => {
                         item.isRefresh = false
                         item.type = 'template'
@@ -1104,7 +1117,7 @@
                         }
                         this.createRuleForm.pipelineList.push(item)
                     })
-                    
+
                     this.tableLoading = false
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -1217,6 +1230,9 @@
                 this.checkPipelineAtom(this.selectedPipelines)
                 this.checkTemplateAtom(this.selectedTemplates)
             },
+            handleSearch () {
+                this.$refs.metadataPanel.toSearch()
+            },
             getAsyncAtom (element) {
                 const target = []
                 element.forEach(item => {
@@ -1232,10 +1248,11 @@
                     this.createRuleForm.controlPointName = params.data.name
                     this.createRuleForm.availablePosition = params.data.availablePos
                     this.createRuleForm.controlPointPosition = params.data.defaultPos.name
+                    this.sideSliderConfig.show = false
                 } else {
                     const tempArr = []
                     const tplData = JSON.parse(JSON.stringify(params.data))
-    
+
                     tplData.forEach(item => {
                         const isExist = this.createRuleForm.indicators.some(val => val.hashId === item.hashId)
                         if (!isExist) {
@@ -1248,11 +1265,11 @@
                             tempArr.push(item)
                         }
                     })
-                    
+
                     const target = this.createRuleForm.indicators
                     this.createRuleForm.indicators = [...target.slice(0, this.lastClickCount + 1), ...tempArr, ...target.slice(this.lastClickCount + 1, target.length)]
                 }
-                this.sideSliderConfig.show = false
+                // this.sideSliderConfig.show = false
             },
             submitValidate () {
                 let errMsg = ''
@@ -1296,7 +1313,7 @@
                     operation: this.createRuleForm.operation,
                     auditTimeoutMinutes: parseInt(this.createRuleForm.auditTimeoutMinutes) || undefined
                 }
-                
+
                 this.createRuleForm.pipelineList.forEach(item => {
                     if (item.type === 'pipeline') {
                         obj.range.push(item.pipelineId)
@@ -1561,11 +1578,13 @@
                 margin-right: 38px;
             }
             .gateway-id-tips {
-                position: absolute;
-                top: 8px;
-                left: -22px;
-                .icon-info-circle {
-                    color: #C3CDD7;
+                margin-top: 8px;
+                margin-left: 100px;
+                color:#313238;
+                font-size: 12px;
+                .icon-info-circle-shape {
+                    font-size: 14px;
+                    color: #ffb848;
                 }
             }
         }
@@ -1625,7 +1644,7 @@
                 .bk-select-name {
                     height: 36px;
                 }
-                .bk-icon,
+                .devops-icon,
                 input {
                     border-radius: 0;
                     border-color: #DDE4EB;
@@ -1811,6 +1830,9 @@
                     margin-right: 36px;
                 }
             }
+            .bk-form-checkbox {
+                margin-right: 36px;
+            }
         }
         .system-active {
             &:before {
@@ -1870,6 +1892,36 @@
         .control-point-name {
             background-color: #FAFBFD;
             color: #737987;
+        }
+        .metadata-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            .search-input-row {
+                display: flex;
+                align-items: center;
+                margin-right: 20px;
+                padding: 0 10px;
+                width: 279px;
+                height: 36px;
+                border: 1px solid #dde4eb;
+                background-color: #fff;
+                .bk-form-input {
+                    padding: 0;
+                    border: 0;
+                    -webkit-box-shadow: border-box;
+                    box-shadow: border-box;
+                    outline: none;
+                    width: 239px;
+                    height: 32px;
+                    margin-left: 0;
+                }
+                .icon-search {
+                    float: right;
+                    color: #c3cdd7;
+                    cursor: pointer;
+                }
+            }
         }
     }
 </style>

@@ -26,6 +26,9 @@
 
 package com.tencent.devops.dispatch.utils
 
+import org.slf4j.LoggerFactory
+import java.util.concurrent.ThreadLocalRandom
+
 object DockerUtils {
     fun parseShortImage(image: String): String {
         return if (image.contains("/")) {
@@ -34,4 +37,42 @@ object DockerUtils {
             image
         }
     }
+
+    /**
+     * 构建固定构建机信息与上一次构建机信息来决定分配的构建机，
+     * 专用构建机上存在一些特殊的依赖环境或配置，所以即使飘移到公共集群也会无法正常构建，所以专用构建机不允许柔性处理
+     * @param dockerHosts 专机列表
+     * @param lastHostIp 上次构建机
+     * @param buildId 构建ID
+     */
+    fun getDockerHostIp(dockerHosts: List<String>, lastHostIp: String?, buildId: String): String {
+        return when {
+            dockerHosts.size == 1 -> { // 只有一台固定构建机
+                logger.info("[$buildId]|Fixed build host machine, hostIp:${dockerHosts[0]}")
+                dockerHosts[0]
+            }
+            dockerHosts.size > 1 -> {
+                if (lastHostIp != null) {
+                    dockerHosts.forEach {
+                        // 固定构建机中寻找上一次使用的构建机
+                        if (it == lastHostIp) {
+                            logger.info("[$buildId]|Last fixed build host machine, hostIp:$lastHostIp")
+                            return lastHostIp
+                        }
+                    }
+                }
+                // 随机分配
+                val randomIp = dockerHosts[ThreadLocalRandom.current().nextInt(0, dockerHosts.size)]
+                logger.info("[$buildId]|Random a fixed build host machine, hostIp:$randomIp")
+                randomIp
+            }
+            null != lastHostIp -> { // 使用上一次的构建机
+                logger.info("[$buildId]|Use last build hostIp: $lastHostIp")
+                lastHostIp
+            }
+            else -> ""
+        }
+    }
+
+    private val logger = LoggerFactory.getLogger(DockerUtils::class.java)
 }

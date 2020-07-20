@@ -9,6 +9,8 @@ spring:
 server:
   port: __BKCI_DOCKERHOST_API_PORT__
 
+dockerhost:
+  mode: docker_build
 
 # docker client 配置
 dockerCli:

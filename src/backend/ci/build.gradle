@@ -30,7 +30,8 @@ buildscript {
     ext {
         kotlinVersion = "1.2.10"
         gradleShadowVersion = "2.0.2"
-        gradleJooqVersion = "2.0.7"
+        jooqVersion = "3.12.3"
+        gradleJooqVersion = "3.0.3"
         gradleDependencyVersion = "1.0.4.RELEASE"
         springBootVersion = "1.5.11.RELEASE"
         springBootRedisVersion = "1.5.11.RELEASE"
@@ -68,6 +69,7 @@ buildscript {
         sigarVersion = "1.6.4"
         poiVersion = "3.17"
         commonLang3Version = "3.5"
+        springKafkaVersion = "1.3.10.RELEASE"
     }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
@@ -113,8 +115,22 @@ ext {
 }
 
 allprojects {
-    group "com.tencent.bk.devops"
-    version "2.0.0"
+    group "com.tencent.bk.devops.ci"
+    version "1.0.2"
+    // 修改为通过JVM启动构建时系统变量，或者从gradle.properties配置文件中读取
+    // 1. try read ci_version in jvm -Dci_version
+    def devops_version = System.getProperty("ci_version")
+    // 2. try read [CI_VERSION_IN_GRADLE_PROPERTIES] in gradle.properties
+    if (devops_version != null) {
+        version = devops_version
+    }
+
+    def snapshot = System.getProperty("snapshot")
+    if (snapshot == "true") {
+        version = version + "-SNAPSHOT"
+    } else {
+        version = version + "-RELEASE"
+    }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
     if (mavenRepoUrl == null) {
@@ -141,7 +157,7 @@ allprojects {
     }
 
     /**
-     * 创建kotlin代码库路径 
+     * 创建kotlin代码库路径
      **/
     task createCodeDirs() {
         def paths = ["src/main/java", "src/main/kotlin", "src/main/resources", "src/test/java", "src/test/kotlin", "src/test/resources"]
@@ -153,6 +169,7 @@ subprojects {
     apply plugin: "idea"
     apply plugin: "java"
     apply plugin: "kotlin"
+    apply plugin: "maven"
     apply plugin: "kotlin-spring"
     apply plugin: "io.spring.dependency-management"
 
@@ -160,18 +177,21 @@ subprojects {
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
         kotlinOptions {
             jvmTarget = "1.8"
+            javaParameters = true
         }
     }
 
     tasks.withType(JavaCompile).all {
         options.encoding = "UTF-8"
+        options.compilerArgs.add '-parameters'
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     jar.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
     uploadArchives.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
-//    install.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
+    // boot-xxx biz-xxx model-xxxx do not install
+    install.onlyIf { !sourceSets.main.allSource.files.isEmpty()  && !name.startsWith("model-") && !name.startsWith("boot-") && !name.startsWith("biz-") }
 
     configurations {
         ktlint
@@ -234,6 +254,7 @@ subprojects {
             dependency "com.github.ulisesbocchio:jasypt-spring-boot-starter:$jasyptVersion"
             dependency "org.jolokia:jolokia-core:$jolokiaVersion"
             dependency("org.apache.commons:commons-lang3:${commonLang3Version}")
+            dependency("org.jooq:jooq:$jooqVersion")
 
             dependencySet(group: "org.springframework.cloud", version: "$springConsulVersion") {
                 entry "spring-cloud-starter-consul-discovery"
@@ -305,6 +326,9 @@ subprojects {
             dependencySet(group: 'org.apache.poi', version: "$poiVersion") {
                 entry "poi"
                 entry "poi-ooxml"
+            }
+            dependencySet(group: "org.springframework.kafka", version: "$springKafkaVersion") {
+                entry "spring-kafka"
             }
         }
     }

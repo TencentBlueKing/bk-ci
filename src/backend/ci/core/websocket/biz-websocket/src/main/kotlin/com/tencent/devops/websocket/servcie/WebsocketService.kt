@@ -26,18 +26,28 @@
 
 package com.tencent.devops.websocket.servcie
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.utils.RedisUtlis
+import com.tencent.devops.websocket.event.ChangePageTransferEvent
+import com.tencent.devops.websocket.event.ClearSessionEvent
+import com.tencent.devops.websocket.event.ClearUserSessionTransferEvent
+import com.tencent.devops.websocket.event.LoginOutTransferEvent
+import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.websocket.utils.PageUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class WebsocketService @Autowired constructor(
     private val redisOperation: RedisOperation,
+    private val transferDispatch: TransferDispatch,
     private val client: Client,
     private val projectProxyService: ProjectProxyService
 ) {
@@ -45,10 +55,32 @@ class WebsocketService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(this::class.java)
     }
 
+    @Value("\${transferData:false}")
+    private val needTransfer: Boolean = false
+
+    @Value("\${session.timeout:5}")
+    private val sessionTimeOut: Long? = null
+
+    @Value("\${session.maxCount:50}")
+    private val cacheMaxSession: Int? = null
+
+    private val cacheSessionList = mutableListOf<String>()
+
+    private val longSessionList = mutableSetOf<String>()
+
     // 用户切换页面，需调整sessionId-page,page-sessionIdList两个map
-    fun changePage(userId: String, sessionId: String, newPage: String, projectId: String) {
-        if (!projectProxyService.checkProject(projectId, userId)) {
-            return
+    fun changePage(
+        userId: String,
+        sessionId: String,
+        newPage: String,
+        projectId: String,
+        needCheckProject: Boolean,
+        transferData: Map<String, Any>? = emptyMap()
+    ) {
+        if (needCheckProject && projectId.isNotEmpty()) {
+            if (!projectProxyService.checkProject(projectId, userId)) {
+                return
+            }
         }
         val redisLock = lockUser(sessionId)
         try {
@@ -71,25 +103,39 @@ class WebsocketService @Autowired constructor(
                 RedisUtlis.cleanPageSessionBySessionId(redisOperation, oldPage, sessionId)
             }
             RedisUtlis.refreshPageSession(redisOperation, sessionId, normalPage)
-            logger.info(
+            logger.debug(
                 "userSession[user:$userId,sessionId:${RedisUtlis.getSessionIdByUserId(
                     redisOperation,
                     userId
                 )}}]"
             )
-            logger.info(
+            logger.debug(
                 "pageSession[page:$newPage,sessionId:${RedisUtlis.getSessionListFormPageSessionByPage(
                     redisOperation,
                     normalPage
                 )}]"
             )
-            logger.info("sessionPage[session:$sessionId,page:$normalPage]")
+            logger.debug("sessionPage[session:$sessionId,page:$normalPage]")
+            if (needTransfer && transferData!!.isNotEmpty()) {
+                transferDispatch.dispatch(
+                    ChangePageTransferEvent(
+                        userId = userId,
+                        page = newPage,
+                        transferData = transferData
+                    )
+                )
+            }
         } finally {
             redisLock.unlock()
         }
     }
 
-    fun loginOut(userId: String, sessionId: String, oldPage: String?) {
+    fun loginOut(
+        userId: String,
+        sessionId: String,
+        oldPage: String?,
+        transferData: Map<String, Any>? = emptyMap()
+    ) {
         if (!checkParams(userId, sessionId)) {
             logger.warn("loginOut checkFail: [userId:$userId,sessionId:$sessionId")
             return
@@ -98,35 +144,129 @@ class WebsocketService @Autowired constructor(
         try {
             redisLock.lock()
             logger.info("WebsocketService-loginOut:user:$userId,sessionId:$sessionId")
-            val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
-            if (!oldPage.isNullOrEmpty() && page != oldPage) {
-                logger.warn("loginOut error: oldPage:$oldPage, redisPage:$page, userId:$userId, sessionId:$sessionId")
+            val redisPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
+            var clearPage = oldPage
+            if (!oldPage.isNullOrEmpty() && redisPage != oldPage) {
+                logger.warn("loginOut error: oldPage:$oldPage, redisPage:$redisPage, userId:$userId, sessionId:$sessionId")
+                clearPage = PageUtils.buildNormalPage(oldPage!!)
             }
-//            RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
+
             RedisUtlis.cleanSessionPageBySessionId(redisOperation, sessionId)
-//            RedisUtlis.cleanSessionTimeOutBySession(redisOperation, sessionId)
-            if (oldPage != null) {
-                RedisUtlis.cleanPageSessionBySessionId(redisOperation, oldPage, sessionId)
-            } else if (page != null) {
-                RedisUtlis.cleanPageSessionBySessionId(redisOperation, page, sessionId)
+            if (clearPage != null) {
+                RedisUtlis.cleanPageSessionBySessionId(redisOperation, clearPage, sessionId)
+            } else if (redisPage != null) {
+                RedisUtlis.cleanPageSessionBySessionId(redisOperation, redisPage, sessionId)
+            }
+            if (needTransfer && transferData!!.isNotEmpty()) {
+                transferDispatch.dispatch(
+                    LoginOutTransferEvent(
+                        userId = userId,
+                        page = oldPage,
+                        transferData = transferData
+                    )
+                )
             }
         } finally {
             redisLock.unlock()
         }
     }
 
-    fun clearUserSession(userId: String, sessionId: String) {
+    fun clearUserSession(userId: String, sessionId: String, transferData: Map<String, Any>?) {
         val redisLock = lockUser(sessionId)
         try {
             redisLock.lock()
             logger.info("clearUserSession:user:$userId,sessionId:$sessionId")
             logger.info("before clearUserSession:${RedisUtlis.getSessionIdByUserId(redisOperation, userId)}")
             RedisUtlis.deleteSigelSessionByUser(redisOperation, userId, sessionId)
-            RedisUtlis.cleanSessionTimeOutBySession(redisOperation, sessionId)
+//            RedisUtlis.cleanSessionTimeOutBySession(redisOperation, sessionId)
+            removeCacheSession(sessionId)
             logger.info("after clearUserSession:${RedisUtlis.getSessionIdByUserId(redisOperation, userId)}")
+            if (needTransfer && transferData!!.isNotEmpty()) {
+                transferDispatch.dispatch(
+                    ClearUserSessionTransferEvent(
+                        userId = userId,
+                        page = "",
+                        transferData = transferData
+                    )
+                )
+            }
         } finally {
             redisLock.unlock()
         }
+    }
+
+    fun clearSession(userId: String, sessionId: String): Result<Boolean> {
+        logger.info("clearSession| $userId| $sessionId")
+        val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
+        clearUserSession(userId, sessionId, null)
+        if (page != null) {
+            logger.info("$userId| $sessionId| ws loginOut fail, page[$page], refresh by interface")
+            loginOut(userId, sessionId, page)
+        }
+        if (!isCacheSession(sessionId)) {
+            transferDispatch.dispatch(
+                ClearSessionEvent(
+                    userId = userId,
+                    sessionId = sessionId,
+                    page = null,
+                    transferData = mutableMapOf()
+                )
+            )
+        }
+        return Result(true)
+    }
+
+    fun addCacheSession(sessionId: String) {
+        if (cacheSessionList.contains(sessionId)) {
+            logger.warn("this session[$sessionId] already in cacheSession")
+            return
+        }
+        cacheSessionList.add(sessionId)
+    }
+
+    fun removeCacheSession(sessionId: String) {
+        cacheSessionList.remove(sessionId)
+    }
+
+    fun isCacheSession(sessionId: String): Boolean {
+        if (cacheSessionList.contains(sessionId)) {
+            logger.debug("sessionId[$sessionId] is in this host")
+            return true
+        }
+        return false
+    }
+
+    fun createLongSessionPage(page: String) {
+        longSessionList.add(page)
+    }
+
+    fun getLongSessionPage(): Set<String> {
+        return longSessionList
+    }
+
+    fun clearLongSessionPage() {
+        longSessionList.clear()
+    }
+
+    fun createTimeoutSession(sessionId: String, userId: String) {
+        val timeout = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(sessionTimeOut!!)
+        val redisData = "$sessionId#$userId&$timeout"
+        // hash后对1000取模，将数据打散到1000个桶内
+        var bucket = redisData.hashCode().rem(WebsocketKeys.REDIS_MO)
+        if (bucket < 0) bucket *= -1
+        val redisHashKey = WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket
+        logger.info("redis hash sessionId[$sessionId] userId[$userId] redisHashKey[$redisHashKey]")
+        var timeoutData = redisOperation.get(redisHashKey)
+        if (timeoutData == null) {
+            redisOperation.set(redisHashKey, redisData, null, true)
+        } else {
+            timeoutData = "$timeoutData,$redisData"
+            redisOperation.set(redisHashKey, timeoutData, null, true)
+        }
+    }
+
+    fun getMaxSession(): Int? {
+        return cacheMaxSession
     }
 
     private fun checkParams(userId: String, sessionId: String): Boolean {

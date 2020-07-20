@@ -27,6 +27,9 @@
 package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.apache.commons.exec.CommandLine
@@ -91,14 +94,22 @@ object CommandLineUtils {
         try {
             val exitCode = executor.execute(cmdLine)
             if (exitCode != 0) {
-                throw RuntimeException("$prefix Script command execution failed with exit code($exitCode)")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "$prefix Script command execution failed with exit code($exitCode)"
+                )
             }
         } catch (ignored: Throwable) {
             logger.warn("Fail to execute the command($command)", ignored)
             if (print2Logger) {
                 LoggerService.addRedLine("$prefix Fail to execute the command($command)")
             }
-            throw ignored
+            throw TaskExecuteException(
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorMsg = ignored.message ?: ""
+            )
         }
         return result.toString()
     }
@@ -106,7 +117,11 @@ object CommandLineUtils {
     fun execute(file: File, workspace: File?, print2Logger: Boolean, prefix: String = ""): String {
         if (!file.exists()) {
             logger.warn("The file(${file.absolutePath}) is not exist")
-            throw RuntimeException("The file(${file.absolutePath}) is not exist")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                errorType = ErrorType.USER,
+                errorMsg = "The file(${file.absolutePath}) is not exist"
+            )
         }
         val command = if (getOS() == OSType.WINDOWS) {
             file.name

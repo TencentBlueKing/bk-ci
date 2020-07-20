@@ -1,6 +1,5 @@
 /**
  * @file checkoutside
- * @author ielgnaw <wuji0223@gmail.com>
  */
 
 import Vue from 'vue'

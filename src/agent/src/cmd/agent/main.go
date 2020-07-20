@@ -29,13 +29,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/astaxie/beego/logs"
 	"os"
-	"pkg/agent"
-	"pkg/config"
-	"pkg/util/systemutil"
 	"runtime"
 	"strings"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/agent"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/astaxie/beego/logs"
 )
 
 const (

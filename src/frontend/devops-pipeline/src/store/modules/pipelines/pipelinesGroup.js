@@ -31,7 +31,13 @@ const state = {
 
 const getters = {
     getViewGroup: state => state.viewGroup,
-    getTagGroupList: state => state.tagGroupList // 标签分组集
+    getTagGroupList: (state) => { // 标签分组集
+        const list = state.tagGroupList || []
+        return list.map((item) => {
+            item.labelValue = []
+            return item
+        })
+    }
 }
 
 const mutations = {

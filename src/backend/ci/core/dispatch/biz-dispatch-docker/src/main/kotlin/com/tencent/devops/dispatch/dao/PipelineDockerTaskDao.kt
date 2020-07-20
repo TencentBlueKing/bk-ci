@@ -58,8 +58,9 @@ class PipelineDockerTaskDao {
         registryPwd: String?,
         imageType: String?,
         imagePublicFlag: Boolean?,
-        imageRDType: ImageRDTypeEnum?
-    ): Int {
+        imageRDType: ImageRDTypeEnum?,
+        containerHashId: String?
+    ): Long {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             val now = LocalDateTime.now()
             val preRecord = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(VM_SEQ_ID.eq(vmSeqId)).fetchAny()
@@ -77,6 +78,7 @@ class PipelineDockerTaskDao {
                     .set(REGISTRY_USER, registryUser)
                     .set(REGISTRY_PWD, registryPwd)
                     .set(IMAGE_TYPE, imageType)
+                    .set(CONTAINER_HASH_ID, containerHashId)
                     .where(ID.eq(preRecord.id)).execute()
                 return preRecord.id
             }
@@ -98,30 +100,29 @@ class PipelineDockerTaskDao {
                 REGISTRY_PWD,
                 IMAGE_TYPE,
                 IMAGE_PUBLIC_FLAG,
-                IMAGE_RD_TYPE
-            )
-                .values(
-                    projectId,
-                    agentId,
-                    pipelineId,
-                    buildId,
-                    vmSeqId,
-                    status.status,
-                    secretKey,
-                    imageName,
-                    channelCode,
-                    hostTag,
-                    now,
-                    now,
-                    zone,
-                    registryUser,
-                    registryPwd,
-                    imageType,
-                    imagePublicFlag,
-                    imageRDType?.type?.toByte()
-                )
-                .returning(ID)
-                .fetchOne().id
+                IMAGE_RD_TYPE,
+                CONTAINER_HASH_ID
+            ).values(
+                projectId,
+                agentId,
+                pipelineId,
+                buildId,
+                vmSeqId,
+                status.status,
+                secretKey,
+                imageName,
+                channelCode,
+                hostTag,
+                now,
+                now,
+                zone,
+                registryUser,
+                registryPwd,
+                imageType,
+                imagePublicFlag,
+                imageRDType?.type?.toByte(),
+                containerHashId
+            ).returning(ID).fetchOne().id
         }
     }
 
@@ -305,7 +306,7 @@ class PipelineDockerTaskDao {
         }
     }
 
-    fun deleteTask(dslContext: DSLContext, id: Int) {
+    fun deleteTask(dslContext: DSLContext, id: Long) {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             dslContext.deleteFrom(this)
                 .where(ID.eq(id))
@@ -340,6 +341,18 @@ class PipelineDockerTaskDao {
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(HOST_TAG.isNotNull).and(HOST_TAG.notEqual(""))
                 .fetch()
+        }
+    }
+
+    fun clearHostTagForUnclaimedHostTask(dslContext: DSLContext, buildId: String, vmSeqId: Int): Boolean {
+        with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
+            return dslContext.update(this)
+                .set(HOST_TAG, "")
+                .where(BUILD_ID.eq(buildId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
+                .and(HOST_TAG.isNotNull).and(HOST_TAG.notEqual(""))
+                .execute() > 0
         }
     }
 
