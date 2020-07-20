@@ -24,12 +24,9 @@ interface AuthResourceCallBackResource {
     fun projectList(
         @ApiParam(value = "回调信息")
         callBackInfo: CallbackRequestDTO,
-        @HeaderParam("username")
-        @ApiParam("用户名")
-        username: String? = "",
-        @HeaderParam("password")
+        @HeaderParam("Authorization")
         @ApiParam("token")
-        token: String? = ""
+        token: String
     ): CallbackBaseResponseDTO?
 
     @POST
@@ -38,11 +35,8 @@ interface AuthResourceCallBackResource {
     fun resourceList(
         @ApiParam(value = "回调信息")
         callBackInfo: CallbackRequestDTO,
-        @HeaderParam("username")
-        @ApiParam("用户名")
-        username: String? = "",
-        @HeaderParam("password")
+        @HeaderParam("Authorization")
         @ApiParam("token")
-        token: String? = ""
+        token: String
     ): CallbackBaseResponseDTO?
 }

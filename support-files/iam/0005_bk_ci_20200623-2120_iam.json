@@ -284,11 +284,11 @@
         "related_resource_types":  [
           {
             "system_id": "bk_ci",
-            "id": "project",
+            "id": "repository",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "project_instance"
+                "id": "repository_instance"
               }
             ]
           }
@@ -306,11 +306,11 @@
         "related_resource_types":  [
           {
             "system_id": "bk_ci",
-            "id": "project",
+            "id": "repository",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "project_instance"
+                "id": "repository_instance"
               }
             ]
           }
@@ -352,11 +352,11 @@
         "related_resource_types":  [
           {
             "system_id": "bk_ci",
-            "id": "project",
+            "id": "repository",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "project_instance"
+                "id": "repository_instance"
               }
             ]
           }
@@ -375,11 +375,11 @@
         "related_resource_types":  [
           {
             "system_id": "bk_ci",
-            "id": "project",
+            "id": "repository",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "project_instance"
+                "id": "repository_instance"
               }
             ]
           }
@@ -398,11 +398,11 @@
         "related_resource_types":  [
           {
             "system_id": "bk_ci",
-            "id": "project",
+            "id": "credential",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "project_instance"
+                "id": "credential_instance"
               }
             ]
           }
@@ -421,11 +421,11 @@
         "related_resource_types":  [
           {
             "system_id": "bk_ci",
-            "id": "project",
+            "id": "credential",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "project_instance"
+                "id": "credential_instance"
               }
             ]
           }
@@ -467,11 +467,11 @@
         "related_resource_types":  [
           {
             "system_id": "bk_ci",
-            "id": "project",
+            "id": "credential",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "project_instance"
+                "id": "credential_instance"
               }
             ]
           }
@@ -490,11 +490,11 @@
         "related_resource_types":  [
           {
             "system_id": "bk_ci",
-            "id": "project",
+            "id": "credential",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "project_instance"
+                "id": "credential_instance"
               }
             ]
           }
@@ -513,11 +513,11 @@
         "related_resource_types":  [
           {
             "system_id": "bk_ci",
-            "id": "project",
+            "id": "environment",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "project_instance"
+                "id": "environment_instance"
               }
             ]
           }
@@ -536,11 +536,11 @@
         "related_resource_types":  [
           {
             "system_id": "bk_ci",
-            "id": "project",
+            "id": "environment",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "project_instance"
+                "id": "environment_instance"
               }
             ]
           }
@@ -582,11 +582,11 @@
         "related_resource_types":  [
           {
             "system_id": "bk_ci",
-            "id": "project",
+            "id": "environment",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "project_instance"
+                "id": "environment_instance"
               }
             ]
           }
@@ -605,11 +605,11 @@
         "related_resource_types":  [
           {
             "system_id": "bk_ci",
-            "id": "project",
+            "id": "environment",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "project_instance"
+                "id": "environment_instance"
               }
             ]
           }
@@ -628,11 +628,11 @@
         "related_resource_types":  [
           {
             "system_id": "bk_ci",
-            "id": "project",
+            "id": "node",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "project_instance"
+                "id": "node_instance"
               }
             ]
           }
@@ -651,11 +651,11 @@
         "related_resource_types":  [
           {
             "system_id": "bk_ci",
-            "id": "project",
+            "id": "node",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "project_instance"
+                "id": "node_instance"
               }
             ]
           }
@@ -697,11 +697,11 @@
         "related_resource_types":  [
           {
             "system_id": "bk_ci",
-            "id": "project",
+            "id": "node",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "project_instance"
+                "id": "node_instance"
               }
             ]
           }
@@ -720,11 +720,11 @@
         "related_resource_types":  [
           {
             "system_id": "bk_ci",
-            "id": "project",
+            "id": "node",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "project_instance"
+                "id": "node_instance"
               }
             ]
           }

@@ -23,6 +23,54 @@
           {"system_id": "bk_ci","id": "pipeline"}
         ]
       }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "repository_instance",
+        "name": "代码库视图",
+        "name_en": "repository instance selection",
+        "resource_type_chain": [
+          {"system_id": "bk_ci","id": "project"},
+          {"system_id": "bk_ci","id": "repository"}
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "environment_instance",
+        "name": "环境视图",
+        "name_en": "environment instance selection",
+        "resource_type_chain": [
+          {"system_id": "bk_ci","id": "project"},
+          {"system_id": "bk_ci","id": "environment"}
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "node_instance",
+        "name": "环境节点视图",
+        "name_en": "node instance selection",
+        "resource_type_chain": [
+          {"system_id": "bk_ci","id": "project"},
+          {"system_id": "bk_ci","id": "node"}
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "cert_instance",
+        "name": "证书视图",
+        "name_en": "cert instance selection",
+        "resource_type_chain": [
+          {"system_id": "bk_ci","id": "project"},
+          {"system_id": "bk_ci","id": "cert"}
+        ]
+      }
     }
   ]
 }

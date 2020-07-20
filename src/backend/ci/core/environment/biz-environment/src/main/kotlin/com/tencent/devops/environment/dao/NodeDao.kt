@@ -446,31 +446,31 @@ class NodeDao {
         }
     }
 
-    fun listPage(dslContext: DSLContext, page: Int, pageSize: Int, name: String?): List<TNodeRecord> {
+    fun listPage(dslContext: DSLContext, page: Int, pageSize: Int, projectId: String?): List<TNodeRecord> {
         with(TNode.T_NODE) {
-            return if (name.isNullOrBlank()) {
+            return if (projectId.isNullOrBlank()) {
                 dslContext.selectFrom(this)
                     .limit(pageSize).offset((page - 1) * pageSize)
                     .fetch()
             } else {
                 dslContext.selectFrom(this)
-                    .where(NODE_NAME.like("%$name%"))
+                    .where(PROJECT_ID.like(projectId))
                     .limit(pageSize).offset((page - 1) * pageSize)
                     .fetch()
             }
         }
     }
 
-    fun count(dslContext: DSLContext, name: String?): Int {
+    fun count(dslContext: DSLContext, project: String?): Int {
         with(TNode.T_NODE) {
-            return if (name.isNullOrBlank()) {
+            return if (project.isNullOrBlank()) {
                 dslContext.selectCount()
                     .from(TNode.T_NODE)
                     .fetchOne(0, Int::class.java)
             } else {
                 dslContext.selectCount()
                     .from(TNode.T_NODE)
-                    .where(NODE_NAME.like("%$name%"))
+                    .where(PROJECT_ID.eq(project))
                     .fetchOne(0, Int::class.java)
             }
         }

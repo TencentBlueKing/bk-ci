@@ -27,6 +27,7 @@
 package com.tencent.devops.environment.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
@@ -231,12 +232,14 @@ class NodeService @Autowired constructor(
                 canDelete = canDeleteNodeIds.contains(it.nodeId),
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                createTime = if (null == it.createdTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(
-                    it.createdTime
-                ),
-                lastModifyTime = if (null == it.lastModifyTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(
-                    it.lastModifyTime
-                ),
+                createTime = if (null == it.createdTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                    .format(
+                        it.createdTime
+                    ),
+                lastModifyTime = if (null == it.lastModifyTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                    .format(
+                        it.lastModifyTime
+                    ),
                 lastModifyUser = it.lastModifyUser ?: ""
             )
         }
@@ -270,12 +273,14 @@ class NodeService @Autowired constructor(
                 canDelete = null,
                 gateway = "",
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                createTime = if (null == it.createdTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(
-                    it.createdTime
-                ),
-                lastModifyTime = if (null == it.lastModifyTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(
-                    it.lastModifyTime
-                ),
+                createTime = if (null == it.createdTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                    .format(
+                        it.createdTime
+                    ),
+                lastModifyTime = if (null == it.lastModifyTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                    .format(
+                        it.lastModifyTime
+                    ),
                 lastModifyUser = it.lastModifyUser ?: ""
             )
         }
@@ -363,5 +368,21 @@ class NodeService @Autowired constructor(
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
         val validRecordList = nodes.filter { canUseNodeIds.contains(it.nodeId) }
         return validRecordList.map { NodeStringIdUtils.getNodeBaseInfo(it) }
+    }
+
+    fun listByPage(projectId: String, page: Int?, pageSize: Int?): Page<NodeBaseInfo> {
+        val limit = page ?: 0
+        var offset = pageSize ?: 10
+        if (offset > 50) {
+            offset = 50
+        }
+        val nodeInfos = nodeDao.listPage(dslContext, limit, offset, projectId)
+        val count = nodeDao.count(dslContext, projectId)
+        return Page(
+            count = count.toLong(),
+            page = limit,
+            pageSize = offset,
+            records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
+        )
     }
 }
