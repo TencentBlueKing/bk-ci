@@ -45,7 +45,7 @@ class SignServiceImpl @Autowired constructor(
         ipaInputStream: InputStream
     ): String? {
         val resignId = UUIDUtil.generate()
-        var ipaSignInfo = signInfoService.decodeIpaSignInfo(ipaSignInfoHeader)
+        var ipaSignInfo = signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper)
         signInfoService.save(resignId, ipaSignInfoHeader, ipaSignInfo)
         ipaSignInfo = signInfoService.check(ipaSignInfo)
 

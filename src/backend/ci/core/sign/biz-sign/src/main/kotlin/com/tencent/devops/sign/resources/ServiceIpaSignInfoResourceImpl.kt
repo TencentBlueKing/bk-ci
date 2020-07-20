@@ -51,7 +51,8 @@ import javax.ws.rs.HeaderParam
 
 @RestResource
 class ServiceIpaSignInfoResourceImpl @Autowired constructor(
-        private val signInfoService: SignInfoService
+        private val signInfoService: SignInfoService,
+        private val objectMapper: ObjectMapper
 ) : ServiceIpaSignInfoResource {
 
 
@@ -65,7 +66,7 @@ class ServiceIpaSignInfoResourceImpl @Autowired constructor(
     }
 
     override fun base64Decode(ipaSignInfoEncode: String): Result<IpaSignInfo> {
-        val ipaSignInfo = signInfoService.decodeIpaSignInfo(ipaSignInfoEncode)
+        val ipaSignInfo = signInfoService.decodeIpaSignInfo(ipaSignInfoEncode, objectMapper)
         return Result(ipaSignInfo)
 
     }

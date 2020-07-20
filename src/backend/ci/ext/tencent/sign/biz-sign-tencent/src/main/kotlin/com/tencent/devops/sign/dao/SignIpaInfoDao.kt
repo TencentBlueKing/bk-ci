@@ -73,7 +73,7 @@ class SignIpaInfoDao {
                 info?.mobileProvisionId,
                 if (info?.universalLinks != null) JsonUtil.toJson(info.universalLinks!!) else null,
                 if (info?.applicationGroups != null) JsonUtil.toJson(info.applicationGroups!!) else null,
-                info?.repalceBundleId,
+                info?.replaceBundleId,
                 if (info?.appexSignInfo != null) JsonUtil.toJson(info.appexSignInfo!!) else null,
                 info?.fileName,
                 info?.fileSize,
@@ -110,7 +110,7 @@ class SignIpaInfoDao {
                     applicationGroups = if (record.applicationGroups != null) {
                         JsonUtil.getObjectMapper().readValue(record.applicationGroups!!, listOf<String>()::class.java)
                     } else null,
-                    repalceBundleId = record.replaceBundle,
+                    replaceBundleId = record.replaceBundle,
                     appexSignInfo = if (record.appexSignInfo != null) JsonUtil.getObjectMapper().readValue(record.appexSignInfo!!, listOf<AppexSignInfo>()::class.java) else null,
                     fileName = record.filename,
                     fileSize = record.fileSize,

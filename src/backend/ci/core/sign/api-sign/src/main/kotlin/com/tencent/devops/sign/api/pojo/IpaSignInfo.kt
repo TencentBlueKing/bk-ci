@@ -6,9 +6,9 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("IPA包签名信息")
 data class IpaSignInfo(
     @ApiModelProperty("操作用户", required = true)
-    var userId: String,
+    var userId: String = "",
     @ApiModelProperty("是否采用通配符重签", required = true)
-    var wildcard: Boolean,
+    var wildcard: Boolean = true,
     @ApiModelProperty("文件名称", required = false)
     var fileName: String? = null,
     @ApiModelProperty("文件大小", required = false)
@@ -34,7 +34,7 @@ data class IpaSignInfo(
     @ApiModelProperty("应用安全组", required = false)
     var applicationGroups: List<String>? = null,
     @ApiModelProperty("是否替换bundleId", required = false)
-    var repalceBundleId: Boolean? = false,
+    var replaceBundleId: Boolean? = false,
     @ApiModelProperty("拓展应用名和对应的描述文件ID", required = false)
     var appexSignInfo: List<AppexSignInfo>? = null
 )
