@@ -72,10 +72,21 @@ class SignServiceImpl @Autowired constructor(
 
         // 解压ipa包
         SignUtils.unzipIpa(ipaFile, ipaUnzipDir)
-        // 下载并返回描述文件信息
-        val mobileProvisionInfoMap = downloadMobileProvision(mobileProvisionDir, ipaSignInfo)
 
-        val signFinished = resignIpaPackage(ipaUnzipDir, ipaSignInfo, mobileProvisionInfoMap)
+        // TODO 下载并返回描述文件信息（区分通配）
+        val mobileProvisionInfoMap = downloadMobileProvision(mobileProvisionDir, ipaSignInfo)
+        val wildcardInfo = MobileProvisionInfo(
+            mobileProvisionFile = File(""),
+            plistFile = File(""),
+            entitlementFile = File(""),
+            bundleId = ""
+        )
+
+        val signFinished = if (ipaSignInfo.wildcard) {
+            resignIpaPackage(ipaUnzipDir, ipaSignInfo, mobileProvisionInfoMap)
+        } else {
+            resignIpaPackageWildcard(ipaUnzipDir, ipaSignInfo, wildcardInfo)
+        }
 
         if (!signFinished) {
             UserIpaResourceImpl.logger.error("sign ipa failed.")
