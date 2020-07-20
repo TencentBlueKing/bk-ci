@@ -196,10 +196,11 @@
                             ...element,
                             id: `e-${hashID(32)}`
                         })),
-                        jobControlOption: {
+                        jobControlOption: copyContainer.jobControlOption ? {
                             ...copyContainer.jobControlOption,
-                            dependOn: ''
-                        }
+                            dependOnType: 'ID',
+                            dependOnId: []
+                        } : undefined
                     }
                     this.pipeline.stages[this.stageIndex].containers.splice(this.containerIndex + 1, 0, JSON.parse(JSON.stringify(container)))
                     this.setPipelineEditing(true)

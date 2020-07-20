@@ -422,10 +422,11 @@
                                 ...element,
                                 id: `e-${hashID(32)}`
                             })),
-                            jobControlOption: {
+                            jobControlOption: container.jobControlOption ? {
                                 ...container.jobControlOption,
-                                dependOn: ''
-                            }
+                                dependOnType: 'ID',
+                                dependOnId: []
+                            } : undefined
                         }))
 
                     }
