@@ -45,21 +45,9 @@ class SignServiceImpl @Autowired constructor(
         ipaInputStream: InputStream
     ): String? {
         val resignId = UUIDUtil.generate()
-        var ipaSignInfo = decodeIpaSignInfo(ipaSignInfoHeader)
+        var ipaSignInfo = signInfoService.decodeIpaSignInfo(ipaSignInfoHeader)
         signInfoService.save(resignId, ipaSignInfoHeader, ipaSignInfo)
-
-        if (ipaSignInfo == null) {
-            UserIpaResourceImpl.logger.error("Fail to parse ipaSignInfoHeaderDecode:$ipaSignInfo")
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_PARSE_SIGN_INFO_HEADER, defaultMessage = "解析签名信息失败")
-        }
-
         ipaSignInfo = signInfoService.check(ipaSignInfo)
-
-        // 检查ipaSignInfo的合法性
-        if (ipaSignInfo == null) {
-            UserIpaResourceImpl.logger.error("Check ipaSignInfo is invalided,  ipaSignInfoHeaderDecode:$ipaSignInfo")
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER, defaultMessage = "验证签名信息为非法信息")
-        }
 
         // 复制文件到临时目录
         ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo)

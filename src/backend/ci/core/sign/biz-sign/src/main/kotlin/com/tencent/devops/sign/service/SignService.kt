@@ -37,20 +37,6 @@ interface SignService {
     ): Map<String, MobileProvisionInfo>
 
     /*
-    * 通用逻辑-解析请求头的签名信息
-    * */
-    fun decodeIpaSignInfo(ipaSignInfoHeader: String): IpaSignInfo? {
-        val ipaSignInfoHeaderDecode = String(Base64Util.decode(ipaSignInfoHeader))
-        val objectMapper = ObjectMapper()
-        try {
-            objectMapper.readValue(ipaSignInfoHeaderDecode, IpaSignInfo::class.java)
-        } catch (e: Exception) {
-            logger.error("解析签名信息失败：$e")
-        }
-        return null
-    }
-
-    /*
     * 通用逻辑-解析描述文件的内容
     * */
     fun parseMobileProvision(mobileProvisionFile: File): MobileProvisionInfo {

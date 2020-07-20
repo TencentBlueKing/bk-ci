@@ -53,5 +53,6 @@ object SignMessageCode {
     const val ERROR_SIGN_IPA = "2122006" // IPA包签名失败
     const val ERROR_ARCHIVE_SIGNED_IPA = "2122007" // 归档IPA包失败
     const val ERROR_MP_NOT_EXIST = "2122008" // 描述文件不存在
+    const val ERROR_ENCODE_SIGN_INFO = "2122009" // 编码签名信息头部失败
 
 }
