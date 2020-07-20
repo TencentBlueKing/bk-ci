@@ -71,10 +71,18 @@ object ZipUtil {
         }
     }
 
-    fun zipAll(srcDir: File, zipFile: File) {
+    fun zipDir(srcDir: File, zipFile: String) {
+
         ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { it ->
-            it.use {
-                zipFiles(it, srcDir, "")
+            try {
+                it.use {
+                    zipFiles(it, srcDir, "")
+                }
+            } catch (e: Exception) {
+                logger.error("zip error: ", e)
+            } finally {
+                it.closeEntry()
+                it.close()
             }
         }
     }
@@ -87,23 +95,21 @@ object ZipUtil {
         for (f in sourceFile.listFiles()) {
 
             if (f.isDirectory) {
-                val entry = ZipEntry(f.name + File.separator)
+                val entry = ZipEntry(parentDirPath + File.separator + f.name + File.separator)
                 entry.time = f.lastModified()
                 entry.isDirectory
                 entry.size = f.length()
 
-                logger.info("zip", "Adding Directory: " + f.name)
+                println("zip -> Adding Directory: " + f.name)
                 zipOut.putNextEntry(entry)
 
-                //Call recursively to add files within this directory
-                zipFiles(zipOut, f, f.name)
+                zipFiles(zipOut, f, parentDirPath + File.separator + f.name)
             } else {
-
-                if (!f.name.contains(".zip")) { //If folder contains a file with extension ".zip", skip it
+                if (!f.extension.contains("zip")) {
                     FileInputStream(f).use { fi ->
                         BufferedInputStream(fi).use { origin ->
                             val path = parentDirPath + File.separator + f.name
-                            logger.info("zip", "Adding file: $path")
+                            println("zip -> Adding file: $path")
                             val entry = ZipEntry(path)
                             entry.time = f.lastModified()
                             entry.isDirectory
@@ -118,9 +124,6 @@ object ZipUtil {
                             }
                         }
                     }
-                } else {
-                    zipOut.closeEntry()
-                    zipOut.close()
                 }
             }
         }

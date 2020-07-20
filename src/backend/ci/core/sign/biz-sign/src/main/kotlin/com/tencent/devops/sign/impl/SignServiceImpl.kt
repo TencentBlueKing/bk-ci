@@ -82,7 +82,11 @@ class SignServiceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA包签名失败")
         }
         // 压缩目录
-        val signedIpaFile = fileService.zipDirToFile(ipaUnzipDir, ipaUnzipDir.parent + File.separator + "result.ipa")
+        val signedIpaFile = SignUtils.zipIpaFile(ipaUnzipDir, ipaUnzipDir.parent + File.separator + "result.ipa")
+        if (signedIpaFile == null) {
+            UserIpaResourceImpl.logger.error("zip ipa failed.")
+            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA文件生成失败")
+        }
 
         // 归档ipa包
         val fileDownloadUrl = archiveService.archive(signedIpaFile, ipaSignInfo)

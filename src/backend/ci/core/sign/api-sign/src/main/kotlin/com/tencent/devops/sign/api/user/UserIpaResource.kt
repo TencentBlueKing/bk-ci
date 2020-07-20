@@ -83,7 +83,6 @@ interface UserIpaResource {
         response: HttpServletResponse
     )
 
-
     @ApiOperation("下载文件")
     @GET
     @Path("/test")
