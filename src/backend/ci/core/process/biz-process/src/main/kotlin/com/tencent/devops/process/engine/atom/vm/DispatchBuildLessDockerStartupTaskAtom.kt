@@ -88,10 +88,8 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         param: NormalContainer,
         runVariables: Map<String, String>
     ): AtomResponse {
-        var status: BuildStatus = BuildStatus.FAILED
         try {
-            status = startUpDocker(task, param)
-            return AtomResponse(status)
+            return startUpDocker(task, param)
         } catch (e: BuildTaskException) {
             LogUtils.addRedLine(
                 rabbitTemplate = rabbitTemplate,
@@ -124,7 +122,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
     }
 
     // TODO Exception中的错误码对应提示信息修改提取
-    fun startUpDocker(task: PipelineBuildTask, param: NormalContainer): BuildStatus {
+    fun startUpDocker(task: PipelineBuildTask, param: NormalContainer): AtomResponse {
         val projectId = task.projectId
         val pipelineId = task.pipelineId
         val buildId = task.buildId
@@ -200,13 +198,18 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             )
         )
         logger.info("[$buildId]|STARTUP_DOCKER|($vmSeqId)|Dispatch startup")
-        return BuildStatus.CALL_WAITING
+        return AtomResponse(BuildStatus.CALL_WAITING)
     }
 
     override fun tryFinish(task: PipelineBuildTask, param: NormalContainer, runVariables: Map<String, String>, force: Boolean): AtomResponse {
         return if (force) {
             if (BuildStatus.isFinish(task.status)) {
-                AtomResponse(task.status)
+                AtomResponse(
+                    buildStatus = task.status,
+                    errorType = task.errorType,
+                    errorCode = task.errorCode,
+                    errorMsg = task.errorMsg
+                )
             } else { // 强制终止的设置为失败
                 logger.warn("[${task.buildId}]|[FORCE_STOP_BUILD_LESS_IN_START_TASK]")
                 pipelineEventDispatcher.dispatch(
@@ -223,7 +226,12 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 defaultFailAtomResponse
             }
         } else {
-            AtomResponse(task.status)
+            AtomResponse(
+                buildStatus = task.status,
+                errorType = task.errorType,
+                errorCode = task.errorCode,
+                errorMsg = task.errorMsg
+            )
         }
     }
 

@@ -101,10 +101,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         param: VMBuildContainer,
         runVariables: Map<String, String>
     ): AtomResponse {
-        var status: BuildStatus = BuildStatus.FAILED
         try {
-            status = execute(task, param)
-            return AtomResponse(status)
+            return execute(task, param)
         } catch (e: BuildTaskException) {
             LogUtils.addRedLine(
                 rabbitTemplate = rabbitTemplate,
@@ -136,7 +134,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         }
     }
 
-    fun execute(task: PipelineBuildTask, param: VMBuildContainer): BuildStatus {
+    fun execute(task: PipelineBuildTask, param: VMBuildContainer): AtomResponse {
         val projectId = task.projectId
         val pipelineId = task.pipelineId
         val buildId = task.buildId
@@ -234,7 +232,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             )
         )
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
-        return BuildStatus.CALL_WAITING
+        return AtomResponse(BuildStatus.CALL_WAITING)
     }
 
     private fun getDispatchType(
@@ -373,7 +371,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     override fun tryFinish(task: PipelineBuildTask, param: VMBuildContainer, runVariables: Map<String, String>, force: Boolean): AtomResponse {
         return if (force) {
             if (BuildStatus.isFinish(task.status)) {
-                AtomResponse(task.status)
+                AtomResponse(
+                    buildStatus = task.status,
+                    errorType = task.errorType,
+                    errorCode = task.errorCode,
+                    errorMsg = task.errorMsg
+                )
             } else { // 强制终止的设置为失败
                 logger.warn("[${task.buildId}]|[FORCE_STOP_IN_START_TASK]")
                 pipelineEventDispatcher.dispatch(
@@ -391,7 +394,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 defaultFailAtomResponse
             }
         } else {
-            AtomResponse(task.status)
+            AtomResponse(
+                buildStatus = task.status,
+                errorType = task.errorType,
+                errorCode = task.errorCode,
+                errorMsg = task.errorMsg
+            )
         }
     }
 
