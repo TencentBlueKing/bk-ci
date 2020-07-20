@@ -28,17 +28,25 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class BuildVariableService @Autowired constructor(
     private val commonDslContext: DSLContext,
-    private val pipelineBuildVarDao: PipelineBuildVarDao
+    private val pipelineBuildVarDao: PipelineBuildVarDao,
+    private val redisOperation: RedisOperation
 ) {
+
+    companion object {
+        private const val PIPELINE_BUILD_VAR_KEY = "pipelineBuildVar"
+    }
 
     fun getVariable(buildId: String, varName: String): String? {
         val vars = getAllVariable(buildId)
@@ -55,7 +63,7 @@ class BuildVariableService @Autowired constructor(
 
     fun setVariable(projectId: String, pipelineId: String, buildId: String, varName: String, varValue: Any) {
         val realVarName = PipelineVarUtil.oldVarToNewVar(varName) ?: varName
-        pipelineBuildVarDao.save(
+        saveVariable(
             dslContext = commonDslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -77,15 +85,39 @@ class BuildVariableService @Autowired constructor(
     }
 
     // 保存方法需要提供事务保护的实现，传入特定dslContext
-    fun saveVariable(dslContext: DSLContext, buildId: String, projectId: String, pipelineId: String, name: String, value: Any) =
-        pipelineBuildVarDao.save(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            name = name,
-            value = value
-        )
+    fun saveVariable(
+        dslContext: DSLContext,
+        buildId: String,
+        projectId: String,
+        pipelineId: String,
+        name: String,
+        value: Any
+    ) {
+        val redisLock = RedisLock(redisOperation, "$PIPELINE_BUILD_VAR_KEY:$buildId:$name", 10)
+        try {
+            redisLock.lock()
+            val varMap = pipelineBuildVarDao.getVars(dslContext, buildId, name)
+            if (varMap.isEmpty()) {
+                pipelineBuildVarDao.save(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    name = name,
+                    value = value
+                )
+            } else {
+                pipelineBuildVarDao.update(
+                    dslContext = dslContext,
+                    buildId = buildId,
+                    name = name,
+                    value = value
+                )
+            }
+        } finally {
+            redisLock.unlock()
+        }
+    }
 
     fun batchSetVariable(dslContext: DSLContext, projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) {
         val vars = variables.map { it.key to it.value.toString() }.toMap().toMutableMap()
@@ -93,13 +125,37 @@ class BuildVariableService @Autowired constructor(
 
         val pipelineBuildParameters = mutableListOf<BuildParameters>()
         vars.forEach { (t, u) -> pipelineBuildParameters.add(BuildParameters(key = t, value = EmojiUtil.removeAllEmoji(u))) }
-
-        pipelineBuildVarDao.batchSave(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            variables = pipelineBuildParameters
-        )
+        val redisLock = RedisLock(redisOperation, "$PIPELINE_BUILD_VAR_KEY:$buildId", 60)
+        try {
+            // 加锁防止数据被重复插入
+            redisLock.lock()
+            val buildVarMap = pipelineBuildVarDao.getVars(dslContext, buildId)
+            val insertBuildParameters = mutableListOf<BuildParameters>()
+            val updateBuildParameters = mutableListOf<BuildParameters>()
+            pipelineBuildParameters.forEach {
+                if (!buildVarMap.containsKey(it.key)) {
+                    insertBuildParameters.add(it)
+                } else {
+                    updateBuildParameters.add(it)
+                }
+            }
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                pipelineBuildVarDao.batchSave(
+                    dslContext = context,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    variables = insertBuildParameters
+                )
+                pipelineBuildVarDao.batchUpdate(
+                    dslContext = context,
+                    buildId = buildId,
+                    variables = updateBuildParameters
+                )
+            }
+        } finally {
+            redisLock.unlock()
+        }
     }
 }
