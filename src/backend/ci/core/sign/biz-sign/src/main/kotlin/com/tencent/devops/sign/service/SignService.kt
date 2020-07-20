@@ -128,6 +128,33 @@ interface SignService {
         }
     }
 
+    /*
+    * 通用逻辑-对解压后的ipa目录进行通配符签名
+    * 对主App，扩展App和框架文件进行通配符签名
+    * */
+    @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+    fun resignIpaPackageWildcard(
+        unzipDir: File,
+        ipaSignInfo: IpaSignInfo,
+        wildcardInfo: MobileProvisionInfo
+    ): Boolean {
+        val payloadDir = File(unzipDir.absolutePath + File.separator + "Payload")
+        val appDirs = payloadDir.listFiles { dir, name ->
+            dir.extension == "app" || name.endsWith("app")
+        }.toList()
+        if (appDirs.isEmpty()) throw ErrorCodeException(
+            errorCode = SignMessageCode.ERROR_SIGN_IPA_ILLEGAL,
+            defaultMessage = "IPA包解析失败"
+        )
+        val appDir = appDirs.first()
+
+        return SignUtils.resignAppWildcard(
+            appDir = appDir,
+            certId = ipaSignInfo.certId ?: SignUtils.DEFAULT_CER_ID,
+            wildcardInfo = wildcardInfo
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(SignServiceImpl::class.java)
     }
