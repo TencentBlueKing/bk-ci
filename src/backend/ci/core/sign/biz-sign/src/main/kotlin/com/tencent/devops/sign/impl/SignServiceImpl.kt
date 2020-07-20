@@ -46,14 +46,18 @@ class SignServiceImpl @Autowired constructor(
     ): String? {
         val resignId = UUIDUtil.generate()
         var ipaSignInfo = signInfoService.decodeIpaSignInfo(ipaSignInfoHeader)
-        signInfoService.save(resignId, ipaSignInfoHeader, ipaSignInfo)
-        ipaSignInfo = signInfoService.check(ipaSignInfo)
 
         // 复制文件到临时目录
         ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo)
+
+        // 补全并记录Info信息
+        ipaSignInfo = signInfoService.check(ipaSignInfo, ipaFile)
+        signInfoService.save(resignId, ipaSignInfoHeader, ipaSignInfo)
+
         // ipa解压后的目录
         ipaUnzipDir = File("${ipaFile.canonicalPath}.unzipDir")
         FileUtil.mkdirs(ipaUnzipDir)
+
         // 描述文件的目录
         mobileProvisionDir = File("${ipaFile.canonicalPath}.mobileProvisionDir")
         FileUtil.mkdirs(mobileProvisionDir)
