@@ -60,6 +60,7 @@ class SignIpaInfoDao {
                 FILE_SIZE,
                 FILE_MD5,
                 USER_ID,
+                WILDCARD,
                 REQUEST_CONTENT
             ).values(
                 resignId,
@@ -78,6 +79,7 @@ class SignIpaInfoDao {
                 info?.fileSize,
                 info?.md5,
                 info?.userId,
+                info?.wildcard,
                 ipaSignInfoHeader
             ).execute()
         }
@@ -113,7 +115,8 @@ class SignIpaInfoDao {
                     fileName = record.filename,
                     fileSize = record.fileSize,
                     md5 = record.fileMd5,
-                    userId = record.userId
+                    userId = record.userId,
+                    wildcard = record.wildcard
                 )
             }
         }
