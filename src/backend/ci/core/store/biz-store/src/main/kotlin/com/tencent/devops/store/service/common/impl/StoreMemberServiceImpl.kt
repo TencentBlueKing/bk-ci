@@ -237,14 +237,22 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     override fun changeMemberTestProjectCode(
         accessToken: String,
         userId: String,
+        storeMember: String,
         projectCode: String,
         storeCode: String,
         storeType: StoreTypeEnum
     ): Result<Boolean> {
-        logger.info("changeMemberTestProjectCode userId is:$userId,accessToken is:$accessToken")
+        logger.info("changeMemberTestProjectCode userId is:$userId,accessToken is:$accessToken,storeMember is:$storeMember")
         logger.info("changeMemberTestProjectCode projectCode is:$projectCode,storeCode is:$storeCode,storeType is:$storeType")
-        if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType.type.toByte())) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+        if (userId != storeMember) {
+            // 如果要修改其他插件成员的调试项目，则要求修改人是插件的管理员
+            if (!storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType.type.toByte())) {
+                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            }
+        } else {
+            if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType.type.toByte())) {
+                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            }
         }
         val validateFlag: Boolean?
         try {
@@ -252,10 +260,10 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             validateFlag = client.get(ServiceProjectResource::class).verifyUserProjectPermission(
                 accessToken = accessToken,
                 projectCode = projectCode,
-                userId = userId
+                userId = storeMember
             ).data
         } catch (e: Exception) {
-            logger.error("verifyUserProjectPermission error is :$e", e)
+            logger.warn("verifyUserProjectPermission error is :$e", e)
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         }
         logger.info("the validateFlag is :$validateFlag")

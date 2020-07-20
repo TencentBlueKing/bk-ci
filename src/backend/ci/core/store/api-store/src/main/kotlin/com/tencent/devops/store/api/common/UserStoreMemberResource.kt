@@ -121,6 +121,9 @@ interface UserStoreMemberResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("store组件成员", required = true)
+        @QueryParam("storeMember")
+        storeMember: String,
         @ApiParam("项目代码", required = true)
         @QueryParam("projectCode")
         projectCode: String,

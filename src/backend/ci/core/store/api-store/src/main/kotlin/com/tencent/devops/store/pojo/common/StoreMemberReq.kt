@@ -26,6 +26,8 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.ApiModel
@@ -36,8 +38,10 @@ data class StoreMemberReq(
     @ApiModelProperty("添加的成员列表")
     val member: List<String>,
     @ApiModelProperty("成员类型")
+    @field:BkField(patternStyle = BkStyleEnum.STORE_MEMBER_TYPE_STYLE)
     val type: StoreMemberTypeEnum,
     @ApiModelProperty("store组件标识")
+    @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     val storeCode: String,
     @ApiModelProperty("store组件类型")
     val storeType: StoreTypeEnum
