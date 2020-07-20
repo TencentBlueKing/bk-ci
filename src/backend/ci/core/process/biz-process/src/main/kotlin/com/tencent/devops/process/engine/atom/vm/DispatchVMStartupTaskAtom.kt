@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.atom.vm
 
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -103,24 +104,35 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         var status: BuildStatus = BuildStatus.FAILED
         try {
             status = execute(task, param)
-        } catch (t: BuildTaskException) {
+            return AtomResponse(status)
+        } catch (e: BuildTaskException) {
             LogUtils.addRedLine(
-                rabbitTemplate,
-                task.buildId,
-                "Fail to execute the task atom: ${t.message}",
-                task.taskId,
-                task.containerHashId,
-                task.executeCount ?: 1
+                rabbitTemplate = rabbitTemplate,
+                buildId = task.buildId,
+                message = "Fail to execute the task atom: ${e.message}",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
             )
-            logger.warn("Fail to execute the task atom", t)
-        } catch (ignored: Throwable) {
+            logger.warn("Fail to execute the task atom", e)
+            return AtomResponse(
+                buildStatus = BuildStatus.FAILED,
+                errorType = e.errorType,
+                errorCode = e.errorCode,
+                errorMsg = e.message
+            )
+        } catch (t: Throwable) {
             LogUtils.addRedLine(
                 rabbitTemplate, task.buildId,
-                "Fail to execute the task atom: ${ignored.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
+                "Fail to execute the task atom: ${t.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
             )
-            logger.warn("Fail to execute the task atom", ignored)
-        } finally {
-            return AtomResponse(status)
+            logger.warn("Fail to execute the task atom", t)
+            return AtomResponse(
+                buildStatus = BuildStatus.FAILED,
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
+                errorMsg = t.message
+            )
         }
     }
 

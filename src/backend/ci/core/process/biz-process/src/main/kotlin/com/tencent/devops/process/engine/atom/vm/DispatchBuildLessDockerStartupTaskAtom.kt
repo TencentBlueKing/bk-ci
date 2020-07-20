@@ -91,21 +91,22 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         var status: BuildStatus = BuildStatus.FAILED
         try {
             status = startUpDocker(task, param)
-        } catch (t: BuildTaskException) {
+            return AtomResponse(status)
+        } catch (e: BuildTaskException) {
             LogUtils.addRedLine(
-                rabbitTemplate,
-                task.buildId,
-                "Build container init failed: ${t.message}",
-                task.taskId,
-                task.containerHashId,
-                task.executeCount ?: 1
+                rabbitTemplate = rabbitTemplate,
+                buildId = task.buildId,
+                message = "Build container init failed: ${e.message}",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
             )
-            logger.warn("Build container init failed", t)
-            AtomResponse(
+            logger.warn("Build container init failed", e)
+            return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
-                errorType = t.errorType,
-                errorCode = t.errorCode,
-                errorMsg = t.message
+                errorType = e.errorType,
+                errorCode = e.errorCode,
+                errorMsg = e.message
             )
         } catch (t: Throwable) {
             LogUtils.addRedLine(
@@ -113,14 +114,12 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 "Build container init failed: ${t.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
             )
             logger.warn("Build container init failed", t)
-            AtomResponse(
+            return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                 errorMsg = t.message
             )
-        } finally {
-            return AtomResponse(status)
         }
     }
 
