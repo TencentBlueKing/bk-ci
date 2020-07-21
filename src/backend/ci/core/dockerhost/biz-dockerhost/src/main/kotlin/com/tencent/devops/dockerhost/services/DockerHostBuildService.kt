@@ -108,7 +108,7 @@ class DockerHostBuildService(
         .dockerHost(config.dockerHost)
         .sslConfig(config.sslConfig)
         .connectTimeout(5000)
-        .readTimeout(5000)
+        .readTimeout(30000)
         .build()
 
     private val dockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(httpClient).build()
