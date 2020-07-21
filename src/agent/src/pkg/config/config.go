@@ -99,7 +99,7 @@ func LoadAgentEnv() {
 
 func DetectAgentVersion() string {
 	workDir := systemutil.GetWorkDir()
-	agentExecutable := workDir+"/"+GetClienAgentFile()
+	agentExecutable := workDir + "/" + GetClienAgentFile()
 
 	if systemutil.IsLinux() || systemutil.IsMacos() {
 		if !fileutil.Exists(agentExecutable) {
