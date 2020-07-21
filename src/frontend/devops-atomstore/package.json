@@ -56,7 +56,5 @@
     "public:test": "cross-env NODE_ENV=test webpack --mode production",
     "public:master": "cross-env NODE_ENV=master webpack --mode production",
     "public:external": "cross-env NODE_ENV=external webpack --mode production"
-  },
-  "license": "ISC",
-  "gitHead": "afc92dde9341d36ec28514ede9e7cca0af3edb1b"
+  }
 }

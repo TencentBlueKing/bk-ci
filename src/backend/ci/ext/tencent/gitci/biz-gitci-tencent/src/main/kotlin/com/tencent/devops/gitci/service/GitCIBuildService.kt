@@ -74,7 +74,7 @@ import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.pojo.CI_STATUS
-import com.tencent.devops.gitci.pojo.CI_BUILD_WEB_URL
+import com.tencent.devops.gitci.pojo.CI_REPOSITORY_URL
 import com.tencent.devops.gitci.pojo.CI_REPOSITORY_NAME
 import com.tencent.devops.gitci.pojo.CI_BUILD_USER
 import com.tencent.devops.gitci.pojo.CI_COMMIT_ID
@@ -105,10 +105,14 @@ import com.tencent.devops.gitci.pojo.CI_MR_TITLE
 import com.tencent.devops.gitci.pojo.CI_MR_URL
 import com.tencent.devops.gitci.pojo.CI_MR_ACTION
 import com.tencent.devops.gitci.pojo.CI_MR_ASSIGNEE
+import com.tencent.devops.gitci.pojo.CI_COMMIT_ID_SHORT
+import com.tencent.devops.gitci.pojo.CI_TAG_CREATE_FROM
+import com.tencent.devops.gitci.pojo.CI_REPOSITORY_OWNER
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
+import com.tencent.devops.gitci.utils.CommonUtils
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -499,9 +503,11 @@ class GitCIBuildService @Autowired constructor(
         startParams[CI_BRANCH] = event.branch
         startParams[CI_BUILD_USER] = event.userId
         startParams[CI_COMMIT_ID] = event.commitId
+        startParams[CI_COMMIT_ID_SHORT] = event.commitId.substring(0, 8)
         startParams[CI_REPOSITORY_NAME] = gitProjectConf.name
-        startParams[CI_BUILD_WEB_URL] = gitProjectConf.url
+        startParams[CI_REPOSITORY_URL] = gitProjectConf.url
         startParams[CI_COMMIT_MESSAGE] = event.commitMsg.toString()
+        startParams[CI_REPOSITORY_OWNER] = CommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl)
 
         // 写入WEBHOOK触发环境变量
         val originEvent = try {
@@ -525,6 +531,7 @@ class GitCIBuildService @Autowired constructor(
                 startParams[CI_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
                 startParams[CI_TAG_USERNAME] = event.userId
                 startParams[CI_REF] = originEvent.ref
+                startParams[CI_TAG_CREATE_FROM] = originEvent.create_from.toString()
             }
             is GitMergeRequestEvent -> {
                 startParams[CI_MR_ACTION] = originEvent.object_attributes.action

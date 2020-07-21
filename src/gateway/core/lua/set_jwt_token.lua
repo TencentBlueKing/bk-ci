@@ -31,15 +31,15 @@ if ngx.var.http_x_devops_jwt_token == nil then
           config.jwtPrivateKey,
           table_of_jwt
       )
-      ngx.log(ngx.STDERR, "generate jwt_token:", jwt_token) 
+      -- ngx.log(ngx.STDERR, "generate jwt_token:", jwt_token) 
       jwt_token_cache:set("X-DEVOPS-JWT-TOKEN", jwt_token, 300)
     end
     return jwt_token
   else
-    ngx.log(ngx.STDERR, "cache jwt_token:", jwt_token_cache_value)
+    -- ngx.log(ngx.STDERR, "cache jwt_token:", jwt_token_cache_value)
     return jwt_token_cache_value
   end
 else
-  ngx.log(ngx.STDERR, "HEADER jwt_token:", ngx.var.http_x_devops_jwt_token)
+  -- ngx.log(ngx.STDERR, "HEADER jwt_token:", ngx.var.http_x_devops_jwt_token)
   return ngx.var.http_x_devops_jwt_token
 end

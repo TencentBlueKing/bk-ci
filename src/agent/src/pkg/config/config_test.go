@@ -33,3 +33,10 @@ import (
 func Test_DetectSlaveVersion_01(t *testing.T) {
 	t.Log("DetectSlaveVersion: ", DetectWorkerVersion())
 }
+
+func Test_parseWorkerVersion(t *testing.T) {
+	t.Log("DetectSlaveVersion: ", parseWorkerVersion(" 11.6 \nPicked up _JAVA_OPTIONS: -Xmx2048m -Xms256m -Xss8m"))
+	t.Log("DetectSlaveVersion: ", parseWorkerVersion("version: Picked up _JAVA_OPTIONS: -Xmx2048m -Djava.awt.headless=true\r\n11.6"))
+	t.Log("DetectSlaveVersion: ", parseWorkerVersion("11.7"))
+	t.Log("DetectSlaveVersion: ", parseWorkerVersion("\n1234567890--------20--------30--------40--------50--------60--64----70"))
+}

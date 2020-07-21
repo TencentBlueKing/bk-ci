@@ -9,7 +9,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_REGION
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -85,8 +84,11 @@ interface ServiceArtifactoryDownLoadResource {
         @ApiParam("路径", required = true)
         @QueryParam("path")
         path: String,
-        @ApiParam("渠道", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode?
+        @ApiParam("有效时间(s)", required = true)
+        @QueryParam("ttl")
+        ttl: Int,
+        @ApiParam("是否直接对应下载链接(false情况下ipa会换成plist下载链接)", required = false)
+        @QueryParam("directed")
+        directed: Boolean?
     ): Result<Url>
 }

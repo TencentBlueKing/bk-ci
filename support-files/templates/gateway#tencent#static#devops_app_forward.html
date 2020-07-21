@@ -205,6 +205,10 @@
 
     var isNewWeixin = function() {
         var wechatInfo = navigator.userAgent.match(/MicroMessenger\/([\d\.]+)/i);
+		var isWxwork = navigator.userAgent.match(/wxwork\/([\d\.]+)/i);
+		console.log(isWxwork)
+		if (isWxwork) return false
+		
         if(!wechatInfo || !wechatInfo[1]) {
             return false;
         }

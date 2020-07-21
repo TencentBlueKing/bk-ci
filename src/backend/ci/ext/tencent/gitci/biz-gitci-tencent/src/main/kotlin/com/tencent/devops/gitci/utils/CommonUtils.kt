@@ -35,6 +35,16 @@ object CommonUtils {
 //    private const val dockerHubUrl = "https://index.docker.io/v1/"
     private const val dockerHubUrl = ""
 
+    fun getRepoOwner(httpUrl: String): String {
+        if (httpUrl.startsWith("http://")) {
+            return httpUrl.removePrefix("http://")
+                .split("/")[1]
+        } else if (httpUrl.startsWith("https://")) {
+            return httpUrl.removePrefix("https://")
+                .split("/")[1]
+        } else return ""
+    }
+
     fun parseImage(imageNameInput: String): Triple<String, String, String> {
         val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
         val arry = imageNameStr.split(":")

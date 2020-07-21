@@ -229,7 +229,7 @@ object Runner {
     private fun showMachineLog(vmName: String) {
         LoggerService.addNormalLine("")
         LoggerService.addFoldStartLine("[Machine Environment Properties]")
-        System.getProperties().forEach { k, v ->
+        System.getProperties().toMap().forEach { (k, v) ->
             LoggerService.addNormalLine("$k: $v")
             logger.info("$k: $v")
         }

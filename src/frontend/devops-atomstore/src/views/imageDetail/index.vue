@@ -48,12 +48,6 @@
                                         selectId: ['imageMemberManage'],
                                         name: this.$t('store.成员管理'),
                                         icon: ''
-                                    },
-                                    {
-                                        id: 'imageVisibleRange',
-                                        selectId: ['imageVisibleRange'],
-                                        name: this.$t('store.可见范围'),
-                                        icon: ''
                                     }
                                 ]
                             }
@@ -87,8 +81,6 @@
             if (['imageVisibleRange', 'imageMemberManage'].includes(this.$route.name)) {
                 this.sideMenuList[0].list[2].isOpen = true
             }
-
-            this.hanldeEnterprise()
         },
 
         methods: {
@@ -117,12 +109,6 @@
                     }
                     this.$store.dispatch('store/updateImageMemInfo', userInfo)
                 })
-            },
-
-            hanldeEnterprise () {
-                if (VERSION_TYPE === 'ee') {
-                    this.sideMenuList[0].list[2].children.splice(1, 1)
-                }
             }
         }
     }
