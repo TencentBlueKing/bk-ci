@@ -105,21 +105,19 @@ object ZipUtil {
 
                 zipFiles(zipOut, f, basePath)
             } else {
-                if (!f.extension.contains("zip")) {
-                    FileInputStream(f).use { fi ->
-                        BufferedInputStream(fi).use { origin ->
-                            logger.info("zip -> Adding file: $basePath")
-                            val entry = ZipEntry(basePath)
-                            entry.time = f.lastModified()
-                            entry.size = f.length()
-                            zipOut.putNextEntry(entry)
-                            while (true) {
-                                val readBytes = origin.read(data)
-                                if (readBytes == -1) {
-                                    break
-                                }
-                                zipOut.write(data, 0, readBytes)
+                FileInputStream(f).use { fi ->
+                    BufferedInputStream(fi).use { origin ->
+                        logger.info("zip -> Adding file: $basePath")
+                        val entry = ZipEntry(basePath)
+                        entry.time = f.lastModified()
+                        entry.size = f.length()
+                        zipOut.putNextEntry(entry)
+                        while (true) {
+                            val readBytes = origin.read(data)
+                            if (readBytes == -1) {
+                                break
                             }
+                            zipOut.write(data, 0, readBytes)
                         }
                     }
                 }
