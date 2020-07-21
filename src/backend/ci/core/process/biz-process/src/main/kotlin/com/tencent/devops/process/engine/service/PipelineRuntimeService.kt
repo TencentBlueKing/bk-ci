@@ -1058,19 +1058,19 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineBuildTaskDao.batchSave(transactionContext, buildTaskList)
             } else {
                 logger.info("batch store to pipelineBuildTask, updateExistsRecord size: ${updateExistsRecord.size}")
-                transactionContext.batchStore(updateExistsRecord).execute()
+                pipelineBuildTaskDao.batchUpdate(transactionContext, updateExistsRecord)
             }
 
             if (updateContainerExistsRecord.isEmpty()) {
                 pipelineBuildContainerDao.batchSave(transactionContext, buildContainers)
             } else {
-                transactionContext.batchStore(updateContainerExistsRecord).execute()
+                pipelineBuildContainerDao.batchUpdate(transactionContext, updateContainerExistsRecord)
             }
 
             if (updateStageExistsRecord.isEmpty()) {
                 pipelineBuildStageDao.batchSave(transactionContext, buildStages)
             } else {
-                transactionContext.batchStore(updateStageExistsRecord).execute()
+                pipelineBuildStageDao.batchUpdate(transactionContext, updateStageExistsRecord)
             }
             // 排队计数+1
             pipelineBuildSummaryDao.updateQueueCount(transactionContext, pipelineInfo.pipelineId, 1)
