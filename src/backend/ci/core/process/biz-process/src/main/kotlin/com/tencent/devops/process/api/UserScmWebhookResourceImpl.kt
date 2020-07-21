@@ -37,7 +37,7 @@ class UserScmWebhookResourceImpl @Autowired constructor(
     private val pipelineWebhookService: PipelineWebhookService
 ) : UserScmWebhookResource {
 
-    override fun updateAllProjectName(): Result<Boolean> {
+    override fun updateProjectNameAndTaskId(): Result<Boolean> {
         pipelineWebhookService.updateProjectNameAndTaskId()
         return Result(true)
     }

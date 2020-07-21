@@ -43,6 +43,6 @@ interface UserScmWebhookResource {
 
     @ApiOperation("更新所有的webhook项目名")
     @PUT
-    @Path("/projectName/all")
-    fun updateAllProjectName(): Result<Boolean>
+    @Path("/updateProjectNameAndTaskId")
+    fun updateProjectNameAndTaskId(): Result<Boolean>
 }
