@@ -195,7 +195,7 @@ class BuildVariableService @Autowired constructor(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         buildId = buildId,
-                        variables = pipelineBuildParameters
+                        variables = insertBuildParameters
                     )
                 }
                 pipelineBuildVarDao.batchUpdate(

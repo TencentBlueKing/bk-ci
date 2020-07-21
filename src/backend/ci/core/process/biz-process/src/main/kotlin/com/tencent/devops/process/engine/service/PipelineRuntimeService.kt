@@ -1158,9 +1158,9 @@ class PipelineRuntimeService @Autowired constructor(
                 }
             } else {
                 logger.info("batch store to pipelineBuildTask, updateExistsRecord size: ${updateExistsRecord.size}")
-                transactionContext.batchStore(updateExistsRecord).execute()
+                pipelineBuildTaskDao.batchUpdate(transactionContext, updateExistsRecord)
                 if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
-                    transactionContext.batchStore(updateBakTaskExistsRecord).execute()
+                    pipelineBuildTaskDao.batchUpdateBakTask(transactionContext, updateBakTaskExistsRecord)
                 }
             }
 
@@ -1171,9 +1171,9 @@ class PipelineRuntimeService @Autowired constructor(
                     pipelineBuildContainerDao.batchSaveBakContainer(transactionContext, buildContainers)
                 }
             } else {
-                transactionContext.batchStore(updateContainerExistsRecord).execute()
+                pipelineBuildContainerDao.batchUpdate(transactionContext, updateContainerExistsRecord)
                 if (moveDataBakSwitchIsOn(moveContainerDataBakSwitch)) {
-                    transactionContext.batchStore(updateBakContainerExistsRecord).execute()
+                    pipelineBuildContainerDao.batchUpdateBakContainer(transactionContext, updateBakContainerExistsRecord)
                 }
             }
 
@@ -1184,9 +1184,9 @@ class PipelineRuntimeService @Autowired constructor(
                     pipelineBuildStageDao.batchSaveBakStage(transactionContext, buildStages)
                 }
             } else {
-                transactionContext.batchStore(updateStageExistsRecord).execute()
+                pipelineBuildStageDao.batchUpdate(transactionContext, updateStageExistsRecord)
                 if (moveDataBakSwitchIsOn(moveStageDataBakSwitch)) {
-                    transactionContext.batchStore(updateBakStageExistsRecord).execute()
+                    pipelineBuildStageDao.batchUpdateBakStage(transactionContext, updateBakStageExistsRecord)
                 }
             }
             // 排队计数+1
