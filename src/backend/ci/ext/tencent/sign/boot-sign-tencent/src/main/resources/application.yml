@@ -8,6 +8,11 @@ spring:
     url: jdbc:mysql://10.125.48.80:3306/devops_sign?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
     username: tig4php
     password: tig4php
+  redis:
+    database: 2
+    host: 10.125.48.80
+    password: itdev@db
+    port: 6379
 
 
 server:
@@ -27,3 +32,25 @@ keystore:
   certUrl: "/api/auth/getCert?id=%s&category=%s"
   authId: "devops"
   authSecret: "a21c218df41f6d7fd032535fe20394e2"
+
+bkrepo:
+  bkrepoApiUrl: http://dev.bkrepo.oa.com/api/generic
+  bkrepoUrl: http://dev.bkrepo.oa.com
+  devnetGatewayUrl: http://dev.devgw.devops.oa.com
+  idcGatewayUrl: http://dev.gw.devops.oa.com
+  pkgRepoName: generic-local
+  dockerRepoName: docker-local
+
+
+devopsGateway:
+  build: http://v2.dev.devnet.devops.oa.com
+  host: http://v2.dev.devops.oa.com
+  api: http://v2.dev.devops.oa.com
+  idcProxy: http://v2.dev.idc.devops.oa.com
+  idc: http://v2.dev.devops.oa.com
+  devnet: http://v2.dev.devnet-backend.devops.oa.com
+  devnetProxy: http://v2.dev.devnet.devops.oa.com
+  oss: http://v2.dev.oss.devops.oa.com
+  ossProxy: http://v2.dev.oss.devops.oa.com
+  outer: https://dev.bkdevops.qq.com
+  outerApi: https://dev.bkdevops.qq.com

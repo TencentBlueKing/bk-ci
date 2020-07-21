@@ -27,6 +27,7 @@
 package com.tencent.devops.common.archive.client
 
 import com.google.gson.JsonParser
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import okhttp3.MediaType
@@ -34,6 +35,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.io.InputStream
 import java.nio.file.Paths
 
 class JfrogClient constructor(
@@ -143,6 +145,28 @@ class JfrogClient constructor(
                     "    }\n" +
                     ")"
         }
+    }
+
+    fun uploadFile(userId: String? = null, repoName: String, path: String, file: File, properties: Map<String,String>? = null) {
+        logger.info("uploadFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
+
+        var url = if(repoName.toLowerCase() == "pipeline") "${getHost()}/service/result/$projectId/$path" else "${getHost()}/custom/service/result/$projectId/$path?"
+        properties?.forEach {
+            url += ";${it.key}=${it.value}"
+        }
+        val request = Request.Builder()
+                .url(url)
+                .put(RequestBody.create(MediaType.parse("application/octet-stream"), file))
+                .build()
+        OkhttpUtils.doHttp(request).use {response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("jfrog upload file failed. url:$url. response:$responseContent")
+                throw RemoteServiceException("jfrog upload file failed. url:$url. response:$responseContent")
+            }
+
+        }
+
     }
 
     private fun getPathPair(regex: String): Map<String, String> {

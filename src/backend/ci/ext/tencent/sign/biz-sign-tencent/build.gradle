@@ -28,6 +28,7 @@ dependencies {
     compile project(":core:sign:biz-sign")
     compile project(":ext:tencent:sign:model-sign-tencent")
     compile project(":ext:tencent:sign:api-sign-tencent")
+    compile project(":ext:tencent:common:common-archive-tencent")
     compile project(":core:common:common-db")
     compile "mysql:mysql-connector-java"
     compile "org.json:json"
