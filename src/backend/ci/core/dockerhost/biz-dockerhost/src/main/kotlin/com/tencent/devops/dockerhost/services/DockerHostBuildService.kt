@@ -44,6 +44,8 @@ import com.github.dockerjava.core.command.LogContainerResultCallback
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
 import com.github.dockerjava.core.command.WaitContainerResultCallback
+import com.github.dockerjava.okhttp.OkDockerHttpClient
+import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.docker.ImageType
@@ -101,7 +103,15 @@ class DockerHostBuildService(
         .withDockerConfig(dockerHostConfig.dockerConfig)
         .withApiVersion(dockerHostConfig.apiVersion)
         .build()
-    private val dockerCli = DockerClientBuilder.getInstance(config).build()
+
+    final var httpClient: DockerHttpClient = OkDockerHttpClient.Builder()
+        .dockerHost(config.dockerHost)
+        .sslConfig(config.sslConfig)
+        .connectTimeout(5000)
+        .readTimeout(5000)
+        .build()
+
+    private val dockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(httpClient).build()
 
     fun startBuild(): DockerHostBuildInfo? {
         val result = dockerHostBuildApi.startBuild(CommonUtils.getInnerIP())
