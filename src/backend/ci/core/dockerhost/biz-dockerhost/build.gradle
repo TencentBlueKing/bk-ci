@@ -24,27 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 dependencies {
-    compile (project(":core:common:common-web")) {
-        exclude (group: 'com.squareup.okhttp3' ,module: 'okhttp')
-    }
-    compile (project(":core:common:common-service")) {
-        exclude (group: 'com.squareup.okhttp3' ,module: 'okhttp')
-    }
-    compile (project(":core:common:common-api")) {
-        exclude (group: 'com.squareup.okhttp3' ,module: 'okhttp')
-    }
-    compile (project(":core:dockerhost:api-dockerhost")) {
-        exclude (group: 'com.squareup.okhttp3' ,module: 'okhttp')
-    }
-    compile (project(":core:dispatch:api-dispatch-docker")) {
-        exclude (group: 'com.squareup.okhttp3' ,module: 'okhttp')
-    }
-    compile (project(":core:process:api-process")) {
-        exclude (group: 'com.squareup.okhttp3' ,module: 'okhttp')
-    }
-    compile (project(":core:store:api-store-image")) {
-        exclude (group: 'com.squareup.okhttp3' ,module: 'okhttp')
-    }
+    compile project(":core:common:common-web")
+    compile project(":core:common:common-service")
+    compile project(":core:common:common-api")
+    compile project(":core:dockerhost:api-dockerhost")
+    compile project(":core:dispatch:api-dispatch-docker")
+    compile project(":core:process:api-process")
+    compile project(":core:store:api-store-image")
     compile group: 'com.github.docker-java', name: 'docker-java', version: '3.2.5'
     compile group: 'com.github.docker-java', name: 'docker-java-transport-okhttp', version: '3.2.5'
     compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.2'
