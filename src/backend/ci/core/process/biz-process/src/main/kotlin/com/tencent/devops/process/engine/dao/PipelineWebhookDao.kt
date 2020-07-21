@@ -173,6 +173,7 @@ class PipelineWebhookDao {
         with(T_PIPELINE_WEBHOOK) {
             return dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
                 .groupBy(PROJECT_ID, PIPELINE_ID)
+                .orderBy(PIPELINE_ID.desc())
                 .limit(offset, limit)
                 .fetch { record ->
                     record[PROJECT_ID] as String to record[PIPELINE_ID] as String
