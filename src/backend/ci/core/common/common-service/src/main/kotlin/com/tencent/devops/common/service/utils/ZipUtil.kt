@@ -100,7 +100,7 @@ object ZipUtil {
                 val entry = ZipEntry(basePath + File.separator)
                 entry.time = f.lastModified()
                 entry.size = f.length()
-                logger.info("zip -> Adding Directory: " + f.name)
+                logger.info("zip -> Adding directory: $basePath")
                 zipOut.putNextEntry(entry)
 
                 zipFiles(zipOut, f, basePath)
