@@ -40,6 +40,6 @@ dependencies {
     compile group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.25.1'
     compile group: 'org.glassfish.jersey.core', name: 'jersey-common', version: '2.25.1'
     compile "org.slf4j:slf4j-api"
-    compile "com.squareup.okhttp3:okhttp"
+    compile "com.squareup.okhttp3:okhttp:3.14.4"
     compile "org.fusesource:sigar"
 }
