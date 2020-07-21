@@ -76,8 +76,11 @@ interface Dispatcher {
             executeCount = event.executeCount ?: 1
         )
         client.get(ServiceBuildResource::class).setVMStatus(
-            projectId = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId,
-            vmSeqId = event.vmSeqId, status = BuildStatus.FAILED
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            status = BuildStatus.FAILED
         )
     }
 }
