@@ -13,17 +13,20 @@
                         <div class="option-group-item"
                             v-for="(child, childIndex) in item.children"
                             :key="child.id"
-                            :class="{ active: child.id === value, selected: selectedPointer === childIndex && selectedGroupPointer === index }"
+                            :class="{ active: child.id === value, selected: isChecked(child.id) && selectedGroupPointer === index }"
                             :disabled="child.disabled"
                             @click.stop="selectOption(child)"
                             @mouseover="setSelectGroupPointer(index, childIndex)"
                             :title="item.name"
-                        >{{ child.name }}</div>
+                        >{{ child.name }}
+                            <i v-if="isMultiple && isChecked(child.id)" class="bk-option-icon bk-icon icon-check-1 checkIcon"></i>
+                        </div>
                     </li>
                 </template>
                 <template v-else>
-                    <li class="option-item" v-for="(item, index) in filteredList" :key="item.id" :class="{ active: item.id === value, selected: selectedPointer === index }" :disabled="item.disabled" @click.stop="selectOption(item)" @mouseover="setSelectPointer(index)" :title="item.name">
+                    <li class="option-item" v-for="(item, index) in filteredList" :key="item.id" :class="{ active: item.id === value, selected: isChecked(item.id) }" :disabled="item.disabled" @click.stop="selectOption(item)" @mouseover="setSelectPointer(index)" :title="item.name">
                         {{ item.name }}
+                        <i v-if="isMultiple && isChecked(item.id)" class="bk-option-icon bk-icon icon-check-1 checkIcon"></i>
                     </li>
                 </template>
                 <template v-if="mergedOptionsConf.hasAddItem">
@@ -61,9 +64,10 @@
                 optionListVisible: false,
                 isFocused: false,
                 loading: this.isLoading,
-                selectedPointer: 0,
+                // selectedPointer: 0,
                 selectedGroupPointer: 0,
-                displayName: ''
+                displayName: '',
+                checkeds: []
             }
         },
         computed: {
@@ -77,6 +81,10 @@
             filteredList () {
                 const { displayName, value, optionList } = this
                 const strVal = this.hasGroup ? displayName + '' : value + ''
+                // 多选状态
+                if (this.isMultiple) {
+                    return optionList
+                }
 
                 if (this.hasGroup) {
                     let target = []
@@ -146,6 +154,9 @@
             }
         },
         created () {
+            if (this.isMultiple) {
+                this.refresh()
+            }
             if (this.hasUrl) {
                 this.getOptionList()
                 this.debounceGetOptionList = debounce(this.getOptionList)
@@ -154,25 +165,63 @@
             }
         },
         methods: {
+            refresh () {
+                if (Array.isArray(this.value)) {
+                    this.value.forEach(item => {
+                        const temp = {}
+                        temp.id = item
+                        temp.name = item
+                        this.checkeds.push(temp)
+                    })
+                } else {
+                    const temp = {}
+                    temp.id = this.value
+                    temp.name = this.value
+                    this.checkeds.push(temp)
+                }
+            },
+            isChecked (id) {
+                return this.displayName.includes(id)
+            },
             handleInput (e) {
                 const { name, value } = e.target
                 this.optionListVisible = true
                 if (!this.hasGroup) this.handleChange(name, value.trim())
             },
-            selectOption ({ id, name, disabled = false }) {
-                if (disabled) return
-                this.handleBlur()
-                this.handleChange(this.name, id)
+            selectOption (child) {
+                // { id, name, disabled = false }
+                if (child.disabled) return
+                if (!this.isMultiple) {
+                    this.handleBlur()
+                    this.handleChange(this.name)
+                } else {
+                    this.toggleChecked(child)
+                    this.handleChange(this.name, this.paramsToString())
+                }
             },
-
+            paramsToString () {
+                this.paramsArr = this.checkeds.map(item => item.id)
+                const paramsStr = this.paramsArr.join(',')
+                return paramsStr
+            },
             clearValue () {
+                if (this.isMultiple) {
+                    this.checkeds = []
+                }
                 this.handleChange(this.name, '')
                 this.$refs.inputArea.focus()
             },
-
+            toggleChecked (child) {
+                const index = this.checkeds.findIndex(m => m.id === child.id)
+                if (index !== -1) {
+                    this.checkeds.splice(index, 1)
+                } else {
+                    this.checkeds.push(child)
+                }
+            },
             handleBlur () {
                 this.optionListVisible = false
-                this.selectedPointer = 0
+                // this.selectedPointer = 0
                 this.selectedGroupPointer = 0
                 this.isFocused = false
                 this.$refs.inputArea && this.$refs.inputArea.blur()
@@ -194,13 +243,13 @@
             },
 
             setSelectPointer (index) {
-                this.selectedPointer = index
+                // this.selectedPointer = index
                 this.adjustViewPort()
             },
 
             setSelectGroupPointer (index, childIndex) {
                 this.selectedGroupPointer = index
-                this.selectedPointer = childIndex
+                // this.selectedPointer = childIndex
                 this.adjustViewPort()
             },
 
@@ -330,6 +379,7 @@
                 }
                 .option-item,
                 .option-group-item {
+                    position: relative;
                     line-height: 36px;
                     padding: 0 18px;
                     white-space: nowrap;
@@ -345,6 +395,14 @@
                     &[disabled] {
                         color: $fontLigtherColor;
                     }
+                }
+                .checkIcon {
+                   position: absolute;
+                   right: 12px;
+                   top: 4px;
+                   color: #3a84ff;
+                   font-size: 26px;
+                   font-weight: 400;
                 }
                 .bk-select-extension a {
                     color: #63656e;

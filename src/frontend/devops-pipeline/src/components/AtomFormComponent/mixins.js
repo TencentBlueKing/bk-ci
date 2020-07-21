@@ -56,6 +56,10 @@ export default {
         hidden: {
             type: Boolean,
             default: false
+        },
+        isMultiple: {
+            type: Boolean,
+            default: false
         }
     },
     watch: {

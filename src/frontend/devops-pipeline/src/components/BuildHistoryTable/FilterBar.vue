@@ -10,6 +10,7 @@
                 :options-conf="item.optionsConf"
                 :date-picker-conf="item.datePickerConf"
                 :handle-change="item.handleChange"
+                :is-multiple="item.isMultiple"
             />
         </div>
         <bk-search-select
@@ -76,13 +77,14 @@
                     id: 'materialAlias',
                     label: this.$t('history.repo'),
                     name: 'materialAlias',
-                    width: 220,
+                    width: 250,
                     value: this.query.materialAlias,
                     component: 'select-input',
                     handleChange: debounce((...args) => {
                         this.query.materialBranch = []
                         this.handleFilterItemChange(...args)
                     }, 500),
+                    isMultiple: true,
                     optionsConf: {
                         url: `${PROCESS_API_URL_PREFIX}/user/builds/{projectId}/{pipelineId}/historyCondition/repo`,
                         searchable: true,
@@ -99,6 +101,7 @@
                     value: this.query.materialBranch,
                     component: 'select-input',
                     handleChange: debounce(this.handleFilterItemChange, 500),
+                    isMultiple: true,
                     optionsConf: {
                         url: `${PROCESS_API_URL_PREFIX}/user/builds/{projectId}/{pipelineId}/historyCondition/branchName?${getQueryParamList(this.query.materialAlias, 'alias')}`,
                         searchable: true,
