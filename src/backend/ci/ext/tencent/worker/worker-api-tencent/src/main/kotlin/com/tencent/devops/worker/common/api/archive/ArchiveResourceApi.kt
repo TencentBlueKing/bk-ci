@@ -62,6 +62,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
     private val bkrepoOverride = "X-BKREPO-OVERWRITE"
 
     private val jfrogResourceApi = JfrogResourceApi()
+    private val bkrepoResourceApi = BkrepoResourceApi()
 
     fun isRepoGrey(): Boolean {
         val path = "/ms/artifactory/api/build/artifactories/checkRepoGray"
@@ -77,6 +78,15 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         return resultData.data!!
     }
 
+    fun getParentFolder(path: String): String {
+        val tmpPath = path.removeSuffix("/")
+        return tmpPath.removeSuffix(getFileName(tmpPath))
+    }
+
+    fun getFileName(path: String): String {
+        return path.removeSuffix("/").split("/").last()
+    }
+
     override fun getFileDownloadUrls(
         userId: String,
         projectId: String,
@@ -85,28 +95,34 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         fileType: FileTypeEnum,
         customFilePath: String?
     ): List<String> {
-        val result = mutableListOf<String>()
-        if (isRepoGrey()) {
-            val repoName = if (fileType == FileTypeEnum.BK_ARCHIVE) {
-                "pipeline"
-            } else {
-                "custom"
-            }
-            val fileData = jfrogResourceApi.getAllBkRepoFiles(userId, projectId, repoName, pipelineId, buildId)
-            LoggerService.addNormalLine("scan file($customFilePath) in repo...")
-            val matcher = FileSystems.getDefault().getPathMatcher("glob:" + customFilePath)
-            fileData.data.forEach { bkrepoFile ->
-                val path = if (repoName == "pipeline") {
-                    bkrepoFile.fullPath.removePrefix("/$pipelineId/$buildId/")
-                } else {
-                    bkrepoFile.fullPath.removePrefix("/")
-                }
 
-                if (matcher.matches(Paths.get(path))) {
-                    result.add(bkrepoFile.fullPath)
-                }
+        if (isRepoGrey()) {
+            var repoName: String
+            var filePath: String
+            var fileName: String
+            if (fileType == FileTypeEnum.BK_CUSTOM) {
+                repoName = "custom"
+                val normalizedPath = "/${customFilePath!!.removePrefix("./").removePrefix("/")}"
+                filePath = getParentFolder(normalizedPath)
+                fileName = getFileName(normalizedPath)
+            } else {
+                repoName = "pipeline"
+                filePath = "/$pipelineId/$buildId/"
+                fileName = getFileName(customFilePath!!)
             }
+
+            return bkrepoResourceApi.queryByPathEqOrNameMatchOrMetadataEqAnd(
+                userId = userId,
+                projectId = projectId,
+                repoNames = listOf(repoName),
+                filePaths = listOf(filePath),
+                fileNames = listOf(fileName),
+                metadata = mapOf(),
+                page = 0,
+                pageSize = 10000
+            ).map { it.fullPath }
         } else {
+            val result = mutableListOf<String>()
             val data = if (fileType == FileTypeEnum.BK_CUSTOM) {
                 jfrogResourceApi.getAllFiles(buildId, "", "")
             } else {
@@ -119,8 +135,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
                     result.add(jfrogFile.uri)
                 }
             }
+            return result
         }
-        return result
     }
 
     private fun uploadJfrogCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
@@ -154,7 +170,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
     }
 
-    fun uploadBkRepoCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
+    private fun uploadBkRepoCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
         val bkrepoPath = destPath.removeSuffix("/") + "/" + file.name
         val url = StringBuilder("/bkrepo/api/build/generic/${buildVariables.projectId}/custom/$bkrepoPath")
         val header = mutableMapOf<String, String>()

@@ -24,19 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:worker:worker-common")
-    compile project(":core:artifactory:api-artifactory-store")
-    compile project(":ext:tencent:common:common-archive-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-    compile project(":ext:tencent:store:api-store-tencent")
-    compile project(":ext:tencent:store:api-store-service")
-    compile project(":ext:tencent:dispatch:api-dispatch-bcs")
-    compile group: 'me.cassiano', name: 'ktlint-html-reporter', version: '0.1.2'
-    compile group: 'com.github.shyiko', name: 'ktlint', version: '0.29.0'
-    compile group: 'com.tencent.bkrepo', name: 'api-repository', version: '0.7.0'
-    compile group: 'com.tencent.bkrepo', name: 'api-generic', version: '0.7.0'
-}
+package com.tencent.devops.worker.common.api.pojo
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+data class QueryNodeInfo(
+    var createdBy: String,
+    var createdDate: String,
+    var lastModifiedBy: String,
+    var lastModifiedDate: String,
+    var folder: Boolean,
+    var path: String,
+    var name: String,
+    var fullPath: String,
+    var size: Long,
+    var sha256: String? = null,
+    var md5: String? = null,
+    var projectId: String,
+    var repoName: String,
+    var metadata: Map<String, String>
+)
