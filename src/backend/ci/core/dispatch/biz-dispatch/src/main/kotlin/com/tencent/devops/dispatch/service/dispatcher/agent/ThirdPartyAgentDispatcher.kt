@@ -123,7 +123,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 client = client,
                 rabbitTemplate = rabbitTemplate,
                 event = pipelineAgentStartupEvent,
-                errorMessage = "第三方构建机状态异常/Bad build agent status (${agentResult.agentStatus?.name})"
+                errorMsg = "第三方构建机状态异常/Bad build agent status (${agentResult.agentStatus?.name})"
             )
             return
         }
@@ -133,7 +133,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 client = client,
                 rabbitTemplate = rabbitTemplate,
                 event = pipelineAgentStartupEvent,
-                errorMessage = "获取第三方构建机失败/Fail to get build agent($dispatchType) because of ${agentResult.message}"
+                errorMsg = "获取第三方构建机失败/Fail to get build agent($dispatchType) because of ${agentResult.message}"
             )
             return
         }
@@ -143,7 +143,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 client = client,
                 rabbitTemplate = rabbitTemplate,
                 event = pipelineAgentStartupEvent,
-                errorMessage = "获取第三方构建机失败/Can not found agent by type($dispatchType)"
+                errorMsg = "获取第三方构建机失败/Can not found agent by type($dispatchType)"
             )
             return
         }
@@ -450,7 +450,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 client = client,
                 rabbitTemplate = rabbitTemplate,
                 event = event,
-                errorMessage = errorMessage ?: "Fail to start up after 60 retries"
+                errorMsg = errorMessage ?: "Fail to start up after 60 retries"
             )
             AlertUtils.doAlert(
                 level = AlertLevel.HIGH, title = "DevOps Alert Notify",

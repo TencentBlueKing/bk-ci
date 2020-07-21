@@ -26,6 +26,7 @@
 
 package com.tencent.devops.dispatch.service.dispatcher
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -65,12 +66,14 @@ interface Dispatcher {
         client: Client,
         rabbitTemplate: RabbitTemplate,
         event: PipelineAgentStartupEvent,
-        errorMessage: String
+        errorType: ErrorType,
+        errorCode: Int,
+        errorMsg: String
     ) {
         LogUtils.addRedLine(
             rabbitTemplate = rabbitTemplate,
             buildId = event.buildId,
-            message = errorMessage,
+            message = errorMsg,
             tag = VMUtils.genStartVMTaskId(event.containerId),
             jobId = event.containerHashId,
             executeCount = event.executeCount ?: 1
@@ -80,7 +83,10 @@ interface Dispatcher {
             pipelineId = event.pipelineId,
             buildId = event.buildId,
             vmSeqId = event.vmSeqId,
-            status = BuildStatus.FAILED
+            status = BuildStatus.FAILED,
+            errorType = errorType,
+            errorCode = errorCode,
+            errorMsg = errorMsg
         )
     }
 }

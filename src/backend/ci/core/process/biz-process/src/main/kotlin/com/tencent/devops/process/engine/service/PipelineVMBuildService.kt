@@ -191,7 +191,10 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         pipelineId: String,
         buildId: String,
         vmSeqId: String,
-        buildStatus: BuildStatus
+        buildStatus: BuildStatus,
+        errorType: ErrorType? = null,
+        errorCode: Int? = null,
+        errorMsg: String? = null
     ): Boolean {
         // 针VM启动不是在第一个的情况，第一个可能是人工审核插件（避免占用VM）
         // agent上报状态需要判断根据ID来获取真正的启动VM的任务，否则兼容处理取第一个插件的状态（正常情况）
@@ -209,13 +212,16 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             return false
         }
 
-        // 如果是成功的状态，则更新构建机启动插件的状态
+        // 如果是完成状态，则更新构建机启动插件的状态
         if (BuildStatus.isFinish(buildStatus)) {
             pipelineRuntimeService.updateTaskStatus(
                 buildId = buildId,
                 taskId = startUpVMTask.taskId,
                 userId = startUpVMTask.starter,
-                buildStatus = buildStatus
+                buildStatus = buildStatus,
+                errorType = errorType,
+                errorCode = errorCode,
+                errorMsg = errorMsg
             )
         }
 
