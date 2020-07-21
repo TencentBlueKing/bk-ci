@@ -27,6 +27,7 @@
 package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.api.command.InspectContainerResponse
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.exception.UnauthorizedException
 import com.github.dockerjava.api.model.AuthConfig
@@ -43,12 +44,15 @@ import com.github.dockerjava.core.command.LogContainerResultCallback
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
 import com.github.dockerjava.core.command.WaitContainerResultCallback
+import com.github.dockerjava.okhttp.OkDockerHttpClient
+import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
+import com.tencent.devops.dockerhost.common.Constants
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
@@ -86,7 +90,6 @@ class DockerHostBuildService(
 ) {
 
     companion object {
-        private const val dockerExitCode = 255 // docker容器状态异常退出码
         private val logger = LoggerFactory.getLogger(DockerHostBuildService::class.java)
     }
 
@@ -100,7 +103,15 @@ class DockerHostBuildService(
         .withDockerConfig(dockerHostConfig.dockerConfig)
         .withApiVersion(dockerHostConfig.apiVersion)
         .build()
-    private val dockerCli = DockerClientBuilder.getInstance(config).build()
+
+    final var httpClient: DockerHttpClient = OkDockerHttpClient.Builder()
+        .dockerHost(config.dockerHost)
+        .sslConfig(config.sslConfig)
+        .connectTimeout(5000)
+        .readTimeout(5000)
+        .build()
+
+    private val dockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(httpClient).build()
 
     fun startBuild(): DockerHostBuildInfo? {
         val result = dockerHostBuildApi.startBuild(CommonUtils.getInnerIP())
@@ -611,7 +622,7 @@ class DockerHostBuildService(
                 .awaitStatusCode(10, TimeUnit.SECONDS)
         } catch (e: Exception) {
             logger.error("[$containerId]| getDockerRunExitCode error.", e)
-            dockerExitCode
+            Constants.DOCKER_EXIST_CODE
         }
     }
 
@@ -705,11 +716,25 @@ class DockerHostBuildService(
 
     fun isContainerRunning(containerId: String): Boolean {
         try {
+            logger.info("Check container: $containerId start.")
             val inspectContainerResponse = dockerCli.inspectContainerCmd(containerId).exec() ?: return false
+            logger.info("Check container: $containerId status: ${inspectContainerResponse.state}")
             return inspectContainerResponse.state.running ?: false
         } catch (e: Exception) {
             logger.error("check container: $containerId status failed.", e)
             return false
+        }
+    }
+
+    fun getContainerState(containerId: String): InspectContainerResponse.ContainerState? {
+        try {
+            logger.info("Get containerState: $containerId start.")
+            val inspectContainerResponse = dockerCli.inspectContainerCmd(containerId).exec() ?: return null
+            logger.info("Get containerState: $containerId state: ${inspectContainerResponse.state}")
+            return inspectContainerResponse.state
+        } catch (e: Exception) {
+            logger.error("check container: $containerId state failed.", e)
+            return null
         }
     }
 
