@@ -111,9 +111,16 @@ class DockerHostBuildService(
         .readTimeout(30000)
         .build()
 
+    final var longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
+        .dockerHost(config.dockerHost)
+        .sslConfig(config.sslConfig)
+        .connectTimeout(5000)
+        .readTimeout(300000)
+        .build()
+
     private val httpDockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(httpClient).build()
 
-    private val dockerCli = DockerClientBuilder.getInstance(config).build()
+    private val dockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
 
     fun startBuild(): DockerHostBuildInfo? {
         val result = dockerHostBuildApi.startBuild(CommonUtils.getInnerIP())
