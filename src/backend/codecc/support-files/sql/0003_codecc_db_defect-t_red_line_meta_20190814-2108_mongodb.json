@@ -1,0 +1,552 @@
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4770"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CHECKSTYLE_NEW_NORMAL",
+  "cn_name": "CheckStyle接入后一般告警数",
+  "detail": "CHECKSTYLE",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"JAVA\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4771"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CHECKSTYLE_HISTORY_PROMPT",
+  "cn_name": "CheckStyle接入前提示告警数",
+  "detail": "CHECKSTYLE",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"JAVA\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4772"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "PYLINT_HISTORY_PROMPT",
+  "cn_name": "PyLint接入前提示告警数",
+  "detail": "PYLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"PYTHON\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4776"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CCN_AVERAGE",
+  "cn_name": "平均圈复杂度",
+  "detail": "CCN",
+  "type": "FLOAT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"C/C++;JAVA;PYTHON;JS;PHP;RUBY;OC/OC++;C#;GOLANG;LUA\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4777"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "PHPCS_NEW_PROMPT",
+  "cn_name": "PHPCS接入后提示告警数",
+  "detail": "PHPCS",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"PHP\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4778"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CPPLINT_HISTORY_NORMAL",
+  "cn_name": "CppLint接入前一般告警数",
+  "detail": "CPPLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"C/C++\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea477a"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "GOML_NEW_SERIOUS",
+  "cn_name": "Gometalinter接入后严重告警数",
+  "detail": "GOML",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"GOLANG\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea477c"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "GOML_NEW_NORMAL",
+  "cn_name": "Gometalinter接入后一般告警数",
+  "detail": "GOML",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"GOLANG\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4783"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CPPLINT_NEW_PROMPT",
+  "cn_name": "CppLint接入后提示告警数",
+  "detail": "CPPLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"C/C++\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4784"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "DUPC_EXTREME",
+  "cn_name": "重复率工具极高风险文件数",
+  "detail": "DUPC",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"C/C++;JAVA;JS;OC/OC++;C#;GOLANG;COTLIN;PYTHON\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4785"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "ESLINT_HISTORY_PROMPT",
+  "cn_name": "EsLint接入前提示告警数",
+  "detail": "ESLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"JS\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4786"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CPPLINT_HISTORY_PROMPT",
+  "cn_name": "CppLint接入前提示告警数",
+  "detail": "CPPLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"C/C++\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4787"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "GOML_HISTORY_SERIOUS",
+  "cn_name": "Gometalinter接入前严重告警数",
+  "detail": "GOML",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"GOLANG\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4788"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "DUPC_MIDDLE",
+  "cn_name": "重复率工具中风险文件数",
+  "detail": "DUPC",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"C/C++;JAVA;JS;OC/OC++;C#;GOLANG;COTLIN;PYTHON\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea478b"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "PYLINT_NEW_PROMPT",
+  "cn_name": "PyLint接入后提示告警数",
+  "detail": "PYLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"PYTHON\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea478c"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "ESLINT_NEW_SERIOUS",
+  "cn_name": "EsLint接入后严重告警数",
+  "detail": "ESLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"JS\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea478f"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CHECKSTYLE_HISTORY_NORMAL",
+  "cn_name": "CheckStyle接入前一般告警数",
+  "detail": "CHECKSTYLE",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"JAVA\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4790"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "PYLINT_HISTORY_SERIOUS",
+  "cn_name": "PyLint接入前严重告警数",
+  "detail": "PYLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"PYTHON\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4791"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "DUPC_HIGH",
+  "cn_name": "重复率工具高风险文件数",
+  "detail": "DUPC",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"C/C++;JAVA;JS;OC/OC++;C#;GOLANG;COTLIN;PYTHON\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4792"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "GOML_HISTORY_NORMAL",
+  "cn_name": "Gometalinter接入前一般告警数",
+  "detail": "GOML",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"GOLANG\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4794"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "ESLINT_NEW_PROMPT",
+  "cn_name": "EsLint接入后提示告警数",
+  "detail": "ESLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"JS\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4796"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CCN_MIDDLE",
+  "cn_name": "圈复杂度工具中风险函数数量",
+  "detail": "CCN",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"C/C++;JAVA;PYTHON;JS;PHP;RUBY;OC/OC++;C#;GOLANG;LUA\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea4797"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "DUPC_AVERAGE",
+  "cn_name": "平均代码重复率",
+  "detail": "DUPC",
+  "type": "FLOAT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"C/C++;JAVA;JS;OC/OC++;C#;GOLANG;COTLIN;PYTHON\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea479a"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CHECKSTYLE_NEW_PROMPT",
+  "cn_name": "CheckStyle接入后提示告警数",
+  "detail": "CHECKSTYLE",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"JAVA\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea479b"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "GOML_HISTORY_PROMPT",
+  "cn_name": "Gometalinter接入前提示告警数",
+  "detail": "GOML",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"GOLANG\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea479c"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CHECKSTYLE_NEW_SERIOUS",
+  "cn_name": "CheckStyle接入后严重告警数",
+  "detail": "CHECKSTYLE",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"JAVA\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea479d"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "PYLINT_HISTORY_NORMAL",
+  "cn_name": "PyLint接入前一般告警数",
+  "detail": "PYLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"PYTHON\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea479e"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "ESLINT_NEW_NORMAL",
+  "cn_name": "EsLint接入后一般告警数",
+  "detail": "ESLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"JS\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea479f"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "PHPCS_NEW_SERIOUS",
+  "cn_name": "PHPCS接入后严重告警数",
+  "detail": "PHPCS",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"PHP\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea47a0"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CPPLINT_HISTORY_SERIOUS",
+  "cn_name": "CppLint接入前严重告警数",
+  "detail": "CPPLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"C/C++\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea47a1"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "PYLINT_NEW_NORMAL",
+  "cn_name": "PyLint接入后一般告警数",
+  "detail": "PYLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"PYTHON\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea47a3"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CCN_EXTREME",
+  "cn_name": "圈复杂度工具极高风险函数数量",
+  "detail": "CCN",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"C/C++;JAVA;PYTHON;JS;PHP;RUBY;OC/OC++;C#;GOLANG;LUA\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea47a7"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "PYLINT_NEW_SERIOUS",
+  "cn_name": "PyLint接入后严重告警数",
+  "detail": "PYLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"PYTHON\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea47a9"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CCN_SINGLE_FUNC_MAX",
+  "cn_name": "单函数圈复杂度最大值",
+  "detail": "CCN",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"C/C++;JAVA;PYTHON;JS;PHP;RUBY;OC/OC++;C#;GOLANG;LUA\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7c29cb4b2924ea47ae"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CHECKSTYLE_HISTORY_SERIOUS",
+  "cn_name": "CheckStyle接入前严重告警数",
+  "detail": "CHECKSTYLE",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"JAVA\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7d29cb4b2924ea47b5"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "ESLINT_HISTORY_NORMAL",
+  "cn_name": "EsLint接入前一般告警数",
+  "detail": "ESLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"JS\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7d29cb4b2924ea47b7"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "DUPC_SINGLE_FILE_MAX",
+  "cn_name": "单文件代码重复率最大值",
+  "detail": "DUPC",
+  "type": "FLOAT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"C/C++;JAVA;JS;OC/OC++;C#;GOLANG;COTLIN;PYTHON\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7d29cb4b2924ea47ba"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "PHPCS_NEW_NORMAL",
+  "cn_name": "PHPCS接入后一般告警数",
+  "detail": "PHPCS",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"PHP\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7d29cb4b2924ea47bb"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "PHPCS_HISTORY_NORMAL",
+  "cn_name": "PHPCS接入前一般告警数",
+  "detail": "PHPCS",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"PHP\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7d29cb4b2924ea47be"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "ESLINT_HISTORY_SERIOUS",
+  "cn_name": "EsLint接入前严重告警数",
+  "detail": "ESLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"JS\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7d29cb4b2924ea47bf"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "PHPCS_HISTORY_SERIOUS",
+  "cn_name": "PHPCS接入前严重告警数",
+  "detail": "PHPCS",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"PHP\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7d29cb4b2924ea47c0"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CPPLINT_NEW_NORMAL",
+  "cn_name": "CppLint接入后一般告警数",
+  "detail": "CPPLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"C/C++\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7d29cb4b2924ea47c2"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CCN_HIGH",
+  "cn_name": "圈复杂度工具高风险函数数量",
+  "detail": "CCN",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"C/C++;JAVA;PYTHON;JS;PHP;RUBY;OC/OC++;C#;GOLANG;LUA\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7d29cb4b2924ea47c3"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "CPPLINT_NEW_SERIOUS",
+  "cn_name": "CppLint接入后严重告警数",
+  "detail": "CPPLINT",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"C/C++\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7d29cb4b2924ea47c5"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "PHPCS_HISTORY_PROMPT",
+  "cn_name": "PHPCS接入前提示告警数",
+  "detail": "PHPCS",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"PHP\"}"
+}
+{
+  "_id": {
+    "$oid": "5d1efc7d29cb4b2924ea47c9"
+  },
+  "_class": "com.tencent.bk.codecc.defect.model.BsRLMetadataEntity",
+  "en_name": "GOML_NEW_PROMPT",
+  "cn_name": "Gometalinter接入后提示告警数",
+  "detail": "GOML",
+  "type": "INT",
+  "msg": "",
+  "extra": "{\"codeLang\":\"GOLANG\"}"
+}

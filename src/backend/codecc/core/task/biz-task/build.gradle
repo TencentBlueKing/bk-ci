@@ -1,0 +1,22 @@
+apply plugin: "java"
+dependencies {
+    compile project(":core:common:common-service")
+    compile project(":core:common:common-web")
+    compile project(":core:common:common-client")
+    compile project(":core:common:common-util")
+    compile project(":core:common:common-db")
+    compile project(":core:common:common-external-auth-internal")
+    compile project(":core:task:model-task")
+    compile project(":core:task:api-task")
+    compile project(":core:defect:api-defect")
+    compile project(":core:quartz:api-quartz")
+    compile "org.json:json:20180130"
+    compile "org.springframework.boot:spring-boot-starter-test"
+//    compile group: 'com.tencent.bk.devops', name: 'common-pipeline', version: '0.0.5', changing: true
+}
+
+version = null
+
+apply from: "$rootDir/task_spring_boot_package.gradle"
+
+// version "1.2.3"  // 这里可以设定版本号
