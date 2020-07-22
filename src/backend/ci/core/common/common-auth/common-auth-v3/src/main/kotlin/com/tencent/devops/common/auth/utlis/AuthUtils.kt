@@ -80,7 +80,6 @@ object AuthUtils {
 
         // 多个项目下有特定资源权限,且有项目勾选任意
         // [{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,demo/"},{"content":[{"field":"pipeline.id","op":"in","value":["p-0d1fff4dabca4fc282e5ff63644bd339","p-54fb8b6562584df4b3693f7c787c105a"]},{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,v3test/"}],"op":"AND"}]
-        println(instantList)
         return instantList
     }
 

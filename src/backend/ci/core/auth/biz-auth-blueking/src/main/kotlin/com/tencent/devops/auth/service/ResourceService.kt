@@ -86,7 +86,7 @@ class ResourceService @Autowired constructor(
                 .pipelineList(projectId, page.offset.toInt(), page.limit.toInt()).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        if(pipelineInfos?.records == null) {
+        if (pipelineInfos?.records == null) {
             logger.info("$projectId 项目下无流水线")
             result.code = 0
             result.message = "无数据"
@@ -115,7 +115,7 @@ class ResourceService @Autowired constructor(
                 .listByProjects(setOf(projectId), page.offset.toInt(), page.limit.toInt()).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        if(repositoryInfos?.records == null) {
+        if (repositoryInfos?.records == null) {
             logger.info("$projectId 项目下无代码库")
             result.code = 0
             result.message = "无数据"
@@ -144,8 +144,8 @@ class ResourceService @Autowired constructor(
                 .list(projectId, page.offset.toInt(), page.limit.toInt()).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        if(credentialInfos?.records == null) {
-            logger.info("$projectId 项目下无证书")
+        if (credentialInfos?.records == null) {
+            logger.info("$projectId 项目下无凭证")
             result.code = 0
             result.message = "无数据"
             result.data = data
@@ -173,7 +173,7 @@ class ResourceService @Autowired constructor(
                 .listNodeByPage(projectId, page.offset.toInt(), page.limit.toInt()).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        if(nodeInfos?.records == null) {
+        if (nodeInfos?.records == null) {
             logger.info("$projectId 项目下无节点")
             result.code = 0
             result.message = "无数据"
@@ -202,7 +202,7 @@ class ResourceService @Autowired constructor(
                 .listEnvByPage(projectId, page.offset.toInt(), page.limit.toInt()).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        if(envInfos?.records == null) {
+        if (envInfos?.records == null) {
             logger.info("$projectId 项目下无环境")
             result.code = 0
             result.message = "无数据"

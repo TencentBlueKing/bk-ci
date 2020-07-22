@@ -5,10 +5,8 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.auth.tables.TAuthGroup
 import com.tencent.devops.model.auth.tables.records.TAuthGroupRecord
 import org.jooq.DSLContext
-import org.jooq.Select
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
-import java.util.UUID
 
 @Repository
 class AuthGroupDao {
@@ -40,18 +38,17 @@ class AuthGroupDao {
         return id.toString()
     }
 
-    fun getGroup(dslContext: DSLContext, projectCode: String, groupCode: String) : TAuthGroupRecord? {
+    fun getGroup(dslContext: DSLContext, projectCode: String, groupCode: String): TAuthGroupRecord? {
         with(TAuthGroup.T_AUTH_GROUP) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode).and(GROUP_CODE.eq(groupCode))).fetchOne()
         }
     }
 
-    fun getGroupById(dslContext: DSLContext, groupId: String) : TAuthGroupRecord? {
+    fun getGroupById(dslContext: DSLContext, groupId: String): TAuthGroupRecord? {
         with(TAuthGroup.T_AUTH_GROUP) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(groupId)).fetchOne()
         }
     }
 }
-

@@ -14,5 +14,4 @@ class ServiceUserGroupResourceImpl @Autowired constructor(
     override fun addUser2Group(userId: String, groupId: String): Result<Boolean> {
         return groupUserService.addUser2Group(userId, groupId)
     }
-
 }

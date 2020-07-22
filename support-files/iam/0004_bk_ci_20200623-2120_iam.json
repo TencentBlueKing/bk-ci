@@ -71,6 +71,18 @@
           {"system_id": "bk_ci","id": "cert"}
         ]
       }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "credential_instance",
+        "name": "ф╬ж╓йсм╪",
+        "name_en": "credential instance selection",
+        "resource_type_chain": [
+          {"system_id": "bk_ci","id": "project"},
+          {"system_id": "bk_ci","id": "credential"}
+        ]
+      }
     }
   ]
 }

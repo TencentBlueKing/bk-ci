@@ -6,7 +6,6 @@ import com.tencent.devops.model.auth.tables.records.TAuthGroupUserRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
-import java.util.UUID
 
 @Repository
 class AuthGroupUserDao {
@@ -30,7 +29,7 @@ class AuthGroupUserDao {
         }
     }
 
-    fun get(dslContext: DSLContext, userId: String, groupId: String) : TAuthGroupUserRecord? {
+    fun get(dslContext: DSLContext, userId: String, groupId: String): TAuthGroupUserRecord? {
         with(TAuthGroupUser.T_AUTH_GROUP_USER) {
             return dslContext.selectFrom(this)
                 .where(USER_ID.eq(userId).and(GROUP_ID.eq(groupId))).fetchOne()

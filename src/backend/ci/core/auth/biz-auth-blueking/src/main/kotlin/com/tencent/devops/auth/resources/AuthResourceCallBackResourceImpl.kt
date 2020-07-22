@@ -20,7 +20,6 @@ class AuthResourceCallBackResourceImpl @Autowired constructor(
                 method = callBackInfo.method,
                 token = token
             )
-
     }
 
     override fun resourceList(

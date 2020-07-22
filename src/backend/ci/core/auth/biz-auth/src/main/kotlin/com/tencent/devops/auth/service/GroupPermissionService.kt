@@ -14,7 +14,7 @@ class GroupPermissionService @Autowired constructor(
     fun getPermissionByGroupCode(groupCode: String): List<String>? {
         val permissionRecord = groupPermissionDao.getByGroupCode(dslContext, groupCode)
         var permissionList = mutableListOf<String>()
-        if(permissionRecord != null) {
+        if (permissionRecord != null) {
             permissionList = permissionRecord.map { it.authAction }
         }
         return permissionList

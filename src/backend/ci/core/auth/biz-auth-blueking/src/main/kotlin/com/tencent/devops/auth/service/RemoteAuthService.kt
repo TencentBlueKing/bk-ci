@@ -16,7 +16,7 @@ class RemoteAuthService @Autowired constructor(
     fun checkToken(token: String): Boolean {
         val pair = StringUtils.decodeAuth(token)
         // TODO: 配置化
-        if(pair.first != "bk_iam") {
+        if (pair.first != "bk_iam") {
             return false
         }
         val redisToken = redisOperation.get(TOKEN_REDIS_KEY)
@@ -35,7 +35,7 @@ class RemoteAuthService @Autowired constructor(
 
         // 最终验证权在auth服务端
         val remoteToken = getRemoteToken()
-        if(pair.second == remoteToken) {
+        if (pair.second == remoteToken) {
             return true
         }
         return false
@@ -51,5 +51,4 @@ class RemoteAuthService @Autowired constructor(
         const val TOKEN_REDIS_KEY = "_BK:AUTH:V3:TOKEN_"
         val logger = LoggerFactory.getLogger(this::class.java)
     }
-
 }

@@ -1896,7 +1896,7 @@ class PipelineService @Autowired constructor(
         logger.info("getPipeline |$projectId| $page| $pageSize")
         var offset = pageSize
         // 最多一次拉取50条数据, 后续可以改为配置
-        if(pageSize!! > 50) {
+        if (pageSize!! > 50) {
            offset = 50
         }
         val pageNotNull = page ?: 1

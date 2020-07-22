@@ -41,7 +41,7 @@ class V3EnvironmentPermissionService constructor(
             supplier = supplierForEnvFakePermission(projectId)
         )
 
-        return getAllEnvInstance(resourceInstances, projectId, userId).map { HashUtil.decodeIdToLong(it) }.toSet()
+        return getAllEnvInstance(resourceInstances, projectId, userId).map { it.toLong() }.toSet()
     }
 
     override fun listEnvByPermissions(
@@ -59,8 +59,10 @@ class V3EnvironmentPermissionService constructor(
         )
         val instanceMap = mutableMapOf<AuthPermission, List<String>>()
         instanceResourcesMap.forEach { (key, value) ->
-            instanceMap[key] = getAllEnvInstance(value, projectId, userId).toList()
+            val envs = getAllNodeInstance(value, projectId, userId).toList()
+            instanceMap[key] = envs.map { HashUtil.encodeIntId(it.toInt())}
         }
+        logger.info("listEnvByPermissions v3Impl [$userId] [$projectId] [$instanceMap]")
         return instanceMap
     }
 
@@ -74,7 +76,7 @@ class V3EnvironmentPermissionService constructor(
             supplier = supplierForEnvFakePermission(projectId)
         )
 
-        return getAllNodeInstance(resourceInstances, projectId, userId).map { HashUtil.decodeIdToLong(it) }.toSet()
+        return getAllNodeInstance(resourceInstances, projectId, userId).map { it.toLong() }.toSet()
     }
 
     override fun listNodeByPermissions(
@@ -92,8 +94,14 @@ class V3EnvironmentPermissionService constructor(
         )
         val instanceMap = mutableMapOf<AuthPermission, List<String>>()
         instanceResourcesMap.forEach { (key, value) ->
-            instanceMap[key] = getAllNodeInstance(value, projectId, userId).toList()
+            val nodes = getAllNodeInstance(value, projectId, userId).toList().map {
+                logger.info("listNodeByPermissions v3Impl [$it] [${HashUtil.encodeLongId(it.toLong())}")
+                HashUtil.encodeLongId(it.toLong())
+            }
+            logger.info("listNodeByPermissions v3Impl [$nodes] ")
+            instanceMap[key] = nodes
         }
+        logger.info("listNodeByPermissions v3Impl [$userId] [$projectId] [$instanceMap]")
         return instanceMap
     }
 

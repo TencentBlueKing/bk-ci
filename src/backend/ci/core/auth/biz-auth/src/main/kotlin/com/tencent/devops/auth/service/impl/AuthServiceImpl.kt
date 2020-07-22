@@ -1,4 +1,3 @@
 package com.tencent.devops.auth.service.impl
 
-class AuthServiceImpl {
-}
+class AuthServiceImpl

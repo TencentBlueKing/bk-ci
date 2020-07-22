@@ -5,7 +5,7 @@ import java.util.Base64
 
 object StringUtils {
     fun decodeAuth(token: String): Pair<String, String> {
-        val str = if(token.contains("Basic ")) {
+        val str = if (token.contains("Basic ")) {
             token.substringAfter("Basic ")
         } else {
             token

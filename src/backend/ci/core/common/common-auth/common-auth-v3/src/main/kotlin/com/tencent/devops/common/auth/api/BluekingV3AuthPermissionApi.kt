@@ -132,13 +132,15 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         }
 
         logger.info("getUserResourceByPermission expression:$expression")
-        if(resourceType == AuthResourceType.PROJECT) {
-            return AuthUtils.getProjects(expression)
+        return if(resourceType == AuthResourceType.PROJECT) {
+            AuthUtils.getProjects(expression)
         } else {
             val instancesList = AuthUtils.getResourceInstance(expression, projectCode, resourceType)
             logger.info("getUserResourceByPermission getInstance project[$projectCode], type[${resourceType.value}], instances[$instancesList]")
             if(!instancesList.contains("*")) {
-                return instancesList.toList()
+                instancesList.toList()
+            } else {
+                listOf("*")
             }
         }
 

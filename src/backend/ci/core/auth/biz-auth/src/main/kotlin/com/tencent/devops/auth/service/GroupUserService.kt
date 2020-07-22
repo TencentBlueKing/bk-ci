@@ -23,13 +23,13 @@ class GroupUserService @Autowired constructor(
             userId = userId,
             groupId = groupId
         )
-        if(groupUserRecord != null) {
+        if (groupUserRecord != null) {
             logger.warn("addUser2Group user $userId already in this group $groupId")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GROUP_USER_ALREADY_EXIST))
         }
         val groupRecord = groupService.getGroupCode(groupId)
 
-        if(groupRecord == null) {
+        if (groupRecord == null) {
             logger.warn("addUser2Group group $groupId is not exist")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GROUP_NOT_EXIST))
         }

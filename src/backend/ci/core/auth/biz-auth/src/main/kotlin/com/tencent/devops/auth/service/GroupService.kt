@@ -3,7 +3,6 @@ package com.tencent.devops.auth.service
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthGroupDao
 import com.tencent.devops.auth.dao.AuthGroupPermissionDao
-import com.tencent.devops.auth.dao.AuthGroupUserDao
 import com.tencent.devops.auth.entity.GroupCreateInfo
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.auth.pojo.enum.GroupType
@@ -15,7 +14,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.lang.RuntimeException
 
 @Service
 class GroupService @Autowired constructor(
@@ -34,7 +32,7 @@ class GroupService @Autowired constructor(
             projectCode = projectCode,
             groupCode = groupInfo.groupCode
         )
-        if(groupRecord != null) {
+        if (groupRecord != null) {
             // 项目下分组已存在,不能重复创建
             logger.warn("createGroup |$userId| $projectCode| $groupInfo is exsit")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GROUP_EXIST))
@@ -49,8 +47,8 @@ class GroupService @Autowired constructor(
         val groupId = groupDao.createGroup(dslContext, groupCreateInfo)
 
         // 若新建分组不是内置分组，需建立分组与权限关系
-        if(groupInfo.groupType == GroupType.USER_BUILD) {
-            if(groupInfo.authPermissionList == null || groupInfo.authPermissionList!!.isEmpty()) {
+        if (groupInfo.groupType == GroupType.USER_BUILD) {
+            if (groupInfo.authPermissionList == null || groupInfo.authPermissionList!!.isEmpty()) {
                 logger.warn("createGroup group is not bind permission| $userId| $projectCode| $groupInfo")
                 // 自定义分组未选权限,抛异常
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GROUP_NOT_BIND_PERSSION))
@@ -67,11 +65,11 @@ class GroupService @Autowired constructor(
         return Result(groupId)
     }
 
-    fun getGroupCode(groupId: String) : TAuthGroupRecord? {
+    fun getGroupCode(groupId: String): TAuthGroupRecord? {
         return groupDao.getGroupById(dslContext, groupId)
     }
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

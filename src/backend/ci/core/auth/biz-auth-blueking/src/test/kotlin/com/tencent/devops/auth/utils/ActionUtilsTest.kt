@@ -13,19 +13,19 @@ class ActionUtilsTest {
     @Test
     fun actionType() {
         val actionType = "pipeline"
-        assertEquals(actionType,ActionUtils.actionType(actionType))
+        assertEquals(actionType, ActionUtils.actionType(actionType))
     }
 
     @Test
     fun actionType1() {
         val actionType = "pipeline_create"
-        assertEquals("pipeline",ActionUtils.actionType(actionType))
+        assertEquals("pipeline", ActionUtils.actionType(actionType))
     }
 
     @Test
     fun actionType2() {
         val actionType = "pipeline1_create"
-        assertNotEquals("pipeline",ActionUtils.actionType(actionType))
+        assertNotEquals("pipeline", ActionUtils.actionType(actionType))
     }
 
     @Test
