@@ -136,13 +136,14 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
     ): DockerLogsResponse {
         logger.info("[$buildId]|[$vmSeqId]|[$containerId]|[$logStartTimeStamp] Enter DockerService.getDockerRunLogs...")
         val containerState = dockerHostBuildService.getContainerState(containerId)
-        var isRunning = false
-        if (containerState != null) {
-            isRunning = containerState.running ?: false
+        val isRunning = if (containerState != null) {
+            containerState.running ?: false
+        } else {
+            true
         }
 
         val exitCode = when {
-            containerState != null -> containerState.exitCode ?: Constants.DOCKER_EXIST_CODE
+            containerState != null -> if (containerState.exitCodeLong == null) Constants.DOCKER_EXIST_CODE else containerState.exitCodeLong!!.toInt()
             else -> null
         }
 
