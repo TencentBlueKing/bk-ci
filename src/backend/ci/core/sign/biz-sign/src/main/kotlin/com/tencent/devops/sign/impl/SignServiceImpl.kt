@@ -52,7 +52,7 @@ class SignServiceImpl @Autowired constructor(
 
         // 复制文件到临时目录
         ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo)
-        signInfoService.finishUpload(resignId)
+        signInfoService.finishUpload(resignId, ipaFile)
 
         // ipa解压后的目录
         ipaUnzipDir = File("${ipaFile.canonicalPath}.unzipDir")

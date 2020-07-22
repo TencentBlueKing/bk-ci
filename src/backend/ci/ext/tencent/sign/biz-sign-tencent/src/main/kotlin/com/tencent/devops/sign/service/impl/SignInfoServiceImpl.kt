@@ -7,6 +7,7 @@ import com.tencent.devops.sign.service.SignInfoService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.io.File
 
 @Service
 class SignInfoServiceImpl(
@@ -20,6 +21,7 @@ class SignInfoServiceImpl(
     }
 
     override fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo) {
+        logger.info("[$resignId] save ipaSignInfo|header=$ipaSignInfoHeader|info=$info")
         signIpaInfoDao.saveSignInfo(dslContext, resignId, ipaSignInfoHeader, info)
         signHistoryDao.initHistory(
             dslContext = dslContext,
@@ -34,11 +36,13 @@ class SignInfoServiceImpl(
         )
     }
 
-    override fun finishUpload(resignId: String) {
+    override fun finishUpload(resignId: String, ipaFile: File) {
+        logger.info("[$resignId] finishUpload|ipaFile=${ipaFile.canonicalPath}")
         signHistoryDao.finishUpload(dslContext, resignId)
     }
 
     override fun finishSign(resignId: String, resultFileMd5: String, downloadUrl: String) {
+        logger.info("[$resignId] finishSign|resultFileMd5=$resultFileMd5|downloadUrl=$downloadUrl")
         signHistoryDao.finishSign(
             dslContext = dslContext,
             resignId = resignId,

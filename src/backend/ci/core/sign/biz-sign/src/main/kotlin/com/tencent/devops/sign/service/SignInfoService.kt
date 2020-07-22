@@ -15,7 +15,7 @@ interface SignInfoService {
 
     fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo)
 
-    fun finishUpload(resignId: String)
+    fun finishUpload(resignId: String, ipaFile: File)
 
     fun finishSign(resignId: String, resultFileMd5: String, downloadUrl: String)
 
