@@ -62,7 +62,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
     private val bkrepoOverride = "X-BKREPO-OVERWRITE"
 
     private val jfrogResourceApi = JfrogResourceApi()
-    private val bkrepoResourceApi = BkrepoResourceApi()
+    private val bkrepoResourceApi = BkRepoResourceApi()
 
     fun isRepoGrey(): Boolean {
         val path = "/ms/artifactory/api/build/artifactories/checkRepoGray"

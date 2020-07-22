@@ -15,9 +15,9 @@ import okhttp3.MediaType
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 
-class BkrepoResourceApi : AbstractBuildResourceApi() {
+class BkRepoResourceApi : AbstractBuildResourceApi() {
     companion object {
-        private val logger = LoggerFactory.getLogger(BkrepoResourceApi::class.java)
+        private val logger = LoggerFactory.getLogger(BkRepoResourceApi::class.java)
     }
 
     fun queryByPathEqOrNameMatchOrMetadataEqAnd(
