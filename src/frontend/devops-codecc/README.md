@@ -76,7 +76,7 @@ codecc-frontend
 2. 运行 npm 脚本
 
     ```
-    tnpm i # 首次
+    npm i # 首次
     npm run local
     ```
 
