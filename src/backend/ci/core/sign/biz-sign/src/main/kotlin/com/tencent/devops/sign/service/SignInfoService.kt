@@ -15,6 +15,10 @@ interface SignInfoService {
 
     fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo)
 
+    fun finishUpload(resignId: String)
+
+    fun finishSign(resignId: String, resultFileMd5: String, downloadUrl: String)
+
     /*
     * 检查IpaSignInfo信息，并补齐默认值，如果返回null则表示IpaSignInfo的值不合法
     * */

@@ -13,6 +13,7 @@ import com.tencent.devops.sign.service.FileService
 import com.tencent.devops.sign.service.SignInfoService
 import com.tencent.devops.sign.service.SignService
 import com.tencent.devops.sign.service.MobileProvisionService
+import com.tencent.devops.sign.utils.IpaFileUtil
 import org.jolokia.util.Base64Util
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,6 +52,7 @@ class SignServiceImpl @Autowired constructor(
 
         // 复制文件到临时目录
         ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo)
+        signInfoService.finishUpload(resignId)
 
         // ipa解压后的目录
         ipaUnzipDir = File("${ipaFile.canonicalPath}.unzipDir")
@@ -96,6 +98,7 @@ class SignServiceImpl @Autowired constructor(
             UserIpaResourceImpl.logger.error("archive signed ipa failed.")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA, defaultMessage = "归档IPA包失败")
         }
+        signInfoService.finishSign(resignId, IpaFileUtil.getMD5(signedIpaFile), fileDownloadUrl)
         return fileDownloadUrl
     }
 

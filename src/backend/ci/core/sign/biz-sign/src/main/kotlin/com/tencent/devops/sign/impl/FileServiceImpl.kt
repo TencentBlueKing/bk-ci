@@ -24,7 +24,7 @@ class FileServiceImpl: FileService {
     override fun copyToTargetFile(
             ipaInputStream: InputStream,
             ipaSignInfo: IpaSignInfo
-    ):File {
+    ): File {
         val ipaTmpDir = "$tmpDir/${ipaSignInfo.projectId}/${ipaSignInfo.pipelineId}/${ipaSignInfo.buildId}/"
         val ipaTmpDirFile = File(ipaTmpDir)
         val ipaFile = File("$ipaTmpDir/${ipaSignInfo.fileName}")

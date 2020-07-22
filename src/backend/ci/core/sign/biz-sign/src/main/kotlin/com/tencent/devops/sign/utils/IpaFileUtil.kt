@@ -2,6 +2,7 @@ package com.tencent.devops.sign.utils
 
 import com.tencent.devops.common.api.util.FileUtil
 import org.apache.commons.codec.binary.Hex
+import org.apache.commons.codec.digest.DigestUtils
 import java.io.*
 import java.security.MessageDigest
 
@@ -61,5 +62,15 @@ object IpaFileUtil {
             return true
         }
         return true
+    }
+
+    /**
+     * 获取文件MD5值
+     * @param file 文件对象
+     * @return 文件MD5值
+     */
+    fun getMD5(file: File): String {
+        if (!file.exists()) return ""
+        return DigestUtils.md5Hex(file.inputStream())
     }
 }
