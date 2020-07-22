@@ -1,0 +1,1092 @@
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c149"
+  },
+  "param_type": "TOOL_ORDER",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "TOOL_ORDER",
+  "param_value": "SPOTBUGS,CPPLINT,CHECKSTYLE,ESLINT,STYLECOP,GOML,DETEKT,PHPCS,PYLINT,CCN,DUPC",
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c14a"
+  },
+  "param_type": "LANG",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "2",
+  "param_name": "C/C++",
+  "param_extend1": "C/C++",
+  "param_extend2": "[\"C_CPP\",\"C\",\"C_PLUS_PLUSH\",\"C\\/C++\"]",
+  "param_extend3": 0,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c14b"
+  },
+  "param_type": "LANG",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "4",
+  "param_name": "JAVA",
+  "param_extend1": "JAVA",
+  "param_extend2": "[\"JAVA\",\"Java\",\"java\"]",
+  "param_extend3": 1,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c14c"
+  },
+  "param_type": "LANG",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "1",
+  "param_name": "C#",
+  "param_extend1": "C#",
+  "param_extend2": "[\"C_SHARP\",\"C#\"]",
+  "param_extend3": 2,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c14d"
+  },
+  "param_type": "LANG",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "64",
+  "param_name": "JS",
+  "param_extend1": "JavaScript",
+  "param_extend2": "[\"JS\",\"JavaScript\",\"javascript\",\"JAVASCRIPT\"]",
+  "param_extend3": 3,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c14f"
+  },
+  "param_type": "LANG",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "32",
+  "param_name": "Python",
+  "param_extend1": "Python",
+  "param_extend2": "[\"PYTHON\",\"Python\",\"python\"]",
+  "param_extend3": 5,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c150"
+  },
+  "param_type": "LANG",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "8",
+  "param_name": "PHP",
+  "param_extend1": "PHP",
+  "param_extend2": "[\"PHP\",\"php\"]",
+  "param_extend3": 6,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c153"
+  },
+  "param_type": "LANG",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "512",
+  "param_name": "Golang",
+  "param_extend1": "Golang",
+  "param_extend2": "[\"GOLANG\",\"Golang\",\"GO\"]",
+  "param_extend3": 9,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c155"
+  },
+  "param_type": "LANG",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "2048",
+  "param_name": "TS",
+  "param_extend1": "TypeScript",
+  "param_extend2": "[\"TYPESCRIPT\",\"TS\",\"TypeScript\",\"typescript\"]",
+  "param_extend3": 11,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c157"
+  },
+  "param_type": "LANG",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "1073741824",
+  "param_name": "其他",
+  "param_extend1": "其他",
+  "param_extend2": "[\"OTHERS\",\"其他\"]",
+  "param_extend3": 29,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c158"
+  },
+  "param_type": "TOOL_TYPE",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "DEFECT",
+  "param_name": "代码缺陷",
+  "param_extend1": "发现代码缺陷",
+  "param_extend3": 0,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c159"
+  },
+  "param_type": "TOOL_TYPE",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "SENSITIVE_INFO",
+  "param_name": "代码安全",
+  "param_extend1": "发现安全问题",
+  "param_extend3": 1,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c15a"
+  },
+  "param_type": "TOOL_TYPE",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "STANDARD",
+  "param_name": "代码规范",
+  "param_extend1": "规范代码，检查一些逻辑错误",
+  "param_extend3": 2,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c15b"
+  },
+  "param_type": "TOOL_TYPE",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "CCN",
+  "param_name": "复杂度",
+  "param_extend1": "控制复杂度",
+  "param_extend3": 3,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c15c"
+  },
+  "param_type": "TOOL_TYPE",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "DUPC",
+  "param_name": "重复代码",
+  "param_extend1": "检测重复代码",
+  "param_extend3": 4,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c15d"
+  },
+  "param_type": "TOOL_PATTERN",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "LINT",
+  "param_name": "LINT",
+  "param_extend1": "LINT",
+  "param_extend3": 0,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c15e"
+  },
+  "param_type": "TOOL_PATTERN",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "COVERITY",
+  "param_name": "COVERITY",
+  "param_extend1": "COVERITY",
+  "param_extend3": 1,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c15f"
+  },
+  "param_type": "TOOL_PATTERN",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "KLOCWORK",
+  "param_name": "KLOCWORK",
+  "param_extend1": "KLOCWORK",
+  "param_extend3": 2,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c160"
+  },
+  "param_type": "TOOL_PATTERN",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "CCN",
+  "param_name": "CCN",
+  "param_extend1": "CCN",
+  "param_extend3": 3,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c161"
+  },
+  "param_type": "TOOL_PATTERN",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "DUPC",
+  "param_name": "DUPC",
+  "param_extend1": "DUPC",
+  "param_extend3": 4,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c162"
+  },
+  "param_type": "PARAM_TYPE",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "STRING",
+  "param_name": "字符串",
+  "param_extend1": "字符串",
+  "param_extend3": 0,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c163"
+  },
+  "param_type": "PARAM_TYPE",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "BOOLEAN",
+  "param_name": "布尔值",
+  "param_extend1": "布尔值",
+  "param_extend3": 1,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c164"
+  },
+  "param_type": "PARAM_TYPE",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "RADIO",
+  "param_name": "单选框",
+  "param_extend1": "单选框",
+  "param_extend3": 2,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cc7fe9dc87521036868c165"
+  },
+  "param_type": "PARAM_TYPE",
+  "param_status": "P",
+  "create_date": {
+    "$numberLong": "1556610717"
+  },
+  "created_by": "system_admin",
+  "param_code": "CHECKBOX",
+  "param_name": "复选框",
+  "param_extend1": "复选框",
+  "param_extend3": 3,
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cefa5ed89f2ffcb8f5bbdbc"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_name": "SH",
+  "param_value": "60",
+  "param_type": "CONFIG_RISK_FACTOR",
+  "param_code": "CCN",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1558496486"
+  },
+  "created_by": "system_admin",
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cefa5ff89f2ffcb8f5bbdf4"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_name": "H",
+  "param_value": "40",
+  "param_type": "CONFIG_RISK_FACTOR",
+  "param_code": "CCN",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1558496486"
+  },
+  "created_by": "system_admin",
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cefa60d89f2ffcb8f5bbe25"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_name": "M",
+  "param_value": "20",
+  "param_type": "CONFIG_RISK_FACTOR",
+  "param_code": "CCN",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1558496486"
+  },
+  "created_by": "system_admin",
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cf61cc6b80aea2b00ed2027"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_name": "SH",
+  "param_value": "20",
+  "param_code": "DUPC",
+  "param_type": "CONFIG_RISK_FACTOR",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1559633094"
+  },
+  "created_by": "system_admin",
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cf61cc6b80aea2b00ed2028"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_name": "H",
+  "param_value": "11",
+  "param_code": "DUPC",
+  "param_type": "CONFIG_RISK_FACTOR",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1559633094"
+  },
+  "created_by": "system_admin",
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5cf61cc6b80aea2b00ed2029"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_name": "M",
+  "param_value": "5",
+  "param_code": "DUPC",
+  "param_type": "CONFIG_RISK_FACTOR",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1559633094"
+  },
+  "created_by": "system_admin",
+  "updated_date": 1.556610717e+09,
+  "updated_by": "system_admin",
+  "created_date": 1.556610717e+09
+}
+{
+  "_id": {
+    "$oid": "5d6f5b3897e61722dcdfdd5e"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/lib_3rd/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578936158"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd5f"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/Lib/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954421"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd60"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/MicrosoftVisualStudio14.0/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954428"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd61"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/Assets/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954437"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd62"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/node_modules/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954444"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd63"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/protobuf/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954451"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd64"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/extensions/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954457"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd65"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/plugins/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954463"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd66"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/third_lib/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954471"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd67"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/third_party/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954476"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd68"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/pbprotocol/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954483"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd69"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/3rdparty/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954488"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd6a"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/jquery.*.js",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954493"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd6b"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/vendors/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954499"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd6c"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/curl/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954504"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd6d"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/tool/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954511"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd6e"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/ThirdPart/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954518"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd6f"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/third-party/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954525"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd70"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/tools/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954531"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd71"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/tinyxml2/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954538"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd72"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/thirdparty/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954545"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd73"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/lib(s)/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954550"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd74"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/TDRExported/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954556"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd75"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/ThirdPartyCode/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954569"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd76"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/externlibs/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954577"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd77"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/boost/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954585"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd78"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/Plugins/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954597"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd79"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/tinyxml/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954607"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd7a"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/3rdParty/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954614"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd7b"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/Tdr/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954619"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd7c"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/demo/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954635"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd7d"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/lib3rd/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954641"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd7e"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/New3rdpartylib/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954647"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd7f"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/3rdlib/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954654"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd80"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/third/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954667"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd81"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/external/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954673"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd82"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/3rd/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954679"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd83"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/tdrbuf/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954688"
+  },
+  "created_by": "systen_admin"
+}
+{
+  "_id": {
+    "$oid": "5d6f5b4a97e61722dcdfdd84"
+  },
+  "_class": "com.tencent.bk.codecc.task.model.BaseDataEntity",
+  "param_value": ".*/utils/.*",
+  "param_name": "url",
+  "param_type": "DEFAULT_FILTER_PATH",
+  "param_status": "1",
+  "create_date": {
+    "$numberLong": "1567578954695"
+  },
+  "created_by": "systen_admin"
+}
