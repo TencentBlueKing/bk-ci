@@ -963,7 +963,7 @@ class PipelineRuntimeService @Autowired constructor(
                                     it.status = BuildStatus.QUEUE.ordinal
                                     it.executeCount += 1
                                     updateContainerExistsRecord.add(it)
-                                    if (moveDataBakSwitchIsOn(moveContainerDataBakSwitch)){
+                                    if (moveDataBakSwitchIsOn(moveContainerDataBakSwitch)) {
                                         updateBakContainerExistsRecord.add(
                                             TPipelineBuildContainerBakRecord(
                                                 it.projectId,
