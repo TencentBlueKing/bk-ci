@@ -115,7 +115,7 @@ class ContainerControl @Autowired constructor(
             when (dependOnControl.dependOnStatus(this, container)) {
                 BuildStatus.FAILED -> {
                     logger.info("[$buildId]|stage=$stageId|container=$containerId| fail due to dependency fail or skip")
-                    dependOnControl.updateContainerStatus(container, BuildStatus.FAILED, true)
+                    dependOnControl.updateContainerStatus(container, BuildStatus.FAILED)
                     return sendBackStage("container_dependOn_failed")
                 }
                 BuildStatus.SUCCEED -> {

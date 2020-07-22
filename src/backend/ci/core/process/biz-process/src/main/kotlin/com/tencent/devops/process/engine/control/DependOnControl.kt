@@ -102,8 +102,7 @@ class DependOnControl @Autowired constructor(
 
     fun updateContainerStatus(
         container: PipelineBuildContainer,
-        buildStatus: BuildStatus,
-        updateDetail: Boolean = false
+        buildStatus: BuildStatus
     ) {
         with(container) {
             pipelineRuntimeService.updateContainerStatus(
@@ -114,9 +113,7 @@ class DependOnControl @Autowired constructor(
                 startTime = LocalDateTime.now(),
                 endTime = LocalDateTime.now()
             )
-            if (updateDetail) {
-                pipelineBuildDetailService.updateContainerStatus(buildId, containerId, buildStatus)
-            }
+            pipelineBuildDetailService.updateContainerStatus(buildId, containerId, buildStatus)
         }
     }
 }
