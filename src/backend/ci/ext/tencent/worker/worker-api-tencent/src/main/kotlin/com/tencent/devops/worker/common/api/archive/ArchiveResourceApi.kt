@@ -78,12 +78,12 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         return resultData.data!!
     }
 
-    fun getParentFolder(path: String): String {
+    private fun getParentFolder(path: String): String {
         val tmpPath = path.removeSuffix("/")
         return tmpPath.removeSuffix(getFileName(tmpPath))
     }
 
-    fun getFileName(path: String): String {
+    private fun getFileName(path: String): String {
         return path.removeSuffix("/").split("/").last()
     }
 
