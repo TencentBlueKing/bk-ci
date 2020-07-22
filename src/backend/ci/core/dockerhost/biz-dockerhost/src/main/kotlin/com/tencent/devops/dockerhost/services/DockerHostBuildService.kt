@@ -111,7 +111,9 @@ class DockerHostBuildService(
         .readTimeout(30000)
         .build()
 
-    private val dockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(httpClient).build()
+    private val httpDockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(httpClient).build()
+
+    private val dockerCli = DockerClientBuilder.getInstance(config).build()
 
     fun startBuild(): DockerHostBuildInfo? {
         val result = dockerHostBuildApi.startBuild(CommonUtils.getInnerIP())
@@ -729,11 +731,11 @@ class DockerHostBuildService(
     fun getContainerState(containerId: String): InspectContainerResponse.ContainerState? {
         try {
             logger.info("Get containerState: $containerId start.")
-            val inspectContainerResponse = dockerCli.inspectContainerCmd(containerId).exec() ?: return null
+            val inspectContainerResponse = httpDockerCli.inspectContainerCmd(containerId).exec() ?: return null
             logger.info("Get containerState: $containerId state: ${inspectContainerResponse.state}")
             return inspectContainerResponse.state
         } catch (e: Exception) {
-            logger.error("check container: $containerId state failed.", e)
+            logger.error("check container: $containerId state failed, return ", e)
             return null
         }
     }
