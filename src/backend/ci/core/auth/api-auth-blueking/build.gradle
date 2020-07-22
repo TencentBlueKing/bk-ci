@@ -26,6 +26,6 @@
 
 dependencies {
     compile project(":core:common:common-web")
+    compile project(":core:common:common-auth:common-auth-v3")
     compile project(":core:auth:api-auth")
-    compile group: 'com.tencent.bk', name: 'iam-sdk', version:'1.0-SNAPSHOT'
 }

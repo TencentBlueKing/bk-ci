@@ -87,6 +87,20 @@ class V3PipelinePermissionService constructor(
         }
     }
 
+    override fun getResourceByPermission(userId: String, projectId: String, permission: AuthPermission): List<String> {
+        val instances = super.getResourceByPermission(userId, projectId, permission)
+        if(instances.contains("*")) {
+            logger.info("getResourceByPermission pipelineImpl user[$userId] projectId[$projectId], instances[$instances]")
+            val pipelineIds = mutableListOf<String>()
+            val pipelineInfos = pipelineInfoDao.listPipelineInfoByProject(dslContext, projectId)
+            pipelineInfos?.map {
+                pipelineIds.add(it.pipelineId)
+            }
+            return pipelineIds
+        }
+        return instances
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }

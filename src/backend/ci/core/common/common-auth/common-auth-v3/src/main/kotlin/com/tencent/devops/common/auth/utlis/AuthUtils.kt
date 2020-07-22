@@ -8,7 +8,9 @@ object AuthUtils {
 
     fun getProjects(content: ExpressionDTO): List<String> {
         if (content.field != "project.id") {
-            return emptyList()
+            if(content.operator != ExpressionOperationEnum.ANY) {
+                return emptyList()
+            }
         }
         val projectList = mutableListOf<String>()
         when (content.operator) {

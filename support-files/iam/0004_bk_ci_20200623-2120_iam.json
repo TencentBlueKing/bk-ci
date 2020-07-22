@@ -56,7 +56,7 @@
         "name_en": "node instance selection",
         "resource_type_chain": [
           {"system_id": "bk_ci","id": "project"},
-          {"system_id": "bk_ci","id": "node"}
+          {"system_id": "bk_ci","id": "env_node"}
         ]
       }
     },

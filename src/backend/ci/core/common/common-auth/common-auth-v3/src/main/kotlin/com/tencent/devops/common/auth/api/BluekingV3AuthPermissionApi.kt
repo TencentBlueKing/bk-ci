@@ -27,6 +27,7 @@
 package com.tencent.devops.common.auth.api
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.constants.ExpressionOperationEnum
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.PathInfoDTO
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
@@ -97,11 +98,9 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
             path.id = projectCode
             instanceDTO.path = path
         }
-        // 有可能出现提供的resourceCode是关联资源的code,需将type类型调整为对应的关联资源。
+        // 有可能出现提供的resourceCode是关联项目资源的code,需将type类型调整为对应的关联资源。
         if(relationResourceType != null) {
             instanceDTO.type = relationResourceType!!.value
-        } else {
-            instanceDTO.type = resourceType.value
         }
 
         logger.info("v3 validateUserResourcePermission instanceDTO[$instanceDTO]")
@@ -121,7 +120,17 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         val actionType = ActionUtils.buildAction(resourceType, permission)
         val actionDto = ActionDTO()
         actionDto.id = actionType
-        val expression = policyService.getPolicyByAction(user, actionDto, null) ?: return emptyList()
+        val expression = (policyService.getPolicyByAction(user, actionDto, null) ?: return emptyList()) ?: return emptyList()
+
+        if(expression.operator == null && expression.content == null) {
+            return emptyList()
+        }
+
+        // 管理员权限
+        if(expression.operator == ExpressionOperationEnum.ANY) {
+            return listOf("*")
+        }
+
         logger.info("getUserResourceByPermission expression:$expression")
         if(resourceType == AuthResourceType.PROJECT) {
             return AuthUtils.getProjects(expression)
@@ -147,7 +156,7 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         logger.info("v3 getUserResourcesByPermissions user[$user] serviceCode[$serviceCode] resourceType[$resourceType] projectCode[$projectCode] permission[$permissions] supplier[$supplier]")
         return getUserResourcesByPermissions(
             userId = user,
-            scopeType = "Project",
+            scopeType = "project",
             scopeId = projectCode,
             resourceType = resourceType,
             permissions = permissions,
@@ -166,14 +175,20 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         supplier: (() -> List<String>)?
     ): Map<AuthPermission, List<String>> {
         logger.info("v3 getUserResourcesByPermissions user[$userId] scopeType[$scopeType] scopeId[$scopeId] resourceType[$resourceType] systemId[$systemId] permission[$permissions] supplier[$supplier]")
-        val actionList = mutableListOf<ActionDTO>()
+        val permissionMap = mutableMapOf<AuthPermission, List<String>>()
         permissions.map {
-            val authType = ActionUtils.buildAction(resourceType, it)
-            val actionDTO = ActionDTO()
-            actionDTO.id = authType
-            actionList.add(actionDTO)
+            val instances = getUserResourceByPermission(
+                user = userId,
+                serviceCode = systemId,
+                resourceType = resourceType,
+                permission = it,
+                projectCode = scopeId,
+                supplier = supplier
+            )
+            permissionMap[it] = instances
         }
-        return mutableMapOf()
+        logger.info("v3 getPermissionMap user[$userId], project[$scopeId] map[$permissionMap]")
+        return permissionMap
     }
 
     companion object{

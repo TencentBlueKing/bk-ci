@@ -22,7 +22,12 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
 ) : ProjectPermissionService {
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
-        TODO("Not yet implemented")
+        return authProjectApi.isProjectUser(
+            user = userId,
+            serviceCode = projectAuthServiceCode,
+            projectCode = projectCode,
+            group = null
+        )
     }
 
     // 创建项目
@@ -66,6 +71,11 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
             userId = userId,
             supplier = null
         )
+
+        if(projects == null || projects.isEmpty()) {
+            return emptyList()
+        }
+
         val projectList = mutableListOf<String>()
         return if(projects[0] == "*") {
             projectDao.getAllProject(dslContext).filter { projectList.add(it.englishName) }
@@ -79,7 +89,11 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun getUserProjectsAvailable(userId: String): Map<String, String> {
-        TODO("Not yet implemented")
+        return authProjectApi.getUserProjectsAvailable(
+            userId = userId,
+            serviceCode = projectAuthServiceCode,
+            supplier = null
+        )
     }
 
     companion object {

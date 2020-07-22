@@ -37,6 +37,9 @@ dependencies {
     compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
     compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base"
     compile "com.fasterxml.jackson.module:jackson-module-kotlin"
-    compile group: 'com.tencent.bk', name: 'iam-sdk', version:'1.0-SNAPSHOT'
+    compile fileTree(dir: 'lib/iam-sdk-1.0.0.jar', includes: ['*.jar'])
+    implementation group: 'org.apache.commons', name: 'commons-collections4', version: '4.4'
+
+
 //    compile group: 'org.json', name: 'json', version: '20180130'
 }

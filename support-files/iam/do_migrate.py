@@ -141,10 +141,14 @@ class Client(object):
         ok, _data = http_func(url, data, headers=headers)
         # TODO: add debug here
         if not ok:
-            return False, "verify from iam server fail", None
+            message = "verify from iam server fail"
+            print("_call_iam_api fail.", "error:", message)
+            return False, message, None
 
         if _data.get("code") != 0:
-            return False, _data.get("message", "iam api fail"), None
+            message = _data.get("message", "iam api fail")
+            print("_call_iam_api fail.", "method:", http_func.__name__, "path:", path, "error:", message)
+            return False, message, None
 
         _d = _data.get("data")
 
@@ -154,22 +158,30 @@ class Client(object):
     operation_funcs = {
         "add_system": "add_system",
         "update_system": "update_system",
+        "upsert_system": "upsert_system",
+
         "add_resource_type": "add_resource_type",
         "update_resource_type": "update_resource_type",
         "delete_resource_type": "delete_resource_type",
+        "upsert_resource_type": "upsert_resource_type",
+
         "add_instance_selection": "add_instance_selection",
         "update_instance_selection": "update_instance_selection",
         "delete_instance_selection": "delete_instance_selection",
+        "upsert_instance_selection": "upsert_instance_selection",
+
         "add_action": "add_action",
         "update_action": "update_action",
         "delete_action": "delete_action",
+        "upsert_action": "upsert_action",
+
         "add_create_action_topology": "add_create_action_topology",
         "update_create_action_topology": "update_create_action_topology",
         "upsert_create_action_topology": "update_create_action_topology",
-        "upsert_system": "upsert_system",
-        "upsert_resource_type": "upsert_resource_type",
-        "upsert_instance_selection": "upsert_instance_selection",
-        "upsert_action": "upsert_action",
+
+        "add_action_groups": "add_action_groups",
+        "update_action_groups": "update_action_groups",
+        "upsert_action_groups": "update_action_groups",
     }
 
     """
@@ -233,8 +245,8 @@ class Client(object):
 
     def api_update_instance_selection(self, system_id, instance_selection_id, data):
         path = "/api/v1/model/systems/{system_id}/instance-selections/{instance_selection_id}".format(
-            system_id=system_id,
-            instance_selection_id=instance_selection_id)
+            system_id=system_id, instance_selection_id=instance_selection_id
+        )
         ok, message, data = self._call_iam_api(http_put, path, data)
         return ok, message
 
@@ -277,6 +289,17 @@ class Client(object):
         )
         ok, message, data = self._call_iam_api(http_put, path, data)
         # if alreay exists, return true
+        return ok, message
+
+    # ---------- action_groups
+    def api_add_action_groups(self, system_id, data):
+        path = "/api/v1/model/systems/{system_id}/configs/action_groups".format(system_id=system_id)
+        ok, message, data = self._call_iam_api(http_post, path, data)
+        return ok, message
+
+    def api_update_action_groups(self, system_id, data):
+        path = "/api/v1/model/systems/{system_id}/configs/action_groups".format(system_id=system_id)
+        ok, message, data = self._call_iam_api(http_put, path, data)
         return ok, message
 
     # ---------- query
@@ -354,11 +377,7 @@ class Client(object):
         if not d_instance_selection_id:
             return False, "the field `id` required"
 
-        d = [
-            {
-                "id": d_instance_selection_id
-            }
-        ]
+        d = [{"id": d_instance_selection_id}]
 
         return self.api_batch_delete_instance_selections(system_id, d)
 
@@ -393,6 +412,12 @@ class Client(object):
     def update_create_action_topology(self, system_id, data):
         action_type = "create"
         return self.api_update_action_topology(system_id, action_type, data)
+
+    def add_action_groups(self, system_id, data):
+        return self.api_add_action_groups(system_id, data)
+
+    def update_action_groups(self, system_id, data):
+        return self.api_update_action_groups(system_id, data)
 
     def upsert_system(self, system_id, data):
         if system_id not in self.system_id_set:
@@ -429,6 +454,7 @@ class Client(object):
     def query_all_models(self, system_id):
         ok, message, data = self.api_query(system_id)
         if not ok:
+            print("do api_query fail", message)
             return set(), set(), set(), set()
 
         system = data.get("base_info", {}) or {}

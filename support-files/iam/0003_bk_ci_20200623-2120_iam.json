@@ -7,8 +7,6 @@
         "id": "bk_ci",
         "name": "蓝鲸持续集成平台",
         "name_en": "bkci",
-        "description": "蓝鲸持续集成平台是一个",
-        "description_en": "BKCI is a...",
         "clients": "bkci",
         "provider_config": {
           "host": "http://ci-auth.service.consul:21936",
@@ -22,9 +20,7 @@
       "data": {
         "id": "project",
         "name": "项目",
-        "name_en": "project",
-        "description": "项目集是...",
-        "description_en": "project is a ...",
+        "name_en": "Project",
         "parents": [],
         "provider_config": {
           "path": "/api/service/auth/resource/projects"
@@ -37,9 +33,7 @@
       "data": {
         "id": "pipeline",
         "name": "流水线",
-        "name_en": "pipeline",
-        "description": "流水线是...",
-        "description_en": "pipeline is a ...",
+        "name_en": "Pipeline",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
           "path": "/api/service/auth/resource/instances/list"
@@ -52,9 +46,7 @@
       "data": {
         "id": "repository",
         "name": "代码库",
-        "name_en": "repository",
-        "description": "代码库是...",
-        "description_en": "repository is a ...",
+        "name_en": "Repository",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
           "path": "/api/service/auth/resource/instances/list"
@@ -67,9 +59,7 @@
       "data": {
         "id": "credential",
         "name": "凭据",
-        "name_en": "credential",
-        "description": "凭据是...",
-        "description_en": "credential is a ...",
+        "name_en": "Credential",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
           "path": "/api/service/auth/resource/instances/list"
@@ -82,9 +72,7 @@
       "data": {
         "id": "cert",
         "name": "证书",
-        "name_en": "cert",
-        "description": "证书是...",
-        "description_en": "cert is a ...",
+        "name_en": "Cert",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
           "path": "/api/service/auth/resource/instances/list"
@@ -97,9 +85,7 @@
       "data": {
         "id": "environment",
         "name": "环境",
-        "name_en": "environment",
-        "description": "环境是...",
-        "description_en": "environment is a ...",
+        "name_en": "Environment",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
           "path": "/api/service/auth/resource/instances/list"
@@ -110,11 +96,9 @@
     {
       "operation": "upsert_resource_type",
       "data": {
-        "id": "node",
-        "name": "环境节点",
-        "name_en": "node",
-        "description": "环境节点是...",
-        "description_en": "node is a ...",
+        "id": "env_node",
+        "name": "节点",
+        "name_en": "Node",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
           "path": "/api/service/auth/resource/instances/list"
@@ -127,9 +111,7 @@
       "data": {
         "id": "custom_dir",
         "name": "版本仓库自定义目录",
-        "name_en": "custom_dir",
-        "description": "版本仓库自定义目录是...",
-        "description_en": "biz_set is a ...",
+        "name_en": "Custom_dir",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
           "path": "/api/service/auth/resource/instances/list"
@@ -142,9 +124,7 @@
       "data": {
         "id": "rule",
         "name": "质量红线规则",
-        "name_en": "rule",
-        "description": "质量红线规则是...",
-        "description_en": "biz_set is a ...",
+        "name_en": "Rule",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
           "path": "/api/service/auth/resource/instances/list"
@@ -157,9 +137,7 @@
       "data": {
         "id": "group",
         "name": "质量红线通知组",
-        "name_en": "group",
-        "description": "质量红线通知组是...",
-        "description_en": "biz_set is a ...",
+        "name_en": "Group",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
           "path": "/api/service/auth/resource/instances/list"
