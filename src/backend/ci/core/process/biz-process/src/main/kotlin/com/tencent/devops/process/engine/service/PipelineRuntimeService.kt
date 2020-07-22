@@ -760,6 +760,7 @@ class PipelineRuntimeService @Autowired constructor(
 
             // 如果是stage重试不是当前stage，则直接进入下一个stage
             if (isStageRetry && !retryStage) {
+                logger.info("[$buildId|RETRY|STAGE(#$stageId)(${stage.name}) is not in retry STAGE($retryStartTaskId)")
                 containerSeq += stage.containers.size // Job跳过计数也需要增加
                 return@nextStage
             }
@@ -790,6 +791,12 @@ class PipelineRuntimeService @Autowired constructor(
                     }
                 } else if (container is VMBuildContainer) {
                     if (!ContainerUtils.isVMBuildContainerEnable(container)) {
+                        containerSeq++
+                        return@nextContainer
+                    }
+                } else if (!retryStage && !retryStartTaskId.isNullOrBlank() && lastTimeBuildContainerRecords.isNotEmpty()) { // 如果重试的插件不在当前Job内，则跳过
+                    if (null == findTaskRecord(lastTimeBuildTaskRecords = lastTimeBuildTaskRecords, container = container, retryStartTaskId = retryStartTaskId!!)) {
+                        logger.info("[$buildId|RETRY|JOB(#$containerId)(${container.name}) is not in retry range")
                         containerSeq++
                         return@nextContainer
                     }
