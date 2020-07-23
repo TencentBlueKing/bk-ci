@@ -8,6 +8,7 @@ interface ArchiveService {
 
     fun archive(
             signedIpaFile: File,
-            ipaSignInfo: IpaSignInfo
-    ): String?
+            ipaSignInfo: IpaSignInfo,
+            properties: Map<String, String>? = null
+    ): Boolean
 }

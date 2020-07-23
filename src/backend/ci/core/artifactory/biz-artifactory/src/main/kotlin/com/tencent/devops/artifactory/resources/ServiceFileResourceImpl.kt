@@ -28,6 +28,7 @@ package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -58,5 +59,19 @@ class ServiceFileResourceImpl @Autowired constructor(private val archiveFileServ
 
     override fun downloadFile(filePath: String, response: HttpServletResponse) {
         archiveFileService.downloadFile(filePath, response)
+    }
+
+    override fun archiveFile(projectCode: String, pipelineId: String, buildId: String, fileType: FileTypeEnum, customFilePath: String?, inputStream: InputStream, disposition: FormDataContentDisposition): Result<String?> {
+        return archiveFileService.archiveFile(
+                userId = "",
+                projectId = projectCode,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                fileType = fileType,
+                customFilePath = customFilePath,
+                inputStream = inputStream,
+                disposition = disposition,
+                fileChannelType = FileChannelTypeEnum.SERVICE
+        )
     }
 }
