@@ -3,6 +3,7 @@ package com.tencent.devops.sign.service.impl
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.service.MobileProvisionService
 import com.tencent.devops.ticket.api.ServiceCertResource
@@ -26,7 +27,7 @@ class MobileProvisionServiceImpl  @Autowired constructor(
 
     override fun downloadMobileProvision(mobileProvisionDir: File, projectId: String, mobileProvisionId: String): File {
         // 从ticket模块获取描述文件
-        val mpInfo = client.get(ServiceCertResource::class).getEnterprise(projectId, mobileProvisionId, publicKey).data
+        val mpInfo = client.getGateway(ServiceCertResource::class, GatewayType.DEVNET_PROXY).getEnterprise(projectId, mobileProvisionId, publicKey).data
                 ?: throw ErrorCodeException(errorCode = SignMessageCode.ERROR_MP_NOT_EXIST, defaultMessage = "描述文件不存在。")
         val publicKeyServer = Base64.getDecoder().decode(mpInfo.publicKey)
         val mpContent = Base64.getDecoder().decode(mpInfo.mobileProvisionContent)
