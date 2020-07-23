@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.impl.SignServiceImpl
+import com.tencent.devops.sign.utils.IpaFileUtil
 import com.tencent.devops.sign.utils.SignUtils.DEFAULT_CER_ID
 import org.jolokia.util.Base64Util
 import org.slf4j.LoggerFactory
@@ -15,15 +16,21 @@ interface SignInfoService {
 
     fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo)
 
-    fun finishUpload(resignId: String, ipaFile: File)
+    fun finishUpload(resignId: String, ipaFile: File, buildId: String?)
 
-    fun finishSign(resignId: String, resultFileMd5: String, downloadUrl: String)
+    fun finishUnzip(resignId: String, unzipDir: File, buildId: String?)
+
+    fun finishResign(resignId: String, buildId: String?)
+
+    fun finishZip(resignId: String, signedIpaFile: File, buildId: String?)
+
+    fun finishArchive(resignId: String, downloadUrl: String, buildId: String?)
 
     /*
     * 检查IpaSignInfo信息，并补齐默认值，如果返回null则表示IpaSignInfo的值不合法
     * */
     fun check(info: IpaSignInfo): IpaSignInfo {
-        if (info.certId.isNullOrBlank()) info.certId = DEFAULT_CER_ID
+        if (info.certId.isBlank()) info.certId = DEFAULT_CER_ID
         if (!info.wildcard) {
             if (info.mobileProvisionId.isNullOrBlank())
                 throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER, defaultMessage = "非通配符重签未指定主描述文件")

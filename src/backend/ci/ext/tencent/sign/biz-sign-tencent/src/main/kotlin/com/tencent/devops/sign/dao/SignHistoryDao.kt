@@ -49,8 +49,11 @@ class SignHistoryDao {
             dslContext.insertInto(this,
                 RESIGN_ID,
                 USER_ID,
-                UPLOAD_FINISHED,
-                RESIGN_FINISHED,
+                UPLOAD_FINISH_TIME,
+                UNZIP_FINISH_TIME,
+                RESIGN_FINISH_TIME,
+                ZIP_FINISH_TIME,
+                ARCHIVE_FINISH_TIME,
                 PROJECT_ID,
                 PIPELINE_ID,
                 BUILD_ID,
@@ -62,8 +65,11 @@ class SignHistoryDao {
             ).values(
                 resignId,
                 userId,
-                false,
-                false,
+                null,
+                null,
+                null,
+                null,
+                null,
                 projectId,
                 pipelineId,
                 buildId,
@@ -82,22 +88,56 @@ class SignHistoryDao {
     ) {
         with(TSignHistory.T_SIGN_HISTORY) {
             dslContext.update(this)
-                .set(UPLOAD_FINISHED, true)
+                .set(UPLOAD_FINISH_TIME, LocalDateTime.now())
                 .where(RESIGN_ID.eq(resignId))
         }
     }
 
-    fun finishSign(
+    fun finishUnzip(
+        dslContext: DSLContext,
+        resignId: String
+    ) {
+        with(TSignHistory.T_SIGN_HISTORY) {
+            dslContext.update(this)
+                .set(UNZIP_FINISH_TIME, LocalDateTime.now())
+                .where(RESIGN_ID.eq(resignId))
+        }
+    }
+
+    fun finishResign(
+        dslContext: DSLContext,
+        resignId: String
+    ) {
+        with(TSignHistory.T_SIGN_HISTORY) {
+            dslContext.update(this)
+                .set(RESIGN_FINISH_TIME, LocalDateTime.now())
+                .where(RESIGN_ID.eq(resignId))
+        }
+    }
+
+    fun finishZip(
         dslContext: DSLContext,
         resignId: String,
-        resultFileMd5: String,
+        resultFileMd5: String
+    ) {
+        with(TSignHistory.T_SIGN_HISTORY) {
+            dslContext.update(this)
+                .set(ZIP_FINISH_TIME, LocalDateTime.now())
+                .set(RESULT_FILE_MD5, resultFileMd5)
+                .where(RESIGN_ID.eq(resignId))
+        }
+    }
+
+    fun finishArchive(
+        dslContext: DSLContext,
+        resignId: String,
         downloadUrl: String
     ) {
         with(TSignHistory.T_SIGN_HISTORY) {
             dslContext.update(this)
-                .set(RESULT_FILE_MD5, resultFileMd5)
+
                 .set(DOWNLOAD_URL, downloadUrl)
-                .set(FINISH_TIME, LocalDateTime.now())
+                .set(ARCHIVE_FINISH_TIME, LocalDateTime.now())
                 .where(RESIGN_ID.eq(resignId))
         }
     }

@@ -3,6 +3,7 @@ package com.tencent.devops.sign.service.impl
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.SignInfoService
+import com.tencent.devops.sign.utils.IpaFileUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -25,19 +26,37 @@ class SignInfoServiceImpl : SignInfoService {
         resignInfoDir.writeText(JsonUtil.toJson(info))
     }
 
-    override fun finishUpload(resignId: String, ipaFile: File) {
-        logger.info("[$resignId] finishUpload|ipaFile=${ipaFile.canonicalPath}")
+    override fun finishUpload(resignId: String, ipaFile: File, buildId: String?) {
+        logger.info("[$resignId] finishUpload|ipaFile=${ipaFile.canonicalPath}|buildId=$buildId")
         val infoDir = File(infoPath + File.separator + resignId)
         infoDir.mkdirs()
-        val resignInfoDir = File(infoDir.absolutePath + File.separator + "IpaFilePath.txt")
+        val resignInfoDir = File(infoDir.absolutePath + File.separator + "finishUpload.txt")
         resignInfoDir.writeText(ipaFile.absolutePath)
     }
 
-    override fun finishSign(resignId: String, resultFileMd5: String, downloadUrl: String) {
-        logger.info("[$resignId] finishSign|resultFileMd5=$resultFileMd5|downloadUrl=$downloadUrl")
+    override fun finishUnzip(resignId: String, unzipDir: File, buildId: String?) {
+        logger.info("[$resignId] finishUnzip|unzipDir=${unzipDir.canonicalPath}|buildId=$buildId")
+    }
+
+    override fun finishResign(resignId: String, buildId: String?) {
+        logger.info("[$resignId] finishResign|buildId=$buildId")
+    }
+
+    override fun finishZip(resignId: String, signedIpaFile: File, buildId: String?) {
+        val resultFileMd5 = IpaFileUtil.getMD5(signedIpaFile)
+        logger.info("[$resignId] finishZip|resultFileMd5=$resultFileMd5|signedIpaFile=$signedIpaFile|buildId=$buildId")
         val infoDir = File(infoPath + File.separator + resignId)
         infoDir.mkdirs()
-        val resignInfoDir = File(infoDir.absolutePath + File.separator + "Result.txt")
-        resignInfoDir.writeText(JsonUtil.toJson(mapOf("resultFileMd5" to resultFileMd5, "downloadUrl" to downloadUrl)))
+        val resignInfoDir = File(infoDir.absolutePath + File.separator + "finishZip.txt")
+        resignInfoDir.writeText(JsonUtil.toJson(mapOf("resultFileMd5" to resultFileMd5, "resultIpaFile" to signedIpaFile.absolutePath)))
+
+    }
+
+    override fun finishArchive(resignId: String, downloadUrl: String, buildId: String?) {
+        logger.info("[$resignId] finishArchive|downloadUrl=$downloadUrl|buildId=$buildId")
+        val infoDir = File(infoPath + File.separator + resignId)
+        infoDir.mkdirs()
+        val resignInfoDir = File(infoDir.absolutePath + File.separator + "finishArchive.txt")
+        resignInfoDir.writeText(JsonUtil.toJson(mapOf("downloadUrl" to downloadUrl)))
     }
 }

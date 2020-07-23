@@ -4,6 +4,7 @@ import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.dao.SignHistoryDao
 import com.tencent.devops.sign.dao.SignIpaInfoDao
 import com.tencent.devops.sign.service.SignInfoService
+import com.tencent.devops.sign.utils.IpaFileUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -36,17 +37,32 @@ class SignInfoServiceImpl(
         )
     }
 
-    override fun finishUpload(resignId: String, ipaFile: File) {
-        logger.info("[$resignId] finishUpload|ipaFile=${ipaFile.canonicalPath}")
+    override fun finishUpload(resignId: String, ipaFile: File, buildId: String?) {
+        logger.info("[$resignId] finishUpload|ipaFile=${ipaFile.canonicalPath}|buildId=$buildId")
         signHistoryDao.finishUpload(dslContext, resignId)
     }
 
-    override fun finishSign(resignId: String, resultFileMd5: String, downloadUrl: String) {
-        logger.info("[$resignId] finishSign|resultFileMd5=$resultFileMd5|downloadUrl=$downloadUrl")
-        signHistoryDao.finishSign(
+    override fun finishUnzip(resignId: String, unzipDir: File, buildId: String?) {
+        logger.info("[$resignId] finishUnzip|unzipDir=${unzipDir.canonicalPath}|buildId=$buildId")
+        signHistoryDao.finishUnzip(dslContext, resignId)
+    }
+
+    override fun finishResign(resignId: String, buildId: String?) {
+        logger.info("[$resignId] finishResign|buildId=$buildId")
+        signHistoryDao.finishResign(dslContext, resignId)
+    }
+
+    override fun finishZip(resignId: String, signedIpaFile: File, buildId: String?) {
+        val resultFileMd5 = IpaFileUtil.getMD5(signedIpaFile)
+        logger.info("[$resignId] finishZip|resultFileMd5=$resultFileMd5|signedIpaFile=${signedIpaFile.canonicalPath}|buildId=$buildId")
+        signHistoryDao.finishZip(dslContext, resignId, resultFileMd5)
+    }
+
+    override fun finishArchive(resignId: String, downloadUrl: String, buildId: String?) {
+        logger.info("[$resignId] finishArchive|downloadUrl=$downloadUrl|buildId=$buildId")
+        signHistoryDao.finishArchive(
             dslContext = dslContext,
             resignId = resignId,
-            resultFileMd5 = resultFileMd5,
             downloadUrl = downloadUrl
         )
     }
