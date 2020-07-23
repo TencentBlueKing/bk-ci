@@ -32,6 +32,7 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_VAR
 import com.tencent.devops.model.process.tables.records.TPipelineBuildVarRecord
 import org.jooq.DSLContext
 import org.jooq.InsertOnDuplicateSetMoreStep
+import org.jooq.Query
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -68,6 +69,24 @@ class PipelineBuildVarDao @Autowired constructor() {
             }
 
         logger.info("save the buildVariable=$name $value, result=$count")
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        buildId: String,
+        name: String,
+        value: Any,
+        valueType: String? = null
+    ): Int {
+        with(T_PIPELINE_BUILD_VAR) {
+            val baseStep = dslContext.update(this)
+            if (valueType != null) {
+                baseStep.set(VAR_TYPE, valueType)
+            }
+            return baseStep.set(VALUE, value.toString())
+                .where(BUILD_ID.eq(buildId).and(KEY.eq(name)))
+                .execute()
+        }
     }
 
     fun getVars(dslContext: DSLContext, buildId: String, key: String? = null): MutableMap<String, String> {
@@ -193,6 +212,26 @@ class PipelineBuildVarDao @Autowired constructor() {
                 }
             }
             logger.info("[$buildId]|batchSave_vars|total=${count.size}|success_count=$success")
+        }
+    }
+
+    fun batchUpdate(
+        dslContext: DSLContext,
+        buildId: String,
+        variables: List<BuildParameters>
+    ) {
+        val list = mutableListOf<Query>()
+        with(T_PIPELINE_BUILD_VAR) {
+            variables.forEach { v ->
+                val baseStep = dslContext.update(this)
+                val valueType = v.valueType
+                if (valueType != null) {
+                    baseStep.set(VAR_TYPE, valueType.name)
+                }
+                val updateStep = baseStep.set(VALUE, v.value.toString()).where(BUILD_ID.eq(buildId).and(KEY.eq(name)))
+                list.add(updateStep)
+            }
+            dslContext.batch(list).execute()
         }
     }
 
