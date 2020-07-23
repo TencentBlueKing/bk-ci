@@ -59,6 +59,7 @@ class SignInfoService(
         signHistoryDao.finishZip(dslContext, resignId, resultFileMd5)
     }
 
+<<<<<<< HEAD
     fun finishArchive(resignId: String, downloadUrl: String, buildId: String?) {
         logger.info("[$resignId] finishArchive|downloadUrl=$downloadUrl|buildId=$buildId")
         signHistoryDao.finishArchive(
@@ -67,6 +68,9 @@ class SignInfoService(
             downloadUrl = downloadUrl
         )
     }
+=======
+    fun finishArchive(resignId: String, buildId: String?)
+>>>>>>> 63ac4e6bf6... feature:新增bkci-sign服务模块 #1481
 
     fun getSignResult(resignId: String): SignResult {
         val record = signHistoryDao.getSignHistory(dslContext, resignId)
