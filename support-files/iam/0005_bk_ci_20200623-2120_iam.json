@@ -1,0 +1,35 @@
+{
+  "system_id": "bk_ci",
+  "operations": [
+    {
+      "operation": "delete_action",
+      "data":{
+        "id": "env_node_view"
+      }
+    },
+    {
+      "operation": "delete_action",
+      "data": {
+        "id": "env_node_edit"
+      }
+    },
+    {
+      "operation": "delete_action",
+      "data": {
+        "id": "env_node_create"
+      }
+    },
+    {
+      "operation": "delete_action",
+      "data": {
+        "id": "env_node_delete"
+      }
+    },
+    {
+      "operation": "delete_action",
+      "data": {
+        "id": "env_node_use"
+      }
+    }
+  ]
+}

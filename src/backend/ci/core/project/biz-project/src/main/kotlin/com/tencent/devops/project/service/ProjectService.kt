@@ -26,6 +26,7 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -78,6 +79,8 @@ interface ProjectService {
     fun listOnlyByProjectCode(projectCodes: Set<String>): List<ProjectVO>
 
     fun list(projectCodes: List<String>): List<ProjectVO>
+
+    fun list(limit: Int, offset: Int): Page<ProjectVO>
 
     fun getAllProject(): List<ProjectVO>
 
