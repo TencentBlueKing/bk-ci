@@ -42,7 +42,8 @@
             return {
                 paramList: [],
                 paramValues: {},
-                disabled: false
+                disabled: false,
+                isDisable: false
             }
         },
         computed: {
@@ -77,7 +78,14 @@
             selectedHandler (name) {
                 this.$validator.errors.remove(name)
             },
-
+            toggleDisable () {
+                this.$emit('setDisable', true)
+                this.isDisable = true
+                setTimeout(() => {
+                    this.isDisable = false
+                    this.$emit('setDisable', false)
+                }, 2000)
+            },
             handleParamChange (name, value) {
                 this.paramValues[name] = value
             },
@@ -85,6 +93,7 @@
              * 切换状态
              */
             async toggleStatus () {
+                if (this.isDisable) return
                 if (this.disabled || this.status === 'running' || !this.canManualStartup) return
                 this.setExecuteStatus(true)
                 this.disabled = true
@@ -97,7 +106,7 @@
                         return
                     }
                 }
-
+                this.toggleDisable()
                 this.$emit('click-event')
                 try {
                     if (this.pipelineId && this.projectId) {

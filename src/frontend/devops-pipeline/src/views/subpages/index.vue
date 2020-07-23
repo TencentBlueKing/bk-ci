@@ -37,9 +37,10 @@
                     :status="pipelineStatus"
                     :can-manual-startup="canManualStartup"
                     :before-exec="isSaveAndRun ? save : undefined"
-                    @exec="toExecute">
+                    @exec="toExecute"
+                    @setDisable="getDisable">
                     <section slot="exec-bar" slot-scope="triggerProps">
-                        <bk-button v-if="pipelineStatus !== 'running'" theme="primary" :disabled="btnDisabled || !canManualStartup || triggerProps.isDisable" :icon="executeStatus || triggerProps.isDisable ? 'loading' : ''" :title="canManualStartup ? '' : '不支持手动启动流水线'">
+                        <bk-button v-if="pipelineStatus !== 'running'" theme="primary" :disabled="btnDisabled || !canManualStartup || triggerProps.isDisable || isDisable" :icon="executeStatus || triggerProps.isDisable ? 'loading' : ''" :title="canManualStartup ? '' : '不支持手动启动流水线'">
                             {{ isSaveAndRun ? $t('subpage.saveAndExec') : $t('exec') }}
                         </bk-button>
                     </section>
@@ -110,6 +111,7 @@
                 isLoading: false,
                 hasNoPermission: false,
                 isDialogShow: false,
+                isDisable: false,
                 dialogConfig: {
                     title: '',
                     loading: false,
@@ -253,6 +255,9 @@
                 'requestPipelineExecDetailByBuildNum',
                 'togglePropertyPanel'
             ]),
+            getDisable (value) {
+                this.isDisable = value
+            },
             handleSelected (pipelineId, cur) {
                 const { projectId, $route } = this
 
