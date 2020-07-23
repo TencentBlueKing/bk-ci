@@ -181,7 +181,8 @@ class PipelineDockerIPInfoDao {
         memLoad: Int,
         diskLoad: Int,
         diskIOLoad: Int,
-        specialIpSet: Set<String> = setOf()
+        specialIpSet: Set<String> = setOf(),
+        clusterId: String? = null
     ): Result<TDispatchPipelineDockerIpInfoRecord> {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             val conditions =
@@ -194,7 +195,9 @@ class PipelineDockerIPInfoDao {
                 // 没有配置专机，则过滤开启了专机独享的ip
                 conditions.add(SPECIAL_ON.eq(false))
             }
-
+            if (!clusterId.isNullOrBlank()) {
+                conditions.add(CLUSTER_ID.eq(clusterId))
+            }
             conditions.add(CPU_LOAD.lessOrEqual(cpuLoad))
             conditions.add(MEM_LOAD.lessOrEqual(memLoad))
             conditions.add(DISK_LOAD.lessOrEqual(diskLoad))

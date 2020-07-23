@@ -271,7 +271,7 @@ class DockerHostClient @Autowired constructor(
                     val retryTimeLocal = retryTime + 1
                     // 当前IP不可用，保险起见将当前ip可用性置为false，并重新获取可用ip
                     pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, dockerIp, false)
-                    val dockerIpLocalPair = dockerHostUtils.getAvailableDockerIp(event.projectId, event.pipelineId, event.vmSeqId, unAvailableIpListLocal)
+                    val dockerIpLocalPair = dockerHostUtils.getAvailableDockerIp(event.projectId, event.pipelineId, event.vmSeqId, unAvailableIpListLocal, event.dockerDevClusterId)
                     dockerBuildStart(dockerIpLocalPair.first, dockerIpLocalPair.second, requestBody, event, driftIpInfo, retryTimeLocal, unAvailableIpListLocal)
                 } else {
                     logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, retry $retryTime times. message: ${resp.message()}")

@@ -79,7 +79,14 @@ class DockerHostUtils @Autowired constructor(
     @Value("\${devopsGateway.idcProxy}")
     val idcProxy: String? = null
 
-    fun getAvailableDockerIpWithSpecialIps(projectId: String, pipelineId: String, vmSeqId: String, specialIpSet: Set<String>, unAvailableIpList: Set<String> = setOf()): Pair<String, Int> {
+    fun getAvailableDockerIpWithSpecialIps(
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        specialIpSet: Set<String>,
+        unAvailableIpList: Set<String> = setOf(),
+        clusterId: String
+    ): Pair<String, Int> {
         val grayEnv = gray.isGray()
 
         // 获取负载配置
@@ -90,31 +97,33 @@ class DockerHostUtils @Autowired constructor(
         val lastHostIp = redisUtils.getDockerBuildLastHost(pipelineId, vmSeqId)
         // 清除旧关系
         redisUtils.deleteDockerBuildLastHost(pipelineId, vmSeqId)
-        if (lastHostIp != null && lastHostIp.isNotEmpty()) {
-            val lastHostIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, lastHostIp)
-            if (lastHostIpInfo != null && specialIpSet.isNotEmpty() && specialIpSet.contains(lastHostIp)) {
-                logger.info("$projectId|$pipelineId|$vmSeqId lastHostIp: $lastHostIp in specialIpSet: $specialIpSet, choose the lastHostIpInfo as availableDockerIp.")
-                return Pair(lastHostIp, lastHostIpInfo.dockerHostPort)
-            }
+        run last@{
+            if (lastHostIp != null && lastHostIp.isNotEmpty()) {
+                val lastHostIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, lastHostIp)
+                if (lastHostIpInfo?.clusterId != clusterId) return@last
+                if (specialIpSet.isNotEmpty() && specialIpSet.contains(lastHostIp)) {
+                    logger.info("$projectId|$pipelineId|$vmSeqId lastHostIp: $lastHostIp in specialIpSet: $specialIpSet, choose the lastHostIpInfo as availableDockerIp.")
+                    return Pair(lastHostIp, lastHostIpInfo.dockerHostPort)
+                }
 
-            if (lastHostIpInfo != null &&
-                specialIpSet.isEmpty() &&
-                lastHostIpInfo.enable &&
-                lastHostIpInfo.diskLoad < dockerHostLoadConfigTriple.second.diskLoadThreshold &&
-                lastHostIpInfo.memLoad < dockerHostLoadConfigTriple.second.memLoadThreshold &&
-                lastHostIpInfo.cpuLoad < dockerHostLoadConfigTriple.second.cpuLoadThreshold
-            ) {
-                logger.info("$projectId|$pipelineId|$vmSeqId lastHostIp: $lastHostIp load enable, lastHostIpInfo:$lastHostIpInfo. specialIpSet is empty, choose the lastHostIpInfo as availableDockerIp.")
-                return Pair(lastHostIp, lastHostIpInfo.dockerHostPort)
+                if (specialIpSet.isEmpty() &&
+                    lastHostIpInfo.enable &&
+                    lastHostIpInfo.diskLoad < dockerHostLoadConfigTriple.second.diskLoadThreshold &&
+                    lastHostIpInfo.memLoad < dockerHostLoadConfigTriple.second.memLoadThreshold &&
+                    lastHostIpInfo.cpuLoad < dockerHostLoadConfigTriple.second.cpuLoadThreshold
+                ) {
+                    logger.info("$projectId|$pipelineId|$vmSeqId lastHostIp: $lastHostIp load enable, lastHostIpInfo:$lastHostIpInfo. specialIpSet is empty, choose the lastHostIpInfo as availableDockerIp.")
+                    return Pair(lastHostIp, lastHostIpInfo.dockerHostPort)
+                }
             }
         }
 
         // 先取容量负载比较小的，同时满足负载条件的（负载阈值具体由OP平台配置)，从满足的节点中随机选择一个
-        val firstPair = dockerLoadCheck(dockerHostLoadConfigTriple.first, grayEnv, specialIpSet, unAvailableIpList)
+        val firstPair = dockerLoadCheck(dockerHostLoadConfigTriple.first, grayEnv, specialIpSet, unAvailableIpList, clusterId)
         val dockerPair = if (firstPair.first.isEmpty()) {
-            val secondPair = dockerLoadCheck(dockerHostLoadConfigTriple.second, grayEnv, specialIpSet, unAvailableIpList)
+            val secondPair = dockerLoadCheck(dockerHostLoadConfigTriple.second, grayEnv, specialIpSet, unAvailableIpList, clusterId)
             if (secondPair.first.isEmpty()) {
-                dockerLoadCheck(dockerHostLoadConfigTriple.third, grayEnv, specialIpSet, unAvailableIpList)
+                dockerLoadCheck(dockerHostLoadConfigTriple.third, grayEnv, specialIpSet, unAvailableIpList, clusterId)
             } else {
                 secondPair
             }
@@ -132,11 +141,11 @@ class DockerHostUtils @Autowired constructor(
         return dockerPair
     }
 
-    fun getAvailableDockerIp(projectId: String, pipelineId: String, vmSeqId: String, unAvailableIpList: Set<String>): Pair<String, Int> {
+    fun getAvailableDockerIp(projectId: String, pipelineId: String, vmSeqId: String, unAvailableIpList: Set<String>, clusterId: String): Pair<String, Int> {
         // 先判断是否OP已配置专机，若配置了专机，从专机列表中选择一个容量最小的
         val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, projectId).toSet()
         logger.info("getAvailableDockerIp projectId: $projectId | specialIpSet: $specialIpSet")
-        return getAvailableDockerIpWithSpecialIps(projectId, pipelineId, vmSeqId, specialIpSet, unAvailableIpList)
+        return getAvailableDockerIpWithSpecialIps(projectId, pipelineId, vmSeqId, specialIpSet, unAvailableIpList, clusterId)
     }
 
     fun getIdlePoolNo(
@@ -234,10 +243,11 @@ class DockerHostUtils @Autowired constructor(
             (dockerIpInfo.grayEnv != gray.isGray()) ||
             (dockerIpInfo.usedNum > 40 && dockerIpInfo.memLoad > 60)) {
             val pair = getAvailableDockerIpWithSpecialIps(
-                event.projectId,
-                event.pipelineId,
-                event.vmSeqId,
-                specialIpSet
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                vmSeqId = event.vmSeqId,
+                specialIpSet = specialIpSet,
+                clusterId = event.dockerDevClusterId
             )
             return Triple(pair.first, pair.second, "")
         }
@@ -246,7 +256,14 @@ class DockerHostUtils @Autowired constructor(
         val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}$dockerIp")
         logger.info("${event.projectId}|${event.pipelineId}|${event.vmSeqId} $dockerIp dockerIpCount: $dockerIpCount")
         return if (dockerIpCount != null && dockerIpCount.toInt() > DOCKER_IP_COUNT_MAX) {
-            val pair = getAvailableDockerIpWithSpecialIps(event.projectId, event.pipelineId, event.vmSeqId, specialIpSet, setOf(dockerIp))
+            val pair = getAvailableDockerIpWithSpecialIps(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                vmSeqId = event.vmSeqId,
+                specialIpSet = specialIpSet,
+                unAvailableIpList = setOf(dockerIp),
+                clusterId = event.dockerDevClusterId
+            )
             Triple(pair.first, pair.second, "IP限流漂移")
         } else {
             Triple(dockerIp, dockerIpInfo.dockerHostPort, "")
@@ -322,7 +339,13 @@ class DockerHostUtils @Autowired constructor(
         )
     }
 
-    private fun dockerLoadCheck(dockerHostLoadConfig: DockerHostLoadConfig, grayEnv: Boolean, specialIpSet: Set<String>, unAvailableIpList: Set<String>): Pair<String, Int> {
+    private fun dockerLoadCheck(
+        dockerHostLoadConfig: DockerHostLoadConfig,
+        grayEnv: Boolean,
+        specialIpSet: Set<String>,
+        unAvailableIpList: Set<String>,
+        clusterId: String
+    ): Pair<String, Int> {
         val dockerIpList =
             pipelineDockerIpInfoDao.getAvailableDockerIpList(
                 dslContext = dslContext,
@@ -331,7 +354,8 @@ class DockerHostUtils @Autowired constructor(
                 memLoad = dockerHostLoadConfig.memLoadThreshold,
                 diskLoad = dockerHostLoadConfig.diskLoadThreshold,
                 diskIOLoad = dockerHostLoadConfig.diskIOLoadThreshold,
-                specialIpSet = specialIpSet
+                specialIpSet = specialIpSet,
+                clusterId = clusterId
             )
 
         return if (dockerIpList.isNotEmpty) {
