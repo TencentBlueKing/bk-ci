@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.api.pojo.SignResult
 import com.tencent.devops.sign.impl.SignServiceImpl
 import com.tencent.devops.sign.utils.IpaFileUtil
 import com.tencent.devops.sign.utils.SignUtils.DEFAULT_CER_ID
@@ -25,6 +26,8 @@ interface SignInfoService {
     fun finishZip(resignId: String, signedIpaFile: File, buildId: String?)
 
     fun finishArchive(resignId: String, downloadUrl: String, buildId: String?)
+
+    fun getSignResult(resignId: String): SignResult
 
     /*
     * 检查IpaSignInfo信息，并补齐默认值，如果返回null则表示IpaSignInfo的值不合法

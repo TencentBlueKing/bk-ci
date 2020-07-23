@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.api.pojo.SignResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -37,13 +38,7 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
 import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.HeaderParam
+import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Context
 
@@ -66,7 +61,20 @@ interface ServiceIpaResource {
             ipaSignInfoHeader: String,
             @ApiParam("ipa包文件", required = true)
             ipaInputStream: InputStream
-    ): Result<String?>
+    ): Result<String>
+
+    @ApiOperation("ipa包签名状态")
+    @POST
+    @Path("/sign/{resignId}/status")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
+    fun getSignResult(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("resignId")
+        resignId: String
+    ): Result<SignResult>
 
     @ApiOperation("下载文件")
     @GET

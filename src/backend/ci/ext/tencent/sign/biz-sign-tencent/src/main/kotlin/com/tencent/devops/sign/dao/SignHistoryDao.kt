@@ -27,6 +27,7 @@
 package com.tencent.devops.sign.dao
 
 import com.tencent.devops.model.sign.tables.TSignHistory
+import com.tencent.devops.model.sign.tables.records.TSignHistoryRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -139,6 +140,16 @@ class SignHistoryDao {
                 .set(DOWNLOAD_URL, downloadUrl)
                 .set(ARCHIVE_FINISH_TIME, LocalDateTime.now())
                 .where(RESIGN_ID.eq(resignId))
+        }
+    }
+
+    fun getSignHistory(dslContext: DSLContext, resignId: String): TSignHistoryRecord? {
+        return with(TSignHistory.T_SIGN_HISTORY) {
+            val select = dslContext.selectFrom(this)
+                .where(
+                    RESIGN_ID.eq(resignId)
+                )
+            select.fetchAny()
         }
     }
 }

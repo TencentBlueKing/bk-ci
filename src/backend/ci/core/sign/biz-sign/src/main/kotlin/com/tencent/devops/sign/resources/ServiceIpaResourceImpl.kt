@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.api.pojo.SignResult
 import com.tencent.devops.sign.api.service.ServiceIpaResource
 import com.tencent.devops.sign.api.user.UserIpaResource
 import com.tencent.devops.sign.service.ArchiveService
@@ -58,8 +59,12 @@ class ServiceIpaResourceImpl @Autowired constructor(
             userId: String,
             ipaSignInfoHeader: String,
             ipaInputStream: InputStream
-    ): Result<String?> {
+    ): Result<String> {
         return Result(signService.signIpaAndArchive(userId, ipaSignInfoHeader, ipaInputStream))
+    }
+
+    override fun getSignResult(userId: String, resignId: String): Result<SignResult> {
+        return Result(signService.getSignResult(userId, resignId))
     }
 
     override fun downloadIpa(userId: String, filePath: String, response: HttpServletResponse) {
