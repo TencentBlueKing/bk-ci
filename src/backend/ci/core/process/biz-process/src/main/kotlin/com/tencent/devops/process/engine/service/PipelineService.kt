@@ -1831,7 +1831,8 @@ class PipelineService @Autowired constructor(
         val offset = slqLimit?.offset ?: 0
         val limit = slqLimit?.limit ?: -1
         // 数据量不多，直接全拉
-        val pipelines = pipelineRepositoryService.listDeletePipelineIdByProject(projectId, deletedPipelineStoreDays.toLong())
+        val pipelines =
+            pipelineRepositoryService.listDeletePipelineIdByProject(projectId, deletedPipelineStoreDays.toLong())
         val list: List<PipelineInfo> = when {
             offset >= pipelines.size -> emptyList()
             limit < 0 -> pipelines.subList(offset, pipelines.size)
@@ -1897,12 +1898,13 @@ class PipelineService @Autowired constructor(
         var offset = pageSize
         // 最多一次拉取50条数据, 后续可以改为配置
         if (pageSize!! > 50) {
-           offset = 50
+            offset = 50
         }
         val pageNotNull = page ?: 1
         val pageSizeNotNull = offset ?: 20
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val pipelineRecords = pipelineInfoDao.listPipelineInfoByProject(dslContext, projectId, sqlLimit.limit, sqlLimit.offset)
+        val pipelineRecords =
+            pipelineInfoDao.listPipelineInfoByProject(dslContext, projectId, sqlLimit.limit, sqlLimit.offset)
         val pipelineInfos = mutableListOf<PipelineInfo>()
         pipelineRecords?.map {
             pipelineInfoDao.convert(it, null)?.let { it1 -> pipelineInfos.add(it1) }
