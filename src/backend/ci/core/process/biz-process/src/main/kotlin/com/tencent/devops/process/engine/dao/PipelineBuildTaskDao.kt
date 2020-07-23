@@ -39,6 +39,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.DSLContext
 import org.jooq.InsertSetMoreStep
+import org.jooq.Query
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -136,6 +137,42 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         .set(ERROR_CODE, it.errorCode)
                         .set(ERROR_MSG, CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX))
                         .set(CONTAINER_HASH_ID, it.containerHashId)
+                )
+            }
+            dslContext.batch(records).execute()
+        }
+    }
+
+    fun batchUpdate(dslContext: DSLContext, taskList: List<TPipelineBuildTaskRecord>) {
+        val records = mutableListOf<Query>()
+        with(T_PIPELINE_BUILD_TASK) {
+            taskList.forEach {
+                records.add(
+                    dslContext.update(this)
+                        .set(PROJECT_ID, it.projectId)
+                        .set(PIPELINE_ID, it.pipelineId)
+                        .set(STAGE_ID, it.stageId)
+                        .set(CONTAINER_ID, it.containerId)
+                        .set(TASK_NAME, it.taskName)
+                        .set(TASK_PARAMS, it.taskParams)
+                        .set(TASK_TYPE, it.taskType)
+                        .set(TASK_ATOM, it.taskAtom)
+                        .set(START_TIME, it.startTime)
+                        .set(END_TIME, it.endTime)
+                        .set(STARTER, it.starter)
+                        .set(APPROVER, it.approver)
+                        .set(STATUS, it.status)
+                        .set(EXECUTE_COUNT, it.executeCount)
+                        .set(TASK_SEQ, it.taskSeq)
+                        .set(SUB_BUILD_ID, it.subBuildId)
+                        .set(CONTAINER_TYPE, it.containerType)
+                        .set(ADDITIONAL_OPTIONS, it.additionalOptions)
+                        .set(TOTAL_TIME, it.totalTime)
+                        .set(ERROR_TYPE, it.errorType)
+                        .set(ERROR_CODE, it.errorCode)
+                        .set(ERROR_MSG, it.errorMsg)
+                        .set(CONTAINER_HASH_ID, it.containerHashId)
+                        .where(BUILD_ID.eq(it.buildId).and(TASK_ID.eq(it.taskId)))
                 )
             }
             dslContext.batch(records).execute()
