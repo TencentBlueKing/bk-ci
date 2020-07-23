@@ -43,9 +43,8 @@ class SignInfoServiceImpl : SignInfoService {
         getfinishZipFile(resignId).writeText(resultFileMd5)
     }
 
-    override fun finishArchive(resignId: String, downloadUrl: String, buildId: String?) {
-        logger.info("[$resignId] finishArchive|downloadUrl=$downloadUrl|buildId=$buildId")
-        getfinishArchiveFile(resignId).writeText(downloadUrl)
+    override fun finishArchive(resignId: String, buildId: String?) {
+        logger.info("[$resignId] finishArchive|buildId=$buildId")
     }
 
     override fun getSignResult(resignId: String): SignResult {

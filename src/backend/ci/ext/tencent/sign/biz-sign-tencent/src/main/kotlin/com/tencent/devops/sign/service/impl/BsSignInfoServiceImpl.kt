@@ -59,12 +59,11 @@ class BsSignInfoServiceImpl(
         signHistoryDao.finishZip(dslContext, resignId, resultFileMd5)
     }
 
-    override fun finishArchive(resignId: String, downloadUrl: String, buildId: String?) {
-        logger.info("[$resignId] finishArchive|downloadUrl=$downloadUrl|buildId=$buildId")
+    override fun finishArchive(resignId: String, buildId: String?) {
+        logger.info("[$resignId] finishArchive|buildId=$buildId")
         signHistoryDao.finishArchive(
             dslContext = dslContext,
-            resignId = resignId,
-            downloadUrl = downloadUrl
+            resignId = resignId
         )
     }
 

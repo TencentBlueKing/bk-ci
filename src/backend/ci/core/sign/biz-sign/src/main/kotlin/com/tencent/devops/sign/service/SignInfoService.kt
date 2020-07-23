@@ -25,7 +25,7 @@ interface SignInfoService {
 
     fun finishZip(resignId: String, signedIpaFile: File, buildId: String?)
 
-    fun finishArchive(resignId: String, downloadUrl: String, buildId: String?)
+    fun finishArchive(resignId: String, buildId: String?)
 
     fun getSignResult(resignId: String): SignResult
 

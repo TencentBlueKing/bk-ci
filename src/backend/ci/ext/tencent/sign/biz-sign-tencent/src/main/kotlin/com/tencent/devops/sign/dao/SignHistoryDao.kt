@@ -131,13 +131,10 @@ class SignHistoryDao {
 
     fun finishArchive(
         dslContext: DSLContext,
-        resignId: String,
-        downloadUrl: String
+        resignId: String
     ) {
         with(TSignHistory.T_SIGN_HISTORY) {
             dslContext.update(this)
-
-                .set(DOWNLOAD_URL, downloadUrl)
                 .set(ARCHIVE_FINISH_TIME, LocalDateTime.now())
                 .where(RESIGN_ID.eq(resignId))
         }

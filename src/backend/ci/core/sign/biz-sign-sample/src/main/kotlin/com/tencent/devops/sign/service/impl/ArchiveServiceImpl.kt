@@ -31,7 +31,7 @@ class ArchiveServiceImpl @Autowired constructor(
     override fun archive(
             signedIpaFile: File,
             ipaSignInfo: IpaSignInfo,
-            properties: Map<String, String>? = null
+            properties: Map<String, String>?
     ): Boolean {
         logger.info("uploadFile, userId: ${ipaSignInfo.userId}, projectId: ${ipaSignInfo.projectId},archiveType: ${ipaSignInfo.archiveType}, archivePath: ${ipaSignInfo.archivePath}")
         val artifactoryType = when (ipaSignInfo.archiveType.toLowerCase()) {

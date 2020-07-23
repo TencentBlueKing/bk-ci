@@ -99,12 +99,12 @@ class SignServiceImpl @Autowired constructor(
         signInfoService.finishZip(resignId, signedIpaFile, ipaSignInfo.buildId)
 
         // 归档ipa包
-        val fileDownloadUrl = archiveService.archive(signedIpaFile, ipaSignInfo)
-        if (fileDownloadUrl == null) {
+        val archiveResult = archiveService.archive(signedIpaFile, ipaSignInfo)
+        if (!archiveResult) {
             logger.error("[$resignId]|[${ipaSignInfo.buildId}] archive signed ipa failed.")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA, defaultMessage = "归档IPA包失败")
         }
-        signInfoService.finishArchive(resignId, fileDownloadUrl, ipaSignInfo.buildId)
+        signInfoService.finishArchive(resignId, ipaSignInfo.buildId)
         return resignId
     }
 
