@@ -8,6 +8,7 @@ import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
+import com.tencent.devops.sign.api.pojo.SignResult
 import com.tencent.devops.sign.resources.UserIpaResourceImpl
 import com.tencent.devops.sign.service.ArchiveService
 import com.tencent.devops.sign.service.FileService
@@ -45,7 +46,7 @@ class SignServiceImpl @Autowired constructor(
         userId: String,
         ipaSignInfoHeader: String,
         ipaInputStream: InputStream
-    ): String? {
+    ): String {
         val resignId = "s-${UUIDUtil.generate()}"
         var ipaSignInfo = signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper)
         signInfoService.save(resignId, ipaSignInfoHeader, ipaSignInfo)
@@ -104,7 +105,12 @@ class SignServiceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA, defaultMessage = "归档IPA包失败")
         }
         signInfoService.finishArchive(resignId, fileDownloadUrl, ipaSignInfo.buildId)
-        return fileDownloadUrl
+        return resignId
+    }
+
+    override fun getSignResult(userId: String, resignId: String): SignResult {
+        // TODO 权限访问控制
+        return signInfoService.getSignResult(resignId)
     }
 
     override fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): Map<String, MobileProvisionInfo> {

@@ -1,6 +1,7 @@
 package com.tencent.devops.sign.service.impl
 
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.api.pojo.SignResult
 import com.tencent.devops.sign.dao.SignHistoryDao
 import com.tencent.devops.sign.dao.SignIpaInfoDao
 import com.tencent.devops.sign.service.SignInfoService
@@ -64,6 +65,19 @@ class SignInfoServiceImpl(
             dslContext = dslContext,
             resignId = resignId,
             downloadUrl = downloadUrl
+        )
+    }
+
+    override fun getSignResult(resignId: String): SignResult {
+        val record = signHistoryDao.getSignHistory(dslContext, resignId)
+         return if (record?.archiveFinishTime != null) SignResult(
+            resignId = record.resignId,
+            finished = true,
+            fileDownloadUrl = record.downloadUrl
+        ) else SignResult(
+            resignId = resignId,
+            finished = false,
+            fileDownloadUrl = null
         )
     }
 }
