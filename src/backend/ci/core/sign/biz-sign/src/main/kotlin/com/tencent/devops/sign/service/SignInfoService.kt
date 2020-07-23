@@ -6,28 +6,79 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.SignResult
+import com.tencent.devops.sign.dao.SignHistoryDao
+import com.tencent.devops.sign.dao.SignIpaInfoDao
 import com.tencent.devops.sign.impl.SignServiceImpl
 import com.tencent.devops.sign.utils.IpaFileUtil
 import com.tencent.devops.sign.utils.SignUtils.DEFAULT_CER_ID
 import org.jolokia.util.Base64Util
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import java.io.File
 
-interface SignInfoService {
+class SignInfoService(
+    private val dslContext: DSLContext,
+    private val signIpaInfoDao: SignIpaInfoDao,
+    private val signHistoryDao: SignHistoryDao
+){
 
-    fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo)
+    fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo) {
+        logger.info("[$resignId] save ipaSignInfo|header=$ipaSignInfoHeader|info=$info")
+        signIpaInfoDao.saveSignInfo(dslContext, resignId, ipaSignInfoHeader, info)
+        signHistoryDao.initHistory(
+            dslContext = dslContext,
+            resignId = resignId,
+            userId = info.userId,
+            projectId = info.projectId,
+            pipelineId = info.projectId,
+            buildId = info.buildId,
+            archiveType = info.archiveType,
+            archivePath = info.archivePath,
+            md5 = info.md5
+        )
+    }
 
-    fun finishUpload(resignId: String, ipaFile: File, buildId: String?)
+    fun finishUpload(resignId: String, ipaFile: File, buildId: String?) {
+        logger.info("[$resignId] finishUpload|ipaFile=${ipaFile.canonicalPath}|buildId=$buildId")
+        signHistoryDao.finishUpload(dslContext, resignId)
+    }
 
-    fun finishUnzip(resignId: String, unzipDir: File, buildId: String?)
+    fun finishUnzip(resignId: String, unzipDir: File, buildId: String?) {
+        logger.info("[$resignId] finishUnzip|unzipDir=${unzipDir.canonicalPath}|buildId=$buildId")
+        signHistoryDao.finishUnzip(dslContext, resignId)
+    }
 
-    fun finishResign(resignId: String, buildId: String?)
+     fun finishResign(resignId: String, buildId: String?) {
+        logger.info("[$resignId] finishResign|buildId=$buildId")
+        signHistoryDao.finishResign(dslContext, resignId)
+    }
 
-    fun finishZip(resignId: String, signedIpaFile: File, buildId: String?)
+    fun finishZip(resignId: String, signedIpaFile: File, buildId: String?) {
+        val resultFileMd5 = IpaFileUtil.getMD5(signedIpaFile)
+        logger.info("[$resignId] finishZip|resultFileMd5=$resultFileMd5|signedIpaFile=${signedIpaFile.canonicalPath}|buildId=$buildId")
+        signHistoryDao.finishZip(dslContext, resignId, resultFileMd5)
+    }
 
-    fun finishArchive(resignId: String, buildId: String?)
+    fun finishArchive(resignId: String, buildId: String?) {
+        logger.info("[$resignId] finishArchive|buildId=$buildId")
+        signHistoryDao.finishArchive(
+            dslContext = dslContext,
+            resignId = resignId
+        )
+    }
 
-    fun getSignResult(resignId: String): SignResult
+    fun getSignResult(resignId: String): SignResult {
+        val record = signHistoryDao.getSignHistory(dslContext, resignId)
+        return if (record?.archiveFinishTime != null) SignResult(
+            resignId = record.resignId,
+            finished = true,
+            fileDownloadUrl = record.downloadUrl
+        ) else SignResult(
+            resignId = resignId,
+            finished = false,
+            fileDownloadUrl = null
+        )
+    }
 
     /*
     * 检查IpaSignInfo信息，并补齐默认值，如果返回null则表示IpaSignInfo的值不合法
