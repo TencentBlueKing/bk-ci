@@ -71,18 +71,6 @@ class BuildVariableService @Autowired constructor(
             name = realVarName,
             value = varValue
         )
-        val moveVarDataBakSwitch = redisOperation.get("moveVarDataBakSwitch")
-        // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
-        if (moveVarDataBakSwitch == "true") {
-            pipelineBuildVarDao.saveBakVar(
-                dslContext = commonDslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                name = realVarName,
-                value = varValue
-            )
-        }
     }
 
     fun batchSetVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) =
