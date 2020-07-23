@@ -85,7 +85,7 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         val instanceDTO = InstanceDTO()
         instanceDTO.system = serviceCode.id()
         // 若不关注操作资源实例，则必须关注是否在项目下
-        if(resourceCode == "*") {
+        if (resourceCode == "*") {
             instanceDTO.id = projectCode
             instanceDTO.type = AuthResourceType.PROJECT.value
         } else {
@@ -99,7 +99,7 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
             instanceDTO.path = path
         }
         // 有可能出现提供的resourceCode是关联项目资源的code,需将type类型调整为对应的关联资源。
-        if(relationResourceType != null) {
+        if (relationResourceType != null) {
             instanceDTO.type = relationResourceType!!.value
         }
 
@@ -122,22 +122,22 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         actionDto.id = actionType
         val expression = (policyService.getPolicyByAction(user, actionDto, null) ?: return emptyList()) ?: return emptyList()
 
-        if(expression.operator == null && expression.content == null) {
+        if (expression.operator == null && expression.content == null) {
             return emptyList()
         }
 
         // 管理员权限
-        if(expression.operator == ExpressionOperationEnum.ANY) {
+        if (expression.operator == ExpressionOperationEnum.ANY) {
             return listOf("*")
         }
 
         logger.info("getUserResourceByPermission expression:$expression")
-        return if(resourceType == AuthResourceType.PROJECT) {
+        return if (resourceType == AuthResourceType.PROJECT) {
             AuthUtils.getProjects(expression)
         } else {
             val instancesList = AuthUtils.getResourceInstance(expression, projectCode, resourceType)
             logger.info("getUserResourceByPermission getInstance project[$projectCode], type[${resourceType.value}], instances[$instancesList]")
-            if(!instancesList.contains("*")) {
+            if (!instancesList.contains("*")) {
                 instancesList.toList()
             } else {
                 listOf("*")
@@ -193,7 +193,7 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         return permissionMap
     }
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
 }
