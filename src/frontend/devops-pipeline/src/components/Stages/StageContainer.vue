@@ -9,7 +9,7 @@
         </template>
 
         <h3 :class="{ 'container-title': true, 'first-ctitle': containerIndex === 0, [container.status]: container.status }" @click.stop="showContainerPanel">
-            <status-icon type="container" :editable="editable" :container-disabled="containerDisabled" :status="container.status">
+            <status-icon type="container" :editable="editable" :container-disabled="containerDisabled" :status="container.status" :depend-on-value="dependOnValue">
                 {{ containerSerialNum }}
             </status-icon>
             <p class="container-name">
@@ -111,6 +111,18 @@
             },
             containerDisabled () {
                 return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false) || this.stageDisabled
+            },
+            dependOnValue () {
+                if (this.container.status !== 'DEPENDENT_WAITING') return ''
+                let val = ''
+                if (this.container.jobControlOption && this.container.jobControlOption.dependOnType) {
+                    if (this.container.jobControlOption.dependOnType === 'ID') {
+                        val = this.container.jobControlOption.dependOnId || []
+                    } else {
+                        val = this.container.jobControlOption.dependOnName || ''
+                    }
+                }
+                return `${this.$t('storeMap.dependOn')} 【${val}】`
             }
         },
         watch: {
