@@ -63,7 +63,7 @@ interface AuthPermissionApi {
         projectCode: String,
         resourceCode: String,
         permission: AuthPermission,
-        relationResourceType : AuthResourceType? = null
+        relationResourceType: AuthResourceType? = null
     ): Boolean
 
     /**

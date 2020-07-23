@@ -14,7 +14,7 @@ class AuthGroupDao {
     fun createGroup(dslContext: DSLContext, groupCreateInfo: GroupCreateInfo): String {
         val id = UUIDUtil.generate()
         with(TAuthGroup.T_AUTH_GROUP) {
-           dslContext.insertInto(
+            dslContext.insertInto(
                 TAuthGroup.T_AUTH_GROUP,
                 ID,
                 GROUP_NAME,
@@ -25,15 +25,15 @@ class AuthGroupDao {
                 UPDATE_USER,
                 UPDATE_TIME
             ).values(
-               id.toString(),
-               groupCreateInfo.groupName,
-               groupCreateInfo.groupCode,
-               groupCreateInfo.projectCode,
-               groupCreateInfo.user,
-               LocalDateTime.now(),
-               null,
-               null
-           ).execute()
+                id.toString(),
+                groupCreateInfo.groupName,
+                groupCreateInfo.groupCode,
+                groupCreateInfo.projectCode,
+                groupCreateInfo.user,
+                LocalDateTime.now(),
+                null,
+                null
+            ).execute()
         }
         return id.toString()
     }

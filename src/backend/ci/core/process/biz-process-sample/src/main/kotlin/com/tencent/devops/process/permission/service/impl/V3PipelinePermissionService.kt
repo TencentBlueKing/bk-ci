@@ -89,7 +89,7 @@ class V3PipelinePermissionService constructor(
 
     override fun getResourceByPermission(userId: String, projectId: String, permission: AuthPermission): List<String> {
         val instances = super.getResourceByPermission(userId, projectId, permission)
-        if(instances.contains("*")) {
+        if (instances.contains("*")) {
             logger.info("getResourceByPermission pipelineImpl user[$userId] projectId[$projectId], instances[$instances]")
             val pipelineIds = mutableListOf<String>()
             val pipelineInfos = pipelineInfoDao.listPipelineInfoByProject(dslContext, projectId)
