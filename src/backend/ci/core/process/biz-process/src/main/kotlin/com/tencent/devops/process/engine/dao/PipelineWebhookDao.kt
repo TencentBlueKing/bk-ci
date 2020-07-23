@@ -139,17 +139,19 @@ class PipelineWebhookDao {
     }
 
     fun convert(it: TPipelineWebhookRecord): PipelineWebhook {
-        return PipelineWebhook(
-            it.projectId,
-            it.pipelineId,
-            ScmType.valueOf(it.repositoryType),
-            convertRepoType(it.repoType),
-            it.repoHashId,
-            it.repoName,
-            it.id,
-            it.projectName,
-            it.taskId
-        )
+        return with(it) {
+            PipelineWebhook(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                repositoryType = ScmType.valueOf(repositoryType),
+                repoType = convertRepoType(repoType),
+                repoHashId = repoHashId,
+                repoName = repoName,
+                id = id,
+                projectName = projectName,
+                taskId = taskId
+            )
+        }
     }
 
     fun getByProjectNameAndType(
