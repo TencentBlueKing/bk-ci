@@ -23,22 +23,8 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-dependencies {
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-api")
-    compile project(":core:dockerhost:api-dockerhost")
-    compile project(":core:dispatch:api-dispatch-docker")
-    compile project(":core:process:api-process")
-    compile project(":core:store:api-store-image")
-    compile group: 'com.github.docker-java', name: 'docker-java', version: '3.2.5'
-    compile group: 'com.github.docker-java', name: 'docker-java-transport-okhttp', version: '3.2.5'
-    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.2'
-    compile group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.25.1'
-    compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet', version: '2.25.1'
-    compile group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.25.1'
-    compile group: 'org.glassfish.jersey.core', name: 'jersey-common', version: '2.25.1'
-    compile "org.slf4j:slf4j-api"
-    compile "org.fusesource:sigar"
-    compile ("com.squareup.okhttp3:okhttp:3.14.4")
+package com.tencent.devops.dockerhost.common
+
+object Constants {
+    const val DOCKER_EXIST_CODE = 255 // docker容器状态异常退出码
 }
