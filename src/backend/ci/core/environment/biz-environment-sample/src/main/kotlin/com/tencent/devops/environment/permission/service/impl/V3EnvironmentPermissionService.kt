@@ -60,7 +60,7 @@ class V3EnvironmentPermissionService constructor(
         val instanceMap = mutableMapOf<AuthPermission, List<String>>()
         instanceResourcesMap.forEach { (key, value) ->
             val envs = getAllNodeInstance(value, projectId, userId).toList()
-            instanceMap[key] = envs.map { HashUtil.encodeIntId(it.toInt())}
+            instanceMap[key] = envs.map { HashUtil.encodeIntId(it.toInt()) }
         }
         logger.info("listEnvByPermissions v3Impl [$userId] [$projectId] [$instanceMap]")
         return instanceMap

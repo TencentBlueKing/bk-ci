@@ -140,5 +140,4 @@ class TicketPermConfiguration {
         authPermissionApi = authPermissionApi,
         ticketAuthServiceCode = ticketAuthServiceCode
     )
-
 }

@@ -35,7 +35,6 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.listener.ProjectEventListener
 import com.tencent.devops.project.listener.SampleProjectEventListener
 import com.tencent.devops.project.service.ProjectPermissionService
-import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.impl.BluekingProjectPermissionServiceImpl
 import com.tencent.devops.project.service.impl.ProjectPermissionServiceImpl
 import com.tencent.devops.project.service.impl.V3ProjectPermissionServiceImpl
@@ -85,7 +84,6 @@ class ProjectConfiguration {
         authResourceApi = authResourceApi,
         projectAuthServiceCode = projectAuthServiceCode
     )
-
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")

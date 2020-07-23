@@ -117,12 +117,11 @@ class ProjectDao {
         }
     }
 
-    fun getCount(dslContext: DSLContext) : Long {
+    fun getCount(dslContext: DSLContext): Long {
         return with(TProject.T_PROJECT) {
             dslContext.selectCount().from(this).where(ENABLED.eq(true)).fetchOne(0, Long::class.java)
         }
     }
-
 
     /**
      * 根据英文名称(projectCode)查询name

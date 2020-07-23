@@ -5,6 +5,7 @@ import com.tencent.devops.auth.utils.StringUtils
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -13,10 +14,12 @@ class RemoteAuthService @Autowired constructor(
     val tokenServiceImpl: TokenServiceImpl
 ) {
 
+    @Value("\${auth:iamCallBackUser}")
+    val iamClientName = ""
+
     fun checkToken(token: String): Boolean {
         val pair = StringUtils.decodeAuth(token)
-        // TODO: 配置化
-        if (pair.first != "bk_iam") {
+        if (pair.first != iamClientName) {
             return false
         }
         val redisToken = redisOperation.get(TOKEN_REDIS_KEY)

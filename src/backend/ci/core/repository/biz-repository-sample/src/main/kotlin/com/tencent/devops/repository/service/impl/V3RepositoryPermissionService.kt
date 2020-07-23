@@ -35,8 +35,8 @@ class V3RepositoryPermissionService constructor(
             supplier = supplierForFakePermission(projectId)
         )
 
-        if(resourceCodeList.contains("*")) {
-            return getAllInstance(resourceCodeList, projectId,userId)
+        if (resourceCodeList.contains("*")) {
+            return getAllInstance(resourceCodeList, projectId, userId)
         }
         return resourceCodeList.map { it.toLong() }
     }
@@ -63,7 +63,7 @@ class V3RepositoryPermissionService constructor(
     }
 
     private fun getAllInstance(resourceCodeList: List<String>, projectId: String, userId: String): List<Long> {
-        if(resourceCodeList.contains("*")) {
+        if (resourceCodeList.contains("*")) {
             logger.info("repositories getResourceInstance impl, user[$userId], projectId[$projectId], resourceCodeList[$resourceCodeList]")
             val instanceIds = mutableListOf<Long>()
             val repositoryInfos = repositoryDao.listByProject(dslContext, projectId, null)

@@ -1,6 +1,5 @@
 package com.tencent.devops.project.service.impl
 
-
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
@@ -72,12 +71,12 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
             supplier = null
         )
 
-        if(projects == null || projects.isEmpty()) {
+        if (projects == null || projects.isEmpty()) {
             return emptyList()
         }
 
         val projectList = mutableListOf<String>()
-        return if(projects[0] == "*") {
+        return if (projects[0] == "*") {
             projectDao.getAllProject(dslContext).filter { projectList.add(it.englishName) }
             projectList
         } else {

@@ -60,17 +60,17 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class BluekingV3AuthAutoConfiguration {
 
-    // TODO: 配置化
-    val iamBaseUrl = "http://9.136.139.172:8080"
-
-//    @Value("\${auth.systemId:}")
-    val systemId = "bk_ci"
+    @Value("\${auth.url:}")
+    val iamBaseUrl = ""
 
     @Value("\${auth.appCode:}")
-    val appCode = "bk_ci"
+    val systemId = ""
+
+    @Value("\${auth.appCode:}")
+    val appCode = ""
 
     @Value("\${auth.appSecret:}")
-    val appSecret = "d043bde2-0b49-4024-b102-3bf0552193dd"
+    val appSecret = ""
 
     @Bean
     @Primary
