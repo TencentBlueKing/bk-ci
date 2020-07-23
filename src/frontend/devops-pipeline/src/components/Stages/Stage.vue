@@ -69,7 +69,7 @@
     import Vue from 'vue'
     import { mapActions, mapState, mapGetters } from 'vuex'
     import StageContainer from './StageContainer'
-    import { getOuterHeight, hashID } from '@/utils/util'
+    import { getOuterHeight, hashID, randomString } from '@/utils/util'
     import Logo from '@/components/Logo'
     import CruveLine from '@/components/Stages/CruveLine'
 
@@ -416,7 +416,7 @@
                         id: `s-${hashID(32)}`,
                         containers: copyStage.containers.map(container => ({
                             ...container,
-                            jobId: '',
+                            jobId: `job_${randomString(3)}`,
                             containerId: `c-${hashID(32)}`,
                             elements: container.elements.map(element => ({
                                 ...element,

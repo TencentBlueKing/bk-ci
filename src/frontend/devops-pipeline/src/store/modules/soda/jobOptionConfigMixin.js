@@ -164,7 +164,7 @@ const jobOptionConfigMixin = {
                     list.push(
                         {
                             id: container.jobId || Math.random(),
-                            name: `Job${this.stageIndex + 1}-${index + 1}${!container.jobId ? ' (该job未设置Job ID)' : ' (Job ID:' + container.jobId + ')'} `,
+                            name: `Job${this.stageIndex + 1}-${index + 1}${!container.jobId ? ' (该job未设置Job ID)' : ' (Job ID: ' + container.jobId + ')'} `,
                             disabled: !container.jobId
                         }
                     )

@@ -40,7 +40,7 @@
 
 <script>
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import { getOuterHeight, hashID } from '@/utils/util'
+    import { getOuterHeight, hashID, randomString } from '@/utils/util'
     import ContainerType from './ContainerType'
     import AtomList from './AtomList'
     import StatusIcon from './StatusIcon'
@@ -203,7 +203,7 @@
                     const container = {
                         ...copyContainer,
                         containerId: `c-${hashID(32)}`,
-                        jobId: '',
+                        jobId: `job_${randomString(3)}`,
                         elements: copyContainer.elements.map(element => ({
                             ...element,
                             id: `e-${hashID(32)}`
