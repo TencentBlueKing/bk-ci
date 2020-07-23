@@ -794,13 +794,16 @@ class PipelineRuntimeService @Autowired constructor(
                         containerSeq++
                         return@nextContainer
                     }
-                } else if (!retryStage && !retryStartTaskId.isNullOrBlank() && lastTimeBuildContainerRecords.isNotEmpty()) { // 如果重试的插件不在当前Job内，则跳过
+                }
+                // 如果重试的插件不在当前Job内，则跳过
+                if (!retryStage && !retryStartTaskId.isNullOrBlank() && lastTimeBuildContainerRecords.isNotEmpty()) {
                     if (null == findTaskRecord(lastTimeBuildTaskRecords = lastTimeBuildTaskRecords, container = container, retryStartTaskId = retryStartTaskId!!)) {
                         logger.info("[$buildId|RETRY|JOB(#$containerId)(${container.name}) is not in retry range")
                         containerSeq++
                         return@nextContainer
                     }
                 }
+
                 // --- 第3层循环：Element遍历处理 ---
                 container.elements.forEach nextElement@{ atomElement ->
                     taskSeq++ // 跳过的也要+1，Seq不需要连续性
