@@ -60,8 +60,8 @@ class UserIpaResourceImpl @Autowired constructor(
         return Result(signService.signIpaAndArchive(userId, ipaSignInfoHeader, ipaInputStream))
     }
 
-    override fun downloadIpa(userId: String, filePath: String, response: HttpServletResponse) {
-        TODO("Not yet implemented")
+    override fun downloadUrl(userId: String, filePath: String, response: HttpServletResponse): String {
+        return ""
     }
 
     override fun test(

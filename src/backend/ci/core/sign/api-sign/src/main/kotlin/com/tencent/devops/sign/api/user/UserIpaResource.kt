@@ -68,11 +68,10 @@ interface UserIpaResource {
         ipaInputStream: InputStream
     ): Result<String?>
 
-    @ApiOperation("下载文件")
+    @ApiOperation("获取签名后IPA的下载地址")
     @GET
-    @Path("/download")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    fun downloadIpa(
+    @Path("/downloadUrl")
+    fun downloadUrl(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -81,9 +80,9 @@ interface UserIpaResource {
         filePath: String,
         @Context
         response: HttpServletResponse
-    )
+    ): String
 
-    @ApiOperation("下载文件")
+    @ApiOperation("test")
     @GET
     @Path("/test")
     fun test(
