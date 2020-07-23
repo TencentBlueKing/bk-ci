@@ -1,6 +1,5 @@
 package com.tencent.devops.sign.service.impl
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.client.JfrogClient
 import com.tencent.devops.common.redis.RedisOperation
@@ -8,15 +7,13 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.ArchiveService
-import com.tencent.devops.sign.service.SignService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 
 @Service
-class ArchiveServiceImpl @Autowired constructor(
+class BsArchiveServiceImpl @Autowired constructor(
         private val bkRepoClient: BkRepoClient,
         private val commonConfig: CommonConfig,
         private val repoGray: RepoGray,
@@ -24,12 +21,16 @@ class ArchiveServiceImpl @Autowired constructor(
 ) : ArchiveService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ArchiveServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(BsArchiveServiceImpl::class.java)
         private const val METADATA_PREFIX = "X-BKREPO-META-"
         private const val BK_REPO_CUSTOM = "X-BKREPO-OVERWRITE"
     }
 
-    override fun archive(signedIpaFile: File, ipaSignInfo: IpaSignInfo): String? {
+    override fun archive(
+            signedIpaFile: File,
+            ipaSignInfo: IpaSignInfo,
+            properties: Map<String, String>?
+    ): Boolean {
         val isRepoGray = repoGray.isGray(ipaSignInfo.projectId, redisOperation)
         val path = if (ipaSignInfo.archiveType.toLowerCase() == "pipeline") {
             "${ipaSignInfo.pipelineId}/${ipaSignInfo.buildId}/${ipaSignInfo.fileName}"
@@ -67,6 +68,6 @@ class ArchiveServiceImpl @Autowired constructor(
             )
         }
 
-        return ""
+        return true
     }
 }

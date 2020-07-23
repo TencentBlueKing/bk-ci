@@ -11,14 +11,14 @@ import org.springframework.stereotype.Service
 import java.io.File
 
 @Service
-class SignInfoServiceImpl(
+class BsSignInfoServiceImpl(
     private val dslContext: DSLContext,
     private val signIpaInfoDao: SignIpaInfoDao,
     private val signHistoryDao: SignHistoryDao
 ) : SignInfoService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(SignInfoServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(BsSignInfoServiceImpl::class.java)
     }
 
     override fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo) {

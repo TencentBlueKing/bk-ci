@@ -1,10 +1,8 @@
 package com.tencent.devops.sign.service.impl
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.sign.Constants.KEYSTORE_CATEGORY_PROVISION
 import com.tencent.devops.sign.Constants.KEYSTORE_HTTP_HEADER_AUTH
 import com.tencent.devops.sign.Constants.KEYSTORE_HTTP_HEADER_IP
@@ -14,7 +12,6 @@ import com.tencent.devops.sign.utils.EncryptUtil
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.security.Keys
-import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -28,7 +25,7 @@ import java.util.*
 
 
 @Service
-class MobileProvisionServiceImpl  @Autowired constructor(
+class KeyStoreMobileProvisionServiceImpl  @Autowired constructor(
 ) : MobileProvisionService {
     @Value("\${keystore.url:}")
     private val keyStoreUrl = "https://proxy.test.keystore.oa.com"
@@ -46,7 +43,7 @@ class MobileProvisionServiceImpl  @Autowired constructor(
     private val keyStoreAuthSecret = "a21c218df41f6d7fd032535fe20394e2"
 
     companion object {
-        private val logger = LoggerFactory.getLogger(MobileProvisionServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(KeyStoreMobileProvisionServiceImpl::class.java)
         private val pairKey = DHUtil.initKey()
         private val privateKey = pairKey.privateKey
         private val publicKey = String(Base64.getEncoder().encode(pairKey.publicKey))
