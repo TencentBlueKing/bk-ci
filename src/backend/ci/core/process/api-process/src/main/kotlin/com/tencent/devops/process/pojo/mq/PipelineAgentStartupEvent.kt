@@ -58,5 +58,6 @@ data class PipelineAgentStartupEvent(
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0,
     val executeCount: Int?,
-    override var routeKeySuffix: String? = null
+    override var routeKeySuffix: String? = null,
+    val dockerDevClusterId: String = "default" // 所使用的构建机集群, 默认为默认构建机集群
 ) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)

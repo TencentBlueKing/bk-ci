@@ -1,0 +1,4 @@
+SET NAMES utf8mb4;
+use devops_ci_dispatch;
+
+REPLACE INTO devops_ci_dispatch.T_DISPATCH_PIPELINE_DOCKER_DEV_CLUSTER (CLUSTER_ID, CLUSTER_NAME, ENABLE, CREATE_USER, CREATE_TIME, UPDATE_USER, UPDATE_TIME) VALUES ('default', '默认构建集群', true, 'admin', '2020-07-23 15:25:42', 'admin', '2020-07-23 15:25:42');

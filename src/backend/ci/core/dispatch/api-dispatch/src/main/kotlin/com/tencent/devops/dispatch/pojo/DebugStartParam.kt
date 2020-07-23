@@ -51,5 +51,7 @@ data class DebugStartParam(
     @ApiModelProperty("镜像类型(BKDEVOPS或THIRD或BKSTORE)", required = true)
     val imageType: String?,
     @ApiModelProperty("镜像仓库凭证ID", required = true)
-    val credentialId: String?
+    val credentialId: String?,
+    @ApiModelProperty("构建机集群ID", required = true)
+    val clusterId: String = "default"
 )

@@ -83,7 +83,8 @@ class DockerDispatcher @Autowired constructor(
             jobId = pipelineAgentStartupEvent.containerHashId,
             executeCount = pipelineAgentStartupEvent.executeCount ?: 1
         )
-
+        // 所使用的构建机集群
+        val dockerDevClusterId = pipelineAgentStartupEvent.dockerDevClusterId
         var poolNo = 0
         try {
             // 先判断是否OP已配置专机，若配置了专机，看当前ip是否在专机列表中，若在 选择当前IP并检查负载，若不在从专机列表中选择一个容量最小的
@@ -101,13 +102,14 @@ class DockerDispatcher @Autowired constructor(
             poolNo = dockerHostUtils.getIdlePoolNo(pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
             if (taskHistory != null) {
                 val dockerIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, taskHistory.dockerIp)
-                if (dockerIpInfo == null) {
-                    // 此前IP下架，重新选择，根据负载条件选择可用IP
+                if (dockerIpInfo == null || dockerIpInfo.clusterId != dockerDevClusterId) {
+                    // 此前IP下架或者此IP与所选集群不符，重新选择，根据负载条件选择可用IP
                     dockerPair = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
                         projectId = pipelineAgentStartupEvent.projectId,
                         pipelineId = pipelineAgentStartupEvent.pipelineId,
                         vmSeqId = pipelineAgentStartupEvent.vmSeqId,
-                        specialIpSet = specialIpSet
+                        specialIpSet = specialIpSet,
+                        clusterId = dockerDevClusterId
                     )
                 } else {
                     driftIpInfo = JsonUtil.toJson(dockerIpInfo.intoMap())
@@ -122,10 +124,11 @@ class DockerDispatcher @Autowired constructor(
                             driftIpInfo = "专机漂移"
 
                             dockerHostUtils.getAvailableDockerIpWithSpecialIps(
-                                pipelineAgentStartupEvent.projectId,
-                                pipelineAgentStartupEvent.pipelineId,
-                                pipelineAgentStartupEvent.vmSeqId,
-                                specialIpSet
+                                projectId = pipelineAgentStartupEvent.projectId,
+                                pipelineId = pipelineAgentStartupEvent.pipelineId,
+                                vmSeqId = pipelineAgentStartupEvent.vmSeqId,
+                                specialIpSet = specialIpSet,
+                                clusterId = dockerDevClusterId
                             )
                         }
                     } else {
@@ -143,7 +146,8 @@ class DockerDispatcher @Autowired constructor(
                     projectId = pipelineAgentStartupEvent.projectId,
                     pipelineId = pipelineAgentStartupEvent.pipelineId,
                     vmSeqId = pipelineAgentStartupEvent.vmSeqId,
-                    specialIpSet = specialIpSet
+                    specialIpSet = specialIpSet,
+                    clusterId = dockerDevClusterId
                 )
             }
 

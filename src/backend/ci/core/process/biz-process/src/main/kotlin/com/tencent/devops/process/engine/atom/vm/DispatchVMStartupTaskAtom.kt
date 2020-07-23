@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.atom.vm
 
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -60,9 +61,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartB
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
-import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
@@ -210,7 +208,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 stageId = task.stageId,
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
-                containerType = task.containerType
+                containerType = task.containerType,
+                dockerDevClusterId = param.dockerDevClusterId ?: "default"
             ),
             PipelineContainerAgentHeartBeatEvent(
                 source = source,
@@ -355,31 +354,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         if (agent.status != AgentStatus.IMPORT_OK) {
             logger.warn("The agent status(${agent.status}) is not OK")
             throw agentException(pipelineId, buildId)
-        }
-    }
-
-    override fun tryFinish(task: PipelineBuildTask, param: VMBuildContainer, runVariables: Map<String, String>, force: Boolean): AtomResponse {
-        return if (force) {
-            if (BuildStatus.isFinish(task.status)) {
-                AtomResponse(task.status)
-            } else { // 强制终止的设置为失败
-                logger.warn("[${task.buildId}]|[FORCE_STOP_IN_START_TASK]")
-                pipelineEventDispatcher.dispatch(
-                    PipelineAgentShutdownEvent(
-                        source = "force_stop_startVM",
-                        projectId = task.projectId,
-                        pipelineId = task.pipelineId,
-                        userId = task.starter,
-                        buildId = task.buildId,
-                        vmSeqId = task.containerId,
-                        buildResult = true,
-                        routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix
-                    )
-                )
-                defaultFailAtomResponse
-            }
-        } else {
-            AtomResponse(task.status)
         }
     }
 
