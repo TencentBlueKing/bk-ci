@@ -1,181 +1,265 @@
 <template>
     <div class="charts-lint">
-        <div class="trend-wrapper">
-            <div class="trend-box">
-                <div class="trend-charts">
-                    <div id="newTrendChart" ref="newTrendChart"></div>
+        <div class="breadcrumb">
+            <div class="breadcrumb-name">
+                <bk-tab :active.sync="active" @tab-change="handleTableChange" type="unborder-card">
+                    <bk-tab-panel
+                        v-for="(panel, index) in panels"
+                        v-bind="panel"
+                        :key="index">
+                    </bk-tab-panel>
+                </bk-tab>
+            </div>
+        </div>
+        <div class="main-container">
+            <div>
+                <bk-form :label-width="60">
+                    <container class="cc-container">
+                        <div class="cc-col">
+                            <bk-form-item :label="$t('工具')">
+                                <bk-select v-model="toolId" @selected="handleSelectTool" :clearable="false" searchable>
+                                    <bk-option-group
+                                        v-for="group in toolList"
+                                        :name="group.name"
+                                        :key="group.key">
+                                        <bk-option v-for="option in group.toolList"
+                                            :key="option.toolName"
+                                            :id="option.toolName"
+                                            :name="option.toolDisplayName">
+                                        </bk-option>
+                                    </bk-option-group>
+                                </bk-select>
+                            </bk-form-item>
+                        </div>
+                        <div class="cc-col">
+                            <bk-form-item :label="$t('日期')">
+                                <bk-date-picker v-model="searchParams.daterange" :type="'daterange'" :options="pickerOptions"></bk-date-picker>
+                            </bk-form-item>
+                        </div>
+                    </container>
+                </bk-form>
+            </div>
+            <div class="trend-wrapper">
+                <div class="trend-box">
+                    <div class="trend-charts">
+                        <div id="newTrendChart" ref="newTrendChart"></div>
+                    </div>
+                    <div class="trend-table">
+                        <div class="table">
+                            <bk-table :data="trendTableData" :outer-border="false">
+                                <bk-table-column :label="$t('日期')" prop="tips" align="center"></bk-table-column>
+                                <bk-table-column :label="$t('新问题数')" align="center">
+                                    <template slot-scope="{ row, column, $index }">
+                                        <a v-if="$index === trendTableData.length - 1" @click="handleHref({ defectType: 1 })" href="javascript:;">{{row.newCount}}</a>
+                                        <span v-else>{{row.newCount}}</span>
+                                    </template>
+                                </bk-table-column>
+                                <div slot="empty">
+                                    <div class="codecc-table-empty-text">
+                                        <img src="../../images/empty.png" class="empty-img">
+                                        <div>{{$t('暂无数据')}}</div>
+                                    </div>
+                                </div>
+                            </bk-table>
+                        </div>
+                    </div>
                 </div>
-                <div class="trend-table">
+                <div class="trend-box">
+                    <div class="trend-charts">
+                        <div id="hisTrendChart" ref="hisTrendChart"></div>
+                    </div>
+                    <div class="trend-table">
+                        <div class="table">
+                            <bk-table :data="trendTableData" :outer-border="false">
+                                <bk-table-column :label="$t('日期')" prop="tips" align="center"></bk-table-column>
+                                <bk-table-column :label="$t('历史问题数')" align="center">
+                                    <template slot-scope="{ row, column, $index }">
+                                        <a v-if="$index === trendTableData.length - 1" @click="handleHref({ defectType: 2 })" href="javascript:;">{{row.historyCount}}</a>
+                                        <span v-else>{{row.historyCount}}</span>
+                                    </template>
+                                </bk-table-column>
+                                <div slot="empty">
+                                    <div class="codecc-table-empty-text">
+                                        <img src="../../images/empty.png" class="empty-img">
+                                        <div>{{$t('暂无数据')}}</div>
+                                    </div>
+                                </div>
+                            </bk-table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="authors-wrapper">
+                <div class="authors-charts">
+                    <div id="newAuthorsChart" ref="newAuthorsChart"></div>
+                </div>
+                <div class="authors-table">
                     <div class="table">
-                        <bk-table :empty-text="$t('st.暂无数据')" :data="trendData" :outer-border="false">
-                            <bk-table-column :label="$t('charts.日期')" prop="tips" align="center"></bk-table-column>
-                            <bk-table-column :label="$t('charts.新告警数')" align="center">
-                                <template slot-scope="{ row, column, $index }">
-                                    <a v-if="$index === 6" @click="handleHref({ fileType: 1 })" href="javascript:;">{{row.newCount}}</a>
-                                    <span v-else>{{row.newCount}}</span>
+                        <bk-table :data="newAuthorsTableData" :outer-border="false">
+                            <bk-table-column :label="$t('问题处理人')" prop="authorName" align="center"></bk-table-column>
+                            <bk-table-column :label="$t('总数')" prop="total" align="center">
+                                <template slot-scope="{ row }">
+                                    <a v-if="row.authorName !== 'Total'" href="javascript:;" @click="handleHref({ author: row.authorName, defectType: 1 })">{{row.total}}</a>
+                                    <a v-else href="javascript:;" @click="handleHref({ defectType: 1 })">{{row.total}}</a>
                                 </template>
                             </bk-table-column>
+                            <bk-table-column :label="$t('严重')" prop="serious" align="center">
+                                <template slot-scope="{ row }">
+                                    <a v-if="row.authorName !== 'Total'" href="javascript:;" @click="handleHref({ author: row.authorName, severity: 1, defectType: 1 })">{{row.serious}}</a>
+                                    <a v-else href="javascript:;" @click="handleHref({ severity: 1, defectType: 1 })">{{row.serious}}</a>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column :label="$t('一般')" prop="normal" align="center">
+                                <template slot-scope="{ row }">
+                                    <a v-if="row.authorName !== 'Total'" href="javascript:;" @click="handleHref({ author: row.authorName, severity: 2, defectType: 1 })">{{row.normal}}</a>
+                                    <a v-else href="javascript:;" @click="handleHref({ severity: 2, defectType: 1 })">{{row.normal}}</a>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column :label="$t('提示')" prop="prompt" align="center">
+                                <template slot-scope="{ row }">
+                                    <a v-if="row.authorName !== 'Total'" href="javascript:;" @click="handleHref({ author: row.authorName, severity: 4, defectType: 1 })">{{row.prompt}}</a>
+                                    <a v-else href="javascript:;" @click="handleHref({ severity: 4, defectType: 1 })">{{row.prompt}}</a>
+                                </template>
+                            </bk-table-column>
+                            <div slot="empty">
+                                <div class="codecc-table-empty-text">
+                                    <img src="../../images/empty.png" class="empty-img">
+                                    <div>{{$t('暂无数据')}}</div>
+                                </div>
+                            </div>
                         </bk-table>
                     </div>
                 </div>
             </div>
-            <div class="trend-box">
-                <div class="trend-charts">
-                    <div id="hisTrendChart" ref="hisTrendChart"></div>
+            <div class="authors-wrapper">
+                <div class="authors-charts">
+                    <div id="hisAuthorsChart" ref="hisAuthorsChart"></div>
                 </div>
-                <div class="trend-table">
+                <div class="authors-table">
                     <div class="table">
-                        <bk-table :empty-text="$t('st.暂无数据')" :data="trendData" :outer-border="false">
-                            <bk-table-column :label="$t('charts.日期')" prop="tips" align="center"></bk-table-column>
-                            <bk-table-column :label="$t('charts.历史告警数')" align="center">
-                                <template slot-scope="{ row, column, $index }">
-                                    <a v-if="$index === 6" @click="handleHref({ fileType: 2 })" href="javascript:;">{{row.historyCount}}</a>
-                                    <span v-else>{{row.historyCount}}</span>
+                        <bk-table :data="hisAuthorsTableData" :outer-border="false">
+                            <bk-table-column :label="$t('问题处理人')" prop="authorName" align="center"></bk-table-column>
+                            <bk-table-column :label="$t('总数')" prop="total" align="center">
+                                <template slot-scope="{ row }">
+                                    <a v-if="row.authorName !== 'Total'" href="javascript:;" @click="handleHref({ author: row.authorName, defectType: 2 })">{{row.total}}</a>
+                                    <a v-else href="javascript:;" @click="handleHref({ defectType: 2 })">{{row.total}}</a>
                                 </template>
                             </bk-table-column>
+                            <bk-table-column :label="$t('严重')" prop="serious" align="center">
+                                <template slot-scope="{ row }">
+                                    <a v-if="row.authorName !== 'Total'" href="javascript:;" @click="handleHref({ author: row.authorName, severity: 1, defectType: 2 })">{{row.serious}}</a>
+                                    <a v-else href="javascript:;" @click="handleHref({ severity: 1, defectType: 2 })">{{row.serious}}</a>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column :label="$t('一般')" prop="normal" align="center">
+                                <template slot-scope="{ row }">
+                                    <a v-if="row.authorName !== 'Total'" href="javascript:;" @click="handleHref({ author: row.authorName, severity: 2, defectType: 2 })">{{row.normal}}</a>
+                                    <a v-else href="javascript:;" @click="handleHref({ severity: 2, defectType: 2 })">{{row.normal}}</a>
+                                </template>
+                            </bk-table-column>
+                            <bk-table-column :label="$t('提示')" prop="prompt" align="center">
+                                <template slot-scope="{ row }">
+                                    <a v-if="row.authorName !== 'Total'" href="javascript:;" @click="handleHref({ author: row.authorName, severity: 4, defectType: 2 })">{{row.prompt}}</a>
+                                    <a v-else href="javascript:;" @click="handleHref({ severity: 4, defectType: 2 })">{{row.prompt}}</a>
+                                </template>
+                            </bk-table-column>
+                            <div slot="empty">
+                                <div class="codecc-table-empty-text">
+                                    <img src="../../images/empty.png" class="empty-img">
+                                    <div>{{$t('暂无数据')}}</div>
+                                </div>
+                            </div>
                         </bk-table>
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="authors-wrapper">
-            <div class="authors-charts">
-                <div id="newAuthorsChart" ref="newAuthorsChart"></div>
-            </div>
-            <div class="authors-table">
-                <div class="table">
-                    <bk-table :empty-text="$t('st.暂无数据')" :data="newAuthorsData" :outer-border="false">
-                        <bk-table-column :label="$t('defect.告警处理人')" prop="authorName" align="center"></bk-table-column>
-                        <bk-table-column :label="$t('charts.总数')" prop="total" align="center">
-                            <template slot-scope="{ row }">
-                                <a v-if="row.authorName !== 'Total'" href="javascript:;" @click="handleHref({ author: row.authorName, fileType: 1 })">{{row.total}}</a>
-                                <a v-else href="javascript:;" @click="handleHref({ fileType: 1 })">{{row.total}}</a>
-                            </template>
-                        </bk-table-column>
-                        <bk-table-column :label="$t('defect.严重')" prop="serious" align="center">
-                            <template slot-scope="{ row }">
-                                <a v-if="row.authorName !== 'Total'" href="javascript:;" @click="handleHref({ author: row.authorName, severity: 1, fileType: 1 })">{{row.serious}}</a>
-                                <a v-else href="javascript:;" @click="handleHref({ severity: 1, fileType: 1 })">{{row.serious}}</a>
-                            </template>
-                        </bk-table-column>
-                        <bk-table-column :label="$t('defect.一般')" prop="normal" align="center">
-                            <template slot-scope="{ row }">
-                                <a v-if="row.authorName !== 'Total'" href="javascript:;" @click="handleHref({ author: row.authorName, severity: 2, fileType: 1 })">{{row.normal}}</a>
-                                <a v-else href="javascript:;" @click="handleHref({ severity: 2, fileType: 1 })">{{row.normal}}</a>
-                            </template>
-                        </bk-table-column>
-                        <bk-table-column :label="$t('defect.提示')" prop="prompt" align="center">
-                            <template slot-scope="{ row }">
-                                <a v-if="row.authorName !== 'Total'" href="javascript:;" @click="handleHref({ author: row.authorName, severity: 4, fileType: 1 })">{{row.prompt}}</a>
-                                <a v-else href="javascript:;" @click="handleHref({ severity: 4, fileType: 1 })">{{row.prompt}}</a>
-                            </template>
-                        </bk-table-column>
-                    </bk-table>
-                </div>
-            </div>
-        </div>
-        <div class="authors-wrapper">
-            <div class="authors-charts">
-                <div id="hisAuthorsChart" ref="hisAuthorsChart"></div>
-            </div>
-            <div class="authors-table">
-                <div class="table">
-                    <bk-table :empty-text="$t('st.暂无数据')" :data="hisAuthorsData" :outer-border="false">
-                        <bk-table-column :label="$t('defect.告警处理人')" prop="authorName" align="center"></bk-table-column>
-                        <bk-table-column :label="$t('charts.总数')" prop="total" align="center">
-                            <template slot-scope="{ row }">
-                                <a v-if="row.authorName !== 'Total'" href="javascript:;" @click="handleHref({ author: row.authorName, fileType: 2 })">{{row.total}}</a>
-                                <a v-else href="javascript:;" @click="handleHref({ fileType: 2 })">{{row.total}}</a>
-                            </template>
-                        </bk-table-column>
-                        <bk-table-column :label="$t('defect.严重')" prop="serious" align="center">
-                            <template slot-scope="{ row }">
-                                <a v-if="row.authorName !== 'Total'" href="javascript:;" @click="handleHref({ author: row.authorName, severity: 1, fileType: 2 })">{{row.serious}}</a>
-                                <a v-else href="javascript:;" @click="handleHref({ severity: 1, fileType: 2 })">{{row.serious}}</a>
-                            </template>
-                        </bk-table-column>
-                        <bk-table-column :label="$t('defect.一般')" prop="normal" align="center">
-                            <template slot-scope="{ row }">
-                                <a v-if="row.authorName !== 'Total'" href="javascript:;" @click="handleHref({ author: row.authorName, severity: 2, fileType: 2 })">{{row.normal}}</a>
-                                <a v-else href="javascript:;" @click="handleHref({ severity: 2, fileType: 2 })">{{row.normal}}</a>
-                            </template>
-                        </bk-table-column>
-                        <bk-table-column :label="$t('defect.提示')" prop="prompt" align="center">
-                            <template slot-scope="{ row }">
-                                <a v-if="row.authorName !== 'Total'" href="javascript:;" @click="handleHref({ author: row.authorName, severity: 4, fileType: 2 })">{{row.prompt}}</a>
-                                <a v-else href="javascript:;" @click="handleHref({ severity: 4, fileType: 2 })">{{row.prompt}}</a>
-                            </template>
-                        </bk-table-column>
-                    </bk-table>
                 </div>
             </div>
         </div>
     </div>
 </template>
 <script>
-    import chartBarOption from '@/mixins/chart-bar-option'
-    import chartLineOption from '@/mixins/chart-line-option'
-    import echarts from 'echarts/lib/echarts'
-    import 'echarts/lib/chart/bar'
-    import 'echarts/lib/chart/line'
-    import 'echarts/lib/component/tooltip'
-    import 'echarts/lib/component/title'
-    import 'echarts/lib/component/legend'
+    import chart from '@/mixins/chart'
+    import { format } from 'date-fns'
 
     export default {
         components: {
         },
-        mixins: [chartBarOption, chartLineOption],
+        mixins: [chart],
         data () {
+            const query = this.$route.query
+
             return {
-                chartLegacys: {
-                    legacyList: []
+                panels: [
+                    { name: 'defect', label: this.$t('问题管理') },
+                    { name: 'report', label: this.$t('数据报表') }
+                ],
+                trendTableData: [],
+                newAuthorsTableData: [],
+                hisAuthorsTableData: [],
+                searchParams: {
+                    taskId: this.$route.params.taskId,
+                    toolId: this.$route.params.toolId,
+                    daterange: [query.startTime, query.endTime]
                 },
-                chartAuthors: {
-                    newAuthorList: [],
-                    historyAuthorList: []
-                },
-                trendData: [],
-                newAuthorsData: [],
-                hisAuthorsData: []
+                newTrendChart: undefined,
+                hisTrendChart: undefined,
+                newAuthorsChart: undefined,
+                hisAuthorsChart: undefined
             }
         },
         computed: {
+            pickerOptions () {
+                return {
+                    disabledDate (time) {
+                        return time.getTime() > Date.now()
+                    }
+                }
+            }
+        },
+        watch: {
+            searchParams: {
+                handler () {
+                    this.fetchLintList().then(res => {
+                        this.initTrend(res.chartLegacys && res.chartLegacys.legacyList)
+                        this.initAuthor('new', res.chartAuthors && res.chartAuthors.newAuthorList)
+                        this.initAuthor('his', res.chartAuthors && res.chartAuthors.historyAuthorList)
+                    })
+                },
+                deep: true
+            }
         },
         created () {
-        },
-        mounted () {
-            this.init()
+            // this.fetchLintList()
         },
         methods: {
-            async init () {
-                const toolId = this.$route.params.toolId
-                const res = await this.$store.dispatch('defect/report', { toolId }, { showLoading: true })
-                this.chartLegacys = res.chartLegacys || {}
-                this.chartAuthors = res.chartAuthors || {}
-                this.initTrend()
-                this.initNewAuthors()
-                this.initHisAuthors()
+            formatTime (date, token, options = {}) {
+                return date ? format(Number(date), token, options) : ''
             },
-            initTrend () {
-                const elemList = this.chartLegacys.legacyList || []
-                const xAxisData = []
-                const newCount = []
-                const historyCount = []
-                elemList.forEach((element, index) => {
-                    xAxisData.unshift(element['tips'])
-                    newCount.unshift(element['newCount'])
-                    historyCount.unshift(element['historyCount'])
-                })
-                this.trendData = elemList.reverse()
+            async fetchLintList () {
+                this.searchParams.daterange[0] = this.searchParams.daterange[0] > Date.now() ? Date.now() : this.searchParams.daterange[0]
+                this.searchParams.daterange[1] = this.searchParams.daterange[1] > Date.now() ? Date.now() : this.searchParams.daterange[1]
+                this.searchParams.daterange[0] = this.searchParams.daterange[0] < this.searchParams.daterange[1] ? this.searchParams.daterange[0] : this.searchParams.daterange[1]
+                const daterange = this.searchParams.daterange
+                let startTime = this.formatTime(daterange[0], 'YYYY-MM-DD')
+                startTime = startTime === 'Invalid Date' ? '' : startTime
+                let endTime = this.formatTime(daterange[1], 'YYYY-MM-DD')
+                endTime = endTime === 'Invalid Date' ? '' : endTime
+                const params = { ...this.searchParams, startTime, endTime, showLoading: true }
+                const res = await this.$store.dispatch('defect/report', params)
+                return res
+            },
+            initTrend (elemList = []) {
+                this.trendTableData = elemList.reverse()
+                const xAxisData = elemList.map(item => item.tips)
+                const newCount = elemList.map(item => item.newCount)
+                const historyCount = elemList.map(item => item.historyCount)
 
-                const option1 = {
+                const optionNew = {
                     title: {
-                        text: this.$t('charts.新告警遗留趋势')
+                        text: this.$t('新问题遗留趋势')
                     },
                     legend: {
                         data: [{
-                            name: this.$t('charts.新告警数')
+                            name: this.$t('新问题数')
                         }]
                     },
                     xAxis: {
@@ -189,25 +273,19 @@
                         left: '50'
                     },
                     series: [{
-                        name: this.$t('charts.新告警数'),
+                        name: this.$t('新问题数'),
                         data: newCount
                     }]
                 }
-                
-                const newTrendChart = echarts.init(this.$refs.newTrendChart)
-                newTrendChart.setOption(this.chartLineOption)
-                newTrendChart.setOption(option1)
-                window.addEventListener('resize', () => {
-                    newTrendChart.resize()
-                })
+                this.handleChartOption('newTrendChart', optionNew, 'chartLineOption')
 
-                const option2 = {
+                const optionHis = {
                     title: {
-                        text: this.$t('charts.历史告警遗留趋势')
+                        text: this.$t('历史问题遗留趋势')
                     },
                     legend: {
                         data: [{
-                            name: this.$t('charts.历史告警数')
+                            name: this.$t('历史问题数')
                         }]
                     },
                     xAxis: {
@@ -221,7 +299,7 @@
                         left: '50'
                     },
                     series: [{
-                        name: this.$t('charts.历史告警数'),
+                        name: this.$t('历史问题数'),
                         data: historyCount,
                         itemStyle: {
                             normal: {
@@ -235,146 +313,49 @@
                         }
                     }]
                 }
-
-                const hisTrendChart = echarts.init(this.$refs.hisTrendChart)
-                hisTrendChart.setOption(this.chartLineOption)
-                hisTrendChart.setOption(option2)
-                window.addEventListener('resize', () => {
-                    hisTrendChart.resize()
-                })
+                this.handleChartOption('hisTrendChart', optionHis, 'chartLineOption')
             },
-            initNewAuthors () {
-                if (!this.chartAuthors.newAuthorList) return
-                const authorList = this.chartAuthors.newAuthorList.authorList
-                const authorName = []
-                const serious = []
-                const normal = []
-                const prompt = []
-
-                if (authorList.length) {
-                    authorList.forEach((author, index) => {
-                        authorName.push(author['authorName'])
-                        serious.push(author['serious'])
-                        normal.push(author['normal'])
-                        prompt.push(author['prompt'])
-                    })
-                } else {
-                    serious.push(0) // 没有数据时，加一条零数据显示图表
+            initAuthor (authorType, list = {}) {
+                const authorTypeMap = {
+                    new: {
+                        data: 'newAuthorsTableData',
+                        title: this.$t('新问题处理人分布'),
+                        chart: 'newAuthorsChart'
+                    },
+                    his: {
+                        data: 'hisAuthorsTableData',
+                        title: this.$t('历史问题处理人分布'),
+                        chart: 'hisAuthorsChart'
+                    }
                 }
-
-                authorList.push(this.chartAuthors.newAuthorList.totalAuthor)
-                this.newAuthorsData = authorList
-
-                const option = {
-                    title: {
-                        text: this.$t('charts.新告警处理人分布')
-                    },
-                    xAxis: {
-                        data: authorName
-                    },
-                    yAxis: {
-                        splitNumber: 4,
-                        minInterval: 1
-                    },
-                    grid: {
-                        left: '50'
-                    },
-                    series: [
-                        {
-                            data: prompt
-                        },
-                        {
-                            data: normal
-                        },
-                        {
-                            data: serious
-                        }
-                    ]
-                }
-
-                const newAuthorsChart = echarts.init(this.$refs.newAuthorsChart)
-                newAuthorsChart.setOption(this.chartBarOption)
-                newAuthorsChart.setOption(option)
-                window.addEventListener('resize', () => {
-                    newAuthorsChart.resize()
-                })
-            },
-            initHisAuthors () {
-                if (!this.chartAuthors.historyAuthorList) return
-                const authorList = this.chartAuthors.historyAuthorList.authorList
-                const authorName = []
-                const serious = []
-                const normal = []
-                const prompt = []
-
-                if (authorList.length) {
-                    authorList.forEach((author, index) => {
-                        authorName.push(author['authorName'])
-                        serious.push(author['serious'])
-                        normal.push(author['normal'])
-                        prompt.push(author['prompt'])
-                    })
-                } else {
-                    serious.push(0) // 没有数据时，加一条零数据显示图表
-                }
-                
-                authorList.push(this.chartAuthors.historyAuthorList.totalAuthor)
-                this.hisAuthorsData = authorList
-
-                const option = {
-                    title: {
-                        text: this.$t('charts.历史告警处理人分布')
-                    },
-                    xAxis: {
-                        data: authorName
-                    },
-                    yAxis: {
-                        splitNumber: 4,
-                        minInterval: 1
-                    },
-                    grid: {
-                        left: '50'
-                    },
-                    series: [
-                        {
-                            data: prompt
-                        },
-                        {
-                            data: normal
-                        },
-                        {
-                            data: serious
-                        }
-                    ]
-                }
-
-                const hisAuthorsChart = echarts.init(this.$refs.hisAuthorsChart)
-                hisAuthorsChart.setOption(this.chartBarOption)
-                hisAuthorsChart.setOption(option)
-                window.addEventListener('resize', () => {
-                    hisAuthorsChart.resize()
-                })
+                this.handleInitAuthor(authorTypeMap, authorType, list)
             },
             handleHref (query) {
-                const resolved = this.$router.resolve({
-                    name: 'defect-lint-list',
-                    params: this.$route.params,
-                    query
-                })
-                const href = `${window.DEVOPS_SITE_URL}/console${resolved.href}`
-                window.open(href, '_blank')
+                this.resolveHref('defect-lint-list', query)
             }
         }
     }
 </script>
 
-<style lang="postcss">
-</style>
-
 <style lang="postcss" scoped>
     @import '../../css/variable.css';
+    @import '../../css/charts.css';
 
     .charts-lint {
+        padding: 16px 20px 0px 16px;
+        .breadcrumb {
+            padding: 0px!important;
+            .breadcrumb-name {
+                background: white;
+            }
+        }
+        .main-container {
+            /* padding: 20px 33px 0!important;
+            margin: 0 -13px!important; */
+            border-top: 1px solid #dcdee5;
+            margin: 0px!important;
+            background: white;
+        }
         .layout-inner .main-content {
             background: #f5f7fa;
         }
@@ -397,14 +378,12 @@
             display: flex;
 
             .trend-box {
-                height: 467px;
                 width: calc(50% - 7.5px);
                 background: #fff;
                 border: 1px solid $borderColor;
                 margin-bottom: 15px;
 
                 .trend-charts, .trend-table {
-                    height: 200px;
                     width: 100%;
                     padding: 15px;
                 }

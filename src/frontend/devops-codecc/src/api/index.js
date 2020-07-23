@@ -12,7 +12,7 @@ import RequestQueue from './request-queue'
 import { bus } from '../common/bus'
 import { messageError } from '@/common/bkmagic'
 import store from '@/store'
-import router from '@/router'
+// import router from '@/router'
 
 // axios 实例
 const axiosInstance = axios.create({
@@ -52,20 +52,20 @@ axiosInstance.interceptors.request.use(config => {
 axiosInstance.interceptors.response.use(response => {
     return response.data
 }, error => {
-    if (error && error.response) {
-        switch (error.response.status) {
-            case 403:
-                router.push({
-                    name: '403'
-                })
-                break
-            case 500:
-                router.push({
-                    name: '500'
-                })
-                break
-        }
-    }
+    // if (error && error.response) {
+    //     switch (error.response.status) {
+    //         case 403:
+    //             router.push({
+    //                 name: '403'
+    //             })
+    //             break
+    //         // case 500:
+    //         //     router.push({
+    //         //         name: '500'
+    //         //     })
+    //         //     break
+    //     }
+    // }
     return Promise.reject(error)
 })
 

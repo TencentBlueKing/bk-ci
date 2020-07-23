@@ -47,7 +47,7 @@
     }
 }
 
-@define-mixin triangle-check-bottom-right $width, $height, $bgColor, $textColor: #fff {
+@define-mixin triangle-check-bottom-right $width, $bgColor, $textColor: #fff {
     &::before {
         content: "";
         width: 0;
@@ -55,19 +55,27 @@
         border-style: solid;
         position: absolute;
         right: -1px;
-        bottom: -1px;
-        border-width: 0 0 $(height)px $(width)px;
-        border-color: transparent transparent $bgColor transparent;
+        top: -1px;
+        border-width: $(width)px;
+        border-color: $bgColor;
     }
 
     &::after {
         content: "\e977";
         color: $textColor;
         position: absolute;
-        right: 4px;
-        bottom: 1px;
+        right: 3px;
+        top: 5px;
         font-weight: bold;
+        font-size: 12px;
         font-family: bk-icons-linear!important;
     }
 }
 
+@define-mixin text-ellipsis $max-line: none {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: $max-line;
+    -webkit-box-orient: vertical;
+}

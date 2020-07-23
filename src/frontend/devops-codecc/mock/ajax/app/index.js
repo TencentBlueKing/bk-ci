@@ -168,6 +168,264 @@ export async function response(getArgs, postArgs, req) {
             },
             message: 'ok'
         }
+    } else if (invoke === 'metadata') {
+        const data = require('./tool-meta.json')
+        return {
+            code: 0,
+            data,
+            message: 'ok'
+        }
+    }
+    else if (invoke === 'tableData') {
+        await sleep(1000)
+        return {
+            code: 0,
+            data: [
+                {
+                    ip: '192.168.0.1',
+                    source: '蓝盾',
+                    status: '创建中',
+                    create_time: '2018-05-25 15:02:24',
+                    children: [
+                        {
+                            name: '游戏体验管理',
+                            count: '23',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '游戏体验管理'
+                        },
+                        {
+                            name: 'guild(游戏公会)',
+                            count: '2',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '无数据测试'
+                        }
+                    ]
+                },
+                {
+                    ip: '192.168.0.2',
+                    source: 'CMDB',
+                    status: '正常',
+                    create_time: '2018-05-25 15:02:24',
+                    children: [
+                        {
+                            name: '游戏体验管理',
+                            count: '23',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '游戏体验管理'
+                        },
+                        {
+                            name: 'guild(游戏公会)',
+                            count: '2',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '无数据测试'
+                        }
+                    ]
+                },
+                {
+                    ip: '192.168.0.3',
+                    source: '蓝盾',
+                    status: '创建中',
+                    create_time: '2018-05-25 15:02:24',
+                    children: [
+                        {
+                            name: '游戏体验管理',
+                            count: '23',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '游戏体验管理'
+                        },
+                        {
+                            name: 'guild(游戏公会)',
+                            count: '2',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '无数据测试'
+                        }
+                    ]
+                },
+                {
+                    ip: '192.168.0.1',
+                    source: '蓝盾',
+                    status: '创建中',
+                    create_time: '2018-05-25 15:02:24',
+                    children: [
+                        {
+                            name: '游戏体验管理',
+                            count: '23',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '游戏体验管理'
+                        },
+                        {
+                            name: 'guild(游戏公会)',
+                            count: '2',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '无数据测试'
+                        }
+                    ]
+                },
+                {
+                    ip: '192.168.0.2',
+                    source: 'CMDB',
+                    status: '正常',
+                    create_time: '2018-05-25 15:02:24',
+                    children: [
+                        {
+                            name: '游戏体验管理',
+                            count: '23',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '游戏体验管理'
+                        },
+                        {
+                            name: 'guild(游戏公会)',
+                            count: '2',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '无数据测试'
+                        }
+                    ]
+                },
+                {
+                    ip: '192.168.0.3',
+                    source: '蓝盾',
+                    status: '创建中',
+                    create_time: '2018-05-25 15:02:24',
+                    children: [
+                        {
+                            name: '游戏体验管理',
+                            count: '23',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '游戏体验管理'
+                        },
+                        {
+                            name: 'guild(游戏公会)',
+                            count: '2',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '无数据测试'
+                        }
+                    ]
+                },
+                {
+                    ip: '192.168.0.1',
+                    source: '蓝盾',
+                    status: '创建中',
+                    create_time: '2018-05-25 15:02:24',
+                    children: [
+                        {
+                            name: '游戏体验管理',
+                            count: '23',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '游戏体验管理'
+                        },
+                        {
+                            name: 'guild(游戏公会)',
+                            count: '2',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '无数据测试'
+                        }
+                    ]
+                },
+                {
+                    ip: '192.168.0.2',
+                    source: 'CMDB',
+                    status: '正常',
+                    create_time: '2018-05-25 15:02:24',
+                    children: [
+                        {
+                            name: '游戏体验管理',
+                            count: '23',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '游戏体验管理'
+                        },
+                        {
+                            name: 'guild(游戏公会)',
+                            count: '2',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '无数据测试'
+                        }
+                    ]
+                },
+                {
+                    ip: '192.168.0.3',
+                    source: '蓝盾',
+                    status: '创建中',
+                    create_time: '2018-05-25 15:02:24',
+                    children: [
+                        {
+                            name: '游戏体验管理',
+                            count: '23',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '游戏体验管理'
+                        },
+                        {
+                            name: 'guild(游戏公会)',
+                            count: '2',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '无数据测试'
+                        }
+                    ]
+                },
+                {
+                    ip: '192.168.0.1',
+                    source: '蓝盾',
+                    status: '创建中',
+                    create_time: '2018-05-25 15:02:24',
+                    children: [
+                        {
+                            name: '游戏体验管理',
+                            count: '23',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '游戏体验管理'
+                        },
+                        {
+                            name: 'guild(游戏公会)',
+                            count: '2',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '无数据测试'
+                        }
+                    ]
+                },
+                {
+                    ip: '192.168.0.2',
+                    source: 'CMDB',
+                    status: '正常',
+                    create_time: '2018-05-25 15:02:24',
+                    children: [
+                        {
+                            name: '游戏体验管理',
+                            count: '23',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '游戏体验管理'
+                        },
+                        {
+                            name: 'guild(游戏公会)',
+                            count: '2',
+                            creator: 'blueking',
+                            create_time: '2017-10-10 11:12',
+                            desc: '无数据测试'
+                        }
+                    ]
+                }
+            ],
+            message: 'ok'
+        }
     }
     return {
         code: 0,
