@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class ServiceAuthResourceImpl @Autowired constructor(
     private val projectService: ProjectService
-): ServiceAuthResource {
+) : ServiceAuthResource {
     override fun list(limit: Int, offset: Int): Result<Page<ProjectVO>> {
         return Result(projectService.list(limit, offset))
     }
