@@ -157,16 +157,4 @@ interface ServiceProjectResource {
         @ApiParam(value = "项目信息", required = true)
         projectUpdateInfo: ProjectUpdateInfo
     ): Result<Boolean>
-
-    @GET
-    @Path("/list")
-    @ApiOperation("分页获取项目信息")
-    fun list(
-        @ApiParam("")
-        @QueryParam("limit")
-        limit: Int,
-        @ApiParam("")
-        @QueryParam("offset")
-        offset: Int
-    ): Result<Page<ProjectVO>>
 }

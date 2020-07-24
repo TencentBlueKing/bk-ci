@@ -75,8 +75,4 @@ class ServiceNodeResourceImpl @Autowired constructor(
     override fun listNodeByType(userId: String, projectId: String, type: String): Result<List<NodeBaseInfo>> {
         return Result(nodeService.listByType(userId, projectId, type))
     }
-
-    override fun listNodeByPage(projectId: String, page: Int?, pageSize: Int?): Result<Page<NodeBaseInfo>> {
-        return Result(nodeService.listByPage(projectId, page, pageSize))
-    }
 }

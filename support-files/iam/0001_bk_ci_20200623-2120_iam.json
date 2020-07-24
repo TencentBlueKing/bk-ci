@@ -5,7 +5,7 @@
       "operation": "upsert_system",
       "data":{
         "id": "bk_ci",
-        "name": "À¶¾¨³ÖĞø¼¯³ÉÆ½Ì¨",
+        "name": "è“é²¸æŒç»­é›†æˆå¹³å°",
         "name_en": "bkci",
         "clients": "bkci",
         "provider_config": {
@@ -19,7 +19,7 @@
       "operation": "upsert_resource_type",
       "data": {
         "id": "project",
-        "name": "ÏîÄ¿",
+        "name": "é¡¹ç›®",
         "name_en": "Project",
         "parents": [],
         "provider_config": {
@@ -32,7 +32,7 @@
       "operation": "upsert_resource_type",
       "data": {
         "id": "pipeline",
-        "name": "Á÷Ë®Ïß",
+        "name": "æµæ°´çº¿",
         "name_en": "Pipeline",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
@@ -44,8 +44,8 @@
     {
       "operation": "upsert_resource_type",
       "data": {
-        "id": "repository",
-        "name": "´úÂë¿â",
+        "id": "repertory",
+        "name": "ä»£ç åº“",
         "name_en": "Repository",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
@@ -58,7 +58,7 @@
       "operation": "upsert_resource_type",
       "data": {
         "id": "credential",
-        "name": "Æ¾¾İ",
+        "name": "å‡­æ®",
         "name_en": "Credential",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
@@ -71,7 +71,7 @@
       "operation": "upsert_resource_type",
       "data": {
         "id": "cert",
-        "name": "Ö¤Êé",
+        "name": "è¯ä¹¦",
         "name_en": "Cert",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
@@ -84,7 +84,7 @@
       "operation": "upsert_resource_type",
       "data": {
         "id": "environment",
-        "name": "»·¾³",
+        "name": "ç¯å¢ƒ",
         "name_en": "Environment",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
@@ -97,7 +97,7 @@
       "operation": "upsert_resource_type",
       "data": {
         "id": "env_node",
-        "name": "½Úµã",
+        "name": "èŠ‚ç‚¹",
         "name_en": "Node",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
@@ -110,7 +110,7 @@
       "operation": "upsert_resource_type",
       "data": {
         "id": "custom_dir",
-        "name": "°æ±¾²Ö¿â×Ô¶¨ÒåÄ¿Â¼",
+        "name": "ç‰ˆæœ¬ä»“åº“è‡ªå®šä¹‰ç›®å½•",
         "name_en": "Custom_dir",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
@@ -123,7 +123,7 @@
       "operation": "upsert_resource_type",
       "data": {
         "id": "rule",
-        "name": "ÖÊÁ¿ºìÏß¹æÔò",
+        "name": "è´¨é‡çº¢çº¿è§„åˆ™",
         "name_en": "Rule",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {
@@ -136,7 +136,7 @@
       "operation": "upsert_resource_type",
       "data": {
         "id": "group",
-        "name": "ÖÊÁ¿ºìÏßÍ¨Öª×é",
+        "name": "è´¨é‡çº¢çº¿é€šçŸ¥ç»„",
         "name_en": "Group",
         "parents": [{"system_id": "bk_ci", "id": "project"}],
         "provider_config": {

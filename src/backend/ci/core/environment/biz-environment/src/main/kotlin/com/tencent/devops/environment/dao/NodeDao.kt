@@ -446,7 +446,37 @@ class NodeDao {
         }
     }
 
-    fun listPage(dslContext: DSLContext, page: Int, pageSize: Int, projectId: String?): List<TNodeRecord> {
+    fun listPage(dslContext: DSLContext, page: Int, pageSize: Int, name: String?): List<TNodeRecord> {
+        with(TNode.T_NODE) {
+            return if (name.isNullOrBlank()) {
+                dslContext.selectFrom(this)
+                    .limit(pageSize).offset((page - 1) * pageSize)
+                    .fetch()
+            } else {
+                dslContext.selectFrom(this)
+                    .where(NODE_NAME.like("%$name%"))
+                    .limit(pageSize).offset((page - 1) * pageSize)
+                    .fetch()
+            }
+        }
+    }
+
+    fun count(dslContext: DSLContext, name: String?): Int {
+        with(TNode.T_NODE) {
+            return if (name.isNullOrBlank()) {
+                dslContext.selectCount()
+                    .from(TNode.T_NODE)
+                    .fetchOne(0, Int::class.java)
+            } else {
+                dslContext.selectCount()
+                    .from(TNode.T_NODE)
+                    .where(NODE_NAME.like("%$name%"))
+                    .fetchOne(0, Int::class.java)
+            }
+        }
+    }
+
+    fun listPageForAuth(dslContext: DSLContext, page: Int, pageSize: Int, projectId: String?): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return if (projectId.isNullOrBlank()) {
                 dslContext.selectFrom(this)
@@ -461,7 +491,7 @@ class NodeDao {
         }
     }
 
-    fun count(dslContext: DSLContext, project: String?): Int {
+    fun countForAuth(dslContext: DSLContext, project: String?): Int {
         with(TNode.T_NODE) {
             return if (project.isNullOrBlank()) {
                 dslContext.selectCount()

@@ -8,7 +8,6 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -16,11 +15,12 @@ import java.lang.RuntimeException
 import com.tencent.bk.sdk.iam.dto.callback.response.BaseDataResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.devops.auth.utils.ActionUtils
-import com.tencent.devops.environment.api.ServiceEnvironmentResource
-import com.tencent.devops.environment.api.ServiceNodeResource
-import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.ticket.api.ServiceCredentialResource
+import com.tencent.devops.environment.api.RemoteEnvResource
+import com.tencent.devops.environment.api.RemoteNodeResource
+import com.tencent.devops.process.api.service.ServiceAuthPipelineResource
+import com.tencent.devops.project.api.service.ServiceAuthResource
+import com.tencent.devops.repository.api.ServiceAuthRepositoryResource
+import com.tencent.devops.ticket.api.ServiceAuthCredentialResource
 
 @Service
 class ResourceService @Autowired constructor(
@@ -32,7 +32,7 @@ class ResourceService @Autowired constructor(
         logger.info("getProjectList method $method, page $page token $token")
         checkToken(token)
         val projectRecords =
-            client.get(ServiceProjectResource::class).list(page.offset!!.toInt(), page.limit!!.toInt()).data
+            client.get(ServiceAuthResource::class).list(page.offset!!.toInt(), page.limit!!.toInt()).data
         logger.info("projectRecords $projectRecords")
         val count = projectRecords?.count ?: 0L
         val projectInfo = mutableListOf<InstanceInfoDTO>()
@@ -82,7 +82,7 @@ class ResourceService @Autowired constructor(
 
     private fun getPipeline(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
         val pipelineInfos =
-            client.get(ServicePipelineResource::class)
+            client.get(ServiceAuthPipelineResource::class)
                 .pipelineList(projectId, page.offset.toInt(), page.limit.toInt()).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
@@ -111,7 +111,7 @@ class ResourceService @Autowired constructor(
 
     private fun getRepository(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
         val repositoryInfos =
-            client.get(ServiceRepositoryResource::class)
+            client.get(ServiceAuthRepositoryResource::class)
                 .listByProjects(setOf(projectId), page.offset.toInt(), page.limit.toInt()).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
@@ -140,7 +140,7 @@ class ResourceService @Autowired constructor(
 
     private fun getCredential(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
         val credentialInfos =
-            client.get(ServiceCredentialResource::class)
+            client.get(ServiceAuthCredentialResource::class)
                 .list(projectId, page.offset.toInt(), page.limit.toInt()).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
@@ -169,7 +169,7 @@ class ResourceService @Autowired constructor(
 
     private fun getNode(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
         val nodeInfos =
-            client.get(ServiceNodeResource::class)
+            client.get(RemoteNodeResource::class)
                 .listNodeByPage(projectId, page.offset.toInt(), page.limit.toInt()).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
@@ -198,7 +198,7 @@ class ResourceService @Autowired constructor(
 
     private fun getEnv(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
         val envInfos =
-            client.get(ServiceEnvironmentResource::class)
+            client.get(RemoteEnvResource::class)
                 .listEnvByPage(projectId, page.offset.toInt(), page.limit.toInt()).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()

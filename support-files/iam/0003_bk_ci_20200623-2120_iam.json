@@ -5,7 +5,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "project_view",
-        "name": "²é¿´ÏîÄ¿",
+        "name": "æŸ¥çœ‹é¡¹ç›®",
         "name_en": "Project View",
         "type": "view",
         "related_resource_types": [
@@ -27,7 +27,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "project_create",
-        "name": "Ìí¼ÓÏîÄ¿",
+        "name": "æ·»åŠ é¡¹ç›®",
         "name_en": "Project Create",
         "type": "create",
         "version": 1
@@ -37,7 +37,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "project_edit",
-        "name": "±à¼­ÏîÄ¿",
+        "name": "ç¼–è¾‘é¡¹ç›®",
         "name_en": "Project Edit",
         "type": "edit",
         "related_resource_types": [
@@ -62,7 +62,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "project_delete",
-        "name": "½ûÓÃÏîÄ¿",
+        "name": "ç¦ç”¨é¡¹ç›®",
         "name_en": "Project Delete",
         "type": "delete",
         "related_resource_types": [
@@ -87,7 +87,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "project_list",
-        "name": "ÏîÄ¿ÁĞ±í",
+        "name": "é¡¹ç›®åˆ—è¡¨",
         "name_en": "Project List",
         "type": "list",
         "related_resource_types": [],
@@ -98,7 +98,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "project_manage",
-        "name": "ÏîÄ¿¹ÜÀí",
+        "name": "é¡¹ç›®ç®¡ç†",
         "name_en": "Project Manage",
         "type": "manage",
         "related_resource_types": [
@@ -123,7 +123,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "pipeline_view",
-        "name": "²é¿´Á÷Ë®Ïß",
+        "name": "æŸ¥çœ‹æµæ°´çº¿",
         "name_en": "Pipeline View",
         "type": "view",
         "related_resource_types": [
@@ -145,7 +145,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "pipeline_edit",
-        "name": "±à¼­Á÷Ë®Ïß",
+        "name": "ç¼–è¾‘æµæ°´çº¿",
         "name_en": "Pipeline Edit",
         "type": "edit",
         "related_resource_types": [
@@ -170,7 +170,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "pipeline_create",
-        "name": "Ìí¼ÓÁ÷Ë®Ïß",
+        "name": "æ·»åŠ æµæ°´çº¿",
         "name_en": "Pipeline Create",
         "type": "create",
         "related_resource_types": [
@@ -192,7 +192,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "pipeline_download",
-        "name": "ÏÂÔØÁ÷Ë®Ïß¹¹¼ş",
+        "name": "ä¸‹è½½æµæ°´çº¿æ„ä»¶",
         "name_en": "Pipeline Download",
         "type": "execute",
         "related_resource_types": [
@@ -217,7 +217,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "pipeline_delete",
-        "name": "É¾³ıÁ÷Ë®Ïß",
+        "name": "åˆ é™¤æµæ°´çº¿",
         "name_en": "Pipeline Delete",
         "type": "delete",
         "related_resource_types": [
@@ -243,7 +243,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "pipeline_share",
-        "name": "·ÖÏíÁ÷Ë®Ïß¹¹¼ş",
+        "name": "åˆ†äº«æµæ°´çº¿æ„ä»¶",
         "name_en": "Pipeline Share",
         "type": "execute",
         "related_resource_types": [
@@ -268,7 +268,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "pipeline_execute",
-        "name": "Ö´ĞĞÁ÷Ë®Ïß",
+        "name": "æ‰§è¡Œæµæ°´çº¿",
         "name_en": "Pipeline Execute",
         "type": "execute",
         "related_resource_types": [
@@ -292,18 +292,18 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "repository_view",
-        "name": "²é¿´´úÂë¿â",
+        "id": "repertory_view",
+        "name": "æŸ¥çœ‹ä»£ç åº“",
         "name_en": "Repository View",
         "type": "view",
         "related_resource_types": [
           {
             "system_id": "bk_ci",
-            "id": "repository",
+            "id": "repertory",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "repository_instance"
+                "id": "repertory_instance"
               }
             ]
           }
@@ -314,25 +314,25 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "repository_edit",
-        "name": "±à¼­´úÂë¿â",
+        "id": "repertory_edit",
+        "name": "ç¼–è¾‘ä»£ç åº“",
         "name_en": "Repository Edit",
         "type": "edit",
         "related_resource_types": [
           {
             "system_id": "bk_ci",
-            "id": "repository",
+            "id": "repertory",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "repository_instance"
+                "id": "repertory_instance"
               }
             ]
           }
         ],
         "related_actions": [
           "project_view",
-          "repository_view"
+          "repertory_view"
         ],
         "version": 1
       }
@@ -340,8 +340,8 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "repository_create",
-        "name": "Ìí¼Ó´úÂë¿â",
+        "id": "repertory_create",
+        "name": "æ·»åŠ ä»£ç åº“",
         "name_en": "Repository Create",
         "type": "create",
         "related_resource_types": [
@@ -358,7 +358,7 @@
         ],
         "related_actions": [
           "project_view",
-          "repository_view"
+          "repertory_view"
         ],
         "version": 1
       }
@@ -366,25 +366,25 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "repository_delete",
-        "name": "É¾³ı´úÂë¿â",
+        "id": "repertory_delete",
+        "name": "åˆ é™¤ä»£ç åº“",
         "name_en": "Repository Delete",
         "type": "delete",
         "related_resource_types": [
           {
             "system_id": "bk_ci",
-            "id": "repository",
+            "id": "repertory",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "repository_instance"
+                "id": "repertory_instance"
               }
             ]
           }
         ],
         "related_actions": [
           "project_view",
-          "repository_view"
+          "repertory_view"
         ],
         "version": 1
       }
@@ -392,25 +392,25 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "repository_use",
-        "name": "Ê¹ÓÃ´úÂë¿â",
+        "id": "repertory_use",
+        "name": "ä½¿ç”¨ä»£ç åº“",
         "name_en": "Repository Use",
         "type": "execute",
         "related_resource_types": [
           {
             "system_id": "bk_ci",
-            "id": "repository",
+            "id": "repertory",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
-                "id": "repository_instance"
+                "id": "repertory_instance"
               }
             ]
           }
         ],
         "related_actions": [
           "project_view",
-          "repository_view"
+          "repertory_view"
         ],
         "version": 1
       }
@@ -419,7 +419,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "credential_view",
-        "name": "²é¿´Æ¾¾İ",
+        "name": "æŸ¥çœ‹å‡­æ®",
         "name_en": "Credential View",
         "type": "view",
         "related_resource_types": [
@@ -444,7 +444,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "credential_edit",
-        "name": "±à¼­Æ¾¾İ",
+        "name": "ç¼–è¾‘å‡­æ®",
         "name_en": "Credential Edit",
         "type": "edit",
         "related_resource_types": [
@@ -470,7 +470,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "credential_create",
-        "name": "Ìí¼ÓÆ¾¾İ",
+        "name": "æ·»åŠ å‡­æ®",
         "name_en": "Credential Create",
         "type": "create",
         "related_resource_types": [
@@ -495,7 +495,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "credential_delete",
-        "name": "É¾³ıÆ¾¾İ",
+        "name": "åˆ é™¤å‡­æ®",
         "name_en": "Credential Delete",
         "type": "delete",
         "related_resource_types": [
@@ -521,7 +521,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "credential_use",
-        "name": "Ê¹ÓÃÆ¾¾İ",
+        "name": "ä½¿ç”¨å‡­æ®",
         "name_en": "Credential Use",
         "type": "execute",
         "related_resource_types": [
@@ -547,7 +547,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "environment_view",
-        "name": "²é¿´»·¾³",
+        "name": "æŸ¥çœ‹ç¯å¢ƒ",
         "name_en": "Environment View",
         "type": "view",
         "related_resource_types": [
@@ -572,7 +572,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "environment_edit",
-        "name": "±à¼­»·¾³",
+        "name": "ç¼–è¾‘ç¯å¢ƒ",
         "name_en": "Environment Edit",
         "type": "edit",
         "related_resource_types": [
@@ -598,7 +598,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "environment_create",
-        "name": "Ìí¼Ó»·¾³",
+        "name": "æ·»åŠ ç¯å¢ƒ",
         "name_en": "Environment Create",
         "type": "create",
         "related_resource_types": [
@@ -624,7 +624,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "environment_delete",
-        "name": "É¾³ı»·¾³",
+        "name": "åˆ é™¤ç¯å¢ƒ",
         "name_en": "Environment Delete",
         "type": "delete",
         "related_resource_types": [
@@ -650,7 +650,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "environment_use",
-        "name": "Ê¹ÓÃ»·¾³",
+        "name": "ä½¿ç”¨ç¯å¢ƒ",
         "name_en": "Environment Use",
         "type": "execute",
         "related_resource_types": [
@@ -676,7 +676,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "env_node_view",
-        "name": "²é¿´½Úµã",
+        "name": "æŸ¥çœ‹èŠ‚ç‚¹",
         "name_en": "Node View",
         "type": "view",
         "related_resource_types": [
@@ -701,7 +701,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "env_node_edit",
-        "name": "±à¼­½Úµã",
+        "name": "ç¼–è¾‘èŠ‚ç‚¹",
         "name_en": "Node Edit",
         "type": "edit",
         "related_resource_types": [
@@ -727,7 +727,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "env_node_create",
-        "name": "Ìí¼Ó½Úµã",
+        "name": "æ·»åŠ èŠ‚ç‚¹",
         "name_en": "Node Create",
         "type": "create",
         "related_resource_types": [
@@ -753,7 +753,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "env_node_delete",
-        "name": "É¾³ı½Úµã",
+        "name": "åˆ é™¤èŠ‚ç‚¹",
         "name_en": "Node Delete",
         "type": "delete",
         "related_resource_types": [
@@ -779,7 +779,7 @@
       "operation": "upsert_action",
       "data": {
         "id": "env_node_use",
-        "name": "Ê¹ÓÃ½Úµã",
+        "name": "ä½¿ç”¨èŠ‚ç‚¹",
         "name_en": "Node Use",
         "type": "execute",
         "related_resource_types": [

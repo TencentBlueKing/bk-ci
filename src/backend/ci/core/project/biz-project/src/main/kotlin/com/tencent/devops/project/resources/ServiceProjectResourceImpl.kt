@@ -100,7 +100,4 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.update(userId, projectId, projectUpdateInfo))
     }
 
-    override fun list(limit: Int, offset: Int): Result<Page<ProjectVO>> {
-        return Result(projectService.list(limit, offset))
-    }
 }

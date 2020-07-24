@@ -376,8 +376,8 @@ class NodeService @Autowired constructor(
         if (offset > 50) {
             offset = 50
         }
-        val nodeInfos = nodeDao.listPage(dslContext, limit, offset, projectId)
-        val count = nodeDao.count(dslContext, projectId)
+        val nodeInfos = nodeDao.listPageForAuth(dslContext, limit, offset, projectId)
+        val count = nodeDao.countForAuth(dslContext, projectId)
         return Page(
             count = count.toLong(),
             page = limit,

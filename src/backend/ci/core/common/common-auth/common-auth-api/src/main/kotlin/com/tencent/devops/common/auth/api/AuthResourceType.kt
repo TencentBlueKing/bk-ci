@@ -30,7 +30,7 @@ enum class AuthResourceType(val value: String) {
     BCS_DEV_IMAGE("dev_image"),     // bcs服务开发镜像
     BCS_PROD_IMAGE("prod_image"),   // bcs服务生产镜像
 
-    CODE_REPERTORY("repository"), // code代码仓库
+    CODE_REPERTORY("repertory"), // code代码仓库
 
     PIPELINE_DEFAULT("pipeline"), // 流水线默认类型
 

@@ -96,21 +96,6 @@ interface ServiceCredentialResource {
         credentialId: String
     )
 
-    @ApiOperation("其他服务获取凭据列表")
-    @Path("/{projectId}/")
-    @GET
-    fun list(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<Page<Credential>>
-
     @ApiOperation("获取拥有对应权限凭据列表")
     @Path("/{projectId}/hasPermissionList")
     @GET

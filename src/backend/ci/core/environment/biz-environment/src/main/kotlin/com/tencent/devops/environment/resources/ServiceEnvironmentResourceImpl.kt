@@ -84,8 +84,4 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
     override fun listBuildEnvs(userId: String, projectId: String, os: OS): Result<List<EnvWithNodeCount>> {
         return Result(envService.listBuildEnvs(userId, projectId, os))
     }
-
-    override fun listEnvByPage(projectId: String, page: Int?, pageSize: Int?): Result<Page<EnvWithPermission>> {
-        return Result(envService.listEnvironmentByPage(projectId, page, pageSize))
-    }
 }

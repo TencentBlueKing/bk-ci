@@ -5,7 +5,7 @@
       "operation": "upsert_action_groups",
       "data": [
         {
-          "name": "ÏîÄ¿¹ÜÀí",
+          "name": "é¡¹ç›®ç®¡ç†",
           "name_en": "Project Permissions",
           "actions": [
             {
@@ -29,7 +29,7 @@
           ]
         },
         {
-          "name": "Á÷Ë®Ïß¹ÜÀí",
+          "name": "æµæ°´çº¿ç®¡ç†",
           "name_en": "Pipeline Permissions",
           "actions": [
             {
@@ -56,28 +56,28 @@
           ]
         },
         {
-          "name": "´úÂë¿â¹ÜÀí",
+          "name": "ä»£ç åº“ç®¡ç†",
           "name_en": "Repository Permissions",
           "actions": [
             {
-              "id": "repository_view"
+              "id": "repertory_view"
             },
             {
-              "id": "repository_edit"
+              "id": "repertory_edit"
             },
             {
-              "id": "repository_create"
+              "id": "repertory_create"
             },
             {
-              "id": "repository_delete"
+              "id": "repertory_delete"
             },
             {
-              "id": "repository_use"
+              "id": "repertory_use"
             }
           ]
         },
         {
-          "name": "Æ¾Ö¤¹ÜÀí",
+          "name": "å‡­è¯ç®¡ç†",
           "name_en": "Credential Permissions",
           "actions": [
             {
@@ -98,7 +98,7 @@
           ]
         },
         {
-          "name": "»·¾³¹ÜÀí",
+          "name": "ç¯å¢ƒç®¡ç†",
           "name_en": "Environment Permissions",
           "actions": [
             {
@@ -119,7 +119,7 @@
           ]
         },
         {
-          "name": "»·¾³½Úµã¹ÜÀí",
+          "name": "ç¯å¢ƒèŠ‚ç‚¹ç®¡ç†",
           "name_en": "Node Permissions",
           "actions": [
             {
