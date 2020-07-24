@@ -96,7 +96,7 @@ jobs:
       
       - name: Create artifact - Step2:Microservices
         run: |
-          cp -rf src/agent/scripts/* bkci/agent-package/script/
+          cp -rf support-files/agent-package/script/* bkci/agent-package/script/
           cp -r src/gateway/* bkci/gateway/
 
           cd src/backend/ci/release/
