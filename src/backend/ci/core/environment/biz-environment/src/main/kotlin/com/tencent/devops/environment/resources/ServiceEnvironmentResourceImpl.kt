@@ -29,7 +29,6 @@ package com.tencent.devops.environment.resources
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
@@ -83,9 +82,5 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
 
     override fun listBuildEnvs(userId: String, projectId: String, os: OS): Result<List<EnvWithNodeCount>> {
         return Result(envService.listBuildEnvs(userId, projectId, os))
-    }
-
-    override fun listEnvByPage(projectId: String, page: Int?, pageSize: Int?): Result<Page<EnvWithPermission>> {
-        return Result(envService.listEnvironmentByPage(projectId, page, pageSize))
     }
 }
