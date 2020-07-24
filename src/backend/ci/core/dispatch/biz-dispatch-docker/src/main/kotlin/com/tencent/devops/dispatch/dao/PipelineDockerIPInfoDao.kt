@@ -26,7 +26,8 @@ class PipelineDockerIPInfoDao {
         diskIOLoad: Int,
         enable: Boolean,
         grayEnv: Boolean,
-        specialOn: Boolean
+        specialOn: Boolean,
+        clusterId: String
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             val preRecord = dslContext.selectFrom(this)
@@ -44,6 +45,7 @@ class PipelineDockerIPInfoDao {
                     .set(GRAY_ENV, grayEnv)
                     .set(SPECIAL_ON, specialOn)
                     .set(GMT_MODIFIED, LocalDateTime.now())
+                    .set(CLUSTER_ID, clusterId)
                     .where(DOCKER_IP.eq(dockerIp))
                     .execute()
             } else {
@@ -61,7 +63,8 @@ class PipelineDockerIPInfoDao {
                     GRAY_ENV,
                     SPECIAL_ON,
                     GMT_CREATE,
-                    GMT_MODIFIED
+                    GMT_MODIFIED,
+                    CLUSTER_ID
                 ).values(
                     dockerIp,
                     dockerHostPort,
@@ -75,7 +78,8 @@ class PipelineDockerIPInfoDao {
                     grayEnv,
                     specialOn,
                     LocalDateTime.now(),
-                    LocalDateTime.now()
+                    LocalDateTime.now(),
+                    clusterId
                 ).execute()
             }
         }
@@ -87,7 +91,8 @@ class PipelineDockerIPInfoDao {
         dockerHostPort: Int,
         enable: Boolean,
         grayEnv: Boolean,
-        specialOn: Boolean
+        specialOn: Boolean,
+        clusterId: String
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.update(this)
@@ -96,6 +101,7 @@ class PipelineDockerIPInfoDao {
                 .set(GRAY_ENV, grayEnv)
                 .set(SPECIAL_ON, specialOn)
                 .set(GMT_MODIFIED, LocalDateTime.now())
+                .set(CLUSTER_ID, clusterId)
                 .where(DOCKER_IP.eq(dockerIp))
                 .execute()
         }
@@ -232,12 +238,26 @@ class PipelineDockerIPInfoDao {
         dslContext: DSLContext,
         dockerIp: String
     ): Int {
-        return with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+        return with(
+            TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO
+        ) {
             dslContext.delete(this)
                 .where(DOCKER_IP.eq(dockerIp))
                 .execute()
         }
     }
+
+    fun updateClusterIdByClusterId(
+        dslContext: DSLContext,
+        oldClusterId: String,
+        newClusterId: String
+    ) {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            dslContext.update(this).set(CLUSTER_ID, newClusterId)
+                .where(CLUSTER_ID.eq(oldClusterId)).execute()
+        }
+    }
+
 }
 
 /*

@@ -1,5 +1,6 @@
 package com.tencent.devops.dispatch.pojo
 
+import com.tencent.devops.common.api.constant.DEFAULT_DOCKER_CLUSTER
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -30,5 +31,7 @@ data class DockerIpInfoVO(
     @ApiModelProperty("是否为专用机独占", required = false)
     val specialOn: Boolean?,
     @ApiModelProperty("创建时间", required = false)
-    val createTime: String?
+    val createTime: String?,
+    @ApiModelProperty("集群ID", required = false)
+    val clusterId: String = DEFAULT_DOCKER_CLUSTER
 )

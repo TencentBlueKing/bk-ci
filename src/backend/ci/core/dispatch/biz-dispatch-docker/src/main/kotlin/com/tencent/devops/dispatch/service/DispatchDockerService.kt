@@ -1,6 +1,8 @@
 package com.tencent.devops.dispatch.service
 
+import com.tencent.devops.common.api.constant.DEFAULT_DOCKER_CLUSTER
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.dispatch.dao.PipelineDockerDevClusterDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.pojo.DockerHostLoadConfig
@@ -9,6 +11,7 @@ import com.tencent.devops.dispatch.pojo.DockerIpListPage
 import com.tencent.devops.dispatch.pojo.DockerIpUpdateVO
 import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.DockerHostUtils
+import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerDevClusterRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -21,7 +24,8 @@ class DispatchDockerService @Autowired constructor(
     private val gray: Gray,
     private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
-    private val dockerHostUtils: DockerHostUtils
+    private val dockerHostUtils: DockerHostUtils,
+    private val pipelineDockerDevClusterDao: PipelineDockerDevClusterDao
 ) {
 
     companion object {
@@ -33,29 +37,39 @@ class DispatchDockerService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 10
 
         try {
-            val dockerIpList = pipelineDockerIPInfoDao.getDockerIpList(dslContext, pageNotNull, pageSizeNotNull)
+            val dockerIpList = pipelineDockerIPInfoDao.getDockerIpList(
+                dslContext, pageNotNull, pageSizeNotNull
+            )
             val count = pipelineDockerIPInfoDao.getDockerIpCount(dslContext)
 
             if (dockerIpList.size == 0 || count == 0L) {
-                return DockerIpListPage(pageNotNull, pageSizeNotNull, 0, emptyList())
+                return DockerIpListPage(
+                    pageNotNull, pageSizeNotNull, 0, emptyList()
+                )
             }
             val dockerIpInfoVOList = mutableListOf<DockerIpInfoVO>()
+
+
             dockerIpList.forEach {
-                dockerIpInfoVOList.add(DockerIpInfoVO(
-                    id = it.id,
-                    dockerIp = it.dockerIp,
-                    dockerHostPort = it.dockerHostPort,
-                    capacity = it.capacity,
-                    usedNum = it.usedNum,
-                    averageCpuLoad = it.cpuLoad,
-                    averageMemLoad = it.memLoad,
-                    averageDiskLoad = it.diskLoad,
-                    averageDiskIOLoad = it.diskIoLoad,
-                    enable = it.enable,
-                    grayEnv = it.grayEnv,
-                    specialOn = it.specialOn,
-                    createTime = it.gmtCreate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                ))
+                dockerIpInfoVOList.add(
+                    DockerIpInfoVO(
+                        id = it.id,
+                        dockerIp = it.dockerIp,
+                        dockerHostPort = it.dockerHostPort,
+                        capacity = it.capacity,
+                        usedNum = it.usedNum,
+                        averageCpuLoad = it.cpuLoad,
+                        averageMemLoad = it.memLoad,
+                        averageDiskLoad = it.diskLoad,
+                        averageDiskIOLoad = it.diskIoLoad,
+                        enable = it.enable,
+                        grayEnv = it.grayEnv,
+                        specialOn = it.specialOn,
+                        createTime = it.gmtCreate.format(
+                            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                        ),
+                        clusterId = it.clusterId
+                    ))
             }
 
             return DockerIpListPage(pageNotNull, pageSizeNotNull, count, dockerIpInfoVOList)
@@ -69,13 +83,19 @@ class DispatchDockerService @Autowired constructor(
         logger.info("$userId create docker IP $dockerIpInfoVOs")
         dockerIpInfoVOs.forEach {
             if (!CommonUtils.verifyIp(it.dockerIp.trim())) {
-                logger.warn("Dispatch create dockerIp error, invalid IP format: ${it.dockerIp}")
-                throw RuntimeException("Dispatch create dockerIp error, invalid IP format: ${it.dockerIp}")
+                logger.warn(
+                    "Dispatch create dockerIp error, invalid IP format: ${it.dockerIp}"
+                )
+                throw RuntimeException(
+                    "Dispatch create dockerIp error, invalid IP format: ${it.dockerIp}"
+                )
             }
         }
-
+        val clusterIds = pipelineDockerDevClusterDao.list(dslContext, true)
+            .map(TDispatchPipelineDockerDevClusterRecord::getClusterId).toSet()
         try {
             dockerIpInfoVOs.forEach {
+                val clusterId = if (it.clusterId in clusterIds) it.clusterId else DEFAULT_DOCKER_CLUSTER
                 pipelineDockerIPInfoDao.createOrUpdate(
                     dslContext = dslContext,
                     dockerIp = it.dockerIp.trim(),
@@ -88,7 +108,8 @@ class DispatchDockerService @Autowired constructor(
                     diskIOLoad = it.averageDiskIOLoad,
                     enable = it.enable,
                     grayEnv = it.grayEnv ?: false,
-                    specialOn = it.specialOn ?: false
+                    specialOn = it.specialOn ?: false,
+                    clusterId = clusterId
                 )
             }
 
@@ -100,7 +121,12 @@ class DispatchDockerService @Autowired constructor(
     }
 
     fun update(userId: String, dockerIp: String, dockerIpUpdateVO: DockerIpUpdateVO): Boolean {
-        logger.info("$userId update Docker IP: $dockerIp dockerIpUpdateVO: $dockerIpUpdateVO")
+        logger.info(
+            "$userId update Docker IP: $dockerIp dockerIpUpdateVO: $dockerIpUpdateVO"
+        )
+        val clusterId = pipelineDockerDevClusterDao.getClusterById(
+            dslContext, dockerIpUpdateVO.clusterId
+        )?.clusterId ?: DEFAULT_DOCKER_CLUSTER
         try {
             pipelineDockerIPInfoDao.update(
                 dslContext = dslContext,
@@ -108,7 +134,8 @@ class DispatchDockerService @Autowired constructor(
                 dockerHostPort = dockerIpUpdateVO.dockerHostPort,
                 enable = dockerIpUpdateVO.enable,
                 grayEnv = dockerIpUpdateVO.grayEnv,
-                specialOn = dockerIpUpdateVO.specialOn
+                specialOn = dockerIpUpdateVO.specialOn,
+                clusterId = clusterId
             )
             return true
         } catch (e: Exception) {
