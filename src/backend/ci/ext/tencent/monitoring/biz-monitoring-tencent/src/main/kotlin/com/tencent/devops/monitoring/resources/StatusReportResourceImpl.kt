@@ -23,16 +23,30 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.resources
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:monitoring:api-monitoring-tencent")
-    compile project(":core:notify:api-notify")
-    compile project(":ext:tencent:notify:biz-notify-tencent")
-    compile project(":ext:tencent:monitoring:model-monitoring-tencent")
-    compile project(":ext:tencent:common:common-notify-tencent")
-    compile project(":core:common:common-db")
-    compile("org.apache.commons:commons-compress:1.15")
-    compile("org.json:json:20140107")
-    compile("org.influxdb:influxdb-java:2.10")
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.monitoring.api.service.StatusReportResource
+import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
+import com.tencent.devops.monitoring.pojo.DispatchStatus
+import com.tencent.devops.monitoring.pojo.UsersStatus
+import com.tencent.devops.monitoring.services.StatusReportService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class StatusReportResourceImpl @Autowired constructor(private val statusReportService: StatusReportService) : StatusReportResource {
+    override fun scmCommitCheck(addCommitCheckStatus: AddCommitCheckStatus): Result<Boolean> {
+        return Result(statusReportService.reportScmCommitCheck(addCommitCheckStatus))
+    }
+
+    override fun userUsers(users: UsersStatus): Result<Boolean> {
+        return Result(statusReportService.reportUserUsers(users))
+    }
+
+    override fun dispatch(dispatchStatus: DispatchStatus): Result<Boolean> {
+        return Result(statusReportService.reportDispatchStatus(dispatchStatus))
+    }
+
+
 }

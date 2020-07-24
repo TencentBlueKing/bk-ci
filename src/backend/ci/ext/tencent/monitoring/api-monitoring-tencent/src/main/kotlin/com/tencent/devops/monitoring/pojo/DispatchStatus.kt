@@ -23,16 +23,33 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.pojo
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:monitoring:api-monitoring-tencent")
-    compile project(":core:notify:api-notify")
-    compile project(":ext:tencent:notify:biz-notify-tencent")
-    compile project(":ext:tencent:monitoring:model-monitoring-tencent")
-    compile project(":ext:tencent:common:common-notify-tencent")
-    compile project(":core:common:common-db")
-    compile("org.apache.commons:commons-compress:1.15")
-    compile("org.json:json:20140107")
-    compile("org.influxdb:influxdb-java:2.10")
-}
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.type.BuildType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("dispatch状态上报")
+data class DispatchStatus(
+    @ApiModelProperty("蓝盾项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("流水线ID", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("vmSeqId", required = true)
+    val vmSeqId: String,
+    @ApiModelProperty("channelCode", required = true)
+    val channelCode: ChannelCode,
+    @ApiModelProperty("BuildType", required = true)
+    val buildType: BuildType,
+    @ApiModelProperty("开机时间", required = true)
+    val startTime: Long,
+    @ApiModelProperty("关机时间", required = false)
+    val stopTime: Long?,
+    @ApiModelProperty("蓝盾错误码", required = true)
+    val errorCode: String,
+    @ApiModelProperty("失败原因", required = false)
+    val errorMsg: String?
+)
