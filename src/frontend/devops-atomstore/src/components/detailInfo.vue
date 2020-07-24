@@ -166,7 +166,9 @@
         },
 
         mounted () {
-            this.$nextTick(() => (this.isOverflow = this.$refs.edit.scrollHeight > 180))
+            setTimeout(() => {
+                this.isOverflow = this.$refs.edit.scrollHeight > 180
+            }, 1000)
         }
     }
 </script>
