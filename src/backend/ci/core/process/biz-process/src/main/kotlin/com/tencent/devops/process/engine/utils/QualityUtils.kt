@@ -118,7 +118,6 @@ object QualityUtils {
                     val finalContainer = when (container) {
                         is VMBuildContainer -> {
                             VMBuildContainer(
-                                containerId = container.containerId,
                                 id = container.id,
                                 name = container.name,
                                 elements = elementList,
@@ -137,12 +136,14 @@ object QualityUtils {
                                 thirdPartyWorkspace = container.thirdPartyWorkspace,
                                 dockerBuildVersion = container.dockerBuildVersion,
                                 tstackAgentId = container.tstackAgentId,
+                                dispatchType = container.dispatchType,
+                                showBuildResource = container.showBuildResource,
                                 canRetry = container.canRetry,
                                 enableExternal = container.enableExternal,
+                                containerId = container.containerId,
                                 jobControlOption = container.jobControlOption,
                                 mutexGroup = container.mutexGroup,
-                                dispatchType = container.dispatchType,
-                                showBuildResource = container.showBuildResource
+                                dockerDevClusterId = container.dockerDevClusterId
                             )
                         }
                         is NormalContainer -> {

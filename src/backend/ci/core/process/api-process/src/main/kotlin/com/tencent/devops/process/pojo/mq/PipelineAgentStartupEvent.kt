@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.pojo.mq
 
+import com.tencent.devops.common.api.constant.DEFAULT_DOCKER_CLUSTER
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
@@ -59,5 +60,5 @@ data class PipelineAgentStartupEvent(
     override var delayMills: Int = 0,
     val executeCount: Int?,
     override var routeKeySuffix: String? = null,
-    val dockerDevClusterId: String = "default" // 所使用的构建机集群, 默认为默认构建机集群
+    val dockerDevClusterId: String = DEFAULT_DOCKER_CLUSTER // 所使用的构建机集群, 默认为默认构建机集群
 ) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)

@@ -89,7 +89,7 @@ class DockerDispatcher @Autowired constructor(
         try {
             // 先判断是否OP已配置专机，若配置了专机，看当前ip是否在专机列表中，若在 选择当前IP并检查负载，若不在从专机列表中选择一个容量最小的
             val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, pipelineAgentStartupEvent.projectId).toSet()
-            logger.info("${pipelineAgentStartupEvent.projectId}| specialIpSet: $specialIpSet")
+            logger.info("${pipelineAgentStartupEvent.projectId}| specialIpSet: $specialIpSet| dockerDevClusterId: $dockerDevClusterId")
 
             val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
                 dslContext = dslContext,
@@ -103,6 +103,7 @@ class DockerDispatcher @Autowired constructor(
             if (taskHistory != null) {
                 val dockerIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, taskHistory.dockerIp)
                 if (dockerIpInfo == null || dockerIpInfo.clusterId != dockerDevClusterId) {
+                    logger.warn("${pipelineAgentStartupEvent.buildId}| dockerIpInfo: $dockerIpInfo| dockerDevClusterId: $dockerDevClusterId is not match")
                     // 此前IP下架或者此IP与所选集群不符，重新选择，根据负载条件选择可用IP
                     dockerPair = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
                         projectId = pipelineAgentStartupEvent.projectId,

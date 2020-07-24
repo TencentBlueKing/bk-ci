@@ -184,7 +184,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         )
 
         dispatchType.replaceVariable(buildVariableService.getAllVariable(buildId))
-
+        logger.info("[$buildId|startup container dockerDevClusterId: ${param.dockerDevClusterId}]")
         pipelineEventDispatcher.dispatch(
             PipelineAgentStartupEvent(
                 source = source,
@@ -209,7 +209,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
                 containerType = task.containerType,
-                dockerDevClusterId = param.dockerDevClusterId ?: "default"
+                dockerDevClusterId = param.dockerDevClusterId
             ),
             PipelineContainerAgentHeartBeatEvent(
                 source = source,

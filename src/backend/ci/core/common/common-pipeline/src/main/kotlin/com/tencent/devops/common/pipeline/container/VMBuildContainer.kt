@@ -26,6 +26,7 @@
 
 package com.tencent.devops.common.pipeline.container
 
+import com.tencent.devops.common.api.constant.DEFAULT_DOCKER_CLUSTER
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -90,7 +91,7 @@ data class VMBuildContainer(
     @ApiModelProperty("容器运行次数", required = false, hidden = true)
     override var executeCount: Int? = 0,
     @ApiModelProperty("所使用的构建机集群", required = false, hidden = true)
-    var dockerDevClusterId: String? = null
+    val dockerDevClusterId: String = DEFAULT_DOCKER_CLUSTER
 ) : Container {
     companion object {
         const val classType = "vmBuild"
