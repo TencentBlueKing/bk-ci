@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.constant.DEFAULT_DOCKER_CLUSTER
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.pipeline.Model
@@ -204,7 +205,8 @@ class CheckImageInitPipelineService @Autowired constructor(
             thirdPartyWorkspace = null,
             dockerBuildVersion = null,
             tstackAgentId = null,
-            dispatchType = DockerDispatchType(DockerVersion.TLINUX2_2.value)
+            dispatchType = DockerDispatchType(DockerVersion.TLINUX2_2.value),
+            dockerDevClusterId = DEFAULT_DOCKER_CLUSTER
         )
         val stageSecondContainers = listOf<Container>(stageSecondContainer)
         val stageSecond = Stage(stageSecondContainers, VMUtils.genStageId(2))

@@ -26,6 +26,7 @@
 
 package com.tencent.devops.dispatch.pojo
 
+import com.tencent.devops.common.api.constant.DEFAULT_DOCKER_CLUSTER
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -53,5 +54,5 @@ data class DebugStartParam(
     @ApiModelProperty("镜像仓库凭证ID", required = true)
     val credentialId: String?,
     @ApiModelProperty("构建机集群ID", required = true)
-    val clusterId: String = "default"
+    val clusterId: String = DEFAULT_DOCKER_CLUSTER
 )
