@@ -2,13 +2,11 @@ package com.tencent.devops.sign.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.SignResult
 import com.tencent.devops.sign.dao.SignHistoryDao
 import com.tencent.devops.sign.dao.SignIpaInfoDao
-import com.tencent.devops.sign.impl.SignServiceImpl
 import com.tencent.devops.sign.utils.IpaFileUtil
 import com.tencent.devops.sign.utils.SignUtils.DEFAULT_CER_ID
 import org.jolokia.util.Base64Util
@@ -72,11 +70,11 @@ class SignInfoService(
         return if (record?.archiveFinishTime != null) SignResult(
             resignId = record.resignId,
             finished = true,
-            fileDownloadUrl = record.downloadUrl
+            finishdTime = record.archiveFinishTime
         ) else SignResult(
             resignId = resignId,
             finished = false,
-            fileDownloadUrl = null
+            finishdTime = null
         )
     }
 

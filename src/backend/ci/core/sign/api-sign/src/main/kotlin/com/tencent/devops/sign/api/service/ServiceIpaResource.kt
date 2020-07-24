@@ -64,7 +64,7 @@ interface ServiceIpaResource {
     ): Result<String>
 
     @ApiOperation("ipa包签名状态")
-    @POST
+    @GET
     @Path("/sign/{resignId}/status")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun getSignResult(
