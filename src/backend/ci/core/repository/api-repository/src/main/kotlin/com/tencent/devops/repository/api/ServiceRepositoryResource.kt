@@ -133,7 +133,6 @@ interface ServiceRepositoryResource {
         permission: Permission
     ): Result<Page<RepositoryInfo>>
 
-
     @ApiOperation("获取项目代码库列表")
     @GET
     @Path("/projects/{projectId}/listByProject")

@@ -29,7 +29,6 @@ package com.tencent.devops.environment.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.OS
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
@@ -132,5 +131,4 @@ interface ServiceEnvironmentResource {
         @QueryParam("os")
         os: OS
     ): Result<List<EnvWithNodeCount>>
-
 }

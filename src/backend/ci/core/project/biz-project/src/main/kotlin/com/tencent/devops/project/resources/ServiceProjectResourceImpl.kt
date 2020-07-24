@@ -26,7 +26,6 @@
 
 package com.tencent.devops.project.resources
 
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -99,5 +98,4 @@ class ServiceProjectResourceImpl @Autowired constructor(
     override fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Result<Boolean> {
         return Result(projectService.update(userId, projectId, projectUpdateInfo))
     }
-
 }
