@@ -73,6 +73,17 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         return Result(credentialService.serviceGet(projectId, credentialId, publicKey))
     }
 
+    override fun list(projectId: String, page: Int?, pageSize: Int?): Result<Page<Credential>> {
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 20
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val result = credentialService.serviceList(projectId, limit.offset, limit.limit)
+        return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
+    }
+
     override fun edit(projectId: String, credentialId: String, credential: CredentialUpdate): Result<Boolean> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
