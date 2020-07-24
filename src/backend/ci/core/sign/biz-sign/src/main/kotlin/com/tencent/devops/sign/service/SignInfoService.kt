@@ -12,8 +12,10 @@ import com.tencent.devops.sign.utils.SignUtils.DEFAULT_CER_ID
 import org.jolokia.util.Base64Util
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 import java.io.File
 
+@Service
 class SignInfoService(
     private val dslContext: DSLContext,
     private val signIpaInfoDao: SignIpaInfoDao,

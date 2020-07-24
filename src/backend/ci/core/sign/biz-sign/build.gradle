@@ -33,6 +33,7 @@ dependencies {
     compile project(":core:log:api-log")
     compile project(":core:artifactory:api-artifactory")
     compile project(":core:sign:model-sign")
+    compile project(":core:artifactory:api-artifactory")
     compile "mysql:mysql-connector-java"
     compile "org.json:json"
     compile "com.googlecode.plist:dd-plist:1.23"
