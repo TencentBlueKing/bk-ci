@@ -174,6 +174,7 @@ class DockerHostBuildResourceApi constructor(
             RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(dockerIpInfoVO))
         )
 
+        logger.info("Start refreshDockerIpStatus $path")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -183,6 +184,7 @@ class DockerHostBuildResourceApi constructor(
                     errorType = ErrorType.SYSTEM,
                     errorMsg = "DockerHostBuildResourceApi $path fail")
             }
+            logger.info("End refreshDockerIpStatus.")
             return objectMapper.readValue(responseContent)
         }
     }

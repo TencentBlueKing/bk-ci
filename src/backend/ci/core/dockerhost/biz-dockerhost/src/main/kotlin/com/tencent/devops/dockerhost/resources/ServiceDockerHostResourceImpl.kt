@@ -106,10 +106,10 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
         buildId: String,
         containerId: String,
         logStartTimeStamp: Int,
+        printLog: Boolean?,
         request: HttpServletRequest
     ): Result<DockerLogsResponse> {
         checkReq(request)
-        logger.info("[$buildId]|Enter ServiceDockerHostResourceImpl.dockerRun...")
         return Result(
             dockerService.getDockerRunLogs(
                 projectId,
@@ -117,7 +117,8 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
                 vmSeqId,
                 buildId,
                 containerId,
-                logStartTimeStamp
+                logStartTimeStamp,
+                printLog
             )
         )
     }

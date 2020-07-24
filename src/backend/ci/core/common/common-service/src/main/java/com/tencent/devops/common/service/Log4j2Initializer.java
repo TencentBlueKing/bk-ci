@@ -137,11 +137,21 @@ public class Log4j2Initializer implements ApplicationContextInitializer<Configur
                     .addComponent(builder.newComponent("TimeBasedTriggeringPolicy").addAttribute("interval", "1").addAttribute("modulate", "true"))
                     .addComponent(builder.newComponent("SizeBasedTriggeringPolicy").addAttribute("size", "300 MB"));
 
+            ComponentBuilder deleteAction = builder.newComponent("Delete")
+                    .addAttribute("basePath", logPath)
+                    .addAttribute("maxDepth", 2)
+                    .addComponent(builder.newComponent("IfFileName").addAttribute("glob", "*.log.gz"))
+                    .addComponent(builder.newComponent("IfLastModified").addAttribute("age", "30d"));
+
             appenderBuilder = builder.newAppender("Rolling", "RollingFile")
                     .addAttribute("fileName", logPath + appName + ".log")
                     .addAttribute("filePattern", logPath + appName + "-%d{yyyy-MM-dd}-%i.log.gz")
                     .add(rollingLayoutBuilder)
-                    .addComponent(builder.newComponent("DefaultRolloverStrategy").addAttribute("max", "10"))
+                    .addComponent(
+                            builder.newComponent("DefaultRolloverStrategy")
+                                    .addAttribute("max", "30")
+                                    .addComponent(deleteAction)
+                    )
                     .addComponent(triggeringPolicy);
             builder.add(appenderBuilder);
 

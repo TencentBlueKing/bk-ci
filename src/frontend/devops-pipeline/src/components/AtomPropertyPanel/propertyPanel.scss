@@ -30,7 +30,8 @@
         height: calc(100% - 60px);
         max-height: calc(100vh - 60px);
         .container-property-panel,
-        .stage-property-panel {
+        .stage-property-panel,
+        .pipeline-stage-review-control {
             padding: 20px 32px 10px 32px;
         }
     }

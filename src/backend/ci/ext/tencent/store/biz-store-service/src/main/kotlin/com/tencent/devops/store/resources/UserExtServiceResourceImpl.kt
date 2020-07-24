@@ -54,7 +54,7 @@ class UserExtServiceResourceImpl @Autowired constructor(
 
     override fun list(
         userId: String,
-        serviceName: String?,
+        keyword: String?,
         classifyCode: String?,
         labelCode: String?,
         bkServiceId: Long?,
@@ -66,7 +66,7 @@ class UserExtServiceResourceImpl @Autowired constructor(
     ): Result<SearchExtServiceVO> {
         return Result(extServiceSearchService.list(
             userId = userId,
-            serviceName = serviceName,
+            keyword = keyword,
             classifyCode = classifyCode,
             labelCode = labelCode,
             bkServiceId = bkServiceId,

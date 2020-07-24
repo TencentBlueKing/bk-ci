@@ -1,18 +1,19 @@
 <template>
     <div
         ref="stageContainer"
-        :class="{ 'soda-stage-container': true, 'first-container': stageIndex === 0, 'readonly': !editable || containerDisabled }"
+        :class="{ 'devops-stage-container': true, 'first-container': stageIndex === 0, 'readonly': !editable || containerDisabled }"
     >
         <template v-if="!isOnlyOneContainer && containerLength - 1 !== containerIndex">
-            <span class="connect-line left" :class="{ 'cruve': containerIndex === 0 }"></span>
-            <span class="connect-line right" :class="{ 'cruve': containerIndex === 0 }"></span>
+            <cruve-line :straight="true" :width="60" :height="cruveHeight" class="connect-line left" />
+            <cruve-line :straight="true" :width="60" :height="cruveHeight" :direction="false" class="connect-line right" />
         </template>
+
         <h3 :class="{ 'container-title': true, 'first-ctitle': containerIndex === 0, [container.status]: container.status }" @click.stop="showContainerPanel">
             <status-icon type="container" :editable="editable" :container-disabled="containerDisabled" :status="container.status">
                 {{ containerSerialNum }}
             </status-icon>
             <p class="container-name">
-                <span :title="container.name">{{ container.status === 'PREPARE_ENV' ? $t('editPage.prepareEnv') : container.name }}</span>
+                <span :class="{ 'skip-name': containerDisabled || container.status === 'SKIP' }" :title="container.name">{{ container.status === 'PREPARE_ENV' ? $t('editPage.prepareEnv') : container.name }}</span>
             </p>
             <container-type :class="showCopyJob ? 'hover-hide' : ''" :container="container" v-if="!showCheckedToatal"></container-type>
             <span :title="$t('editPage.copyJob')" v-if="showCopyJob && !container.isError" class="devops-icon copyJob" @click.stop="copyContainer">
@@ -22,7 +23,6 @@
             <span @click.stop v-if="showCheckedToatal && canSkipElement">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="containerDisabled"></bk-checkbox>
             </span>
-            <bk-button v-if="showDebugBtn" class="debug-btn" theme="warning" @click.stop="debugDocker">{{ $t('editPage.docker.debugConsole') }}</bk-button>
         </h3>
         <atom-list
             :container="container"
@@ -45,13 +45,15 @@
     import AtomList from './AtomList'
     import StatusIcon from './StatusIcon'
     import Logo from '@/components/Logo'
+    import CruveLine from '@/components/Stages/CruveLine'
 
     export default {
         components: {
             StatusIcon,
             ContainerType,
             AtomList,
-            Logo
+            Logo,
+            CruveLine
         },
         props: {
             container: Object,
@@ -76,7 +78,8 @@
         data () {
             return {
                 showContainerName: false,
-                showAtomName: false
+                showAtomName: false,
+                cruveHeight: 0
             }
         },
         computed: {
@@ -86,7 +89,7 @@
             ]),
             ...mapGetters('atom', [
                 'isTriggerContainer',
-                'isDockerBuildResource',
+
                 'getAllContainers'
             ]),
             showCheckedToatal () {
@@ -105,12 +108,6 @@
             },
             projectId () {
                 return this.$route.params.projectId
-            },
-            isDocker () {
-                return this.isDockerBuildResource(this.container)
-            },
-            showDebugBtn () {
-                return this.container.baseOS === 'LINUX' && this.isDocker && (this.container.status === 'FAILED' && this.$route.name === 'pipelinesDetail' && this.execDetail && this.execDetail.buildNum === this.execDetail.latestBuildNum && this.execDetail.curVersion === this.execDetail.latestVersion)
             },
             containerDisabled () {
                 return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false) || this.stageDisabled
@@ -148,9 +145,6 @@
             this.updateCruveConnectHeight()
         },
         methods: {
-            ...mapActions('soda', [
-                'startDebugDocker'
-            ]),
             ...mapActions('atom', [
                 'togglePropertyPanel',
                 'addAtom',
@@ -179,10 +173,7 @@
                 if (!this.$refs.stageContainer) {
                     return
                 }
-                const height = `${getOuterHeight(this.$refs.stageContainer) - 12}px`
-                Array.from(this.$refs.stageContainer.querySelectorAll('.connect-line')).map(el => {
-                    el.style.height = height
-                })
+                this.cruveHeight = getOuterHeight(this.$refs.stageContainer)
             },
             showContainerPanel () {
                 const { stageIndex, containerIndex } = this
@@ -193,59 +184,6 @@
                         containerIndex
                     }
                 })
-            },
-            async debugDocker () {
-                const vmSeqId = this.getRealSeqId()
-                const projectId = this.$route.params.projectId
-                const pipelineId = this.$route.params.pipelineId
-                let url = ''
-                const tab = window.open('about:blank')
-                try {
-                    const res = await this.startDebugDocker({
-                        projectId: projectId,
-                        pipelineId: pipelineId,
-                        vmSeqId,
-                        imageCode: this.container.dispatchType && this.container.dispatchType.imageCode,
-                        imageVersion: this.container.dispatchType && this.container.dispatchType.imageVersion,
-                        imageName: this.container.dispatchType && this.container.dispatchType.value ? this.container.dispatchType.value : this.container.dockerBuildVersion,
-                        buildEnv: this.container.buildEnv,
-                        imageType: this.container.dispatchType && this.container.dispatchType.imageType ? this.container.dispatchType.imageType : 'BKDEVOPS',
-                        credentialId: this.container.dispatchType && this.container.dispatchType.credentialId ? this.container.dispatchType.credentialId : ''
-                    })
-                    if (res === true) {
-                        url = `${WEB_URL_PIRFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&vmSeqId=${vmSeqId}`
-                    }
-                    tab.location = url
-                } catch (err) {
-                    tab.close()
-                    if (err.code === 403) {
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: this.$t('pipeline'),
-                                option: this.$t('edit')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${projectId}&service_code=pipeline&role_manager=pipeline:${pipelineId}`
-                        })
-                    } else {
-                        this.$showTips({
-                            theme: 'error',
-                            message: err.message || err
-                        })
-                    }
-                }
-            },
-            getRealSeqId () {
-                let i = 0
-                let seqId = 0
-                this.execDetail && this.execDetail.model.stages && this.execDetail.model.stages.map((stage, sIndex) => {
-                    stage.containers.map((container, cIndex) => {
-                        if (sIndex === this.stageIndex && cIndex === this.containerIndex) {
-                            seqId = i
-                        }
-                        i++
-                    })
-                })
-                return seqId
             },
             copyContainer () {
                 try {
@@ -274,39 +212,36 @@
 
 <style lang="scss">
     @import "./Stage";
-    .soda-stage-container {
+    .devops-stage-container {
         text-align: left;
-        margin: 0 $StageMargin/2 26px $StageMargin/2;
+        margin: 16px 20px 0 20px;
         position: relative;
 
         // 实心圆点
         &:after {
             content: '';
-            width: $dotR;
-            height: $dotR;
+            width: $smalldotR;
+            height: $smalldotR;
             position: absolute;
-            right: -$dotR / 2;
-            top: $itemHeight / 2 - ($dotR / 2 - 1);
+            right: -$smalldotR / 2;
+            top: $itemHeight / 2 - ($smalldotR / 2 - 1);
             background: $primaryColor;
             border-radius: 50%;
         }
         // 三角箭头
         &:before {
-            content: '';
-            border: $angleSize solid transparent;
-            border-left-color: $primaryColor;
-            height: 0;
-            width: 0;
+            font-family: 'bk-icons-linear' !important;
+            content: "\e94d";
             position: absolute;
-            left: -$angleSize;
-            top: $itemHeight / 2 - $angleSize + 1;
+            font-size: 13px;
+            color: $primaryColor;
+            left: -10px;
+            top: $itemHeight / 2 - 13px / 2 + 1;
             z-index: 2;
         }
 
         &.first-container {
-            margin-left: 0;
-            &:before,
-            .container-title:before {
+            &:before {
                 display: none;
             }
         }
@@ -333,6 +268,11 @@
 
             .atom-canskip-checkbox {
                 margin-right: 6px;
+                &.is-disabled .bk-checkbox {
+                    background-color: transparent;
+                    border-color: #979BA4;
+                }
+
             }
             input[type=checkbox] {
                 border-radius: 3px;
@@ -374,100 +314,20 @@
                 }
             }
 
-            // 实线
-            &:before,
-            &:after {
-                content: '';
-                position: absolute;
-                border-top: 2px $lineStyle $primaryColor;
-                width: $StagePadding;
-                top: $itemHeight / 2;
-                left: -$StagePadding;
-            }
-            &:after {
-                right: -$StagePadding;
-                left: auto;
-            }
-
-            &:not(.first-ctitle) {
-                &:before,
-                &:after {
-                    width: $shortLine;
-                    left: -$shortLine;
-                }
-
-                &:after {
-                    left: auto;
-                    right: -$shortLine;
-                }
-            }
         }
+
         .connect-line {
             position: absolute;
-            top: $itemHeight / 2 + 1 + $lineRadius;
-            @include cruve-connect ($lineRadius, $lineStyle, $primaryColor, false);
-            &.left {
-                left: -$StageMargin / 2 + (2 * $lineRadius);
+            top: $itemHeight / 2 - 4;
+            stroke: $primaryColor;
+            stroke-width: 1;
+            fill: none;
+
+             &.left {
+                left: -$svgWidth + 4;
             }
             &.right {
-                @include cruve-connect ($lineRadius, $lineStyle, $primaryColor, true);
-                right: -$StageMargin / 2  + (2 * $lineRadius);
-            }
-            &:not(.cruve) {
-                &:before {
-                    top: -$itemHeight / 2 + $lineRadius + 1;
-                    transform: rotate(0);
-                    border-radius: 0;
-                }
-            }
-        }
-    }
-
-    .readonly {
-        .connect-line {
-            &.left,
-            &.right {
-                border-color: $lineColor;
-                &:before {
-                    border-right-color: $lineColor;
-                }
-                &:after {
-                    border-bottom-color: $lineColor;
-                }
-            }
-        }
-        &:after {
-            background: $lineColor;
-        }
-        // 三角箭头
-        &:before {
-            border-left-color: $lineColor;
-        }
-        .container-title {
-            cursor: pointer;
-            background-color: $fontWeightColor;
-
-            &.RUNNING {
-                background-color: $loadingColor;
-            }
-            &.PREPARE_ENV {
-                background-color: $loadingColor;
-            }
-            &.CANCELED, &.REVIEWING, &.REVIEW_ABORT {
-                background-color: $cancelColor;
-            }
-            &.FAILED, &.HEARTBEAT_TIMEOUT {
-                background-color: $dangerColor;
-            }
-            &.SUCCEED {
-                background-color: $successColor;
-            }
-            &:before,
-            &:after {
-                border-top-color: $lineColor;
-            }
-            > .container-name span:hover {
-                color: white;
+                right: -$addIconLeftMargin - $containerMargin;
             }
         }
     }

@@ -18,7 +18,6 @@
  */
 
 import { mapActions, mapGetters, mapState } from 'vuex'
-import cookie from 'cookie'
 import {
     navConfirm
 } from '@/utils/util'
@@ -345,25 +344,6 @@ export default {
                 return setting
             }
         },
-        savePipelineAuthority () {
-            const { role, policy } = this.pipelineAuthority
-            const longProjectId = this.curProject && this.curProject.projectId ? this.curProject.projectId : ''
-            const { pipelineId } = this.$route.params
-            const data = {
-                project_id: longProjectId,
-                resource_type_code: 'pipeline',
-                resource_code: pipelineId,
-                role: role.map(item => {
-                    item.group_list = item.selected
-                    return item
-                }),
-                policy: policy.map(item => {
-                    item.group_list = item.selected
-                    return item
-                })
-            }
-            return this.$ajax.put(`/backend/api/perm/service/pipeline/mgr_resource/permission/`, data, { headers: { 'X-CSRFToken': cookie.parse(document.cookie).backend_csrftoken } })
-        },
         getPipelineSetting () {
             const { pipelineSetting } = this
             const { projectId } = this.$route.params
@@ -490,8 +470,7 @@ export default {
                 this.setSaveStatus(true)
                 const saveAction = this.isTemplatePipeline ? this.saveSetting : this.savePipelineAndSetting
                 const responses = await Promise.all([
-                    saveAction(),
-                    ...(this.authSettingEditing ? [this.savePipelineAuthority()] : [])
+                    saveAction()
                 ])
 
                 if (responses.some(res => res.code === 403)) {

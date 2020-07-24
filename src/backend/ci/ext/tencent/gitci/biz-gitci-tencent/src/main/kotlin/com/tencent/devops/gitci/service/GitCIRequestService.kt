@@ -392,84 +392,88 @@ class GitCIRequestService @Autowired constructor(
 
     private fun createGitRequestEvent(gitPushEvent: GitPushEvent, e: String): GitRequestEvent {
         val latestCommit = getLatestCommit(gitPushEvent.after, gitPushEvent.commits)
-        return GitRequestEvent(null,
-                OBJECT_KIND_PUSH,
-                gitPushEvent.operation_kind,
-                null,
-                gitPushEvent.project_id,
-                gitPushEvent.ref.removePrefix("refs/heads/"),
-                null,
-                gitPushEvent.after,
-                latestCommit?.message,
-                getCommitTimeStamp(latestCommit?.timestamp),
-                gitPushEvent.user_name,
-                gitPushEvent.total_commits_count.toLong(),
-                null,
-                e,
-                "",
-                null
+        return GitRequestEvent(
+            id = null,
+            objectKind = OBJECT_KIND_PUSH,
+            operationKind = gitPushEvent.operation_kind,
+            extensionAction = null,
+            gitProjectId = gitPushEvent.project_id,
+            branch = gitPushEvent.ref.removePrefix("refs/heads/"),
+            targetBranch = null,
+            commitId = gitPushEvent.after,
+            commitMsg = latestCommit?.message,
+            commitTimeStamp = getCommitTimeStamp(latestCommit?.timestamp),
+            userId = gitPushEvent.user_name,
+            totalCommitCount = gitPushEvent.total_commits_count.toLong(),
+            mergeRequestId = null,
+            event = e,
+            description = "",
+            mrTitle = null
         )
     }
 
     private fun createGitRequestEvent(gitTagPushEvent: GitTagPushEvent, e: String): GitRequestEvent {
         val latestCommit = getLatestCommit(gitTagPushEvent.after, gitTagPushEvent.commits)
-        return GitRequestEvent(null,
-                OBJECT_KIND_TAG_PUSH,
-                gitTagPushEvent.operation_kind,
-                null,
-                gitTagPushEvent.project_id,
-                gitTagPushEvent.ref.removePrefix("refs/tags/"),
-                null,
-                gitTagPushEvent.after,
-                latestCommit?.message,
-                getCommitTimeStamp(latestCommit?.timestamp),
-                gitTagPushEvent.user_name,
-                gitTagPushEvent.total_commits_count.toLong(),
-                null,
-                e,
-                "",
-                null
+        return GitRequestEvent(
+            id = null,
+            objectKind = OBJECT_KIND_TAG_PUSH,
+            operationKind = gitTagPushEvent.operation_kind,
+            extensionAction = null,
+            gitProjectId = gitTagPushEvent.project_id,
+            branch = gitTagPushEvent.ref.removePrefix("refs/tags/"),
+            targetBranch = null,
+            commitId = gitTagPushEvent.after,
+            commitMsg = latestCommit?.message,
+            commitTimeStamp = getCommitTimeStamp(latestCommit?.timestamp),
+            userId = gitTagPushEvent.user_name,
+            totalCommitCount = gitTagPushEvent.total_commits_count.toLong(),
+            mergeRequestId = null,
+            event = e,
+            description = "",
+            mrTitle = null
         )
     }
 
     private fun createGitRequestEvent(gitMrEvent: GitMergeRequestEvent, e: String): GitRequestEvent {
         val latestCommit = gitMrEvent.object_attributes.last_commit
-        return GitRequestEvent(null,
-                OBJECT_KIND_MERGE_REQUEST,
-                null,
-                gitMrEvent.object_attributes.extension_action,
-                gitMrEvent.object_attributes.source_project_id,
-                gitMrEvent.object_attributes.source_branch,
-                gitMrEvent.object_attributes.target_branch,
-                latestCommit.id,
-                latestCommit.message,
-                getCommitTimeStamp(latestCommit.timestamp),
-                latestCommit.author.name,
-                0,
-                gitMrEvent.object_attributes.iid,
-                e,
-                "",
-                gitMrEvent.object_attributes.title
+        return GitRequestEvent(
+            id = null,
+            objectKind = OBJECT_KIND_MERGE_REQUEST,
+            operationKind = null,
+            extensionAction = gitMrEvent.object_attributes.extension_action,
+            gitProjectId = gitMrEvent.object_attributes.source_project_id,
+            branch = gitMrEvent.object_attributes.source_branch,
+            targetBranch = gitMrEvent.object_attributes.target_branch,
+            commitId = latestCommit.id,
+            commitMsg = latestCommit.message,
+            commitTimeStamp = getCommitTimeStamp(latestCommit.timestamp),
+            userId = gitMrEvent.user.username,
+            totalCommitCount = 0,
+            mergeRequestId = gitMrEvent.object_attributes.iid,
+            event = e,
+            description = "",
+            mrTitle = gitMrEvent.object_attributes.title
         )
     }
 
     private fun createGitRequestEvent(userId: String, triggerBuildReq: TriggerBuildReq): GitRequestEvent {
-        return GitRequestEvent(null,
-                OBJECT_KIND_MANUAL,
-                "",
-                null,
-                triggerBuildReq.gitProjectId,
-                triggerBuildReq.branch.removePrefix("refs/heads/"),
-                null,
-                "",
-                triggerBuildReq.customCommitMsg,
-                getCommitTimeStamp(null),
-                userId,
-                0,
-                null,
-                "",
-                triggerBuildReq.description,
-                ""
+        return GitRequestEvent(
+            id = null,
+            objectKind = OBJECT_KIND_MANUAL,
+            operationKind = "",
+            extensionAction = null,
+            gitProjectId = triggerBuildReq.gitProjectId,
+            branch = triggerBuildReq.branch.removePrefix("refs/heads/"),
+            targetBranch = null,
+            commitId = "",
+            commitMsg = triggerBuildReq.customCommitMsg,
+            commitTimeStamp = getCommitTimeStamp(null),
+            userId = userId,
+            totalCommitCount = 0,
+            mergeRequestId = null,
+            event = "",
+            description = triggerBuildReq.description,
+            mrTitle = ""
         )
     }
 

@@ -26,7 +26,9 @@
 
 package com.tencent.devops.store.dao.common
 
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreOptLog
+import com.tencent.devops.store.pojo.common.OperationLogCreateRequest
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -62,6 +64,37 @@ class OperationLogDao {
                     optUser,
                     optUser
                 ).execute()
+        }
+    }
+
+    fun batchAddLogs(
+        dslContext: DSLContext,
+        userId: String,
+        operationLogList: List<OperationLogCreateRequest>
+    ) {
+        with(TStoreOptLog.T_STORE_OPT_LOG) {
+            val addStep = operationLogList.map {
+                dslContext.insertInto(
+                    this,
+                    ID,
+                    STORE_CODE,
+                    STORE_TYPE,
+                    OPT_TYPE,
+                    OPT_DESC,
+                    OPT_USER,
+                    CREATOR
+                )
+                    .values(
+                        UUIDUtil.generate(),
+                        it.storeCode,
+                        it.storeType,
+                        it.optType,
+                        it.optDesc,
+                        it.optUser,
+                        userId
+                    )
+            }
+            dslContext.batch(addStep).execute()
         }
     }
 }

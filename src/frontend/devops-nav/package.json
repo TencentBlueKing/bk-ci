@@ -34,7 +34,6 @@
     "copy-webpack-plugin": "^4.5.1",
     "cross-env": "^5.1.4",
     "css-loader": "^0.28.11",
-    "eslint": "~5.16.0",
     "eslint-config-standard": "~12.0.0",
     "eslint-friendly-formatter": "~4.0.1",
     "eslint-loader": "~2.1.2",
@@ -42,9 +41,9 @@
     "eslint-plugin-node": "^8.0.1",
     "eslint-plugin-promise": "~4.1.1",
     "eslint-plugin-standard": "~4.0.0",
-    "eslint-plugin-vue": "~5.2.2",
     "exports-loader": "^0.7.0",
     "file-loader": "^1.1.11",
+    "fork-ts-checker-webpack-plugin": "^5.0.5",
     "ghooks": "^2.0.4",
     "html-loader": "^0.5.5",
     "html-webpack-plugin": "^3.1.0",
@@ -66,6 +65,8 @@
     "webpack": "^4.2.0",
     "webpack-bundle-analyzer": "^3.3.2",
     "webpack-cli": "^3.1.1",
+    "eslint": "^7.3.1",
+    "eslint-plugin-vue": "^6.2.2",
     "webpack-dev-server": "^3.1.1"
   },
   "dependencies": {

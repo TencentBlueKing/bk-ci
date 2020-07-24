@@ -118,7 +118,7 @@ class StageControl @Autowired constructor(
 
             val fastKill = stage.controlOption?.fastKill == true && source == "$BS_CONTAINER_END_SOURCE_PREIX${BuildStatus.FAILED}"
 
-            logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$this|stage=$stage|needPause=$needPause|fastKill=$fastKill")
+            logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$this|stage=$stage|action=$actionType|needPause=$needPause|fastKill=$fastKill")
 
             // [终止事件]或[满足FastKill]或[等待审核超时] 直接结束流水线，不需要判断各个Stage的状态，可直接停止
             if (ActionType.isTerminate(actionType) || fastKill) {
@@ -126,7 +126,13 @@ class StageControl @Autowired constructor(
 
                 buildStatus = BuildStatus.TERMINATE
                 stages.forEach { s ->
-                    pipelineStageService.updateStageStatus(buildId, s.stageId, buildStatus)
+                    if (BuildStatus.isRunning(s.status)) {
+                        pipelineStageService.updateStageStatus(
+                            buildId = buildId,
+                            stageId = s.stageId,
+                            buildStatus = buildStatus
+                        )
+                    }
                 }
                 allContainers.forEach { c ->
                     if (BuildStatus.isRunning(c.status)) {
@@ -268,7 +274,7 @@ class StageControl @Autowired constructor(
 
         if (finishContainers < containers.size) { // 还有未执行完的任务,继续下发其他构建容器
             sendContainerEvent(containers, newActionType, userId)
-        } else if (finishContainers == containers.size) { // 全部执行完的
+        } else if (finishContainers == containers.size && !BuildStatus.isFinish(status)) { // 全部执行完且Stage状态不是已完成
             buildStatus = if (failureContainers == 0) {
                 BuildStatus.SUCCEED
             } else {

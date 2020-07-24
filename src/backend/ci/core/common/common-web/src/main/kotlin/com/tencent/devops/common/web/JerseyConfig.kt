@@ -87,6 +87,7 @@ open class JerseyConfig : ResourceConfig(), ApplicationContextAware, Initializin
         register(CodeccReportExceptionMapper::class.java)
         register(ErrorCodeExceptionMapper::class.java)
         register(BkFieldExceptionMapper::class.java)
+        register(JsonMappingExceptionMapper::class.java)
         logger.info("JerseyConfig-RestResource-find-start")
         val restResources = applicationContext.getBeansWithAnnotation(RestResource::class.java)
         logger.info("JerseyConfig-RestResource-register-start")

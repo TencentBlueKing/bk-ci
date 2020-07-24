@@ -76,6 +76,7 @@ import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.TimeZone
+import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 
 @Component
@@ -84,7 +85,10 @@ class DockerHostBuildService(
     private val environment: Environment
 ) {
 
-    private val logger = LoggerFactory.getLogger(DockerHostBuildService::class.java)
+    companion object {
+        private const val dockerExitCode = 255 // docker容器状态异常退出码
+        private val logger = LoggerFactory.getLogger(DockerHostBuildService::class.java)
+    }
 
     private val dockerHostBuildApi: DockerHostBuildResourceApi =
         DockerHostBuildResourceApi(if ("codecc_build" == dockerHostConfig.dockerhostMode) "ms/dispatch-codecc" else "ms/dispatch")
@@ -600,10 +604,15 @@ class DockerHostBuildService(
         return logs
     }
 
-    fun getDockerRunExitCode(containerId: String): Int {
-        return dockerCli.waitContainerCmd(containerId)
-            .exec(WaitContainerResultCallback())
-            .awaitStatusCode()
+    fun getDockerRunExitCode(containerId: String): Int? {
+        return try {
+            dockerCli.waitContainerCmd(containerId)
+                .exec(WaitContainerResultCallback())
+                .awaitStatusCode(10, TimeUnit.SECONDS)
+        } catch (e: Exception) {
+            logger.error("[$containerId]| getDockerRunExitCode error.", e)
+            dockerExitCode
+        }
     }
 
     fun clearContainers() {

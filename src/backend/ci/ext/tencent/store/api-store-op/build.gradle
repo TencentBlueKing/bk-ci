@@ -25,7 +25,7 @@
  */
 
 dependencies {
-    compile project(":core:store:api-store")
+    compile project(":ext:tencent:store:api-store-tencent")
     compile project(":ext:tencent:store:api-store-service")
 }
 

@@ -177,9 +177,9 @@ class ExtServiceProjectService @Autowired constructor(
         projectRelRecords.forEach {
             val publicFlag = it["publicFlag"] as Boolean
             val projectType = it["projectType"] as Byte
-            var installUser = ""
-            var installTime = ""
-            if (projectType.equals(StoreProjectTypeEnum.INIT)) {
+            val installUser: String
+            val installTime: String
+            if (projectType == StoreProjectTypeEnum.INIT.type.toByte()) {
                 installUser = it["publisher"] as String
                 installTime = (it["pubTime"] as LocalDateTime).timestampmilli().toString()
             } else {
@@ -205,7 +205,7 @@ class ExtServiceProjectService @Autowired constructor(
                     publisher = installUser,
                     publishTime = installTime,
                     createTime = (it["createTime"] as LocalDateTime).timestampmilli().toString(),
-                    updateTime = (it["updateTime"] as LocalDateTime)?.timestampmilli().toString(),
+                    updateTime = (it["updateTime"] as LocalDateTime).timestampmilli().toString(),
                     itemIds = serviceItemMap[it["serviceId"] as String] ?: emptySet()
                 )
             )
@@ -272,6 +272,6 @@ class ExtServiceProjectService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

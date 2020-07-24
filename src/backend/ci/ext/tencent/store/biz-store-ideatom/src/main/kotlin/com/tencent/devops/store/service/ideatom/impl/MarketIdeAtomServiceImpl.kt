@@ -82,7 +82,7 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
     @Suppress("UNCHECKED_CAST")
     private fun doList(
         userId: String,
-        ideAtomName: String?,
+        keyword: String?,
         categoryCode: String?,
         classifyCode: String?,
         labelCode: String?,
@@ -93,7 +93,7 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): MarketIdeAtomResp {
-        logger.info("[list]userId=$userId, ideAtomName=$ideAtomName, classifyCode=$classifyCode, " +
+        logger.info("[list]userId=$userId, keyword=$keyword, classifyCode=$classifyCode, " +
                 "labelCode=$labelCode, score=$score, page=$page, pageSize=$pageSize")
 
         val results = mutableListOf<MarketIdeAtomItem>()
@@ -102,7 +102,7 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
         val count = marketIdeAtomDao.count(
                 dslContext = dslContext,
                 categoryCode = categoryCode,
-                ideAtomName = ideAtomName,
+                keyword = keyword,
                 classifyCode = classifyCode,
                 labelCodeList = labelCodeList,
                 score = score,
@@ -110,7 +110,7 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
                 )
         val atoms = marketIdeAtomDao.list(
                 dslContext = dslContext,
-                ideAtomName = ideAtomName,
+                keyword = keyword,
                 categoryCode = categoryCode,
                 classifyCode = classifyCode,
                 labelCodeList = labelCodeList,
@@ -191,7 +191,7 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
                 label = MessageCodeUtil.getCodeLanMessage(LATEST),
                 records = doList(
                         userId = userId,
-                        ideAtomName = null,
+                        keyword = null,
                         categoryCode = null,
                         classifyCode = null,
                         labelCode = null,
@@ -209,7 +209,7 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
                 label = MessageCodeUtil.getCodeLanMessage(HOTTEST),
                 records = doList(
                         userId = userId,
-                        ideAtomName = null,
+                        keyword = null,
                         categoryCode = null,
                         classifyCode = null,
                         labelCode = null,
@@ -235,7 +235,7 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
                     label = classifyLanName,
                     records = doList(
                             userId = userId,
-                            ideAtomName = null,
+                            keyword = null,
                             categoryCode = null,
                             classifyCode = classifyCode,
                             labelCode = null,
@@ -257,7 +257,7 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
      */
     override fun list(
         userId: String,
-        atomName: String?,
+        keyword: String?,
         categoryCode: String?,
         classifyCode: String?,
         labelCode: String?,
@@ -267,12 +267,12 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): MarketIdeAtomResp {
-        logger.info("[list]userId=$userId, atomName=$atomName, classifyCode=$classifyCode, labelCode=$labelCode, " +
+        logger.info("[list]userId=$userId, keyword=$keyword, classifyCode=$classifyCode, labelCode=$labelCode, " +
                 "score=$score, sortType=$sortType, page=$page, pageSize=$pageSize")
 
         return doList(
                 userId = userId,
-                ideAtomName = atomName,
+                keyword = keyword,
                 categoryCode = categoryCode,
                 classifyCode = classifyCode,
                 labelCode = labelCode,

@@ -19,18 +19,29 @@
 
 @import '../../scss/conf';
 @import '../../scss/mixins/ellipsis';
-$StageMargin: 82px;
+$StageMargin: 80px;
+$svgWidth: 60px;
+$reviewIconSize: 28px;
+$stageEntryHeight: 50px;
+$stageConnectorSize: 2px;
 $itemHeight: 42px;
 $serialSize: 42px;
 $iconSize: 42px;
 $lineStyle: solid;
 $StagePadding: $StageMargin / 2;
 $addBtnSize: 18px;
-$shortLine: $StagePadding - $addBtnSize / 2 - 10px;
 $dotR: 10px;
-$angleSize: 5px;
-$lineRadius: 6px;
+$smalldotR: 6px;
+$angleSize: 7px;
+$lineRadius: 2px;
+$shortLine: $StagePadding;
 $stageBGColor: #f5f5f5;
+
+$containerMargin: 20px;
+$addIconLeftMargin: $StageMargin / 2 - $reviewIconSize / 2;
+$addIconRightMargin: $reviewIconSize / 2 + $StageMargin / 2;
+$addIconLeft: -$addIconRightMargin;
+$appendIconRight: -$addIconLeftMargin - $addBtnSize;
 
 
 @keyframes rotating {
@@ -95,35 +106,13 @@ $stageBGColor: #f5f5f5;
     }
 }
 
-@mixin cruve-connect ($lineCurvature, $connectStyle, $color, $direction) {
+.connect-line {
     position: absolute;
-    border-left: 2px $connectStyle $color;
-    height: 100%;
-    &:before,
-    &:after {
-        position: absolute;
-        content: '';
-        border-radius: 50%;
-        border: 2px $connectStyle transparent;
-        width: 2 *  $lineCurvature;
-        height: 2 *  $lineCurvature;
-    }
-    &:before {
-        left: -16px;
-        top: -$lineCurvature - 1;
-        border-right-color: $color;
-        transform: rotate(-45deg);
-    }
-    &:after {
-        left: -2px;
-        bottom: -$lineCurvature - 1;
-        border-bottom-color: $color;
-        transform: rotate(45deg);
-    }
-
-    @if $direction {
-        transform: rotate3d(0, 1, 0, 180deg);
-    }
+    width: $svgWidth;
+    top: $itemHeight / 2 - 2;
+    stroke: $primaryColor;
+    stroke-width: 1;
+    fill: none;
 }
 
 $borderColor: #addaff;
@@ -183,6 +172,14 @@ $borderColor: #addaff;
     cursor: pointer;
 }
 
+span.skip-name {
+    text-decoration: line-through;
+    color: #c4cdd6;
+    &:hover {
+        color: #c4cdd6;
+    }
+}
+
 .add-plus-icon {
     @include add-plus-icon($primaryColor, $borderColor, white, 18px, true);
     @include add-plus-icon-active($primaryColor, $primaryColor, white);
@@ -196,26 +193,76 @@ $borderColor: #addaff;
     }
 }
 
-.play-icon {
-    @extend .add-plus-icon;
-    &:after {
-        display: none;
-    }
-    &:before {
-        width: 0;
-        height: 0;
-        border: 4px solid transparent;
-        border-left-color: $primaryColor;
-        background-color: transparent !important;
-    }
-
-    &:hover {
+.readonly {
+    .stage-connector {
+        background: $lineColor;
+        color: $lineColor;
         &:before {
-            border-left-color: white;
+            background: $lineColor;
+        }
+    }
+    .connect-line {
+        &.left,
+        &.right {
+            stroke: $lineColor;
+
+            &:before {
+                stroke: $lineColor;
+            }
+            &:after {
+                stroke: $lineColor;
+                background-color: $lineColor;
+            }
+        }
+    }
+    &:after {
+        background: $lineColor;
+    }
+    // 三角箭头
+    &:before {
+        color: $lineColor;
+    }
+    .container-title {
+        cursor: pointer;
+        background-color: $fontWeightColor;
+
+        &.QUEUE {
+            color: $loadingColor;
+        }
+        &.RUNNING,
+        &.REVIEWING,
+        &.PREPARE_ENV,
+        &.LOOP_WAITING,
+        &.CALL_WAITING {
+            background-color: $loadingColor;
+        }
+        &.CANCELED,
+        &.REVIEW_ABORT,
+        &.TRY_FINALLY,
+        &.QUEUE_CACHE,
+        &.UNEXEC
+        &.SKIP {
+            background-color: $cancelColor;
+        }
+        &.FAILED,
+        &.TERMINATE,
+        &.HEARTBEAT_TIMEOUT,
+        &.QUALITY_CHECK_FAIL,
+        &.QUEUE_TIMEOUT,
+        &.EXEC_TIMEOUT {
+            background-color: $dangerColor;
+        }
+        &.SUCCEED,
+        &.REVIEW_PROCESSED,
+        &.STAGE_SUCCESS {
+            background-color: $successColor;
+        }
+        &:before,
+        &:after {
+            border-top-color: $lineColor;
+        }
+        > .container-name span:hover {
+            color: white;
         }
     }
 }
-
-
-
-

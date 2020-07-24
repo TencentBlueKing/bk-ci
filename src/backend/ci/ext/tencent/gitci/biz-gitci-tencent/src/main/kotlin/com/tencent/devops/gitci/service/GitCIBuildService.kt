@@ -27,7 +27,9 @@
 package com.tencent.devops.gitci.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
@@ -71,6 +73,46 @@ import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.gitci.client.ScmClient
+import com.tencent.devops.gitci.pojo.CI_STATUS
+import com.tencent.devops.gitci.pojo.CI_REPOSITORY_URL
+import com.tencent.devops.gitci.pojo.CI_REPOSITORY_NAME
+import com.tencent.devops.gitci.pojo.CI_BUILD_USER
+import com.tencent.devops.gitci.pojo.CI_COMMIT_ID
+import com.tencent.devops.gitci.pojo.CI_EVENT_TYPE
+import com.tencent.devops.gitci.pojo.CI_BRANCH
+import com.tencent.devops.gitci.pojo.CI_REF
+import com.tencent.devops.gitci.pojo.CI_COMMIT_MESSAGE
+import com.tencent.devops.gitci.pojo.CI_PUSH_BEFORE_COMMIT
+import com.tencent.devops.gitci.pojo.CI_PUSH_AFTER_COMMIT
+import com.tencent.devops.gitci.pojo.CI_PUSH_TOTAL_COMMIT
+import com.tencent.devops.gitci.pojo.CI_PUSH_OPERATION_KIND
+import com.tencent.devops.gitci.pojo.CI_TAG_NAME
+import com.tencent.devops.gitci.pojo.CI_TAG_OPERATION
+import com.tencent.devops.gitci.pojo.CI_TAG_USERNAME
+import com.tencent.devops.gitci.pojo.CI_MR_ID
+import com.tencent.devops.gitci.pojo.CI_MR_AUTHOR
+import com.tencent.devops.gitci.pojo.CI_MR_TARGET_BRANCH
+import com.tencent.devops.gitci.pojo.CI_MR_SOURCE_BRANCH
+import com.tencent.devops.gitci.pojo.CI_MR_TARGET_REPOSITORY
+import com.tencent.devops.gitci.pojo.CI_MR_SOURCE_REPOSITORY
+import com.tencent.devops.gitci.pojo.CI_MR_CREATE_TIME
+import com.tencent.devops.gitci.pojo.CI_MR_UPDATE_TIME
+import com.tencent.devops.gitci.pojo.CI_MR_CREATE_TIME_TIMESTAMP
+import com.tencent.devops.gitci.pojo.CI_MR_UPDATE_TIME_TIMESTAMP
+import com.tencent.devops.gitci.pojo.CI_MR_NUMBER
+import com.tencent.devops.gitci.pojo.CI_MR_DESC
+import com.tencent.devops.gitci.pojo.CI_MR_TITLE
+import com.tencent.devops.gitci.pojo.CI_MR_URL
+import com.tencent.devops.gitci.pojo.CI_MR_ACTION
+import com.tencent.devops.gitci.pojo.CI_MR_ASSIGNEE
+import com.tencent.devops.gitci.pojo.CI_COMMIT_ID_SHORT
+import com.tencent.devops.gitci.pojo.CI_TAG_CREATE_FROM
+import com.tencent.devops.gitci.pojo.CI_REPOSITORY_OWNER
+import com.tencent.devops.gitci.pojo.git.GitEvent
+import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.gitci.pojo.git.GitPushEvent
+import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
+import com.tencent.devops.gitci.utils.CommonUtils
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -139,8 +181,14 @@ class GitCIBuildService @Autowired constructor(
 
         logger.info("pipelineId: $pipelineId")
 
-        // 启动构建
-        val buildId = client.get(ServiceBuildResource::class).manualStartup(event.userId, gitProjectConf.projectCode!!, pipelineId, mapOf(), channelCode).data!!.id
+            // 启动构建
+            val buildId = client.get(ServiceBuildResource::class).manualStartup(
+            userId = event.userId,
+            projectId = gitProjectConf.projectCode!!,
+            pipelineId = pipelineId,
+            values = mapOf(),
+            channelCode = channelCode
+        ).data!!.id
         gitRequestEventBuildDao.update(dslContext, event.id!!, pipelineId, buildId)
         logger.info("buildId: $buildId")
 
@@ -319,52 +367,52 @@ class GitCIBuildService @Autowired constructor(
         val gitCiCodeRepoInput = when (event.objectKind) {
             OBJECT_KIND_PUSH -> {
                 GitCiCodeRepoInput(
-                        gitProjectConf.name,
-                        gitProjectConf.gitHttpUrl,
-                        gitToken.accessToken,
-                        null,
-                        CodePullStrategy.REVERT_UPDATE,
-                        GitPullModeType.COMMIT_ID,
-                        event.commitId
+                    repositoryName = gitProjectConf.name,
+                    repositoryUrl = gitProjectConf.gitHttpUrl,
+                    oauthToken = gitToken.accessToken,
+                    localPath = null,
+                    strategy = CodePullStrategy.REVERT_UPDATE,
+                    pullType = GitPullModeType.COMMIT_ID,
+                    refName = event.commitId
                 )
             }
             OBJECT_KIND_TAG_PUSH -> {
                 GitCiCodeRepoInput(
-                        gitProjectConf.name,
-                        gitProjectConf.gitHttpUrl,
-                        gitToken.accessToken,
-                        null,
-                        CodePullStrategy.REVERT_UPDATE,
-                        GitPullModeType.TAG,
-                        event.branch.removePrefix("refs/tags/")
+                    repositoryName = gitProjectConf.name,
+                    repositoryUrl = gitProjectConf.gitHttpUrl,
+                    oauthToken = gitToken.accessToken,
+                    localPath = null,
+                    strategy = CodePullStrategy.REVERT_UPDATE,
+                    pullType = GitPullModeType.TAG,
+                    refName = event.branch.removePrefix("refs/tags/")
                 )
             }
             OBJECT_KIND_MERGE_REQUEST -> {
                 GitCiCodeRepoInput(
-                        gitProjectConf.name,
-                        gitProjectConf.gitHttpUrl,
-                        gitToken.accessToken,
-                        null,
-                        CodePullStrategy.REVERT_UPDATE,
-                        GitPullModeType.BRANCH,
-                        "",
-                        StartType.WEB_HOOK,
-                        CodeEventType.MERGE_REQUEST.name,
-                        event.branch,
-                        event.targetBranch,
-                        gitProjectConf.gitHttpUrl,
-                        gitProjectConf.gitHttpUrl
+                    repositoryName = gitProjectConf.name,
+                    repositoryUrl = gitProjectConf.gitHttpUrl,
+                    oauthToken = gitToken.accessToken,
+                    localPath = null,
+                    strategy = CodePullStrategy.REVERT_UPDATE,
+                    pullType = GitPullModeType.BRANCH,
+                    refName = "",
+                    pipelineStartType = StartType.WEB_HOOK,
+                    hookEventType = CodeEventType.MERGE_REQUEST.name,
+                    hookSourceBranch = event.branch,
+                    hookTargetBranch = event.targetBranch,
+                    hookSourceUrl = gitProjectConf.gitHttpUrl,
+                    hookTargetUrl = gitProjectConf.gitHttpUrl
                 )
             }
             OBJECT_KIND_MANUAL -> {
                 GitCiCodeRepoInput(
-                        gitProjectConf.name,
-                        gitProjectConf.gitHttpUrl,
-                        gitToken.accessToken,
-                        null,
-                        CodePullStrategy.REVERT_UPDATE,
-                        GitPullModeType.BRANCH,
-                        event.branch.removePrefix("refs/heads/")
+                    repositoryName = gitProjectConf.name,
+                    repositoryUrl = gitProjectConf.gitHttpUrl,
+                    oauthToken = gitToken.accessToken,
+                    localPath = null,
+                    strategy = CodePullStrategy.REVERT_UPDATE,
+                    pullType = GitPullModeType.BRANCH,
+                    refName = event.branch.removePrefix("refs/heads/")
                 )
             }
             else -> {
@@ -374,12 +422,12 @@ class GitCIBuildService @Autowired constructor(
         }
 
         return MarketBuildAtomElement(
-                "拉代码",
-                null,
-                null,
-                GitCiCodeRepoTask.atomCode,
-                "1.*",
-                mapOf("input" to gitCiCodeRepoInput!!)
+            name = "拉代码",
+            id = null,
+            status = null,
+            atomCode = GitCiCodeRepoTask.atomCode,
+            version = "1.*",
+            data = mapOf("input" to gitCiCodeRepoInput!!)
         )
     }
 
@@ -449,15 +497,63 @@ class GitCIBuildService @Autowired constructor(
 
         val startParams = mutableMapOf<String, String>()
 
-        // 代码库相关固定参数
-        startParams["BK_CI_REPO_GIT_WEBHOOK_BRANCH"] = event.branch
-        startParams["BK_CI_REPO_GIT_WEBHOOK_PUSH_USERNAME"] = event.userId
-        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_AUTHOR"] = event.userId
-        startParams["BK_CI_REPO_GIT_WEBHOOK_TARGET_BRANCH"] = event.targetBranch ?: ""
-        startParams["BK_CI_REPO_GIT_WEBHOOK_SOURCE_BRANCH"] = event.branch
-        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP"] = event.commitTimeStamp ?: ""
-        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_ID"] = event.mergeRequestId.toString()
-        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_TITLE"] = event.mrTitle ?: ""
+        // 通用参数
+        startParams[CI_STATUS] = "true"
+        startParams[CI_EVENT_TYPE] = event.objectKind
+        startParams[CI_BRANCH] = event.branch
+        startParams[CI_BUILD_USER] = event.userId
+        startParams[CI_COMMIT_ID] = event.commitId
+        startParams[CI_COMMIT_ID_SHORT] = event.commitId.substring(0, 8)
+        startParams[CI_REPOSITORY_NAME] = gitProjectConf.name
+        startParams[CI_REPOSITORY_URL] = gitProjectConf.url
+        startParams[CI_COMMIT_MESSAGE] = event.commitMsg.toString()
+        startParams[CI_REPOSITORY_OWNER] = CommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl)
+
+        // 写入WEBHOOK触发环境变量
+        val originEvent = try {
+            objectMapper.readValue<GitEvent>(event.event)
+        } catch (e: Exception) {
+            logger.warn("Fail to parse the git web hook commit event, errMsg: ${e.message}")
+        }
+
+        when (originEvent) {
+            is GitPushEvent -> {
+                startParams[CI_BUILD_USER] = originEvent.user_name
+                startParams[CI_PUSH_BEFORE_COMMIT] = originEvent.before
+                startParams[CI_PUSH_AFTER_COMMIT] = originEvent.after
+                startParams[CI_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
+                startParams[CI_PUSH_OPERATION_KIND] = originEvent.operation_kind
+                startParams[CI_REF] = originEvent.ref
+            }
+            is GitTagPushEvent -> {
+                startParams[CI_TAG_NAME] = event.branch
+                startParams[CI_TAG_OPERATION] = originEvent.operation_kind ?: ""
+                startParams[CI_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
+                startParams[CI_TAG_USERNAME] = event.userId
+                startParams[CI_REF] = originEvent.ref
+                startParams[CI_TAG_CREATE_FROM] = originEvent.create_from.toString()
+            }
+            is GitMergeRequestEvent -> {
+                startParams[CI_MR_ACTION] = originEvent.object_attributes.action
+                startParams[CI_MR_AUTHOR] = originEvent.user.username
+                startParams[CI_MR_TARGET_BRANCH] = originEvent.object_attributes.target_branch
+                startParams[CI_MR_SOURCE_BRANCH] = originEvent.object_attributes.source_branch
+                startParams[CI_MR_TARGET_REPOSITORY] = originEvent.object_attributes.target.name
+                startParams[CI_MR_SOURCE_REPOSITORY] = originEvent.object_attributes.source.name
+                startParams[CI_MR_CREATE_TIME] = originEvent.object_attributes.created_at
+                startParams[CI_MR_CREATE_TIME_TIMESTAMP] =
+                    DateTimeUtil.zoneDateToTimestamp(originEvent.object_attributes.created_at).toString()
+                startParams[CI_MR_UPDATE_TIME] = originEvent.object_attributes.updated_at
+                startParams[CI_MR_UPDATE_TIME_TIMESTAMP] =
+                    DateTimeUtil.zoneDateToTimestamp(originEvent.object_attributes.updated_at).toString()
+                startParams[CI_MR_ID] = originEvent.object_attributes.iid.toString()
+                startParams[CI_MR_TITLE] = originEvent.object_attributes.title
+                startParams[CI_MR_URL] = originEvent.object_attributes.url
+                startParams[CI_MR_NUMBER] = originEvent.object_attributes.id.toString()
+                startParams[CI_MR_DESC] = originEvent.object_attributes.description
+                startParams[CI_MR_ASSIGNEE] = originEvent.object_attributes.assignee_id.toString()
+            }
+        }
 
         // 用户自定义变量
         startParams.putAll(yaml.variables ?: mapOf())
