@@ -250,10 +250,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         return true
     }
 
-//    fun pluginClaimTask(buildId: String, vmSeqId: String, vmName: String): BuildTask {
-//        return buildClaim(buildId, vmSeqId, vmName)
-//    }
-
     /**
      * 构建机请求执行任务
      */
