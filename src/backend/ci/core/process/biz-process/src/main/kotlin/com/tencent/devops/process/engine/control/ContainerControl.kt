@@ -310,7 +310,12 @@ class ContainerControl @Autowired constructor(
         containerFinalStatus: BuildStatus
     ): Pair<PipelineBuildTask, ActionType>?
     {
-        if (!startVMFail) { // 非构建机启动失败的 做下收尾动作
+        /* #2043
+            当出现终止操作（取消），不再处理以下两种情况:
+            - 即使前面有插件运行失败也运行，除非被取消才不运行
+            - 只有前面有插件运行失败时才运行
+         */
+        if (!ActionType.isTerminate(actionType) && !startVMFail) { // 非构建机启动失败的 做下收尾动作
             containerTaskList.forEach {
                 if (taskNeedRunWhenOtherTaskFail(it)) {
                     logger.info("[$buildId]|CONTAINER_$actionType|stage=$stageId|container=$containerId|taskId=${it.taskId}|Continue when failed")
