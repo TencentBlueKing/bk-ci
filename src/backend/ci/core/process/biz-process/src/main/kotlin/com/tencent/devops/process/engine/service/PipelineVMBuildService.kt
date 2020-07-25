@@ -38,6 +38,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
@@ -45,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -136,9 +138,10 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                             throw IllegalStateException("Deny to start VM! startVMStatus=${it.startVMStatus}")
                         }
                     }
-
+                    var timeoutMills: Long? = null
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
                     val buildEnvs = if (it is VMBuildContainer) {
+                        timeoutMills = Timeout.transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
                         if (it.buildEnv == null) {
                             emptyList<BuildEnv>()
                         } else {
@@ -154,6 +157,9 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                             list
                         }
                     } else {
+                        if (it is NormalContainer) {
+                            timeoutMills = Timeout.transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
+                        }
                         emptyList()
                     }
                     pipelineBuildDetailService.containerStart(buildId = buildId, containerId = vmSeqId.toInt())
@@ -175,7 +181,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         buildEnvs = buildEnvs,
                         containerId = it.id!!,
                         containerHashId = it.containerId ?: "",
-                        variablesWithType = variablesWithType
+                        variablesWithType = variablesWithType,
+                        timeoutMills = timeoutMills!!
                     )
                 }
                 vmId++
