@@ -33,6 +33,7 @@ import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.service.RepositoryPermissionService
 import com.tencent.devops.repository.service.impl.BluekingRepositoryPermissionService
 import com.tencent.devops.repository.service.impl.MockRepositoryPermissionService
+import com.tencent.devops.repository.service.impl.V3RepositoryPermissionService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -68,6 +69,22 @@ class RepositoryPermConfiguration {
         authPermissionApi: AuthPermissionApi,
         codeAuthServiceCode: CodeAuthServiceCode
     ): RepositoryPermissionService = MockRepositoryPermissionService(
+        dslContext = dslContext,
+        repositoryDao = repositoryDao,
+        authResourceApi = authResourceApi,
+        authPermissionApi = authPermissionApi,
+        codeAuthServiceCode = codeAuthServiceCode
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    fun v3RepositoryPermissionService(
+        dslContext: DSLContext,
+        repositoryDao: RepositoryDao,
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        codeAuthServiceCode: CodeAuthServiceCode
+    ): RepositoryPermissionService = V3RepositoryPermissionService(
         dslContext = dslContext,
         repositoryDao = repositoryDao,
         authResourceApi = authResourceApi,

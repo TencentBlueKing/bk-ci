@@ -37,6 +37,8 @@ import com.tencent.devops.ticket.service.CertPermissionService
 import com.tencent.devops.ticket.service.CredentialPermissionService
 import com.tencent.devops.ticket.service.MockCertPermissionService
 import com.tencent.devops.ticket.service.MockCredentialPermissionService
+import com.tencent.devops.ticket.service.V3CertPermissionService
+import com.tencent.devops.ticket.service.V3CredentialPermissionService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -70,6 +72,38 @@ class TicketPermConfiguration {
         authPermissionApi: AuthPermissionApi,
         ticketAuthServiceCode: TicketAuthServiceCode
     ): CredentialPermissionService = BluekingCredentialPermissionService(
+        authResourceApi = authResourceApi,
+        authPermissionApi = authPermissionApi,
+        ticketAuthServiceCode = ticketAuthServiceCode
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    fun v3CertPermissionService(
+        dslContext: DSLContext,
+        certDao: CertDao,
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        ticketAuthServiceCode: TicketAuthServiceCode
+    ): CertPermissionService = V3CertPermissionService(
+        dslContext = dslContext,
+        certDao = certDao,
+        authResourceApi = authResourceApi,
+        authPermissionApi = authPermissionApi,
+        ticketAuthServiceCode = ticketAuthServiceCode
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    fun v3CredentialPermissionService(
+        dslContext: DSLContext,
+        credentialDao: CredentialDao,
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        ticketAuthServiceCode: TicketAuthServiceCode
+    ): CredentialPermissionService = V3CredentialPermissionService(
+        dslContext = dslContext,
+        credentialDao = credentialDao,
         authResourceApi = authResourceApi,
         authPermissionApi = authPermissionApi,
         ticketAuthServiceCode = ticketAuthServiceCode
