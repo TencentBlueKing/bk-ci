@@ -28,6 +28,7 @@ package com.tencent.devops.process.api.builds
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBuildService
@@ -52,11 +53,6 @@ class BuildBuildResourceImpl @Autowired constructor(
         return Result(vmBuildService.buildVMStarted(buildId, vmSeqId, vmName))
     }
 
-//    override fun setPluginStarted(buildId: String, vmSeqId: String, vmName: String): Result<BuildVariables> {
-//        checkParam(buildId, vmSeqId, vmName)
-//        return Result(vmBuildService.pluginStart(buildId, vmSeqId, vmName))
-//    }
-
     override fun claimTask(buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
         checkParam(buildId, vmSeqId, vmName)
         return Result(vmBuildService.buildClaimTask(buildId, vmSeqId, vmName))
@@ -76,6 +72,10 @@ class BuildBuildResourceImpl @Autowired constructor(
     override fun endTask(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
         checkParam(buildId, vmSeqId, vmName)
         return Result(vmBuildService.buildEndTask(buildId, vmSeqId, vmName))
+    }
+
+    override fun timeoutTheBuild(projectId: String, pipelineId: String, buildId: String, vmSeqId: String): Result<Boolean> {
+        return Result(vmBuildService.setStartUpVMStatus(projectId, pipelineId, buildId, vmSeqId, BuildStatus.EXEC_TIMEOUT))
     }
 
     override fun heartbeat(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {

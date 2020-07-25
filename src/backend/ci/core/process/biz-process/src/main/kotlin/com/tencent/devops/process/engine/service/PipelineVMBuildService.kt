@@ -71,6 +71,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 
@@ -224,6 +225,18 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 userId = startUpVMTask.starter,
                 buildStatus = buildStatus
             )
+
+            // #2043 上报启动构建机状态时，重新刷新开始时间，以防止调度的耗时占用了Job的超时时间
+            if (!BuildStatus.isFinish(startUpVMTask.status)) { // #2043 构建机当前启动状态是未结束状态，才进行刷新开妈时间
+                pipelineRuntimeService.updateContainerStatus(
+                    buildId = buildId,
+                    stageId = startUpVMTask.stageId,
+                    containerId = startUpVMTask.containerId,
+                    startTime = LocalDateTime.now(),
+                    endTime = null,
+                    buildStatus = BuildStatus.RUNNING
+                )
+            }
         }
 
         // 失败的话就发终止事件
