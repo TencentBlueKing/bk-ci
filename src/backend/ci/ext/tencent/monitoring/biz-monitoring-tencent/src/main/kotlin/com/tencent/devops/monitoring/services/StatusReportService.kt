@@ -25,7 +25,6 @@
  */
 package com.tencent.devops.monitoring.services
 
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
 import com.tencent.devops.monitoring.pojo.DispatchStatus
@@ -34,77 +33,60 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
+import kotlin.reflect.full.declaredMemberProperties
 
 @Service
 @RefreshScope
 class StatusReportService @Autowired constructor(
-    private val client: Client,
     private val influxdbClient: InfluxdbClient
 ) {
     private val logger = LoggerFactory.getLogger(StatusReportService::class.java)
 
     fun reportScmCommitCheck(addCommitCheckStatus: AddCommitCheckStatus): Boolean {
-        try {
+        return try {
             val field: MutableMap<String, String> = mutableMapOf()
-            field["requestTime"] = addCommitCheckStatus.requestTime.toString()
-            field["responseTime"] = addCommitCheckStatus.responseTime.toString()
-            field["elapseTime"] = addCommitCheckStatus.elapseTime.toString()
-            field["errorCode"] = addCommitCheckStatus.errorCode
-            field["statusCode"] = addCommitCheckStatus.statusCode ?: ""
-            field["errorMsg"] = addCommitCheckStatus.errorMsg ?: ""
-            field["statusMessage"] = addCommitCheckStatus.statusMessage ?: ""
-            influxdbClient.insert("commitCheckStatus", emptyMap(), field)
+            val properties = addCommitCheckStatus.javaClass.kotlin.declaredMemberProperties
+            properties.forEach {
+                field[it.name] = it.get(addCommitCheckStatus)?.toString() ?: ""
+            }
+            influxdbClient.insert(AddCommitCheckStatus::class.java.simpleName, emptyMap(), field)
 
-            return true
+            true
         } catch (e: Throwable) {
             logger.error("reportScmCommitCheck exception:", e)
-            return false
+            false
         }
     }
 
     fun reportUserUsers(users: UsersStatus): Boolean {
-        try {
+        return try {
             val field: MutableMap<String, String> = mutableMapOf()
-            field["projectId"] = users.projectId
-            field["pipelineId"] = users.pipelineId
-            field["buildId"] = users.buildId
-            field["vmSeqId"] = users.vmSeqId
-            field["channelCode"] = users.channelCode.name
-            field["requestTime"] = users.requestTime.toString()
-            field["responseTime"] = users.responseTime.toString()
-            field["elapseTime"] = users.elapseTime.toString()
-            field["errorCode"] = users.errorCode
-            field["statusCode"] = users.statusCode ?: ""
-            field["errorMsg"] = users.errorMsg ?: ""
-            field["statusMessage"] = users.statusMessage ?: ""
-            influxdbClient.insert("usersStatus", emptyMap(), field)
+            val properties = users.javaClass.kotlin.declaredMemberProperties
+            properties.forEach {
+                field[it.name] = it.get(users)?.toString() ?: ""
+            }
+            influxdbClient.insert(UsersStatus::class.java.simpleName, emptyMap(), field)
 
-            return true
+            true
         } catch (e: Throwable) {
             logger.error("reportUserUsers exception:", e)
-            return false
+            false
         }
     }
 
     fun reportDispatchStatus(dispatchStatus: DispatchStatus): Boolean {
-        try {
+        return try {
             val field: MutableMap<String, String> = mutableMapOf()
-            field["projectId"] = dispatchStatus.projectId
-            field["pipelineId"] = dispatchStatus.pipelineId
-            field["buildId"] = dispatchStatus.buildId
-            field["vmSeqId"] = dispatchStatus.vmSeqId
-            field["channelCode"] = dispatchStatus.channelCode.name
-            field["buildType"] = dispatchStatus.buildType.name
-            field["startTime"] = dispatchStatus.startTime.toString()
-            field["stopTime"] = (dispatchStatus.stopTime ?: "").toString()
-            field["errorCode"] = dispatchStatus.errorCode
-            field["errorMsg"] = dispatchStatus.errorMsg ?: ""
-            influxdbClient.insert("dispatchStatus", emptyMap(), field)
+            val properties = dispatchStatus.javaClass.kotlin.declaredMemberProperties
+            properties.forEach {
+                field[it.name] = it.get(dispatchStatus)?.toString() ?: ""
+            }
+            influxdbClient.insert(DispatchStatus::class.java.simpleName, emptyMap(), field)
 
-            return true
+            true
         } catch (e: Throwable) {
             logger.error("reportDispatchStatus exception:", e)
-            return false
+            false
         }
     }
 }

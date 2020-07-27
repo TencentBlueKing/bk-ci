@@ -40,8 +40,10 @@ data class DispatchStatus(
     val buildId: String,
     @ApiModelProperty("vmSeqId", required = true)
     val vmSeqId: String,
-    @ApiModelProperty("channelCode", required = true)
-    val channelCode: ChannelCode,
+    @ApiModelProperty("retryCount", required = false)
+    val retryCount: Long? = 0,
+    @ApiModelProperty("channelCode", required = false)
+    val channelCode: ChannelCode?,
     @ApiModelProperty("BuildType", required = true)
     val buildType: BuildType,
     @ApiModelProperty("开机时间", required = true)

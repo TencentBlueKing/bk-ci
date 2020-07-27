@@ -55,5 +55,4 @@ data class UsersStatus(
     val errorCode: String,
     @ApiModelProperty("错误信息", required = false)
     val errorMsg: String?
-
 )

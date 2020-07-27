@@ -49,16 +49,16 @@ import javax.annotation.PostConstruct
 class InfluxdbClient {
     companion object {
         private val logger = LoggerFactory.getLogger(InfluxdbClient::class.java)
-        private const val TIME_RANGE_HOUR = "HOUR"
-        private const val TIME_RANGE_DAY = "DAY"
-        private const val TIME_RANGE_WEEK = "WEEK"
-        private const val DB = "agentMetrix"
-        private const val TIME_PART_HOUR = "time >= now() - 1h and time <= now() - 30s GROUP BY time(10s)"
-        private const val TIME_PART_DAY = "time >= now() - 24h and time <= now() - 30s GROUP BY time(2m)"
-        private const val TIME_PART_WEEK = "time >= now() - 7d and time <= now() - 30s GROUP BY time(10m)"
-        private const val TIME_GROUP_BY_HOUR = "10s"
-        private const val TIME_GROUP_BY_DAY = "2m"
-        private const val TIME_GROUP_BY_WEEK = "10m"
+//        private const val TIME_RANGE_HOUR = "HOUR"
+//        private const val TIME_RANGE_DAY = "DAY"
+//        private const val TIME_RANGE_WEEK = "WEEK"
+//        private const val DB = "agentMetrix"
+//        private const val TIME_PART_HOUR = "time >= now() - 1h and time <= now() - 30s GROUP BY time(10s)"
+//        private const val TIME_PART_DAY = "time >= now() - 24h and time <= now() - 30s GROUP BY time(2m)"
+//        private const val TIME_PART_WEEK = "time >= now() - 7d and time <= now() - 30s GROUP BY time(10m)"
+//        private const val TIME_GROUP_BY_HOUR = "10s"
+//        private const val TIME_GROUP_BY_DAY = "2m"
+//        private const val TIME_GROUP_BY_WEEK = "10m"
     }
 
     @Value("\${influxdb.server:}")
@@ -119,16 +119,12 @@ class InfluxdbClient {
         return influxDB.databaseExists(database)
     }
 
-    fun insert(measurement: String, tags: Map<String, String?>, fields: Map<String, String?>) {
+    fun insert(measurement: String, tags: Map<String, String?>, fields: Map<String, String>) {
         val builder: Point.Builder = measurement(measurement)
         builder.tag(tags)
         builder.fields(fields)
         builder.time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
         influxDB.write(dbName, monitoringRetentionPolicy, builder.build());
-    }
-
-    fun createContinuousQuery(measurement: String) {
-        influxDB.query(Query("CREATE CONTINUOUS QUERY cq_${measurement}_count ON $dbName  BEGIN SELECT count(statusCode) as total_count INTO commitCheckStatus_count FROM usersStatus group by time(5m) END", ""))
     }
 }
 
