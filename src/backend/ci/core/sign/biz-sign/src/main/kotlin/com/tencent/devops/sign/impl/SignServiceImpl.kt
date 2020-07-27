@@ -57,7 +57,6 @@ class SignServiceImpl @Autowired constructor(
         var ipaSignInfo = signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper)
         signInfoService.save(resignId, ipaSignInfoHeader, ipaSignInfo)
         ipaSignInfo = signInfoService.check(ipaSignInfo)
-        val buildId = ipaSignInfo.buildId
 
         // 复制文件到临时目录
         ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo)
@@ -127,16 +126,16 @@ class SignServiceImpl @Autowired constructor(
         if (ipaSignInfo.mobileProvisionId != null) {
             val mpFile = mobileProvisionService.downloadMobileProvision(
                     mobileProvisionDir = mobileProvisionDir,
-                    projectId = ipaSignInfo.projectId ?: "",
+                    projectId = ipaSignInfo.projectId,
                     mobileProvisionId = ipaSignInfo.mobileProvisionId!!
             )
             mobileProvisionMap[MAIN_APP_FILENAME] = parseMobileProvision(mpFile)
         }
         ipaSignInfo.appexSignInfo?.forEach {
             val mpFile = mobileProvisionService.downloadMobileProvision(
-                    mobileProvisionDir = mobileProvisionDir,
-                    projectId = ipaSignInfo.projectId ?: "",
-                    mobileProvisionId = it.mobileProvisionId
+                mobileProvisionDir = mobileProvisionDir,
+                projectId = ipaSignInfo.projectId,
+                mobileProvisionId = it.mobileProvisionId
             )
             mobileProvisionMap[it.appexName] = parseMobileProvision(mpFile)
         }
@@ -213,9 +212,9 @@ class SignServiceImpl @Autowired constructor(
         logger.info("Start to resign ${appDir.name} with $mobileProvisionInfoList")
         return SignUtils.resignApp(
                 appDir = appDir,
-                certId = ipaSignInfo.certId ?: SignUtils.DEFAULT_CER_ID,
+                certId = ipaSignInfo.certId,
                 infos = mobileProvisionInfoList,
-                appName = SignUtils.MAIN_APP_FILENAME,
+                appName = MAIN_APP_FILENAME,
                 universalLinks = ipaSignInfo.universalLinks,
                 applicationGroups = ipaSignInfo.applicationGroups
         )
@@ -243,7 +242,7 @@ class SignServiceImpl @Autowired constructor(
 
         return SignUtils.resignAppWildcard(
                 appDir = appDir,
-                certId = ipaSignInfo.certId ?: SignUtils.DEFAULT_CER_ID,
+                certId = ipaSignInfo.certId,
                 wildcardInfo = wildcardInfo
         )
     }
