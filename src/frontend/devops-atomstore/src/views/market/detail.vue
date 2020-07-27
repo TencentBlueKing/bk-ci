@@ -176,7 +176,6 @@
 <style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
     .store-main {
-        margin-top: 3.2vh;
         height: 91.2vh;
         overflow-y: scroll;
     }
@@ -189,7 +188,6 @@
 
     .detail-info {
         max-width: 1400px;
-        margin-top: 0;
     }
 
     .detail-tabs {
