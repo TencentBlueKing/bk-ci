@@ -129,6 +129,55 @@ class DependOnUtilTest {
     }
 
     @Test
+    fun `remove not exist job`() {
+        val container1 = NormalContainer(
+            id = "1",
+            enableSkip = false,
+            conditions = null,
+            jobId = "job_bash1",
+            jobControlOption = JobControlOption(
+                runCondition = JobRunCondition.STAGE_RUNNING,
+                timeout = 900,
+                enable = true
+            )
+        )
+        val container2 = NormalContainer(
+            id = "2",
+            enableSkip = false,
+            conditions = null,
+            jobControlOption = JobControlOption(
+                runCondition = JobRunCondition.STAGE_RUNNING,
+                timeout = 900,
+                enable = true,
+                dependOnType = DependOnType.ID,
+                dependOnId = listOf("job_bash1", "job_bash2")
+            )
+        )
+        val stage = Stage(
+            id = "1",
+            containers = listOf(container1, container2)
+        )
+        val expectedContainer2 = NormalContainer(
+            id = "2",
+            enableSkip = false,
+            conditions = null,
+            jobControlOption = JobControlOption(
+                runCondition = JobRunCondition.STAGE_RUNNING,
+                timeout = 900,
+                enable = true,
+                dependOnType = DependOnType.ID,
+                dependOnId = listOf("job_bash1")
+            )
+        )
+        val expectedStage = Stage(
+            id = "1",
+            containers = listOf(container1, expectedContainer2)
+        )
+        DependOnUtils.checkRepeatedJobId(stage)
+        Assert.assertEquals(expectedStage, stage)
+    }
+
+    @Test
     fun `check init dependon for empty job`() {
         val container1 = NormalContainer(
             id = "1",

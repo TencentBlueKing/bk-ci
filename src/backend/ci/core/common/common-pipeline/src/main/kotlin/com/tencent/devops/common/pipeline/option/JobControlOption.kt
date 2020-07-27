@@ -44,7 +44,7 @@ data class JobControlOption(
     val customCondition: String? = null, // 自定义条件
     // job依赖
     val dependOnType: DependOnType? = null,
-    val dependOnId: List<String>? = null,
+    var dependOnId: List<String>? = null, // 需要过滤不存在的job，定义为var类型
     val dependOnName: String? = null,
     var dependOnContainerId2JobIds: Map<String, String>? = null // containerId与jobId映射，depend on运行时使用的是containerId
 )

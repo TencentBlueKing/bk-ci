@@ -61,6 +61,33 @@ object DependOnUtils {
             }
             jobIdSet.add(jobId!!)
         }
+        removeNonexistentJob(
+            stage = stage,
+            jobIdSet = jobIdSet
+        )
+    }
+
+    /**
+     * 移除不存在的jobId
+     * 如果已选择的jobId名字被修改，前端并不会把job删除,而是不展示，需要后端将不存在的jobId删除
+     */
+    private fun removeNonexistentJob(
+        stage: Stage,
+        jobIdSet: Set<String>
+    ) {
+        stage.containers.forEach container@{ c ->
+            val jobControlOption = when (c) {
+                is VMBuildContainer -> c.jobControlOption
+                is NormalContainer -> c.jobControlOption
+                else -> null
+            } ?: return@container
+            val isEmpty = jobControlOption.dependOnId?.isEmpty() ?: true
+            if (jobControlOption.dependOnType != DependOnType.ID || isEmpty) {
+                return@container
+            }
+            val existJobIds = jobControlOption.dependOnId!!.filter { jobIdSet.contains(it) }
+            jobControlOption.dependOnId = existJobIds
+        }
     }
 
     /**
