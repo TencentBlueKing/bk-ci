@@ -123,7 +123,7 @@ class BSAuthPermissionApi @Autowired constructor(
         projectCode: String,
         resourceCode: String,
         permission: AuthPermission,
-        relationResourceType : AuthResourceType?
+        relationResourceType: AuthResourceType?
     ): Boolean {
         val epoch = System.currentTimeMillis()
         var success = false
