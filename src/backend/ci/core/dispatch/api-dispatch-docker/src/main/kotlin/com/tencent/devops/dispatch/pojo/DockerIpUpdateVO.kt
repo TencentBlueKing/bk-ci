@@ -1,5 +1,6 @@
 package com.tencent.devops.dispatch.pojo
 
+import com.tencent.devops.common.api.constant.DEFAULT_DOCKER_CLUSTER
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -16,5 +17,7 @@ data class DockerIpUpdateVO(
     @ApiModelProperty("是否为灰度节点")
     val grayEnv: Boolean,
     @ApiModelProperty("是否为专用机独占")
-    val specialOn: Boolean
+    val specialOn: Boolean,
+    @ApiModelProperty("集群ID", required = false)
+    val clusterId: String = DEFAULT_DOCKER_CLUSTER
 )

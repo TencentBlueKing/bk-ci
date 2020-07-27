@@ -58,5 +58,9 @@ data class ContainerResp(
     @ApiModelProperty("编译环境信息", required = false)
     val apps: List<ContainerAppWithVersion>?,
     @ApiModelProperty("支持的构建资源", required = false)
-    val resources: Map<BuildType, ContainerResource>?
+    val resources: Map<BuildType, ContainerResource>?,
+    @ApiModelProperty(
+        "默认docker构建集群，当操作系统为linux时返回", required = false, hidden = true
+    )
+    val dockerDevClusterId: String? = null
 )

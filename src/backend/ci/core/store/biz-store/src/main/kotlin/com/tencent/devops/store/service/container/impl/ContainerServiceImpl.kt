@@ -27,6 +27,7 @@
 package com.tencent.devops.store.service.container.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DEFAULT_DOCKER_CLUSTER
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -174,6 +175,10 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
                     businessValue = containerOS.name
                 )!!.configValue
             )
+            val dockerDevClusterId = if (containerOS == OS.LINUX)
+                DEFAULT_DOCKER_CLUSTER
+            else
+                null
             val pipelineContainerResp = ContainerResp(
                 id = it.id,
                 name = it.name,
@@ -187,7 +192,8 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
                 props = convertString(it.props),
                 apps = appList,
                 defaultBuildType = defaultBuildType,
-                resources = resources
+                resources = resources,
+                dockerDevClusterId = dockerDevClusterId
             )
             logger.info("pipelineContainerResp is: $pipelineContainerResp")
             dataList.add(pipelineContainerResp)
