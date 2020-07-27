@@ -33,14 +33,14 @@ import io.swagger.annotations.ApiModelProperty
 data class Incident(
     @ApiModelProperty("id", required = true)
     val id: Long?,
-    @ApiModelProperty("发生时间", required = true)
+    @ApiModelProperty("发生时间（时间戳，毫秒）", required = true)
     val dayTime: Long,
     @ApiModelProperty("模块", required = true)
     val moduleName: String,
     @ApiModelProperty("级别", required = true)
     val level: String,
-    @ApiModelProperty("持续时间(秒)", required = true)
-    val duringTime: Int,
+    @ApiModelProperty("持续时间(毫秒)", required = true)
+    val duringTime: Long,
     @ApiModelProperty("当前状态", required = true)
     val status: IncidentStatus,
     @ApiModelProperty("时间", required = false)
