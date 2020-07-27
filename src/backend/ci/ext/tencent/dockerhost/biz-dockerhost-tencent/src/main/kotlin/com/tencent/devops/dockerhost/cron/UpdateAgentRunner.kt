@@ -57,7 +57,7 @@ class UpdateAgentRunner @Autowired constructor(
                     logger.info("copy origin file to bak end.")
                 }
 
-                logger.info("copy origin file to bak ======== ")
+                logger.info("copy origin file to bak ======== ${gray.isGray()}")
                 val headerMap = mutableMapOf<String, String>()
                 if (gray.isGray()) {
                     headerMap["X-DEVOPS-PROJECT-ID"] = "grayproject"
