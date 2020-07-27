@@ -26,45 +26,63 @@
 package com.tencent.devops.monitoring.api.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
-import com.tencent.devops.monitoring.pojo.DispatchStatus
-import com.tencent.devops.monitoring.pojo.UsersStatus
+import com.tencent.devops.monitoring.pojo.Incident
+import com.tencent.devops.monitoring.pojo.SystemOperational
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.GET
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_MONITORING_REPORT"], description = "监控上报")
-@Path("/service/report")
+@Api(tags = ["SERVICE_MONITORING_INCIDENTS"], description = "故障管理")
+@Path("/service/system")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface StatusReportResource {
+interface SystemOperationalResource {
 
-    @ApiOperation("scm模块上报addCommitCheck接口调用情况")
+    @ApiOperation("查询系统可用性")
+    @GET
+    @Path("/operational")
+    fun operational(): Result<SystemOperational>
+
+    @ApiOperation("添加故障")
+    @PUT
+    @Path("/incidents")
+    fun addIncidents(
+        @ApiParam("故障", required = true)
+        incident: Incident
+    ): Result<Long>
+
+    @ApiOperation("修改故障")
     @POST
-    @Path("/scm/commitcheck")
-    fun scmCommitCheck(
-        @ApiParam("addCommitCheck接口状态", required = true)
-        addCommitCheckStatus: AddCommitCheckStatus
+    @Path("/incidents")
+    fun updateIncidents(
+        @ApiParam("故障", required = true)
+        incident: Incident
     ): Result<Boolean>
 
-    @ApiOperation("project模块上报users接口调用情况")
-    @POST
-    @Path("/project/users")
-    fun userUsers(
-        @ApiParam("users接口状态", required = true)
-        users: UsersStatus
+    @ApiOperation("删除故障")
+    @DELETE
+    @Path("/incidents/{incidentId}")
+    fun deleteIncidents(
+        @ApiParam("故障", required = true)
+        @PathParam("incidentId")
+        incidentId: Long
     ): Result<Boolean>
 
-    @ApiOperation("各个dispatch模块上报开机状态")
-    @POST
-    @Path("/dispatch/status")
-    fun dispatch(
-        @ApiParam("构建机开机关机状态", required = true)
-        dispatchStatus: DispatchStatus
-    ): Result<Boolean>
+    @ApiOperation("查看故障")
+    @GET
+    @Path("/incidents/{incidentId}")
+    fun getIncidents(
+        @ApiParam("故障", required = true)
+        @PathParam("incidentId")
+        incidentId: Long
+    ): Result<Incident?>
 }

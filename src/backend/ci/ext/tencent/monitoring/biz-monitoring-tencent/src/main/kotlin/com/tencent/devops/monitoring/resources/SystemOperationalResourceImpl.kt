@@ -23,48 +23,38 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.monitoring.api.service
+package com.tencent.devops.monitoring.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
-import com.tencent.devops.monitoring.pojo.DispatchStatus
-import com.tencent.devops.monitoring.pojo.UsersStatus
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.monitoring.api.service.SystemOperationalResource
+import com.tencent.devops.monitoring.pojo.Incident
+import com.tencent.devops.monitoring.pojo.SystemOperational
+import com.tencent.devops.monitoring.services.StatusReportService
+import com.tencent.devops.monitoring.services.SystemIncidentsService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["SERVICE_MONITORING_REPORT"], description = "监控上报")
-@Path("/service/report")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface StatusReportResource {
+@RestResource
+class SystemOperationalResourceImpl @Autowired constructor(private val systemIncidentsService: SystemIncidentsService) : SystemOperationalResource {
+    override fun operational(): Result<SystemOperational> {
+        TODO("Not yet implemented")
+    }
 
-    @ApiOperation("scm模块上报addCommitCheck接口调用情况")
-    @POST
-    @Path("/scm/commitcheck")
-    fun scmCommitCheck(
-        @ApiParam("addCommitCheck接口状态", required = true)
-        addCommitCheckStatus: AddCommitCheckStatus
-    ): Result<Boolean>
+    override fun addIncidents(incident: Incident): Result<Long> {
+        return Result(systemIncidentsService.addIncidents(incident))
+    }
 
-    @ApiOperation("project模块上报users接口调用情况")
-    @POST
-    @Path("/project/users")
-    fun userUsers(
-        @ApiParam("users接口状态", required = true)
-        users: UsersStatus
-    ): Result<Boolean>
+    override fun updateIncidents(incident: Incident): Result<Boolean> {
+        systemIncidentsService.updateIncidents(incident)
+        return Result(true)
+    }
 
-    @ApiOperation("各个dispatch模块上报开机状态")
-    @POST
-    @Path("/dispatch/status")
-    fun dispatch(
-        @ApiParam("构建机开机关机状态", required = true)
-        dispatchStatus: DispatchStatus
-    ): Result<Boolean>
+    override fun deleteIncidents(incidentId: Long): Result<Boolean> {
+        systemIncidentsService.deleteIncidents(incidentId)
+        return Result(true)
+    }
+
+    override fun getIncidents(incidentId: Long): Result<Incident?> {
+        return Result(systemIncidentsService.getIncidents(incidentId))
+    }
 }
