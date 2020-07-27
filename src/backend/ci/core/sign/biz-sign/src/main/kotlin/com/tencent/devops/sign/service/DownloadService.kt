@@ -23,11 +23,9 @@ interface DownloadService {
     * 获取下载连接
     * */
     fun getDownloadUrl(
-        userId: String,
-        resignId: String
+        userId: String?,
+        resignId: String,
+        downloadType: String
     ): String
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(DownloadService::class.java)
-    }
 }

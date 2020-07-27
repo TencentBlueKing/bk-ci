@@ -36,10 +36,7 @@ import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.SignResult
 import com.tencent.devops.sign.api.service.ServiceIpaResource
 import com.tencent.devops.sign.api.user.UserIpaResource
-import com.tencent.devops.sign.service.ArchiveService
-import com.tencent.devops.sign.service.FileService
-import com.tencent.devops.sign.service.SignInfoService
-import com.tencent.devops.sign.service.SignService
+import com.tencent.devops.sign.service.*
 import io.swagger.annotations.ApiParam
 import org.jolokia.util.Base64Util
 import org.slf4j.LoggerFactory
@@ -51,27 +48,26 @@ import javax.ws.rs.HeaderParam
 
 @RestResource
 class ServiceIpaResourceImpl @Autowired constructor(
-        private val signService: SignService
+        private val signService: SignService,
+        private val downloadService: DownloadService
 ) : ServiceIpaResource {
-
-
-    override fun ipaSign(
-            userId: String,
-            ipaSignInfoHeader: String,
-            ipaInputStream: InputStream
-    ): Result<String> {
-        return Result(signService.signIpaAndArchive(userId, ipaSignInfoHeader, ipaInputStream))
-    }
-
-    override fun getSignResult(userId: String, resignId: String): Result<SignResult> {
-        return Result(signService.getSignResult(userId, resignId))
-    }
-
-    override fun downloadIpa(userId: String, filePath: String, response: HttpServletResponse) {
-        TODO("Not yet implemented")
-    }
-
     companion object {
         val logger = LoggerFactory.getLogger(ServiceIpaResourceImpl::class.java)
+    }
+
+    override fun ipaSign(ipaSignInfoHeader: String, ipaInputStream: InputStream): Result<String> {
+        return Result(signService.signIpaAndArchive(ipaSignInfoHeader, ipaInputStream))
+    }
+
+    override fun getSignResult(resignId: String): Result<SignResult> {
+        return Result(signService.getSignResult(resignId))
+    }
+
+    override fun downloadUrl(resignId: String): Result<String> {
+        return Result(downloadService.getDownloadUrl(
+                userId = null,
+                resignId = resignId,
+                downloadType = "service")
+        )
     }
 }

@@ -31,6 +31,7 @@ import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -42,6 +43,7 @@ import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.*
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 /**
  * 注意，此类用了MULTIPART_FORM_DATA，导致Feign会有问题，不要直接用Feign去调用。
@@ -84,6 +86,15 @@ interface ServiceFileResource {
         @Context
         response: HttpServletResponse
     )
+
+    @ApiOperation("下载文件到本地")
+    @GET
+    @Path("/file/download/local")
+    fun downloadFileToLocal(
+            @ApiParam("文件路径", required = true)
+            @QueryParam("filePath")
+            filePath: String
+    ): Response
 
     @ApiOperation("归档文件")
     @POST

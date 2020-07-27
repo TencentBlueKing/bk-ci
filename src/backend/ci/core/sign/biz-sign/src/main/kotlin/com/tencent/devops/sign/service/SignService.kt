@@ -24,7 +24,6 @@ interface SignService {
     * 对ipa文件进行签名，并归档
     * */
     fun signIpaAndArchive(
-        userId: String,
         ipaSignInfoHeader: String,
         ipaInputStream: InputStream
     ): String
@@ -32,7 +31,7 @@ interface SignService {
     /*
     * 查询某次签名任务是否完成
     * */
-    fun getSignResult(userId: String, resignId: String): SignResult
+    fun getSignResult(resignId: String): SignResult
 
     /*
     * 下载描述文件

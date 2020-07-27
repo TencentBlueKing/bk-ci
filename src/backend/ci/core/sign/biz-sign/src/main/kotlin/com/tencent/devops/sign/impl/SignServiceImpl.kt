@@ -49,7 +49,6 @@ class SignServiceImpl @Autowired constructor(
     private lateinit var mobileProvisionDir: File
 
     override fun signIpaAndArchive(
-            userId: String,
             ipaSignInfoHeader: String,
             ipaInputStream: InputStream
     ): String {
@@ -117,7 +116,7 @@ class SignServiceImpl @Autowired constructor(
         return resignId
     }
 
-    override fun getSignResult(userId: String, resignId: String): SignResult {
+    override fun getSignResult(resignId: String): SignResult {
         // TODO 权限访问控制
         return signInfoService.getSignResult(resignId)
     }

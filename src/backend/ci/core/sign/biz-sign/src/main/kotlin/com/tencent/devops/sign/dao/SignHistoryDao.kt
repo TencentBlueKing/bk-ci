@@ -61,8 +61,7 @@ class SignHistoryDao {
                 ARCHIVE_TYPE,
                 ARCHIVE_PATH,
                 FILE_MD5,
-                RESULT_FILE_MD5,
-                DOWNLOAD_URL
+                RESULT_FILE_MD5
             ).values(
                 resignId,
                 userId,
@@ -77,7 +76,6 @@ class SignHistoryDao {
                 archiveType,
                 archivePath,
                 md5,
-                null,
                 null
             ).execute()
         }

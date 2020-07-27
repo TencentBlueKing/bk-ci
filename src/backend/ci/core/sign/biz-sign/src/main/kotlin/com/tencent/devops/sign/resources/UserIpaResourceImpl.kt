@@ -30,14 +30,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.api.pojo.SignResult
 import com.tencent.devops.sign.api.user.UserIpaResource
-import com.tencent.devops.sign.service.ArchiveService
-import com.tencent.devops.sign.service.FileService
-import com.tencent.devops.sign.service.SignInfoService
-import com.tencent.devops.sign.service.SignService
+import com.tencent.devops.sign.service.*
 import io.swagger.annotations.ApiParam
 import org.jolokia.util.Base64Util
 import org.slf4j.LoggerFactory
@@ -46,10 +48,13 @@ import java.io.InputStream
 import java.net.URLEncoder
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.core.Response
+
 
 @RestResource
 class UserIpaResourceImpl @Autowired constructor(
-    private val signService: SignService
+    private val signService: SignService,
+    private val downloadService: DownloadService
 ) : UserIpaResource {
 
     override fun ipaSign(
@@ -57,11 +62,19 @@ class UserIpaResourceImpl @Autowired constructor(
         ipaSignInfoHeader: String,
         ipaInputStream: InputStream
     ): Result<String?> {
-        return Result(signService.signIpaAndArchive(userId, ipaSignInfoHeader, ipaInputStream))
+        return Result(signService.signIpaAndArchive(ipaSignInfoHeader, ipaInputStream))
     }
 
-    override fun downloadUrl(userId: String, filePath: String, response: HttpServletResponse): String {
-        return ""
+    override fun getSignResult(userId: String, resignId: String): Result<SignResult> {
+        return Result(signService.getSignResult(resignId))
+    }
+
+    override fun downloadUrl(userId: String, resignId: String): Result<String> {
+        return Result(downloadService.getDownloadUrl(
+                userId = userId,
+                resignId = resignId,
+                downloadType = "user")
+        )
     }
 
     override fun test(

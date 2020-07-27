@@ -53,9 +53,6 @@ interface ServiceIpaResource {
     @Path("/sign")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun ipaSign(
-            @ApiParam("userId", required = true)
-            @HeaderParam(AUTH_HEADER_USER_ID)
-            userId: String,
             @ApiParam("ipaSignInfoHeader", required = false)
             @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
             ipaSignInfoHeader: String,
@@ -68,26 +65,17 @@ interface ServiceIpaResource {
     @Path("/sign/{resignId}/status")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun getSignResult(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("签名任务ID", required = true)
         @PathParam("resignId")
         resignId: String
     ): Result<SignResult>
 
-    @ApiOperation("下载文件")
+    @ApiOperation("获取签名后IPA的下载地址")
     @GET
-    @Path("/download")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    fun downloadIpa(
-            @ApiParam("userId", required = true)
-            @HeaderParam(AUTH_HEADER_USER_ID)
-            userId: String,
-            @ApiParam("文件路径", required = true)
-            @QueryParam("filePath")
-            filePath: String,
-            @Context
-            response: HttpServletResponse
-    )
+    @Path("/sign/{resignId}/downloadUrl/")
+    fun downloadUrl(
+            @ApiParam("签名任务ID", required = true)
+            @PathParam("resignId")
+            resignId: String
+    ): Result<String>
 }
