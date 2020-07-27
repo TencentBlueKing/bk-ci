@@ -50,14 +50,11 @@ class UpdateAgentRunner @Autowired constructor(
             if (0L == localFileLength || localFileLength != serverFileLength) {
                 logger.info("need to update docker.jar")
                 val bakFile = File(dockerHostConfig.dockerAgentPath!! + "_bak")
-                logger.info("copy origin file to bak")
                 if (agentFile.exists()) {
                     logger.info("agentFile exist, copy origin file to bak")
                     agentFile.copyTo(bakFile, true)
-                    logger.info("copy origin file to bak end.")
                 }
 
-                logger.info("copy origin file to bak ======== ${gray.isGray()}")
                 val headerMap = mutableMapOf<String, String>()
                 if (gray.isGray()) {
                     headerMap["X-DEVOPS-PROJECT-ID"] = "grayproject"
