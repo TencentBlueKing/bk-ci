@@ -60,33 +60,6 @@ BEGIN
         ALTER TABLE T_PIPELINE_SETTING
             ADD COLUMN `MAX_PIPELINE_RES_NUM` int(11) DEFAULT '50' COLLATE utf8mb4_bin;
     END IF;
-	
-	IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_PIPELINE_WEBHOOK'
-                    AND COLUMN_NAME = 'PROJECT_NAME') THEN
-        ALTER TABLE T_PIPELINE_WEBHOOK 
-			ADD COLUMN `PROJECT_NAME` VARCHAR(128) DEFAULT NULL;
-    END IF;
-	
-	IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_PIPELINE_WEBHOOK'
-                    AND COLUMN_NAME = 'TASK_ID') THEN
-        ALTER TABLE T_PIPELINE_WEBHOOK 
-			ADD COLUMN `TASK_ID` VARCHAR(34) DEFAULT NULL;
-    END IF;
-	
-	IF NOT EXISTS(SELECT 1
-              FROM information_schema.statistics
-              WHERE TABLE_SCHEMA = db
-                AND TABLE_NAME = 'T_PIPELINE_WEBHOOK'
-                AND INDEX_NAME = 'IDX_PROJECT_NAME_REPOSITORY_TYPE') THEN
-        ALTER TABLE T_PIPELINE_WEBHOOK 
-			ADD INDEX `IDX_PROJECT_NAME_REPOSITORY_TYPE` (`PROJECT_NAME`, `REPOSITORY_TYPE`);
-    END IF;
 
 
     COMMIT;
