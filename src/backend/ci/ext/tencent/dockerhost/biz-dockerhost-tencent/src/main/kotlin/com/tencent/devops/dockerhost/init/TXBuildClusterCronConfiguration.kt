@@ -45,7 +45,6 @@ import java.util.concurrent.Executors
  */
 
 @Configuration
-@ConditionalOnProperty(prefix = "dockerhost", name = ["mode"], havingValue = "docker_build")
 @EnableScheduling
 class TXBuildClusterCronConfiguration : SchedulingConfigurer {
 
@@ -56,7 +55,6 @@ class TXBuildClusterCronConfiguration : SchedulingConfigurer {
         scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(100))
 
         scheduledTaskRegistrar.addCronTask(
-//                { updateAgentRunner.update() }, "0 0 3 * * ?"
             { updateAgentRunner.update() }, downloadAgentCron!!
         )
     }
