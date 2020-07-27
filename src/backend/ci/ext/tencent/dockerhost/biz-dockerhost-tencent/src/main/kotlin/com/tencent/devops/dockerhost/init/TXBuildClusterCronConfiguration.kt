@@ -26,6 +26,7 @@
 
 package com.tencent.devops.dockerhost.init
 
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.cron.UpdateAgentRunner
 import org.springframework.beans.factory.annotation.Autowired
@@ -64,7 +65,7 @@ class TXBuildClusterCronConfiguration : SchedulingConfigurer {
     private lateinit var updateAgentRunner: UpdateAgentRunner
 
     @Bean
-    fun updateAgentRunner(dockerHostConfig: DockerHostConfig): UpdateAgentRunner {
-        return UpdateAgentRunner(dockerHostConfig)
+    fun updateAgentRunner(dockerHostConfig: DockerHostConfig, gray: Gray): UpdateAgentRunner {
+        return UpdateAgentRunner(dockerHostConfig, gray)
     }
 }
