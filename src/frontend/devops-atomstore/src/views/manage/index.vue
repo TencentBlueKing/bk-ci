@@ -1,15 +1,6 @@
 <template>
     <article class="g-store-main">
-        <header class="g-store-title">
-            <icon class="title-icon" name="color-logo-store" size="22" />
-            <span class="banner-des quick-route" @click="goToStore"> {{ $t('store.研发商店') }} </span>
-            <i class="right-arrow banner-arrow"></i>
-            <span class="banner-des"> {{ $t('store.工作台') }} </span>
-            <i class="right-arrow banner-arrow"></i>
-            <span class="banner-des quick-route" @click="goToWorkList"> {{ type | typeFilter }}</span>
-            <i class="right-arrow banner-arrow"></i>
-            <span class="banner-des">{{ $route.params.code }}</span>
-        </header>
+        <bread-crumbs :bread-crumbs="navList" :type="type"></bread-crumbs>
 
         <transition-tab :panels="panels"
             @tab-change="tabChange"
@@ -26,29 +17,12 @@
     import api from '@/api'
     import { mapGetters } from 'vuex'
     import transitionTab from '@/components/transition-tab.vue'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
 
     export default {
         components: {
-            transitionTab
-        },
-
-        filters: {
-            typeFilter (val) {
-                const bkLocale = window.devops || {}
-                let res = ''
-                switch (val) {
-                    case 'template':
-                        res = bkLocale.$t('store.流水线模板')
-                        break
-                    case 'image':
-                        res = bkLocale.$t('store.容器镜像')
-                        break
-                    default:
-                        res = bkLocale.$t('store.流水线插件')
-                        break
-                }
-                return res
-            }
+            transitionTab,
+            breadCrumbs
         },
 
         data () {
@@ -105,6 +79,26 @@
                     image: 'IMAGE'
                 }
                 return storeTypeMap[this.type]
+            },
+
+            navList () {
+                let name
+                switch (this.type) {
+                    case 'template':
+                        name = this.$t('store.流水线模板')
+                        break
+                    case 'image':
+                        name = this.$t('store.容器镜像')
+                        break
+                    default:
+                        name = this.$t('store.流水线插件')
+                        break
+                }
+                return [
+                    { name: this.$t('store.工作台') },
+                    { name, to: { name: `${this.type}Work` } },
+                    { name: this.$route.params.code }
+                ]
             }
         },
 
@@ -163,22 +157,6 @@
                         userName: res.userName
                     }
                     this.$store.dispatch('store/updateUserInfo', userInfo)
-                })
-            },
-
-            goToWorkList () {
-                const name = `${this.type}Work`
-                this.$router.push({
-                    name
-                })
-            },
-
-            goToStore () {
-                this.$router.push({
-                    name: 'atomHome',
-                    query: {
-                        pipeType: this.type
-                    }
                 })
             }
         }

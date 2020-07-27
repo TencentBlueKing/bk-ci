@@ -44,29 +44,6 @@
     padding-bottom: 4vh;
     flex-direction: column;
     overflow: hidden;
-    .g-store-title {
-        height: 5.6vh;
-        display: flex;
-        align-items: center;
-        padding-left: .32rem;
-        margin-bottom: 3.2vh;
-        background-color: #fff;
-        color: #999;
-        .title-icon {
-            margin-right: 6px;
-        }
-        .right-arrow {
-            height: 5.6vh;
-            &::after {
-                margin-top: -2.5px;
-                border-color: #252935;
-            }
-        }
-        .quick-route {
-            color: #222;
-            cursor: pointer;
-        }
-    }
     .g-store-body {
         width: 14.6rem;
         margin: 16px auto 0;
@@ -263,40 +240,9 @@ input[disabled="disabled"] {
     }
 }
 
-.market-home-title {
-    height: 50px;
+.g-title-work {
     font-size: 14px;
-    border-bottom: 1px solid $borderWeightColor;
-    position: relative;
-    background: $white;
-    font-weight: normal;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    .title-icon {
-        margin-left: 32px;
-        margin-right: 6px;
-    }
-    .title-name {
-        flex: 1;
-    }
-    .title-work {
-        margin-right: 30px;
-        color: $iconPrimaryColor;
-    }
-    .back-home {
-        flex-basis: 68px;
-        color: $primaryColor;
-        cursor: pointer;
-    }
-    .banner-arrow {
-        height: 0px;
-        &:after {
-            margin-top: -8px;
-            width: 5px;
-            height: 5px;
-        }
-    }
+    color: $iconPrimaryColor;
 }
 
 .right-arrow {

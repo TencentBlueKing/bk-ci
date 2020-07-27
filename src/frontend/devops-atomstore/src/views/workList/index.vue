@@ -1,13 +1,6 @@
 <template>
     <article class="g-store-main">
-        <header class="g-store-title">
-            <icon class="title-icon" name="color-logo-store" size="22" />
-            <span class="back-home quick-route" @click="toAtomStore"> {{ $t('store.研发商店') }} </span>
-            <i class="right-arrow banner-arrow"></i>
-            <span class="banner-des"> {{ $t('store.工作台') }} </span>
-            <i class="right-arrow banner-arrow"></i>
-            <span class="banner-des"> {{ currentTab.name|typeFilter }} </span>
-        </header>
+        <bread-crumbs :bread-crumbs="navList" :type="currentTabName.slice(0, -4)"></bread-crumbs>
 
         <transition-tab :panels="tabList"
             @tab-change="tabChange"
@@ -25,32 +18,15 @@
 
 <script>
     import transitionTab from '@/components/transition-tab.vue'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
     import * as cookie from 'js-cookie'
     let currentProjectCode = cookie.get(X_DEVOPS_PROJECT_ID)
     if (!currentProjectCode) currentProjectCode = (window.projectList[0] || {}).projectCode
 
     export default {
         components: {
-            transitionTab
-        },
-
-        filters: {
-            typeFilter (val) {
-                const bkLocale = window.devops || {}
-                let res = ''
-                switch (val) {
-                    case 'templateWork':
-                        res = bkLocale.$t('store.流水线模板')
-                        break
-                    case 'imageWork':
-                        res = bkLocale.$t('store.容器镜像')
-                        break
-                    default:
-                        res = bkLocale.$t('store.流水线插件')
-                        break
-                }
-                return res
-            }
+            transitionTab,
+            breadCrumbs
         },
 
         data () {
@@ -83,6 +59,26 @@
         computed: {
             currentTab () {
                 return this.tabList.find(x => x.name === this.currentTabName)
+            },
+
+            navList () {
+                const type = this.currentTab.name
+                let name
+                switch (type) {
+                    case 'templateWork':
+                        name = this.$t('store.流水线模板')
+                        break
+                    case 'imageWork':
+                        name = this.$t('store.容器镜像')
+                        break
+                    default:
+                        name = this.$t('store.流水线插件')
+                        break
+                }
+                return [
+                    { name: this.$t('store.工作台') },
+                    { name }
+                ]
             }
         },
 
@@ -95,12 +91,6 @@
         methods: {
             tabChange (name) {
                 this.currentTabName = name
-            },
-
-            toAtomStore () {
-                this.$router.push({
-                    name: 'atomHome'
-                })
             }
         }
     }
