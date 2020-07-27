@@ -277,7 +277,7 @@
     }
 
     .image-progress-main {
-        height: calc(100% - 8.8vh);
+        height: calc(100% - 5.6vh);
         overflow-y: auto;
     }
 
@@ -299,7 +299,7 @@
 
     .image-progress-section {
         width: 1200px;
-        margin: 0 auto 28px;
+        margin: 28px auto;
         h3 {
             font-weight: bold;
             color: $fontWeightColor;

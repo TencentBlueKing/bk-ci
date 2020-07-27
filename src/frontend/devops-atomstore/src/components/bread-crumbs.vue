@@ -35,7 +35,6 @@
         align-items: center;
         justify-content: space-between;
         padding: 0 .32rem;
-        margin-bottom: 3.2vh;
         background-color: #fff;
         color: #999;
         box-shadow: 0 1px 0 0 #ebedf0;

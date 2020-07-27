@@ -697,8 +697,8 @@
     .edit-atom-wrapper {
         height: 100%;
         .edit-atom-content {
-            padding: 0 0 40px;
-            height: calc(100% - 8.8vh);
+            padding: 20px 0 40px;
+            height: calc(100% - 5.6vh);
             overflow: auto;
             display: flex;
             justify-content: center;

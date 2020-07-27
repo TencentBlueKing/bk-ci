@@ -473,8 +473,8 @@
     .edit-template-wrapper {
         height: 100%;
         .edit-template-content {
-            margin: 0 0 20px;
-            height: calc(100% - 8.8vh - 20px);
+            margin: 20px 0;
+            height: calc(100% - 5.6vh - 40px);
             overflow: auto;
             display: flex;
             justify-content: center;

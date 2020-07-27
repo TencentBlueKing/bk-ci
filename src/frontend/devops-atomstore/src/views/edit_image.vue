@@ -1,6 +1,6 @@
 <template>
     <article class="edit-image-home">
-        <bread-crumbs :bread-crumbs="navList" type="template">
+        <bread-crumbs :bread-crumbs="navList" type="image">
             <a class="g-title-work" target="_blank" href="http://tempdocklink/pages/viewpage.action?pageId=22118721"> {{ $t('store.镜像指引') }} </a>
         </bread-crumbs>
         <main v-bkloading="{ isLoading }" class="edit-content">
@@ -505,13 +505,13 @@
     }
 
     .edit-content {
-        height: calc(100% - 8.8vh);
+        height: calc(100% - 5.6vh);
         overflow: auto;
     }
 
     .edit-image {
         width: 1200px;
-        margin: 0 auto 20px;
+        margin: 20px auto;
         position: relative;
         .image-remark-input {
             border: 1px solid #c4c6cc;

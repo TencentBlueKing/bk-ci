@@ -283,8 +283,8 @@
     .install-atom-wrapper {
         height: 100%;
         .install-atom-content {
-            padding: 0 0 40px;
-            height: calc(100vh - 8.8vh);
+            padding: 20px 0 40px;
+            height: calc(100vh - 5.6vh);
             overflow: auto;
             .template-tip {
                 margin-top: 10px;

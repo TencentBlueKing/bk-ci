@@ -69,7 +69,7 @@
 <style lang="scss" scoped>
     .transition-tabs {
         width: 14.6rem;
-        margin: 0 auto;
+        margin: 3.2vh auto 0;
         box-shadow: 1px 2px 3px 0 rgba(0,0,0,0.05);
         .transition-child-tabs {
             height: 4.7vh;

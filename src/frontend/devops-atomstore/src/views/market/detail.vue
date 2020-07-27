@@ -176,7 +176,8 @@
 <style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
     .store-main {
-        height: calc(100vh - 93px);
+        margin-top: 3.2vh;
+        height: 91.2vh;
         overflow-y: scroll;
     }
 
