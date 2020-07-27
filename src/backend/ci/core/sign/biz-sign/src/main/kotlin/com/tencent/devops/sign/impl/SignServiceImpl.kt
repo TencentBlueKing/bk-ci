@@ -31,6 +31,7 @@ import com.tencent.devops.sign.utils.SignUtils
 import com.tencent.devops.sign.utils.SignUtils.MAIN_APP_FILENAME
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.lang.RuntimeException
+import java.util.regex.Pattern
 
 @Service
 class SignServiceImpl @Autowired constructor(
@@ -75,7 +76,7 @@ class SignServiceImpl @Autowired constructor(
         signInfoService.finishUnzip(resignId, ipaUnzipDir, ipaSignInfo)
 
         // 解析Info.plist
-//        var ipaInfoPlist = parsInfoPlist()
+        val ipaInfoPlist = parsInfoPlist(findInfoPlist(ipaUnzipDir))
 
         // TODO 下载并返回描述文件信息（区分通配）
         val mobileProvisionInfoMap = downloadMobileProvision(mobileProvisionDir, ipaSignInfo)
@@ -106,8 +107,11 @@ class SignServiceImpl @Autowired constructor(
         }
         signInfoService.finishZip(resignId, signedIpaFile, ipaSignInfo)
 
+        // 生产元数据
+        val properties = getProperties(ipaSignInfo, ipaInfoPlist)
+
         // 归档ipa包
-        val archiveResult = archiveService.archive(signedIpaFile, ipaSignInfo)
+        val archiveResult = archiveService.archive(signedIpaFile, ipaSignInfo, properties)
         if (!archiveResult) {
             logger.error("[$resignId]|[${ipaSignInfo.buildId}] archive signed ipa failed.")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA, defaultMessage = "归档IPA包失败")
@@ -117,7 +121,6 @@ class SignServiceImpl @Autowired constructor(
     }
 
     override fun getSignResult(resignId: String): SignResult {
-        // TODO 权限访问控制
         return signInfoService.getSignResult(resignId)
     }
 
@@ -133,9 +136,9 @@ class SignServiceImpl @Autowired constructor(
         }
         ipaSignInfo.appexSignInfo?.forEach {
             val mpFile = mobileProvisionService.downloadMobileProvision(
-                mobileProvisionDir = mobileProvisionDir,
-                projectId = ipaSignInfo.projectId,
-                mobileProvisionId = it.mobileProvisionId
+                    mobileProvisionDir = mobileProvisionDir,
+                    projectId = ipaSignInfo.projectId,
+                    mobileProvisionId = it.mobileProvisionId
             )
             mobileProvisionMap[it.appexName] = parseMobileProvision(mpFile)
         }
@@ -248,10 +251,40 @@ class SignServiceImpl @Autowired constructor(
     }
 
     /*
+    * 寻找Info.plist的信息
+    * */
+    private fun findInfoPlist(
+            unzipDir: File
+    ): File {
+        try {
+            val payloadFile = File(unzipDir,"payload")
+            if(payloadFile.exists() && payloadFile.isDirectory) {
+                val appPattern = Pattern.compile(".+\\.app")
+                payloadFile.listFiles().forEach {
+                    if(appPattern.matcher(it.name).matches()) {
+                        val infoPlistFile = File(it,"Info.plist")
+                        if(it.exists() && it.isDirectory && infoPlistFile.exists() && infoPlistFile.isFile) {
+                            return infoPlistFile
+                        }else {
+                            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "寻找Info.plist失败")
+                        }
+                    }
+                }
+                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "寻找Info.plist失败")
+            }else {
+                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "寻找Info.plist失败")
+            }
+        } catch (e: Exception) {
+            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "寻找Info.plist失败")
+        }
+    }
+
+
+    /*
     * 解析ipa包Info.plist的信息
     * */
-    override fun parsInfoPlist(
-        infoPlist: File
+    private fun parsInfoPlist(
+            infoPlist: File
     ): IpaInfoPlist {
         try {
             val rootDict = PropertyListParser.parse(infoPlist) as NSDictionary
@@ -280,6 +313,26 @@ class SignServiceImpl @Autowired constructor(
         } catch (e: Exception) {
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_PARS_INFO_PLIST, defaultMessage = "解析Info.plist失败")
         }
+    }
+
+    /*
+    * 解析ipa包Info.plist的信息
+    * */
+    private fun getProperties(
+            ipaSignInfo: IpaSignInfo,
+            ipaInfoPlist: IpaInfoPlist
+    ): Map<String, String> {
+        val properties = mutableMapOf<String, String>()
+        properties["bundleIdentifier"] = ipaInfoPlist.bundleIdentifier
+        properties["appTitle"] = ipaInfoPlist.appTitle
+        properties["appVersion"] = ipaInfoPlist.bundleVersion
+        properties["projectId"] = ipaSignInfo.projectId
+        properties["pipelineId"] = ipaSignInfo.pipelineId ?: ""
+        properties["buildId"] = ipaSignInfo.buildId ?: ""
+        properties["userId"] = ipaSignInfo.userId
+        properties["source"] = "pipeline"
+        properties["ipa.sign.status"] = "true"
+        return properties
     }
 
     companion object {
