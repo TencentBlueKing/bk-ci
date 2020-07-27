@@ -29,7 +29,7 @@ package com.tencent.devops.dockerhost.cron
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
+import com.tencent.devops.dockerhost.dispatch.DockerHostDebugResourceApi
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.File
@@ -40,13 +40,13 @@ class UpdateAgentRunner @Autowired constructor(
     private val gray: Gray
 ) {
     private val logger = LoggerFactory.getLogger(UpdateAgentRunner::class.java)
-    private val dockerHostBuildApi: DockerHostBuildResourceApi = DockerHostBuildResourceApi()
+    private val dockerHostDebugResourceApi: DockerHostDebugResourceApi = DockerHostDebugResourceApi()
 
     fun update() {
         try {
             val agentFile = File(dockerHostConfig.dockerAgentPath!!)
             val localFileLength = if (agentFile.exists()) { agentFile.length() } else { 0 }
-            val serverFileLength = dockerHostBuildApi.getDockerJarLength()
+            val serverFileLength = dockerHostDebugResourceApi.getDockerJarLength()
             if (0L == localFileLength || localFileLength != serverFileLength) {
                 logger.info("need to update docker.jar")
                 val bakFile = File(dockerHostConfig.dockerAgentPath!! + "_bak")
