@@ -31,23 +31,23 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("project接口，users接口的状态上报")
 data class UsersStatus(
-    @ApiModelProperty("蓝盾项目ID", required = true)
-    val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
-    val pipelineId: String,
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("vmSeqId", required = true)
-    val vmSeqId: String,
-    @ApiModelProperty("channelCode", required = true)
-    val channelCode: ChannelCode,
-    @ApiModelProperty("请求时间", required = true)
+    @ApiModelProperty("蓝盾项目ID", required = false)
+    val projectId: String?,
+    @ApiModelProperty("流水线ID", required = false)
+    val pipelineId: String?,
+    @ApiModelProperty("构建ID", required = false)
+    val buildId: String?,
+    @ApiModelProperty("vmSeqId", required = false)
+    val vmSeqId: String?,
+    @ApiModelProperty("channelCode", required = false)
+    val channelCode: ChannelCode?,
+    @ApiModelProperty("请求时间(时间戳，毫秒)", required = true)
     val requestTime: Long,
-    @ApiModelProperty("响应时间", required = true)
+    @ApiModelProperty("响应时间(时间戳，毫秒)", required = true)
     val responseTime: Long,
-    @ApiModelProperty("耗时", required = true)
+    @ApiModelProperty("耗时(毫秒)", required = true)
     val elapseTime: Long,
-    @ApiModelProperty("状态码", required = false)
+    @ApiModelProperty("Http状态码", required = false)
     val statusCode: String?,
     @ApiModelProperty("状态码对应的错误信息", required = false)
     val statusMessage: String?,

@@ -40,11 +40,11 @@ data class AddCommitCheckStatus(
 //    val vmSeqId: String,
 //    @ApiModelProperty("channelCode", required = true)
 //    val channelCode: ChannelCode,
-    @ApiModelProperty("请求时间", required = true)
+    @ApiModelProperty("请求时间(时间戳，毫秒)", required = true)
     val requestTime: Long,
-    @ApiModelProperty("响应时间", required = true)
+    @ApiModelProperty("响应时间(时间戳，毫秒)", required = true)
     val responseTime: Long,
-    @ApiModelProperty("耗时", required = true)
+    @ApiModelProperty("耗时(毫秒)", required = true)
     val elapseTime: Long,
     @ApiModelProperty("http状态码", required = false)
     val statusCode: String?,
