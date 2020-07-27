@@ -24,19 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.process.api.user
 
-import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-data class PipelineWebhook(
-    val projectId: String,
-    val pipelineId: String,
-    val repositoryType: ScmType,
-    val repoType: RepositoryType?,
-    val repoHashId: String?, // repoHashId 与 repoName 不能同时为空，如果两个都不为空就用repoName
-    val repoName: String?,
-    val id: Long? = null,
-    var projectName: String? = null,
-    val taskId: String? = null
-)
+@Api(tags = ["USER_WEBHOOK"], description = "用户-webhook")
+@Path("/user/webhook")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserScmWebhookResource {
+
+    @ApiOperation("更新所有的webhook项目名")
+    @PUT
+    @Path("/updateProjectNameAndTaskId")
+    fun updateProjectNameAndTaskId(): Result<Boolean>
+}

@@ -24,19 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.process.api
 
-import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.user.UserScmWebhookResource
+import com.tencent.devops.process.engine.service.PipelineWebhookService
+import org.springframework.beans.factory.annotation.Autowired
 
-data class PipelineWebhook(
-    val projectId: String,
-    val pipelineId: String,
-    val repositoryType: ScmType,
-    val repoType: RepositoryType?,
-    val repoHashId: String?, // repoHashId 与 repoName 不能同时为空，如果两个都不为空就用repoName
-    val repoName: String?,
-    val id: Long? = null,
-    var projectName: String? = null,
-    val taskId: String? = null
-)
+@RestResource
+class UserScmWebhookResourceImpl @Autowired constructor(
+    private val pipelineWebhookService: PipelineWebhookService
+) : UserScmWebhookResource {
+
+    override fun updateProjectNameAndTaskId(): Result<Boolean> {
+        pipelineWebhookService.updateProjectNameAndTaskId()
+        return Result(true)
+    }
+}
