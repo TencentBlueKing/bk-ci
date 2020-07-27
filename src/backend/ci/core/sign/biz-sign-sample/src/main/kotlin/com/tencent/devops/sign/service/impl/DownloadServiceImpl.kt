@@ -38,7 +38,7 @@ class DownloadServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(DownloadServiceImpl::class.java)
     }
 
-    override fun getDownloadUrl(userId: String?, resignId: String, downloadType: String): String {
+    override fun getDownloadUrl(userId: String, resignId: String, downloadType: String): String {
         val signIpaInfoResult = signIpaInfoDao.getSignInfo(dslContext, resignId)
         if(signIpaInfoResult == null) {
             logger.error("签名任务签名信息(resignId=$resignId)不存在。")

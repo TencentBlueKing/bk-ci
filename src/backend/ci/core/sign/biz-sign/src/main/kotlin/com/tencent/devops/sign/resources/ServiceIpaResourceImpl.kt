@@ -65,7 +65,7 @@ class ServiceIpaResourceImpl @Autowired constructor(
 
     override fun downloadUrl(resignId: String): Result<String> {
         return Result(downloadService.getDownloadUrl(
-                userId = null,
+                userId = "",
                 resignId = resignId,
                 downloadType = "service")
         )

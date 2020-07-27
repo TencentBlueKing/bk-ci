@@ -56,5 +56,6 @@ object SignMessageCode {
     const val ERROR_ENCODE_SIGN_INFO = "2122009" // 编码签名信息头部失败
     const val ERROR_PARS_INFO_PLIST = "2122010" // 解析Info.plist失败
     const val ERROR_RESIGN_TASK_NOT_EXIST = "2122011" // 签名任务不存在
+    const val ERROR_CREATE_DOWNLOAD_URL = "2122012" // 创建下载连接失败
 
 }

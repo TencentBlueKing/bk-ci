@@ -23,7 +23,7 @@ interface DownloadService {
     * 获取下载连接
     * */
     fun getDownloadUrl(
-        userId: String?,
+        userId: String,
         resignId: String,
         downloadType: String
     ): String

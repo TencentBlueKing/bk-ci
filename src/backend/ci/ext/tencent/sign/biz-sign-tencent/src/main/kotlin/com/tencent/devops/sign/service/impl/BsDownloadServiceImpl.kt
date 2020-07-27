@@ -45,7 +45,7 @@ class BsDownloadServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(BsDownloadServiceImpl::class.java)
     }
 
-    override fun getDownloadUrl(userId: String?, resignId: String, downloadType: String): String {
+    override fun getDownloadUrl(userId: String, resignId: String, downloadType: String): String {
         val signIpaInfoResult = signIpaInfoDao.getSignInfo(dslContext, resignId)
         if(signIpaInfoResult == null) {
             logger.error("签名任务签名信息(resignId=$resignId)不存在。")
@@ -73,45 +73,39 @@ class BsDownloadServiceImpl @Autowired constructor(
             }
         }
         val downloadUrl = when (downloadType) {
-            "user" -> {
+            "service" -> {
                 client.getGateway(ServiceArtifactoryDownLoadResource::class, GatewayType.DEVNET_PROXY).downloadUrl(
                         projectId = signIpaInfoResult.projectId,
                         artifactoryType = artifactoryType,
-                        userId = userId?:"",
+                        userId = signIpaInfoResult.userId,
                         path = path,
-                        channelCode = ChannelCode.BS
+                        ttl = 7200,
+                        directed = true
 
                 ).data?.url
             }
-            "service" -> {
+            "user" -> {
                 client.getGateway(UserArtifactoryResource::class, GatewayType.DEVNET_PROXY).downloadUrl(
+                        userId = userId,
                         projectId = signIpaInfoResult.projectId,
                         artifactoryType = artifactoryType,
-                        userId = userId?:"",
-                        path = path,
-                        channelCode = ChannelCode.BS
-
+                        path = path
                 ).data?.url
             }
-            else -> "user"
-        }
-
-        val filePath = when (signIpaInfoResult.archiveType.toLowerCase()) {
-            "pipeline" -> {
-                "${FileTypeEnum.BK_ARCHIVE.fileType}/${signIpaInfoResult.projectId}/${signIpaInfoResult.pipelineId}/${signIpaInfoResult.buildId}/${signHistoryResult.resultFileName ?: "result.ipa"}"
-            }
-            "custom" -> {
-                "${FileTypeEnum.BK_CUSTOM.fileType}/${signIpaInfoResult.projectId}/${signIpaInfoResult.archivePath?.trim('/')}/${signHistoryResult.resultFileName ?: "result.ipa"}"
-            }
             else -> {
-                // 默认是流水线
-                "${FileTypeEnum.BK_ARCHIVE.fileType}/${signIpaInfoResult.projectId}/${signIpaInfoResult.pipelineId}/${signIpaInfoResult.buildId}/${signHistoryResult.resultFileName ?: "result.ipa"}"
+                client.getGateway(UserArtifactoryResource::class, GatewayType.DEVNET_PROXY).downloadUrl(
+                        userId = userId,
+                        projectId = signIpaInfoResult.projectId,
+                        artifactoryType = artifactoryType,
+                        path = path
+                ).data?.url
             }
         }
-        return
-
-
-        return "${commonConfig.devopsHostGateway}/artifactory/api/$downloadTypePath/artifactories/file/download/local?filePath=${URLEncoder.encode(filePath, "UTF-8")}"
+        if(downloadUrl == null) {
+            logger.error("创建下载连接失败(resignId=$resignId)")
+            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CREATE_DOWNLOAD_URL, defaultMessage = "创建下载连接失败。")
+        }
+        return downloadUrl
     }
 
 }
