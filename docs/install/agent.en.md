@@ -13,7 +13,7 @@ For the convenience of compilation, all the compilation dependencies have been p
 - It is recommended to use Golang 1.12 for compilation.
 - It is not recommended to use cross compilation to create agent executables.
 - Compile on Linux: build_linux.sh
-- Compile on Windows: build_linux.sh
+- Compile on Windows: build_windows.bat
 - Compile on macOS: build_macos.sh
 
 - The outputs are stored in the following files (installation packages) in the agent/bin directory:
