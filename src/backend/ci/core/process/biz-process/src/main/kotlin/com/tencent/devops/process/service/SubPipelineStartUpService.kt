@@ -101,7 +101,9 @@ class SubPipelineStartUpService(
             runVariables[PIPELINE_START_USER_ID] ?: runVariables[PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_ID)]
             ?: "null"
         val triggerUser =
-            runVariables[PIPELINE_START_USER_NAME] ?: runVariables[PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_NAME)]
+            runVariables[PIPELINE_START_USER_NAME] ?: runVariables[PipelineVarUtil.newVarToOldVar(
+                PIPELINE_START_USER_NAME
+            )]
             ?: userId
 
         logger.info("[$buildId]|callPipelineStartup|$userId|$triggerUser|$project|$callProjectId|$projectId|$parentPipelineId|$callPipelineId|$taskId")
@@ -214,7 +216,9 @@ class SubPipelineStartUpService(
                         val subPip = msg["subPip"]
                         logger.info("callPipelineStartup: ${msg["projectId"]} $projectId")
                         val subPro =
-                            if (msg["projectId"] == null || msg["projectId"].toString().isBlank()) projectId else msg["projectId"]
+                            if (msg["projectId"] == null || msg["projectId"].toString()
+                                    .isBlank()
+                            ) projectId else msg["projectId"]
                         val exist = HashSet(currentExistPipelines)
                         checkSubpipeline(atomCode, subPro as String, subPip as String, exist)
                         existPipelines.addAll(exist)
@@ -314,6 +318,19 @@ class SubPipelineStartUpService(
             }
         }
         return Result(parameter)
+    }
+
+    fun getSubVar(buildId: String, taskId: String): Result<Map<String, String>> {
+        logger.info("getSubVar | $buildId | $taskId")
+        val taskRecord = pipelineBuildTaskDao.get(
+            dslContext = dslContext,
+            buildId = buildId,
+            taskId = taskId
+        ) ?: return Result(emptyMap())
+        logger.info("getSubVar sub buildId :${taskRecord.subBuildId}")
+
+        val subBuildId = taskRecord.subBuildId
+        return Result(buildVariableService.getAllVariable(subBuildId))
     }
 
     fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {

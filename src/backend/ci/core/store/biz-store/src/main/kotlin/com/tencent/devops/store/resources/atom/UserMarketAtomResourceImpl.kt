@@ -57,7 +57,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
 
     override fun list(
         userId: String,
-        atomName: String?,
+        keyword: String?,
         classifyCode: String?,
         labelCode: String?,
         score: Int?,
@@ -71,7 +71,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return Result(
             marketAtomService.list(
                 userId = userId.trim(),
-                atomName = atomName?.trim(),
+                keyword = keyword?.trim(),
                 classifyCode = classifyCode?.trim(),
                 labelCode = labelCode?.trim(),
                 score = score,

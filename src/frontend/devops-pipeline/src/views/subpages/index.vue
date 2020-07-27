@@ -72,8 +72,8 @@
             <bk-form :model="dialogConfig.formData" form-type="vertical" style="padding: 0 10px">
                 <bk-form-item v-for="item in dialogConfig.formConfig" :label="item.label" :required="item.required" :rules="item.rules" :property="item.name" :key="item.name">
                     <bk-radio-group v-if="item.component === 'enum-input'" v-model="dialogConfig.formData[item.name]">
-                        <bk-radio class="bkdevops-radio" :value="true">{{ $t('true') }}</bk-radio>
-                        <bk-radio class="bkdevops-radio" :value="false">{{ $t('false') }}</bk-radio>
+                        <bk-radio style="margin-right: 10px;" :value="true">{{ $t('true') }}</bk-radio>
+                        <bk-radio :value="false">{{ $t('false') }}</bk-radio>
                     </bk-radio-group>
                     <component v-else :is="item.component" v-model="dialogConfig.formData[item.name]" v-bind="item.bindData"></component>
                 </bk-form-item>
@@ -150,12 +150,6 @@
             pipelineId () {
                 return this.$route.params.pipelineId
             },
-            hasCodeccAtom () {
-                if (this.execDetail && this.execDetail.model) {
-                    return this.getAllElements(this.execDetail.model.stages).some(element => element['@type'] === 'linuxPaasCodeCCScript')
-                }
-                return false
-            },
             templateFormConfig () {
                 return [{
                     name: 'templateName',
@@ -201,7 +195,7 @@
                 return this.saveStatus || this.executeStatus
             },
             saveBtnDisabled () {
-                return this.saveStatus || this.executeStatus || Object.keys(this.pipelineSetting).length === 0 || Object.keys(this.pipelineAuthority).length === 0
+                return this.saveStatus || this.executeStatus || Object.keys(this.pipelineSetting).length === 0
             },
             canManualStartup () {
                 return this.curPipeline ? this.curPipeline.canManualStartup : false

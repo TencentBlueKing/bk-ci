@@ -49,9 +49,6 @@ abstract class AbstractTask(
     open val inputs: AbstractInput?,
     open val condition: String?
 ) {
-    abstract fun getTaskType(): String
-    abstract fun getTaskVersion(): String
-
     abstract fun covertToElement(config: CiBuildConfig): Element
 }
 

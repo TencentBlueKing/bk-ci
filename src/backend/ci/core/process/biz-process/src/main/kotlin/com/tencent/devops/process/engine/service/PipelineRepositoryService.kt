@@ -615,7 +615,7 @@ class PipelineRepositoryService constructor(
             val transactionContext = DSL.using(configuration)
 
             val record =
-                (pipelineInfoDao.getPipelineInfo(transactionContext, projectId, pipelineId, channelCode, delete, null)
+                (pipelineInfoDao.getPipelineInfo(transactionContext, projectId, pipelineId, channelCode, null, null)
                     ?: throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                         defaultMessage = "要删除的流水线不存在"

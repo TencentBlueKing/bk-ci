@@ -29,6 +29,6 @@ package cron
 import "testing"
 
 func Test_AgentStartup_01(t *testing.T) {
-	CleanDumpFileJob(1, 1)
+	cleanDumpFile(36)
+	cleanLogFile(72)
 }
-

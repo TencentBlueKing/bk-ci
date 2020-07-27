@@ -105,7 +105,7 @@ class MarketImageDao @Autowired constructor(
      */
     fun count(
         dslContext: DSLContext,
-        imageName: String?,
+        keyword: String?,
         classifyCodeList: List<String>?,
         labelCodeList: List<String>?,
         rdType: ImageRDTypeEnum?,
@@ -113,7 +113,7 @@ class MarketImageDao @Autowired constructor(
         imageSourceType: ImageType?
     ): Int {
         val (tImage, tImageFeature, conditions) = formatConditions(
-            imageName = imageName,
+            keyword = keyword,
             imageSourceType = imageSourceType,
             classifyCodeList = classifyCodeList,
             rdType = rdType,
@@ -158,7 +158,7 @@ class MarketImageDao @Autowired constructor(
     }
 
     private fun formatConditions(
-        imageName: String?,
+        keyword: String?,
         imageSourceType: ImageType?,
         classifyCodeList: List<String>?,
         rdType: ImageRDTypeEnum?,
@@ -171,8 +171,8 @@ class MarketImageDao @Autowired constructor(
         // 隐含条件
         conditions.add(tImage.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())) // 已发布的
         conditions.add(tImage.LATEST_FLAG.eq(true)) // 最新版本
-        if (!imageName.isNullOrEmpty()) {
-            conditions.add(tImage.IMAGE_NAME.contains(imageName))
+        if (!keyword.isNullOrEmpty()) {
+            conditions.add(tImage.IMAGE_NAME.contains(keyword).or(tImage.SUMMARY.contains(keyword)))
         }
         if (imageSourceType != null) {
             conditions.add(tImage.IMAGE_SOURCE_TYPE.eq(imageSourceType.type))
@@ -200,8 +200,8 @@ class MarketImageDao @Autowired constructor(
      */
     fun list(
         dslContext: DSLContext,
-        // 镜像名称，模糊匹配
-        imageName: String?,
+        // 搜索关键字，模糊匹配
+        keyword: String?,
         // 分类代码，精确匹配
         classifyCodeList: List<String>?,
         // 标签，精确匹配
@@ -222,7 +222,7 @@ class MarketImageDao @Autowired constructor(
         pageSize: Int?
     ): Result<Record18<String, String, String, Byte, String, String, String, String, String, String, Boolean, Boolean, String, LocalDateTime, String, String, LocalDateTime, LocalDateTime>>? {
         val (tImage, tImageFeature, conditions) = formatConditions(
-            imageName = imageName,
+            keyword = keyword,
             imageSourceType = imageSourceType,
             classifyCodeList = classifyCodeList,
             rdType = rdType,
@@ -330,8 +330,8 @@ class MarketImageDao @Autowired constructor(
 
     fun count(
         dslContext: DSLContext,
-        // 镜像名称，模糊匹配
-        imageName: String?,
+        // 搜索关键字，模糊匹配
+        keyword: String?,
         // 分类代码，精确匹配
         classifyCodeList: List<String>?,
         // 标签，精确匹配
@@ -346,7 +346,7 @@ class MarketImageDao @Autowired constructor(
         imageSourceType: ImageType?
     ): Int {
         val (tImage, tImageFeature, conditions) = formatConditions(
-            imageName = imageName,
+            keyword = keyword,
             imageSourceType = imageSourceType,
             classifyCodeList = classifyCodeList,
             rdType = rdType,
@@ -844,7 +844,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: Collection<String>?,
         notInImageCodes: Collection<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?
@@ -862,8 +862,8 @@ class MarketImageDao @Autowired constructor(
         if (recommendFlag != null) {
             conditions.add(tImageFeature.RECOMMEND_FLAG.eq(recommendFlag))
         }
-        if (!imageNamePart.isNullOrBlank()) {
-            conditions.add(tImage.IMAGE_NAME.contains(imageNamePart))
+        if (!keyword.isNullOrBlank()) {
+            conditions.add(tImage.IMAGE_NAME.contains(keyword).or(tImage.SUMMARY.contains(keyword)))
         }
         if (!classifyId.isNullOrBlank()) {
             conditions.add(tImage.CLASSIFY_ID.eq(classifyId))
@@ -883,7 +883,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: List<String>?,
         notInImageCodes: List<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
@@ -900,7 +900,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType,
@@ -918,7 +918,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: List<String>?,
         notInImageCodes: List<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
@@ -933,7 +933,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType,
@@ -949,7 +949,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: List<String>?,
         notInImageCodes: List<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
@@ -965,7 +965,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType,
@@ -983,7 +983,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: List<String>?,
         notInImageCodes: List<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
@@ -997,7 +997,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType,
@@ -1013,7 +1013,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: List<String>?,
         notInImageCodes: List<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
@@ -1029,7 +1029,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType,
@@ -1047,7 +1047,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: List<String>?,
         notInImageCodes: List<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
@@ -1063,7 +1063,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType,
@@ -1079,7 +1079,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: Collection<String>?,
         notInImageCodes: Collection<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
@@ -1098,7 +1098,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType
@@ -1158,7 +1158,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: Collection<String>?,
         notInImageCodes: Collection<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?
@@ -1173,7 +1173,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType
@@ -1201,7 +1201,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: List<String>?,
         notInImageCodes: List<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
@@ -1221,7 +1221,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType
@@ -1288,7 +1288,7 @@ class MarketImageDao @Autowired constructor(
         inImageCodes: List<String>?,
         notInImageCodes: List<String>?,
         recommendFlag: Boolean?,
-        imageNamePart: String?,
+        keyword: String?,
         classifyId: String?,
         categoryCode: String?,
         rdType: ImageRDTypeEnum?,
@@ -1305,7 +1305,7 @@ class MarketImageDao @Autowired constructor(
             inImageCodes = inImageCodes,
             notInImageCodes = notInImageCodes,
             recommendFlag = recommendFlag,
-            imageNamePart = imageNamePart,
+            keyword = keyword,
             classifyId = classifyId,
             categoryCode = categoryCode,
             rdType = rdType

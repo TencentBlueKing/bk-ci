@@ -346,7 +346,7 @@ class ExtServiceDao {
         pageSize: Int?,
         timeDescFlag: Boolean? = null
     ): Result<TExtensionServiceRecord>? {
-        return with(TExtensionService.T_EXTENSION_SERVICE) {
+        with(TExtensionService.T_EXTENSION_SERVICE) {
             val baseStep = dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_STATUS.eq(serviceStatus.status.toByte()))
             if (timeDescFlag != null && timeDescFlag) {
                 baseStep.orderBy(CREATE_TIME.desc())
@@ -429,14 +429,14 @@ class ExtServiceDao {
      */
     fun count(
         dslContext: DSLContext,
-        serviceName: String?,
+        keyword: String?,
         classifyCode: String?,
         bkService: Long?,
         rdType: ServiceTypeEnum? = null,
         labelCodeList: List<String>?,
         score: Int?
     ): Int {
-        val (ta, conditions) = formatConditions(serviceName, classifyCode, dslContext)
+        val (ta, conditions) = formatConditions(keyword, classifyCode, dslContext)
 
         val baseStep = dslContext.select(ta.ID.countDistinct()).from(ta)
 
@@ -652,7 +652,7 @@ class ExtServiceDao {
      */
     fun list(
         dslContext: DSLContext,
-        serviceName: String?,
+        keyword: String?,
         classifyCode: String?,
         bkService: Long?,
         labelCodeList: List<String>?,
@@ -663,7 +663,7 @@ class ExtServiceDao {
         page: Int?,
         pageSize: Int?
     ): Result<out Record>? {
-        val (ta, conditions) = formatConditions(serviceName, classifyCode, dslContext)
+        val (ta, conditions) = formatConditions(keyword, classifyCode, dslContext)
         val taf = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("taf")
         val baseStep = dslContext.select(
             ta.ID.`as`("SERVICE_ID"),
@@ -804,15 +804,15 @@ class ExtServiceDao {
     }
 
     private fun formatConditions(
-        serviceName: String?,
+        keyword: String?,
         classifyCode: String?,
         dslContext: DSLContext
     ): Pair<TExtensionService, MutableList<Condition>> {
         val ta = TExtensionService.T_EXTENSION_SERVICE.`as`("ta")
         val storeType = StoreTypeEnum.SERVICE.type.toByte()
         val conditions = setExtServiceVisibleCondition(ta)
-        if (!serviceName.isNullOrEmpty()) {
-            conditions.add(ta.SERVICE_NAME.contains(serviceName))
+        if (!keyword.isNullOrEmpty()) {
+            conditions.add(ta.SERVICE_NAME.contains(keyword).or(ta.SUMMARY.contains(keyword)))
         }
         if (!classifyCode.isNullOrEmpty()) {
             val a = TClassify.T_CLASSIFY.`as`("a")

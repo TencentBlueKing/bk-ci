@@ -59,8 +59,8 @@
                         <div v-if="formErrors.sortError" class="error-tips"> {{ $t('store.分类不能为空') }} </div>
                     </div>
                 </div>
-                <div class="bk-form-item is-required" v-if="isEnterprise">
-                    <label class="bk-label env-label"> {{ $t('store.操作系统') }} </label>
+                <div class="bk-form-item is-required">
+                    <label class="bk-label env-label"> {{ $t('操作系统') }} </label>
                     <div class="bk-form-content atom-item-content">
                         <bk-checkbox-group v-model="atomForm.os">
                             <bk-checkbox :value="entry.value" v-for="(entry, key) in envList" :key="key" @click.native="changeOs(entry.value)">
@@ -71,26 +71,6 @@
                         <div v-if="formErrors.envError" class="error-tips"> {{ $t('store.操作系统不能为空') }} </div>
                     </div>
                 </div>
-                <template v-else>
-                    <div class="bk-form-item is-required" ref="jobError">
-                        <label class="bk-label env-label"> {{ $t('store.适用Job类型') }} </label>
-                        <div class="bk-form-content atom-item-content">
-                            <bk-radio-group v-model="atomForm.jobType" class="radio-group">
-                                <bk-radio :value="entry.value" v-for="(entry, key) in jobTypeList" :key="key" @click.native="formErrors.jobError = false">{{entry.label}}</bk-radio>
-                            </bk-radio-group>
-                            <div v-if="formErrors.jobError" class="error-tips"> {{ $t('store.字段有误，请重新选择') }} </div>
-                        </div>
-                    </div>
-                    <bk-checkbox-group v-model="atomForm.os" v-if="atomForm.jobType === 'AGENT'" class="bk-form-content atom-os" ref="envError">
-                        <bk-checkbox :value="entry.value" v-for="(entry, key) in envList" :key="key" @click.native="changeOs(entry.value)">
-                            <p class="os-checkbox-label">
-                                <i :class="{ 'bk-icon': true, [`icon-${entry.icon}`]: true }"></i>
-                                <span class="bk-checkbox-text">{{ entry.label }}</span>
-                            </p>
-                        </bk-checkbox>
-                    </bk-checkbox-group>
-                </template>
-                <div v-if="!isEnterprise && formErrors.envError" class="error-tips env-error"> {{ $t('store.需要选择编译环境') }} </div>
                 <div class="bk-form-item">
                     <label class="bk-label"> {{ $t('store.功能标签') }} </label>
                     <div class="bk-form-content template-item-content">
@@ -107,15 +87,6 @@
                                 :name="option.labelName">
                             </bk-option>
                         </bk-select>
-                    </div>
-                </div>
-                <div class="bk-form-item is-required is-open" ref="openSourceError" v-if="!atomForm.version && !isEnterprise">
-                    <label class="bk-label"> {{ $t('store.是否开源') }} </label>
-                    <div class="bk-form-content atom-item-content">
-                        <bk-radio-group v-model="atomForm.visibilityLevel" class="radio-group">
-                            <bk-radio :value="entry.value" v-for="(entry, key) in isOpenSource" :key="key" @click.native="formErrors.openSourceError = false">{{entry.label}}</bk-radio>
-                        </bk-radio-group>
-                        <div v-if="formErrors.openSourceError" class="error-tips"> {{ $t('store.字段有误，请重新选择') }} </div>
                     </div>
                 </div>
                 <div class="bk-form-item introduction-form-item is-required">
@@ -275,7 +246,7 @@
                 initJobType: '',
                 initReleaseType: '',
                 descTemplate: '',
-                docsLink: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942',
+                docsLink: 'http://tempdocklink/pages/viewpage.action?pageId=15008942',
                 showContent: false,
                 isUploading: false,
                 initOs: [],
@@ -291,10 +262,6 @@
                     { label: 'Linux', value: 'LINUX', icon: 'linux-view' },
                     { label: 'Windows', value: 'WINDOWS', icon: 'windows' },
                     { label: 'macOS', value: 'MACOS', icon: 'macos' }
-                ],
-                isOpenSource: [
-                    { label: this.$t('store.是'), value: 'LOGIN_PUBLIC' },
-                    { label: this.$t('store.否'), value: 'PRIVATE' }
                 ],
                 publishShelf: [
                     { label: this.$t('store.新上架'), value: 'NEW' }
@@ -337,8 +304,7 @@
                     publisher: '',
                     version: '1.0.0',
                     releaseType: 'NEW',
-                    versionContent: '',
-                    visibilityLevel: 'LOGIN_PUBLIC'
+                    versionContent: ''
                 },
                 formErrors: {
                     categoryError: false,
@@ -363,9 +329,6 @@
             },
             releasePackageUrl () {
                 return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/atoms/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
-            },
-            isEnterprise () {
-                return VERSION_TYPE === 'ee'
             }
         },
         watch: {
@@ -616,21 +579,9 @@
                     errorCount++
                 }
 
-                if (!this.isEnterprise && this.jobTypeList.find(x => x.value === this.atomForm.jobType) < 0) {
-                    this.formErrors.jobError = true
-                    ref = ref || 'jobError'
-                    errorCount++
-                }
-
                 if (this.atomForm.jobType === 'AGENT' && !this.atomForm.os.length) {
                     this.formErrors.envError = true
                     ref = ref || 'envError'
-                    errorCount++
-                }
-
-                if (!this.isEnterprise && this.isOpenSource.find(x => x.value === this.atomForm.visibilityLevel) < 0) {
-                    this.formErrors.openSourceError = true
-                    ref = ref || 'openSourceError'
                     errorCount++
                 }
 
@@ -640,7 +591,7 @@
                     errorCount++
                 }
 
-                if (this.isEnterprise && !this.atomForm.packageShaContent) {
+                if (!this.atomForm.packageShaContent) {
                     this.formErrors.releasePackageError = true
                     errorCount++
                 }

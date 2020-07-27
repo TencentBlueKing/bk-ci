@@ -61,12 +61,6 @@
                                         icon: ''
                                     },
                                     {
-                                        id: 'visible',
-                                        selectId: ['visible'],
-                                        name: this.$t('store.可见范围'),
-                                        icon: ''
-                                    },
-                                    {
                                         id: 'private',
                                         selectId: ['private'],
                                         name: this.$t('store.私有配置'),
@@ -102,7 +96,6 @@
 
         created () {
             this.initData()
-            this.hanldeEnterprise()
         },
 
         methods: {
@@ -139,12 +132,6 @@
                     if (!userInfo.isProjectAdmin) this.sideMenuList[0].list.splice(2, 1)
                     this.$store.dispatch('store/updateUserInfo', userInfo)
                 })
-            },
-
-            hanldeEnterprise () {
-                if (VERSION_TYPE === 'ee') {
-                    this.sideMenuList[0].list[3].children.splice(1, 1)
-                }
             }
         }
     }

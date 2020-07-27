@@ -21,17 +21,14 @@ import { mapActions, mapGetters } from 'vuex'
 import Accordion from '@/components/atomFormField/Accordion'
 import EnumInput from '@/components/atomFormField/EnumInput'
 import VuexInput from '@/components/atomFormField/VuexInput'
-import ExperienceInput from '@/components/atomFormField/ExperienceInput'
 import VuexTextarea from '@/components/atomFormField/VuexTextarea'
 import Selector from '@/components/atomFormField/Selector'
 import SelectInput from '@/components/AtomFormComponent/SelectInput'
 import DevopsSelect from '@/components/AtomFormComponent/DevopsSelect'
 import AtomAceEditor from '@/components/atomFormField/AtomAceEditor'
 import CronTimer from '@/components/atomFormField/CronTimer/week'
-import StaffInput from '@/components/atomFormField/StaffInput'
-import CompanyStaffInput from '@/components/atomFormField/CompanyStaffInput'
+import UserInput from '@/components/atomFormField/UserInput'
 import RequestSelector from '@/components/atomFormField/RequestSelector'
-import GitRequestSelector from '@/components/atomFormField/GitRequestSelector'
 import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
 import AtomCheckboxList from '@/components/atomFormField/AtomCheckboxList'
 import AtomDatePicker from '@/components/atomFormField/AtomDatePicker'
@@ -44,7 +41,6 @@ import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
 import NameSpaceVar from '@/components/atomFormField/NameSpaceVar'
 import RouteTips from '@/components/atomFormField/RouteTips'
 import QualitygateTips from '@/components/atomFormField/QualitygateTips'
-import CheckInline from '@/components/atomFormField/CheckInline'
 import FormField from './FormField'
 import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
 import RemoteCurlUrl from '@/components/atomFormField/RemoteCurlUrl'
@@ -74,24 +70,20 @@ const atomMixin = {
         SelectInput,
         AtomAceEditor,
         CronTimer,
-        StaffInput,
-        CompanyStaffInput,
+        UserInput,
         RequestSelector,
-        GitRequestSelector,
         AtomCheckbox,
         AtomCheckboxList,
         FormField,
         AtomDatePicker,
         CodeModeSelector,
         CodeModeInput,
-        ExperienceInput,
         ParamsView,
         SvnpathInput,
         KeyValue,
         KeyValueNormal,
         NameSpaceVar,
         RouteTips,
-        CheckInline,
         GroupIdSelector,
         QualitygateTips,
         AutoComplete,

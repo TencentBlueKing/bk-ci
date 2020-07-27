@@ -45,6 +45,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.measure.MeasureService
@@ -129,17 +130,21 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             s.containers.forEach c@{
 
                 if (vmId.toString() == vmSeqId) {
+                    // 增加判断状态，如果是已经结束的，拒绝重复启动请求
+                    BuildStatus.values().forEach { s ->
+                        if (BuildStatus.isFinish(s) && s.name == it.startVMStatus) {
+                            throw IllegalStateException("Deny to start VM! startVMStatus=${it.startVMStatus}")
+                        }
+                    }
+
+                    val containerAppResource = client.get(ServiceContainerAppResource::class)
                     val buildEnvs = if (it is VMBuildContainer) {
                         if (it.buildEnv == null) {
                             emptyList<BuildEnv>()
                         } else {
                             val list = ArrayList<BuildEnv>()
                             it.buildEnv!!.forEach { build ->
-                                val env = client.get(ServiceContainerAppResource::class).getBuildEnv(
-                                    build.key,
-                                    build.value,
-                                    it.baseOS.name.toLowerCase()
-                                ).data
+                                val env = containerAppResource.getBuildEnv(name = build.key, version = build.value, os = it.baseOS.name.toLowerCase()).data
                                 if (env == null) {
                                     logger.warn("The container app($build) is not exist")
                                 } else {
@@ -151,11 +156,14 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     } else {
                         emptyList()
                     }
-                    pipelineBuildDetailService.containerStart(buildId, vmSeqId.toInt())
-                    addHeartBeat(buildId, vmSeqId, System.currentTimeMillis())
+                    pipelineBuildDetailService.containerStart(buildId = buildId, containerId = vmSeqId.toInt())
+                    addHeartBeat(buildId = buildId, vmSeqId = vmSeqId, time = System.currentTimeMillis())
                     setStartUpVMStatus(
-                        projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId,
-                        buildId = buildId, vmSeqId = vmSeqId, buildStatus = BuildStatus.SUCCEED
+                        projectId = buildInfo.projectId,
+                        pipelineId = buildInfo.pipelineId,
+                        buildId = buildId,
+                        vmSeqId = vmSeqId,
+                        buildStatus = BuildStatus.SUCCEED
                     )
                     return BuildVariables(
                         buildId = buildId,
@@ -175,7 +183,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         }
 
         logger.warn("Fail to find the vm build container($vmSeqId) of $model")
-        throw IllegalStateException("Fail to find the vm build container")
+        throw NotFoundException("Fail to find the vm build container")
     }
 
     fun setStartUpVMStatus(
@@ -185,51 +193,61 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         vmSeqId: String,
         buildStatus: BuildStatus
     ): Boolean {
-        val buildTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
-        logger.info("[$buildId]|setStartUpVMStatus|vmSeqId=$vmSeqId|status=$buildStatus|size=${buildTasks.size}")
-        if (buildTasks.isNotEmpty()) {
-            val startUpVMTask = buildTasks[0]
-            // 如果是成功的状态，则更新构建机启动插件的状态
-            if (BuildStatus.isFinish(buildStatus)) {
-                pipelineRuntimeService.updateTaskStatus(
-                    buildId = buildId,
-                    taskId = startUpVMTask.taskId,
-                    userId = startUpVMTask.starter,
-                    buildStatus = buildStatus
-                )
-            }
+        // 针VM启动不是在第一个的情况，第一个可能是人工审核插件（避免占用VM）
+        // agent上报状态需要判断根据ID来获取真正的启动VM的任务，否则兼容处理取第一个插件的状态（正常情况）
+        var startUpVMTask = pipelineRuntimeService.getBuildTask(buildId, VMUtils.genStartVMTaskId(vmSeqId))
 
-            // 失败的话就发终止事件
-            var message: String? = null
-            val actionType = if (BuildStatus.isFailure(buildStatus)) {
-                message = "构建机启动失败，所有插件被终止"
-                ActionType.TERMINATE
-            } else {
-                ActionType.START
+        if (startUpVMTask == null) {
+            val buildTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
+            if (buildTasks.isNotEmpty()) {
+                startUpVMTask = buildTasks[0]
             }
+        }
 
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildContainerEvent(
-                    source = "container_startup_$buildStatus",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    userId = startUpVMTask.starter,
-                    stageId = startUpVMTask.stageId,
-                    containerId = startUpVMTask.containerId,
-                    containerType = startUpVMTask.containerType,
-                    actionType = actionType,
-                    reason = message
-                )
-            )
-            pipelineBuildDetailService.updateStartVMStatus(
+        logger.info("[$buildId]|setStartUpVMStatus|taskId=${startUpVMTask?.taskId}|vmSeqId=$vmSeqId|status=$buildStatus")
+        if (startUpVMTask == null) {
+            return false
+        }
+
+        // 如果是成功的状态，则更新构建机启动插件的状态
+        if (BuildStatus.isFinish(buildStatus)) {
+            pipelineRuntimeService.updateTaskStatus(
                 buildId = buildId,
-                containerId = startUpVMTask.containerId,
+                taskId = startUpVMTask.taskId,
+                userId = startUpVMTask.starter,
                 buildStatus = buildStatus
             )
-            return true
         }
-        return false
+
+        // 失败的话就发终止事件
+        var message: String? = null
+        val actionType = if (BuildStatus.isFailure(buildStatus)) {
+            message = "构建机启动失败，所有插件被终止"
+            ActionType.TERMINATE
+        } else {
+            ActionType.START
+        }
+
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildContainerEvent(
+                source = "container_startup_$buildStatus",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                userId = startUpVMTask.starter,
+                stageId = startUpVMTask.stageId,
+                containerId = startUpVMTask.containerId,
+                containerType = startUpVMTask.containerType,
+                actionType = actionType,
+                reason = message
+            )
+        )
+        pipelineBuildDetailService.updateStartVMStatus(
+            buildId = buildId,
+            containerId = startUpVMTask.containerId,
+            buildStatus = buildStatus
+        )
+        return true
     }
 
 //    fun pluginClaimTask(buildId: String, vmSeqId: String, vmName: String): BuildTask {
@@ -468,7 +486,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 logger.warn("[$buildId]| save var fail: ${ignored.message}", ignored)
             }
         }
-        logger.info("[$buildId]|ERRORCODE|completeClaimBuildTask|errorType=${result.errorType}|errorCode=${result.errorCode}|message=${result.message}] ")
+        logger.info("[$buildId]completeClaimBuildTask|errorType=${result.errorType}|errorCode=${result.errorCode}|message=${result.message}] ")
         val errorType = if (!result.errorType.isNullOrBlank()) {
             ErrorType.valueOf(result.errorType!!)
         } else null

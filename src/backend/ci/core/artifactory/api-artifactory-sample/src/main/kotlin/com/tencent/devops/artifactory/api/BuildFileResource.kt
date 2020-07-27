@@ -137,4 +137,25 @@ interface BuildFileResource {
         @QueryParam("customFilePath")
         customFilePath: String?
     ): Result<GetFileDownloadUrlsResponse?>
+
+/*    @ApiOperation("跨项目拷贝文件")
+    @Path("/artifactoryType/{artifactoryType}/acrossProjectCopy")
+    @GET
+    fun acrossProjectCopy(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam("X-DEVOPS-PROJECT-ID")
+        projectId: String,
+        @ApiParam("版本仓库类型", required = true)
+        @PathParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @ApiParam("路径", required = true)
+        @QueryParam("path")
+        path: String,
+        @ApiParam("目标项目", required = true)
+        @QueryParam("targetProjectId")
+        targetProjectId: String,
+        @ApiParam("目标路径", required = true)
+        @QueryParam("targetPath")
+        targetPath: String
+    ): Result<Count>*/
 }

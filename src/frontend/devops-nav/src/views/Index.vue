@@ -22,13 +22,6 @@
                         >
                             {{ $t('accessDeny.switchProject') }}
                         </bk-button>
-                        <a
-                            target="_blank"
-                            class="empty-btns-item"
-                            :href="`/console/perm/apply-join-project${$route.params.projectId ? `?project_code=${$route.params.projectId}` : ''}`"
-                        >
-                            <bk-button theme="success">{{ $t('apply') }}</bk-button>
-                        </a>
                     </empty-tips>
 
                     <empty-tips
@@ -57,7 +50,6 @@
             </main>
         </template>
 
-        <login-dialog v-if="showLoginDialog" />
         <ask-permission-dialog />
     </div>
 </template>
@@ -66,7 +58,6 @@
     import Vue from 'vue'
     import Header from '../components/Header/index.vue'
     import AskPermissionDialog from '../components/AskPermissionDialog/AskPermissionDialog.vue'
-    import LoginDialog from '../components/LoginDialog/index.vue'
     import { Component } from 'vue-property-decorator'
     import { State, Getter } from 'vuex-class'
     import eventBus from '../utils/eventBus'
@@ -74,7 +65,6 @@
     @Component({
         components: {
             Header,
-            LoginDialog,
             AskPermissionDialog
         }
     })
@@ -86,8 +76,6 @@
         @Getter enableProjectList
         @Getter disableProjectList
         @Getter approvalingProjectList
-        
-        showLoginDialog: boolean = false
 
         get loadingOption (): object {
             return {
@@ -121,10 +109,6 @@
         }
 
         created () {
-            eventBus.$on('toggle-login-dialog', (isShow) => {
-                this.showLoginDialog = isShow
-            })
-
             eventBus.$on('update-project-id', projectId => {
                 this.$router.replace({
                     params: {

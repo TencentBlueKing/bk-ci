@@ -28,6 +28,7 @@ package com.tencent.devops.artifactory.service.impl
 
 import com.tencent.devops.artifactory.client.JFrogServiceClient
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
+import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
@@ -50,6 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.FileCopyUtils
 import java.io.File
+import java.io.InputStream
 import java.io.UnsupportedEncodingException
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -88,6 +90,11 @@ class JFrogArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl()
         }
         val httpResponse = getFileHttpResponse(filePath)
         FileCopyUtils.copy(httpResponse.body()!!.byteStream(), response.outputStream)
+    }
+
+    override fun getInputStreamByFilePath(filePath: String): InputStream {
+        val httpResponse = getFileHttpResponse(filePath)
+        return httpResponse.body()!!.byteStream()
     }
 
     private fun getFileHttpResponse(filePath: String): okhttp3.Response {
@@ -224,6 +231,15 @@ class JFrogArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl()
             BK_CI_ATOM_DIR -> "atom"
             else -> "file"
         }
+    }
+
+    override fun doAcrossProjectCopy(
+        sourceParentPath: String,
+        sourcePathPattern: String,
+        destPath: String,
+        targetProjectId: String
+    ): Result<Count> {
+        return Result(Count(0))
     }
 
     companion object {
