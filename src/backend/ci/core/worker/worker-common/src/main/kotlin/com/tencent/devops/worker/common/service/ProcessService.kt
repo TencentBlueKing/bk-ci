@@ -110,4 +110,11 @@ object ProcessService {
             throw RemoteServiceException("Failed to do heartbeat task")
         }
     }
+
+    fun timeout() {
+        val result = buildApi.timeout()
+        if (result.isNotOk()) {
+            throw RemoteServiceException("Failed to report timeout")
+        }
+    }
 }
