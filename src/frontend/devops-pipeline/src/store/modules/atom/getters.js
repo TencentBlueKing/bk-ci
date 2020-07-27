@@ -37,14 +37,8 @@ export default {
 
         return state.atomClassifyCodeList.filter(classifyCode => classifyCode !== 'trigger')
     },
-    getAtomTree: (state, getters) => (os, category, searchKey) => {
-        let atomCodeList = getters.getAtomCodeListByCategory(category)
-        if (searchKey) {
-            atomCodeList = atomCodeList.filter(atomCode => {
-                const atom = state.atomMap[atomCode]
-                return atom.name.toLowerCase().indexOf(searchKey.toLowerCase()) > -1
-            })
-        }
+    getAtomTree: (state, getters) => (os, category) => {
+        const atomCodeList = getters.getAtomCodeListByCategory(category)
         const classifyCodeList = getters.classifyCodeListByCategory(category)
         const { atomClassifyMap, atomMap } = state
         const atomTree = classifyCodeList.reduce((cMap, classifyCode) => {
