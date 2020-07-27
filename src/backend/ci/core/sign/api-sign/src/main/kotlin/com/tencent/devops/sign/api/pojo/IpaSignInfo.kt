@@ -19,12 +19,14 @@ data class IpaSignInfo(
     var certId: String = "",
     @ApiModelProperty("归档类型(PIPELINE|CUSTOM)", required = false)
     var archiveType: String = "PIPELINE",
-    @ApiModelProperty("项目Id", required = false)
+    @ApiModelProperty("项目ID", required = false)
     var projectId: String = "",
-    @ApiModelProperty("流水线Id", required = false)
+    @ApiModelProperty("流水线ID", required = false)
     var pipelineId: String? = null,
-    @ApiModelProperty("构建Id", required = false)
+    @ApiModelProperty("构建ID", required = false)
     var buildId: String? = null,
+    @ApiModelProperty("任务ID", required = false)
+    var taskId: String? = null,
     @ApiModelProperty("归档路径", required = false)
     var archivePath: String? = "/",
     @ApiModelProperty("主App描述文件ID", required = false)
