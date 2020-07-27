@@ -169,8 +169,8 @@
             },
 
             atomTree () {
-                const { searchKey, container, getAtomTree, getAtomFromStore, category } = this
-                const atomTree = getAtomTree(container.baseOS, category, searchKey)
+                const { container, getAtomTree, getAtomFromStore, category } = this
+                const atomTree = getAtomTree(container.baseOS, category)
                 getAtomFromStore(atomTree)
                 return atomTree
             },
@@ -189,19 +189,13 @@
             },
 
             installArr () {
-                const installed = this.atomTree.all ? this.atomTree.all.children : []
-                return installed.filter(item => item.recommendFlag !== false)
+                const installed = this.atomTree.rdStore ? this.atomTree.rdStore.children : []
+                return installed.filter((item) => (item.hasInstalled && item.recommendFlag !== false))
             },
 
             uninstallArr () {
                 const storeList = this.atomTree.rdStore ? this.atomTree.rdStore.children : []
-                const newList = [...storeList]
-                const installed = this.atomTree.all ? this.atomTree.all.children : []
-                installed.forEach((installStore) => {
-                    const index = newList.findIndex(store => store.atomCode === installStore.atomCode)
-                    if (index > -1) newList.splice(index, 1)
-                })
-                return newList.filter(item => item.recommendFlag !== false)
+                return storeList.filter((item) => (!item.hasInstalled && item.recommendFlag !== false))
             },
 
             unRecommendArr () {
@@ -308,7 +302,6 @@
 
                     return store
                 })
-                // const sortStoreList = rdStoreList.sort(atom => atom.flag ? 1 : -1).sort(atom => atom.notShowSelect ? 1 : -1).sort(atom => atom.disabled ? 1 : -1)
                 atomTree.rdStore = { children: rdStoreList, classifyCode: RD_STORE_CODE, classifyName: this.$t('store'), level: 0 }
             },
 
