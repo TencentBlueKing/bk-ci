@@ -48,7 +48,7 @@ class BsArchiveServiceImpl @Autowired constructor(
                     bkrepoApiUrl = null,
                     userName = null,
                     password = null,
-                    properties = null,
+                    properties = properties,
                     gatewayUrl = commonConfig.devopsDevnetProxyGateway!!
 
             )
@@ -64,7 +64,7 @@ class BsArchiveServiceImpl @Autowired constructor(
                     repoName = ipaSignInfo.archiveType,
                     path = path,
                     file = signedIpaFile,
-                    properties = null
+                    properties = properties
             )
         }
 

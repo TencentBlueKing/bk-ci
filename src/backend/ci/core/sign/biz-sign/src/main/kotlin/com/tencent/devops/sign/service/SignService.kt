@@ -57,14 +57,6 @@ interface SignService {
         mobileProvisionInfoList: Map<String, MobileProvisionInfo>
     ): Boolean
 
-
-    /*
-    * 解析ipa包Info.plist的信息
-    * */
-    fun parsInfoPlist(
-            infoPlist: File
-    ): IpaInfoPlist
-
     /*
     * 通用逻辑-对解压后的ipa目录进行通配符签名
     * 对主App，扩展App和框架文件进行通配符签名
