@@ -40,10 +40,6 @@ bk-ci提供了流水线、代码库、凭证管理、环境管理、研发商店
 - [下载与编译](docs/overview/source_compile.md)
 - [一分钟安装部署](docs/overview/installation.md)
 
-## RoadMap
-- [版本规划](docs/VERSION.md)
-- [版本日志](version.md)
-
 ## Support
 1. [wiki](https://github.com/Tencent/bk-ci/wiki)
 2. [蓝鲸社区](https://bk.tencent.com/s-mart/community)
