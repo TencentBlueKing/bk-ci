@@ -124,7 +124,6 @@
         },
         data () {
             return {
-
                 searchKey: '',
                 classifyCode: 'all',
                 activeAtomCode: '',
@@ -169,8 +168,8 @@
             },
 
             atomTree () {
-                const { container, getAtomTree, getAtomFromStore, category } = this
-                const atomTree = getAtomTree(container.baseOS, category)
+                const { container, getAtomTree, getAtomFromStore, category, searchKey } = this
+                const atomTree = getAtomTree(container.baseOS, category, searchKey)
                 getAtomFromStore(atomTree)
                 return atomTree
             },
@@ -265,16 +264,26 @@
             ]),
 
             getAtomFromStore (atomTree) {
-                const allAtom = atomTree.all || {}
-                const allInstalledAtom = allAtom.children || []
-                const codes = allInstalledAtom.map(atom => atom.atomCode)
-
                 const storeList = (this.storeAtomData.data || []).filter((item) => {
                     let res = true
                     if (this.category === 'TRIGGER') res = item.classifyCode === 'trigger'
                     else res = item.classifyCode !== 'trigger'
                     return res
                 })
+                const allAtom = atomTree.all || {}
+                const allInstalledAtom = allAtom.children || []
+                const codes = []
+                allInstalledAtom.forEach((atom) => {
+                    const code = atom.atomCode
+                    codes.push(code)
+                    const index = storeList.findIndex(x => x.code === code)
+                    if (index < 0) {
+                        atom.code = code
+                        atom.rdType = atom.atomType
+                        storeList.push(atom)
+                    }
+                })
+
                 const baseOs = this.container.baseOS
                 const rdStoreList = storeList.map((store) => {
                     store.atomCode = store.code
