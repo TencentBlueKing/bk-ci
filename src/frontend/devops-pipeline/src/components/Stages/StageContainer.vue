@@ -121,7 +121,7 @@
         watch: {
             'preContainer.elements.length': function (newVal, oldVal) {
                 if (newVal !== oldVal) {
-                    this.updateCruveConnectHeight()
+                    this.$forceUpdate()
                 }
             },
             'container.runContainer' (newVal) {
@@ -145,6 +145,9 @@
             if (this.containerDisabled) {
                 this.container.runContainer = false
             }
+        },
+        updated () {
+            this.updateCruveConnectHeight()
         },
         methods: {
             ...mapActions('atom', [
