@@ -40,7 +40,7 @@ import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.ProcessService
@@ -161,7 +161,7 @@ object Runner {
                                     isSuccess = false,
                                     buildResult = env,
                                     type = buildTask.type,
-                                    message = CommonUtils.interceptStringInLength(message, PIPELINE_MESSAGE_STRING_LENGTH_MAX),
+                                    message = CommonUtils.interceptStringInLength(message, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX),
                                     errorType = errorType,
                                     errorCode = errorCode
                                 )

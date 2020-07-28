@@ -51,6 +51,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -183,14 +184,19 @@ class BuildEndControl @Autowired constructor(
                     }
                 }
             }
-            // 优先保存SYSTEM错误，若无SYSTEM错误，将BuildData中错误信息更新为编排顺序的最后一个Element错误
+
             if (it.errorType != null) {
                 buildInfo.errorInfo.add(ErrorInfo(
+                    taskId = it.taskId,
+                    taskName = it.taskName,
                     errorType = it.errorType ?: ErrorType.USER,
                     errorCode = it.errorCode ?: USER_DEFAULT_ERROR,
-                    errorMsg = CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX)
-                        ?: ""
+                    errorMsg = CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX) ?: ""
                 ))
+                // 做入库长度保护，假设超过上限则抛弃该错误信息
+                if (JsonUtil.toJson(buildInfo.errorInfo).toByteArray().size > PIPELINE_MESSAGE_STRING_LENGTH_MAX) {
+                    buildInfo.errorInfo.removeAt(buildInfo.errorInfo.lastIndex)
+                }
             }
         }
     }
