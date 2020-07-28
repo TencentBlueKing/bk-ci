@@ -41,11 +41,11 @@ rpm -ivh openresty-1.13.6.2-1.el7.centos.x86_64.rpm
 cd /usr/local/openresty/nginx && ./sbin/nginx -v
 ```
 
-“nginx version: openresty/1.13.6.2” means the installation is successful.
+`"nginx version: openresty/1.13.6.2"` means the installation is successful.
 
 ### Deploy and Start bk-ci Gateway
 
-The gateway mainly consists of configuration files and Lua scripts, so you only need to create a symbolic link from the gateway to the Nginx conf directory.
+The gateway mainly consists of configuration files and Lua scripts, so you only need to create a symbolic link from the gateway to the Nginx conf/ directory.
 
 - First, configure the relevant parameters in {{code}}/scripts/bkenv.properties.
 - Run the render command to create template files of the gateway.
