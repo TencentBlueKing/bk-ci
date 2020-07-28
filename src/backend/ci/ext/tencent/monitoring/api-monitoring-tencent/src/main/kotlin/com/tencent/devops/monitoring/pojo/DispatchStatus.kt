@@ -45,7 +45,7 @@ data class DispatchStatus(
     @ApiModelProperty("channelCode", required = false)
     val channelCode: ChannelCode?,
     @ApiModelProperty("BuildType", required = true)
-    val buildType: BuildType,
+    val buildType: String,
     @ApiModelProperty("开机时间", required = true)
     val startTime: Long,
     @ApiModelProperty("关机时间", required = false)
