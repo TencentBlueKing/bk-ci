@@ -588,9 +588,7 @@ class PipelineRuntimeService @Autowired constructor(
                 webHookType = webhookType,
                 startType = getStartType(trigger, webhookType),
                 recommendVersion = recommendVersion,
-                errorType = if (errorType != null) ErrorType.values()[errorType].name else null,
-                errorCode = errorCode,
-                errorMsg = errorMsg
+                errorInfo = if (errorInfo != null) JsonUtil.getObjectMapper().readValue(errorInfo, mutableListOf<ErrorInfo>()::class.java) else null
             )
         }
     }
