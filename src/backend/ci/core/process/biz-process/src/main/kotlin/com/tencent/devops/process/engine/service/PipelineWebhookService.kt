@@ -350,26 +350,34 @@ class PipelineWebhookService @Autowired constructor(
                 val variable = triggerContainer.params.associate { it.id to it.defaultValue.toString() }
                 val pipelineWebhooks = mutableListOf<PipelineWebhook>()
                 triggerContainer.elements.forEach element@{ element ->
-                    val (repositoryConfig, repositoryType) = getRepositoryConfig(element, variable) ?: return@element
-                    val repo = client.get(ServiceRepositoryResource::class)
-                        .get(projectId, repositoryConfig.getURLEncodeRepositoryId(), repositoryConfig.repositoryType)
-                        .data
-                    if (repo == null) {
-                        logger.warn("pipelineId:[$pipelineId],repo[$repositoryConfig] does not exist")
-                        return@element
-                    }
-                    pipelineWebhooks.add(
-                        PipelineWebhook(
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            repositoryType = repositoryType,
-                            repoType = repositoryConfig.repositoryType,
-                            repoHashId = repositoryConfig.repositoryHashId,
-                            repoName = repositoryConfig.repositoryName,
-                            projectName = getProjectName(repo.projectName),
-                            taskId = element.id
+                    val (repositoryConfig, repositoryType) = getRepositoryConfig(element, variable)
+                        ?: return@element
+                    try {
+                        val repo = client.get(ServiceRepositoryResource::class)
+                            .get(
+                                projectId,
+                                repositoryConfig.getURLEncodeRepositoryId(),
+                                repositoryConfig.repositoryType
+                            ).data
+                        if (repo == null) {
+                            logger.warn("pipelineId:[$pipelineId],repo[$repositoryConfig] does not exist")
+                            return@element
+                        }
+                        pipelineWebhooks.add(
+                            PipelineWebhook(
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                repositoryType = repositoryType,
+                                repoType = repositoryConfig.repositoryType,
+                                repoHashId = repositoryConfig.repositoryHashId,
+                                repoName = repositoryConfig.repositoryName,
+                                projectName = getProjectName(repo.projectName),
+                                taskId = element.id
+                            )
                         )
-                    )
+                    } catch (t: Throwable) {
+                        logger.warn("pipelineId:[$pipelineId], Fail to get repository - repositoryConfig:($repositoryConfig), repositoryType:($repositoryType), ignore")
+                    }
                 }
                 pipelineWebhookDao.updateProjectNameAndTaskId(
                     dslContext = dslContext,
