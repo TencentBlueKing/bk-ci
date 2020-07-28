@@ -361,7 +361,7 @@
                 const param = {
                     page: this.page,
                     pageSize: this.pageSize,
-                    templateName: this.searchName,
+                    keyword: this.searchName,
                     categoryCode: this.curCategory,
                     projectCode: this.projectId
                 }

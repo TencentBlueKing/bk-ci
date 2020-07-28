@@ -54,4 +54,6 @@ interface BuildSDKApi : WorkerRestApiSDK {
         buildId: String,
         channelCode: ChannelCode = ChannelCode.BS
     ): Result<ModelDetail?>
+
+    fun timeout(): Result<Boolean>
 }

@@ -52,5 +52,7 @@ data class BuildVariables(
     @ApiModelProperty("container或者job的id", required = false)
     val containerHashId: String,
     @ApiModelProperty("参数类型集合", required = false)
-    val variablesWithType: List<BuildParameters>
+    val variablesWithType: List<BuildParameters>,
+    @ApiModelProperty("Job超时时间（毫秒）", required = true)
+    var timeoutMills: Long
 )

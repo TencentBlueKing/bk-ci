@@ -311,6 +311,8 @@
     .image-progress-section {
         width: 1200px;
         margin: 28px auto;
+        position: relative;
+        z-index: 3;
         h3 {
             font-weight: bold;
             color: $fontWeightColor;
