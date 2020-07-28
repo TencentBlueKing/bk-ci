@@ -163,7 +163,8 @@ object Runner {
                                     type = buildTask.type,
                                     message = CommonUtils.interceptStringInLength(message, PIPELINE_MESSAGE_STRING_LENGTH_MAX),
                                     errorType = errorType,
-                                    errorCode = errorCode
+                                    errorCode = errorCode,
+                                    monitorData = taskDaemon.getMonitorData()
                                 )
                             } finally {
                                 LoggerService.finishTask()

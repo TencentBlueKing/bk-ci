@@ -28,8 +28,13 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.KEY_CHANNEL
+import com.tencent.devops.common.api.constant.KEY_END_TIME
+import com.tencent.devops.common.api.constant.KEY_START_TIME
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -37,6 +42,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.measure.AtomMonitorReportBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -57,16 +63,19 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskService
+import com.tencent.devops.process.service.measure.AtomMonitorEventDispatcher
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
+import com.tencent.devops.store.pojo.common.KEY_VERSION
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -81,12 +90,16 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     private val measureService: MeasureService?,
     private val rabbitTemplate: RabbitTemplate,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val atomMonitorEventDispatcher: AtomMonitorEventDispatcher,
     private val pipelineTaskService: PipelineTaskService,
     private val redisOperation: RedisOperation,
     private val jmxElements: JmxElements,
     private val consulClient: ConsulDiscoveryClient?,
     private val client: Client
 ) {
+
+    @Value("\${build.atomMonitorData.report.switch:false}")
+    val atomMonitorSwitch: String = "false"
 
     /**
      * Dispatch service startup the vm for the build and then notify to process service
@@ -531,12 +544,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         // 发送度量数据
         sendElementData(
             buildId = buildId,
-            taskId = result.taskId,
-            success = result.success,
-            type = result.type,
-            errorType = result.errorType,
-            errorCode = result.errorCode,
-            errorMsg = result.message
+            vmSeqId = vmSeqId,
+            result = result
         )
         logger.info("Complete the task(${result.taskId}) of build($buildId) and seqId($vmSeqId)")
         pipelineRuntimeService.completeClaimBuildTask(
@@ -595,22 +604,21 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         return true
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun sendElementData(
         buildId: String,
-        taskId: String,
-        success: Boolean,
-        type: String?,
-        errorType: String?,
-        errorCode: Int?,
-        errorMsg: String?
+        vmSeqId: String,
+        result: BuildTaskResult
     ) {
-        if (measureService == null) {
+        if (measureService == null && !atomMonitorSwitch.toBoolean()) {
             return
         }
+        val taskId = result.taskId
         try {
             val task = pipelineRuntimeService.getBuildTask(buildId, taskId)!!
-            val buildStatus = if (success) BuildStatus.SUCCEED else BuildStatus.FAILED
-            val atomCode = task.taskParams["atomCode"] as String? ?: ""
+            val buildStatus = if (result.success) BuildStatus.SUCCEED else BuildStatus.FAILED
+            val taskParams = task.taskParams
+            val atomCode = taskParams["atomCode"] as String? ?: ""
             measureService?.postTaskData(
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
@@ -620,13 +628,42 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 buildId = buildId,
                 startTime = task.startTime?.timestampmilli() ?: 0L,
                 status = buildStatus,
-                type = type!!,
+                type = result.type!!,
                 executeCount = task.executeCount,
-                errorType = errorType,
-                errorCode = errorCode,
-                errorMsg = errorMsg,
+                errorType = result.errorType,
+                errorCode = result.errorCode,
+                errorMsg = result.message,
                 userId = task.starter
             )
+            // 上报插件监控数据
+            val monitorDataMap = result.monitorData
+            if (monitorDataMap != null) {
+                val version = taskParams[KEY_VERSION] as String? ?: ""
+                var startTime = monitorDataMap[KEY_START_TIME]
+                if (startTime != null) {
+                    startTime = DateTimeUtil.toDateTime(task.startTime)
+                }
+                var endTime = monitorDataMap[KEY_END_TIME]
+                if (endTime != null) {
+                    endTime = DateTimeUtil.toDateTime(task.endTime)
+                }
+                val atomMonitorData = AtomMonitorData(
+                    errorCode = result.errorCode ?: -1,
+                    errorMsg = result.message,
+                    atomCode = atomCode,
+                    version = version,
+                    projectId = task.projectId,
+                    pipelineId = task.pipelineId,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    startTime = startTime.toString(),
+                    endTime = endTime.toString(),
+                    channel = monitorDataMap[KEY_CHANNEL] as? String,
+                    starter = task.starter,
+                    extData = monitorDataMap["extData"] as? Map<String, Any>
+                )
+                atomMonitorEventDispatcher.dispatch(AtomMonitorReportBroadCastEvent(atomMonitorData))
+            }
         } catch (t: Throwable) {
             logger.warn("[$buildId]| Fail to send the measure element data", t)
         }
