@@ -28,3 +28,4 @@ dependencies {
     compile project(":ext:tencent:monitoring:api-monitoring")
     compile project(":ext:tencent:common:common-pipeline-tencent")
 }
+apply from: "$rootDir/task_spring_boot_package.gradle"
