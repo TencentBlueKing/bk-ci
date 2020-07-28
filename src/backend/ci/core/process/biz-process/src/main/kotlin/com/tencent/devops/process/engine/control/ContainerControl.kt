@@ -310,7 +310,12 @@ class ContainerControl @Autowired constructor(
         containerFinalStatus: BuildStatus
     ): Pair<PipelineBuildTask, ActionType>?
     {
-        if (!startVMFail) { // 非构建机启动失败的 做下收尾动作
+        /* #2043
+            当出现终止操作（取消），不再处理以下两种情况:
+            - 即使前面有插件运行失败也运行，除非被取消才不运行
+            - 只有前面有插件运行失败时才运行
+         */
+        if (!ActionType.isTerminate(actionType) && !startVMFail) { // 非构建机启动失败的 做下收尾动作
             containerTaskList.forEach {
                 if (taskNeedRunWhenOtherTaskFail(it)) {
                     logger.info("[$buildId]|CONTAINER_$actionType|stage=$stageId|container=$containerId|taskId=${it.taskId}|Continue when failed")
@@ -424,11 +429,11 @@ class ContainerControl @Autowired constructor(
                         errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                         errorMsg = message ?: "插件执行意外终止"
                     )
-                    startVMFail = startVMFail || task.taskSeq == 0
+                    startVMFail = startVMFail || isStartVMTask(task)
                 }
                 BuildStatus.isFailure(task.status) -> {
                     containerFinalStatus = task.status
-                    startVMFail = startVMFail || task.taskSeq == 0
+                    startVMFail = startVMFail || isStartVMTask(task)
                 }
                 else -> containerFinalStatus = BuildStatus.FAILED
             }
@@ -449,7 +454,7 @@ class ContainerControl @Autowired constructor(
                 if (waitToDoTask != null) {
                     waitToDoTask = null
                 }
-                startVMFail = task.taskSeq == 0
+                startVMFail = isStartVMTask(task)
                 return Triple(waitToDoTask, containerFinalStatus, startVMFail)
             }
         }
@@ -530,7 +535,7 @@ class ContainerControl @Autowired constructor(
                 // 如果在待执行插件之前前面还有失败的插件，则整个设置状态失败，因为即使重试也是失败了。
                 containerFinalStatus = task.status
                 if (waitToDoTask == null) {
-                    startVMFail = task.taskSeq == 0
+                    startVMFail = isStartVMTask(task)
                     return Triple(waitToDoTask, containerFinalStatus, startVMFail)
                 }
             } else if (BuildStatus.isFailure(task.status) && continueWhenFailure(task.additionalOptions)) {
@@ -539,6 +544,8 @@ class ContainerControl @Autowired constructor(
         }
         return Triple(waitToDoTask, containerFinalStatus, startVMFail)
     }
+
+    private fun isStartVMTask(task: PipelineBuildTask) = VMUtils.genStartVMTaskId(task.containerId) == task.taskId
 
     fun checkIfAllSkip(
         buildId: String,

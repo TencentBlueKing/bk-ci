@@ -28,6 +28,7 @@ dependencies {
     compile project(":core:dockerhost:biz-dockerhost")
     //compile project(":dockerhost:plugin-dockerhost-distcc")
     compile project(":core:dockerhost:plugin-dockerhost-codecc")
+    compile ("com.squareup.okhttp3:okhttp:3.14.4")
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"

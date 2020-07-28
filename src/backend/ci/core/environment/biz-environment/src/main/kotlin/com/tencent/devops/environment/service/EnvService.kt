@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -541,5 +542,42 @@ class EnvService @Autowired constructor(
             projectId = projectId,
             envId = HashUtil.decodeIdToLong(envHashId),
             nodeIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) })
+    }
+
+    override fun listEnvironmentByPage(projectId: String, page: Int?, pageSize: Int?): Page<EnvWithPermission> {
+        val limit = page ?: 0
+        var offset = pageSize ?: 10
+        if (offset > 50) {
+            offset = 50
+        }
+
+        val envList = mutableListOf<EnvWithPermission>()
+        val envRecords = envDao.listPage(dslContext, limit, offset, projectId)
+        envRecords.map {
+            envList.add(
+                EnvWithPermission(
+                    envHashId = HashUtil.encodeLongId(it.envId),
+                    name = it.envName,
+                    desc = it.envDesc,
+                    envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                    nodeCount = null,
+                    envVars = jacksonObjectMapper().readValue(it.envVars),
+                    createdUser = it.createdUser,
+                    createdTime = it.createdTime.timestamp(),
+                    updatedUser = it.updatedUser,
+                    updatedTime = it.updatedTime.timestamp(),
+                    canEdit = null,
+                    canDelete = null,
+                    canUse = null
+                )
+            )
+        }
+        val count = envDao.countByProject(dslContext, projectId)
+        return Page(
+            count = count.toLong(),
+            records = envList,
+            pageSize = offset,
+            page = limit
+        )
     }
 }
