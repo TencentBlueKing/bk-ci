@@ -29,3 +29,6 @@ src/backend/ci/.setting
 out
 **version.txt
 /src/backend/ci/.settings/
+
+.vscode
+scripts/ci_env.properties

@@ -46,7 +46,7 @@ function _M:getAllWhitelistIp()
     else
       ns_config = config.ns_devnet_gray
     end
-  end 
+  end
   --- 初始化HTTP连接
   local httpc = http.new()
   --- 开始连接
