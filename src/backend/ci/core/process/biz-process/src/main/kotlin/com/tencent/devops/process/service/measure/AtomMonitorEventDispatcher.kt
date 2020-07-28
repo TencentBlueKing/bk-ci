@@ -24,56 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.task
+package com.tencent.devops.process.service.measure
 
-import com.tencent.devops.process.pojo.BuildTask
-import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.env.BuildEnv
-import com.tencent.devops.worker.common.env.BuildType
-import java.io.File
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.EventDispatcher
+import com.tencent.devops.common.event.pojo.measure.AtomMonitorReportBroadCastEvent
+import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 
-abstract class ITask {
+class AtomMonitorEventDispatcher constructor(
+    private val rabbitTemplate: RabbitTemplate
+) : EventDispatcher<AtomMonitorReportBroadCastEvent> {
 
-    private val environment = HashMap<String, String>()
-
-    private val monitorData = HashMap<String, Any>()
-
-    fun run(
-        buildTask: BuildTask,
-        buildVariables: BuildVariables,
-        workspace: File
-    ) {
-        execute(buildTask, buildVariables, workspace)
+    override fun dispatch(vararg events: AtomMonitorReportBroadCastEvent) {
+        try {
+            events.forEach { event ->
+                val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+                val routeKey = eventType.routeKey
+                logger.info("dispatch the event|Route=$routeKey|exchange=${eventType.exchange}|source=(${event.javaClass.name})")
+                rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
+                    if (eventType.delayMills > 0) { // 事件类型固化默认值
+                        message.messageProperties.setHeader("x-delay", eventType.delayMills)
+                    }
+                    message
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("Fail to dispatch the event($events)", e)
+        }
     }
 
-    protected abstract fun execute(
-        buildTask: BuildTask,
-        buildVariables: BuildVariables,
-        workspace: File
-    )
-
-    protected fun addEnv(env: Map<String, String>) {
-        environment.putAll(env)
+    companion object {
+        private val logger = LoggerFactory.getLogger(AtomMonitorEventDispatcher::class.java)
     }
-
-    protected fun addEnv(key: String, value: String) {
-        environment.put(key, value)
-    }
-
-    protected fun getEnv(key: String) =
-        environment[key] ?: ""
-
-    fun getAllEnv(): Map<String, String> {
-        return environment
-    }
-
-    protected fun addMonitorData(monitorDataMap: Map<String, Any>) {
-        monitorData.putAll(monitorDataMap)
-    }
-
-    fun getMonitorData(): Map<String, Any> {
-        return monitorData
-    }
-
-    protected fun isThirdAgent() = BuildEnv.getBuildType() == BuildType.AGENT
 }
