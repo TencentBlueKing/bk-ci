@@ -26,13 +26,15 @@
 
 package com.tencent.devops.common.api.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.tencent.devops.common.api.enums.AgentStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("第三方Agent数据返回包装模型")
 data class ErrorInfo(
+    @ApiModelProperty("插件ID", required = false)
+    val taskId: String,
+    @ApiModelProperty("插件名称", required = false)
+    val taskName: String,
     @ApiModelProperty("错误类型", required = false)
     val errorType: ErrorType,
     @ApiModelProperty("错误码", required = true)
