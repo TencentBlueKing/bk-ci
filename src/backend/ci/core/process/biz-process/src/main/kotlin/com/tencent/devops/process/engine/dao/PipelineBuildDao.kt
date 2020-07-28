@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -280,9 +281,7 @@ class PipelineBuildDao {
         buildParameters: String?,
         recommendVersion: String?,
         remark: String? = null,
-        errorType: ErrorType?,
-        errorCode: Int?,
-        errorMsg: String?
+        errorInfo: List<ErrorInfo>?
     ) {
         with(T_PIPELINE_BUILD_HISTORY) {
             var baseQuery = dslContext.update(this)
@@ -294,10 +293,8 @@ class PipelineBuildDao {
             if (!remark.isNullOrBlank()) {
                 baseQuery = baseQuery.set(REMARK, remark)
             }
-            if (errorType != null) {
-                baseQuery = baseQuery.set(ERROR_TYPE, errorType.ordinal)
-                baseQuery = baseQuery.set(ERROR_CODE, errorCode)
-                baseQuery = baseQuery.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX))
+            if (errorInfo != null) {
+                baseQuery = baseQuery.set(ERROR_INFO, JsonUtil.toJson(errorInfo))
             }
             baseQuery.where(BUILD_ID.eq(buildId))
                 .execute()
@@ -419,9 +416,7 @@ class PipelineBuildDao {
                 parentBuildId = t.parentBuildId,
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
-                errorType = if (t.errorType == null) null else ErrorType.values()[t.errorType],
-                errorCode = t.errorCode,
-                errorMsg = t.errorMsg
+                errorInfo = JsonUtil.getObjectMapper().readValue(t.errorInfo, mutableListOf<ErrorInfo>()::class.java)
             )
         }
     }
