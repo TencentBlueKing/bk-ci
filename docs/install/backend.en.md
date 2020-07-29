@@ -1,6 +1,6 @@
 # Backend Microservice Deployment
 
-For BlueKing ci backend (in the backend directory), there are a total of 10 microservices (artifactory, dispatch, environment, log, plugin, process, project, repository, store, ticket) and one Agent (worker).
+There are 10 microservices (artifactory, dispatch, environment, log, plugin, process, project, repository, store, ticket) and one Agent (worker) under BlueKing ci backend (under backend/ directory).
 
 ## 1. System Requirements
 
@@ -53,9 +53,9 @@ For BlueKing ci backend (in the backend directory), there are a total of 10 micr
 
 ### 2.2 Microservice Deployment
 
-Create a ci directory in the /data/bkee root directory on the deployment server.
+Create a ci/ directory in the /data/bkee root directory on the deployment server.
 
-- Create directories in ci according to the microservice name and put the above boot-xxx.jar files in them.
+- Create directories in ci/ according to the microservice name and put the above boot-xxx.jar files in them.
 - Modify the name of each microservice script in the /bk-ci/support-files/templates/ directory. For example, #project#project.sh, which corresponds to the project management service, should be changed to project.sh and put in the corresponding directory.
 - Variables in configuration files that are declared with two underscores need to be substituted. See [support-files placeholder declaration](../../support-files/README.MD) to substitute the corresponding placeholders.
 
@@ -71,9 +71,9 @@ Create a ci directory in the /data/bkee root directory on the deployment server.
       |- boot-project.jar  # SpringBoot.jar of the Project microservice
 ```
 
-- Start microservice: Take the project management service as an example. /data/bkee/ci/project/project.sh start
+- Start microservice: Take the project management service as an example. `/data/bkee/ci/project/project.sh start`
 
 ### 2.3 Special Deployment Process of the Artifactory service
 
-- If the microservice is deployed on multiple nodes, the archiveLocalBasePath directory in the application-artifactory.yml configuration file should be distributed and highly available. For example, it can mount NFS or CephFS.
-- For the initialization of the icon files of default plugins, all the directories in bk-ci/support-files/file should be put in the path specified by the archiveLocalBasePath parameter in the application-artifactory.xml file. Otherwise, the icons will not be displayed properly.
+- If the microservice is deployed on multiple nodes, the value of archiveLocalBasePath in the application-artifactory.yml configuration file should be distributed and highly available. For example, it can mount NFS or CephFS.
+- For the initialization of the icon files of default plugins, all the directories under bk-ci/support-files/file should be put into the path specified by the archiveLocalBasePath parameter in the application-artifactory.xml file. Otherwise, the icons will not be displayed properly.
