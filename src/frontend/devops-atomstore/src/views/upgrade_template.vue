@@ -162,7 +162,8 @@
             },
             navList () {
                 return [
-                    { name: this.$t('store.工作台'), to: { name: 'templateWork' } },
+                    { name: this.$t('store.工作台') },
+                    { name: this.$t('store.流水线模板'), to: { name: 'templateWork' } },
                     { name: this.templateDetail.templateName, to: { name: 'setting', params: { code: this.templateDetail.templateCode, type: 'template' } } },
                     { name: this.$t('store.上架模板') }
                 ]

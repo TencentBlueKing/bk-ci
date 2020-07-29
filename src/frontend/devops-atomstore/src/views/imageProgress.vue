@@ -132,7 +132,8 @@
 
             navList () {
                 return [
-                    { name: this.$t('store.工作台'), to: { name: 'imageWork' } },
+                    { name: this.$t('store.工作台') },
+                    { name: this.$t('store.容器镜像'), to: { name: 'imageWork' } },
                     { name: this.imageDetail.imageCode, to: { name: 'show', params: { code: this.imageDetail.imageCode, type: 'image' } } },
                     { name: this.$t('store.上架/升级镜像') }
                 ]
