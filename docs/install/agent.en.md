@@ -72,8 +72,8 @@ In the /data/bkee/bkci root directory:
 
 Agent consists of devopsDaemon and devopsAgent compiled by Go and backend/release/worker-agent.jar.
 
-- Copy backend/release/worker-agent.jar complied by backend to the jar directory.
-- Put devopsDaemon, devopsAgent and upgrader compiled by Go in the agent/bin directory to the upgrade directory.
+- Copy backend/release/worker-agent.jar complied by backend to the jar/ directory.
+- Move devopsDaemon, devopsAgent and upgrader compiled by Go in the agent/bin directory to the upgrade/ directory.
 
 ### JRE Directory Description
 
@@ -82,16 +82,16 @@ This directory is used to store JRE for Linux/Windows/macOS and serves as the Ja
 #### Prepare to create jre.zip
 
 - Please download JRE 1.8 for Linux/Windows/macOS (Note that a fee may be charged) and unzip it to the current directory. Do not put it in the jre_xxxx directory created.
-- Download the cryptography toolkit bcprov-jdk16-1.46.jar and put it in the lib/ext directory created from the previous step. Please download it from qualified Maven repositories. The following link is for reference only.
+- Download the cryptography toolkit bcprov-jdk16-1.46.jar and move it into the lib/ext directory created from the previous step. Please download it from qualified Maven repositories. The following link is for reference only: [Download bcprov-jdk16-1.64.jar](http://central.maven.org/maven2/org/bouncycastle/bcprov-jdk16/1.46/bcprov-jdk16-1.46.jar)
 
 #### Rezip JRE Package
 
-- Zip it directly in the root directory of JRE, zip -r jre.zip *. In other words, the jre directory no longer exists in the zip file.
-- Put jre.zip in the directory corresponding to your operating system, namely Linux/macOS/Windows.
+- Compress files in jre/'s root directory: `zip -r jre.zip *`. In other words, the jre/ directory no longer exists in the zip file.
+- Move jre.zip to the directory corresponding to your operating system, namely Linux/macOS/Windows.
 
 #### .agent.properties Description
 
-Only one Agent can be installed on one agent and this Agent can belong to only one project simultaneously.
+Only one Agent can be installed on one machine and this Agent can belong to only one project simultaneously.
 
 - Content of the Agent configuration file config/.agent.properties:
 
@@ -108,6 +108,6 @@ devops.master.restart.hour=0
 - devops.project.id is the English name of the project that Agent binds to. It will be automatically replaced when the user downloads and installs it.
 - devops.agent.id is Agent ID. It will be automatically replaced when the user downloads and installs it.
 - devops.agent.secret.key is Agent key. It will be automatically replaced when the user downloads and installs it.
-- devops.parallel.task.count is the number of concurrent builds. By default, 4 builds are run in parallel.
+- devops.parallel.task.count is the number of concurrent builds. By default, 4 builds are can be run concurrently.
 - landun.gateway is the bkci gateway. It will be automatically replaced when the user downloads and installs it.
 - landun.env is the environment type. It will be automatically replaced when the user downloads and installs it.

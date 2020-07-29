@@ -1,6 +1,6 @@
 # bk-ci Frontend Deployment Document
 
-For BlueKing ci frontend (in the frontend directory), common-lib and svg-sprites contain static resources of project dependencies. The rest of directories contain SPA projects built with Vue, among which devop-nav is the main entry point. Other subroutines are integrated using the iframe element or the UMD pattern.
+Under BlueKing ci frontend (under the frontend directory), common-lib/ and svg-sprites/ contain static resources of project dependencies. The rest of directories contain SPA projects built with Vue, among which devop-nav is the main entry point. Other subroutines are integrated using the iframe element or the UMD pattern.
 
 ## System Requirement
 
@@ -21,7 +21,7 @@ yarn start
 yarn public
 ```
 
-After you run these commands, a folder named frontend will be created in the src/frontend directory, which contains resource files created from BK-CI frontend packaging.
+After running commands above, a folder named frontend will be created in the src/frontend directory, which contains resource files created from BK-CI frontend packaging.
 
 Each frontend service module and its corresponding folder are as follows.
 
