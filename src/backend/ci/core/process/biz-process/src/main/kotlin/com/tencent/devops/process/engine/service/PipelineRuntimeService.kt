@@ -61,12 +61,16 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
+import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerBakRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
+import com.tencent.devops.model.process.tables.records.TPipelineBuildStageBakRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
+import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskBakRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.atom.vm.DispatchBuildLessDockerShutdownTaskAtom
@@ -160,7 +164,8 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildStageDao: PipelineBuildStageDao,
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
-    private val buildVariableService: BuildVariableService
+    private val buildVariableService: BuildVariableService,
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -184,16 +189,43 @@ class PipelineRuntimeService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId
             )
+            val moveStageDataBakSwitch = redisOperation.get("moveStageDataBakSwitch")
+            // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+            if (moveDataBakSwitchIsOn(moveStageDataBakSwitch)) {
+                pipelineBuildStageDao.deletePipelineBuildBakStages(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )
+            }
             pipelineBuildContainerDao.deletePipelineBuildContainers(
                 dslContext = transactionContext,
                 projectId = projectId,
                 pipelineId = pipelineId
             )
+            val moveContainerDataBakSwitch = redisOperation.get("moveContainerDataBakSwitch")
+            // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+            if (moveDataBakSwitchIsOn(moveContainerDataBakSwitch)) {
+                pipelineBuildContainerDao.deletePipelineBuildBakContainers(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )
+            }
             pipelineBuildTaskDao.deletePipelineBuildTasks(
                 dslContext = transactionContext,
                 projectId = projectId,
                 pipelineId = pipelineId
             )
+            val moveTaskDataBakSwitch = redisOperation.get("moveTaskDataBakSwitch")
+            // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+            if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
+                pipelineBuildTaskDao.deletePipelineBuildBakTasks(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                )
+            }
         }
         buildVariableService.deletePipelineBuildVar(projectId = projectId, pipelineId = pipelineId)
         buildStartupParamService.deletePipelineBuildParam(projectId = projectId, pipelineId = pipelineId)
@@ -413,6 +445,19 @@ class PipelineRuntimeService @Autowired constructor(
             startTime = startTime,
             endTime = endTime
         )
+        val moveContainerDataBakSwitch = redisOperation.get("moveContainerDataBakSwitch")
+        // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+        if (moveDataBakSwitchIsOn(moveContainerDataBakSwitch)) {
+            pipelineBuildContainerDao.updateBakContainerStatus(
+                dslContext = dslContext,
+                buildId = buildId,
+                stageId = stageId,
+                containerId = containerId,
+                buildStatus = buildStatus,
+                startTime = startTime,
+                endTime = endTime
+            )
+        }
     }
 
     fun listPipelineBuildHistory(projectId: String, pipelineId: String, offset: Int, limit: Int): List<BuildHistory> {
@@ -748,6 +793,14 @@ class PipelineRuntimeService @Autowired constructor(
         val updateStageExistsRecord: MutableList<TPipelineBuildStageRecord> = mutableListOf()
         val updateContainerExistsRecord: MutableList<TPipelineBuildContainerRecord> = mutableListOf()
 
+        val updateBakTaskExistsRecord: MutableList<TPipelineBuildTaskBakRecord> = mutableListOf()
+        val updateBakStageExistsRecord: MutableList<TPipelineBuildStageBakRecord> = mutableListOf()
+        val updateBakContainerExistsRecord: MutableList<TPipelineBuildContainerBakRecord> = mutableListOf()
+
+        val moveTaskDataBakSwitch = redisOperation.get("moveTaskDataBakSwitch")
+        val moveContainerDataBakSwitch = redisOperation.get("moveContainerDataBakSwitch")
+        val moveStageDataBakSwitch = redisOperation.get("moveStageDataBakSwitch")
+
         var containerSeq = 0
 
         // --- 第1层循环：Stage遍历处理 ---
@@ -879,6 +932,9 @@ class PipelineRuntimeService @Autowired constructor(
 
                         if (taskRecord != null) {
                             updateExistsRecord.add(taskRecord)
+                            if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
+                                addBuildTaskBakRecord(updateBakTaskExistsRecord, taskRecord)
+                            }
                             needUpdateContainer = true
                         }
                     }
@@ -902,7 +958,9 @@ class PipelineRuntimeService @Autowired constructor(
                         retryCount = retryCount,
                         buildId = buildId,
                         stageId = stageId,
-                        userId = userId
+                        userId = userId,
+                        moveTaskDataBakSwitch = moveTaskDataBakSwitch,
+                        updateBakTaskExistsRecord = updateBakTaskExistsRecord
                     )
                 }
 
@@ -914,6 +972,26 @@ class PipelineRuntimeService @Autowired constructor(
                                     it.status = BuildStatus.QUEUE.ordinal
                                     it.executeCount += 1
                                     updateContainerExistsRecord.add(it)
+                                    if (moveDataBakSwitchIsOn(moveContainerDataBakSwitch)) {
+                                        updateBakContainerExistsRecord.add(
+                                            TPipelineBuildContainerBakRecord(
+                                                it.projectId,
+                                                it.pipelineId,
+                                                it.buildId,
+                                                it.stageId,
+                                                it.containerId,
+                                                it.containerType,
+                                                it.seq,
+                                                it.status,
+                                                it.startTime,
+                                                it.endTime,
+                                                it.cost,
+                                                it.executeCount,
+                                                it.conditions,
+                                                LocalDateTime.now()
+                                            )
+                                        )
+                                    }
                                     return@findHistoryContainer
                                 }
                             }
@@ -981,6 +1059,24 @@ class PipelineRuntimeService @Autowired constructor(
                                 it.status = BuildStatus.QUEUE.ordinal
                                 it.executeCount += 1
                                 updateStageExistsRecord.add(it)
+                                if (moveDataBakSwitchIsOn(moveStageDataBakSwitch)) {
+                                    updateBakStageExistsRecord.add(
+                                        TPipelineBuildStageBakRecord(
+                                            it.pipelineId,
+                                            it.projectId,
+                                            it.buildId,
+                                            it.stageId,
+                                            it.seq,
+                                            it.status,
+                                            it.startTime,
+                                            it.endTime,
+                                            it.cost,
+                                            it.executeCount,
+                                            it.conditions,
+                                            LocalDateTime.now()
+                                        )
+                                    )
+                                }
                                 return@findHistoryStage
                             }
                         }
@@ -1065,21 +1161,42 @@ class PipelineRuntimeService @Autowired constructor(
                 // 保持要执行的任务
                 logger.info("batch save to pipelineBuildTask, buildTaskList size: ${buildTaskList.size}")
                 pipelineBuildTaskDao.batchSave(transactionContext, buildTaskList)
+                // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+                if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
+                    pipelineBuildTaskDao.batchSaveBakTask(transactionContext, buildTaskList)
+                }
             } else {
                 logger.info("batch store to pipelineBuildTask, updateExistsRecord size: ${updateExistsRecord.size}")
                 pipelineBuildTaskDao.batchUpdate(transactionContext, updateExistsRecord)
+                if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
+                    pipelineBuildTaskDao.batchUpdateBakTask(transactionContext, updateBakTaskExistsRecord)
+                }
             }
 
             if (updateContainerExistsRecord.isEmpty()) {
                 pipelineBuildContainerDao.batchSave(transactionContext, buildContainers)
+                // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+                if (moveDataBakSwitchIsOn(moveContainerDataBakSwitch)) {
+                    pipelineBuildContainerDao.batchSaveBakContainer(transactionContext, buildContainers)
+                }
             } else {
                 pipelineBuildContainerDao.batchUpdate(transactionContext, updateContainerExistsRecord)
+                if (moveDataBakSwitchIsOn(moveContainerDataBakSwitch)) {
+                    pipelineBuildContainerDao.batchUpdateBakContainer(transactionContext, updateBakContainerExistsRecord)
+                }
             }
 
             if (updateStageExistsRecord.isEmpty()) {
                 pipelineBuildStageDao.batchSave(transactionContext, buildStages)
+                // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+                if (moveDataBakSwitchIsOn(moveStageDataBakSwitch)) {
+                    pipelineBuildStageDao.batchSaveBakStage(transactionContext, buildStages)
+                }
             } else {
                 pipelineBuildStageDao.batchUpdate(transactionContext, updateStageExistsRecord)
+                if (moveDataBakSwitchIsOn(moveStageDataBakSwitch)) {
+                    pipelineBuildStageDao.batchUpdateBakStage(transactionContext, updateBakStageExistsRecord)
+                }
             }
             // 排队计数+1
             pipelineBuildSummaryDao.updateQueueCount(transactionContext, pipelineInfo.pipelineId, 1)
@@ -1115,6 +1232,42 @@ class PipelineRuntimeService @Autowired constructor(
         return buildId
     }
 
+    private fun addBuildTaskBakRecord(
+        updateBakTaskExistsRecord: MutableList<TPipelineBuildTaskBakRecord>,
+        taskRecord: TPipelineBuildTaskRecord
+    ) {
+        updateBakTaskExistsRecord.add(
+            TPipelineBuildTaskBakRecord(
+                taskRecord.pipelineId,
+                taskRecord.projectId,
+                taskRecord.buildId,
+                taskRecord.stageId,
+                taskRecord.containerId,
+                taskRecord.taskName,
+                taskRecord.taskId,
+                taskRecord.taskParams,
+                taskRecord.taskType,
+                taskRecord.taskAtom,
+                taskRecord.startTime,
+                taskRecord.endTime,
+                taskRecord.starter,
+                taskRecord.approver,
+                taskRecord.status,
+                taskRecord.executeCount,
+                taskRecord.taskSeq,
+                taskRecord.subBuildId,
+                taskRecord.containerType,
+                taskRecord.additionalOptions,
+                taskRecord.totalTime,
+                taskRecord.errorType,
+                taskRecord.errorCode,
+                taskRecord.errorMsg,
+                taskRecord.containerHashId,
+                LocalDateTime.now()
+            )
+        )
+    }
+
     private fun calculateStartVMTaskSeq(taskSeq: Int, container: Container, atomElement: Element): Int {
         // 在当前位置插入启动构建机
         if (container is VMBuildContainer) {
@@ -1141,7 +1294,9 @@ class PipelineRuntimeService @Autowired constructor(
         retryCount: Int,
         buildId: String,
         stageId: String,
-        userId: String
+        userId: String,
+        moveTaskDataBakSwitch: String?,
+        updateBakTaskExistsRecord: MutableList<TPipelineBuildTaskBakRecord>
     ) {
         if (startVMTaskSeq <= 0) {
             return
@@ -1211,6 +1366,9 @@ class PipelineRuntimeService @Autowired constructor(
             )
             if (taskRecord != null) {
                 updateExistsRecord.add(taskRecord)
+                if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
+                    addBuildTaskBakRecord(updateBakTaskExistsRecord, taskRecord)
+                }
             } else {
                 logger.info("[$buildId]|RETRY| not found $startTaskVMId(${container.name})")
             }
@@ -1225,6 +1383,9 @@ class PipelineRuntimeService @Autowired constructor(
             )
             if (taskRecord != null) {
                 updateExistsRecord.add(taskRecord)
+                if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
+                    addBuildTaskBakRecord(updateBakTaskExistsRecord, taskRecord)
+                }
                 val stopVmTaskId = VMUtils.genStopVMTaskId(VMUtils.genVMSeq(containerSeq = containerSeq, taskSeq = startVMTaskSeq))
                 taskRecord = retryDetailModelStatus(
                     lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
@@ -1235,6 +1396,9 @@ class PipelineRuntimeService @Autowired constructor(
                 )
                 if (taskRecord != null) {
                     updateExistsRecord.add(taskRecord)
+                    if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
+                        addBuildTaskBakRecord(updateBakTaskExistsRecord, taskRecord)
+                    }
                 } else {
                     logger.warn("[$buildId]|RETRY| not found $stopVmTaskId(${container.name})")
                 }
@@ -1320,11 +1484,21 @@ class PipelineRuntimeService @Autowired constructor(
                         taskParam[BS_MANUAL_ACTION] = manualAction
                         taskParam[BS_MANUAL_ACTION_USERID] = userId
                         val result = pipelineBuildTaskDao.updateTaskParam(
-                            dslContext,
-                            buildId,
-                            taskId,
-                            JsonUtil.toJson(taskParam)
+                            dslContext = dslContext,
+                            buildId = buildId,
+                            taskId = taskId,
+                            taskParam = JsonUtil.toJson(taskParam)
                         )
+                        val moveTaskDataBakSwitch = redisOperation.get("moveTaskDataBakSwitch")
+                        // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+                        if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
+                            pipelineBuildTaskDao.updateBakTaskParam(
+                                dslContext = dslContext,
+                                buildId = buildId,
+                                taskId = taskId,
+                                taskParam = JsonUtil.toJson(taskParam)
+                            )
+                        }
                         if (result != 1) {
                             logger.info("[{}]|taskId={}| update task param failed", buildId, taskId)
                         }
@@ -1361,6 +1535,16 @@ class PipelineRuntimeService @Autowired constructor(
                             taskId = taskId,
                             taskParam = JsonUtil.toJson(taskParam)
                         )
+                        val moveTaskDataBakSwitch = redisOperation.get("moveTaskDataBakSwitch")
+                        // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+                        if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
+                            pipelineBuildTaskDao.updateBakTaskParam(
+                                dslContext = dslContext,
+                                buildId = buildId,
+                                taskId = taskId,
+                                taskParam = JsonUtil.toJson(taskParam)
+                            )
+                        }
                         if (result != 1) {
                             logger.info("[{}]|taskId={}| update task param failed|result:{}", buildId, taskId, result)
                         }
@@ -1621,6 +1805,16 @@ class PipelineRuntimeService @Autowired constructor(
             taskId = taskId,
             subBuildId = subBuildId
         )
+        val moveTaskDataBakSwitch = redisOperation.get("moveTaskDataBakSwitch")
+        // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+        if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
+            pipelineBuildTaskDao.updateBakSubBuildId(
+                dslContext = dslContext,
+                buildId = buildId,
+                taskId = taskId,
+                subBuildId = subBuildId
+            )
+        }
     }
 
     fun updateTaskStatus(
@@ -1672,6 +1866,20 @@ class PipelineRuntimeService @Autowired constructor(
                 errorCode = errorCode,
                 errorMsg = errorMsg
             )
+            val moveTaskDataBakSwitch = redisOperation.get("moveTaskDataBakSwitch")
+            // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+            if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
+                pipelineBuildTaskDao.updateBakTaskStatus(
+                    dslContext = transactionContext,
+                    buildId = buildId,
+                    taskId = task.taskId,
+                    userId = userId,
+                    buildStatus = buildStatus,
+                    errorType = errorType,
+                    errorCode = errorCode,
+                    errorMsg = errorMsg
+                )
+            }
             pipelineBuildSummaryDao.updateCurrentBuildTask(
                 dslContext = transactionContext,
                 pipelineId = task.pipelineId,
@@ -1689,6 +1897,8 @@ class PipelineRuntimeService @Autowired constructor(
             )
         )
     }
+
+    private fun moveDataBakSwitchIsOn(moveDataBakSwitch: String?) = moveDataBakSwitch == "true"
 
     fun getPipelineBuildHistoryCount(projectId: String, pipelineId: String): Int {
         return pipelineBuildDao.count(dslContext = dslContext, projectId = projectId, pipelineId = pipelineId)
