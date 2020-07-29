@@ -141,7 +141,7 @@ class BuildEndControl @Autowired constructor(
                 source = "build_finish_$buildId", projectId = projectId, pipelineId = pipelineId,
                 userId = userId, buildId = buildId, status = buildStatus.name,
                 startTime = buildInfo.startTime, endTime = buildInfo.endTime, triggerType = buildInfo.trigger,
-                errorInfo = JsonUtil.toJson(buildInfo.errorInfo)
+                errorInfo = if (buildInfo.errorInfo != null) JsonUtil.toJson(buildInfo.errorInfo!!) else null
             ),
             PipelineBuildStatusBroadCastEvent(
                 source = source,
