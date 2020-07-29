@@ -40,6 +40,8 @@ data class DispatchStatus(
     val buildId: String,
     @ApiModelProperty("vmSeqId", required = true)
     val vmSeqId: String,
+    @ApiModelProperty("actionType", required = true)
+    val actionType: String,
     @ApiModelProperty("retryCount", required = false)
     val retryCount: Long? = 0,
     @ApiModelProperty("channelCode", required = false)
