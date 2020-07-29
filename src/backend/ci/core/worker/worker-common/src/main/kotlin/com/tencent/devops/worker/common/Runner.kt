@@ -116,7 +116,9 @@ object Runner {
                                     containerId = buildVariables.containerHashId,
                                     isSuccess = true,
                                     buildResult = env,
-                                    type = buildTask.type
+                                    type = buildTask.type,
+                                    errorCode = 0,
+                                    monitorData = taskDaemon.getMonitorData()
                                 )
                                 logger.info("Finish completing the task ($buildTask)")
                             } catch (e: Throwable) {
