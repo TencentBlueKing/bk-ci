@@ -760,6 +760,7 @@ class PipelineRuntimeService @Autowired constructor(
 
             // 如果是stage重试不是当前stage，则直接进入下一个stage
             if (isStageRetry && !retryStage) {
+                logger.info("[$buildId|RETRY|STAGE(#$stageId)(${stage.name}) is not in retry STAGE($retryStartTaskId)")
                 containerSeq += stage.containers.size // Job跳过计数也需要增加
                 return@nextStage
             }
@@ -794,6 +795,15 @@ class PipelineRuntimeService @Autowired constructor(
                         return@nextContainer
                     }
                 }
+                // 如果重试的插件不在当前Job内，则跳过
+                if (!retryStage && !retryStartTaskId.isNullOrBlank() && lastTimeBuildContainerRecords.isNotEmpty()) {
+                    if (null == findTaskRecord(lastTimeBuildTaskRecords = lastTimeBuildTaskRecords, container = container, retryStartTaskId = retryStartTaskId!!)) {
+                        logger.info("[$buildId|RETRY|JOB(#$containerId)(${container.name}) is not in retry range")
+                        containerSeq++
+                        return@nextContainer
+                    }
+                }
+
                 // --- 第3层循环：Element遍历处理 ---
                 container.elements.forEach nextElement@{ atomElement ->
                     taskSeq++ // 跳过的也要+1，Seq不需要连续性
