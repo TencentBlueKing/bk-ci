@@ -186,7 +186,9 @@ class BuildEndControl @Autowired constructor(
             }
 
             if (it.errorType != null) {
-                buildInfo.errorInfo.add(ErrorInfo(
+                val infos = mutableListOf<ErrorInfo>()
+                if (buildInfo.errorInfo != null) infos.addAll(buildInfo.errorInfo!!)
+                infos.add(ErrorInfo(
                     taskId = it.taskId,
                     taskName = it.taskName,
                     errorType = it.errorType ?: ErrorType.USER,
@@ -194,9 +196,10 @@ class BuildEndControl @Autowired constructor(
                     errorMsg = CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX) ?: ""
                 ))
                 // 做入库长度保护，假设超过上限则抛弃该错误信息
-                if (JsonUtil.toJson(buildInfo.errorInfo).toByteArray().size > PIPELINE_MESSAGE_STRING_LENGTH_MAX) {
-                    buildInfo.errorInfo.removeAt(buildInfo.errorInfo.lastIndex)
+                if (JsonUtil.toJson(infos).toByteArray().size > PIPELINE_MESSAGE_STRING_LENGTH_MAX) {
+                    infos.removeAt(infos.lastIndex)
                 }
+                buildInfo.errorInfo = infos
             }
         }
     }
