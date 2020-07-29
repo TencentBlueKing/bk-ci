@@ -27,12 +27,12 @@
     {
       "operation": "upsert_instance_selection",
       "data": {
-        "id": "repertory_instance",
+        "id": "repository_instance",
         "name": "¥˙¬Îø‚ ”Õº",
         "name_en": "repository instance selection",
         "resource_type_chain": [
           {"system_id": "bk_ci","id": "project"},
-          {"system_id": "bk_ci","id": "repertory"}
+          {"system_id": "bk_ci","id": "repository"}
         ]
       }
     },
