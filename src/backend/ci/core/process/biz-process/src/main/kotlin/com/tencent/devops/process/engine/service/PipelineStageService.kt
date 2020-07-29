@@ -81,12 +81,16 @@ class PipelineStageService @Autowired constructor(
         val moveStageDataBakSwitch = redisOperation.get("moveStageDataBakSwitch")
         // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
         if (moveStageDataBakSwitch == "true") {
-            pipelineBuildStageDao.updateBakStageStatus(
-                dslContext = dslContext,
-                buildId = buildId,
-                stageId = stageId,
-                buildStatus = buildStatus
-            )
+            try {
+                pipelineBuildStageDao.updateBakStageStatus(
+                    dslContext = dslContext,
+                    buildId = buildId,
+                    stageId = stageId,
+                    buildStatus = buildStatus
+                )
+            } catch (e: Exception) {
+                logger.warn("build($buildId) updateBakStageStatus error", e)
+            }
         }
     }
 
@@ -126,13 +130,17 @@ class PipelineStageService @Autowired constructor(
         val moveStageDataBakSwitch = redisOperation.get("moveStageDataBakSwitch")
         // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
         if (moveStageDataBakSwitch == "true") {
-            pipelineBuildStageDao.updateBakStageStatus(
-                dslContext = dslContext,
-                buildId = buildId,
-                stageId = stageId,
-                buildStatus = BuildStatus.PAUSE,
-                controlOption = controlOption
-            )
+            try {
+                pipelineBuildStageDao.updateBakStageStatus(
+                    dslContext = dslContext,
+                    buildId = buildId,
+                    stageId = stageId,
+                    buildStatus = BuildStatus.PAUSE,
+                    controlOption = controlOption
+                )
+            } catch (e: Exception) {
+                logger.warn("build($buildId) updateBakStageStatus error", e)
+            }
         }
         SpringContextUtil.getBean(PipelineBuildDetailService::class.java).stagePause(
             pipelineId = pipelineId,
