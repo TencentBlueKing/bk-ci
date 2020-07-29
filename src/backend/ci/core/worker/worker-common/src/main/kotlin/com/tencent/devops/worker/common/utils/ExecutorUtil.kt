@@ -90,4 +90,8 @@ object ExecutorUtil {
         }
         return threadLocal.get()
     }
+
+    fun removeThreadLocal() {
+        threadLocal.remove()
+    }
 }
