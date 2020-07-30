@@ -58,6 +58,8 @@ class KeyStoreMobileProvisionServiceImpl  @Autowired constructor(
         val headers = mutableMapOf<String, String>()
         headers[KEYSTORE_HTTP_HEADER_AUTH] = token?:""
         headers[KEYSTORE_HTTP_HEADER_IP] = InetAddress.getLocalHost().hostAddress
+        logger.info("Keystore download mobileprovision url:$url")
+        logger.info("Keystore download mobileprovision header:$headers")
         OkhttpUtils.doGet(url, headers).use { resp ->
             if(resp.code() != 200 || resp.body() == null) {
                 throw ErrorCodeException(
