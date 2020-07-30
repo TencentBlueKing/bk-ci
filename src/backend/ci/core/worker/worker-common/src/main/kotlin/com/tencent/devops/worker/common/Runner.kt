@@ -69,7 +69,7 @@ object Runner {
             LoggerService.executeCount = retryCount.toInt() + 1
             LoggerService.jobId = buildVariables.containerHashId
 
-            Heartbeat.start()
+            Heartbeat.start(buildVariables.timeoutMills) // #2043 添加Job超时监控
             // 开始轮询
             try {
                 LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
@@ -180,7 +180,7 @@ object Runner {
                 }
             } catch (e: Exception) {
                 logger.error("Other unknown error has occurred:", e)
-                LoggerService.addNormalLine(Ansi().fgRed().a("Other unknown error has occurred: " + e.message).reset().toString())
+                LoggerService.addRedLine("Other unknown error has occurred: " + e.message)
             } finally {
                 LoggerService.stop()
                 Heartbeat.stop()
