@@ -155,7 +155,7 @@ class SignServiceImpl @Autowired constructor(
         return mobileProvisionMap
     }
 
-    override fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): MobileProvisionInfo? {
+    private fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): MobileProvisionInfo? {
         val wildcardMobileProvision = mobileProvisionService.downloadWildcardMobileProvision(mobileProvisionDir, ipaSignInfo)
         return if(wildcardMobileProvision == null)  null else  parseMobileProvision(wildcardMobileProvision)
     }
