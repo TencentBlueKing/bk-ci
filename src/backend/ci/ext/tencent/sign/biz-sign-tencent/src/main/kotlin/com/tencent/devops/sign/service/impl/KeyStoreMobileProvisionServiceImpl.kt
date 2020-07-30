@@ -11,6 +11,8 @@ import com.tencent.devops.sign.Constants.KEYSTORE_CATEGORY_PROVISION
 import com.tencent.devops.sign.Constants.KEYSTORE_HTTP_HEADER_AUTH
 import com.tencent.devops.sign.Constants.KEYSTORE_HTTP_HEADER_IP
 import com.tencent.devops.sign.api.constant.SignMessageCode
+import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import com.tencent.devops.sign.service.MobileProvisionService
 import com.tencent.devops.sign.utils.EncryptUtil
 import io.jsonwebtoken.Jwts
@@ -48,6 +50,9 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor(
 
     @Value("\${bkci.sign.keyChainGroups:}")
     private val keyChainGroups: String = ""
+
+    @Value("\${bkci.sign.wildcardMobileProvisionId:}")
+    private val wildcardMobileProvisionId = ""
 
     private val TEAM_IDENTIFIER_KEY = "com.apple.developer.team-identifier"
 
@@ -118,6 +123,14 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor(
             )
         }
 
+    }
+
+    override fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): File? {
+        return downloadMobileProvision(
+                mobileProvisionDir = mobileProvisionDir,
+                projectId = ipaSignInfo.projectId,
+                mobileProvisionId = wildcardMobileProvisionId
+        )
     }
 
 

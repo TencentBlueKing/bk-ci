@@ -47,9 +47,6 @@ class SignServiceImpl @Autowired constructor(
     @Value("\${bkci.sign.tmpDir:/data/enterprise_sign_tmp/}")
     private val tmpDir = "/data/enterprise_sign_tmp/"
 
-    @Value("\${bkci.sign.wildcardMobileProvisionId:}")
-    private val wildcardMobileProvisionId = ""
-
     private lateinit var ipaFile: File
     private lateinit var ipaUnzipDir: File
     private lateinit var mobileProvisionDir: File
@@ -145,15 +142,8 @@ class SignServiceImpl @Autowired constructor(
     }
 
     override fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): MobileProvisionInfo? {
-        if (wildcardMobileProvisionId.isNullOrBlank()) {
-            return null
-        }
-        val mpFile = mobileProvisionService.downloadMobileProvision(
-                mobileProvisionDir = mobileProvisionDir,
-                projectId = ipaSignInfo.projectId,
-                mobileProvisionId = wildcardMobileProvisionId
-        )
-        return parseMobileProvision(mpFile)
+        val wildcardMobileProvision = mobileProvisionService.downloadWildcardMobileProvision(mobileProvisionDir, ipaSignInfo)
+        return if(wildcardMobileProvision == null)  null else  parseMobileProvision(wildcardMobileProvision)
     }
 
     /*
