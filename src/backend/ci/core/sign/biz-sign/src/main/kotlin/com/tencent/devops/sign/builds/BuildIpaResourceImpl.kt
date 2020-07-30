@@ -45,7 +45,7 @@ class BuildIpaResourceImpl @Autowired constructor(
     }
 
     override fun ipaSign(ipaSignInfoHeader: String, ipaInputStream: InputStream): Result<String> {
-        return Result(signService.signIpaAndArchive(ipaSignInfoHeader, ipaInputStream))
+        return Result(signService.asyncSignIpaAndArchive(ipaSignInfoHeader, ipaInputStream))
     }
 
     override fun getSignResult(resignId: String): Result<Boolean> {

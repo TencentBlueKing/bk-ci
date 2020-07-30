@@ -1,4 +1,4 @@
-package com.tencent.devops.sign.api.config
+package com.tencent.devops.sign.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

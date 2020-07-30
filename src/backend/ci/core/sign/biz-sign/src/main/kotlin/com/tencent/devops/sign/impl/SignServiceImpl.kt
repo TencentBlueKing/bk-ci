@@ -51,11 +51,26 @@ class SignServiceImpl @Autowired constructor(
     private lateinit var ipaUnzipDir: File
     private lateinit var mobileProvisionDir: File
 
-    override fun signIpaAndArchive(
+//    @Async("asyncSignExecutor")
+    override fun asyncSignIpaAndArchive(
         ipaSignInfoHeader: String,
         ipaInputStream: InputStream
     ): String {
         val resignId = "s-${UUIDUtil.generate()}"
+        try {
+            signIpaAndArchive(resignId, ipaSignInfoHeader, ipaInputStream)
+        } catch (e: Exception) {
+            logger.error("asyncSignIpaAndArchive error")
+        }
+        return resignId
+    }
+
+    @Async("asyncSignExecutor")
+    override fun signIpaAndArchive(
+        resignId: String,
+        ipaSignInfoHeader: String,
+        ipaInputStream: InputStream
+    ) {
         var ipaSignInfo = signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper)
 
         val taskExecuteCount = signInfoService.save(resignId, ipaSignInfoHeader, ipaSignInfo)
@@ -119,14 +134,13 @@ class SignServiceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA, defaultMessage = "归档IPA包失败")
         }
         signInfoService.finishArchive(resignId, ipaSignInfo, taskExecuteCount)
-        return resignId
     }
 
     override fun getSignResult(resignId: String): Boolean {
         return signInfoService.getSignResult(resignId)
     }
 
-    override fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): Map<String, MobileProvisionInfo> {
+    private fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): Map<String, MobileProvisionInfo> {
         val mobileProvisionMap = mutableMapOf<String, MobileProvisionInfo>()
         if (ipaSignInfo.mobileProvisionId != null) {
             val mpFile = mobileProvisionService.downloadMobileProvision(
@@ -150,7 +164,7 @@ class SignServiceImpl @Autowired constructor(
     /*
     * 通用逻辑-解析描述文件的内容
     * */
-    override fun parseMobileProvision(mobileProvisionFile: File): MobileProvisionInfo {
+    private fun parseMobileProvision(mobileProvisionFile: File): MobileProvisionInfo {
         val plistFile = File("${mobileProvisionFile.canonicalPath}.plist")
         val entitlementFile = File("${mobileProvisionFile.canonicalPath}.entitlement.plist")
         // 描述文件转为plist文件
@@ -186,7 +200,7 @@ class SignServiceImpl @Autowired constructor(
     * 对主App，扩展App和框架文件进行签名
     * */
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-    override fun resignIpaPackage(
+    private fun resignIpaPackage(
         unzipDir: File,
         ipaSignInfo: IpaSignInfo,
         mobileProvisionInfoList: Map<String, MobileProvisionInfo>
@@ -230,7 +244,7 @@ class SignServiceImpl @Autowired constructor(
     * 对主App，扩展App和框架文件进行通配符签名
     * */
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-    override fun resignIpaPackageWildcard(
+    private fun resignIpaPackageWildcard(
         unzipDir: File,
         ipaSignInfo: IpaSignInfo,
         wildcardInfo: MobileProvisionInfo
@@ -339,6 +353,5 @@ class SignServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(SignServiceImpl::class.java)
-        private val executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
     }
 }
