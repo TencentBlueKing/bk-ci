@@ -64,7 +64,13 @@ class AtomMonitorReportListener @Autowired constructor(
         val field: MutableMap<String, String> = mutableMapOf()
         val properties = data.javaClass.kotlin.declaredMemberProperties
         properties.forEach {
-            field[it.name] = jacksonObjectMapper().writeValueAsString(it.get(data)?.toString() ?: "")
+            val value = it.get(data)
+            if (value is Map<*, *>) {
+                field[it.name] = jacksonObjectMapper().writeValueAsString(it.get(data))
+            } else {
+                field[it.name] = it.get(data)?.toString() ?: ""
+            }
+
         }
         influxdbClient.insert(AtomMonitorData::class.java.simpleName, emptyMap(), field)
     }
