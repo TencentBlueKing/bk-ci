@@ -29,7 +29,7 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -107,9 +107,7 @@ class PipelineBuildService @Autowired constructor(
             deptName = projectInfo.deptName,
             centerName = projectInfo.centerName,
             model = model,
-            errorType = event.errorType,
-            errorCode = event.errorCode,
-            errorMsg = event.errorMsg
+            errorInfos = event.errorInfo
         )
         esService.build(data)
     }
@@ -364,9 +362,7 @@ class PipelineBuildService @Autowired constructor(
                 parentBuildId = t.parentBuildId,
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
-                errorType = if (t.errorType == null) null else ErrorType.values()[t.errorType],
-                errorCode = t.errorCode,
-                errorMsg = t.errorMsg
+                errorInfo = if(t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo, mutableListOf<ErrorInfo>()::class.java) else null
             )
         }
     }
