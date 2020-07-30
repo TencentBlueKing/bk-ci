@@ -74,6 +74,7 @@ import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.common.KEY_VERSION
 import okhttp3.Request
+import org.apache.lucene.util.RamUsageEstimator
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -102,7 +103,10 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 ) {
 
     @Value("\${build.atomMonitorData.report.switch:false}")
-    val atomMonitorSwitch: String = "false"
+    private val atomMonitorSwitch: String = "false"
+
+    @Value("\${build.atomMonitorData.report.maxMonitorDataSize:1677216}")
+    private val maxMonitorDataSize: String = "1677216"
 
     /**
      * Dispatch service startup the vm for the build and then notify to process service
@@ -656,26 +660,38 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             // 上报插件监控数据
             val monitorDataMap = result.monitorData
             if (monitorDataMap != null) {
-                val version = taskParams[KEY_VERSION] as String? ?: ""
-                var startTime = monitorDataMap[KEY_START_TIME]
-                if (startTime != null) {
-                    startTime = DateTimeUtil.toDateTime(task.startTime)
+                val monitorDataSize = RamUsageEstimator.sizeOfMap(monitorDataMap)
+                if (monitorDataSize > maxMonitorDataSize.toLong()) {
+                    // 上报的监控对象大小大于规定的值则不上报
+                    logger.info("the build($buildId) of atom($atomCode) monitorDataSize($monitorDataSize) is too large,maxMonitorDataSize is:$maxMonitorDataSize")
+                    return
                 }
-                var endTime = monitorDataMap[KEY_END_TIME]
-                if (endTime != null) {
-                    endTime = DateTimeUtil.toDateTime(task.endTime)
+                val version = taskParams[KEY_VERSION] as String? ?: ""
+                val startTimeStr = monitorDataMap[KEY_START_TIME]
+                val startTime = if (startTimeStr == null) {
+                    task.startTime?.timestampmilli()
+                } else {
+                    DateTimeUtil.stringToLocalDateTime(startTimeStr.toString()).timestampmilli()
+                }
+                val endTimeStr = monitorDataMap[KEY_END_TIME]
+                val endTime = if (endTimeStr == null) {
+                    task.endTime?.timestampmilli()
+                } else {
+                    DateTimeUtil.stringToLocalDateTime(endTimeStr.toString()).timestampmilli()
                 }
                 val atomMonitorData = AtomMonitorData(
                     errorCode = result.errorCode ?: -1,
                     errorMsg = result.message,
+                    errorType = result.errorType,
                     atomCode = atomCode,
                     version = version,
                     projectId = task.projectId,
                     pipelineId = task.pipelineId,
                     buildId = buildId,
                     vmSeqId = vmSeqId,
-                    startTime = startTime.toString(),
-                    endTime = endTime.toString(),
+                    startTime = startTime,
+                    endTime = endTime,
+                    elapseTime = (endTime ?: 0) - (startTime ?: 0),
                     channel = monitorDataMap[KEY_CHANNEL] as? String,
                     starter = task.starter,
                     extData = monitorDataMap["extData"] as? Map<String, Any>
