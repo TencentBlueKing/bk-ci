@@ -62,6 +62,7 @@ import okio.Okio
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.InputStream
+import java.net.URLEncoder
 import java.nio.file.FileSystems
 import java.nio.file.Paths
 import javax.ws.rs.NotFoundException
@@ -271,7 +272,7 @@ class BkRepoClient constructor(
         header.put(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
         header.put(BK_REPO_OVERRIDE, "true")
         properties?.forEach {
-            header.put("$METADATA_PREFIX${it.key}", it.value)
+            header.put("$METADATA_PREFIX${it.key}", tryEncode(it.value))
         }
         requestBuilder.headers(Headers.of(header))
             .put(RequestBody.create(MediaType.parse("application/octet-stream"), file))
@@ -281,6 +282,15 @@ class BkRepoClient constructor(
                 logger.error("upload file failed, responseContent: ${response.body()!!.string()}")
                 throw RuntimeException("upload file failed")
             }
+        }
+    }
+
+
+    private fun tryEncode(str: String?): String {
+        return if (str.isNullOrBlank()) {
+            ""
+        } else {
+            URLEncoder.encode(str, "UTF-8")
         }
     }
 
