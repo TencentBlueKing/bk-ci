@@ -42,42 +42,57 @@ class SignHistoryDao {
         projectId: String?,
         pipelineId: String?,
         buildId: String?,
+        taskId: String?,
         archiveType: String?,
         archivePath: String?,
         md5: String?
-    ) {
+    ): Int {
         with(TSignHistory.T_SIGN_HISTORY) {
+            var executeCount = 1
+            val record = dslContext.selectFrom(this)
+                .where(TASK_ID.eq(taskId))
+                .orderBy(TASK_EXECUTE_COUNT.desc())
+                .fetch()
+            if (record.isNotEmpty && record.first().taskExecuteCount != null) {
+                executeCount = record.first().taskExecuteCount + 1
+            }
+
             dslContext.insertInto(this,
                 RESIGN_ID,
                 USER_ID,
+                PROJECT_ID,
+                PIPELINE_ID,
+                BUILD_ID,
+                TASK_ID,
+                TASK_EXECUTE_COUNT,
+                ARCHIVE_TYPE,
+                ARCHIVE_PATH,
+                FILE_MD5,
+                RESULT_FILE_MD5,
                 UPLOAD_FINISH_TIME,
                 UNZIP_FINISH_TIME,
                 RESIGN_FINISH_TIME,
                 ZIP_FINISH_TIME,
-                ARCHIVE_FINISH_TIME,
-                PROJECT_ID,
-                PIPELINE_ID,
-                BUILD_ID,
-                ARCHIVE_TYPE,
-                ARCHIVE_PATH,
-                FILE_MD5,
-                RESULT_FILE_MD5
+                ARCHIVE_FINISH_TIME
             ).values(
                 resignId,
                 userId,
-                null,
-                null,
-                null,
-                null,
-                null,
                 projectId,
                 pipelineId,
                 buildId,
+                taskId,
+                executeCount,
                 archiveType,
                 archivePath,
                 md5,
+                null,
+                null,
+                null,
+                null,
+                null,
                 null
             ).execute()
+            return executeCount
         }
     }
 
@@ -89,6 +104,7 @@ class SignHistoryDao {
             dslContext.update(this)
                 .set(UPLOAD_FINISH_TIME, LocalDateTime.now())
                 .where(RESIGN_ID.eq(resignId))
+                .execute()
         }
     }
 
@@ -100,6 +116,7 @@ class SignHistoryDao {
             dslContext.update(this)
                 .set(UNZIP_FINISH_TIME, LocalDateTime.now())
                 .where(RESIGN_ID.eq(resignId))
+                .execute()
         }
     }
 
@@ -111,6 +128,7 @@ class SignHistoryDao {
             dslContext.update(this)
                 .set(RESIGN_FINISH_TIME, LocalDateTime.now())
                 .where(RESIGN_ID.eq(resignId))
+                .execute()
         }
     }
 
@@ -124,6 +142,7 @@ class SignHistoryDao {
                 .set(ZIP_FINISH_TIME, LocalDateTime.now())
                 .set(RESULT_FILE_MD5, resultFileMd5)
                 .where(RESIGN_ID.eq(resignId))
+                .execute()
         }
     }
 
@@ -135,16 +154,16 @@ class SignHistoryDao {
             dslContext.update(this)
                 .set(ARCHIVE_FINISH_TIME, LocalDateTime.now())
                 .where(RESIGN_ID.eq(resignId))
+                .execute()
         }
     }
 
     fun getSignHistory(dslContext: DSLContext, resignId: String): TSignHistoryRecord? {
         return with(TSignHistory.T_SIGN_HISTORY) {
-            val select = dslContext.selectFrom(this)
+            dslContext.selectFrom(this)
                 .where(
                     RESIGN_ID.eq(resignId)
-                )
-            select.fetchAny()
+                ).fetchAny()
         }
     }
 }

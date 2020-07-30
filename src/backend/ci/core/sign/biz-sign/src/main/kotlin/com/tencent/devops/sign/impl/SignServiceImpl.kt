@@ -56,12 +56,12 @@ class SignServiceImpl @Autowired constructor(
         val resignId = "s-${UUIDUtil.generate()}"
         var ipaSignInfo = signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper)
 
-        signInfoService.save(resignId, ipaSignInfoHeader, ipaSignInfo)
+        val taskExecuteCount = signInfoService.save(resignId, ipaSignInfoHeader, ipaSignInfo)
         ipaSignInfo = signInfoService.check(ipaSignInfo)
 
         // 复制文件到临时目录
         ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo)
-        signInfoService.finishUpload(resignId, ipaFile, ipaSignInfo)
+        signInfoService.finishUpload(resignId, ipaFile, ipaSignInfo, taskExecuteCount)
 
         // ipa解压后的目录
         ipaUnzipDir = File("${ipaFile.canonicalPath}.unzipDir")
@@ -73,7 +73,7 @@ class SignServiceImpl @Autowired constructor(
 
         // 解压ipa包
         SignUtils.unzipIpa(ipaFile, ipaUnzipDir)
-        signInfoService.finishUnzip(resignId, ipaUnzipDir, ipaSignInfo)
+        signInfoService.finishUnzip(resignId, ipaUnzipDir, ipaSignInfo, taskExecuteCount)
 
         // 解析Info.plist
         val ipaInfoPlist = parsInfoPlist(findInfoPlist(ipaUnzipDir))
@@ -97,7 +97,7 @@ class SignServiceImpl @Autowired constructor(
             logger.error("[$resignId]|[${ipaSignInfo.buildId}] sign ipa failed.")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA包签名失败")
         }
-        signInfoService.finishResign(resignId, ipaSignInfo)
+        signInfoService.finishResign(resignId, ipaSignInfo, taskExecuteCount)
 
         // 压缩目录
         val signedIpaFile = SignUtils.zipIpaFile(ipaUnzipDir, ipaUnzipDir.parent + File.separator + "result.ipa")
@@ -105,7 +105,7 @@ class SignServiceImpl @Autowired constructor(
             logger.error("[$resignId]|[${ipaSignInfo.buildId}] zip ipa failed.")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA文件生成失败")
         }
-        signInfoService.finishZip(resignId, signedIpaFile, ipaSignInfo)
+        signInfoService.finishZip(resignId, signedIpaFile, ipaSignInfo, taskExecuteCount)
 
         // 生产元数据
         val properties = getProperties(ipaSignInfo, ipaInfoPlist)
@@ -116,7 +116,7 @@ class SignServiceImpl @Autowired constructor(
             logger.error("[$resignId]|[${ipaSignInfo.buildId}] archive signed ipa failed.")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA, defaultMessage = "归档IPA包失败")
         }
-        signInfoService.finishArchive(resignId, ipaSignInfo)
+        signInfoService.finishArchive(resignId, ipaSignInfo, taskExecuteCount)
         return resignId
     }
 

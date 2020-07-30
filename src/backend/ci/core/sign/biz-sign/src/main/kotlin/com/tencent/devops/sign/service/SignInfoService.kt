@@ -25,31 +25,33 @@ class SignInfoService(
     private val rabbitTemplate: RabbitTemplate
 ){
 
-    fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo) {
+    fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo): Int {
         logger.info("[$resignId] save ipaSignInfo|header=$ipaSignInfoHeader|info=$info")
-        if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
-            buildId = info.buildId!!,
-            message = "Start resign ipa package with info: $info",
-            tag = info.taskId!!,
-            jobId = null,
-            executeCount = 1
-        )
         signIpaInfoDao.saveSignInfo(dslContext, resignId, ipaSignInfoHeader, info)
-        signHistoryDao.initHistory(
+        val executeCount = signHistoryDao.initHistory(
             dslContext = dslContext,
             resignId = resignId,
             userId = info.userId,
             projectId = info.projectId,
             pipelineId = info.projectId,
             buildId = info.buildId,
+            taskId = info.taskId,
             archiveType = info.archiveType,
             archivePath = info.archivePath,
             md5 = info.md5
         )
+        if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) LogUtils.addLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = info.buildId!!,
+            message = "Start resign ipa package with info: $info",
+            tag = info.taskId!!,
+            jobId = null,
+            executeCount = executeCount
+        )
+        return executeCount
     }
 
-    fun finishUpload(resignId: String, ipaFile: File, info: IpaSignInfo) {
+    fun finishUpload(resignId: String, ipaFile: File, info: IpaSignInfo, executeCount: Int) {
         logger.info("[$resignId] finishUpload|ipaFile=${ipaFile.canonicalPath}|buildId=${info.buildId}")
         if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
@@ -57,12 +59,12 @@ class SignInfoService(
             message = "Finished ipa package upload: $ipaFile",
             tag = info.taskId!!,
             jobId = null,
-            executeCount = 1
+            executeCount = executeCount
         )
         signHistoryDao.finishUpload(dslContext, resignId)
     }
 
-    fun finishUnzip(resignId: String, unzipDir: File, info: IpaSignInfo) {
+    fun finishUnzip(resignId: String, unzipDir: File, info: IpaSignInfo, executeCount: Int) {
         logger.info("[$resignId] finishUnzip|unzipDir=${unzipDir.canonicalPath}|buildId=${info.buildId}")
         if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
@@ -70,12 +72,12 @@ class SignInfoService(
             message = "Finished unzip ipa package: $unzipDir",
             tag = info.taskId!!,
             jobId = null,
-            executeCount = 1
+            executeCount = executeCount
         )
         signHistoryDao.finishUnzip(dslContext, resignId)
     }
 
-     fun finishResign(resignId: String, info: IpaSignInfo) {
+     fun finishResign(resignId: String, info: IpaSignInfo, executeCount: Int) {
         logger.info("[$resignId] finishResign|buildId=${info.buildId}")
          if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) LogUtils.addLine(
              rabbitTemplate = rabbitTemplate,
@@ -83,12 +85,12 @@ class SignInfoService(
              message = "Finished resign!",
              tag = info.taskId!!,
              jobId = null,
-             executeCount = 1
+             executeCount = executeCount
          )
         signHistoryDao.finishResign(dslContext, resignId)
     }
 
-    fun finishZip(resignId: String, signedIpaFile: File, info: IpaSignInfo) {
+    fun finishZip(resignId: String, signedIpaFile: File, info: IpaSignInfo, executeCount: Int) {
         val resultFileMd5 = IpaFileUtil.getMD5(signedIpaFile)
         logger.info("[$resignId] finishZip|resultFileMd5=$resultFileMd5|signedIpaFile=${signedIpaFile.canonicalPath}|buildId=${info.buildId}")
         if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) LogUtils.addLine(
@@ -97,12 +99,12 @@ class SignInfoService(
             message = "Finished zip the signed ipa file with result:$signedIpaFile",
             tag = info.taskId!!,
             jobId = null,
-            executeCount = 1
+            executeCount = executeCount
         )
         signHistoryDao.finishZip(dslContext, resignId, resultFileMd5)
     }
 
-    fun finishArchive(resignId: String, info: IpaSignInfo) {
+    fun finishArchive(resignId: String, info: IpaSignInfo, executeCount: Int) {
         logger.info("[$resignId] finishArchive|buildId=${info.buildId}")
         if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
@@ -110,7 +112,7 @@ class SignInfoService(
             message = "Finished archive the signed ipa file. (archiveType=${info.archiveType},archivePath=${info.archivePath})",
             tag = info.taskId!!,
             jobId = null,
-            executeCount = 1
+            executeCount = executeCount
         )
         signHistoryDao.finishArchive(
             dslContext = dslContext,
