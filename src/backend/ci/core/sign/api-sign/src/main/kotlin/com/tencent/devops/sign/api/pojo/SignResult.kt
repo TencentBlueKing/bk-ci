@@ -9,7 +9,5 @@ data class SignResult(
     @ApiModelProperty("签名ID", required = true)
     val resignId: String,
     @ApiModelProperty("是否完成", required = true)
-    val finished: Boolean,
-    @ApiModelProperty("签名完成时间", required = false)
-    val finishdTime: LocalDateTime?
+    val finished: Boolean
 )
