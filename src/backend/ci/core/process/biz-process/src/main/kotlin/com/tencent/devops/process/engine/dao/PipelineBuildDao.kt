@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -413,7 +414,7 @@ class PipelineBuildDao {
                 parentBuildId = t.parentBuildId,
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
-                errorInfoList = if(t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo, listOf<ErrorInfo>()::class.java) else null
+                errorInfoList = if(t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo) as List<ErrorInfo> else null
             )
         }
     }
