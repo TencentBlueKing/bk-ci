@@ -1925,7 +1925,7 @@ class TemplateService @Autowired constructor(
             }
         }
         if(isAddRemoteAuth) {
-            logger.info("template Model has RemoteTriggerElement")
+            logger.info("template Model has RemoteTriggerElement project[$projectId] pipeline[$pipelineId]")
             pipelineRemoteAuthService.generateAuth(pipelineId, projectId, userId)
         }
     }
