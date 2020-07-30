@@ -1,8 +1,12 @@
 package com.tencent.devops.sign.service.impl
 
+import com.dd.plist.NSDictionary
+import com.dd.plist.NSString
+import com.dd.plist.PropertyListParser
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.sign.Constants.KEYSTORE_CATEGORY_PROVISION
 import com.tencent.devops.sign.Constants.KEYSTORE_HTTP_HEADER_AUTH
 import com.tencent.devops.sign.Constants.KEYSTORE_HTTP_HEADER_IP
@@ -25,7 +29,7 @@ import java.util.*
 
 
 @Service
-class KeyStoreMobileProvisionServiceImpl  @Autowired constructor(
+class KeyStoreMobileProvisionServiceImpl @Autowired constructor(
 ) : MobileProvisionService {
     @Value("\${keystore.url:}")
     private val keyStoreUrl = "https://proxy.test.keystore.oa.com"
@@ -42,12 +46,20 @@ class KeyStoreMobileProvisionServiceImpl  @Autowired constructor(
     @Value("\${keystore.authSecret:}")
     private val keyStoreAuthSecret = "a21c218df41f6d7fd032535fe20394e2"
 
+    @Value("\${bkci.sign.keyChainGroups:}")
+    private val keyChainGroups: String = ""
+
+    private val TEAM_IDENTIFIER_KEY = "com.apple.developer.team-identifier"
+
+    private val KEYCHAIN_ACCESS_GROUPS_KEY = "keychain-access-groups"
+
     companion object {
         private val logger = LoggerFactory.getLogger(KeyStoreMobileProvisionServiceImpl::class.java)
         private val pairKey = DHUtil.initKey()
         private val privateKey = pairKey.privateKey
         private val publicKey = String(Base64.getEncoder().encode(pairKey.publicKey))
         private var token: String? = null
+        private val teamIdentifier = "com.apple.developer.team-identifier"
 
     }
 
@@ -56,12 +68,12 @@ class KeyStoreMobileProvisionServiceImpl  @Autowired constructor(
         val mobileProvisionFile = File("${mobileProvisionDir.canonicalPath}/$mobileProvisionId.mobileprovision")
         val url = String.format(keyStoreUrl + keyStoreCertUrl, mobileProvisionId, KEYSTORE_CATEGORY_PROVISION)
         val headers = mutableMapOf<String, String>()
-        headers[KEYSTORE_HTTP_HEADER_AUTH] = token?:""
+        headers[KEYSTORE_HTTP_HEADER_AUTH] = token ?: ""
         headers[KEYSTORE_HTTP_HEADER_IP] = InetAddress.getLocalHost().hostAddress
         logger.info("Keystore download mobileprovision url:$url")
         logger.info("Keystore download mobileprovision header:$headers")
         OkhttpUtils.doGet(url, headers).use { resp ->
-            if(resp.code() != 200 || resp.body() == null) {
+            if (resp.code() != 200 || resp.body() == null) {
                 throw ErrorCodeException(
                         errorCode = SignMessageCode.ERROR_MP_NOT_EXIST,
                         defaultMessage = "KeyStore描述文件($mobileProvisionId)不存在或者下载失败。"
@@ -70,11 +82,44 @@ class KeyStoreMobileProvisionServiceImpl  @Autowired constructor(
             val decryptedMobileProvisionEncrypt = resp.body()!!.bytes()
             logger.info("Keystore decrypt decryptedMobileProvisionEncrypt:$decryptedMobileProvisionEncrypt")
             logger.info("Keystore decrypt keyStoreAuthSecret:$keyStoreAuthSecret")
-            val decryptedMobileProvisionDecrypt = EncryptUtil.decrypt(decryptedMobileProvisionEncrypt ,keyStoreAuthSecret)
+            val decryptedMobileProvisionDecrypt = EncryptUtil.decrypt(decryptedMobileProvisionEncrypt, keyStoreAuthSecret)
             mobileProvisionFile.writeBytes(decryptedMobileProvisionDecrypt)
         }
         return mobileProvisionFile
     }
+
+
+    override fun handleEntitlement(entitlementFile: File) {
+        if(keyChainGroups.isNullOrBlank()) {
+            return
+        }
+        val keyChainGroupsList =  keyChainGroups.split(";")
+        // 解析entitlement文件
+        try {
+            val rootDict = PropertyListParser.parse(entitlementFile) as NSDictionary
+            // entitlement
+            if (rootDict.containsKey(TEAM_IDENTIFIER_KEY) && rootDict.containsKey(KEYCHAIN_ACCESS_GROUPS_KEY)) {
+                val teamId = (rootDict.objectForKey(TEAM_IDENTIFIER_KEY) as NSString).toString()
+                if (!teamId.isNullOrBlank() && keyChainGroupsList.isNotEmpty()) {
+                    keyChainGroupsList.forEach{
+                        if(it.isNotBlank()) {
+                            val insertKeyChainGroupCMD = "plutil -insert keychain-access-groups.0 -string '$teamId.$it' ${entitlementFile.canonicalPath}"
+                            CommandLineUtils.execute(insertKeyChainGroupCMD, entitlementFile.parentFile, true)
+                        }
+                    }
+
+                }
+            }
+        }catch (e: Exception) {
+            logger.error("插入entitlement文件(${entitlementFile.canonicalPath})的keychain-access-groups失败。")
+            throw ErrorCodeException(
+                    errorCode = SignMessageCode.ERROR_INSERT_KEYCHAIN_GROUPS,
+                    defaultMessage = "entitlement插入keychain失败"
+            )
+        }
+
+    }
+
 
     private fun generateToken() {
         val claims = mutableMapOf<String, Any>()
@@ -93,6 +138,7 @@ class KeyStoreMobileProvisionServiceImpl  @Autowired constructor(
         logger.info("Refresh keystore jwt token")
         generateToken()
     }
+
 
 }
 //
