@@ -23,10 +23,35 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.pojo
 
-package com.tencent.devops.monitoring.constant
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-object MonitoringMessageCode {
-    const val ERROR_MONITORING_SEND_NOTIFY_FAIL = "2110001" // 监控服务：通知发送失败
-    const val ERROR_MONITORING_INSERT_DATA_FAIL = "2110002" // 监控服务：写入influxdb失败
-}
+@ApiModel("插件监控数据")
+data class AtomMonitorData(
+    @ApiModelProperty("插件执行错误码", required = true)
+    val errorCode: Int,
+    @ApiModelProperty("插件执行错误信息", required = false)
+    val errorMsg: String? = null,
+    @ApiModelProperty("插件代码", required = true)
+    val atomCode: String,
+    @ApiModelProperty("插件版本", required = true)
+    val version: String,
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("流水线ID", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("构建环境ID", required = true)
+    val vmSeqId: String,
+    @ApiModelProperty("执行开始时间", required = true)
+    val startTime: String,
+    @ApiModelProperty("执行结束时间", required = true)
+    val endTime: String,
+    @ApiModelProperty("来源渠道", required = true)
+    val channel: String,
+    @ApiModelProperty("扩展数据", required = false)
+    val extData: Map<String, Any>? = null
+)

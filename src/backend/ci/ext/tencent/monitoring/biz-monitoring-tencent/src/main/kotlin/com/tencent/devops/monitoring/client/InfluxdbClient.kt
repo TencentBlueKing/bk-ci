@@ -23,27 +23,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-@file:Suppress("DEPRECATION")
-
 package com.tencent.devops.monitoring.client
 
 import org.influxdb.BatchOptions
 import org.influxdb.InfluxDB
 import org.influxdb.InfluxDBFactory
-import org.influxdb.dto.BatchPoints.database
 import org.influxdb.dto.Point
 import org.influxdb.dto.Point.measurement
 import org.influxdb.dto.Query
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import javax.annotation.PostConstruct
-
 
 @Component
 class InfluxdbClient {
