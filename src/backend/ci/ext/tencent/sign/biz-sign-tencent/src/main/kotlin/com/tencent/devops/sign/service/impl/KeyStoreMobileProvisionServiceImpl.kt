@@ -68,6 +68,8 @@ class KeyStoreMobileProvisionServiceImpl  @Autowired constructor(
                 )
             }
             val decryptedMobileProvisionEncrypt = resp.body()!!.bytes()
+            logger.info("Keystore decrypt decryptedMobileProvisionEncrypt:$decryptedMobileProvisionEncrypt")
+            logger.info("Keystore decrypt keyStoreAuthSecret:$keyStoreAuthSecret")
             val decryptedMobileProvisionDecrypt = EncryptUtil.decrypt(decryptedMobileProvisionEncrypt ,keyStoreAuthSecret)
             mobileProvisionFile.writeBytes(decryptedMobileProvisionDecrypt)
         }
