@@ -464,13 +464,15 @@ class GitCIBuildService @Autowired constructor(
         val startParams = mutableMapOf<String, String>()
 
         // 通用参数
+        startParams[BK_CI_RUN] = "true"
+        startParams[BK_CI_REPO_OWNER] = CommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl)
+        startParams[BK_CI_REPOSITORY] = CommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl) + "/" + gitProjectConf.name
         startParams[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] = event.objectKind
         startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] = event.branch
         startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = event.commitId
         startParams[BK_REPO_WEBHOOK_REPO_NAME] = gitProjectConf.name
         startParams[BK_REPO_WEBHOOK_REPO_URL] = gitProjectConf.url
         startParams[BK_REPO_GIT_WEBHOOK_COMMIT_MESSAGE] = event.commitMsg.toString()
-        startParams[BK_REPO_GIT_REPOSITORY_OWNER] = CommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl)
         if (!event.commitId.isBlank() && event.commitId.length >= 8)
             startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID_SHORT] = event.commitId.substring(0, 8)
 
