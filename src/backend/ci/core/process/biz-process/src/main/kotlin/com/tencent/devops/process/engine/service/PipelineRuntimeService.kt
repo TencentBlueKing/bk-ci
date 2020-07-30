@@ -192,11 +192,15 @@ class PipelineRuntimeService @Autowired constructor(
             val moveStageDataBakSwitch = redisOperation.get("moveStageDataBakSwitch")
             // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
             if (moveDataBakSwitchIsOn(moveStageDataBakSwitch)) {
-                pipelineBuildStageDao.deletePipelineBuildBakStages(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )
+                try {
+                    pipelineBuildStageDao.deletePipelineBuildBakStages(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId
+                    )
+                } catch (e: Exception) {
+                    logger.warn("pipelineId($pipelineId) deletePipelineBuildBakStages error", e)
+                }
             }
             pipelineBuildContainerDao.deletePipelineBuildContainers(
                 dslContext = transactionContext,
@@ -206,11 +210,15 @@ class PipelineRuntimeService @Autowired constructor(
             val moveContainerDataBakSwitch = redisOperation.get("moveContainerDataBakSwitch")
             // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
             if (moveDataBakSwitchIsOn(moveContainerDataBakSwitch)) {
-                pipelineBuildContainerDao.deletePipelineBuildBakContainers(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )
+                try {
+                    pipelineBuildContainerDao.deletePipelineBuildBakContainers(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId
+                    )
+                } catch (e: Exception) {
+                    logger.warn("pipelineId($pipelineId) deletePipelineBuildBakContainers error", e)
+                }
             }
             pipelineBuildTaskDao.deletePipelineBuildTasks(
                 dslContext = transactionContext,
@@ -220,11 +228,15 @@ class PipelineRuntimeService @Autowired constructor(
             val moveTaskDataBakSwitch = redisOperation.get("moveTaskDataBakSwitch")
             // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
             if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
-                pipelineBuildTaskDao.deletePipelineBuildBakTasks(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )
+                try {
+                    pipelineBuildTaskDao.deletePipelineBuildBakTasks(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId
+                    )
+                } catch (e: Exception) {
+                    logger.warn("pipelineId($pipelineId) deletePipelineBuildBakTasks error", e)
+                }
             }
         }
         buildVariableService.deletePipelineBuildVar(projectId = projectId, pipelineId = pipelineId)
@@ -448,15 +460,19 @@ class PipelineRuntimeService @Autowired constructor(
         val moveContainerDataBakSwitch = redisOperation.get("moveContainerDataBakSwitch")
         // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
         if (moveDataBakSwitchIsOn(moveContainerDataBakSwitch)) {
-            pipelineBuildContainerDao.updateBakContainerStatus(
-                dslContext = dslContext,
-                buildId = buildId,
-                stageId = stageId,
-                containerId = containerId,
-                buildStatus = buildStatus,
-                startTime = startTime,
-                endTime = endTime
-            )
+            try {
+                pipelineBuildContainerDao.updateBakContainerStatus(
+                    dslContext = dslContext,
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerId = containerId,
+                    buildStatus = buildStatus,
+                    startTime = startTime,
+                    endTime = endTime
+                )
+            } catch (e: Exception) {
+                logger.warn("build($buildId) updateBakContainerStatus error", e)
+            }
         }
     }
 
@@ -1163,13 +1179,21 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineBuildTaskDao.batchSave(transactionContext, buildTaskList)
                 // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
                 if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
-                    pipelineBuildTaskDao.batchSaveBakTask(transactionContext, buildTaskList)
+                    try {
+                        pipelineBuildTaskDao.batchSaveBakTask(transactionContext, buildTaskList)
+                    } catch (e: Exception) {
+                        logger.warn("build($buildId) batchSaveBakTask error", e)
+                    }
                 }
             } else {
                 logger.info("batch store to pipelineBuildTask, updateExistsRecord size: ${updateExistsRecord.size}")
                 pipelineBuildTaskDao.batchUpdate(transactionContext, updateExistsRecord)
                 if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
-                    pipelineBuildTaskDao.batchUpdateBakTask(transactionContext, updateBakTaskExistsRecord)
+                    try {
+                        pipelineBuildTaskDao.batchUpdateBakTask(transactionContext, updateBakTaskExistsRecord)
+                    } catch (e: Exception) {
+                        logger.warn("build($buildId) batchUpdateBakTask error", e)
+                    }
                 }
             }
 
@@ -1177,12 +1201,20 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineBuildContainerDao.batchSave(transactionContext, buildContainers)
                 // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
                 if (moveDataBakSwitchIsOn(moveContainerDataBakSwitch)) {
-                    pipelineBuildContainerDao.batchSaveBakContainer(transactionContext, buildContainers)
+                    try {
+                        pipelineBuildContainerDao.batchSaveBakContainer(transactionContext, buildContainers)
+                    } catch (e: Exception) {
+                        logger.warn("build($buildId) batchSaveBakContainer error", e)
+                    }
                 }
             } else {
                 pipelineBuildContainerDao.batchUpdate(transactionContext, updateContainerExistsRecord)
                 if (moveDataBakSwitchIsOn(moveContainerDataBakSwitch)) {
-                    pipelineBuildContainerDao.batchUpdateBakContainer(transactionContext, updateBakContainerExistsRecord)
+                    try {
+                        pipelineBuildContainerDao.batchUpdateBakContainer(transactionContext, updateBakContainerExistsRecord)
+                    } catch (e: Exception) {
+                        logger.warn("build($buildId) batchUpdateBakContainer error", e)
+                    }
                 }
             }
 
@@ -1190,12 +1222,20 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineBuildStageDao.batchSave(transactionContext, buildStages)
                 // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
                 if (moveDataBakSwitchIsOn(moveStageDataBakSwitch)) {
-                    pipelineBuildStageDao.batchSaveBakStage(transactionContext, buildStages)
+                    try {
+                        pipelineBuildStageDao.batchSaveBakStage(transactionContext, buildStages)
+                    } catch (e: Exception) {
+                        logger.warn("build($buildId) batchSaveBakStage error", e)
+                    }
                 }
             } else {
                 pipelineBuildStageDao.batchUpdate(transactionContext, updateStageExistsRecord)
                 if (moveDataBakSwitchIsOn(moveStageDataBakSwitch)) {
-                    pipelineBuildStageDao.batchUpdateBakStage(transactionContext, updateBakStageExistsRecord)
+                    try {
+                        pipelineBuildStageDao.batchUpdateBakStage(transactionContext, updateBakStageExistsRecord)
+                    } catch (e: Exception) {
+                        logger.warn("build($buildId) batchUpdateBakStage error", e)
+                    }
                 }
             }
             // 排队计数+1
@@ -1492,12 +1532,16 @@ class PipelineRuntimeService @Autowired constructor(
                         val moveTaskDataBakSwitch = redisOperation.get("moveTaskDataBakSwitch")
                         // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
                         if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
-                            pipelineBuildTaskDao.updateBakTaskParam(
-                                dslContext = dslContext,
-                                buildId = buildId,
-                                taskId = taskId,
-                                taskParam = JsonUtil.toJson(taskParam)
-                            )
+                            try {
+                                pipelineBuildTaskDao.updateBakTaskParam(
+                                    dslContext = dslContext,
+                                    buildId = buildId,
+                                    taskId = taskId,
+                                    taskParam = JsonUtil.toJson(taskParam)
+                                )
+                            } catch (e: Exception) {
+                                logger.warn("build($buildId) updateBakTaskParam error", e)
+                            }
                         }
                         if (result != 1) {
                             logger.info("[{}]|taskId={}| update task param failed", buildId, taskId)
@@ -1538,12 +1582,16 @@ class PipelineRuntimeService @Autowired constructor(
                         val moveTaskDataBakSwitch = redisOperation.get("moveTaskDataBakSwitch")
                         // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
                         if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
-                            pipelineBuildTaskDao.updateBakTaskParam(
-                                dslContext = dslContext,
-                                buildId = buildId,
-                                taskId = taskId,
-                                taskParam = JsonUtil.toJson(taskParam)
-                            )
+                            try {
+                                pipelineBuildTaskDao.updateBakTaskParam(
+                                    dslContext = dslContext,
+                                    buildId = buildId,
+                                    taskId = taskId,
+                                    taskParam = JsonUtil.toJson(taskParam)
+                                )
+                            } catch (e: Exception) {
+                                logger.warn("build($buildId) updateBakTaskParam error", e)
+                            }
                         }
                         if (result != 1) {
                             logger.info("[{}]|taskId={}| update task param failed|result:{}", buildId, taskId, result)
@@ -1808,12 +1856,16 @@ class PipelineRuntimeService @Autowired constructor(
         val moveTaskDataBakSwitch = redisOperation.get("moveTaskDataBakSwitch")
         // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
         if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
-            pipelineBuildTaskDao.updateBakSubBuildId(
-                dslContext = dslContext,
-                buildId = buildId,
-                taskId = taskId,
-                subBuildId = subBuildId
-            )
+            try {
+                pipelineBuildTaskDao.updateBakSubBuildId(
+                    dslContext = dslContext,
+                    buildId = buildId,
+                    taskId = taskId,
+                    subBuildId = subBuildId
+                )
+            } catch (e: Exception) {
+                logger.warn("build($buildId) updateBakSubBuildId error", e)
+            }
         }
     }
 
@@ -1869,16 +1921,20 @@ class PipelineRuntimeService @Autowired constructor(
             val moveTaskDataBakSwitch = redisOperation.get("moveTaskDataBakSwitch")
             // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
             if (moveDataBakSwitchIsOn(moveTaskDataBakSwitch)) {
-                pipelineBuildTaskDao.updateBakTaskStatus(
-                    dslContext = transactionContext,
-                    buildId = buildId,
-                    taskId = task.taskId,
-                    userId = userId,
-                    buildStatus = buildStatus,
-                    errorType = errorType,
-                    errorCode = errorCode,
-                    errorMsg = errorMsg
-                )
+                try {
+                    pipelineBuildTaskDao.updateBakTaskStatus(
+                        dslContext = transactionContext,
+                        buildId = buildId,
+                        taskId = task.taskId,
+                        userId = userId,
+                        buildStatus = buildStatus,
+                        errorType = errorType,
+                        errorCode = errorCode,
+                        errorMsg = errorMsg
+                    )
+                } catch (e: Exception) {
+                    logger.warn("build($buildId) updateBakTaskStatus error", e)
+                }
             }
             pipelineBuildSummaryDao.updateCurrentBuildTask(
                 dslContext = transactionContext,
