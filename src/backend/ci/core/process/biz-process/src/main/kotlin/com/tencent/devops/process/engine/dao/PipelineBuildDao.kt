@@ -278,7 +278,7 @@ class PipelineBuildDao {
         buildParameters: String?,
         recommendVersion: String?,
         remark: String? = null,
-        errorInfo: List<ErrorInfo>?
+        errorInfoList: List<ErrorInfo>?
     ) {
         with(T_PIPELINE_BUILD_HISTORY) {
             var baseQuery = dslContext.update(this)
@@ -291,7 +291,7 @@ class PipelineBuildDao {
                 baseQuery = baseQuery.set(REMARK, remark)
             }
             if (errorInfo != null) {
-                baseQuery = baseQuery.set(ERROR_INFO, JsonUtil.toJson(errorInfo))
+                baseQuery = baseQuery.set(ERROR_INFO, JsonUtil.toJson(errorInfoList))
             }
             baseQuery.where(BUILD_ID.eq(buildId))
                 .execute()
@@ -413,7 +413,7 @@ class PipelineBuildDao {
                 parentBuildId = t.parentBuildId,
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
-                errorInfo = if(t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo, mutableListOf<ErrorInfo>()::class.java) else null
+                errorInfoList = if(t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo, mutableListOf<ErrorInfo>()::class.java) else null
             )
         }
     }

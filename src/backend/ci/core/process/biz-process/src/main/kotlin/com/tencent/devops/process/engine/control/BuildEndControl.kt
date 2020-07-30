@@ -125,14 +125,14 @@ class BuildEndControl @Autowired constructor(
                 buildNum = buildInfo.buildNum
             ),
             currentBuildStatus = buildInfo.status,
-            errorInfo = buildInfo.errorInfo
+            errorInfoList = buildInfo.errorInfoList
         )
 
         // 设置状态
         pipelineBuildDetailService.buildEnd(
             buildId = buildId,
             buildStatus = buildStatus,
-            errorInfo = buildInfo.errorInfo
+            errorInfos = buildInfo.errorInfoList
         )
 
         // 广播结束事件
@@ -141,7 +141,7 @@ class BuildEndControl @Autowired constructor(
                 source = "build_finish_$buildId", projectId = projectId, pipelineId = pipelineId,
                 userId = userId, buildId = buildId, status = buildStatus.name,
                 startTime = buildInfo.startTime, endTime = buildInfo.endTime, triggerType = buildInfo.trigger,
-                errorInfo = if (buildInfo.errorInfo != null) JsonUtil.toJson(buildInfo.errorInfo!!) else null
+                errorInfoList = if (buildInfo.errorInfoList != null) JsonUtil.toJson(buildInfo.errorInfoList!!) else null
             ),
             PipelineBuildStatusBroadCastEvent(
                 source = source,
@@ -187,7 +187,7 @@ class BuildEndControl @Autowired constructor(
 
             if (it.errorType != null) {
                 val infos = mutableListOf<ErrorInfo>()
-                if (buildInfo.errorInfo != null) infos.addAll(buildInfo.errorInfo!!)
+                if (buildInfo.errorInfoList != null) infos.addAll(buildInfo.errorInfoList!!)
                 infos.add(ErrorInfo(
                     taskId = it.taskId,
                     taskName = it.taskName,
@@ -199,7 +199,7 @@ class BuildEndControl @Autowired constructor(
                 if (JsonUtil.toJson(infos).toByteArray().size > PIPELINE_MESSAGE_STRING_LENGTH_MAX) {
                     infos.removeAt(infos.lastIndex)
                 }
-                buildInfo.errorInfo = infos
+                buildInfo.errorInfoList = infos
             }
         }
     }

@@ -453,7 +453,7 @@ class PipelineBuildDetailService @Autowired constructor(
         buildId: String,
         buildStatus: BuildStatus,
         cancelUser: String? = null,
-        errorInfo: List<ErrorInfo>? = null
+        errorInfos: List<ErrorInfo>? = null
     ) {
         logger.info("Build end $buildId")
 
@@ -482,7 +482,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
             }
 
-            logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|finalStatus=$finalStatus|cancelUser=$cancelUser|errorInfo=$errorInfo")
+            logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|finalStatus=$finalStatus|cancelUser=$cancelUser|errorInfo=$errorInfos")
             try {
                 val model: Model = JsonUtil.to(record.model, Model::class.java)
                 val allStageStatus = mutableListOf<BuildStageStatus>()
@@ -519,8 +519,8 @@ class PipelineBuildDetailService @Autowired constructor(
                         )
                     )
                 }
-                if (errorInfo != null) {
-                    model.errorInfo = errorInfo
+                if (errorInfos != null) {
+                    model.errorInfoList = errorInfos
                 }
                 pipelineBuildDao.updateBuildStageStatus(dslContext, buildId, allStageStatus)
                 buildDetailDao.update(
