@@ -5,7 +5,7 @@
       "operation": "upsert_instance_selection",
       "data": {
         "id": "project_instance",
-        "name": "ÏîÄ¿ÊÓÍ¼",
+        "name": "é¡¹ç›®è§†å›¾",
         "name_en": "project instance selection",
         "resource_type_chain": [
           {"system_id": "bk_ci","id": "project"}
@@ -16,7 +16,7 @@
       "operation": "upsert_instance_selection",
       "data": {
         "id": "pipeline_instance",
-        "name": "Á÷Ë®ÏßÊÓÍ¼",
+        "name": "æµæ°´çº¿è§†å›¾",
         "name_en": "pipeline instance selection",
         "resource_type_chain": [
           {"system_id": "bk_ci","id": "project"},
@@ -28,7 +28,7 @@
       "operation": "upsert_instance_selection",
       "data": {
         "id": "repertory_instance",
-        "name": "´úÂë¿âÊÓÍ¼",
+        "name": "ä»£ç åº“è§†å›¾",
         "name_en": "repository instance selection",
         "resource_type_chain": [
           {"system_id": "bk_ci","id": "project"},
@@ -40,7 +40,7 @@
       "operation": "upsert_instance_selection",
       "data": {
         "id": "environment_instance",
-        "name": "»·¾³ÊÓÍ¼",
+        "name": "ç¯å¢ƒè§†å›¾",
         "name_en": "environment instance selection",
         "resource_type_chain": [
           {"system_id": "bk_ci","id": "project"},
@@ -52,7 +52,7 @@
       "operation": "upsert_instance_selection",
       "data": {
         "id": "node_instance",
-        "name": "»·¾³½ÚµãÊÓÍ¼",
+        "name": "ç¯å¢ƒèŠ‚ç‚¹è§†å›¾",
         "name_en": "node instance selection",
         "resource_type_chain": [
           {"system_id": "bk_ci","id": "project"},
@@ -64,7 +64,7 @@
       "operation": "upsert_instance_selection",
       "data": {
         "id": "cert_instance",
-        "name": "Ö¤ÊéÊÓÍ¼",
+        "name": "è¯ä¹¦è§†å›¾",
         "name_en": "cert instance selection",
         "resource_type_chain": [
           {"system_id": "bk_ci","id": "project"},
@@ -76,7 +76,7 @@
       "operation": "upsert_instance_selection",
       "data": {
         "id": "credential_instance",
-        "name": "Æ¾Ö¤ÊÓÍ¼",
+        "name": "å‡­è¯è§†å›¾",
         "name_en": "credential instance selection",
         "resource_type_chain": [
           {"system_id": "bk_ci","id": "project"},

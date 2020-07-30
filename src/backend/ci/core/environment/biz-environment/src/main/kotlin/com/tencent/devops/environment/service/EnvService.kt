@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_BUILD_2_DEPLOY_DENY
@@ -547,7 +546,7 @@ class EnvService @Autowired constructor(
 
     override fun listEnvironmentByPage(projectId: String, page: Int?, pageSize: Int?): Page<EnvWithPermission> {
         var limit = page ?: 1
-        if(limit <= 0) {
+        if (limit <= 0) {
             limit = 1
         }
         var offset = pageSize ?: 10

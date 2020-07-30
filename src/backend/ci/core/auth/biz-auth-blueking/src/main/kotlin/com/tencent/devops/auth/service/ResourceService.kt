@@ -63,7 +63,7 @@ class ResourceService @Autowired constructor(
     ): ListInstanceResponseDTO? {
         logger.info("getResourceList project[$projectId] method[$method], page[$page],token[$token],actionType[$actionType]")
         checkToken(token)
-        val resourceType = if(actionType.contains("env_node")) {
+        val resourceType = if (actionType.contains("env_node")) {
             AuthResourceType.ENVIRONMENT_ENV_NODE.value
         } else {
             ActionUtils.actionType(actionType)
@@ -187,7 +187,7 @@ class ResourceService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         nodeInfos?.records?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.nodeId
+            entity.id = it.nodeHashId
             entity.displayName = it.name
             entityInfo.add(entity)
         }

@@ -372,7 +372,7 @@ class NodeService @Autowired constructor(
 
     fun listByPage(projectId: String, page: Int?, pageSize: Int?): Page<NodeBaseInfo> {
         var limit = page ?: 1
-        if(limit <= 0) {
+        if (limit <= 0) {
             limit = 1
         }
         var offset = pageSize ?: 10
