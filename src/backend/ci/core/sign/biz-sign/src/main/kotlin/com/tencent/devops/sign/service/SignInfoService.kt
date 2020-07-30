@@ -101,7 +101,7 @@ class SignInfoService(
             jobId = null,
             executeCount = executeCount
         )
-        signHistoryDao.finishZip(dslContext, resignId, resultFileMd5)
+        signHistoryDao.finishZip(dslContext, resignId, signedIpaFile.name, resultFileMd5)
     }
 
     fun finishArchive(resignId: String, info: IpaSignInfo, executeCount: Int) {

@@ -135,6 +135,7 @@ class SignHistoryDao {
     fun finishZip(
         dslContext: DSLContext,
         resignId: String,
+        resultFileName: String,
         resultFileMd5: String
     ) {
         with(TSignHistory.T_SIGN_HISTORY) {
