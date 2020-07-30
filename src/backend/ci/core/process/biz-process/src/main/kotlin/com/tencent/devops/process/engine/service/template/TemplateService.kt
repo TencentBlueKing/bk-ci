@@ -1920,16 +1920,15 @@ class TemplateService @Autowired constructor(
         val elementList = model.stages[0].containers[0].elements
         var isAddRemoteAuth = false
         elementList.map {
-            if(it is RemoteTriggerElement) {
+            if (it is RemoteTriggerElement) {
                 isAddRemoteAuth = true
             }
         }
-        if(isAddRemoteAuth) {
+        if (isAddRemoteAuth) {
             logger.info("template Model has RemoteTriggerElement project[$projectId] pipeline[$pipelineId]")
             pipelineRemoteAuthService.generateAuth(pipelineId, projectId, userId)
         }
     }
-
 
     companion object {
         private val logger = LoggerFactory.getLogger(TemplateService::class.java)
