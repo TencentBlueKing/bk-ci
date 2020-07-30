@@ -79,5 +79,5 @@ data class BuildHistory(
     @ApiModelProperty("推荐版本号", required = false)
     val recommendVersion: String?,
     @ApiModelProperty("流水线任务执行错误", required = false)
-    var errorInfo: MutableList<ErrorInfo>?
+    var errorInfoList: MutableList<ErrorInfo>?
 )

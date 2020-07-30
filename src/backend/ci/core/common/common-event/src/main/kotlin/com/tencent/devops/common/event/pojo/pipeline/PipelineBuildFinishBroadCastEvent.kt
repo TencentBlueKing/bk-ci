@@ -48,5 +48,5 @@ data class PipelineBuildFinishBroadCastEvent(
     val startTime: Long?,
     val endTime: Long?,
     val triggerType: String,
-    var errorInfo: String? = null
+    var errorInfoList: String? = null
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

@@ -633,7 +633,7 @@ class PipelineRuntimeService @Autowired constructor(
                 webHookType = webhookType,
                 startType = getStartType(trigger, webhookType),
                 recommendVersion = recommendVersion,
-                errorInfo = if (errorInfo != null) JsonUtil.getObjectMapper().readValue(errorInfo, mutableListOf<ErrorInfo>()::class.java) else null
+                errorInfoList = if (errorInfo != null) JsonUtil.getObjectMapper().readValue(errorInfo, mutableListOf<ErrorInfo>()::class.java) else null
             )
         }
     }
@@ -1672,7 +1672,7 @@ class PipelineRuntimeService @Autowired constructor(
     fun finishLatestRunningBuild(
         latestRunningBuild: LatestRunningBuild,
         currentBuildStatus: BuildStatus,
-        errorInfo: List<ErrorInfo>?
+        errorInfoList: List<ErrorInfo>?
     ) {
         if (BuildStatus.isReadyToRun(currentBuildStatus)) {
             // 减1,当作没执行过
@@ -1722,7 +1722,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildParameters = JsonUtil.toJson(buildParameters),
                 recommendVersion = recommendVersion,
                 remark = remark,
-                errorInfo = errorInfo
+                errorInfoList = errorInfoList
             )
             webSocketDispatcher.dispatch(
                 pipelineWebsocketService.buildHistoryMessage(
