@@ -107,7 +107,7 @@ class PipelineBuildService @Autowired constructor(
             deptName = projectInfo.deptName,
             centerName = projectInfo.centerName,
             model = model,
-            errorInfos = event.errorInfo
+            errorInfoList = event.errorInfoList
         )
         esService.build(data)
     }
@@ -362,7 +362,7 @@ class PipelineBuildService @Autowired constructor(
                 parentBuildId = t.parentBuildId,
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
-                errorInfo = if(t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo, mutableListOf<ErrorInfo>()::class.java) else null
+                errorInfoList = if(t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo, mutableListOf<ErrorInfo>()::class.java) else null
             )
         }
     }

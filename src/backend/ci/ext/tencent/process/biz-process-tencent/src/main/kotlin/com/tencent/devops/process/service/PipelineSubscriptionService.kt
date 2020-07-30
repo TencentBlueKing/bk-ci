@@ -159,7 +159,7 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
         projectId: String,
         startTime: Long,
         buildStatus: BuildStatus,
-        errorInfo: String?
+        errorInfoList: String?
     ) {
         logger.info("onPipelineShutdown pipeline:$pipelineId")
         val endTime = System.currentTimeMillis()
@@ -221,7 +221,7 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
             buildStatus = buildStatus,
             buildNum = buildNum,
             model = model,
-            errorInfo = errorInfo
+            errorInfoList = errorInfoList
         )
 
         logger.info("onPipelineShutdown pipelineNameReal:$pipelineName")

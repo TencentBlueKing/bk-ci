@@ -189,7 +189,7 @@ class ESService @Autowired constructor(
             deptName = source["deptName"]?.toString() ?: "",
             centerName = source["centerName"]?.toString() ?: "",
             model = source["model"]?.toString() ?: "",
-            errorInfos = source["errorInfo"]?.toString() ?: ""
+            errorInfoList = source["errorInfo"]?.toString() ?: ""
         )
     }
 

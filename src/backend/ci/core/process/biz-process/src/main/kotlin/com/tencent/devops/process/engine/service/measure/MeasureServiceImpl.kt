@@ -67,7 +67,7 @@ class MeasureServiceImpl constructor(
         buildStatus: BuildStatus,
         buildNum: Int,
         model: Model?,
-        errorInfo: String?
+        errorInfoList: String?
     ) {
         try {
             if (model == null) {
@@ -97,7 +97,7 @@ class MeasureServiceImpl constructor(
                 pipeline = json,
                 buildNum = buildNum,
                 metaInfo = metaInfo,
-                errorInfo = errorInfo
+                errorInfoList = errorInfoList
             )
 
             val requestBody = objectMapper.writeValueAsString(data)

@@ -40,5 +40,5 @@ data class BuildData(
     val deptName: String,
     val centerName: String,
     val model: String,
-    val errorInfos: String? = null
+    val errorInfoList: String? = null
 )

@@ -41,7 +41,7 @@ interface MeasureService {
         buildStatus: BuildStatus,
         buildNum: Int,
         model: Model?,
-        errorInfo: String?
+        errorInfoList: String?
     )
 
     fun postCancelData(projectId: String, pipelineId: String, buildId: String, userId: String)

@@ -60,5 +60,5 @@ data class PipelineBuildData(
     @ApiModelProperty("元数据")
     val metaInfo: Map<String, Any>,
     @ApiModelProperty("流水线错误信息集合", required = false)
-    var errorInfo: String? = null
+    var errorInfoList: String? = null
 )
