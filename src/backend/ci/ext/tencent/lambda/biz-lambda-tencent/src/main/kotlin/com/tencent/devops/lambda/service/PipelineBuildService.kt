@@ -25,6 +25,7 @@
  */
 package com.tencent.devops.lambda.service
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -362,7 +363,7 @@ class PipelineBuildService @Autowired constructor(
                 parentBuildId = t.parentBuildId,
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
-                errorInfoList = if(t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo, mutableListOf<ErrorInfo>()::class.java) else null
+                errorInfoList = if(t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo) as List<ErrorInfo> else null
             )
         }
     }
