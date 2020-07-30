@@ -33,9 +33,9 @@ class BsArchiveServiceImpl @Autowired constructor(
     ): Boolean {
         val isRepoGray = repoGray.isGray(ipaSignInfo.projectId, redisOperation)
         val path = if (ipaSignInfo.archiveType.toLowerCase() == "pipeline") {
-            "${ipaSignInfo.pipelineId}/${ipaSignInfo.buildId}/${signedIpaFile.fileName}"
+            "${ipaSignInfo.pipelineId}/${ipaSignInfo.buildId}/${signedIpaFile.name}"
         } else {
-            "${ipaSignInfo.archivePath}/${signedIpaFile.fileName}"
+            "${ipaSignInfo.archivePath}/${signedIpaFile.name}"
         }
         if (isRepoGray) {
             bkRepoClient.uploadLocalFile(
