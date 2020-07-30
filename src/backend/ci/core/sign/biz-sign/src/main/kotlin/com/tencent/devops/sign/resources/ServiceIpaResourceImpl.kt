@@ -26,25 +26,21 @@
 
 package com.tencent.devops.sign.resources
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.sign.api.constant.SignMessageCode
-import com.tencent.devops.sign.api.pojo.IpaSignInfo
-import com.tencent.devops.sign.api.pojo.SignResult
 import com.tencent.devops.sign.api.service.ServiceIpaResource
-import com.tencent.devops.sign.api.user.UserIpaResource
-import com.tencent.devops.sign.service.*
-import io.swagger.annotations.ApiParam
-import org.jolokia.util.Base64Util
+import com.tencent.devops.sign.service.DownloadService
+import com.tencent.devops.sign.service.SignService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.ResponseBody
+import org.springframework.web.context.request.async.WebAsyncTask
 import java.io.InputStream
-import java.net.URLEncoder
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.HeaderParam
+import java.util.concurrent.Callable
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.GET
+
 
 @RestResource
 class ServiceIpaResourceImpl @Autowired constructor(
@@ -59,7 +55,7 @@ class ServiceIpaResourceImpl @Autowired constructor(
         return Result(signService.signIpaAndArchive(ipaSignInfoHeader, ipaInputStream))
     }
 
-    override fun getSignResult(resignId: String): Result<SignResult> {
+    override fun getSignResult(resignId: String): Result<Boolean> {
         return Result(signService.getSignResult(resignId))
     }
 

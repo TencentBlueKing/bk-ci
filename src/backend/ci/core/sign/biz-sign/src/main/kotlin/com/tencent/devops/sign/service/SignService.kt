@@ -31,7 +31,7 @@ interface SignService {
     /*
     * 查询某次签名任务是否完成
     * */
-    fun getSignResult(resignId: String): SignResult
+    fun getSignResult(resignId: String): Boolean
 
     /*
     * 下载描述文件
