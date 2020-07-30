@@ -7,7 +7,6 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.RestController
 
 @RestResource
 class ServiceAuthResourceImpl @Autowired constructor(
