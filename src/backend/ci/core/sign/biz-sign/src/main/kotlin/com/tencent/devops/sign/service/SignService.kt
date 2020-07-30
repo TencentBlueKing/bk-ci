@@ -43,6 +43,15 @@ interface SignService {
     ): Map<String, MobileProvisionInfo>
 
     /*
+    * 下载描述文件
+    * 返回描述文件所在目录
+    * */
+    fun downloadWildcardMobileProvision(
+            mobileProvisionDir: File,
+            ipaSignInfo: IpaSignInfo
+    ): MobileProvisionInfo?
+
+    /*
     * 通用逻辑-解析描述文件的内容
     * */
     fun parseMobileProvision(mobileProvisionFile: File): MobileProvisionInfo
@@ -65,6 +74,6 @@ interface SignService {
     fun resignIpaPackageWildcard(
         unzipDir: File,
         ipaSignInfo: IpaSignInfo,
-        wildcardInfo: MobileProvisionInfo
+        wildcardInfo: MobileProvisionInfo?
     ): Boolean
 }

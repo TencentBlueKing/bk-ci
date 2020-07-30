@@ -35,23 +35,26 @@ import java.util.regex.Pattern
 
 @Service
 class SignServiceImpl @Autowired constructor(
-    private val fileService: FileService,
-    private val signInfoService: SignInfoService,
-    private val archiveService: ArchiveService,
-    private val objectMapper: ObjectMapper,
-    private val mobileProvisionService: MobileProvisionService
+        private val fileService: FileService,
+        private val signInfoService: SignInfoService,
+        private val archiveService: ArchiveService,
+        private val objectMapper: ObjectMapper,
+        private val mobileProvisionService: MobileProvisionService
 ) : SignService {
 
     @Value("\${bkci.sign.tmpDir:/data/enterprise_sign_tmp/}")
     private val tmpDir = "/data/enterprise_sign_tmp/"
+
+    @Value("\${bkci.sign.wildcardMobileProvisionId:}")
+    private val wildcardMobileProvisionId = ""
 
     private lateinit var ipaFile: File
     private lateinit var ipaUnzipDir: File
     private lateinit var mobileProvisionDir: File
 
     override fun signIpaAndArchive(
-        ipaSignInfoHeader: String,
-        ipaInputStream: InputStream
+            ipaSignInfoHeader: String,
+            ipaInputStream: InputStream
     ): String {
         val resignId = "s-${UUIDUtil.generate()}"
         var ipaSignInfo = signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper)
@@ -78,18 +81,12 @@ class SignServiceImpl @Autowired constructor(
         // 解析Info.plist
         val ipaInfoPlist = parsInfoPlist(findInfoPlist(ipaUnzipDir))
 
-        // TODO 下载并返回描述文件信息（区分通配）
+        // 下载描述文件
+        val wildcardMobileProvisionInfo = downloadWildcardMobileProvision(mobileProvisionDir, ipaSignInfo)
         val mobileProvisionInfoMap = downloadMobileProvision(mobileProvisionDir, ipaSignInfo)
-        val wildcardInfo = MobileProvisionInfo(
-            mobileProvisionFile = File(""),
-            plistFile = File(""),
-            entitlementFile = File(""),
-            bundleId = ""
-        )
-
         // 签名操作
         val signFinished = if (ipaSignInfo.wildcard) {
-            resignIpaPackageWildcard(ipaUnzipDir, ipaSignInfo, wildcardInfo)
+            resignIpaPackageWildcard(ipaUnzipDir, ipaSignInfo, wildcardMobileProvisionInfo)
         } else {
             resignIpaPackage(ipaUnzipDir, ipaSignInfo, mobileProvisionInfoMap)
         }
@@ -128,9 +125,9 @@ class SignServiceImpl @Autowired constructor(
         val mobileProvisionMap = mutableMapOf<String, MobileProvisionInfo>()
         if (ipaSignInfo.mobileProvisionId != null) {
             val mpFile = mobileProvisionService.downloadMobileProvision(
-                mobileProvisionDir = mobileProvisionDir,
-                projectId = ipaSignInfo.projectId,
-                mobileProvisionId = ipaSignInfo.mobileProvisionId!!
+                    mobileProvisionDir = mobileProvisionDir,
+                    projectId = ipaSignInfo.projectId,
+                    mobileProvisionId = ipaSignInfo.mobileProvisionId!!
             )
             mobileProvisionMap[MAIN_APP_FILENAME] = parseMobileProvision(mpFile)
         }
@@ -143,6 +140,18 @@ class SignServiceImpl @Autowired constructor(
             mobileProvisionMap[it.appexName] = parseMobileProvision(mpFile)
         }
         return mobileProvisionMap
+    }
+
+    override fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): MobileProvisionInfo? {
+        if (wildcardMobileProvisionId.isNullOrBlank()) {
+            return null
+        }
+        val mpFile = mobileProvisionService.downloadMobileProvision(
+                mobileProvisionDir = mobileProvisionDir,
+                projectId = ipaSignInfo.projectId,
+                mobileProvisionId = wildcardMobileProvisionId
+        )
+        return parseMobileProvision(mpFile)
     }
 
     /*
@@ -171,11 +180,13 @@ class SignServiceImpl @Autowired constructor(
         if (!entitlementDict.containsKey("application-identifier")) throw RuntimeException("no Entitlements.application-identifier find in plist")
         val bundleIdString = (entitlementDict.objectForKey("application-identifier") as NSString).toString()
         val bundleId = bundleIdString.substring(bundleIdString.indexOf(".") + 1)
+        // 统一处理entitlement文件
+        mobileProvisionService.handleEntitlement(entitlementFile)
         return MobileProvisionInfo(
-            mobileProvisionFile = mobileProvisionFile,
-            plistFile = plistFile,
-            entitlementFile = entitlementFile,
-            bundleId = bundleId
+                mobileProvisionFile = mobileProvisionFile,
+                plistFile = plistFile,
+                entitlementFile = entitlementFile,
+                bundleId = bundleId
         )
     }
 
@@ -185,17 +196,17 @@ class SignServiceImpl @Autowired constructor(
     * */
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     override fun resignIpaPackage(
-        unzipDir: File,
-        ipaSignInfo: IpaSignInfo,
-        mobileProvisionInfoList: Map<String, MobileProvisionInfo>
+            unzipDir: File,
+            ipaSignInfo: IpaSignInfo,
+            mobileProvisionInfoList: Map<String, MobileProvisionInfo>
     ): Boolean {
         val payloadDir = File(unzipDir.absolutePath + File.separator + "Payload")
         val appDirs = payloadDir.listFiles { dir, name ->
             dir.extension == "app" || name.endsWith("app")
         }.toList()
         if (appDirs.isEmpty()) throw ErrorCodeException(
-            errorCode = SignMessageCode.ERROR_SIGN_IPA_ILLEGAL,
-            defaultMessage = "IPA包解析失败"
+                errorCode = SignMessageCode.ERROR_SIGN_IPA_ILLEGAL,
+                defaultMessage = "IPA包解析失败"
         )
         val appDir = appDirs.first()
 
@@ -206,20 +217,20 @@ class SignServiceImpl @Autowired constructor(
             if (!mobileProvisionInfoList.keys.contains(app.nameWithoutExtension)) {
                 logger.error("Not found appex <${app.name}> MobileProvisionInfo")
                 throw ErrorCodeException(
-                    errorCode = SignMessageCode.ERROR_SIGN_INFO_ILLEGAL,
-                    defaultMessage = "缺少${app.name}签名信息，请检查参数"
+                        errorCode = SignMessageCode.ERROR_SIGN_INFO_ILLEGAL,
+                        defaultMessage = "缺少${app.name}签名信息，请检查参数"
                 )
             }
         }
 
         logger.info("Start to resign ${appDir.name} with $mobileProvisionInfoList")
         return SignUtils.resignApp(
-            appDir = appDir,
-            certId = ipaSignInfo.certId,
-            infos = mobileProvisionInfoList,
-            appName = MAIN_APP_FILENAME,
-            universalLinks = ipaSignInfo.universalLinks,
-            applicationGroups = ipaSignInfo.applicationGroups
+                appDir = appDir,
+                certId = ipaSignInfo.certId,
+                infos = mobileProvisionInfoList,
+                appName = MAIN_APP_FILENAME,
+                universalLinks = ipaSignInfo.universalLinks,
+                applicationGroups = ipaSignInfo.applicationGroups
         )
     }
 
@@ -229,24 +240,30 @@ class SignServiceImpl @Autowired constructor(
     * */
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     override fun resignIpaPackageWildcard(
-        unzipDir: File,
-        ipaSignInfo: IpaSignInfo,
-        wildcardInfo: MobileProvisionInfo
+            unzipDir: File,
+            ipaSignInfo: IpaSignInfo,
+            wildcardInfo: MobileProvisionInfo?
     ): Boolean {
+        if(wildcardInfo == null) {
+            throw ErrorCodeException(
+                    errorCode = SignMessageCode.ERROR_WILDCARD_MP_NOT_EXIST,
+                    defaultMessage = "通配符描述文件不存在"
+            )
+        }
         val payloadDir = File(unzipDir.absolutePath + File.separator + "Payload")
         val appDirs = payloadDir.listFiles { dir, name ->
             dir.extension == "app" || name.endsWith("app")
         }.toList()
         if (appDirs.isEmpty()) throw ErrorCodeException(
-            errorCode = SignMessageCode.ERROR_SIGN_IPA_ILLEGAL,
-            defaultMessage = "IPA包解析失败"
+                errorCode = SignMessageCode.ERROR_SIGN_IPA_ILLEGAL,
+                defaultMessage = "IPA包解析失败"
         )
         val appDir = appDirs.first()
 
         return SignUtils.resignAppWildcard(
-            appDir = appDir,
-            certId = ipaSignInfo.certId,
-            wildcardInfo = wildcardInfo
+                appDir = appDir,
+                certId = ipaSignInfo.certId,
+                wildcardInfo = wildcardInfo
         )
     }
 
@@ -257,21 +274,21 @@ class SignServiceImpl @Autowired constructor(
             unzipDir: File
     ): File {
         try {
-            val payloadFile = File(unzipDir,"payload")
-            if(payloadFile.exists() && payloadFile.isDirectory) {
+            val payloadFile = File(unzipDir, "payload")
+            if (payloadFile.exists() && payloadFile.isDirectory) {
                 val appPattern = Pattern.compile(".+\\.app")
                 payloadFile.listFiles().forEach {
-                    if(appPattern.matcher(it.name).matches()) {
-                        val infoPlistFile = File(it,"Info.plist")
-                        if(it.exists() && it.isDirectory && infoPlistFile.exists() && infoPlistFile.isFile) {
+                    if (appPattern.matcher(it.name).matches()) {
+                        val infoPlistFile = File(it, "Info.plist")
+                        if (it.exists() && it.isDirectory && infoPlistFile.exists() && infoPlistFile.isFile) {
                             return infoPlistFile
-                        }else {
+                        } else {
                             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "寻找Info.plist失败")
                         }
                     }
                 }
                 throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "寻找Info.plist失败")
-            }else {
+            } else {
                 throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "寻找Info.plist失败")
             }
         } catch (e: Exception) {
@@ -305,10 +322,10 @@ class SignServiceImpl @Autowired constructor(
             parameters = rootDict.objectForKey("CFBundleVersion") as NSString
             val bundleVersionFull = parameters.toString()
             return IpaInfoPlist(
-                bundleIdentifier = bundleIdentifier,
-                appTitle = appTitle,
-                bundleVersion = bundleVersion,
-                bundleVersionFull = bundleVersionFull
+                    bundleIdentifier = bundleIdentifier,
+                    appTitle = appTitle,
+                    bundleVersion = bundleVersion,
+                    bundleVersionFull = bundleVersionFull
             )
         } catch (e: Exception) {
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_PARS_INFO_PLIST, defaultMessage = "解析Info.plist失败")

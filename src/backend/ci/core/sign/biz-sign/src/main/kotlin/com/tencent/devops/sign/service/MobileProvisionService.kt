@@ -11,4 +11,8 @@ interface MobileProvisionService {
         projectId: String,
         mobileProvisionId: String
     ): File
+
+    fun handleEntitlement(
+            entitlementFile: File
+    )
 }

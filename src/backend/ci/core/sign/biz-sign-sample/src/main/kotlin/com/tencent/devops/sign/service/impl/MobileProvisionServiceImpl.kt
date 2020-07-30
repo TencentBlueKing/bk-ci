@@ -37,4 +37,8 @@ class MobileProvisionServiceImpl  @Autowired constructor(
         return mobileProvisionFile
     }
 
+    override fun handleEntitlement(entitlementFile: File) {
+
+    }
+
 }
