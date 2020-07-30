@@ -141,6 +141,7 @@ class SignHistoryDao {
         with(TSignHistory.T_SIGN_HISTORY) {
             dslContext.update(this)
                 .set(ZIP_FINISH_TIME, LocalDateTime.now())
+                .set(RESULT_FILE_NAME, resultFileName)
                 .set(RESULT_FILE_MD5, resultFileMd5)
                 .where(RESIGN_ID.eq(resignId))
                 .execute()

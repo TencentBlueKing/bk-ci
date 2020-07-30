@@ -42,11 +42,9 @@ class ArchiveServiceImpl @Autowired constructor(
         val url =
                 "${commonConfig.devopsDevnetProxyGateway}/ms/artifactory/api/service/artifactories/file/archive?fileType=$artifactoryType&customFilePath=${ipaSignInfo.archivePath}"
         val fileBody = RequestBody.create(MediaType.parse("multipart/form-data"), signedIpaFile)
-        val fileName = signedIpaFile.name
-        val uploadFileName = fileName.substring(0,fileName.lastIndex(".")) + "_enterprise_sign.ipa"
         val requestBody = MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("file", uploadFileName, fileBody)
+                .addFormDataPart("file", signedIpaFile.name, fileBody)
                 .build()
         val headers = mutableMapOf<String, String>()
         headers[AUTH_HEADER_DEVOPS_PROJECT_ID] = ipaSignInfo.projectId
