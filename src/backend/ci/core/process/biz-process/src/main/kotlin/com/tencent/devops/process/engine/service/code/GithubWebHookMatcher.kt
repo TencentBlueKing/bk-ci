@@ -202,4 +202,11 @@ class GithubWebHookMatcher(val event: GithubEvent) : ScmWebhookMatcher {
     }
 
     override fun getMergeRequestId() = null
+
+    override fun getMessage(): String? {
+        return when (event) {
+            is GithubPushEvent -> event.head_commit.message
+            else -> ""
+        }
+    }
 }
