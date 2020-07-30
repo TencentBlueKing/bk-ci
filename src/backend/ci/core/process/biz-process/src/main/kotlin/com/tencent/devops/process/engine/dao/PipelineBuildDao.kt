@@ -413,7 +413,7 @@ class PipelineBuildDao {
                 parentBuildId = t.parentBuildId,
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
-                errorInfoList = if(t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo, mutableListOf<ErrorInfo>()::class.java) else null
+                errorInfoList = if(t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo, listOf<ErrorInfo>()::class.java) else null
             )
         }
     }

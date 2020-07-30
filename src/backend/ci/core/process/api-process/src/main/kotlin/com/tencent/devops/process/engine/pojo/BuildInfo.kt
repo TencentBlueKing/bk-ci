@@ -48,7 +48,7 @@ data class BuildInfo(
     val parentBuildId: String?,
     val parentTaskId: String?,
     val channelCode: ChannelCode,
-    var errorInfoList: MutableList<ErrorInfo>?
+    var errorInfoList: List<ErrorInfo>?
 ) {
 
     fun isFinish() = when {
