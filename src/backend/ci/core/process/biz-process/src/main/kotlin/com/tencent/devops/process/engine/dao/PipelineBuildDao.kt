@@ -290,7 +290,7 @@ class PipelineBuildDao {
             if (!remark.isNullOrBlank()) {
                 baseQuery = baseQuery.set(REMARK, remark)
             }
-            if (errorInfo != null) {
+            if (errorInfoList != null) {
                 baseQuery = baseQuery.set(ERROR_INFO, JsonUtil.toJson(errorInfoList))
             }
             baseQuery.where(BUILD_ID.eq(buildId))

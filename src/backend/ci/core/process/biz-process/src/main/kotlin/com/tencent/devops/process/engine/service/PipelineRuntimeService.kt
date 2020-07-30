@@ -1538,7 +1538,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildParameters = JsonUtil.toJson(buildParameters),
                 recommendVersion = recommendVersion,
                 remark = remark,
-                errorInfo = errorInfos
+                errorInfoList = errorInfoList
             )
             webSocketDispatcher.dispatch(
                 pipelineWebsocketService.buildHistoryMessage(
