@@ -20,7 +20,7 @@ class RemoteAuthService @Autowired constructor(
     fun checkToken(token: String): Boolean {
         val pair = StringUtils.decodeAuth(token)
         if (pair.first != iamClientName) {
-            logger.warn("iam tokenCheck: userName error ${pair.first} , value[$iamClientName]")
+            logger.warn("iam tokenCheck: userName error ${pair.first}")
             return false
         }
         val redisToken = redisOperation.get(TOKEN_REDIS_KEY)
