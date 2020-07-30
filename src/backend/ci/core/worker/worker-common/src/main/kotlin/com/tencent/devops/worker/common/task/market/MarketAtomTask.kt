@@ -413,7 +413,7 @@ open class MarketAtomTask : ITask() {
         // 添加插件监控数据
         val monitorData = atomResult?.monitorData
         if (monitorData != null) {
-            addMonitorData(atomResult.monitorData)
+            addMonitorData(monitorData)
         }
         deletePluginFile(atomTmpSpace)
         val success: Boolean
