@@ -120,15 +120,9 @@ class SignInfoService(
         )
     }
 
-    fun getSignResult(resignId: String): SignResult {
+    fun getSignResult(resignId: String): Boolean {
         val record = signHistoryDao.getSignHistory(dslContext, resignId)
-        return if (record?.archiveFinishTime != null) SignResult(
-            resignId = record.resignId,
-            finished = true
-        ) else SignResult(
-            resignId = resignId,
-            finished = false
-        )
+        return record?.archiveFinishTime != null
     }
 
     /*

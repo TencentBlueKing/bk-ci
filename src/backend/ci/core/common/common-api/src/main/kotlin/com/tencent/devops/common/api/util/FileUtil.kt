@@ -31,7 +31,13 @@ import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
-import java.io.*
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.BufferedInputStream
+import java.io.IOException
+import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.MessageDigest
@@ -204,8 +210,8 @@ object FileUtil {
      * @return 文件MD5值
      */
     fun copyAndGetMD5(
-            inputStream: InputStream,
-            target: File
+        inputStream: InputStream,
+        target: File
     ): String? {
         var outputStream: OutputStream? = null
         try {
@@ -240,7 +246,7 @@ object FileUtil {
         return if (!dir.exists()) {
             dir.mkdirs()
             true
-        }else {
+        } else {
             dir.deleteRecursively()
             dir.mkdirs()
             true

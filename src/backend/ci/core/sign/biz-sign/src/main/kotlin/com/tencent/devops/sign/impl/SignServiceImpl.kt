@@ -30,7 +30,9 @@ import java.io.InputStream
 import com.tencent.devops.sign.utils.SignUtils
 import com.tencent.devops.sign.utils.SignUtils.MAIN_APP_FILENAME
 import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.scheduling.annotation.Async
 import java.lang.RuntimeException
+import java.util.concurrent.Executors
 import java.util.regex.Pattern
 
 @Service
@@ -117,7 +119,7 @@ class SignServiceImpl @Autowired constructor(
         return resignId
     }
 
-    override fun getSignResult(resignId: String): SignResult {
+    override fun getSignResult(resignId: String): Boolean {
         return signInfoService.getSignResult(resignId)
     }
 
@@ -354,5 +356,6 @@ class SignServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(SignServiceImpl::class.java)
+        private val executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
     }
 }

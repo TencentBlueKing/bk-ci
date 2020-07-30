@@ -2,7 +2,6 @@ package com.tencent.devops.sign.api.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
 
 @ApiModel("签名状态查询结果")
 data class SignResult(

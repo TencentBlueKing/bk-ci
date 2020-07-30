@@ -1,7 +1,5 @@
 package com.tencent.devops.sign.api.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 import java.io.File
 
 data class MobileProvisionInfo(

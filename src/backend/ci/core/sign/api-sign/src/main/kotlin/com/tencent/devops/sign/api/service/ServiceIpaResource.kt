@@ -27,20 +27,13 @@
 package com.tencent.devops.sign.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.sign.api.pojo.IpaSignInfo
-import com.tencent.devops.sign.api.pojo.SignResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
-import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Context
 
 @Api(tags = ["SERVICE_IPA"], description = "服务接口-IPA包")
 @Path("/service/ipa")
@@ -53,11 +46,11 @@ interface ServiceIpaResource {
     @Path("/sign")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun ipaSign(
-            @ApiParam("ipaSignInfoHeader", required = false)
-            @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
-            ipaSignInfoHeader: String,
-            @ApiParam("ipa包文件", required = true)
-            ipaInputStream: InputStream
+        @ApiParam("ipaSignInfoHeader", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
+        ipaSignInfoHeader: String,
+        @ApiParam("ipa包文件", required = true)
+        ipaInputStream: InputStream
     ): Result<String>
 
     @ApiOperation("ipa包签名状态")
@@ -68,14 +61,14 @@ interface ServiceIpaResource {
         @ApiParam("签名任务ID", required = true)
         @PathParam("resignId")
         resignId: String
-    ): Result<SignResult>
+    ): Result<Boolean>
 
     @ApiOperation("获取签名后IPA的下载地址")
     @GET
     @Path("/sign/{resignId}/downloadUrl/")
     fun downloadUrl(
-            @ApiParam("签名任务ID", required = true)
-            @PathParam("resignId")
-            resignId: String
+        @ApiParam("签名任务ID", required = true)
+        @PathParam("resignId")
+        resignId: String
     ): Result<String>
 }
