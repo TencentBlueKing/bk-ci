@@ -103,18 +103,7 @@ class WebsocketService @Autowired constructor(
                 RedisUtlis.cleanPageSessionBySessionId(redisOperation, oldPage, sessionId)
             }
             RedisUtlis.refreshPageSession(redisOperation, sessionId, normalPage)
-            logger.info(
-                "userSession[user:$userId,sessionId:${RedisUtlis.getSessionIdByUserId(
-                    redisOperation,
-                    userId
-                )}}]"
-            )
-            logger.info(
-                "pageSession[page:$newPage,sessionId:${RedisUtlis.getSessionListFormPageSessionByPage(
-                    redisOperation,
-                    normalPage
-                )}]"
-            )
+
             logger.info("sessionPage[session:$sessionId,page:$normalPage]")
             if (needTransfer && transferData!!.isNotEmpty()) {
                 transferDispatch.dispatch(
@@ -176,11 +165,9 @@ class WebsocketService @Autowired constructor(
         try {
             redisLock.lock()
             logger.info("clearUserSession:user:$userId,sessionId:$sessionId")
-            logger.info("before clearUserSession:${RedisUtlis.getSessionIdByUserId(redisOperation, userId)}")
             RedisUtlis.deleteSigelSessionByUser(redisOperation, userId, sessionId)
 //            RedisUtlis.cleanSessionTimeOutBySession(redisOperation, sessionId)
             removeCacheSession(sessionId)
-            logger.info("after clearUserSession:${RedisUtlis.getSessionIdByUserId(redisOperation, userId)}")
             if (needTransfer && transferData!!.isNotEmpty()) {
                 transferDispatch.dispatch(
                     ClearUserSessionTransferEvent(
