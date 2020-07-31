@@ -52,6 +52,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.RestResource
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.BadRequestException
 
@@ -219,6 +220,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         pageSize: Int?,
         searchProps: List<Property>
     ): Result<FileInfoPage<FileInfo>> {
+        logger.info("searchFileAndPropertyByOr, projectId: $projectId, page: $page, pageSize: $pageSize, searchProps: $searchProps")
         checkParam(projectId)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
@@ -233,13 +235,8 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
 
     override fun createDockerUser(projectId: String): Result<DockerUser> {
         checkParam(projectId)
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            val result = artifactoryService.createDockerUser(projectId) // todo: bkrepo 不支持 docker
-            Result(DockerUser(result.user, result.password))
-        } else {
-            val result = artifactoryService.createDockerUser(projectId)
-            Result(DockerUser(result.user, result.password))
-        }
+        val result = artifactoryService.createDockerUser(projectId)
+        return Result(DockerUser(result.user, result.password))
     }
 
     override fun setProperties(
@@ -254,12 +251,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         if (tag.isBlank()) {
             throw ParamBlankException("Invalid path")
         }
-
-        if (repoGray.isGray(projectId, redisOperation)) {
-            artifactoryService.setDockerProperties(projectId, imageName, tag, properties) // todo: bkrepo 不支持 docker
-        } else {
-            artifactoryService.setDockerProperties(projectId, imageName, tag, properties)
-        }
+        artifactoryService.setDockerProperties(projectId, imageName, tag, properties)
         return Result(true)
     }
 
@@ -362,5 +354,9 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
                 records = result.second
             )
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ServiceArtifactoryResourceImpl::class.java)
     }
 }

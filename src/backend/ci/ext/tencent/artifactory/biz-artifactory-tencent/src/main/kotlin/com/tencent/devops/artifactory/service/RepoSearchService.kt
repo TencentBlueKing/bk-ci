@@ -48,7 +48,8 @@ interface RepoSearchService {
     fun serviceSearchFileAndProperty(
         projectId: String,
         searchProps: List<Property>,
-        customized: Boolean? = null
+        customized: Boolean? = null,
+        generateShortUrl: Boolean = false
     ): Pair<Long, List<FileInfo>>
 
     fun serviceSearchFileAndPropertyByOr(
