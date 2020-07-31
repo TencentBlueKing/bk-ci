@@ -184,12 +184,12 @@ class WebsocketService @Autowired constructor(
         }
     }
 
-    fun clearSession(userId: String, sessionId: String): Result<Boolean> {
+    fun clearAllBySession(userId: String, sessionId: String): Result<Boolean> {
         logger.info("clearSession| $userId| $sessionId")
         val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
         clearUserSession(userId, sessionId, null)
         if (page != null) {
-            logger.info("$userId| $sessionId| ws loginOut fail, page[$page], refresh by interface")
+            logger.info("$userId| $sessionId|$page clear when disconnection")
             loginOut(userId, sessionId, page)
         }
         if (!isCacheSession(sessionId)) {
@@ -213,10 +213,12 @@ class WebsocketService @Autowired constructor(
         cacheSessionList.add(sessionId)
     }
 
+    // 清楚实例内部缓存的session
     fun removeCacheSession(sessionId: String) {
         cacheSessionList.remove(sessionId)
     }
 
+    // 判断获取到的session是否由该实例持有,只有持有了该实例才能做push动作
     fun isCacheSession(sessionId: String): Boolean {
         if (cacheSessionList.contains(sessionId)) {
             logger.debug("sessionId[$sessionId] is in this host")

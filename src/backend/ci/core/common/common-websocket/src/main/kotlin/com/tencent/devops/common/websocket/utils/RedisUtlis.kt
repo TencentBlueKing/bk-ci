@@ -177,6 +177,7 @@ object RedisUtlis {
         redisOperation.delete(USER_SESSION_REDIS_KEY + userId)
     }
 
+    // 清除USER-SESSION 映射内的sessionId
     fun deleteSigelSessionByUser(redisOperation: RedisOperation, userId: String, sessionId: String) {
         val sessionList = redisOperation.get(USER_SESSION_REDIS_KEY + userId)
         if (!sessionList.isNullOrBlank()) {

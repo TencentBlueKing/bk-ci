@@ -20,19 +20,19 @@ class SessionHandler @Autowired constructor(
     // 链接关闭记录去除session
     override fun afterConnectionClosed(session: WebSocketSession?, closeStatus: CloseStatus?) {
         val uri = session?.uri
+        if(closeStatus != CloseStatus.NORMAL) {
+            logger.warn("websocket close not normal, Status[$closeStatus] uri[${session?.uri}] remoteIp[${session?.remoteAddress}]")
+        }
         val sessionId = uri?.query?.substringAfter("sessionId=")
         if (sessionId.isNullOrEmpty()) {
             logger.warn("connection closed can not find sessionId, $uri| ${session?.remoteAddress}")
             super.afterConnectionClosed(session, closeStatus)
         }
         val remoteId = session?.remoteAddress
-        logger.info("connection closed success: |$sessionId| $uri | $remoteId ")
         val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId!!)
         val userId = RedisUtlis.getUserBySession(redisOperation, sessionId)
-        logger.info("connection closed user[$userId] page[$page], session[$sessionId] clear")
-        websocketService.clearSession(userId!!, sessionId)
-        websocketService.removeCacheSession(sessionId)
-        websocketService.loginOut(userId, sessionId, page)
+        logger.info("connection closed closeStatus[${closeStatus}] user[$userId] page[$page], session[$sessionId]")
+        websocketService.clearAllBySession(userId!!, sessionId)
 
         super.afterConnectionClosed(session, closeStatus)
     }
