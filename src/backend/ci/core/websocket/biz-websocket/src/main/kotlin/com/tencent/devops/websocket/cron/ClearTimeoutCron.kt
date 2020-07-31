@@ -50,7 +50,7 @@ class ClearTimeoutCron(
     /**
      * 每分钟一次，计算session是否已经超时，若超时，剔除该session关联的所有websocket redis信息。
      */
-    @Scheduled(cron = "0 */10 * * * ?")
+    @Scheduled(cron = "0 */30 * * * ?")
     fun newClearTimeoutCache() {
         longSessionLog()
         clearTimeoutSession()
@@ -114,5 +114,6 @@ class ClearTimeoutCron(
                 }
             }
         }
+        logger.info("websocket cron cost ${System.currentTimeMillis()-nowTime} ms")
     }
 }

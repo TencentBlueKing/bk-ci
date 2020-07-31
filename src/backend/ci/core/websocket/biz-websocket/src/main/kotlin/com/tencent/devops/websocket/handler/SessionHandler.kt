@@ -20,7 +20,7 @@ class SessionHandler @Autowired constructor(
     // 链接关闭记录去除session
     override fun afterConnectionClosed(session: WebSocketSession?, closeStatus: CloseStatus?) {
         val uri = session?.uri
-        if(closeStatus != CloseStatus.NORMAL) {
+        if(closeStatus != CloseStatus.NORMAL && closeStatus != CloseStatus.PROTOCOL_ERROR) {
             logger.warn("websocket close not normal, Status[$closeStatus] uri[${session?.uri}] remoteIp[${session?.remoteAddress}]")
         }
         val sessionId = uri?.query?.substringAfter("sessionId=")

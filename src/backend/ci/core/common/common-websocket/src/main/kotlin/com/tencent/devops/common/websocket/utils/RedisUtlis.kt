@@ -96,6 +96,11 @@ object RedisUtlis {
         return redisOperation.get(SESSION_USER_REDIS_KEY + sessionId)
     }
 
+    // 删除该session对应的User记录
+    fun deleteUserSessionBySession(redisOperation: RedisOperation, sessionId: String) {
+        return redisOperation.delete(SESSION_USER_REDIS_KEY + sessionId)
+    }
+
     // 判断一个session是否有登录页面，用于判断pipeline系列dispatch是否需要push消息到mq
     fun isSessionLoadPage(redisOperation: RedisOperation, sessionId: String): Boolean {
         val page = getPageFromSessionPageBySession(redisOperation, sessionId)

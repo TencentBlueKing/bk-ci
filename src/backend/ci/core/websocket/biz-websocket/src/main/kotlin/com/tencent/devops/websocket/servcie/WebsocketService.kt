@@ -167,6 +167,7 @@ class WebsocketService @Autowired constructor(
         try {
             redisLock.lock()
             logger.info("clearUserSession:user:$userId,sessionId:$sessionId")
+            RedisUtlis.deleteUserSessionBySession(redisOperation, sessionId)
             RedisUtlis.deleteSigelSessionByUser(redisOperation, userId, sessionId)
 //            RedisUtlis.cleanSessionTimeOutBySession(redisOperation, sessionId)
             removeCacheSession(sessionId)
