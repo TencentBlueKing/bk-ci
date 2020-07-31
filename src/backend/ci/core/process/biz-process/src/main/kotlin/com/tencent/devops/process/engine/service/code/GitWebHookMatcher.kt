@@ -463,7 +463,7 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
     override fun getRevision(): String {
         return when (event) {
             is GitPushEvent -> event.checkout_sha ?: ""
-            is GitTagPushEvent -> event.checkout_sha ?: ""
+            is GitTagPushEvent -> event.commits[0].id
             is GitMergeRequestEvent -> event.object_attributes.last_commit.id
             else -> ""
         }
@@ -518,6 +518,15 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         return when (event) {
             is GitMergeRequestEvent -> event.object_attributes.id
             else -> null
+        }
+    }
+
+    override fun getMessage(): String? {
+        return when (event) {
+            is GitPushEvent -> event.commits[0].message
+            is GitTagPushEvent -> event.commits[0].message
+            is GitMergeRequestEvent -> event.object_attributes.last_commit.message
+            else -> ""
         }
     }
 }

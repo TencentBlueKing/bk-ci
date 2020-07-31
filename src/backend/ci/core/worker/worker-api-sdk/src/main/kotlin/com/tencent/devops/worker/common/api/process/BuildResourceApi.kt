@@ -157,4 +157,19 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         )
         return objectMapper.readValue(responseContent)
     }
+
+    override fun timeout(): Result<Boolean> {
+
+        val path = "/ms/process/api/build/builds/timeout"
+        val request = buildPost(path)
+        val errorMessage = "构建超时结束请求失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 120L,
+            writeTimeoutInSec = 120L
+        )
+        return objectMapper.readValue(responseContent)
+    }
 }
