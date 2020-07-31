@@ -167,7 +167,6 @@ class WebsocketConfiguration {
         return container
     }
 
-
     @Bean
     fun transferDispatch(
         rabbitTemplate: RabbitTemplate

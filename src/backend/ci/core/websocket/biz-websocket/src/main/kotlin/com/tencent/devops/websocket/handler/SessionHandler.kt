@@ -1,5 +1,6 @@
 package com.tencent.devops.websocket.handler
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 import com.tencent.devops.websocket.servcie.WebsocketService
@@ -11,42 +12,46 @@ import org.springframework.web.socket.WebSocketSession
 import org.springframework.web.socket.handler.WebSocketHandlerDecorator
 
 class SessionHandler @Autowired constructor(
-		delegate: WebSocketHandler?,
-		val websocketService: WebsocketService,
-		val redisOperation: RedisOperation
+    delegate: WebSocketHandler?,
+    val websocketService: WebsocketService,
+    val redisOperation: RedisOperation
 ) : WebSocketHandlerDecorator(delegate) {
 
-	// 链接关闭记录去除session
-	override fun afterConnectionClosed(session: WebSocketSession?, closeStatus: CloseStatus?) {
-		val sessionId = session?.id
-		val uri = session?.uri
-		val remoteId = session?.remoteAddress
-		logger.info("connection closed success: |$sessionId| $uri | $remoteId ")
+    // 链接关闭记录去除session
+    override fun afterConnectionClosed(session: WebSocketSession?, closeStatus: CloseStatus?) {
+        val uri = session?.uri
+        val sessionId = uri?.query?.substringAfter("sessionId=")
+        if (sessionId.isNullOrEmpty()) {
+            logger.warn("connection closed can not find sessionId, $uri| ${session?.remoteAddress}")
+            super.afterConnectionClosed(session, closeStatus)
+        }
+        val remoteId = session?.remoteAddress
+        logger.info("connection closed success: |$sessionId| $uri | $remoteId ")
+        val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId!!)
+        val userId = RedisUtlis.getUserBySession(redisOperation, sessionId)
+        logger.info("connection closed user[$userId] page[$page], session[$sessionId] clear")
+        websocketService.clearSession(userId!!, sessionId)
+        websocketService.removeCacheSession(sessionId)
+        websocketService.loginOut(userId, sessionId, page)
 
-		val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId!!)
-		val userId = RedisUtlis.getUserBySession(redisOperation, sessionId)
-		logger.info("connection closed user[$userId] page[$page], session[$sessionId] clear")
-		websocketService.clearSession(userId!!, sessionId)
-		websocketService.removeCacheSession(sessionId)
-		websocketService.loginOut(userId, sessionId, page)
+        super.afterConnectionClosed(session, closeStatus)
+    }
 
-		super.afterConnectionClosed(session, closeStatus)
-	}
+    override fun afterConnectionEstablished(session: WebSocketSession?) {
+        val uri = session?.uri
+        val remoteId = session?.remoteAddress
+        if (session == null) {
+            logger.warn("connection warm: session is empty, $uri")
+            return super.afterConnectionEstablished(session)
+        }
+        val sessionId = uri?.query?.substringAfter("sessionId=")
+        val webUser = session.handshakeHeaders[AUTH_HEADER_DEVOPS_USER_ID]
+        websocketService.addCacheSession(sessionId!!)
+        logger.info("connection success: |$sessionId| $uri | $remoteId | $webUser ")
+        super.afterConnectionEstablished(session)
+    }
 
-	override fun afterConnectionEstablished(session: WebSocketSession?) {
-		val sessionId = session?.id
-		val uri = session?.uri
-		val remoteId = session?.remoteAddress
-		if(session == null) {
-			logger.warn("connection warm: session is empty, $uri")
-			return super.afterConnectionEstablished(session)
-		}
-		websocketService.addCacheSession(sessionId!!)
-		logger.info("connection success: |$sessionId| $uri | $remoteId ")
-		super.afterConnectionEstablished(session)
-	}
-
-	companion object {
-		val logger = LoggerFactory.getLogger(this::class.java)
-	}
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
+    }
 }
