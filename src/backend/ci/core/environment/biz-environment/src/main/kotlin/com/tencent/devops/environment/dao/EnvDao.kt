@@ -237,7 +237,7 @@ class EnvDao {
 
     fun countByProject(dslContext: DSLContext, projectId: String?): Int {
         with(TEnv.T_ENV) {
-            return dslContext.selectCount().where(PROJECT_ID.eq(projectId))
+            return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId))
                 .fetchOne(0, Int::class.java)
         }
     }

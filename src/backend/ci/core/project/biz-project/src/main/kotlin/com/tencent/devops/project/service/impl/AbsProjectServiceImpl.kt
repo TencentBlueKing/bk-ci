@@ -194,7 +194,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return ProjectUtils.packagingBean(record, grayProjectSet())
     }
 
-    override fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Boolean {
+    override fun update(userId: String, englishName: String, projectUpdateInfo: ProjectUpdateInfo): Boolean {
         validate(ProjectValidateType.project_name, projectUpdateInfo.projectName, projectUpdateInfo.englishName)
         val startEpoch = System.currentTimeMillis()
         var success = false
@@ -202,14 +202,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             try {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    projectDao.update(context, userId, projectId, projectUpdateInfo)
+                    val projectId = projectDao.getByEnglishName(dslContext, englishName)?.projectId ?: return@transaction
+                    projectDao.update(context, userId, projectId!!, projectUpdateInfo)
                     projectPermissionService.modifyResource(
                         projectCode = projectUpdateInfo.englishName,
                         projectName = projectUpdateInfo.projectName
                     )
                     projectDispatcher.dispatch(ProjectUpdateBroadCastEvent(
                         userId = userId,
-                        projectId = projectId,
+                        projectId = englishName,
                         projectInfo = projectUpdateInfo
                     ))
                 }

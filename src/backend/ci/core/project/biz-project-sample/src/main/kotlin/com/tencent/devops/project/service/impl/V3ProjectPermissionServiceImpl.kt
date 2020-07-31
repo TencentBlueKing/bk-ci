@@ -57,11 +57,11 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun deleteResource(projectCode: String) {
-        TODO("Not yet implemented")
+        return
     }
 
     override fun modifyResource(projectCode: String, projectName: String) {
-        TODO("Not yet implemented")
+        return
     }
 
     override fun getUserProjects(userId: String): List<String> {
