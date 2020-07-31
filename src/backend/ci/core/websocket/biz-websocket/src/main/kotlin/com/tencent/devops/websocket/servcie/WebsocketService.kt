@@ -32,6 +32,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.utils.RedisUtlis
+import com.tencent.devops.common.websocket.utils.RedisUtlis.cleanUserSessionBySessionId
 import com.tencent.devops.websocket.event.ChangePageTransferEvent
 import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.event.ClearUserSessionTransferEvent
@@ -132,7 +133,7 @@ class WebsocketService @Autowired constructor(
         val redisLock = lockUser(sessionId)
         try {
             redisLock.lock()
-            logger.info("WebsocketService-loginOut:user:$userId,sessionId:$sessionId")
+            logger.info("WebsocketService loginOut:user:$userId,sessionId:$sessionId")
             val redisPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
             var clearPage = oldPage
             if (!oldPage.isNullOrEmpty() && redisPage != oldPage) {
@@ -146,6 +147,7 @@ class WebsocketService @Autowired constructor(
             } else if (redisPage != null) {
                 RedisUtlis.cleanPageSessionBySessionId(redisOperation, redisPage, sessionId)
             }
+            cleanUserSessionBySessionId(redisOperation, userId, sessionId)
             if (needTransfer && transferData!!.isNotEmpty()) {
                 transferDispatch.dispatch(
                     LoginOutTransferEvent(
