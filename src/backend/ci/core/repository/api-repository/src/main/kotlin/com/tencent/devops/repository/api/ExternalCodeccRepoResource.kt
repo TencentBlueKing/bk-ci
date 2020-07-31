@@ -26,6 +26,7 @@
 
 package com.tencent.devops.repository.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -34,6 +35,7 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -116,5 +118,23 @@ interface ExternalCodeccRepoResource {
         @ApiParam(value = "子模块项目名称")
         @QueryParam("subModule")
         subModule: String? = null
+    ): Result<String>
+
+    @ApiOperation("获取仓库单个文件内容")
+    @GET
+    @Path("/repo/{repoName}/oauth/git_file_content")
+    fun getGitFileContentOAuth(
+        @ApiParam(value = "用户id")
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "代码库url")
+        @PathParam("repoName")
+        repoName: String,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String,
+        @ApiParam(value = "分支或者commit id（git）")
+        @QueryParam("ref")
+        ref: String?
     ): Result<String>
 }
