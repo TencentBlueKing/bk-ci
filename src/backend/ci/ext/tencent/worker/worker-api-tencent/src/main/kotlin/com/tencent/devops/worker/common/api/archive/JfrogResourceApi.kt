@@ -28,7 +28,6 @@ package com.tencent.devops.worker.common.api.archive
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
-import com.tencent.devops.worker.common.api.pojo.BkRepoFileData
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.archive.pojo.JfrogFilesData
 
