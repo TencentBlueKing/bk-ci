@@ -78,15 +78,4 @@ class LogRabbitMQAutoConfiguration {
     ): RabbitTemplate {
         return RabbitTemplate(connectionFactory)
     }
-
-    @Bean(name = ["logContainerFactory"])
-    fun logFactory(
-        configurer: SimpleRabbitListenerContainerFactoryConfigurer,
-        @Qualifier("logConnectionFactory")
-        connectionFactory: ConnectionFactory
-    ): SimpleRabbitListenerContainerFactory {
-        val factory = SimpleRabbitListenerContainerFactory()
-        configurer.configure(factory, connectionFactory)
-        return factory
-    }
 }
