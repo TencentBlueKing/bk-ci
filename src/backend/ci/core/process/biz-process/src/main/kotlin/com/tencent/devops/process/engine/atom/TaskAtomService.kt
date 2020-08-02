@@ -36,7 +36,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
@@ -52,7 +52,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class TaskAtomService @Autowired(required = false) constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val buildVariableService: BuildVariableService,
@@ -80,8 +80,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom).execute(task, runVariables)
             }
         } catch (t: BuildTaskException) {
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] has exception: ${t.message}",
                 tag = task.taskId,
@@ -96,8 +95,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             )
             logger.warn("[${task.buildId}]|Fail to execute the task [${task.taskName}]", t)
         } catch (t: Throwable) {
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] has exception: ${t.message}",
                 tag = task.taskId,
@@ -200,8 +198,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 actionType = ActionType.END
             )
         )
-        LogUtils.stopLog(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.stopLog(
             buildId = task.buildId,
             tag = task.taskId,
             jobId = task.containerHashId,
@@ -221,8 +218,7 @@ class TaskAtomService @Autowired(required = false) constructor(
 
             log(atomResponse, task, force)
         } catch (t: BuildTaskException) {
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] has exception: ${t.message}",
                 tag = task.taskId,
@@ -233,8 +229,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             atomResponse.errorType = ErrorType.SYSTEM
             atomResponse.errorMsg = t.message
         } catch (t: Throwable) {
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] has exception: ${t.message}",
                 tag = task.taskId,
@@ -275,8 +270,7 @@ class TaskAtomService @Autowired(required = false) constructor(
         force: Boolean
     ) {
         if (BuildStatus.isFinish(atomResponse.buildStatus)) {
-            LogUtils.addLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addLine(
                 buildId = task.buildId,
                 message = "Task [${task.taskName}] ${atomResponse.buildStatus}!",
                 tag = task.taskId,
@@ -285,8 +279,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             )
         } else {
             if (force) {
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addLine(
                     buildId = task.buildId,
                     message = "Try to Stop Task [${task.taskName}]...",
                     tag = task.taskId,

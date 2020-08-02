@@ -30,10 +30,14 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.log.model.pojo.ILogEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
+import javax.annotation.Resource
 
-object LogDispatcher {
+class LogMQEventDispatcher (
+    @Resource(name="logRabbitTemplate")
+    private val rabbitTemplate: RabbitTemplate
+) {
 
-    fun dispatch(rabbitTemplate: RabbitTemplate, event: ILogEvent) {
+    fun dispatch(event: ILogEvent) {
         try {
 //            logger.info("[${event.buildId}] Dispatch the event")
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
@@ -51,5 +55,5 @@ object LogDispatcher {
         }
     }
 
-    private val logger = LoggerFactory.getLogger(LogDispatcher::class.java)
+    private val logger = LoggerFactory.getLogger(LogMQEventDispatcher::class.java)
 }

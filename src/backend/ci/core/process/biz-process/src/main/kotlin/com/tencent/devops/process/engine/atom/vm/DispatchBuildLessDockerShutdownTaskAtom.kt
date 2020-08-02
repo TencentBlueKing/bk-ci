@@ -33,7 +33,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -82,7 +82,7 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
             )
         )
         // 同步Job执行状态
-        LogUtils.stopLog(
+        BuildLogPrinter.stopLog(
             rabbitTemplate = rabbitTemplate,
             buildId = buildId,
             tag = task.containerHashId ?: "",

@@ -37,7 +37,7 @@ import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils.continueWhenFailure
@@ -65,7 +65,7 @@ import java.time.LocalDateTime
  */
 @Service
 class ContainerControl @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -138,8 +138,7 @@ class ContainerControl @Autowired constructor(
             val quotaPair = pipelineQuotaService.getProjectRemainQuota(projectId)
             val remainQuota = quotaPair.first
             if (remainQuota <= 0) {
-                LogUtils.addRedLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "[$executeCount]| Job#($containerId) Quota Exceed: ${quotaPair.second}",
                     tag = VMUtils.genStartVMTaskId(containerId),
@@ -157,8 +156,7 @@ class ContainerControl @Autowired constructor(
             }
 
             // 开始构建，构建次数+1
-            LogUtils.addLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addLine(
                 buildId = buildId,
                 message = "[$executeCount]| Job#($containerId) Add Quota",
                 tag = VMUtils.genStartVMTaskId(containerId),
@@ -272,8 +270,7 @@ class ContainerControl @Autowired constructor(
 
         // 配额使用-1
         pipelineQuotaService.decQuotaByProject(projectId = projectId, buildId = buildId, jobId = containerId)
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "[$executeCount]| Mutex Fail for Job#${this.containerId} & minus Quota for project: $projectId",
             tag = VMUtils.genStartVMTaskId(containerId),
@@ -294,8 +291,7 @@ class ContainerControl @Autowired constructor(
 
         // 配额使用-1
         pipelineQuotaService.decQuotaByProject(projectId = projectId, buildId = buildId, jobId = containerId)
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "[$executeCount]| Finish Job#${this.containerId} & minus Quota for project: $projectId",
             tag = VMUtils.genStartVMTaskId(containerId),
@@ -415,8 +411,7 @@ class ContainerControl @Autowired constructor(
                         userId = task.starter,
                         buildStatus = containerFinalStatus
                     )
-                    LogUtils.addRedLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addRedLine(
                         buildId = task.buildId, message = "终止执行插件[${task.taskName}]: $message",
                         tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                     )
@@ -474,8 +469,7 @@ class ContainerControl @Autowired constructor(
             if (!ControlUtils.isEnable(task.additionalOptions)) {
                 logger.info("[$buildId]|container=$containerId|task(${task.taskSeq})=${task.taskId}|${task.taskName}|is not enable, will skip")
 
-                LogUtils.addYellowLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addYellowLine(
                     buildId = task.buildId,
                     message = "插件[${task.taskName}]被禁用",
                     tag = task.taskId,
@@ -518,8 +512,7 @@ class ContainerControl @Autowired constructor(
                     )
                     waitToDoTask = null
 
-                    LogUtils.addYellowLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addYellowLine(
                         buildId = task.buildId,
                         message = "插件[${task.taskName}]被跳过",
                         tag = task.taskId,

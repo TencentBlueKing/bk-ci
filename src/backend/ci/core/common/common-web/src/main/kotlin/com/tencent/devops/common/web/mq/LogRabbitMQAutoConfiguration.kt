@@ -1,0 +1,92 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.common.web.mq
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.springframework.amqp.rabbit.annotation.EnableRabbit
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory
+import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
+import org.springframework.amqp.rabbit.connection.ConnectionFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.amqp.SimpleRabbitListenerContainerFactoryConfigurer
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
+import org.springframework.core.Ordered
+
+
+/**
+ *
+ * Powered By Tencent
+ */
+@Configuration
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
+@EnableRabbit
+class LogRabbitMQAutoConfiguration {
+
+    @Bean(name = ["logConnectionFactory"])
+    fun hPayConnectionFactory(
+        @Value("\${spring.rabbitmq.log.host}") host: String,
+        @Value("\${spring.rabbitmq.log.port}") port: Int,
+        @Value("\${spring.rabbitmq.log.username}") username: String,
+        @Value("\${spring.rabbitmq.log.password}") password: String,
+        @Value("\${spring.rabbitmq.log.virtual-host}") virtualHost: String
+    ): ConnectionFactory {
+        val connectionFactory = CachingConnectionFactory()
+        connectionFactory.host = host
+        connectionFactory.port = port
+        connectionFactory.username = username
+        connectionFactory.setPassword(password)
+        connectionFactory.virtualHost = virtualHost
+        return connectionFactory
+    }
+
+
+    @Bean(name = ["logRabbitTemplate"])
+    @Primary
+    fun logRabbitTemplate(
+        @Qualifier("logConnectionFactory")
+        connectionFactory: ConnectionFactory
+    ): RabbitTemplate {
+        return RabbitTemplate(connectionFactory)
+    }
+
+    @Bean(name = ["logContainerFactory"])
+    fun logFactory(
+        configurer: SimpleRabbitListenerContainerFactoryConfigurer,
+        @Qualifier("logConnectionFactory")
+        connectionFactory: ConnectionFactory
+    ): SimpleRabbitListenerContainerFactory {
+        val factory = SimpleRabbitListenerContainerFactory()
+        configurer.configure(factory, connectionFactory)
+        return factory
+    }
+}

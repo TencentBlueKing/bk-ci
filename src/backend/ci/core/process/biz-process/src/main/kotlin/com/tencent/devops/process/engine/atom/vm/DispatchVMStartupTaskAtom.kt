@@ -44,7 +44,7 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.common.pipeline.type.tstack.TStackDispatchType
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_AGENT_STATUS_EXCEPTION
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
@@ -86,7 +86,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val dispatchTypeParser: DispatchTypeParser
 ) : IAtomTask<VMBuildContainer> {
     override fun getParamElement(task: PipelineBuildTask): VMBuildContainer {
@@ -104,19 +104,21 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         try {
             status = execute(task, param)
         } catch (t: BuildTaskException) {
-            LogUtils.addRedLine(
-                rabbitTemplate,
-                task.buildId,
-                "Fail to execute the task atom: ${t.message}",
-                task.taskId,
-                task.containerHashId,
-                task.executeCount ?: 1
+            buildLogPrinter.addRedLine(
+                buildId = task.buildId,
+                message = "Fail to execute the task atom: ${t.message}",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
             )
             logger.warn("Fail to execute the task atom", t)
         } catch (ignored: Throwable) {
-            LogUtils.addRedLine(
-                rabbitTemplate, task.buildId,
-                "Fail to execute the task atom: ${ignored.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
+            buildLogPrinter.addRedLine(
+                buildId = task.buildId,
+                message = "Fail to execute the task atom: ${ignored.message}",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
             )
             logger.warn("Fail to execute the task atom", ignored)
         } finally {
@@ -171,7 +173,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         pipelineBuildDetailService.containerPreparing(buildId, vmSeqId.toInt())
 
         // 读取插件市场中的插件信息，写入待构建处理
-        val atoms = AtomUtils.parseContainerMarketAtom(container, task, client, rabbitTemplate)
+        val atoms = AtomUtils.parseContainerMarketAtom(
+            container = container,
+            task = task,
+            client = client,
+            buildLogPrinter = buildLogPrinter
+        )
 
         val source = "vmStartupTaskAtom"
         val dispatchType = getDispatchType(projectId, pipelineId, buildId, param, param.baseOS)

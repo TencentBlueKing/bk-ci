@@ -29,7 +29,7 @@ package com.tencent.devops.dispatch.service.dispatcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -46,14 +46,14 @@ interface Dispatcher {
 
     fun retry(
         client: Client,
-        rabbitTemplate: RabbitTemplate,
+        buildLogPrinter: BuildLogPrinter,
         pipelineEventDispatcher: PipelineEventDispatcher,
         event: PipelineAgentStartupEvent,
         errorMessage: String? = null
     ) {
         if (event.retryTime > 3) {
             // 置为失败
-            onFailBuild(client, rabbitTemplate, event, errorMessage ?: "Fail to start up after 3 retries")
+            onFailBuild(client, buildLogPrinter, event, errorMessage ?: "Fail to start up after 3 retries")
             return
         }
         event.retryTime += 1
@@ -63,12 +63,11 @@ interface Dispatcher {
 
     fun onFailBuild(
         client: Client,
-        rabbitTemplate: RabbitTemplate,
+        buildLogPrinter: BuildLogPrinter,
         event: PipelineAgentStartupEvent,
         errorMessage: String
     ) {
-        LogUtils.addRedLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addRedLine(
             buildId = event.buildId,
             message = errorMessage,
             tag = VMUtils.genStartVMTaskId(event.containerId),

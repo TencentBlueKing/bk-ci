@@ -50,7 +50,7 @@ import com.tencent.devops.log.util.Constants
 import com.tencent.devops.log.util.ESIndexUtils.getIndexSettings
 import com.tencent.devops.log.util.ESIndexUtils.getTypeMappings
 import com.tencent.devops.log.util.ESIndexUtils.indexRequest
-import com.tencent.devops.log.utils.LogDispatcher
+import com.tencent.devops.log.utils.LogMQEventDispatcher
 import org.elasticsearch.action.index.IndexRequestBuilder
 import org.elasticsearch.common.unit.TimeValue
 import org.elasticsearch.index.IndexNotFoundException
@@ -109,7 +109,7 @@ class LogServiceV2 @Autowired constructor(
     fun addLogEvent(event: LogEvent) {
         startLog(event.buildId)
         val logMessage = addLineNo(event.buildId, event.logs)
-        LogDispatcher.dispatch(rabbitTemplate, LogBatchEvent(event.buildId, logMessage))
+        logMQEventDispatcher.dispatch(LogBatchEvent(event.buildId, logMessage))
     }
 
     fun addBatchLogEvent(event: LogBatchEvent) {

@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.process.dao.PipelineTaskDao
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -58,7 +58,7 @@ class PipelineTaskService @Autowired constructor(
     val objectMapper: ObjectMapper,
     val pipelineTaskDao: PipelineTaskDao,
     val pipelineModelTaskDao: PipelineModelTaskDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val pipelineVariableService: BuildVariableService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeService: PipelineRuntimeService
@@ -145,8 +145,7 @@ class PipelineTaskService @Autowired constructor(
             logger.info("retry task [$buildId]|stageId=${taskRecord.stageId}|container=${taskRecord.containerId}|taskId=$taskId|retryCount=$retryCount |vm atom will retry, even the task is failure")
             val nextCount = retryCount + 1
             redisOperation.set(getRedisKey(taskRecord!!.buildId, taskRecord.taskId), nextCount.toString())
-            LogUtils.addYellowLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addYellowLine(
                 buildId = buildId,
                 message = "插件${taskRecord.taskName}执行失败, 5s后开始执行第${nextCount}次重试",
                 tag = taskRecord.taskId,

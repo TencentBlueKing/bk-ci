@@ -34,7 +34,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.dao.DispatchPipelineBuildDao
 import com.tencent.devops.dispatch.pojo.PipelineBuild
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -51,10 +51,10 @@ import javax.ws.rs.NotFoundException
 class PipelineDispatchService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
+    private val buildLogPrinter: BuildLogPrinter,
     private val dispatchPipelineBuildDao: DispatchPipelineBuildDao,
     private val logService: LogService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val rabbitTemplate: RabbitTemplate
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
     private var dispatchers: Set<Dispatcher>? = null
@@ -98,8 +98,7 @@ class PipelineDispatchService @Autowired constructor(
         }
 
         if (pipelineAgentStartupEvent.retryTime == 0) {
-            LogUtils.addLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addLine(
                 buildId = pipelineAgentStartupEvent.buildId,
                 message = "构建环境准备中...",
                 tag = VMUtils.genStartVMTaskId(pipelineAgentStartupEvent.containerId),
@@ -126,14 +125,14 @@ class PipelineDispatchService @Autowired constructor(
                 it.shutdown(pipelineAgentShutdownEvent)
             }
         } finally {
-            logService.stopLog(pipelineAgentShutdownEvent.buildId)
+            buildLogPrinter.stopLog(buildId = pipelineAgentShutdownEvent.buildId, tag = "", jobId = null)
         }
     }
 
     fun reDispatch(pipelineAgentStartupEvent: PipelineAgentStartupEvent) {
         getDispatchers().forEach {
             if (it.canDispatch(pipelineAgentStartupEvent)) {
-                it.retry(client, rabbitTemplate, pipelineEventDispatcher, pipelineAgentStartupEvent)
+                it.retry(client, buildLogPrinter, pipelineEventDispatcher, pipelineAgentStartupEvent)
                 return
             }
         }

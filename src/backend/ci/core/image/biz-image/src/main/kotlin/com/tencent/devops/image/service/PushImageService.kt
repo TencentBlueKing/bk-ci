@@ -41,7 +41,7 @@ import com.tencent.devops.image.pojo.PushImageParam
 import com.tencent.devops.image.pojo.PushImageTask
 import com.tencent.devops.image.pojo.enums.TaskStatus
 import com.tencent.devops.image.utils.CommonUtils
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -57,7 +57,7 @@ class PushImageService @Autowired constructor(
     private val dockerConfig: DockerConfig,
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PushImageService::class.java)
@@ -122,8 +122,7 @@ class PushImageService @Autowired constructor(
             logger.info("[${pushImageParam.buildId}]|Pull image success, image name and tag: $fromImage")
             dockerClient.tagImageCmd(fromImage, toImageRepo, pushImageParam.targetImageTag).exec()
             logger.info("[${pushImageParam.buildId}]|Tag image success, image name and tag: $toImageRepo:${pushImageParam.targetImageTag}")
-            LogUtils.addLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addLine(
                 buildId = pushImageParam.buildId,
                 message = "目标镜像：$toImageRepo:${pushImageParam.targetImageTag}",
                 tag = pushImageParam.buildId,
