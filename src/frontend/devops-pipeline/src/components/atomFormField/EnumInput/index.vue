@@ -57,4 +57,7 @@
             display: inline-block;
         }
     }
+    .bkdevops-running-lock-setting-tab .bkdevops-radio {
+        margin-right: 25px;
+    }
 </style>
