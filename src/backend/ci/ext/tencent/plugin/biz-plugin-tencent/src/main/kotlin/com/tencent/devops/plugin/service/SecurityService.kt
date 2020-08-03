@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UnicodeUtil
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.pojo.security.UploadParams
 import okhttp3.MultipartBody
 import okhttp3.Request
@@ -45,7 +45,7 @@ import java.io.InputStream
 import java.time.LocalDateTime
 
 @Service
-class SecurityService @Autowired constructor(private val rabbitTemplate: RabbitTemplate) {
+class SecurityService @Autowired constructor(private val buildLogPrinter: BuildLogPrinter) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(SecurityService::class.java)
@@ -123,13 +123,12 @@ class SecurityService @Autowired constructor(private val rabbitTemplate: RabbitT
                 .post(body)
                 .build()
 
-            LogUtils.addLine(
-                rabbitTemplate,
-                buildId,
-                "start to upload security file.",
-                elementId,
-                containerId,
-                executeCount
+            buildLogPrinter.addLine(
+                buildId = buildId,
+                message = "start to upload security file.",
+                tag = elementId,
+                jobId = containerId,
+                executeCount = executeCount
             )
             OkhttpUtils.doHttp(request).use { response ->
                 val data = UnicodeUtil.unicodeToString(response.body()!!.string())
@@ -137,8 +136,7 @@ class SecurityService @Autowired constructor(private val rabbitTemplate: RabbitT
                 if (!response.isSuccessful || jsonPraser.parse(data).asJsonObject["ret"].asString != "0") {
                     throw RuntimeException("upload file $filePath to $mtpUrl fail:\n$data")
                 }
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addLine(
                     buildId = buildId,
                     message = "upload file $filePath to $mtpUrl success:\n$data",
                     tag = elementId,
@@ -187,8 +185,7 @@ class SecurityService @Autowired constructor(private val rabbitTemplate: RabbitT
                 .post(taskBody)
                 .build()
 
-            LogUtils.addLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addLine(
                 buildId = buildId,
                 message = "start security task in env($envId) for task($taskId).",
                 tag = elementId,
@@ -200,8 +197,7 @@ class SecurityService @Autowired constructor(private val rabbitTemplate: RabbitT
                 if (!response.isSuccessful || jsonPraser.parse(data).asJsonObject["ret"].asString != "0") {
                     throw RuntimeException("fail to start the task[$taskId]:\n$data")
                 }
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addLine(
                     buildId = buildId,
                     message = "success to start the task[$taskId]: $$data",
                     tag = elementId,
