@@ -642,8 +642,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             )
             // 上报插件监控数据
             val specReportAtoms = redisOperation.get("specReportAtoms")
-            if (specReportAtoms != null && specReportAtoms.split(",").contains(atomCode)) {
-                // 如果配置了指定插件上报监控数据，则其它插件无需上报
+            if (!switchFlag.toBoolean() || (specReportAtoms != null && specReportAtoms.split(",").contains(atomCode))) {
+                // 上报开关关闭或者不在指定上报插件范围内则无需上报监控数据
                 return
             }
             val monitorDataMap = result.monitorData
