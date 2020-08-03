@@ -18,7 +18,6 @@
 
 <script>
     import { bus } from '@/utils/bus'
-    import { mapActions } from 'vuex'
     export default {
         props: {
             beforeExec: {
@@ -68,9 +67,6 @@
             bus.$off('trigger-excute', this.toggleStatus)
         },
         methods: {
-            ...mapActions('atom', [
-                'setExecuteStatus'
-            ]),
             /**
              * 清除select错误
              */
@@ -86,19 +82,15 @@
              */
             async toggleStatus () {
                 if (this.disabled || this.status === 'running' || !this.canManualStartup) return
-                this.setExecuteStatus(true)
                 this.disabled = true
-                this.setExecuteStatus(true)
                 // debugger
                 if (this.beforeExec && typeof this.beforeExec === 'function') {
                     if (!await this.beforeExec(true)) {
                         this.disabled = false
-                        this.setExecuteStatus(false)
                         return
                     }
                 }
 
-                this.$emit('click-event')
                 try {
                     if (this.pipelineId && this.projectId) {
                         const res = await this.$store.dispatch('pipelines/requestStartupInfo', {
@@ -119,6 +111,7 @@
                                 })
                             } else {
                                 await this.execPipeline()
+                                this.disabled = false
                             }
                         } else {
                             throw new Error(this.$t('newlist.withoutManualAtom'))
@@ -127,6 +120,7 @@
                         throw new Error(this.$t('newlist.paramsErr'))
                     }
                 } catch (err) {
+                    this.disabled = false
                     if (err.code === 403) { // 没有权限执行
                         this.$showAskPermissionDialog({
                             noPermissionList: [{
@@ -141,9 +135,6 @@
                             theme: 'error'
                         })
                     }
-                } finally {
-                    this.setExecuteStatus(false)
-                    this.disabled = false
                 }
             },
             /**
