@@ -1,26 +1,44 @@
 <template>
-    <bk-form :class="scenes === 'manage-edit' ? 'edit' : ''" :label-width="120" :model="formData" ref="codeForm">
-        <div v-if="scenes === 'manage-edit'" class="edit-title">{{$t('repo.代码仓库')}}</div>
-        <bk-form-item :label="this.$t('repo.代码仓库')" :required="true" :rules="formRules.repositoryHashId" property="repositoryHashId" class="form-item-repo">
+    <div v-if="scenes === 'manage-edit' && ((taskDetail.atomCode && taskDetail.createFrom === 'bs_pipeline') || taskDetail.createFrom === 'gongfeng_scan')" :model="formData" ref="codeForm">
+        <div>
+            <span class="pipeline-label">{{$t('代码仓库')}}</span>
+            <span class="fs14">{{ formData.aliasName || codeMessage.repoUrl || '--' }}</span>
+        </div>
+        <div v-if="isGitRepo">
+            <span class="pipeline-label">{{$t('分支')}}</span>
+            <span class="fs14">{{ formData.branch }}</span>
+        </div>
+        <div v-if="scenes !== 'manage-edit'">
+            <tool-compile-form v-show="shownTool" ref="editData" :code-message="toolParams" :is-tool-manage="isToolManage" />
+        </div>
+        <div :class="isToolManage ? 'active' : ''" v-else>
+            <template>
+                <tool-compile-form v-show="shownTool" ref="editData" class="pb20" style="width: 50%;" :code-message="codeMessage" :is-tool-manage="isToolManage" />
+            </template>
+        </div>
+    </div>
+    <bk-form v-else :class="scenes === 'manage-edit' ? 'edit' : ''" :label-width="130" :model="formData" ref="codeForm">
+        <bk-form-item :label="this.$t('代码仓库')" :required="true" :rules="formRules.repoHashId" property="repoHashId" class="form-item-repo">
             <bk-select
-                v-model="formData.repositoryHashId"
+                v-model="formData.repoHashId"
                 @toggle="handleRepoSelectToggle"
                 @change="handleRepoSelectChange"
+                :loading="isloading"
                 :disabled="isToolManage"
                 searchable
             >
                 <bk-option
-                    v-for="(option, index) in repoList"
-                    :key="index"
+                    v-for="option in repoList"
+                    :key="option.repoHashId"
                     :id="option.repoHashId"
                     :name="option.aliasName">
                 </bk-option>
             </bk-select>
-            <a :href="codeUrl" target="_blank" class="repo-add-link">{{$t('op.新增')}} <i class="bk-icon icon-edit"></i></a>
+            <a :href="codeUrl" target="_blank" class="repo-add-link">{{$t('新增')}} <i class="codecc-icon icon-link"></i></a>
         </bk-form-item>
-        <bk-form-item :label="$t('repo.分支')" :required="true" property="branch" :rules="formRules.branch" v-if="isGitRepo">
+        <bk-form-item :label="$t('分支')" :required="true" property="branch" :rules="formRules.branch" v-if="isGitRepo">
             <bk-input :disabled="isToolManage" v-model.trim="formData.branch"></bk-input>
-            <!-- <bk-select 
+            <!-- <bk-select
                 v-model="formData.branch"
                 searchable
                 @change="handleBranchSelectChange"
@@ -33,99 +51,24 @@
                 </bk-option>
             </bk-select> -->
         </bk-form-item>
-        <bk-form-item>
-        </bk-form-item>
-        <div v-if="scenes === 'manage-edit'" class="edit-title">{{$t('repo.其他信息')}}</div>
+        <div style="height: 20px;"></div>
         <div v-if="scenes !== 'manage-edit'">
-            <template v-for="(params, toolName) in toolParams">
-                <bk-form-item
-                    v-for="param in params"
-                    :label="param.labelName"
-                    :property="param.varName"
-                    :key="param.key"
-                    class="left"
-                >
-                    <bk-input
-                        v-bk-tooltips="{
-                            content: param.varTips,
-                            width: isToolManage ? 400 : 300,
-                            placement: isToolManage ? 'bottom' : 'right'
-                        }"
-                        v-model.trim="formData.toolParams[toolName][param.varName]"
-                        v-if="param.varType === 'STRING'"
-                    ></bk-input>
-                    <bk-radio-group v-model="formData.toolParams[toolName][param.varName]" v-if="param.varType === 'BOOLEAN'" class="radio-param">
-                        <bk-radio :value="true" class="item">{{$t('repo.是')}}</bk-radio>
-                        <bk-radio :value="false" class="item">{{$t('repo.否')}}</bk-radio>
-                    </bk-radio-group>
-                    <bk-radio-group v-if="param.varType === 'RADIO'" v-model="formData.toolParams[toolName][param.varName]" class="radio-param">
-                        <bk-radio :title="option.name" @change="getLang(option, param)" v-for="(option, index) in param.varOptionList" :value="option.id" :key="index" class="item">{{option.name}}</bk-radio>
-                    </bk-radio-group>
-                    <bk-checkbox-group v-model="formData.toolParams[toolName][param.varName]" v-if="param.varType === 'CHECKBOX'" class="checkbox-param">
-                        <bk-checkbox v-for="(option, index) in param.varOptionList" :value="option.id" :key="index" class="item">{{option.name}}</bk-checkbox>
-                    </bk-checkbox-group>
-                    <div v-if="param.varType === 'TEXTAREA'">
-                        <Ace
-                            class="ace-wrapper"
-                            :read-only="disabled"
-                            :value="value"
-                            :lang="lang"
-                            :name="name"
-                            v-model="formData.toolParams[toolName][param.varName]"
-                            @input="handleScriptInput"
-                            height="300"
-                            width="100%">
-                        </Ace>
-                    </div>
-                </bk-form-item>
-            </template>
+            <tool-compile-form v-show="shownTool" ref="editData" :code-message="toolParams" :is-tool-manage="isToolManage" />
         </div>
         <div :class="isToolManage ? 'active' : ''" v-else>
             <template>
-                <bk-form-item
-                    v-for="(param, key) in formData.toolConfigList"
-                    :label="param.labelName"
-                    :rules="param.varType !== 'STRING' ? formRules.chooseValue : formRules.inputValue"
-                    :property="`toolConfigList.${key}.chooseValue` ? `toolConfigList.${key}.chooseValue` : ''"
-                    :key="key"
-                    v-bk-tooltips="{ content: param.varTips, width: 300, placement: 'right' }"
-                    class="left"
-                >
-                    <bk-input v-model.trim="param.chooseValue" v-if="param.varType === 'STRING'"></bk-input>
-                    <bk-radio-group v-model="param.chooseValue" v-if="param.varType === 'BOOLEAN'" class="radio-param">
-                        <bk-radio :value="true" class="item">{{$t('repo.是')}}</bk-radio>
-                        <bk-radio :value="false" class="item">{{$t('repo.否')}}</bk-radio>
-                    </bk-radio-group>
-                    <bk-radio-group v-if="param.varType === 'RADIO'" v-model="param.chooseValue" class="radio-param">
-                        <bk-radio v-for="(option, index) in param.varOptionList" :value="option.id" :key="index" class="item">{{option.name}}</bk-radio>
-                    </bk-radio-group>
-                    <bk-checkbox-group v-model="param.chooseValue" v-if="param.varType === 'CHECKBOX'" class="checkbox-param">
-                        <bk-checkbox v-for="(option, index) in param.varOptionList" :value="option.id" :key="index" class="item">{{option.name}}</bk-checkbox>
-                    </bk-checkbox-group>
-                    <div v-if="param.varType === 'TEXTAREA'">
-                        <Ace
-                            class="ace-wrapper"
-                            :read-only="disabled"
-                            :value="value"
-                            :lang="formData.toolConfigList[key - 1].chooseValue === 'shell' ? 'sh' : formData.toolConfigList[key - 1].chooseValue"
-                            :name="name"
-                            v-model="param.chooseValue"
-                            @input="handleScriptInput"
-                            height="300"
-                            width="100%">
-                        </Ace>
-                    </div>
-                </bk-form-item>
+                <tool-compile-form v-show="shownTool" ref="editData" class="pb20" style="width: 50%;" :code-message="codeMessage" :is-tool-manage="isToolManage" />
             </template>
         </div>
         <bk-form-item class="footer" v-if="scenes !== 'register-add'">
+            <bk-button v-if="scenes === 'manage-add'" @click="handlePrev">{{$t('上一步')}}</bk-button>
             <bk-button
                 :loading="buttonLoading"
                 theme="primary"
-                :title="scenes === 'manage-add' ? $t('op.提交') : $t('op.保存')"
+                :title="scenes === 'manage-add' ? $t('提交') : $t('保存')"
                 @click.stop.prevent="handleSubmit"
             >
-                {{scenes === 'manage-add' ? $t("op.提交") : $t("op.保存")}}
+                {{scenes === 'manage-add' ? $t('提交') : $t('保存')}}
             </bk-button>
         </bk-form-item>
     </bk-form>
@@ -133,13 +76,13 @@
 
 <script>
     import { mapState } from 'vuex'
-    import Ace from '@/components/ace-editor'
+    import toolCompileForm from '@/components/tool-compile-form'
     import fieldMixin from '../fieldMixin'
 
     export default {
         name: 'tool-config-form',
         components: {
-            Ace
+            toolCompileForm
         },
         mixins: [fieldMixin],
         props: {
@@ -160,9 +103,6 @@
                     return true
                 }
             },
-            beforeSubmit: {
-                type: Function
-            },
             success: {
                 type: Function
             },
@@ -173,50 +113,41 @@
             isToolManage: {
                 type: Boolean,
                 default: false
+            },
+            codeLang: {
+                type: Array,
+                default: []
             }
         },
         data () {
             return {
                 formRules: {
-                    repositoryHashId: [
+                    repoHashId: [
                         {
                             required: true,
-                            message: this.$t('st.必填项'),
+                            message: this.$t('必填项'),
                             trigger: 'change'
                         }
                     ],
                     branch: [
                         {
                             required: true,
-                            message: this.$t('st.必填项'),
+                            message: this.$t('必填项'),
                             trigger: 'blur'
                         },
                         {
                             max: 50,
-                            message: this.$t('st.不能多于x个字符', { num: 50 }),
+                            message: this.$t('不能多于x个字符', { num: 50 }),
                             trigger: 'blur'
-                        }
-                    ],
-                    inputValue: [
-                        {
-                            max: 50,
-                            message: this.$t('st.不能多于x个字符', { num: 50 }),
-                            trigger: 'blur'
-                        }
-                    ],
-                    chooseValue: [
-                        {
-                            required: true,
-                            message: this.$t('st.必填项'),
-                            trigger: 'change'
                         }
                     ]
                 },
                 formData: {
-                    repositoryHashId: '',
+                    repoHashId: '',
                     branch: 'master',
                     toolParams: {},
-                    toolConfigList: []
+                    toolConfigList: [],
+                    aliasName: ''
                 },
                 repoList: [],
                 repoSelected: {},
@@ -224,38 +155,66 @@
                 lang: 'sh',
                 codeUrl: `${window.DEVOPS_SITE_URL}/console/codelib/${this.$route.params.projectId}`,
                 isSubmit: false,
-                repoChange: true
+                repoChange: true,
+                compileToolList: [],
+                compileToolVersionList: [],
+                compile: {
+                    compileEnv: '',
+                    compileTool: [''],
+                    compileToolVersion: []
+                },
+                selectLoading: false,
+                toolList: [
+                    {}
+                ],
+                isCreate: true,
+                scriptLang: ['1', '2', '4', '16', '512', '4096'],
+                isloading: false
             }
         },
         computed: {
             ...mapState('tool', {
                 toolMap: 'mapList'
             }),
+            ...mapState('task', {
+                taskDetail: 'detail'
+            }),
+            taskId () {
+                return this.$route.params.taskId
+            },
             isGitRepo () {
                 const gitRepoType = ['CODE_GIT', 'CODE_GITLAB', 'GITHUB']
-                return gitRepoType.indexOf(this.repoSelected.type) !== -1
+                return gitRepoType.indexOf(this.repoSelected.type) !== -1 || this.taskDetail.createFrom === 'gongfeng_scan'
             },
             toolParams () {
-                const { toolMap } = this
                 const toolParams = {}
-                if (this.codeMessage && this.repoList) {
-                    for (const i in this.repoList) {
-                        if (this.codeMessage.repoHashId === this.repoList[i].repoHashId) {
-                            this.$set(this.formData, 'repositoryHashId', this.codeMessage.repoHashId)
-                            this.$set(this.formData, 'branch', this.codeMessage.branch === '' ? 'master' : this.codeMessage.branch)
-                        }
+                for (const i in this.repoList) {
+                    if (this.codeMessage.repoHashId === this.repoList[i].repoHashId && !this.formData.repoHashId) {
+                        this.$set(this.formData, 'repoHashId', this.codeMessage.repoHashId)
+                        this.$set(this.formData, 'aliasName', this.repoList[i].aliasName)
+                        this.$set(this.formData, 'branch', this.codeMessage.branch === '' ? 'master' : this.codeMessage.branch)
                     }
                 }
+                return Object.assign({}, toolParams)
+            },
+            shownTool () {
+                let shownTool = false
                 this.tools.forEach(toolName => {
-                    if (toolMap[toolName]) {
-                        const params = JSON.parse(toolMap[toolName].params)
-                        if (params.length) {
-                            toolParams[toolName] = params
-                            this.formData[toolName] = params
-                        }
+                    if (['COVERITY', 'KLOCWORK', 'PINPOINT', 'CODEQL'].includes(toolName) && this.hasScript) {
+                        shownTool = true
                     }
                 })
-                return Object.assign({}, toolParams)
+                return shownTool
+            },
+            hasScript () {
+                // 非编译语言不显示脚本框
+                let hasScript = false
+                let codeLangNum = this.taskDetail.codeLang
+                if (this.codeLang.length) {
+                    codeLangNum = String(this.codeLang.reduce((n1, n2) => n1 + n2, 0))
+                }
+                if (codeLangNum && this.scriptLang.find(lang => lang & codeLangNum)) hasScript = true
+                return hasScript
             }
             // branchList () {
             //     let data = {}
@@ -275,74 +234,51 @@
             // }
         },
         watch: {
-            tools (tools) {
-                this.initFormData(tools)
-            },
             'toolParams': {
                 handler (newVal, oldVal) {
-                    this.tools.forEach(toolName => {
-                        if (this.toolMap[toolName]) {
-                            const params = JSON.parse(this.toolMap[toolName].params)
-                            if (params.length) {
-                                this.toolParams[toolName] = params
-                            }
-                        }
-                    })
+                    // this.tools.forEach(toolName => {
+                    //     if (this.toolMap[toolName] && this.toolMap[toolName].params) {
+                    //         const params = JSON.parse(this.toolMap[toolName].params)
+                    //         console.log(params)
+                    //     }
+                    // })
                 },
                 deep: true
             },
             codeMessage: {
                 handler () {
-                    if (this.codeMessage && this.repoList) {
-                        if (this.codeMessage.toolConfigList.length > 0) {
-                            this.codeMessage.toolConfigList.forEach(item => {
-                                if (!item.chooseValue) {
-                                    item.chooseValue = ''
-                                }
-                            })
-                            this.$set(this.formData, 'toolConfigList', this.codeMessage.toolConfigList)
+                    for (const i in this.repoList) {
+                        if (this.codeMessage.repoHashId === this.repoList[i].repoHashId && !this.formData.repoHashId) {
+                            this.$set(this.formData, 'repoHashId', this.codeMessage.repoHashId)
+                            this.$set(this.formData, 'aliasName', this.repoList[i].aliasName)
+                            this.$set(this.formData, 'branch', this.codeMessage.branch === '' ? 'master' : this.codeMessage.branch)
                         }
+                    }
+                    this.tools.forEach(toolName => {
+                        if (['COVERITY', 'KLOCWORK', 'PINPOINT', 'CODEQL'].includes(toolName) && this.hasScript) {
+                            this.shownTool = true
+                        }
+                    })
+                    if (this.codeMessage && this.repoList) {
+                        this.compile.compileEnv = this.codeMessage.osType || 'LINUX'
                     }
                 },
                 deep: true
             }
         },
         created () {
-            this.initFormData(this.tools)
             this.fetchRepos()
         },
         methods: {
-            getLang (option, param) {
-                if (param.varName === 'PROJECT_BUILD_TYPE') {
-                    if (option.id === 'shell') {
-                        this.lang = 'sh'
-                    }
-                }
-            },
-            initFormData (tools) {
-                const { toolMap } = this
-
-                // 填充已选择工具默认值到formData
-                tools.forEach(toolName => {
-                    if (toolMap[toolName]) {
-                        const params = JSON.parse(toolMap[toolName].params)
-                        if (params.length && !this.formData.toolParams.hasOwnProperty(toolName)) {
-                            this.formData.toolParams[toolName] = {}
-                        }
-                        params.forEach(param => {
-                            if (!this.formData.toolParams[toolName].hasOwnProperty(param.varName)) {
-                                this.formData.toolParams[toolName][param.varName] = param.varDefault
-                            }
-                        })
-                    }
-                })
-            },
             async fetchRepos () {
                 try {
+                    this.isloading = true
                     const projCode = this.$route.params.projectId
                     this.repoList = await this.$store.dispatch('task/getRepoList', { projCode })
                 } catch (e) {
                     console.error(e)
+                } finally {
+                    this.isloading = false
                 }
             },
             async handleRepoSelectToggle (isOpen) {
@@ -353,44 +289,52 @@
             handleRepoSelectChange (id) {
                 this.repoChange = true
                 this.repoSelected = this.repoList.find(repo => repo.repoHashId === id) || {}
+                this.$set(this.formData, 'aliasName', this.repoSelected.aliasName)
                 this.$refs.codeForm.formItems[0].validate('change')
             },
             handleBranchSelectChange () {
                 this.$refs.codeForm.formItems[1].validate('blur')
             },
             getSubmitData () {
-                const tools = this.tools.map(toolName => {
-                    return {
-                        toolName,
-                        taskId: this.$route.params.taskId,
-                        paramJson: JSON.stringify(this.formData.toolParams[toolName])
+                const receiveData = Object.assign(this.$refs.editData.compile, { ...this.$refs.editData.scriptData })
+                const buildEnv = {}
+                if (receiveData) {
+                    for (let i = 0; i < receiveData.compileTool.length; i++) {
+                        const key = receiveData.compileTool[i]
+                        const value = receiveData.compileToolVersion[i]
+                        buildEnv[key] = value
                     }
-                })
-                if (this.codeMessage.toolConfigList && this.codeMessage.toolConfigList.length > 0) {
-                    this.codeMessage.toolConfigList.map(item => {
-                        item.varOptionList = []
-                    })
                 }
                 const data = this.scenes !== 'manage-edit' ? {
-                    taskId: this.$route.params.taskId,
-                    repositoryHashId: this.formData.repositoryHashId,
-                    branchName: this.formData.branch,
+                    taskId: this.taskId,
+                    aliasName: this.formData.aliasName,
+                    repoHashId: this.formData.repoHashId,
+                    branch: this.formData.branch,
                     scmType: this.repoSelected.type,
-                    tools
+                    osType: receiveData.compileEnv || '',
+                    buildEnv: buildEnv || '',
+                    projectBuildType: receiveData.projectBuildType || '',
+                    projectBuildCommand: receiveData.projectBuildCommand || ''
                 } : {
                     taskId: this.$route.params.taskId,
-                    repoHashId: this.formData.repositoryHashId,
+                    aliasName: this.formData.aliasName,
+                    repoHashId: this.formData.repoHashId,
                     branch: this.formData.branch,
-                    toolConfigList: this.codeMessage.toolConfigList,
-                    scmType: this.repoSelected.type
+                    scmType: this.repoSelected.type,
+                    osType: receiveData.compileEnv || '',
+                    buildEnv: buildEnv || '',
+                    projectBuildType: receiveData.projectBuildType || '',
+                    projectBuildCommand: receiveData.projectBuildCommand || ''
                 }
-
+                if (!this.hasScript) {
+                    data.osType = ''
+                    data.buildEnv = ''
+                    data.projectBuildType = ''
+                    data.projectBuildCommand = ''
+                }
                 return data
             },
             handleSubmit (event) {
-                if (this.scenes !== 'manage-edit' && this.formData.toolConfigList.length === 0) {
-                    this.formData.toolConfigList.push({ chooseValue: '' })
-                }
                 this.$refs.codeForm.validate().then(validator => {
                     this.isSubmit = true
                     const data = this.getSubmitData()
@@ -399,23 +343,37 @@
                     if (isManageAddScenes) {
                         this.buttonLoading = true
                     }
-                    if (this.beforeSubmit) {
-                        this.beforeSubmit()
-                    }
                     if (this.scenes === 'manage-edit') {
                         this.$store.dispatch('task/saveCodeMessage', data).then(res => {
                             if (res.data === true) {
-                                this.$bkMessage({ theme: 'success', message: this.$t('op.保存成功') })
+                                this.$emit('saveBasic')
                             }
                         }).catch(e => {
-                            this.$bkMessage({ theme: 'error', message: this.$t('op.保存失败') })
+                            this.$bkMessage({ theme: 'error', message: this.$t('保存失败') })
                         }).finally(() => {
                             this.$store.dispatch('task/getCodeMessage')
                             this.buttonLoading = false
                             this.isSubmit = false
                         })
                     } else {
-                        this.$store.dispatch('task/addTool', data).then(res => {
+                        const pickedTools = this.tools.map(toolName => {
+                            return {
+                                toolName,
+                                taskId: this.taskId
+                            }
+                        })
+                        let tools = this.$parent.$refs.toolParamsSideForm.getParamsValue()
+                        tools = Object.assign(pickedTools, tools)
+                        const obj = {}
+                        tools = tools.reduce(function (item, next) { // 去重
+                            if (!obj[next.toolName]) {
+                                obj[next.toolName] = true
+                                item.push(next)
+                            }
+                            return item
+                        }, [])
+                        const postData = { ...data, tools }
+                        this.$store.dispatch('task/addTool', postData).then(res => {
                             if (res.code === '0') {
                                 if (this.success) {
                                     this.success()
@@ -427,6 +385,7 @@
                             if (isManageAddScenes) {
                                 this.buttonLoading = false
                                 this.isSubmit = false
+                                this.$emit('update')
                             }
                         })
                     }
@@ -436,8 +395,8 @@
 
                 this.$emit('submit', event)
             },
-            handleScriptInput (content) {
-                this.handleChange(this.name, content)
+            handlePrev () {
+                this.$emit('handlePrev')
             }
         }
     }
@@ -449,30 +408,24 @@
         .repo-add-link {
             font-size: 12px;
             position: absolute;
+            line-height: 32px;
             right: -52px;
-            top: 8px;
+            top: 0;
             color: #3a84ff;
         }
-    }
-    .edit-title {
-        border-bottom: 1px solid $bgHoverColor;
-        padding-bottom: 10px;
-        margin-bottom: 22px;
-        font-size: 14px;
-        color: #63656e;
-        font-weight: bold;
     }
     /* .bk-form-item {
         width: 50%;
     } */
     .footer {
-        padding-top: 20px;
+        /* padding-top: 20px; */
     }
 
     .radio-param,
     .checkbox-param {
         .item {
             margin-right: 8px;
+            line-height: 25px;
         }
         .ace-wrapper {
             padding-top: 5px;
@@ -487,5 +440,35 @@
         .bk-form-item {
             width: 50%;
         }
+    }
+    .compile-tool {
+        margin-bottom: -57px;
+        div {
+            div {
+                width: 49%;
+            }
+        }
+    }
+    .compile-version {
+        position: relative;
+        top: -32px;
+        left: 51%;
+    }
+    .tool-icon {
+        position: relative;
+        top: -57px;
+        left: 102%;
+        .bk-icon {
+            cursor: pointer;
+        }
+    }
+    .pipeline-label {
+        display: inline-block;
+        width: 104px;
+        text-align: left;
+        font-size: 14px;
+        line-height: 14px;
+        height: 46px;
+        font-weight: 600;
     }
 </style>

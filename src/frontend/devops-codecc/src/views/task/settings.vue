@@ -1,6 +1,6 @@
 <template>
-    <div>
-        <bk-tab type="border-card" :active.sync="active" :before-toggle="beforeToggle">
+    <div :class="{ 'mini': active === 'tools' }">
+        <bk-tab type="border-card" class="cc-settings" :active.sync="active" :before-toggle="beforeToggle">
             <bk-tab-panel
                 v-for="(panel, index) in panels"
                 v-bind="panel"
@@ -19,12 +19,14 @@
         data () {
             return {
                 panels: [
-                    { name: 'basic', label: this.$t('nav.基础信息') },
-                    { name: 'tools', label: this.$t('nav.工具管理') },
-                    { name: 'code', label: this.$t('nav.代码库配置') },
-                    { name: 'trigger', label: this.$t('nav.扫描触发') },
-                    { name: 'ignore', label: this.$t('nav.路径屏蔽') },
-                    { name: 'manage', label: this.$t('nav.任务管理') }
+                    { name: 'code', label: this.$t('基础信息') },
+                    { name: 'checkerset', label: this.$t('规则集配置') },
+                    // { name: 'tools', label: this.$t('工具管理') },
+                    { name: 'report', label: this.$t('通知报告') },
+                    { name: 'trigger', label: this.$t('扫描触发') },
+                    { name: 'ignore', label: this.$t('路径屏蔽') },
+                    { name: 'authority', label: this.$t('人员权限') },
+                    { name: 'manage', label: this.$t('任务管理') }
                 ],
                 active: this.$route.name.split('-').pop()
             }
@@ -41,16 +43,14 @@
         methods: {
             beforeToggle (name) {
                 if (this.taskDetail.createFrom.indexOf('pipeline') !== -1) {
-                    if (name === 'tools' || name === 'code' || name === 'manage' || name === 'trigger') {
+                    if (name === 'tools' || name === 'manage') {
                         const titleMap = {
-                            'tools': this.$t('st.此代码检查任务为流水线创建，工具需前往相应流水线添加。'),
-                            'code': this.$t('st.此代码检查任务为流水线创建，代码库需前往相应流水线配置。'),
-                            'manage': this.$t('st.此代码检查任务为流水线创建，任务需前往相应流水线管理。'),
-                            'trigger': this.$t('st.此代码检查任务为流水线创建，扫描触发需前往相应流水线配置。')
+                            'tools': this.$t('此代码检查任务为流水线创建，工具需前往相应流水线添加。'),
+                            'manage': this.$t('此代码检查任务为流水线创建，任务需前往相应流水线管理。')
                         }
-                        let that = this
+                        const that = this
                         this.$bkInfo({
-                            title: this.$t('st.温馨提示'),
+                            title: this.$t('温馨提示'),
                             subTitle: titleMap[name],
                             maskClose: true,
                             confirmFn (name) {
@@ -75,8 +75,30 @@
         min-height: calc(100% - 43px);
         background: #fff;
     }
-
 </style>
 
 <style lang="postcss" scoped>
+    .main-content.mini {
+        max-width: calc(100% - 350px);
+        min-width: 1085px;
+        >>>.params-side {
+            top: 57px;
+            max-height: calc(100vh - 152px);
+            toolparams {
+                max-height: calc(100vh - 262px);
+            }
+        }
+    }
+    >>> .cc-settings>.bk-tab-header>.bk-tab-label-wrapper>.bk-tab-label-list>.bk-tab-label-item {
+        &:nth-of-type(1), &:nth-of-type(2) {
+            >.bk-tab-label::after {
+                content: "*";
+                color: #ff5656;
+                position: relative;
+                margin: 2px -7px 0 2px;
+                display: inline-block;
+                vertical-align: middle;
+            }
+        }
+    }
 </style>

@@ -59,7 +59,7 @@ export default {
      * 跳转到登录页
      */
     redirectToLogin () {
-        window.location.href = window.PAAS_SERVICE_URL + '/login/?c_url=' + window.location.href
+        window.location.href = window.PAAS_SERVICE_URL + '/?c_url=' + window.location.href
     },
 
     /**
