@@ -1,0 +1,19 @@
+CREATE CONTINUOUS QUERY cq_atom_total_count ON monitoring  BEGIN SELECT count(errorCode) as total_count INTO AtomMonitorData_success_rat_count FROM AtomMonitorData group by time(5m) END
+CREATE CONTINUOUS QUERY cq_atom_failed_count ON monitoring  BEGIN SELECT count(errorCode) as failed_count INTO AtomMonitorData_success_rat_count FROM AtomMonitorData where errorCode != '0' group by time(5m) END
+CREATE CONTINUOUS QUERY cq_atom_success_count ON monitoring  BEGIN SELECT count(errorCode) as success_count INTO AtomMonitorData_success_rat_count FROM AtomMonitorData where errorCode = '0' group by time(5m) END
+CREATE CONTINUOUS QUERY cq_atom_success_rat ON monitoring  BEGIN SELECT success_count * 100 / total_count as success_rat INTO AtomMonitorData_success_rat_count FROM AtomMonitorData_success_rat_count END
+
+CREATE CONTINUOUS QUERY cq_atom_linuxscript_total_count ON monitoring  BEGIN SELECT count(errorCode) as linuxscript_total_count INTO AtomMonitorData_success_rat_count FROM AtomMonitorData where atomCode = 'linuxScript' group by time(5m) END
+CREATE CONTINUOUS QUERY cq_atom_linuxscript_failed_count ON monitoring  BEGIN SELECT count(errorCode) as linuxscript_failed_count INTO AtomMonitorData_success_rat_count FROM AtomMonitorData where atomCode = 'linuxScript' and errorCode != '0' group by time(5m) END
+CREATE CONTINUOUS QUERY cq_atom_linuxscript_success_count ON monitoring  BEGIN SELECT count(errorCode) as linuxscript_success_count INTO AtomMonitorData_success_rat_count FROM AtomMonitorData where atomCode = 'linuxScript' and errorCode = '0' group by time(5m) END
+CREATE CONTINUOUS QUERY cq_atom_linuxscript_success_rat ON monitoring  BEGIN SELECT linuxscript_success_count * 100 / linuxscript_total_count as linuxscript_success_rat INTO AtomMonitorData_success_rat_count FROM AtomMonitorData_success_rat_count END
+
+CREATE CONTINUOUS QUERY cq_atom_UploadArtifactory_total_count ON monitoring  BEGIN SELECT count(errorCode) as UploadArtifactory_total_count INTO AtomMonitorData_success_rat_count FROM AtomMonitorData where atomCode = 'UploadArtifactory' group by time(5m) END
+CREATE CONTINUOUS QUERY cq_atom_UploadArtifactory_failed_count ON monitoring  BEGIN SELECT count(errorCode) as UploadArtifactory_failed_count INTO AtomMonitorData_success_rat_count FROM AtomMonitorData where atomCode = 'UploadArtifactory' and errorCode != '0' group by time(5m) END
+CREATE CONTINUOUS QUERY cq_atom_UploadArtifactory_success_count ON monitoring  BEGIN SELECT count(errorCode) as UploadArtifactory_success_count INTO AtomMonitorData_success_rat_count FROM AtomMonitorData where atomCode = 'UploadArtifactory' and errorCode = '0' group by time(5m) END
+CREATE CONTINUOUS QUERY cq_atom_UploadArtifactory_success_rat ON monitoring  BEGIN SELECT UploadArtifactory_success_count * 100 / UploadArtifactory_total_count as UploadArtifactory_success_rat INTO AtomMonitorData_success_rat_count FROM AtomMonitorData_success_rat_count END
+
+CREATE CONTINUOUS QUERY cq_atom_CODE_GIT_total_count ON monitoring  BEGIN SELECT count(errorCode) as CODE_GIT_total_count INTO AtomMonitorData_success_rat_count FROM AtomMonitorData where atomCode = 'CODE_GIT' group by time(5m) END
+CREATE CONTINUOUS QUERY cq_atom_CODE_GIT_failed_count ON monitoring  BEGIN SELECT count(errorCode) as CODE_GIT_failed_count INTO AtomMonitorData_success_rat_count FROM AtomMonitorData where atomCode = 'CODE_GIT' and errorCode != '0' group by time(5m) END
+CREATE CONTINUOUS QUERY cq_atom_CODE_GIT_success_count ON monitoring  BEGIN SELECT count(errorCode) as CODE_GIT_success_count INTO AtomMonitorData_success_rat_count FROM AtomMonitorData where atomCode = 'CODE_GIT' and errorCode = '0' group by time(5m) END
+CREATE CONTINUOUS QUERY cq_atom_CODE_GIT_success_rat ON monitoring  BEGIN SELECT CODE_GIT_success_count * 100 / CODE_GIT_total_count as CODE_GIT_success_rat INTO AtomMonitorData_success_rat_count FROM AtomMonitorData_success_rat_count END
