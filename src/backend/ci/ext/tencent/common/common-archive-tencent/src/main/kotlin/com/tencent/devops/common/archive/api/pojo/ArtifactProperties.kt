@@ -27,5 +27,5 @@
 package com.tencent.devops.common.archive.api.pojo
 
 data class ArtifactProperties(
-    val ArtifactProperties: List<JFrogPropertyItem>
+    val artifactProperties: List<JFrogPropertyItem>
 )

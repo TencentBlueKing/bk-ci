@@ -45,19 +45,20 @@ class JFrogPropertiesApi constructor(
     private val credential = JFrogUtil.makeCredential(jFrogConfigProperties.username!!, jFrogConfigProperties.password!!)
 
     fun getProperties(path: String): Map<String, List<String>> {
-        val encodePath = URLEncoder.encode(path, "UTF-8")
+        logger.info("getProperties, path: $path")
+        val encodePath = URLEncoder.encode(path.removePrefix(JFrogUtil.getRepoPath()), "UTF-8")
         val url = "$baseUrl/api/artifactproperties?path=$encodePath&repoKey=generic-local"
         val request = Request.Builder().url(url).header("Authorization", credential).get().build()
 
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.error("get file properties failed, path: $path, responseContent: $responseContent")
+                logger.error("get file properties failed, encodePath: $encodePath, responseContent: $responseContent")
                 throw RuntimeException("get file properties failed")
             }
 
             val artifactProperties = objectMapper.readValue<ArtifactProperties>(responseContent)
-            return artifactProperties.ArtifactProperties.associate {
+            return artifactProperties.artifactProperties.associate {
                 it.name to listOf(it.value)
             }
         }
