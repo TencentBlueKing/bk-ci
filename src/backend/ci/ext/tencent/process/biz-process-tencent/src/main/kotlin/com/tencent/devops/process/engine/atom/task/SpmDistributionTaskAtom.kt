@@ -40,7 +40,7 @@ import com.tencent.devops.common.pipeline.element.SpmDistributionElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_CDN_FAIL
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -66,7 +66,7 @@ import java.io.File
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class SpmDistributionTaskAtom @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val commonConfig: CommonConfig
 ) : IAtomTask<SpmDistributionElement> {
     @Value("\${cdntool.cmdpath}")
@@ -121,7 +121,7 @@ class SpmDistributionTaskAtom @Autowired constructor(
         try {
             regexPathsStr.split(",").forEach { regex ->
                 val requestBody = getRequestBody(regex, isCustom)
-                LogUtils.addLine(rabbitTemplate, buildId, "requestBody:$requestBody", elementId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addLine(buildId, "requestBody:$requestBody", elementId, task.containerHashId, task.executeCount ?: 1)
                 val request = Request.Builder()
                         .url(searchUrl)
                         .post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
@@ -144,7 +144,7 @@ class SpmDistributionTaskAtom @Autowired constructor(
                 }
             }
             logger.info("$count file(s) will be distribute...")
-            LogUtils.addLine(rabbitTemplate, buildId, "$count file(s) will be distribute...", elementId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addLine(buildId, "$count file(s) will be distribute...", elementId, task.containerHashId, task.executeCount ?: 1)
             if (count == 0) throw TaskExecuteException(
                 errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                 errorType = ErrorType.USER,
@@ -152,7 +152,7 @@ class SpmDistributionTaskAtom @Autowired constructor(
             )
             zipFile = FileUtil.zipToCurrentPath(workspace)
             logger.info("Zip file: ${zipFile.canonicalPath}")
-            LogUtils.addLine(rabbitTemplate, buildId, "Zip file: $zipFile", elementId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addLine(buildId, "Zip file: $zipFile", elementId, task.containerHashId, task.executeCount ?: 1)
 
             // 创建cdntool的配置文件
             val cdnToolConfFile = File(workspace, "cdntool.conf")
@@ -178,7 +178,7 @@ class SpmDistributionTaskAtom @Autowired constructor(
             if (response["ret"] != 0) {
                 val msg = response["error"]
                 logger.error("Spm return not 0,distribute to cdn failed. msg: $msg")
-                LogUtils.addRedLine(rabbitTemplate, buildId, "分发CDN失败. msg: $msg", elementId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addRedLine(buildId, "分发CDN失败. msg: $msg", elementId, task.containerHashId, task.executeCount ?: 1)
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -190,10 +190,10 @@ class SpmDistributionTaskAtom @Autowired constructor(
             logger.info("Distribute to cdn request success, now get the process...")
             if (waitForDistribute(rootPath, distributeFile, cmdbAppId, maxRunningMins)) {
                 logger.info("CDN distribute success.")
-                LogUtils.addLine(rabbitTemplate, buildId, "CDN distribute success.", elementId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addLine(buildId, "CDN distribute success.", elementId, task.containerHashId, task.executeCount ?: 1)
             }
 
-            LogUtils.addLine(rabbitTemplate, buildId, "Distribute to CDN done", elementId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addLine(buildId, "Distribute to CDN done", elementId, task.containerHashId, task.executeCount ?: 1)
         } finally {
             workspace.deleteRecursively()
             zipFile?.delete()

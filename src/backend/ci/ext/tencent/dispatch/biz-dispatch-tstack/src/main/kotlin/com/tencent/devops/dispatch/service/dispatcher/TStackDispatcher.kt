@@ -30,6 +30,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.type.tstack.TStackDispatchType
 import com.tencent.devops.dispatch.service.TstackBuildService
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.slf4j.LoggerFactory
@@ -41,7 +42,7 @@ import org.springframework.stereotype.Component
 class TStackDispatcher @Autowired constructor(
     private val client: Client,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val tstackBuildService: TstackBuildService
 ) : Dispatcher {
     override fun canDispatch(pipelineAgentStartupEvent: PipelineAgentStartupEvent) =
@@ -51,7 +52,7 @@ class TStackDispatcher @Autowired constructor(
         val startSuccess = tstackBuildService.startTstackBuild(pipelineAgentStartupEvent)
         if (!startSuccess) {
             logger.warn("Start tstack build failed 0 $pipelineAgentStartupEvent, retry")
-            retry(client, rabbitTemplate, pipelineEventDispatcher, pipelineAgentStartupEvent)
+            retry(client, buildLogPrinter, pipelineEventDispatcher, pipelineAgentStartupEvent)
         }
     }
 

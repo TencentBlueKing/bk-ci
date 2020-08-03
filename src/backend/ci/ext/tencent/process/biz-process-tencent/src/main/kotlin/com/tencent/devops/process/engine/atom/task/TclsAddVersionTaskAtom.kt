@@ -39,7 +39,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.TclsType
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.element.TclsAddVersionElement
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
@@ -62,7 +62,7 @@ import java.util.Base64
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class TclsAddVersionTaskAtom @Autowired constructor(
     private val client: Client,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<TclsAddVersionElement> {
 
     override fun getParamElement(task: PipelineBuildTask): TclsAddVersionElement {
@@ -80,7 +80,7 @@ class TclsAddVersionTaskAtom @Autowired constructor(
         if (isMtclsApp) {
             if (param.serviceId.isNullOrBlank()) {
                 logger.warn("TCLS serviceId is not init of build($buildId)")
-                LogUtils.addRedLine(rabbitTemplate, buildId, "TCLS serviceId is not init", elementId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addRedLine(buildId, "TCLS serviceId is not init", elementId, task.containerHashId, task.executeCount ?: 1)
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -91,7 +91,7 @@ class TclsAddVersionTaskAtom @Autowired constructor(
         } else {
             if (param.tclsAppId.isNullOrBlank()) {
                 logger.warn("TCLS appId is not init of build($buildId)")
-                LogUtils.addRedLine(rabbitTemplate, buildId, "TCLS appId is not init", elementId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addRedLine(buildId, "TCLS appId is not init", elementId, task.containerHashId, task.executeCount ?: 1)
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -103,7 +103,7 @@ class TclsAddVersionTaskAtom @Autowired constructor(
 
         if (param.ticketId.isBlank()) {
             logger.warn("ticketId is not init of build($buildId)")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "ticketId is not init", elementId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId, "ticketId is not init", elementId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -190,12 +190,12 @@ class TclsAddVersionTaskAtom @Autowired constructor(
                     val msg = responseData["message"]
 
                     logger.error("add version failed: $msg")
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "添加 TCLS 版本失败,错误信息：$msg", elementId, task.containerHashId, task.executeCount ?: 1)
+                    buildLogPrinter.addRedLine(buildId, "添加 TCLS 版本失败,错误信息：$msg", elementId, task.containerHashId, task.executeCount ?: 1)
                     return defaultFailAtomResponse
                 }
             } catch (e: Exception) {
                 logger.error("add version error", e)
-                LogUtils.addRedLine(rabbitTemplate, buildId, "添加 TCLS 版本失败,错误信息：${e.message}", elementId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addRedLine(buildId, "添加 TCLS 版本失败,错误信息：${e.message}", elementId, task.containerHashId, task.executeCount ?: 1)
                 return defaultFailAtomResponse
             }
         }

@@ -36,7 +36,7 @@ import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.code.VSAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.api.ServiceJinGangAppResource
 import com.tencent.devops.common.pipeline.element.JinGangAppElement
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -55,7 +55,7 @@ import java.io.File
 class JinGangAppTaskAtom @Autowired constructor(
     private val bkAuthResourceApi: BSAuthResourceApi,
     private val client: Client,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val serviceCode: VSAuthServiceCode
 ) : IAtomTask<JinGangAppElement> {
 
@@ -87,7 +87,7 @@ class JinGangAppTaskAtom @Autowired constructor(
             )
         }
         files.split(",").map { it.trim() }.forEach {
-            LogUtils.addLine(rabbitTemplate, buildId, "jin gang start scan file: $it", taskId, containerId, task.executeCount ?: 1)
+            buildLogPrinter.addLine(buildId, "jin gang start scan file: $it", taskId, containerId, task.executeCount ?: 1)
             val path = if (isCustom) "/${it.removePrefix("/")}" else "/$pipelineId/$buildId/${it.removePrefix("/")}"
             val data = client.get(ServiceJinGangAppResource::class).scanApp(userId, projectId, pipelineId, buildId, buildNo, taskId, path, isCustom, runType)
             val resourceName = File(it).name + "($buildNo)"
@@ -101,9 +101,9 @@ class JinGangAppTaskAtom @Autowired constructor(
                     projectId, HashUtil.encodeLongId(jinGangTaskId.toLong()), resourceName)
 
             if (data.status != 0) {
-                LogUtils.addLine(rabbitTemplate, buildId, "jin gang fail: $data", taskId, containerId, task.executeCount ?: 1)
+                buildLogPrinter.addLine(buildId, "jin gang fail: $data", taskId, containerId, task.executeCount ?: 1)
             } else {
-                LogUtils.addLine(rabbitTemplate, buildId, "jin gang success: $data", taskId, containerId, task.executeCount ?: 1)
+                buildLogPrinter.addLine(buildId, "jin gang success: $data", taskId, containerId, task.executeCount ?: 1)
             }
         }
         return AtomResponse(BuildStatus.SUCCEED)

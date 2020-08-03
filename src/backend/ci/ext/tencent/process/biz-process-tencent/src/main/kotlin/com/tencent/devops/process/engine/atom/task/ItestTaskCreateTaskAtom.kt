@@ -31,7 +31,7 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.ItestTaskCreateElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -52,7 +52,7 @@ import org.springframework.stereotype.Component
 @Scope(SCOPE_PROTOTYPE)
 class ItestTaskCreateTaskAtom @Autowired constructor(
     private val client: Client,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<ItestTaskCreateElement> {
 
     override fun getParamElement(task: PipelineBuildTask): ItestTaskCreateElement {
@@ -89,7 +89,7 @@ class ItestTaskCreateTaskAtom @Autowired constructor(
 
         logger.info("Create task for itest success!")
         val processJson = JSONObject.fromObject(taskCreateResponse.data).toString()
-        LogUtils.addLine(rabbitTemplate, buildId, "创建itest自测任务成功, 详情：$processJson", taskId, containerId, task.executeCount ?: 1)
+        buildLogPrinter.addLine(buildId, "创建itest自测任务成功, 详情：$processJson", taskId, containerId, task.executeCount ?: 1)
         return AtomResponse(BuildStatus.SUCCEED)
     }
 

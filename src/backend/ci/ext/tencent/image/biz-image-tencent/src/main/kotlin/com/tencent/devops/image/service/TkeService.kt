@@ -42,7 +42,7 @@ import com.tencent.devops.image.config.DockerConfig
 import com.tencent.devops.image.pojo.PushImageTask
 import com.tencent.devops.image.pojo.enums.TaskStatus
 import com.tencent.devops.image.pojo.tke.TkePushImageParam
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -65,9 +65,9 @@ class TkeService @Autowired constructor(
     private val dockerConfig: DockerConfig,
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) {
-// 从配置文件中读取相关配置
+    // 从配置文件中读取相关配置
     @Value("\${esb.appCode:#{null}}")
     val appCode: String = ""
 
@@ -146,13 +146,12 @@ class TkeService @Autowired constructor(
 
         val fromImage =
             "${dockerConfig.imagePrefix}/paas/${pushImageParam.projectId}/${pushImageParam.srcImageName}:${pushImageParam.srcImageTag}"
-        LogUtils.addLine(
-            rabbitTemplate,
-            pushImageParam.buildId,
-            "源镜像：$fromImage",
-            pushImageParam.taskId,
-                pushImageParam.containerId,
-            pushImageParam.executeCount ?: 1
+        buildLogPrinter.addLine(
+            buildId = pushImageParam.buildId,
+            message = "源镜像：$fromImage",
+            tag = pushImageParam.taskId,
+            jobId = pushImageParam.containerId,
+            executeCount = pushImageParam.executeCount ?: 1
         )
         val toImageRepo = if (pushImageParam.verifyOa) {
             "${pushImageParam.repoAddress}/${pushImageParam.targetImageName}"
@@ -164,12 +163,11 @@ class TkeService @Autowired constructor(
             logger.info("[${pushImageParam.buildId}]|Pull image success, image name and tag: $fromImage")
             dockerClient.tagImageCmd(fromImage, toImageRepo, pushImageParam.targetImageTag).exec()
             logger.info("[${pushImageParam.buildId}]|Tag image success, image name and tag: $toImageRepo:${pushImageParam.targetImageTag}")
-            LogUtils.addLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addLine(
                 buildId = pushImageParam.buildId,
                 message = "目标镜像：$toImageRepo:${pushImageParam.targetImageTag}",
                 tag = pushImageParam.taskId,
-                    jobId = pushImageParam.containerId,
+                jobId = pushImageParam.containerId,
                 executeCount = pushImageParam.executeCount ?: 1
             )
             pushImageToTke(pushImageParam)
@@ -258,35 +256,32 @@ class TkeService @Autowired constructor(
                 val code = responseData["code"] as String
                 if (NumberUtils.isDigits(code) && code.toInt() == 0) {
                     logger.error("[${pushImageParam.buildId}]|Import docker image success")
-                    LogUtils.addLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addLine(
                         buildId = pushImageParam.buildId,
                         message = "注册镜像成功",
                         tag = pushImageParam.taskId,
-                            jobId = pushImageParam.containerId,
-                executeCount = pushImageParam.executeCount ?: 1
+                        jobId = pushImageParam.containerId,
+                        executeCount = pushImageParam.executeCount ?: 1
                     )
                 } else {
                     val msg = responseData["msg"]
                     logger.error("[${pushImageParam.buildId}]|Import docker image failed, msg:$msg")
-                    LogUtils.addRedLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addRedLine(
                         buildId = pushImageParam.buildId,
                         message = "注册镜像失败，错误信息：$msg",
                         tag = pushImageParam.taskId,
-                            jobId = pushImageParam.containerId,
-                executeCount = pushImageParam.executeCount ?: 1
+                        jobId = pushImageParam.containerId,
+                        executeCount = pushImageParam.executeCount ?: 1
                     )
                 }
             }
         } catch (e: Exception) {
             logger.error("[${pushImageParam.buildId}]|Import docker image failed exception:", e)
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId = pushImageParam.buildId,
                 message = "注册镜像失败，错误信息：${e.message}",
                 tag = pushImageParam.taskId,
-                    jobId = pushImageParam.containerId,
+                jobId = pushImageParam.containerId,
                 executeCount = pushImageParam.executeCount ?: 1
             )
         }

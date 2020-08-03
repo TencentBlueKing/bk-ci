@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.api.ServiceLunaResource
 import com.tencent.devops.plugin.pojo.luna.LunaUploadParam
 import com.tencent.devops.common.pipeline.element.LunaPushFileElement
@@ -49,7 +49,7 @@ import org.springframework.stereotype.Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class LunaPushFileTaskAtom @Autowired constructor(
     private val client: Client,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<LunaPushFileElement> {
 
     override fun getParamElement(task: PipelineBuildTask): LunaPushFileElement {
@@ -92,10 +92,10 @@ class LunaPushFileTaskAtom @Autowired constructor(
             )
         )
 
-        LogUtils.addLine(rabbitTemplate, buildId, "开始上传文件到LUNA...", task.taskId, task.containerHashId, task.executeCount ?: 1)
-        LogUtils.addLine(rabbitTemplate, buildId, "匹配文件中: ${uploadParams.fileParams.regexPath}($fileSource)", task.taskId, task.containerHashId, task.executeCount ?: 1)
+        buildLogPrinter.addLine(buildId, "开始上传文件到LUNA...", task.taskId, task.containerHashId, task.executeCount ?: 1)
+        buildLogPrinter.addLine(buildId, "匹配文件中: ${uploadParams.fileParams.regexPath}($fileSource)", task.taskId, task.containerHashId, task.executeCount ?: 1)
         client.get(ServiceLunaResource::class).pushFile(uploadParams)
-        LogUtils.addLine(rabbitTemplate, buildId, "上传文件到LUNA结束! 请到LUNA平台->托管源站->托管列表->文件管理中查看【<a target='_blank' href='http://luna.oa.com/homepage'>传送门</a>】",
+        buildLogPrinter.addLine(buildId, "上传文件到LUNA结束! 请到LUNA平台->托管源站->托管列表->文件管理中查看【<a target='_blank' href='http://luna.oa.com/homepage'>传送门</a>】",
             task.taskId, task.containerHashId, task.executeCount ?: 1)
         return defaultSuccessAtomResponse
     }

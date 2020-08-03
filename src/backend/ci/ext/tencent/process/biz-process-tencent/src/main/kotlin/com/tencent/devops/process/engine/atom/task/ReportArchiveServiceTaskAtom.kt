@@ -39,7 +39,7 @@ import com.tencent.devops.common.pipeline.element.ReportArchiveServiceElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -71,7 +71,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val reportService: ReportService,
     private val jFrogStorageApi: JFrogStorageApi,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val jobClient: JobClient,
     private val redisOperation: RedisOperation,
     private val repoGray: RepoGray,
@@ -157,13 +157,13 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         val containerId = task.containerHashId
         val executeCount = task.executeCount ?: 1
         if (param.fileDir.isBlank()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "fileDir is not init", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, "fileDir is not init", taskId, containerId, executeCount)
             return AtomResponse(BuildStatus.FAILED)
         }
 
         if (param.reportName.isBlank()) {
             logger.warn("reportName is not init of build($buildId)")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "reportName is not init", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, "reportName is not init", taskId, containerId, executeCount)
             return AtomResponse(BuildStatus.FAILED)
         }
 
@@ -178,7 +178,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
 
         val outputVariables = mutableMapOf<String, Any>()
         val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
 
         val localIp = CommonUtils.getInnerIP()
         task.taskParams[BS_TASK_HOST] = localIp
@@ -213,7 +213,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
             timeout = getTimeoutMills().toLong()
         )
         val taskInstanceId = jobClient.fastPushFileDevops(fileRequest, projectId)
-        LogUtils.addLine(rabbitTemplate, buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkFileTransferStatus(
@@ -233,7 +233,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
 
         if (!BuildStatus.isFinish(buildStatus)) {
-            LogUtils.addLine(rabbitTemplate, task.buildId, "报告正在上传 job:$taskInstanceId", task.taskId, task.containerHashId, executeCount)
+            buildLogPrinter.addLine(task.buildId, "报告正在上传 job:$taskInstanceId", task.taskId, task.containerHashId, executeCount)
             return AtomResponse(buildStatus)
         }
 
@@ -290,8 +290,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
 
         val indexFile = File(localDir, indexFileParam)
         if (!indexFile.exists()) {
-            LogUtils.addLine(
-                rabbitTemplate,
+            buildLogPrinter.addLine(
                 buildId,
                 "入口文件($indexFileParam)不在文件夹($fileDirParam)下",
                 taskId,
@@ -304,7 +303,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
                 errorMsg = "Index file not exist"
             )
         }
-        LogUtils.addLine(rabbitTemplate, buildId, "入口文件检测完成", taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "入口文件检测完成", taskId, containerId, executeCount)
 
         var indexFileContent = indexFile.readBytes().toString(Charset.defaultCharset())
         indexFileContent = indexFileContent.replace("\${$REPORT_DYNAMIC_ROOT_URL}", reportRootUrl)
@@ -332,7 +331,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         }
 
         reportService.create(projectId, pipelineId, buildId, taskId, indexFileParam, reportNameParam, ReportTypeEnum.INTERNAL, reportEmail)
-        LogUtils.addLine(rabbitTemplate, buildId, "上传自定义产出物成功，共产生了${count}个文件", taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "上传自定义产出物成功，共产生了${count}个文件", taskId, containerId, executeCount)
     }
 
     private fun checkFileTransferStatus(
@@ -349,8 +348,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
 
         if (System.currentTimeMillis() - startTime > maxRunningMills) {
             logger.warn("job getTimeout. getTimeout minutes:${maxRunningMills / 60000}")
-            LogUtils.addRedLine(
-                rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId,
                 "Job getTimeout: ${maxRunningMills / 60000} Minutes",
                 taskId,
@@ -365,12 +363,12 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         return if (taskResult.isFinish) {
             if (taskResult.success) {
                 logger.info("[$buildId]|SUCCEED|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addLine(rabbitTemplate, buildId, "文件推送完成", taskId, containerId, executeCount)
+                buildLogPrinter.addLine(buildId, "文件推送完成", taskId, containerId, executeCount)
                 BuildStatus.SUCCEED
             } else {
                 logger.info("[$buildId]|FAIL|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addRedLine(rabbitTemplate, buildId, "自定义产出物报告推送文件失败", taskId, containerId, executeCount)
-                LogUtils.addRedLine(rabbitTemplate, buildId, "失败详情: ${taskResult.msg}", taskId, containerId, executeCount)
+                buildLogPrinter.addRedLine(buildId, "自定义产出物报告推送文件失败", taskId, containerId, executeCount)
+                buildLogPrinter.addRedLine(buildId, "失败详情: ${taskResult.msg}", taskId, containerId, executeCount)
                 BuildStatus.FAILED
             }
         } else {
