@@ -632,7 +632,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         vmSeqId: String,
         result: BuildTaskResult
     ) {
-        if (measureService == null && !atomMonitorSwitch.toBoolean()) {
+        val switchFlag = redisOperation.get("atomMonitorSwitch") ?: atomMonitorSwitch
+        if (measureService == null && !switchFlag.toBoolean()) {
             return
         }
         val taskId = result.taskId
@@ -658,6 +659,11 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 userId = task.starter
             )
             // 上报插件监控数据
+            val specReportAtoms = redisOperation.get("specReportAtoms")
+            if (specReportAtoms != null && specReportAtoms.split(",").contains(atomCode)) {
+                // 如果配置了指定插件上报监控数据，则其它插件无需上报
+                return
+            }
             val monitorDataMap = result.monitorData
             if (monitorDataMap != null) {
                 val monitorDataSize = RamUsageEstimator.sizeOfMap(monitorDataMap)
@@ -666,38 +672,38 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     logger.info("the build($buildId) of atom($atomCode) monitorDataSize($monitorDataSize) is too large,maxMonitorDataSize is:$maxMonitorDataSize")
                     return
                 }
-                val version = taskParams[KEY_VERSION] as String? ?: ""
-                val startTimeStr = monitorDataMap[KEY_START_TIME]
-                val startTime = if (startTimeStr == null) {
-                    task.startTime?.timestampmilli()
-                } else {
-                    DateTimeUtil.stringToLocalDateTime(startTimeStr.toString()).timestampmilli()
-                }
-                val endTimeStr = monitorDataMap[KEY_END_TIME]
-                val endTime = if (endTimeStr == null) {
-                    task.endTime?.timestampmilli()
-                } else {
-                    DateTimeUtil.stringToLocalDateTime(endTimeStr.toString()).timestampmilli()
-                }
-                val atomMonitorData = AtomMonitorData(
-                    errorCode = result.errorCode ?: -1,
-                    errorMsg = result.message,
-                    errorType = result.errorType,
-                    atomCode = atomCode,
-                    version = version,
-                    projectId = task.projectId,
-                    pipelineId = task.pipelineId,
-                    buildId = buildId,
-                    vmSeqId = vmSeqId,
-                    startTime = startTime,
-                    endTime = endTime,
-                    elapseTime = (endTime ?: 0) - (startTime ?: 0),
-                    channel = monitorDataMap[KEY_CHANNEL] as? String,
-                    starter = task.starter,
-                    extData = monitorDataMap["extData"] as? Map<String, Any>
-                )
-                atomMonitorEventDispatcher.dispatch(AtomMonitorReportBroadCastEvent(atomMonitorData))
             }
+            val version = taskParams[KEY_VERSION] as String? ?: ""
+            val startTimeStr = monitorDataMap?.get(KEY_START_TIME)
+            val startTime = if (startTimeStr == null) {
+                task.startTime?.timestampmilli()
+            } else {
+                DateTimeUtil.stringToLocalDateTime(startTimeStr.toString()).timestampmilli()
+            }
+            val endTimeStr = monitorDataMap?.get(KEY_END_TIME)
+            val endTime = if (endTimeStr == null) {
+                task.endTime?.timestampmilli()
+            } else {
+                DateTimeUtil.stringToLocalDateTime(endTimeStr.toString()).timestampmilli()
+            }
+            val atomMonitorData = AtomMonitorData(
+                errorCode = result.errorCode ?: -1,
+                errorMsg = result.message,
+                errorType = result.errorType,
+                atomCode = atomCode,
+                version = version,
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                startTime = startTime,
+                endTime = endTime,
+                elapseTime = (endTime ?: 0) - (startTime ?: 0),
+                channel = monitorDataMap?.get(KEY_CHANNEL) as? String,
+                starter = task.starter,
+                extData = monitorDataMap?.get("extData") as? Map<String, Any>
+            )
+            atomMonitorEventDispatcher.dispatch(AtomMonitorReportBroadCastEvent(atomMonitorData))
         } catch (t: Throwable) {
             logger.warn("[$buildId]| Fail to send the measure element data", t)
         }
