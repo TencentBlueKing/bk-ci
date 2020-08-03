@@ -31,6 +31,7 @@ class V3EnvironmentPermissionService constructor(
         return { mutableListOf() }
     }
 
+    // 解密后
     override fun listEnvByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
         val resourceInstances = authPermissionApi.getUserResourceByPermission(
             user = userId,
@@ -41,9 +42,10 @@ class V3EnvironmentPermissionService constructor(
             supplier = supplierForEnvFakePermission(projectId)
         )
 
-        return getAllEnvInstance(resourceInstances, projectId, userId).map { it.toLong() }.toSet()
+        return getAllEnvInstance(resourceInstances, projectId, userId).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
 
+    // 加密
     override fun listEnvByPermissions(
         userId: String,
         projectId: String,
@@ -59,13 +61,14 @@ class V3EnvironmentPermissionService constructor(
         )
         val instanceMap = mutableMapOf<AuthPermission, List<String>>()
         instanceResourcesMap.forEach { (key, value) ->
-            val envs = getAllNodeInstance(value, projectId, userId).toList()
-            instanceMap[key] = envs.map { HashUtil.encodeIntId(it.toInt()) }
+            val envs = getAllEnvInstance(value, projectId, userId).toList()
+            instanceMap[key] = envs.map { it }
         }
         logger.info("listEnvByPermissions v3Impl [$userId] [$projectId] [$instanceMap]")
         return instanceMap
     }
 
+    // 解密后
     override fun listNodeByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
         val resourceInstances = authPermissionApi.getUserResourceByPermission(
             user = userId,
@@ -76,9 +79,10 @@ class V3EnvironmentPermissionService constructor(
             supplier = supplierForEnvFakePermission(projectId)
         )
 
-        return getAllNodeInstance(resourceInstances, projectId, userId).map { it.toLong() }.toSet()
+        return getAllNodeInstance(resourceInstances, projectId, userId).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
 
+    // 加密
     override fun listNodeByPermissions(
         userId: String,
         projectId: String,
@@ -95,8 +99,8 @@ class V3EnvironmentPermissionService constructor(
         val instanceMap = mutableMapOf<AuthPermission, List<String>>()
         instanceResourcesMap.forEach { (key, value) ->
             val nodes = getAllNodeInstance(value, projectId, userId).toList().map {
-                logger.info("listNodeByPermissions v3Impl [$it] [${HashUtil.encodeLongId(it.toLong())}")
-                HashUtil.encodeLongId(it.toLong())
+                logger.info("listNodeByPermissions v3Impl [$it] [${HashUtil.decodeIdToLong(it)}")
+                it
             }
             logger.info("listNodeByPermissions v3Impl [$nodes] ")
             instanceMap[key] = nodes
@@ -105,13 +109,14 @@ class V3EnvironmentPermissionService constructor(
         return instanceMap
     }
 
+    // 拿到的数据统一为加密后的id
     private fun getAllNodeInstance(resourceCodeList: List<String>, projectId: String, userId: String): Set<String> {
         val instanceIds = mutableSetOf<String>()
         if (resourceCodeList.contains("*")) {
             logger.info("node getResourceInstance impl, user[$userId], projectId[$projectId], resourceCodeList[$resourceCodeList]")
             val repositoryInfos = nodeDao.listNodes(dslContext, projectId)
             repositoryInfos.map {
-                instanceIds.add(it.nodeId.toString())
+                instanceIds.add(HashUtil.encodeLongId(it.nodeId))
             }
             return instanceIds
         }
@@ -119,6 +124,7 @@ class V3EnvironmentPermissionService constructor(
         return instanceIds
     }
 
+    // 拿到的数据统一为加密后的id
     private fun getAllEnvInstance(resourceCodeList: List<String>, projectId: String, userId: String): Set<String> {
         val instanceIds = mutableSetOf<String>()
 
@@ -126,7 +132,7 @@ class V3EnvironmentPermissionService constructor(
             logger.info("env getResourceInstance impl, user[$userId], projectId[$projectId], resourceCodeList[$resourceCodeList]")
             val repositoryInfos = envDao.list(dslContext, projectId)
             repositoryInfos.map {
-                instanceIds.add(it.envId.toString())
+                instanceIds.add(HashUtil.encodeLongId(it.envId))
             }
             return instanceIds
         }

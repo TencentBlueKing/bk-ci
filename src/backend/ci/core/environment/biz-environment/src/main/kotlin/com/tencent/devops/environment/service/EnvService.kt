@@ -545,7 +545,10 @@ class EnvService @Autowired constructor(
     }
 
     override fun listEnvironmentByPage(projectId: String, page: Int?, pageSize: Int?): Page<EnvWithPermission> {
-        val limit = page ?: 0
+        var limit = page ?: 1
+        if (limit <= 0) {
+            limit = 1
+        }
         var offset = pageSize ?: 10
         if (offset > 50) {
             offset = 50

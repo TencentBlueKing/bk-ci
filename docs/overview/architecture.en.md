@@ -4,15 +4,15 @@ BlueKing Continuous Integration (**bk-ci**) is built with multiple programming l
 
 - **WebAPI Gateway & FrontEnd:**
   - **WebAPI Gateway:** Powered with OpenResty. It contains user login handlers and identity authentication, as well as Lua scripts and Nginx configurations forwarded by **Consul** service discovery of backend APIs.
-  - **FrondEnd:** Ppure frontend design based on Vue. It contains static resources like js, img and html files.
+  - **FrondEnd:** Pure frontend design based on Vue. It contains static resources like js, img and html files.
 - **MicroService BackEnd:** Based on Kotlin and Java. It uses the SpringCloud microservice architecture. Each microservice module is introduced below in startup order.
-  - **Project:** Project management. It manages pipeline projects and multiple modules depend on it.
-  - **Log:** Log: Build logging service. It stores build logs and returns query outputs.
+  - **Project:** Project management, It manages pipeline projects. Multiple modules depend on it.
+  - **Log:** Build logging service. It stores build logs and returns query outputs.
   - **Ticket:** Ticket management service. It stores user ticket information, such as the username and password of the repository, SSL, Token, etc.
   - **Repository:** Repository management service. It stores user repositories and depends on the interaction with Ticket.
   - **Artifactory:** Artifact storage service. This service only performs the simplified version of artifact access, and it can be extended to integrate into your own storage system.
   - **Environment:** Agent service. It imports agents and uses environment management to manage agent clusters for the scheduling of parallel builds.
-  - **Store:** Development store service. It facilitates the management of pipeline plugins and functions of pipeline modules including the update, release or removal of plugins and templates. It interacts with Process and Artifactory.
+  - **Store:** Development store service. It facilitates the management of pipeline plugins and pipeline template, including their updates, releases or removals. It interacts with Process and Artifactory.
   - **Process:** Pipeline management. It manages pipelines and core services of the pipeline scheduling function.
   - **Dispatch:** Agent scheduling. It receives agent startup events of pipelines and distributes them to the corresponding agent to handle.
   - **Plugin:** Plugin extension service. It is empty for now and is mainly used to extend some backend services interacting with frontend pages, such as integration with all sorts of CD platforms, testing platforms, quality assurance platforms, etc. These services can be configured with frontend pages and leave room for imagination.
