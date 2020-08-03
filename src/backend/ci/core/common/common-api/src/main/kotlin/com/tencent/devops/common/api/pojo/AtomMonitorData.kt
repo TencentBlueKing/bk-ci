@@ -53,8 +53,8 @@ data class AtomMonitorData(
     val startTime: Long?,
     @ApiModelProperty("执行结束时间", required = false)
     val endTime: Long?,
-    @ApiModelProperty("执行耗时时间", required = true)
-    val elapseTime: Long,
+    @ApiModelProperty("执行耗时时间", required = false)
+    val elapseTime: Long?,
     @ApiModelProperty("来源渠道", required = false)
     val channel: String? = null,
     @ApiModelProperty("执行人", required = true)
