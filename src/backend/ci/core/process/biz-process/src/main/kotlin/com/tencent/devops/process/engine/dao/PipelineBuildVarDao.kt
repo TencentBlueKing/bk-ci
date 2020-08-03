@@ -224,12 +224,13 @@ class PipelineBuildVarDao @Autowired constructor() {
         with(T_PIPELINE_BUILD_VAR) {
             variables.forEach { v ->
                 val baseStep = dslContext.update(this)
+                    .set(BUILD_ID, buildId)
                 val valueType = v.valueType
                 if (valueType != null) {
                     baseStep.set(VAR_TYPE, valueType.name)
                 }
-                val updateStep = baseStep.set(VALUE, v.value.toString()).where(BUILD_ID.eq(buildId).and(KEY.eq(name)))
-                list.add(updateStep)
+                baseStep.set(VALUE, v.value.toString()).where(BUILD_ID.eq(buildId).and(KEY.eq(v.key)))
+                list.add(baseStep)
             }
             dslContext.batch(list).execute()
         }

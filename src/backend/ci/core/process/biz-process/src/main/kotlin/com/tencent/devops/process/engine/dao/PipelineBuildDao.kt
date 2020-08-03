@@ -26,16 +26,16 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.Condition
@@ -67,7 +67,8 @@ class PipelineBuildDao {
         channelCode: ChannelCode,
         parentBuildId: String?,
         parentTaskId: String?,
-        webhookType: String?
+        webhookType: String?,
+        webhookInfo: String?
     ) {
 
         with(T_PIPELINE_BUILD_HISTORY) {
@@ -89,7 +90,8 @@ class PipelineBuildDao {
                 CHANNEL,
                 VERSION,
                 QUEUE_TIME,
-                WEBHOOK_TYPE
+                WEBHOOK_TYPE,
+                WEBHOOK_INFO
             ).values(
                 buildId,
                 buildNum,
@@ -107,7 +109,8 @@ class PipelineBuildDao {
                 channelCode.name,
                 version,
                 LocalDateTime.now(),
-                webhookType
+                webhookType,
+                webhookInfo
             ).execute()
         }
     }
@@ -265,6 +268,7 @@ class PipelineBuildDao {
             if (!retry) {
                 update.set(START_TIME, LocalDateTime.now())
             }
+            update.set(IS_RETRY, retry)
             update.where(BUILD_ID.eq(buildId)).execute()
         }
     }

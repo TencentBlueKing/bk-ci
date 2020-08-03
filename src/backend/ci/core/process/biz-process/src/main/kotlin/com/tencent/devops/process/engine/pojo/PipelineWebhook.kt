@@ -35,5 +35,8 @@ data class PipelineWebhook(
     val repositoryType: ScmType,
     val repoType: RepositoryType?,
     val repoHashId: String?, // repoHashId 与 repoName 不能同时为空，如果两个都不为空就用repoName
-    val repoName: String?
+    val repoName: String?,
+    val id: Long? = null,
+    var projectName: String? = null,
+    val taskId: String? = null
 )

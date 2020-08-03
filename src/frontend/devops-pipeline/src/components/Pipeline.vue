@@ -120,6 +120,11 @@
                 default: false
             }
         },
+        data () {
+            return {
+                timer: null
+            }
+        },
         computed: {
             ...mapGetters('atom', [
                 'osList',
@@ -240,17 +245,23 @@
                 })
             },
             insert (type) {
-                const { pipeline, insertStageIndex, isAddParallelContainer, setInertStageIndex } = this
-                if (!isAddParallelContainer) {
-                    this.addStage({
-                        stages: pipeline.stages,
-                        insertStageIndex
-                    })
-                    setInertStageIndex({
-                        insertStageIndex: insertStageIndex + 1
-                    })
+                const insertCb = (type) => {
+                    const { pipeline, insertStageIndex, isAddParallelContainer, setInertStageIndex } = this
+                    if (!isAddParallelContainer) {
+                        this.addStage({
+                            stages: pipeline.stages,
+                            insertStageIndex
+                        })
+                        setInertStageIndex({
+                            insertStageIndex: insertStageIndex + 1
+                        })
+                    }
+                    this.insertContainer(type, insertStageIndex)
                 }
-                this.insertContainer(type, insertStageIndex)
+                this.timer && window.clearTimeout(this.timer)
+                this.timer = window.setTimeout(() => {
+                    insertCb(type)
+                }, 300)
             }
         }
     }
