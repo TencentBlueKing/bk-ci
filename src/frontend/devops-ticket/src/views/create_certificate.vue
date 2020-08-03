@@ -107,21 +107,21 @@
                 certType: '',
                 certData: {},
                 certTypeList: [
-                    {
-                        label: this.$t('ticket.cert.iosCert'),
-                        value: 'ios',
-                        icon: 'icon-macos'
-                    },
-                    {
-                        label: this.$t('ticket.cert.androidCert'),
-                        value: 'android',
-                        icon: 'icon-android-shape'
-                    },
-                    {
-                        label: this.$t('ticket.cert.sslOrTlsCert'),
-                        value: 'tls',
-                        icon: 'icon-personal-cert'
-                    },
+                    // {
+                    //     label: this.$t('ticket.cert.iosCert'),
+                    //     value: 'ios',
+                    //     icon: 'icon-macos'
+                    // },
+                    // {
+                    //     label: this.$t('ticket.cert.androidCert'),
+                    //     value: 'android',
+                    //     icon: 'icon-android-shape'
+                    // },
+                    // {
+                    //     label: this.$t('ticket.cert.sslOrTlsCert'),
+                    //     value: 'tls',
+                    //     icon: 'icon-personal-cert'
+                    // },
                     {
                         label: this.$t('ticket.cert.iosCorporatesignCert'),
                         value: 'enterprise',
@@ -180,7 +180,7 @@
         methods: {
             init () {
                 const params = this.$route.params || {}
-                this.certType = params.certType ? params.certType.toLowerCase() : 'ios'
+                this.certType = params.certType ? params.certType.toLowerCase() : 'enterprise'
                 this.isEdit = this.$route.name === 'editCert'
 
                 if (this.isEdit) {

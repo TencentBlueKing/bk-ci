@@ -2,60 +2,70 @@
 ---
 [![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-ci/blob/master/LICENSE) [![Release Version](https://img.shields.io/badge/release-0.0.1-brightgreen.svg)](https://github.com/Tencent/bk-ci/releases) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-ci/pulls) ![Backend CI](https://github.com/Tencent/bk-ci/workflows/Backend%20CI/badge.svg?branch=master)
 
+English | [简体中文](README_EN.md)
+
 > **Note**: The `master` branch may be in an unstable or even broken state during development. Please use [releases](https://github.com/tencent/bk-ci/releases) instead of  `master` branch in order to get stable binaries.
 
 a free & open source CI server, bk-ci(BlueKing Continuous Integration) helps you automate your build-test-release workflows, continuous delivery of your product faster, easier, with fewer bugs.
 
-TODO
-使用bk-ci屏蔽掉所有研发流程中的繁琐环节，让你聚焦于编码。bk-ci通常被用于：
-- 工程编译
-- 静态代码检查
-- 运行测试用例，及时发现BUG
-- 部署与发布
+bk-ci removes all the tedious tasks in R&D process and enables you to focus on coding. It is often used for:
 
-TODO
-bk-ci提供了流水线、代码库、凭证管理、环境管理、研发商店5大核心服务，多重组合，满足企业不同场景的需求：
-- **Pipeline**：将团队现有的研发流程以可视化方式呈现出来，编译、测试、部署，一条流水线搞定
-- **Code**：将企业内已有的代码托管服务关联至bk-ci
-- **凭证管理**：为代码库、流水线等服务提供不同类型的凭据、证书管理功能
-- **环境管理**：可以将企业内部的开发编译机托管至bk-ci
-- **研发商店**：由流水线插件和流水线模板组成，插件用于对接企业内部的各种第三方服务，模板助力企业内部的研发流程规范化
+- Project compilation
+- Static code analysis
+- Running test cases to find bugs in time
+- Deployment and release
+
+bk-ci provides five core services, namely Process, Repository, Ticket, Environment and Store. They can be combined in multiple ways to meet business needs in different scenarios.
+
+- **Process**: It visualizes current R&D process of the team. One pipeline can handle compilation, testing and deployment.
+- **Repository**: It links current source code hosting service of the enterprise to bk-ci.
+- **Ticket**: It provides the management of various kinds of tickets and certificates for services like Repository and Process.
+- **Environment**: It can host the internal agents of the enterprise on bk-ci.
+- **Store**: It consists of pipeline plugins and pipeline templates. Plugins are used to integrate with various third-party services of the enterprise and templates help to standardize its internal R&D process.
 
 ## Overview
-- [Architecture Design](docs/overview/architecture.md)
-- [Code Directory](docs/overview/code_framework.md)
-- [Design Philosophy](docs/overview/design.md)
+
+- [Architecture](docs/overview/architecture.en.md)
+- [Code Directory](docs/overview/code_framework.en.md)
+- [Design](docs/overview/design.en.md)
 
 ## Features
-- CI/CD: 由于框架的可扩展性，bk-ci既可以用作简单的CI场景，也可以成为企业内所有项目的持续交付中心
-- Visualize:  bk-ci提供了灵活的可视化编排流水线，动动指尖，将研发流程描述与此
-- Scalable: 灵活的架构设计可以随意横向扩容，满足企业大规模使用
-- Distributed: bk-ci可以便捷的管控多台构建机，助你更快的跨多平台构建、测试和部署
-- Pipeline Plugins: bk-ci拥有完善的插件开发体系，其具备了低门槛、灵活可扩展等特性
-- Pipeline Templated: 流水线模板将是企业内部推行研发规范的一大助力
+
+- Continuous integration and continuous delivery: Due to the scalability of the framework, bk-ci can not only be used in simple CI scenarios, but also as the continuous delivery center of all the projects of the enterprise.
+- What you see is what you get: bk-ci provides flexible and visualized pipelines for you to orchestrate. Move your fingers and you can describe the R&D process here.
+- Parallel and scalable framework: The flexible framework can be scaled horizontally at will to meet the enterprise’s need for large-scale use.
+- Distributed system: bk-ci can manage multiple agents easily to help you perform cross-platform build, testing and deployment in a faster manner.
+- Pipeline plugins: bk-ci has a complete plugin development system with properties like low barrier to entry and scalability.
+- Pipeline templates: It promotes the standardization of R&D within the enterprise.
 
 ## Experience
+
 - [bk-ci in docker](https://hub.docker.com/r/blueking/bk-ci)
 
 ## Getting started
-- [Download and Compile](docs/overview/source_compile.md)
-- [Installation and Deployment](docs/overview/installation.md)
+
+- [Download and Compile](docs/overview/source_compile.en.md)
+- [Install and Deploy Within One Minute](docs/overview/installation.en.md)
 
 ## Support
+
 1. [wiki](https://github.com/Tencent/bk-ci/wiki)
-2. [BK forum](https://bk.tencent.com/s-mart/community)
+2. [BlueKing Forum](https://bk.tencent.com/s-mart/community)
 3. QQ Group: 744672165
 
 ## BlueKing Community
-- [BK-BCS](https://github.com/Tencent/bk-bcs)：a basic container service platform which provides orchestration and management for micro-service business.
-- [BK-BCS-SaaS](https://github.com/Tencent/bk-bcs-saas)：a SaaS provides users with highly scalable , flexible and easy-to-use container products and services.
-- [BK-CMDB](https://github.com/Tencent/bk-cmdb)：an enterprise level configuration management serivce database.
-- [BK-PaaS](https://github.com/Tencent/bk-PaaS)：an development platform that allows developers to create, develop, deploy and manage SaaS applications easily and quickly.
-- [BK-SOPS](https://github.com/Tencent/bk-sops)：an lightweight scheduling SaaS for task flow scheduling and execution through a visual graphical interface.
+
+- [BK-BCS](https://github.com/Tencent/bk-bcs): BlueKing Container Service is an orchestration platform for microservices based on container technology.
+- [BK-BCS-SaaS](https://github.com/Tencent/bk-bcs-saas): SaaS of BlueKing Container Service is based on two modes, the native Kubernetes mode and the Mesos self-developed mode. It provides highly scalable, flexible and easy-to-use container management service for users.
+- [BK-CMDB](https://github.com/Tencent/bk-cmdb): BlueKing Configuration Management DataBase (BlueKing CMDB) is an enterprise level configuration management platform for assets and applications.
+- [BK-PaaS](https://github.com/Tencent/bk-PaaS): BlueKing PaaS is an open development platform that allows developers to create, develop, deploy and manage SaaS applications quickly and easily.
+- [BK-SOPS](https://github.com/Tencent/bk-sops): BlueKing Standard OPS (SOPS) is a light-weighted SaaS product in the Tencent BlueKing product system designed for the orchestration and execution of tasks through a graphical interface.
 
 ## Contributing
-- If you have good ideas or suggestions, please let us know by Issues or Pull Requests and contribute to the Blue Whale Open Source Community. For bk-ci branch management, issues, and pr specifications, read the [Contributing Guide](CONTRIBUTING.md)。
-- If you are interested in contributing, check out the [CONTRIBUTING.md](https://opensource.tencent.com/contribution), also join our Tencent OpenSource Plan.
+
+- Please read [Contributing](CONTRIBUTING.en.md) for the branch management, issue and pr specifications of bk-ci.
+- [Tencent Open Source Incentive Program](https://opensource.tencent.com/contribution) encourages the participation and contribution of developers. We look forward to having you join it.
 
 ## License
-BK-CI is based on the MIT protocol. Please refer to [LICENSE](LICENSE.txt) for details.
+BK-CI is based on the MIT license. Please refer to [LICENCE](LICENSE.txt) for details.
+

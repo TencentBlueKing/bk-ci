@@ -64,7 +64,7 @@ import com.tencent.devops.dispatch.utils.DockerHostLock
 import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.dispatch.utils.DockerUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.VmInfo
@@ -104,7 +104,7 @@ class DockerHostBuildService @Autowired constructor(
     private val gray: Gray,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val dockerHostUtils: DockerHostUtils,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val defaultImageConfig: DefaultImageConfig
 ) {
 
@@ -971,9 +971,9 @@ class DockerHostBuildService @Autowired constructor(
     fun log(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
         logger.info("write log from docker host, buildId: $buildId, msg: $message, tag: $tag, jobId= $jobId")
         if (red) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, message, tag ?: "", jobId ?: "", 1)
+            buildLogPrinter.addRedLine(buildId, message, tag ?: "", jobId ?: "", 1)
         } else {
-            LogUtils.addLine(rabbitTemplate, buildId, message, tag ?: "", jobId ?: "", 1)
+            buildLogPrinter.addLine(buildId, message, tag ?: "", jobId ?: "", 1)
         }
     }
 

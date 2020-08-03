@@ -45,7 +45,7 @@ import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyRedisBuild
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -59,7 +59,7 @@ import org.springframework.stereotype.Component
 class ThirdPartyAgentDispatcher @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val redisUtils: RedisUtils,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val thirdPartyAgentBuildService: ThirdPartyAgentService
@@ -121,7 +121,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         if (agentResult.agentStatus != AgentStatus.IMPORT_OK) {
             onFailBuild(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 event = pipelineAgentStartupEvent,
                 errorMessage = "第三方构建机状态异常/Bad build agent status (${agentResult.agentStatus?.name})"
             )
@@ -131,7 +131,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         if (agentResult.isNotOk()) {
             onFailBuild(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 event = pipelineAgentStartupEvent,
                 errorMessage = "获取第三方构建机失败/Fail to get build agent($dispatchType) because of ${agentResult.message}"
             )
@@ -141,7 +141,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         if (agentResult.data == null) {
             onFailBuild(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 event = pipelineAgentStartupEvent,
                 errorMessage = "获取第三方构建机失败/Can not found agent by type($dispatchType)"
             )
@@ -151,7 +151,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         if (!buildByAgentId(pipelineAgentStartupEvent, agentResult.data!!, dispatchType.workspace)) {
             retry(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
                 errorMessage = "获取第三方构建机失败/Load build agent（${dispatchType.displayName}）fail!"
@@ -209,8 +209,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     "Start the third party build agent($agentId) " +
                         "of build(${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId})"
                 )
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addLine(
                     buildId = pipelineAgentStartupEvent.buildId,
                     message = "Start up the agent ${agent.hostname}/${agent.ip} for the build ${pipelineAgentStartupEvent.buildId}",
                     tag = "",
@@ -264,7 +263,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             logger.warn("Fail to get the agents by env($dispatchType) because of ${agentsResult.message}")
             retry(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
                 errorMessage = errorMessage
@@ -276,7 +275,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             logger.warn("Get null agents by env($dispatchType)")
             retry(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
                 errorMessage = errorMessage
@@ -288,7 +287,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             logger.warn("The third party agents is empty of env($dispatchType)")
             retry(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
                 errorMessage = "第三方构建机环境（${dispatchType.envName}）的节点为空/The build agent (${dispatchType.envName}) have no node id"
@@ -421,8 +420,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             }
 
             if (pipelineAgentStartupEvent.retryTime == 1) {
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addLine(
                     buildId = pipelineAgentStartupEvent.buildId,
                     message = "All eligible agents are disabled or offline, Waiting for an available agent...",
                     tag = "",
@@ -431,7 +429,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 )
             }
             logger.info("Fail to find the fix agents for the build(${pipelineAgentStartupEvent.buildId})")
-            retry(client, rabbitTemplate, pipelineEventDispatcher, pipelineAgentStartupEvent, errorMessage)
+            retry(client, buildLogPrinter, pipelineEventDispatcher, pipelineAgentStartupEvent, errorMessage)
         } finally {
             redisLock.unlock()
         }
@@ -439,7 +437,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
 
     override fun retry(
         client: Client,
-        rabbitTemplate: RabbitTemplate,
+        buildLogPrinter: BuildLogPrinter,
         pipelineEventDispatcher: PipelineEventDispatcher,
         event: PipelineAgentStartupEvent,
         errorMessage: String?
@@ -448,7 +446,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             // 置为失败
             onFailBuild(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorMessage = errorMessage ?: "Fail to start up after 60 retries"
             )

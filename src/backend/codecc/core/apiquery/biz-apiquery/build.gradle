@@ -1,0 +1,22 @@
+apply plugin: "java"
+dependencies {
+    compile project(":core:common:common-service")
+    compile project(":core:common:common-web")
+    compile project(":core:common:common-client")
+    compile project(":core:common:common-redis")
+    compile project(":core:apiquery:model-apiquery")
+    compile project(":core:apiquery:api-apiquery")
+    compile project(":core:defect:api-defect")
+    compile project(":core:task:api-task")
+    compile project(":core:common:common-external-auth-internal")
+    compile project(":ext:tencent:coverity:api-coverity")
+    compile project(":core:schedule:api-schedule")
+    compile "io.jsonwebtoken:jjwt"
+    compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
+}
+
+version = null
+
+apply from: "$rootDir/task_spring_boot_package.gradle"
+
+// version "1.2.3"  // 这里可以设定版本号

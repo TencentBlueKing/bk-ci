@@ -48,6 +48,7 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -60,7 +61,10 @@ import org.springframework.core.Ordered
 class LogMQConfiguration @Autowired constructor() {
 
     @Bean
-    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
+    fun rabbitAdmin(
+        @Qualifier("logConnectionFactory")
+        connectionFactory: ConnectionFactory
+    ): RabbitAdmin {
         return RabbitAdmin(connectionFactory)
     }
 
@@ -109,6 +113,7 @@ class LogMQConfiguration @Autowired constructor() {
 
     @Bean
     fun logEventListener(
+        @Qualifier("logConnectionFactory")
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired logEventQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
@@ -130,6 +135,7 @@ class LogMQConfiguration @Autowired constructor() {
 
     @Bean
     fun logBatchEventListener(
+        @Qualifier("logConnectionFactory")
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired logBatchEventQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
@@ -172,6 +178,7 @@ class LogMQConfiguration @Autowired constructor() {
 
     @Bean
     fun pipelineBuildFinishListenerContainer(
+        @Qualifier("logConnectionFactory")
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired pipelineBuildFinishQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,

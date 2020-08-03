@@ -31,6 +31,8 @@ import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.log.utils.LogMQEventDispatcher
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import org.junit.Assert
 import org.junit.Ignore
@@ -39,7 +41,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 class MutexControlTest {
 
-    private val rabbitTemplate: RabbitTemplate = mock()
+    private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(LogMQEventDispatcher(mock()))
     private val redisOperation: RedisOperation = RedisOperation(mock())
     private val variables: Map<String, String> = mapOf(Pair("var1", "Test"))
     private val buildId: String = "b-12345678901234567890123456789012"
@@ -66,7 +68,7 @@ class MutexControlTest {
         controlOption = null
     )
     private val mutexControl: MutexControl = MutexControl(
-        rabbitTemplate = rabbitTemplate,
+        buildLogPrinter = buildLogPrinter,
         redisOperation = redisOperation,
         pipelineRuntimeService = mock()
     )

@@ -1,98 +1,161 @@
 <template>
     <div class="charts-dupc">
-        <div class="authors-wrapper">
-            <div class="authors-charts">
-                <div id="authorsChart" ref="authorsChart"></div>
-            </div>
-            <div class="authors-table">
-                <table>
-                    <thead>
-                        <tr class="table-tr">
-                            <th>{{$t('defect.风险级别')}}</th>
-                            <th>{{$t('charts.文件个数')}}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><i class="block-sup"></i>{{$t('charts.极高风险(>=20%)')}}</td>
-                            <td><a href="javascript:;" @click="handleHref({ severity: 1 })">{{ dupcData[0] }}</a></td>
-                        </tr>
-                        <tr>
-                            <td><i class="block-high"></i>{{$t('charts.高风险11%20%')}}</td>
-                            <td><a href="javascript:;" @click="handleHref({ severity: 2 })">{{ dupcData[1] }}</a></td>
-                        </tr>
-                        <tr>
-                            <td><i class="block-mid"></i>{{$t('charts.中风险5%11%')}}</td>
-                            <td><a href="javascript:;" @click="handleHref({ severity: 4 })">{{ dupcData[2] }}</a></td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: bold;">Total</td>
-                            <td><a href="javascript:;" @click="handleHref()">{{ dupcData[3] }}</a></td>
-                        </tr>
-                    </tbody>
-                </table>
+        <div class="breadcrumb">
+            <div class="breadcrumb-name">
+                <bk-tab :active.sync="active" @tab-change="handleTableChange" type="unborder-card">
+                    <bk-tab-panel
+                        v-for="(panel, index) in panels"
+                        v-bind="panel"
+                        :key="index">
+                    </bk-tab-panel>
+                    
+                </bk-tab>
             </div>
         </div>
-        <div class="trend-wrapper">
-            <div class="trend-charts">
-                <div id="trendChart" ref="trendChart"></div>
-                <div class="tips">{{$t('charts.注项目代码重复率')}}</div>
+        <div class="main-container">
+            <div>
+                <bk-form :label-width="60">
+                    <container class="cc-container">
+                        <div class="cc-col">
+                            <bk-form-item :label="$t('日期')">
+                                <bk-date-picker v-model="searchParams.daterange" :type="'daterange'" :options="pickerOptions"></bk-date-picker>
+                            </bk-form-item>
+                        </div>
+                    </container>
+                </bk-form>
+            </div>
+            <div class="authors-wrapper">
+                <div class="authors-charts">
+                    <div id="authorsChart" ref="authorsChart"></div>
+                </div>
+                <div class="authors-table">
+                    <table>
+                        <thead>
+                            <tr class="table-tr">
+                                <th>{{$t('风险级别')}}</th>
+                                <th>{{$t('文件个数')}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><i class="block-sup"></i>{{$t('极高风险(>=20%)')}}</td>
+                                <td><a href="javascript:;" @click="handleHref({ severity: 1 })">{{ dupcData[0] }}</a></td>
+                            </tr>
+                            <tr>
+                                <td><i class="block-high"></i>{{$t('高风险11%20%')}}</td>
+                                <td><a href="javascript:;" @click="handleHref({ severity: 2 })">{{ dupcData[1] }}</a></td>
+                            </tr>
+                            <tr>
+                                <td><i class="block-mid"></i>{{$t('中风险5%11%')}}</td>
+                                <td><a href="javascript:;" @click="handleHref({ severity: 4 })">{{ dupcData[2] }}</a></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold;">Total</td>
+                                <td><a href="javascript:;" @click="handleHref()">{{ dupcData[3] }}</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="trend-wrapper">
+                <div class="trend-charts">
+                    <div id="trendChart" ref="trendChart"></div>
+                    <div class="tips">{{$t('注代码重复率')}}</div>
+                </div>
             </div>
         </div>
     </div>
 </template>
 <script>
-    import chartBarOption from '@/mixins/chart-bar-option'
-    import chartLineOption from '@/mixins/chart-line-option'
+    import chart from '@/mixins/chart'
     import echarts from 'echarts/lib/echarts'
-    import 'echarts/lib/chart/bar'
-    import 'echarts/lib/chart/line'
-    import 'echarts/lib/component/tooltip'
-    import 'echarts/lib/component/title'
-    import 'echarts/lib/component/legend'
+    import { format } from 'date-fns'
 
     export default {
         components: {
         },
-        mixins: [chartBarOption, chartLineOption],
+        mixins: [chart],
         data () {
+            const query = this.$route.query
+
             return {
+                panels: [
+                    { name: 'defect', label: this.$t('重复文件') },
+                    { name: 'report', label: this.$t('数据报表') }
+                ],
                 chartRiskList: {},
                 chartTrendList: {
                     ducpChartList: []
                 },
-                dupcData: []
+                dupcData: [],
+                searchParams: {
+                    taskId: this.$route.params.taskId,
+                    toolId: 'DUPC',
+                    daterange: [query.startTime, query.endTime]
+                },
+                toolId: 'DUPC',
+                authorsChart: undefined,
+                trendChart: undefined
             }
         },
         computed: {
+            pickerOptions () {
+                return {
+                    disabledDate (time) {
+                        return time.getTime() > Date.now()
+                    }
+                }
+            }
+        },
+        watch: {
+            searchParams: {
+                handler () {
+                    this.fetchLintList().then(res => {
+                        this.chartRiskList = res.chartRiskList || {}
+                        this.chartTrendList = res.chartTrendList || {}
+                        this.initAuthors()
+                        this.initTrend()
+                    })
+                },
+                deep: true
+            }
         },
         created () {
         },
         mounted () {
-            this.init()
+            // this.fetchLintList()
         },
         methods: {
-            async init () {
-                const toolId = 'DUPC'
-                const res = await this.$store.dispatch('defect/report', { toolId }, { showLoading: true })
-                this.chartRiskList = res.chartRiskList || {}
-                this.chartTrendList = res.chartTrendList || {}
-                this.initAuthors()
-                this.initTrend()
+            formatTime (date, token, options = {}) {
+                return date ? format(Number(date), token, options) : ''
+            },
+            async fetchLintList () {
+                this.searchParams.daterange[0] = this.searchParams.daterange[0] > Date.now() ? Date.now() : this.searchParams.daterange[0]
+                this.searchParams.daterange[1] = this.searchParams.daterange[1] > Date.now() ? Date.now() : this.searchParams.daterange[1]
+                this.searchParams.daterange[0] = this.searchParams.daterange[0] < this.searchParams.daterange[1] ? this.searchParams.daterange[0] : this.searchParams.daterange[1]
+                const daterange = this.searchParams.daterange
+                let startTime = this.formatTime(daterange[0], 'YYYY-MM-DD')
+                startTime = startTime === 'Invalid Date' ? '' : startTime
+                let endTime = this.formatTime(daterange[1], 'YYYY-MM-DD')
+                endTime = endTime === 'Invalid Date' ? '' : endTime
+                const params = { ...this.searchParams, startTime, endTime, showLoading: true }
+                const res = await this.$store.dispatch('defect/report', params)
+                return res
             },
             async initAuthors () {
                 const { superHighCount, highCount, mediumCount, totalCount } = this.chartRiskList
                 this.dupcData = [superHighCount, highCount, mediumCount, totalCount]
+                const dupcFileData = [superHighCount, highCount, mediumCount]
 
                 const option = {
                     title: {
-                        text: this.$t('charts.重复文件分布')
+                        text: this.$t('重复文件分布')
                     },
                     xAxis: {
                         axisLabel: {
                             rotate: 0
                         },
-                        data: [this.$t('charts.极高风险'), this.$t('charts.高风险'), this.$t('charts.中风险')]
+                        data: [this.$t('极高风险'), this.$t('高风险'), this.$t('中风险')]
                     },
                     yAxis: {
                         splitNumber: 4,
@@ -106,7 +169,7 @@
                     },
                     series: [
                         {
-                            name: this.$t('charts.文件'),
+                            name: this.$t('文件'),
                             type: 'bar',
                             barWidth: '30%',
                             itemStyle: {
@@ -117,7 +180,15 @@
                                     }
                                 }
                             },
-                            data: this.dupcData
+                            data: dupcFileData,
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'top',
+                                    fontSize: 16,
+                                    distance: 10
+                                }
+                            }
                         }
                     ]
                 }
@@ -142,15 +213,15 @@
 
                 const option = {
                     title: {
-                        text: this.$t('charts.项目代码重复率趋势')
+                        text: this.$t('代码重复率趋势')
                     },
                     legend: {
                         data: [
                             {
-                                name: this.$t('charts.上限建议值')
+                                name: this.$t('上限建议值')
                             },
                             {
-                                name: this.$t('charts.重复率')
+                                name: this.$t('重复率')
                             }
                         ]
                     },
@@ -167,12 +238,12 @@
                     },
                     series: [
                         {
-                            name: this.$t('charts.重复率'),
+                            name: this.$t('重复率'),
                             type: 'line',
                             data: dupc
                         },
                         {
-                            name: this.$t('charts.上限建议值'),
+                            name: this.$t('上限建议值'),
                             type: 'line',
                             symbol: 'none',
                             itemStyle: {
@@ -204,13 +275,7 @@
                 })
             },
             handleHref (query) {
-                const resolved = this.$router.resolve({
-                    name: 'defect-dupc-list',
-                    params: this.$route.params,
-                    query
-                })
-                const href = `${window.DEVOPS_SITE_URL}/console${resolved.href}`
-                window.open(href, '_blank')
+                this.resolveHref('defect-dupc-list', query)
             }
         }
     }
@@ -218,7 +283,24 @@
 
 <style lang="postcss" scoped>
     @import '../../css/variable.css';
+    @import '../../css/charts.css';
 
+    .charts-dupc {
+        padding: 16px 20px 0px 16px;
+        .breadcrumb {
+            padding: 0px!important;
+            .breadcrumb-name {
+                background: white;
+            }
+        }
+        .main-container {
+            /* padding: 20px 33px 0!important;
+            margin: 0 -13px!important; */
+            border-top: 1px solid #dcdee5;
+            margin: 0px!important;
+            background: white;
+        }
+    }
     .authors-wrapper {
         width: 100%;
         height: 225px;
@@ -243,7 +325,7 @@
             table {
                 width: 100%;
                 text-align: left;
-                font-size: 14px;
+                font-size: 12px;
 
                 tr {
                     height: 35px;

@@ -1,20 +1,6 @@
 <template>
     <div>
         <bk-tab class="settings-ignore-tab" :active.sync="active" type="card" @tab-change="changeTab">
-            <template slot="setting">
-                <div class="settings-ignore-header" v-if="customExist">
-                    <div v-if="customExist" class="header-tab-middle">
-                        <bk-button @click="newVisible" size="small" icon="plus" :theme="'primary'" :title="$t('filter.添加路径')">{{$t('filter.添加路径')}}</bk-button>
-                    </div>
-                    <div class="header-tab-right">{{$t('filter.添加后的代码路径将不会产生告警')}}</div>
-                </div>
-                <div class="settings-ignore-header" v-if="defaultExist">
-                    <div v-if="defaultExist" class="header-tab-middle">
-                        <bk-button @click="inputVisible" size="small" icon="plus" :theme="'primary'" :title="$t('filter.默认设置')">{{$t('filter.默认设置')}}</bk-button>
-                    </div>
-                    <div class="header-tab-right">{{$t('filter.添加后的代码路径将不会产生告警')}}</div>
-                </div>
-            </template>
             <bk-tab-panel
                 v-for="(panel, index) in options"
                 :key="index"
@@ -22,37 +8,47 @@
             </bk-tab-panel>
             <!-- 添加路径组件 -->
             <div class="path-list" v-if="customExist">
+                <span v-if="!isEditable" class="link-text">{{$t('修改路径屏蔽，请前往流水线')}} <a @click="hanldeToPipeline" href="javascript:;">{{$t('立即前往>>')}}</a></span>
+                <div class="settings-ignore-header" v-if="customExist && isEditable">
+                    <bk-button v-if="customExist" @click="newVisible" size="small" icon="plus" :theme="'primary'" :title="$t('添加路径')">{{$t('添加路径')}}</bk-button>
+                    <span class="header-tab-right">{{$t('添加后的代码路径将不会产生问题')}}</span>
+                </div>
                 <div
                     class="custom-path"
                     v-for="(customPath, index) in customList"
                     :key="index">
                     {{customPath}}
-                    <div class="del-style" @click="delCustomPath(customPath)">{{$t('op.删除')}}</div>
+                    <div class="del-style" v-if="isEditable" @click="delCustomPath(customPath)">{{$t('删除')}}</div>
                 </div>
             </div>
             <!-- /添加路径组件 -->
             <!-- 系统默认组件 -->
             <div class="path-list" v-if="defaultExist">
+                <div class="settings-ignore-header" v-if="defaultExist">
+                    <bk-button v-if="defaultExist" @click="inputVisible" icon="plus" :theme="'primary'" :title="$t('默认设置')">{{$t('默认设置')}}</bk-button>
+                    <span class="header-tab-right">{{$t('添加后的代码路径将不会产生问题')}}</span>
+                </div>
                 <div
                     class="default-path"
                     v-for="(defaultPath, index) in defaultSelectList"
                     :key="index">
                     {{defaultPath}}
-                    <div class="del-style" @click="delDefaultPath(defaultPath)">{{$t('op.移除')}}</div>
+                    <div class="del-style" @click="delDefaultPath(defaultPath)">{{$t('移除')}}</div>
                 </div>
             </div>
             <!-- /系统默认组件 -->
             <div class="no-path" v-if="customNone">
-                <empty size="small" :title="$t('filter.暂无任何路径')" :desc="$t('filter.添加后的代码路径将不再进行代码检查')">
+                <empty size="small" title="" :desc="$t('添加后的代码路径将被屏蔽，不再有问题等产生')">
                     <template v-slot:action>
-                        <bk-button theme="primary" @click="newVisible">{{$t('filter.添加路径')}}</bk-button>
+                        <span v-if="!isEditable" class="fs12">{{$t('修改路径屏蔽，请前往流水线')}} <a @click="hanldeToPipeline" href="javascript:;">{{$t('立即前往>>')}}</a></span>
+                        <bk-button v-else theme="primary" @click="newVisible">{{$t('添加路径')}}</bk-button>
                     </template>
                 </empty>
             </div>
             <div class="no-path" v-if="defaultNone">
-                <empty size="small" :title="$t('filter.暂无任何路径')" :desc="$t('filter.添加后的代码路径将不再进行代码检查')">
+                <empty size="small" title="" :desc="$t('添加后的代码路径将被屏蔽，不再有问题等产生')">
                     <template v-slot:action>
-                        <bk-button theme="primary" @click="inputVisible">{{$t('filter.添加路径')}}</bk-button>
+                        <bk-button theme="primary" @click="inputVisible">{{$t('添加路径')}}</bk-button>
                     </template>
                 </empty>
             </div>
@@ -63,8 +59,8 @@
             :mask-close="false"
             @cancel="delVisiable = false"
             @confirm="handleDelete(pathName)"
-            :title="$t('op.确认')">
-            {{$t('filter.确认要删除吗', { pathName })}}
+            :title="$t('确认')">
+            {{$t('确认要删除吗', { pathName })}}
         </bk-dialog>
         <SettingsIgnoreNew :visible="isCreateShow" @visibleChange="updateCreateVisible" />
         <SettingsIgnoreInput :selected="defaultSelectList" :list="defaultList" :visible="isInputShow" @visibleChange="updateInputVisible" />
@@ -86,8 +82,8 @@
         data () {
             return {
                 options: [
-                    { name: 'custom', label: this.$t('nav.自定义') },
-                    { name: 'default', label: this.$t('nav.系统默认') }
+                    { name: 'custom', label: this.$t('自定义') },
+                    { name: 'default', label: this.$t('系统默认') }
                 ],
                 select: 'custom',
                 tabSelect: 'custom',
@@ -99,30 +95,26 @@
         },
         computed: {
             ...mapState('task', {
-                taskIgnore: 'ignore'
+                taskIgnore: 'ignore',
+                taskDetail: 'detail'
             }),
             taskId () {
                 return this.$route.params.taskId
             },
+            isEditable () {
+                return !this.taskDetail.atomCode || this.taskDetail.createFrom !== 'bs_pipeline' || this.taskDetail.createFrom === 'gongfeng_scan'
+            },
             customNone () {
-                let customNone = false
-                customNone = this.tabSelect === 'custom' && this.customList.length === 0
-                return customNone
+                return this.tabSelect === 'custom' && this.customList.length === 0
             },
             defaultNone () {
-                let defaultNone = false
-                defaultNone = this.tabSelect === 'default' && this.defaultSelectList.length === 0
-                return defaultNone
+                return this.tabSelect === 'default' && this.defaultSelectList.length === 0
             },
             customExist () {
-                let customExist = false
-                customExist = this.tabSelect === 'custom' && this.customList.length !== 0
-                return customExist
+                return this.tabSelect === 'custom' && this.customList.length !== 0
             },
             defaultExist () {
-                let defaultExist = false
-                defaultExist = this.tabSelect === 'default' && this.defaultSelectList.length !== 0
-                return defaultExist
+                return this.tabSelect === 'default' && this.defaultSelectList.length !== 0
             },
             customList () {
                 const customList = []
@@ -194,15 +186,18 @@
                 }
                 this.$store.dispatch('task/deleteIgnore', { params: params }).then(res => {
                     if (res === true) {
-                        this.$bkMessage({ theme: 'success', message: this.$t('op.删除成功') })
+                        this.$bkMessage({ theme: 'success', message: this.$t('删除成功') })
                         this.$store.dispatch('task/ignore', this.taskId)
                         this.$store.dispatch('task/ignoreTree')
                     }
                 }).catch(e => {
-                    this.$bkMessage({ theme: 'error', message: this.$t('op.删除失败') })
+                    this.$bkMessage({ theme: 'error', message: this.$t('删除失败') })
                     this.$store.dispatch('task/ignoreTree')
                 })
                 this.delVisiable = false
+            },
+            hanldeToPipeline () {
+                window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${this.taskDetail.projectId}/${this.taskDetail.pipelineId}/edit`, '_blank')
             }
         }
     }
@@ -227,6 +222,9 @@
                     font-size: 14px;
                     padding-right: 14px;
                 }
+                &:hover {
+                    background: $bgHoverColor;
+                }
             }
         }
         .no-path {
@@ -238,6 +236,7 @@
         }
         /* 组件按钮 start */
         .settings-ignore-header {
+            line-height: 40px;
             .header-tab-left {
                 display: inline-block;
                 cursor: pointer;
@@ -250,17 +249,14 @@
                 color: $goingColor;
             }
             .header-tab-right {
-                float: right;
                 font-size: 12px;
                 color: $fontLightColor;
-                padding-top: 2.5px;
+                padding-left: 12px;
             }
             .header-tab-middle {
-                float: right;
                 font-size: 12px;
                 color: $goingColor;
                 padding-left: 18px;
-                cursor: pointer;
                 >>>.bk-button.bk-button-small {
                     padding:0 6px;
                 }
@@ -304,5 +300,16 @@
         border: none;
     }
     /* 覆盖组件样式 end */
-
+    .link-text {
+        font-size: 12px;
+        line-height: 40px;
+        a {
+            margin-left: 12px;
+        }
+    }
+    .fs12 {
+        a {
+            margin-left: 12px;
+        }
+    }
 </style>

@@ -40,25 +40,26 @@ export default {
         }
     },
     actions: {
-        lintDetail ({ commit, state, dispatch }, params, config) {
+        lintDetail ({ commit, state, dispatch }, params, config = {}) {
             if (config.showLoading) {
                 commit('setMainContentLoading', true, { root: true })
             }
             const { sortField, sortType, ...data } = params
             const query = { sortField, sortType }
             // return http.get('/defect/index?invoke=lintdetail', data, { params: query }).then(res => {
-            return http.post(`${window.AJAX_URL_PREFIX}/defect/api/user/warn/detail`, data, { params: query }).then(res => {
+            return http.post(`${window.AJAX_URL_PREFIX}/defect/api/user/warn/detail`, data, { params: query, cancelPrevious: false }).then(res => {
                 const detail = res.data || {}
                 return detail
             }).catch(e => {
                 console.error(e)
+                return e
             }).finally(() => {
                 if (config.showLoading) {
                     commit('setMainContentLoading', false, { root: true })
                 }
             })
         },
-        lintList ({ commit, state, dispatch }, params, config) {
+        lintList ({ commit, state, dispatch }, params, config = {}) {
             if (config.showLoading) {
                 commit('setMainContentLoading', true, { root: true })
             }
@@ -84,16 +85,10 @@ export default {
                 return params
             })
         },
-        authorEdit ({ commit }, data, config) {
-            if (config.showLoading) {
-                commit('setMainContentLoading', true, { root: true })
-            }
-            return http.put(`${window.AJAX_URL_PREFIX}/defect/api/user/warn/author`, data)
-                .finally(() => {
-                    if (config.showLoading) {
-                        commit('setMainContentLoading', false, { root: true })
-                    }
-                })
+        batchEdit ({ commit }, data) {
+            return http.post(`${window.AJAX_URL_PREFIX}/defect/api/user/warn/batch`, data).then(res => {
+                return res
+            })
         },
         dupcList ({ commit, state, dispatch }) {
             return http.get('/defect/index?invoke=dupclist').then(res => {
@@ -119,17 +114,19 @@ export default {
         sort ({ commit, state, dispatch }, data) {
             return http.post(`${window.AJAX_URL_PREFIX}/tool/sort`, data)
         },
-        report ({ commit, state, dispatch }, data, config) {
-            if (config.showLoading) {
+        report ({ commit, state, dispatch }, data) {
+            if (data.showLoading) {
                 commit('setMainContentLoading', true, { root: true })
             }
-            return http.get(`${window.AJAX_URL_PREFIX}/defect/api/user/report/toolName/${data.toolId}`, data).then(res => {
+            const { startTime, endTime } = data
+            const query = { startTime, endTime }
+            return http.get(`${window.AJAX_URL_PREFIX}/defect/api/user/report/toolName/${data.toolId}`, { params: query }).then(res => {
                 const charts = res.data || []
                 return charts
             }).catch(e => {
                 console.error(e)
             }).finally(() => {
-                if (config.showLoading) {
+                if (data.showLoading) {
                     commit('setMainContentLoading', false, { root: true })
                 }
             })
@@ -146,11 +143,77 @@ export default {
             if (rootState.task.status.status === 1) {
                 return
             }
-            return http.post(`${window.AJAX_URL_PREFIX}/defect/api/user/operation/taskId/${data.taskId}?toolName=${data.toolName}`, data.funcId).then(res => {
+            return http.post(`${window.AJAX_URL_PREFIX}/defect/api/user/operation/taskId/${data.taskId}`, data.funcId).then(res => {
                 const records = res.data || []
                 commit('updateOperateRecords', records)
                 return records
             }).catch(e => e)
+        },
+        newVersion ({ commit, state, dispatch }, params) {
+            return http.post(`${window.AJAX_URL_PREFIX}/defect/api/user/checker/tools/${params.toolName}/checkerSets/${params.checkerSetId}/versions/difference`, params).then(res => {
+                const data = res.data || {}
+                return data
+            }).catch(e => {
+                console.error(e)
+            })
+        },
+        getWarnContent ({ commit, state, dispatch }, data) {
+            return http.get(`${window.AJAX_URL_PREFIX}/defect/api/user/checker/detail/toolName/${data.toolName}?checkerKey=${data.checkerKey}`, data).then(res => {
+                const content = res.data || []
+                return content
+            }).catch(e => {
+                console.error(e)
+            })
+        },
+        getTransferAuthorList ({ commit, rootState }) {
+            return http.get(`${window.AJAX_URL_PREFIX}/defect/api/user/transferAuthor/list`).then(res => {
+                const data = res.data || {}
+                return data
+            }).catch(e => {
+                console.error(e)
+            })
+        },
+        getBuildList ({ commit, rootState }, data) {
+            return http.get(`${window.AJAX_URL_PREFIX}/defect/api/user/warn/tasks/${data.taskId}/buildInfos`).then(res => {
+                const data = res.data || {}
+                return data
+            }).catch(e => {
+                console.error(e)
+            })
+        },
+        commentDefect ({ commit, state, dispatch }, params) {
+            const { singleCommentId, userName, comment, ...query } = params
+            const data = { singleCommentId, userName, comment }
+            return http.post(`${window.AJAX_URL_PREFIX}/defect/api/user/warn/codeComment/toolName/${query.toolName}`, data, { params: query }).then(res => {
+                return res || {}
+            }).catch(e => {
+                console.error(e)
+            })
+        },
+        deleteComment ({ commit, state, dispatch }, params) {
+            const { commentId, singleCommentId, toolName } = params
+            return http.delete(`${window.AJAX_URL_PREFIX}/defect/api/user/warn/codeComment/commentId/${commentId}/singleCommentId/${singleCommentId}/toolName/${toolName}`).then(res => {
+                return res || {}
+            }).catch(e => {
+                console.error(e)
+            })
+        },
+        updateComment ({ commit, state, dispatch }, params) {
+            const { commentId, toolName, singleCommentId, userName, comment } = params
+            const data = { singleCommentId, userName, comment }
+            return http.put(`${window.AJAX_URL_PREFIX}/defect/api/user/warn/codeComment/commentId/${commentId}/toolName/${toolName}`, data).then(res => {
+                return res || {}
+            }).catch(e => {
+                console.error(e)
+            })
+        },
+        gatherFile ({ commit, state, dispatch }, params) {
+            const { taskId, toolName } = params
+            return http.get(`${window.AJAX_URL_PREFIX}/defect/api/user/warn/gather/taskId/${taskId}/toolName/${toolName}`).then(res => {
+                return res.data || {}
+            }).catch(e => {
+                console.error(e)
+            })
         }
     }
 }
