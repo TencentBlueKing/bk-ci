@@ -87,7 +87,7 @@ class LogServiceV2 @Autowired constructor(
     private val createIndexBeanV2: CreateIndexBeanV2,
     private val logBeanV2: LogBeanV2,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate
+    private val logMQEventDispatcher: LogMQEventDispatcher
 ) {
 
     companion object {

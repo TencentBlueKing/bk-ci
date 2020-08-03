@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.atom.quality
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -43,7 +44,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class QualityGateInTaskAtom @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val templateService: TemplateService,
     private val pipelineBuildQualityService: PipelineBuildQualityService
@@ -58,7 +59,7 @@ class QualityGateInTaskAtom @Autowired constructor(
         runVariables: Map<String, String>,
         force: Boolean
     ): AtomResponse {
-        return QualityUtils.tryFinish(task, rabbitTemplate)
+        return QualityUtils.tryFinish(task, buildLogPrinter)
     }
 
     override fun execute(
@@ -71,7 +72,7 @@ class QualityGateInTaskAtom @Autowired constructor(
             interceptTaskName = param.interceptTaskName,
             interceptTask = param.interceptTask,
             runVariables = runVariables,
-            rabbitTemplate = rabbitTemplate,
+            buildLogPrinter = buildLogPrinter,
             position = ControlPointPosition.BEFORE_POSITION,
             pipelineBuildQualityService = pipelineBuildQualityService,
             templateService = templateService
@@ -82,7 +83,7 @@ class QualityGateInTaskAtom @Autowired constructor(
             task = task,
             interceptTask = param.interceptTask!!,
             checkResult = checkResult,
-            rabbitTemplate = rabbitTemplate,
+            buildLogPrinter = buildLogPrinter,
             pipelineBuildQualityService = pipelineBuildQualityService,
             pipelineBuildDetailService = pipelineBuildDetailService
         )

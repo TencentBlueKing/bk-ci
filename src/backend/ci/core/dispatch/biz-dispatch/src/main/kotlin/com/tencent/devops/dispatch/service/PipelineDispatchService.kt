@@ -53,7 +53,6 @@ class PipelineDispatchService @Autowired constructor(
     private val dslContext: DSLContext,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchPipelineBuildDao: DispatchPipelineBuildDao,
-    private val logService: LogService,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 

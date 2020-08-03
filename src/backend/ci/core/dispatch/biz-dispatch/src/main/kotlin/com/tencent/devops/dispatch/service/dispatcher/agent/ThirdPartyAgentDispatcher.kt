@@ -437,7 +437,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
 
     override fun retry(
         client: Client,
-        rabbitTemplate: RabbitTemplate,
+        buildLogPrinter: BuildLogPrinter,
         pipelineEventDispatcher: PipelineEventDispatcher,
         event: PipelineAgentStartupEvent,
         errorMessage: String?

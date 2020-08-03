@@ -51,7 +51,7 @@ import org.springframework.stereotype.Component
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : IAtomTask<NormalContainer> {
     override fun getParamElement(task: PipelineBuildTask): NormalContainer {
@@ -82,8 +82,7 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
             )
         )
         // 同步Job执行状态
-        BuildLogPrinter.stopLog(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.stopLog(
             buildId = buildId,
             tag = task.containerHashId ?: "",
             jobId = task.containerHashId ?: "",
