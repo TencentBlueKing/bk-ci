@@ -19,6 +19,7 @@
     "build:test": "lerna run public:test --parallel",
     "build:master": "lerna run public:master --parallel",
     "build:external": "lerna run public:external --parallel",
+    "changelog": "conventional-changelog -c changelog.config.js -p github -i CHANGELOG.md -s",
     "public": "gulp -d frontend"
   },
   "husky": {

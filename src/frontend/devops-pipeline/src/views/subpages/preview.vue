@@ -67,7 +67,7 @@
             }
         },
         computed: {
-            ...mapGetters('soda', {
+            ...mapGetters({
                 curParamList: 'pipelines/getCurAtomPrams'
             }),
             ...mapGetters('atom', [
@@ -141,6 +141,7 @@
             this.togglePropertyPanel({
                 isShow: false
             })
+            this.$store.commit('pipelines/updateCurAtomPrams', null)
             this.setPipeline()
             this.setPipelineEditing(false)
 
