@@ -33,7 +33,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import javax.annotation.Resource
 
 class LogMQEventDispatcher (
-    @Resource(name="logRabbitTemplate")
+    @Resource(name="extendRabbitTemplate")
     private val rabbitTemplate: RabbitTemplate
 ) {
 
