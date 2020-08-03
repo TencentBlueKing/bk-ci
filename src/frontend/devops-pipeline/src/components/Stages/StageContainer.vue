@@ -121,7 +121,7 @@
         watch: {
             'preContainer.elements.length': function (newVal, oldVal) {
                 if (newVal !== oldVal) {
-                    this.updateCruveConnectHeight()
+                    this.$forceUpdate()
                 }
             },
             'container.runContainer' (newVal) {
@@ -145,6 +145,9 @@
             if (this.containerDisabled) {
                 this.container.runContainer = false
             }
+        },
+        updated () {
+            this.updateCruveConnectHeight()
         },
         methods: {
             ...mapActions('atom', [
@@ -325,11 +328,11 @@
             z-index: 0;
 
              &.left {
-                left: $addIconLeft + $addBtnSize / 2 - 2;
+                left: -$svgWidth + 4;
 
             }
             &.right {
-                right: -$StageMargin - $addIconLeft - $addBtnSize / 2 - 2;
+                right: -$StageMargin - $addIconLeft - $addBtnSize - 2;
             }
 
             &.first-connect-line {
@@ -337,11 +340,11 @@
                 width: $svgWidth;
                 top: -$stageEntryHeight / 2 - 2 - 16px;
                 &.left {
-                    left: -$svgWidth + 4;
+                    left: -$svgWidth - $addBtnSize / 2 + 4;
                 }
                 &.right {
                     left: auto;
-                    right: -$addIconLeftMargin - $containerMargin;
+                    right: -$addIconLeftMargin - $containerMargin - $addBtnSize / 2;
 
                 }
             }

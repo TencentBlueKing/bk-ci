@@ -696,7 +696,7 @@
                             pipelineId,
                             buildId: item.latestBuildId || 0
                         }
-                        if (!this.pipelineFeConfMap[pipelineId].extMenu.length) {
+                        if (this.pipelineFeConfMap[pipelineId] && !this.pipelineFeConfMap[pipelineId].extMenu.length) {
                             feConfig.extMenu = [
                                 {
                                     text: this.$t('edit'),

@@ -52,13 +52,13 @@ import org.springframework.core.Ordered
 @EnableRabbit
 class LogRabbitMQAutoConfiguration {
 
-    @Bean(name = ["logConnectionFactory"])
-    fun hPayConnectionFactory(
-        @Value("\${spring.rabbitmq.log.host}") host: String,
-        @Value("\${spring.rabbitmq.log.port}") port: Int,
-        @Value("\${spring.rabbitmq.log.username}") username: String,
-        @Value("\${spring.rabbitmq.log.password}") password: String,
-        @Value("\${spring.rabbitmq.log.virtual-host}") virtualHost: String
+    @Bean(name = ["extendConnectionFactory"])
+    fun extendConnectionFactory(
+        @Value("\${spring.rabbitmq.extend.host}") host: String,
+        @Value("\${spring.rabbitmq.extend.port}") port: Int,
+        @Value("\${spring.rabbitmq.extend.username}") username: String,
+        @Value("\${spring.rabbitmq.extend.password}") password: String,
+        @Value("\${spring.rabbitmq.extend.virtual-host}") virtualHost: String
     ): ConnectionFactory {
         val connectionFactory = CachingConnectionFactory()
         connectionFactory.host = host
@@ -70,10 +70,10 @@ class LogRabbitMQAutoConfiguration {
     }
 
 
-    @Bean(name = ["logRabbitTemplate"])
+    @Bean(name = ["extendRabbitTemplate"])
     @Primary
-    fun logRabbitTemplate(
-        @Qualifier("logConnectionFactory")
+    fun extendRabbitTemplate(
+        @Qualifier("extendConnectionFactory")
         connectionFactory: ConnectionFactory
     ): RabbitTemplate {
         return RabbitTemplate(connectionFactory)

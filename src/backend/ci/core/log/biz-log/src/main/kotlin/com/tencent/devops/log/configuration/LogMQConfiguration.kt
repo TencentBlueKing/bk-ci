@@ -62,7 +62,7 @@ class LogMQConfiguration @Autowired constructor() {
 
     @Bean
     fun rabbitAdmin(
-        @Qualifier("logConnectionFactory")
+        @Qualifier("extendConnectionFactory")
         connectionFactory: ConnectionFactory
     ): RabbitAdmin {
         return RabbitAdmin(connectionFactory)
@@ -113,7 +113,7 @@ class LogMQConfiguration @Autowired constructor() {
 
     @Bean
     fun logEventListener(
-        @Qualifier("logConnectionFactory")
+        @Qualifier("extendConnectionFactory")
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired logEventQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
@@ -135,7 +135,7 @@ class LogMQConfiguration @Autowired constructor() {
 
     @Bean
     fun logBatchEventListener(
-        @Qualifier("logConnectionFactory")
+        @Qualifier("extendConnectionFactory")
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired logBatchEventQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
@@ -178,7 +178,7 @@ class LogMQConfiguration @Autowired constructor() {
 
     @Bean
     fun pipelineBuildFinishListenerContainer(
-        @Qualifier("logConnectionFactory")
+        @Qualifier("extendConnectionFactory")
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired pipelineBuildFinishQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
