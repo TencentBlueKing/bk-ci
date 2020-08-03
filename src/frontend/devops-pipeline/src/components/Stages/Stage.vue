@@ -19,11 +19,11 @@
                 <i @click.stop="deleteStageHandler" class="add-plus-icon close" />
             </span>
         </bk-button>
-        <cruveLine v-if="!isTriggerStage" class="first-connect-line connect-line left" :width="60" :height="60"></cruveLine>
         <draggable v-model="computedContainer" v-bind="dragOptions" :move="checkMove" tag="ul">
             <stage-container v-for="(container, index) in computedContainer"
                 :key="container.containerId"
                 :stage-index="stageIndex"
+                :pre-container="containers[index - 1]"
                 :container-index="index"
                 :stage-length="stageLength"
                 :editable="editable"
@@ -34,7 +34,6 @@
                 :container="container">
             </stage-container>
         </draggable>
-        <cruve-line class="first-connect-line connect-line right" :width="60" :direction="false" :height="60"></cruve-line>
         <span class="stage-connector">
             <i class="devops-icon icon-right-shape connector-angle"></i>
         </span>
@@ -459,7 +458,7 @@
             position: absolute;
             left: -$reviewIconSize / 2;
             top: ($stageEntryHeight - $reviewIconSize) / 2;
-            z-index: 2;
+            z-index: 3;
         }
 
         .pipeline-stage-entry {
@@ -470,7 +469,7 @@
             background-color: #EFF5FF;
             border-color: #D4E8FF;
             color: $primaryColor;
-            z-index: 1;
+            z-index: 2;
 
             &:not(.editable-stage-entry),
             &.stage-disabled {
@@ -571,17 +570,6 @@
             }
         }
 
-        .first-connect-line {
-            height: 76px;
-            width: $svgWidth;
-            top: $stageEntryHeight / 2 - 2;
-            left: $addIconLeft + $addBtnSize / 2;
-            &.right {
-                left: auto;
-                right: -$StageMargin - $addIconLeft - $addBtnSize / 2;
-            }
-        }
-
         .add-connector {
             stroke-dasharray: 4,4;
             top: 7px;
@@ -636,6 +624,7 @@
             top: $stageEntryHeight / 2 - 1;
             color: $primaryColor;
             background-color: $primaryColor;
+            z-index: 1;
 
             &:before {
                 content: '';

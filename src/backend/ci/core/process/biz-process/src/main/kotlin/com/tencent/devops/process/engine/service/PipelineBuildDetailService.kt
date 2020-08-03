@@ -813,6 +813,10 @@ class PipelineBuildDetailService @Autowired constructor(
                     if (container.id == containerId || container.containerId == containerId) {
                         update = true
                         container.startVMStatus = buildStatus.name
+                        // #2074 如果是失败的，则将Job整体状态设置为失败
+                        if (BuildStatus.isFailure(buildStatus)) {
+                            container.status = buildStatus.name
+                        }
                         return Traverse.BREAK
                     }
                 }

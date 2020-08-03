@@ -79,12 +79,12 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun updateLogo(
         userId: String,
-        projectId: String,
+        englishName: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
         accessToken: String?
     ): Result<Boolean> {
-        return projectService.updateLogo(userId, projectId, inputStream, disposition)
+        return projectService.updateLogo(userId, englishName, inputStream, disposition)
     }
 
     override fun validate(

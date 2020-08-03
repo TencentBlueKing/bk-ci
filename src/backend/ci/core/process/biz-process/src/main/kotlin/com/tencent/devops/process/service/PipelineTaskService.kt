@@ -49,6 +49,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class PipelineTaskService @Autowired constructor(
@@ -222,6 +223,8 @@ class PipelineTaskService @Autowired constructor(
                 pipelineId = pipelineId,
                 variables = valueMap
             )
+            redisOperation.delete(failTaskRedisKey(buildId, taskId))
+            redisOperation.delete(failTaskNameRedisKey(buildId, taskId))
             logger.info("$buildId|$taskId| retry success, success remove fail recode")
         } catch (e: Exception) {
             logger.warn("removeFailVarWhenSuccess error, msg: $e")
@@ -243,8 +246,18 @@ class PipelineTaskService @Autowired constructor(
         val failTask = "[${taskRecord.stageId}][$containerName]${taskRecord.taskName} \n"
         val failTaskName = "${taskRecord.taskName}"
 
-        redisOperation.set(failTaskRedisKey(taskRecord.buildId, taskRecord.taskId), failTask)
-        redisOperation.set(failTaskNameRedisKey(taskRecord.buildId, taskRecord.taskId), failTaskName)
+        redisOperation.set(
+            failTaskRedisKey(taskRecord.buildId, taskRecord.taskId),
+            failTask,
+            TimeUnit.DAYS.toMinutes(7L),
+            true
+        )
+        redisOperation.set(
+            failTaskNameRedisKey(taskRecord.buildId, taskRecord.taskId),
+            failTaskName,
+            TimeUnit.DAYS.toMinutes(7L),
+            true
+        )
         return Pair(failTask, failTaskName)
     }
 

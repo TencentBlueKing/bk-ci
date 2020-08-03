@@ -168,6 +168,13 @@ export async function response(getArgs, postArgs, req) {
             },
             message: 'ok'
         }
+    } else if (invoke === 'metadata') {
+        const data = require('./tool-meta.json')
+        return {
+            code: 0,
+            data,
+            message: 'ok'
+        }
     }
     return {
         code: 0,
