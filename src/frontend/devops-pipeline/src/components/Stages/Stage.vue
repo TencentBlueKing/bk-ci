@@ -624,7 +624,6 @@
             top: $stageEntryHeight / 2 - 1;
             color: $primaryColor;
             background-color: $primaryColor;
-            z-index: 1;
 
             &:before {
                 content: '';

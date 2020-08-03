@@ -205,6 +205,7 @@
                 'toggleAtomSelectorPopup',
                 'toggleStageSelectPopup',
                 'togglePropertyPanel',
+                'setInertStageIndex',
                 'addStage',
                 'addContainer',
                 'fetchAtoms',
@@ -239,11 +240,14 @@
                 })
             },
             insert (type) {
-                const { pipeline, insertStageIndex, isAddParallelContainer } = this
+                const { pipeline, insertStageIndex, isAddParallelContainer, setInertStageIndex } = this
                 if (!isAddParallelContainer) {
                     this.addStage({
                         stages: pipeline.stages,
                         insertStageIndex
+                    })
+                    setInertStageIndex({
+                        insertStageIndex: insertStageIndex + 1
                     })
                 }
                 this.insertContainer(type, insertStageIndex)
