@@ -46,6 +46,7 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.ProcessService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
+import com.tencent.devops.worker.common.utils.CommandLineUtils
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -193,6 +194,8 @@ object Runner {
             if (workspacePathFile != null && checkIfNeed2CleanWorkspace()) {
                 val file = workspacePathFile.absoluteFile.normalize()
                 logger.warn("Need to clean up the workspace(${file.absolutePath})")
+                // 去除workspace目录下的软连接
+                CommandLineUtils.execute("find $workspacePathFile -type l | xargs rm -rf \\;", workspacePathFile, true, "")
                 if (!file.deleteRecursively()) {
                     logger.warn("Fail to clean up the workspace")
                 }
