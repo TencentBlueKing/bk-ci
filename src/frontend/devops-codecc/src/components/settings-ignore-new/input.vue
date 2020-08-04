@@ -4,7 +4,7 @@
         v-model="inputVisible"
         :theme="'primary'"
         :width="579"
-        :title="$t('filter.设置默认路径')"
+        :title="$t('设置默认路径')"
         @confirm="save"
         @cancel="cancel"
         :position="{ top: 100, left: 5 }">
@@ -35,8 +35,8 @@
                     pathType: 'DEFAULT'
                 },
                 title: [
-                    this.$t('filter.待添加路径'),
-                    this.$t('filter.已添加路径')
+                    this.$t('待添加路径'),
+                    this.$t('已添加路径')
                 ]
             }
         },
@@ -63,11 +63,11 @@
                 this.selectedList.taskId = this.taskId
                 this.$store.dispatch('task/createIgnore', this.selectedList).then(res => {
                     if (res === true) {
-                        this.$bkMessage({ theme: 'success', message: this.$t('filter.路径添加成功') })
+                        this.$bkMessage({ theme: 'success', message: this.$t('路径添加成功') })
                         this.$store.dispatch('task/ignore', this.taskId)
                     }
                 }).catch(e => {
-                    this.$bkMessage({ theme: 'error', message: this.$t('filter.路径添加失败') })
+                    this.$bkMessage({ theme: 'error', message: this.$t('路径添加失败') })
                 })
                 this.inputVisible = false
             },

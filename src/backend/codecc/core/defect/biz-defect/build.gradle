@@ -1,0 +1,22 @@
+apply plugin: "java"
+dependencies {
+    compile project(":core:common:common-service")
+    compile project(":core:common:common-web")
+    compile project(":core:common:common-client")
+    compile project(":core:common:common-redis")
+    compile project(":core:defect:model-defect")
+    compile project(":core:defect:api-defect")
+    compile project(":core:task:api-task")
+    compile project(":ext:tencent:task:api-task-opensource")
+    compile project(":core:common:common-external-auth-internal")
+    compile project(":ext:tencent:coverity:api-coverity")
+    compile project(":core:schedule:api-schedule")
+    compile "org.springframework.kafka:spring-kafka:1.3.10.RELEASE"
+    compile group: "com.tencent.bk.devops.ci.common", name: "common-kafka-tencent", version: version, changing: true
+}
+
+version = null
+
+apply from: "$rootDir/task_spring_boot_package.gradle"
+
+// version "1.2.3"  // 这里可以设定版本号

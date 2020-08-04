@@ -46,7 +46,8 @@ export const BUILD_HISTORY_TABLE_DEFAULT_COLUMNS = [
     'totalTime',
     'artifactList',
     'pipelineVersion',
-    'remark'
+    'remark',
+    'errorCode'
 ]
 
 export function getVersionConfig () {

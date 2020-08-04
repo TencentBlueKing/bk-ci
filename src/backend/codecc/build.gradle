@@ -46,11 +46,10 @@ buildscript {
         commonsIOVersion = "2.5"
         xmlrpcVersion = "3.1.3"
         commonsHttpclientVersion = "3.1"
-        ci_version = "2.3.6-SNAPSHOT"
     }
 
     repositories {
-        mavenLocal()
+        mavenLocal ()
         maven { url MAVEN_REPO_SNAPSHOT_URL }
         maven { url MAVEN_LOCAL_REPO_URL }
         maven { url MAVEN_REPO_URL }
@@ -71,7 +70,7 @@ buildscript {
 
 ext {
     // Open the Git repository in the current directory.
-    git = org.ajoberstar.grgit.Grgit.open(file('../../../'))
+    git = org.ajoberstar.grgit.Grgit.open(file('../../'))
 
     // Get commit id of HEAD.
     commit = git.head()
@@ -81,7 +80,7 @@ ext {
 
 allprojects {
     group "com.tencent.bk.codecc"
-    version "0.0.2" // 总版本
+    version "1.0.0-RELEASE" // 总版本
 
     repositories {
         mavenLocal()
@@ -127,8 +126,8 @@ subprojects {
         ktlint
         all*.exclude group: "org.springframework.boot", module: "spring-boot-starter-logging"
         all*.exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
-        def defect = /^biz-defect.*/
-        if (!(project.name ==~ defect) && project.name != "boot-defect") {
+        def job = /^biz-codeccjob.*/
+        if (!(project.name ==~ job) && project.name != "boot-codeccjob") {
             all*.exclude group: "org.springframework.boot", module: "spring-boot-starter-websocket"
             all*.exclude group: "io.undertow", module: "undertow-websockets-jsr"
         }

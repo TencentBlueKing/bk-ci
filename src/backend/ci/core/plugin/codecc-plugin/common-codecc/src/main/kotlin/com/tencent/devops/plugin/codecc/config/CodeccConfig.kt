@@ -38,6 +38,9 @@ class CodeccConfig {
     @Value("\${codeccGateway.gateway:}")
     val codeccApiGateWay: String = ""
 
+    @Value("\${codeccGateway.proxy:}")
+    val codeccApiProxyGateWay: String = ""
+
     @Value("\${codeccGateway.api.createTask:/ms/task/api/service/task}")
     val createPath = "/ms/task/api/service/task"
 

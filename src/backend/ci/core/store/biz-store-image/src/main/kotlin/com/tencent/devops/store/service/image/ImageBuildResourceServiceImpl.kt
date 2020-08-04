@@ -28,6 +28,7 @@ package com.tencent.devops.store.service.image
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.container.BuildResourceDao
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
@@ -64,7 +65,14 @@ class ImageBuildResourceServiceImpl @Autowired constructor(
             } else {
                 try {
                     logger.info("configValue=${record.configValue}")
-                    return JsonUtil.to(record.configValue, BaseImageInfo::class.java)
+                    val baseImageInfo = JsonUtil.to(record.configValue, BaseImageInfo::class.java)
+                    if (baseImageInfo.imageType == null) {
+                        baseImageInfo.imageType = ImageType.BKSTORE.name
+                    }
+                    if (baseImageInfo.imageType.equals(ImageType.BKSTORE.name)) {
+                        baseImageInfo.value = baseImageInfo.code
+                    }
+                    return baseImageInfo
                 } catch (e: Exception) {
                     logger.error("defaultBuildResource value wrong format, plz config in op:${record.configValue}")
                     return null

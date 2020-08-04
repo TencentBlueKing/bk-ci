@@ -18,15 +18,18 @@ class TaskWebSocket {
         })
     }
 
+    subscribeMsg (subscribeUrl, { success }) {
+        this.stompClient.subscribe(subscribeUrl, (res) => {
+            success(res)
+        })
+    }
+
     build (projectId, taskId, subscribeUrl, { success, error }) {
-        const socket = new SockJS(`${window.AJAX_URL_PREFIX}/defect/websocket/user/taskLog/analysisInfo?X-DEVOPS-PROJECT-ID=${projectId}&X-DEVOPS-TASK-ID=${taskId}`)
+        const socket = new SockJS(`${window.AJAX_URL_PREFIX}/codeccjob/websocket/user/taskLog/analysisInfo?X-DEVOPS-PROJECT-ID=${projectId}&X-DEVOPS-TASK-ID=${taskId}`)
         this.stompClient = Stomp.over(socket)
         this.stompClient.debug = null
         this.stompClient.connect({}, () => {
-            this.stompClient.subscribe(subscribeUrl, (res) => {
-                this.errTime = 1
-                success(res)
-            })
+            this.subscribeMsg(subscribeUrl, { success })
         }, (err) => {
             if (this.errTime <= 8) {
                 // 由于部署原因，可能会出现需要重连的情况

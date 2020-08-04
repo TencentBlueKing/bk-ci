@@ -28,6 +28,7 @@ package com.tencent.devops.process.api.builds
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBuildService
@@ -49,17 +50,12 @@ class BuildBuildResourceImpl @Autowired constructor(
 
     override fun setStarted(buildId: String, vmSeqId: String, vmName: String): Result<BuildVariables> {
         checkParam(buildId, vmSeqId, vmName)
-        return Result(vmBuildService.buildVMStarted(buildId, vmSeqId, vmName))
+        return Result(vmBuildService.buildVMStarted(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
-
-//    override fun setPluginStarted(buildId: String, vmSeqId: String, vmName: String): Result<BuildVariables> {
-//        checkParam(buildId, vmSeqId, vmName)
-//        return Result(vmBuildService.pluginStart(buildId, vmSeqId, vmName))
-//    }
 
     override fun claimTask(buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
         checkParam(buildId, vmSeqId, vmName)
-        return Result(vmBuildService.buildClaimTask(buildId, vmSeqId, vmName))
+        return Result(vmBuildService.buildClaimTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
     override fun completeTask(
@@ -68,19 +64,31 @@ class BuildBuildResourceImpl @Autowired constructor(
         vmName: String,
         result: BuildTaskResult
     ): Result<Boolean> {
-        checkParam(buildId, vmSeqId, vmName)
-        vmBuildService.buildCompleteTask(buildId, vmSeqId, vmName, result)
+        checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
+        vmBuildService.buildCompleteTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName, result = result)
         return Result(true)
     }
 
     override fun endTask(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
-        checkParam(buildId, vmSeqId, vmName)
-        return Result(vmBuildService.buildEndTask(buildId, vmSeqId, vmName))
+        checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
+        return Result(vmBuildService.buildEndTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
+    }
+
+    override fun timeoutTheBuild(projectId: String, pipelineId: String, buildId: String, vmSeqId: String): Result<Boolean> {
+        return Result(
+            data = vmBuildService.setStartUpVMStatus(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                buildStatus = BuildStatus.EXEC_TIMEOUT
+            )
+        )
     }
 
     override fun heartbeat(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
-        checkParam(buildId, vmSeqId, vmName)
-        return Result(vmBuildService.heartbeat(buildId, vmSeqId, vmName))
+        checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
+        return Result(data = vmBuildService.heartbeat(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
     override fun getSingleHistoryBuild(
@@ -89,11 +97,9 @@ class BuildBuildResourceImpl @Autowired constructor(
         buildNum: String,
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
-        val history = buildService.getSingleHistoryBuild(
-            projectId, pipelineId,
-            buildNum.toInt(), channelCode ?: ChannelCode.BS
+        return Result(
+            data = buildService.getSingleHistoryBuild(projectId = projectId, pipelineId = pipelineId, buildNum = buildNum.toInt(), channelCode = channelCode ?: ChannelCode.BS)
         )
-        return Result(history)
     }
 
     override fun getLatestSuccessBuild(
@@ -101,7 +107,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
-        return Result(buildService.getLatestSuccessBuild(projectId, pipelineId, channelCode ?: ChannelCode.BS))
+        return Result(data = buildService.getLatestSuccessBuild(projectId = projectId, pipelineId = pipelineId, channelCode = channelCode ?: ChannelCode.BS))
     }
 
     override fun getBuildDetail(
@@ -115,14 +121,13 @@ class BuildBuildResourceImpl @Autowired constructor(
         }
         return Result(
             buildService.getBuildDetail(
-                projectId, pipelineId, buildId, channelCode,
-                ChannelCode.isNeedAuth(channelCode)
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId, channelCode = channelCode, checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )
     }
 
     override fun getSubBuildVars(buildId: String, taskId: String): Result<Map<String, String>> {
-        return subPipelineStartUpService.getSubVar(buildId, taskId)
+        return subPipelineStartUpService.getSubVar(buildId = buildId, taskId = taskId)
     }
 
     private fun checkParam(buildId: String, vmSeqId: String, vmName: String) {

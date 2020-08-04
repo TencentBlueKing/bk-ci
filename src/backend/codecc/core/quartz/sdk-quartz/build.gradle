@@ -1,0 +1,19 @@
+apply plugin: "java"
+
+dependencies {
+    compile project(":core:common:common-service")
+    compile project(":core:common:common-web")
+    compile project(":core:common:common-client")
+    compile project(":core:task:api-task")
+    compile project(":core:defect:api-defect")
+    compile(group: 'com.tencent.bk.devops.ci.process', name: 'api-process', version: version, changing: true) {
+        exclude group: 'com.tencent.bk.devops.ci.scm', module: 'api-scm'
+        exclude group: 'com.tencent.bk.devops.ci.measure', module: 'api-measure'
+        exclude group: 'com.tencent.bk.devops.ci.image', module: 'api-image'
+    }
+
+}
+
+version = null
+
+// version "1.2.3"  // 这里可以设定版本号

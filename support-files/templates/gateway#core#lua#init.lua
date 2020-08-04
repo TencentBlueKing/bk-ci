@@ -114,8 +114,7 @@ config = {
   },
   bkrepo = {
     domain = "__BKREPO_HOST__"
-  },
-  jwtPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n__BKCI_RSA_PRIVATE_KEY__\n-----END RSA PRIVATE KEY-----" 
+  }
 }
   
 require("init_common")
