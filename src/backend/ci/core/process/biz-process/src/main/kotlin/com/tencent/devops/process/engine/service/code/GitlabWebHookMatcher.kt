@@ -80,4 +80,8 @@ class GitlabWebHookMatcher(private val event: GitlabCommitEvent) : ScmWebhookMat
     override fun getCodeType() = CodeType.GITLAB
 
     override fun getMergeRequestId() = null
+
+    override fun getMessage(): String? {
+        return event.commits[0].message
+    }
 }

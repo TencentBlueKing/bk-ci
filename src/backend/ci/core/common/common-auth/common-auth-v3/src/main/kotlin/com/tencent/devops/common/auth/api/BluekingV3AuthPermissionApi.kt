@@ -120,7 +120,8 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         val actionType = ActionUtils.buildAction(resourceType, permission)
         val actionDto = ActionDTO()
         actionDto.id = actionType
-        val expression = (policyService.getPolicyByAction(user, actionDto, null) ?: return emptyList()) ?: return emptyList()
+        val expression = (policyService.getPolicyByAction(user, actionDto, null) ?: return emptyList())
+        logger.info("getUserResourceByPermission expression:$expression")
 
         if (expression.operator == null && expression.content == null) {
             return emptyList()
@@ -131,7 +132,6 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
             return listOf("*")
         }
 
-        logger.info("getUserResourceByPermission expression:$expression")
         return if (resourceType == AuthResourceType.PROJECT) {
             AuthUtils.getProjects(expression)
         } else {

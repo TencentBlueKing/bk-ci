@@ -74,7 +74,7 @@ auth:
   appCode: __APP_CODE__
   appSecret: __APP_TOKEN__
   bkloginUrl: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/login/api/v2
-  iamCallBackUser: __IAM_SERVER_NAME__
+  iamCallBackUser: __IAM_CALLBACK_USER__
 
 
 #bk esb config for cd plugin in pipeline
