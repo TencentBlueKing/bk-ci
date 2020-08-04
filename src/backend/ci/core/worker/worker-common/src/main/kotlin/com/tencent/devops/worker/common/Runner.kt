@@ -195,7 +195,7 @@ object Runner {
                 val file = workspacePathFile.absoluteFile.normalize()
                 logger.warn("Need to clean up the workspace(${file.absolutePath})")
                 // 去除workspace目录下的软连接
-                // CommandLineUtils.execute("find $workspacePathFile -type l | xargs rm -rf \\;", workspacePathFile, true, "")
+                CommandLineUtils.execute("find $workspacePathFile -type l | xargs rm -rf \\;", workspacePathFile, true, "")
                 if (!file.deleteRecursively()) {
                     logger.warn("Fail to clean up the workspace")
                 }
