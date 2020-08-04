@@ -24,6 +24,8 @@
     "load": "Load",
     "edit": "Edit",
     "terminate": "Cancel",
+    "userError": "USER",
+    "systemError": "SYSTEM",
     "retry": "Retry",
     "resume": "Continue",
     "uninstall": "Uninstall",

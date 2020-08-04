@@ -6,7 +6,7 @@
         <bk-button :class="['pipeline-stage-entry', [stageStatusCls], { 'editable-stage-entry': editable, 'stage-disabled': stageDisabled }]" @click.stop="showStagePanel">
             <logo v-if="stage.status === 'SKIP'" v-bk-tooltips="$t('skipStageDesc')" class="skip-icon redo-arrow" name="redo-arrow" size="16"></logo>
             <i v-else-if="stageStatusIcon" :class="`stage-status-icon bk-icon icon-${stageStatusIcon}`"></i>
-            <span :class="{ 'stage-entry-name': true, 'skip-name': stageDisabled || stage.status === 'SKIP' }">{{ stageTitle }}</span>
+            <span :title="stageTitle" :class="{ 'stage-entry-name': true, 'skip-name': stageDisabled || stage.status === 'SKIP' }">{{ stageTitle }}</span>
             <i v-if="isStageError" class="bk-icon icon-exclamation-triangle-shape stage-entry-error-icon" />
             <span @click.stop v-if="showCheckedToatal && canSkipElement" class="check-total-stage">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="stage.runStage" :disabled="stageDisabled"></bk-checkbox>
@@ -471,6 +471,11 @@
             color: $primaryColor;
             z-index: 2;
 
+            .stage-entry-name {
+                @include ellipsis();
+                width: 90%;
+            }
+
             &:not(.editable-stage-entry),
             &.stage-disabled {
                 background-color: #F3F3F3;
@@ -525,6 +530,9 @@
                 }
                 .stage-entry-error-icon {
                     display: none;
+                }
+                .stage-entry-name {
+                    width: 70%;
                 }
             }
 
