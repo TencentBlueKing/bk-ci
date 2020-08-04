@@ -36,7 +36,6 @@ import org.apache.commons.exec.DefaultExecutor
 import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
 import java.io.File
-import java.util.concurrent.ThreadLocalRandom
 
 object ExecutorUtil {
     private val executor = DefaultExecutor()
