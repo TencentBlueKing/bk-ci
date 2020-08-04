@@ -137,7 +137,7 @@ class JwtManager(
     }
 
     init {
-        if (privateKeyString.isNullOrBlank() || publicKeyString.isNullOrBlank()) {
+        if (!enable || privateKeyString.isNullOrBlank() || publicKeyString.isNullOrBlank()) {
             privateKey = null
             publicKey = null
             authEnable = false
