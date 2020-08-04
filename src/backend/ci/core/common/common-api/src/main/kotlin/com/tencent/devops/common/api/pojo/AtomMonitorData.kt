@@ -24,31 +24,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.common.api.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线模型-构建任务结果")
-data class BuildTaskResult(
-    @ApiModelProperty("任务ID", required = true)
-    val taskId: String,
-    @ApiModelProperty("插件ID", required = true)
-    val elementId: String,
-    @ApiModelProperty("Container ID", required = true)
-    val containerId: String?,
-    @ApiModelProperty("是否执行成功", required = true)
-    val success: Boolean,
-    @ApiModelProperty("构建结果", required = true)
-    val buildResult: Map<String, String>,
-    @ApiModelProperty("错误原因", required = false)
-    val message: String? = null,
-    @ApiModelProperty("任务类型", required = false)
-    val type: String? = null,
-    @ApiModelProperty("错误类型", required = false)
+@ApiModel("插件监控数据")
+data class AtomMonitorData(
+    @ApiModelProperty("插件执行错误码", required = true)
+    val errorCode: Int,
+    @ApiModelProperty("插件执行错误信息", required = false)
+    val errorMsg: String? = null,
+    @ApiModelProperty("插件执行错误类型", required = false)
     val errorType: String? = null,
-    @ApiModelProperty("错误码标识", required = false)
-    val errorCode: Int? = null,
-    @ApiModelProperty("插件监控数据", required = false)
-    val monitorData: Map<String, Any>? = null
+    @ApiModelProperty("插件代码", required = true)
+    val atomCode: String,
+    @ApiModelProperty("插件版本", required = true)
+    val version: String,
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("流水线ID", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("构建环境ID", required = true)
+    val vmSeqId: String,
+    @ApiModelProperty("执行开始时间", required = false)
+    val startTime: Long?,
+    @ApiModelProperty("执行结束时间", required = false)
+    val endTime: Long?,
+    @ApiModelProperty("执行耗时时间", required = false)
+    val elapseTime: Long?,
+    @ApiModelProperty("来源渠道", required = false)
+    val channel: String? = null,
+    @ApiModelProperty("执行人", required = true)
+    val starter: String,
+    @ApiModelProperty("扩展数据", required = false)
+    val extData: Map<String, Any>? = null
 )
