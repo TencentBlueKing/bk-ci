@@ -36,13 +36,31 @@ object CommonUtils {
     private const val dockerHubUrl = ""
 
     fun getRepoOwner(httpUrl: String): String {
-        if (httpUrl.startsWith("http://")) {
-            return httpUrl.removePrefix("http://")
-                .split("/")[1]
-        } else if (httpUrl.startsWith("https://")) {
-            return httpUrl.removePrefix("https://")
-                .split("/")[1]
-        } else return ""
+        return when {
+            httpUrl.startsWith("http://") -> {
+                httpUrl.removePrefix("http://")
+                    .split("/")[1]
+            }
+            httpUrl.startsWith("https://") -> {
+                httpUrl.removePrefix("https://")
+                    .split("/")[1]
+            }
+            else -> ""
+        }
+    }
+
+    fun getRepoName(httpUrl: String): String {
+        return when {
+            httpUrl.startsWith("http://") -> {
+                httpUrl.removePrefix("http://")
+                    .split("/")[2]
+            }
+            httpUrl.startsWith("https://") -> {
+                httpUrl.removePrefix("https://")
+                    .split("/")[2]
+            }
+            else -> ""
+        }
     }
 
     fun parseImage(imageNameInput: String): Triple<String, String, String> {
