@@ -32,10 +32,10 @@ CREATE TABLE IF NOT EXISTS `T_SIGN_HISTORY` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC;
 
 -- ----------------------------
--- Table structure for T_SIGN_HISTORY
+-- Table structure for T_SIGN_IPA_INFO
 -- ----------------------------
 
-CREATE TABLE IF NOT EXISTS `T_SIGN_HISTORY` (
+CREATE TABLE IF NOT EXISTS `T_SIGN_IPA_INFO` (
   `RESIGN_ID` varchar(64) NOT NULL,
   `USER_ID` varchar(64) NOT NULL,
   `WILDCARD` bit(1) NOT NULL,
