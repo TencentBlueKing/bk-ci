@@ -26,12 +26,14 @@
 
 package com.tencent.devops.dispatch.service.dispatcher.docker
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.client.DockerHostClient
+import com.tencent.devops.dispatch.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
@@ -155,15 +157,15 @@ class DockerDispatcher @Autowired constructor(
                 driftIpInfo = driftIpInfo
             )
         } catch (e: Exception) {
-            val errMsg = if (e is DockerServiceException) {
+            val errMsgTriple = if (e is DockerServiceException) {
                 logger.warn("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed. ${e.message}")
-                e.message!!
+                Triple(e.errorType, e.errorCode, e.message!!)
             } else {
                 logger.error(
                     "[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed.",
                     e
                 )
-                "Start build Docker VM failed."
+                Triple(ErrorType.SYSTEM, ErrorCodeEnum.SYSTEM_ERROR.errorCode, "Start build Docker VM failed.")
             }
 
             // 更新构建记录状态
@@ -193,7 +195,7 @@ class DockerDispatcher @Autowired constructor(
                 )
             }
 
-            onFailBuild(client, rabbitTemplate, pipelineAgentStartupEvent, errMsg)
+            onFailBuild(client, rabbitTemplate, pipelineAgentStartupEvent, errMsgTriple.first, errMsgTriple.second, errMsgTriple.third)
         }
     }
 

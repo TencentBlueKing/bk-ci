@@ -32,9 +32,9 @@ apply plugin: "kotlin-spring"
 apply plugin: "org.springframework.boot"
 
 dependencies {
-    compile project(":common:common-api")
-    compile project(":common:common-web")
-    compile project(":common:common-service")
+    compile project(":core:common:common-api")
+    compile project(":core:common:common-web")
+    compile project(":core:common:common-service")
 }
 bootRun {
     jvmArgs = ["-Dspring.output.ansi.enabled=ALWAYS",
