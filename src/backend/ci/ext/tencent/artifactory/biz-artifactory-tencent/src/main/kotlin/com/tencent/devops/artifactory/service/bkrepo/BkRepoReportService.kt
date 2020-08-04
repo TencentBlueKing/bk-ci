@@ -48,8 +48,7 @@ class BkRepoReportService @Autowired constructor(
         elementId: String,
         path: String
     ): Response {
-        logger.info("get, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, , " +
-            "elementId: $elementId, path: $path")
+        logger.info("get, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, elementId: $elementId, path: $path")
         val normalizedPath = JFrogUtil.normalize(path)
         val realPath = "/$pipelineId/$buildId/$elementId/${normalizedPath.removePrefix("/")}"
         bkRepoClient.getFileDetail("", projectId, RepoUtils.REPORT_REPO, realPath)

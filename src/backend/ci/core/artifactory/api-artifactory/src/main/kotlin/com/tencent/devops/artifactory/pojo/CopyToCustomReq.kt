@@ -26,6 +26,7 @@
 
 package com.tencent.devops.artifactory.pojo
 
+import com.tencent.devops.common.api.exception.OperationException
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -35,4 +36,10 @@ data class CopyToCustomReq(
     val files: List<String>,
     @ApiModelProperty("是否拷贝所有文件", required = true)
     val copyAll: Boolean
-)
+){
+    fun check() {
+        if (!copyAll && files.isEmpty()) {
+            throw OperationException("invalid request")
+        }
+    }
+}

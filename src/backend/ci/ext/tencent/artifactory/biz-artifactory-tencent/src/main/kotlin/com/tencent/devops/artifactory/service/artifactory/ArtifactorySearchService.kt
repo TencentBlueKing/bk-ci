@@ -55,8 +55,7 @@ class ArtifactorySearchService @Autowired constructor(
         offset: Int,
         limit: Int
     ): Pair<Long, List<FileInfo>> {
-        logger.info("Search file. [ProjectId=$projectId, Props=$searchProps]")
-
+        logger.info("search, userId: $userId, projectId: $projectId, searchProps: $searchProps, offset: $offset, limit: $limit")
         val repoPathPrefix = JFrogUtil.getRepoPath()
         val pipelinePathPrefix = "/" + JFrogUtil.getPipelinePathPrefix(projectId).removePrefix(repoPathPrefix)
         val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(projectId).removePrefix(repoPathPrefix)
@@ -100,16 +99,12 @@ class ArtifactorySearchService @Autowired constructor(
         offset: Int,
         limit: Int
     ): Pair<Long, List<FileInfo>> {
-        logger.info("Service search file and property. [ProjectId=$projectId, Props=$searchProps]")
-
+        logger.info("serviceSearch, projectId: $projectId, searchProps: $searchProps, offset: $offset, limit: $limit")
         val repoPathPrefix = JFrogUtil.getRepoPath()
         val pipelinePathPrefix = "/" + JFrogUtil.getPipelinePathPrefix(projectId).removePrefix(repoPathPrefix)
         val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(projectId).removePrefix(repoPathPrefix)
-
         val relativePathSet = setOf(pipelinePathPrefix, customDirPathPrefix)
-
         val fileNameSet = mutableSetOf<String>()
-
         val props = mutableListOf<Pair<String, String>>()
         searchProps.forEach {
             if (it.key == ARCHIVE_PROPS_FILE_NAME) {
@@ -121,7 +116,6 @@ class ArtifactorySearchService @Autowired constructor(
 
         val finalOffset = if (limit == -1) null else offset
         val finalLimit = if (limit == -1) null else limit
-
         val jFrogAQLFileInfoList = jFrogAQLService.searchByProperty(
             repoPathPrefix,
             relativePathSet,
@@ -136,8 +130,7 @@ class ArtifactorySearchService @Autowired constructor(
     }
 
     override fun searchFileAndProperty(userId: String, projectId: String, searchProps: SearchProps): Pair<Long, List<FileInfo>> {
-        logger.info("Service search file and property. [ProjectId=$projectId, Props=$searchProps]")
-
+        logger.info("searchFileAndProperty, userId: $userId, projectId: $projectId, searchProps: $searchProps")
         val repoPathPrefix = JFrogUtil.getRepoPath()
         val pipelinePathPrefix = "/" + JFrogUtil.getPipelinePathPrefix(projectId).removePrefix(repoPathPrefix)
         val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(projectId).removePrefix(repoPathPrefix)
@@ -175,8 +168,7 @@ class ArtifactorySearchService @Autowired constructor(
         regexPath: String,
         customized: Boolean
     ): Pair<Long, List<FileInfo>> {
-        logger.info("Service search file by regex. [ProjectId=$projectId, PipelineId=$pipelineId, BuildId=$buildId, RegexPath=$regexPath]")
-
+        logger.info("serviceSearchFileByRegex, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, regexPath: $regexPath, customized: $customized")
         val repoPathPrefix = JFrogUtil.getRepoPath()
         val pipelinePathPrefix = "/" + JFrogUtil.getPipelinePathPrefix(projectId).removePrefix(repoPathPrefix)
         val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(projectId).removePrefix(repoPathPrefix)
@@ -204,12 +196,10 @@ class ArtifactorySearchService @Autowired constructor(
         searchProps: List<Property>,
         customized: Boolean?
     ): Pair<Long, List<FileInfo>> {
-        logger.info("Service search file and property. [ProjectId=$projectId, Props=$searchProps]")
-
+        logger.info("serviceSearchFileAndProperty, projectId: $projectId, searchProps: $searchProps, customized: $customized")
         val repoPathPrefix = JFrogUtil.getRepoPath()
         val pipelinePathPrefix = "/" + JFrogUtil.getPipelinePathPrefix(projectId).removePrefix(repoPathPrefix)
         val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(projectId).removePrefix(repoPathPrefix)
-
         val relativePathSet = when (customized) {
             null -> setOf(pipelinePathPrefix, customDirPathPrefix)
             true -> setOf(customDirPathPrefix)
@@ -226,12 +216,9 @@ class ArtifactorySearchService @Autowired constructor(
             }
         }
 
-        val jFrogAQLFileInfoList =
-            jFrogAQLService.searchFileAndPropertyByPropertyByAnd(repoPathPrefix, relativePathSet, fileNameSet, props)
-        val fileInfoList =
-            artifactoryService.transferJFrogAQLFileInfo(projectId, jFrogAQLFileInfoList, emptyList(), false).sortedWith(
-                Comparator { file1, file2 -> -file1.modifiedTime.compareTo(file2.modifiedTime) }
-            )
+        val jFrogAQLFileInfoList = jFrogAQLService.searchFileAndPropertyByPropertyByAnd(repoPathPrefix, relativePathSet, fileNameSet, props)
+        val fileInfoList = artifactoryService.transferJFrogAQLFileInfo(projectId, jFrogAQLFileInfoList, emptyList(), false)
+            .sortedWith(Comparator { file1, file2 -> -file1.modifiedTime.compareTo(file2.modifiedTime) })
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 
@@ -240,12 +227,10 @@ class ArtifactorySearchService @Autowired constructor(
         searchProps: List<Property>,
         customized: Boolean?
     ): Pair<Long, List<FileInfo>> {
-        logger.info("Service search file and property by or. [ProjectId=$projectId, Props=$searchProps]")
-
+        logger.info("serviceSearchFileAndPropertyByOr, projectId: $projectId, searchProps: $searchProps, customized: $customized")
         val repoPathPrefix = JFrogUtil.getRepoPath()
         val pipelinePathPrefix = "/" + JFrogUtil.getPipelinePathPrefix(projectId).removePrefix(repoPathPrefix)
         val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(projectId).removePrefix(repoPathPrefix)
-
         val relativePathSet = when (customized) {
             null -> setOf(pipelinePathPrefix, customDirPathPrefix)
             true -> setOf(customDirPathPrefix)
@@ -261,17 +246,14 @@ class ArtifactorySearchService @Autowired constructor(
                 props.add(Pair(it.key, it.value))
             }
         }
-
-        val jFrogAQLFileInfoList =
-            jFrogAQLService.searchFileAndPropertyByPropertyByOr(repoPathPrefix, relativePathSet, fileNameSet, props)
-        val fileInfoList =
-            artifactoryService.transferJFrogAQLFileInfo(projectId, jFrogAQLFileInfoList, emptyList(), false).sortedWith(
-                Comparator { file1, file2 -> -file1.modifiedTime.compareTo(file2.modifiedTime) }
-            )
+        val jFrogAQLFileInfoList = jFrogAQLService.searchFileAndPropertyByPropertyByOr(repoPathPrefix, relativePathSet, fileNameSet, props)
+        val fileInfoList = artifactoryService.transferJFrogAQLFileInfo(projectId, jFrogAQLFileInfoList, emptyList(), false)
+            .sortedWith(Comparator { file1, file2 -> -file1.modifiedTime.compareTo(file2.modifiedTime) })
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 
     override fun getJforgInfoByteewTime(page: Int, pageSize: Int, startTime: Long, endTime: Long): List<FileInfo> {
+        logger.info("getJforgInfoByteewTime, page: $page, pageSize: $pageSize, startTime: $startTime, endTime: $endTime")
         val pageNotNull = page ?: 0
         var pageSizeNotNull = pageSize ?: 500
         if (pageSizeNotNull > 500) {

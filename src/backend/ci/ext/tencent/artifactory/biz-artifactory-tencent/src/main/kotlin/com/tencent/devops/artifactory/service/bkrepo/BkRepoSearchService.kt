@@ -55,7 +55,7 @@ class BkRepoSearchService @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Pair<Long, List<FileInfo>> {
-        logger.info("search, projectId: $projectId, searchProps: $searchProps, page: $page, pageSize: $pageSize")
+        logger.info("search, userId: $userId, projectId: $projectId, searchProps: $searchProps, page: $page, pageSize: $pageSize")
         val fileNameSet = mutableSetOf<String>()
         searchProps.fileNames?.forEach {
             fileNameSet.add(it)

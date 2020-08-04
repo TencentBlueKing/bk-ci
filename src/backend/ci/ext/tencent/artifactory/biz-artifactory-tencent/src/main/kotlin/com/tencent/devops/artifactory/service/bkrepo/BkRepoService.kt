@@ -53,9 +53,6 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
@@ -80,11 +77,10 @@ class BkRepoService @Autowired constructor(
     val shortUrlApi: ShortUrlApi,
     val bkRepoClient: BkRepoClient,
     val commonConfig: CommonConfig,
-    val authProjectApi: BSAuthProjectApi,
-    val client: Client,
-    val artifactoryAuthServiceCode: BSRepoAuthServiceCode
+    val client: Client
 ) : RepoService {
     override fun list(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): List<FileInfo> {
+        logger.info("list, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         return when (artifactoryType) {
             ArtifactoryType.PIPELINE -> {
                 bkRepoPipelineDirService.list(userId, projectId, path)
@@ -425,7 +421,7 @@ class BkRepoService @Autowired constructor(
 
     override fun createDockerUser(projectCode: String): DockerUser {
         logger.info("createDockerUser, projectCode: $projectCode")
-        throw OperationException("Not Supported")
+        throw OperationException("not supported")
     }
 
     override fun listCustomFiles(projectId: String, condition: CustomFileSearchCondition): List<String> {
@@ -457,9 +453,9 @@ class BkRepoService @Autowired constructor(
     }
 
     override fun copyToCustom(userId: String, projectId: String, pipelineId: String, buildId: String, copyToCustomReq: CopyToCustomReq) {
-        if (copyToCustomReq.files.isEmpty()) {
-            throw OperationException("invalid request")
-        }
+        logger.info("copyToCustom, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, copyToCustomReq: $copyToCustomReq")
+        copyToCustomReq.check()
+        pipelineService.validatePermission(userId, projectId)
 
         val pipelineName = pipelineService.getPipelineName(projectId, pipelineId)
         val buildNo = pipelineService.getBuildName(buildId)

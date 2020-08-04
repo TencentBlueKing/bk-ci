@@ -51,6 +51,7 @@ class ArtifactoryPipelineDirService @Autowired constructor(
     private val pipelineService: PipelineService
 ) : PipelineDirService {
     override fun list(userId: String, projectId: String, path: String): List<FileInfo> {
+        logger.info("list, userId: $userId, projectId: $projectId, path: $path")
         val normalizedPath = JFrogUtil.normalize(path)
         if (!JFrogUtil.isValid(normalizedPath)) {
             logger.error("Path $path is not valid")
@@ -77,6 +78,7 @@ class ArtifactoryPipelineDirService @Autowired constructor(
     }
 
     override fun show(userId: String, projectId: String, argPath: String): FileDetail {
+        logger.info("show, userId: $userId, projectId: $projectId, argPath: $argPath")
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
