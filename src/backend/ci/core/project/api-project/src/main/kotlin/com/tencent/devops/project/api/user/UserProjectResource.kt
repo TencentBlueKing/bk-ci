@@ -128,16 +128,16 @@ interface UserProjectResource {
     ): Result<Boolean>
 
     @PUT
-    @Path("/{project_id}/logo")
+    @Path("/{english_name}/logo")
     @ApiOperation("更改项目logo")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun updateLogo(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("project_id")
-        projectId: String,
+        @ApiParam("项目英文名", required = true)
+        @PathParam("english_name")
+        englishName: String,
         @ApiParam("文件", required = true)
         @FormDataParam("logo")
         inputStream: InputStream,

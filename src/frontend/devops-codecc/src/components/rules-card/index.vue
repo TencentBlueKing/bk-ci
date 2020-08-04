@@ -1,22 +1,22 @@
 <template>
     <div class="card" :class="isSelected ? 'active' : ''">
-        <p :class="isSelected ? 'active' : ''" class="title">{{title}}</p>
+        <p :class="isSelected ? 'active' : ''" class="title"><i class="icon codecc-icon tool-icon" :class="isSelected ? `icon-${iconName}-selected` : `icon-${iconName}`"></i>{{title}}</p>
         <p :class="isSelected ? 'active' : ''">{{isSelected}}/{{total}}</p>
         <bk-switcher
             v-if="index !== 0"
             class="bk-switcher-xsmall"
             v-model="switcher"
             size="small"
-            :title="switcher ? $t('checkers.关闭') : $t('suspend.启用')"
+            :title="switcher ? $t('关闭') : $t('启用')"
             @click.native="comfirm(switcher)"
         >
         </bk-switcher>
         <div class="status" :style="index === 0 ? 'padding-top: 20px;' : ''" v-if="!realOpen">
-            <p @click="toggle">{{$t('checkers.展开')}}</p>
+            <p @click="toggle">{{$t('展开')}}</p>
             <i class="bk-icon icon-angle-right" @click="toggle"></i>
         </div>
         <div class="status" :style="index === 0 ? 'padding-top: 20px;' : ''" v-else-if="realOpen">
-            <p @click="toggle">{{$t('checkers.收起')}}</p>
+            <p @click="toggle">{{$t('收起')}}</p>
             <i class="bk-icon icon-angle-down" @click="toggle"></i>
         </div>
         <div
@@ -25,7 +25,7 @@
             :class="index === 0 ? 'is-first' : 'is-others'"
             :style="'margin-left:' + cardPosition + 'px;width:' + realWidth + 'px;'"
         >
-            <bk-button class="add-button" theme="primary" @click="openChangeRules">{{$t('checkers.配置规则')}}</bk-button>
+            <bk-button class="add-button" theme="primary" @click="openChangeRules">{{$t('配置规则')}}</bk-button>
             <i class="bk-icon icon-close" @click="toggle"></i>
             <bk-table
                 ref="rulesTable"
@@ -33,7 +33,6 @@
                 :data="tableData"
                 :height="elHeight"
                 :size="size"
-                :empty-text="$t('checkers.暂无规则')"
                 :cell-class-name="cellStyle"
                 :toggle-row-selection="select"
                 @select="select"
@@ -41,15 +40,34 @@
                 @selection-change="select"
             >
                 <bk-table-column type="selection" width="60" align="center"></bk-table-column>
-                <bk-table-column type="index" :label="$t('st.序号')" align="center" width="60"></bk-table-column>
-                <bk-table-column :label="$t('defect.规则')" prop="checkerKey" width="200">
+                <bk-table-column type="index" :label="$t('序号')" align="center" width="60"></bk-table-column>
+                <bk-table-column :sortable="true" :label="$t('规则')" prop="checkerKey" width="200">
                     <template slot-scope="props"> <span :title="props.row.checkerKey">{{ props.row.checkerKey }}</span></template>
                 </bk-table-column>
-                <bk-table-column :label="$t('st.规则类型')" prop="checkerType" width="120"></bk-table-column>
-                <bk-table-column :sort-orders="['ascending', 'descending', null]" :sortable="true" :label="$t('defect.级别')" prop="severity" width="80"></bk-table-column>
-                <bk-table-column :label="$t('st.详细说明')" prop="checkerDesc">
-                    <template slot-scope="props"> <span :title="props.row.checkerDesc">{{ props.row.checkerDesc }}</span></template>
+                <bk-table-column :label="$t('规则类型')" prop="checkerType" width="120">
+                    <template slot-scope="props"> <span :title="props.row.checkerType">{{ props.row.checkerType }}</span></template>
                 </bk-table-column>
+                <bk-table-column :label="$t('语言')" prop="language" width="120">
+                    <template slot-scope="props"> <span :title="formatLang(props.row.language)">{{ formatLang(props.row.language) || '--' }}</span></template>
+                </bk-table-column>
+                <bk-table-column :sort-method="sortSeverity" :sortable="true" :label="$t('级别')" prop="severity" width="80"></bk-table-column>
+                <bk-table-column :label="$t('详细说明')" prop="checkerDesc">
+                    <template slot-scope="props">
+                        <span :title="props.row.checkerDesc" :class="{ 'edit-checker-true': props.row.editable }">{{ props.row.checkerDesc }}</span>
+                        <bk-button :text="true" v-if="props.row.editable" @click="showUpdateParameter(props.row.checkerKey)">{{ $t('修改参数') }}</bk-button>
+                    </template>
+                </bk-table-column>
+                <bk-table-column width="90px">
+                    <template slot-scope="props">
+                        <bk-button :text="true" v-if="hasDetail" @click="showDetail(props.row)">{{ $t('详情') }}</bk-button>
+                    </template>
+                </bk-table-column>
+                <div slot="empty">
+                    <div class="codecc-table-empty-text">
+                        <img src="../../images/empty.png" class="empty-img">
+                        <div>{{$t('暂无规则')}}</div>
+                    </div>
+                </div>
             </bk-table>
         </div>
         <bk-dialog v-model="singleVisiable"
@@ -71,9 +89,50 @@
         >
             <div class="center">{{operateText}}</div>
         </bk-dialog>
+        <bk-dialog
+            v-model="detailVisiable"
+            width="800"
+            :theme="'primary'"
+            :mask-close="false"
+            :title="detailTitle"
+            @after-leave="cancel"
+        >
+            <div class="detail-content"></div>
+            <div slot="footer" class="detail-footer">
+                <bk-button
+                    theme="primary"
+                    type="button"
+                    @click.native="detailVisiable = false"
+                >
+                    {{$t('关闭')}}
+                </bk-button>
+            </div>
+        </bk-dialog>
+        <bk-dialog v-model="updateVisiable"
+            width="533px"
+            :mask-close="false"
+            @confirm="updateParameter"
+            theme="primary">
+            <div class="update-parameter-title">
+                <span>{{$t('修改规则x参数', { name: ruleData.checkerName })}}</span>
+            </div>
+            <div class="update-parameter-body">
+                <bk-form :label-width="120">
+                    <bk-form-item :label="$t('语言')">{{formatLang(ruleData.language)}}</bk-form-item>
+                    <bk-form-item :label="$t('工具')">{{ruleData.toolName}}</bk-form-item>
+                    <bk-form-item :label="$t('类型')">{{ruleData.checkerType}}</bk-form-item>
+                    <bk-form-item :label="$t('描述')">{{ruleData.checkerDesc}}</bk-form-item>
+                    <bk-form-item :label="$t('参数修改')">n=
+                        <bk-input style="width: 69px" v-model="parameter"></bk-input>
+                    </bk-form-item>
+                </bk-form>
+            </div>
+        </bk-dialog>
     </div>
 </template>
 <script>
+    import { mapState } from 'vuex'
+    import pako from 'pako'
     export default {
         props: {
             data: {
@@ -91,18 +150,44 @@
                 selectedRules: [],
                 singleVisiable: false,
                 mutiVisiable: false,
+                detailVisiable: false,
                 open: 0,
                 close: 0,
                 switcher: false,
                 onFocusItem: '',
                 editTitle: '',
+                detailTitle: '',
                 realWidth: 1080,
                 selected: false,
                 elHeight: 292,
-                operateText: ''
+                operateText: '',
+                updateVisiable: false,
+                ruleData: {},
+                parameter: '',
+                iconMap: {
+                    LOGICAL: 'logical',
+                    BEST_PRACTICES: 'bestpractices',
+                    DEFAULT: 'default',
+                    STYLISTIC: 'stylistic',
+                    ES6: 'es6',
+                    NODE: 'node',
+                    VARIABLE: 'variable',
+                    STRICT_MODE: 'strictmode',
+                    SECURITY: 'security',
+                    MEMORY: 'memory',
+                    PERFORMANCE: 'performance',
+                    SYS_API: 'sys_api',
+                    EXPRESSION: 'expression',
+                    KING_KONG: 'security'
+                },
+                detailContent: '',
+                isloading: false
             }
         },
         computed: {
+            ...mapState([
+                'toolMeta'
+            ]),
             tableData () {
                 const tableData = []
                 if (this.data) {
@@ -110,11 +195,11 @@
                 }
                 tableData.map(item => {
                     if (item.severity === 1) {
-                        item.severity = this.$t('defect.严重')
+                        item.severity = this.$t('严重')
                     } else if (item.severity === 2) {
-                        item.severity = this.$t('defect.一般')
+                        item.severity = this.$t('一般')
                     } else if (item.severity === 3) {
-                        item.severity = this.$t('defect.提示')
+                        item.severity = this.$t('提示')
                     }
                 })
                 this.$nextTick(() => {
@@ -128,32 +213,23 @@
                 return tableData
             },
             title () {
-                let title = ''
-                if (this.data.pkgDesc) {
-                    title = this.data.pkgDesc
-                }
-                return title
+                return this.data.pkgDesc || ''
+            },
+            iconName () {
+                return this.iconMap[this.data.pkgName] || 'default'
             },
             total () {
-                let total = 0
-                if (this.data.totalCheckerNum) {
-                    total = this.data.totalCheckerNum
-                }
-                return total
+                return this.data.totalCheckerNum || 0
             },
             isSelected () {
-                let isSelected = 0
-                isSelected = this.data.openCheckerNum
-                this.switcher = isSelected !== 0
+                const isSelected = this.data.openCheckerNum
+                this.switcher = !!isSelected
                 return isSelected
             },
             cardPosition () {
                 let cardPosition = 0
-                if (this.index !== 0) {
-                    cardPosition = this.index - 1
-                    while (cardPosition > (this.realWidth / 210 - 1)) {
-                        cardPosition = cardPosition - (this.realWidth / 210 - 1)
-                    }
+                if (this.index) {
+                    cardPosition = (this.index - 1) % Math.floor(this.realWidth / 210)
                 }
                 cardPosition = parseInt(cardPosition) * (-210)
                 return cardPosition
@@ -167,8 +243,9 @@
                 }
                 this.$nextTick(() => {
                     if (this.$refs.rulesTable) {
+                        const childrens = this.$refs.rulesTable.$children
                         if (this.$refs.rulesTable.$el.parentNode.clientHeight > 292) {
-                            height = this.$refs.rulesTable.$children[7].$children.length > 7 ? 292 : (this.$refs.rulesTable.$children[7].$children.length + 1) * 42.1
+                            height = childrens[childrens.length - 1].$children.length > 7 ? 292 : (childrens[childrens.length - 1].$children.length + 1) * 42.1
                         } else {
                             height = this.$refs.rulesTable.$el.parentNode.clientHeight - 78
                         }
@@ -182,6 +259,9 @@
                     }
                 })
                 return realOpen
+            },
+            hasDetail () {
+                return ['COVERITY', 'KLOCWORK', 'PINPOINT'].includes(this.$route.params.toolId)
             }
         },
         watch: {
@@ -223,11 +303,11 @@
                     }
                 }
                 if (!this.switcher) {
-                    this.editTitle = this.$t('checkers.关闭x条规则', { num: this.close })
-                    this.operateText = this.$t('checkers.规则减少可能会让扫描错过一些缺陷，增大代码质量风险。')
+                    this.editTitle = this.$t('关闭x条规则', { num: this.close })
+                    this.operateText = this.$t('规则减少可能会让扫描错过一些缺陷，增大代码质量风险。')
                 } else {
-                    this.editTitle = this.$t('checkers.启用x条规则', { num: this.open })
-                    this.operateText = this.$t('checkers.你的代码将接受更细致的扫描，告警误报率也会有所上升。')
+                    this.editTitle = this.$t('启用x条规则', { num: this.open })
+                    this.operateText = this.$t('你的代码将接受更细致的扫描，问题误报率也会有所上升。')
                 }
                 this.mutiVisiable = true
             },
@@ -241,19 +321,22 @@
                         closedCheckers.push(this.tableData[i].checkerKey)
                     }
                 }
+                const { taskId, toolId } = this.$route.params
                 const postData = {
                     pkgId: this.data.pkgId,
-                    toolName: this.$route.params.toolId,
-                    openedCheckers: openedCheckers,
-                    closedCheckers: closedCheckers
+                    toolName: toolId,
+                    taskId,
+                    openedCheckers,
+                    closedCheckers
                 }
                 this.$store.dispatch('tool/changeRules', postData).then(res => {
                     if (res === true) {
-                        this.$bkMessage({ theme: 'success', message: this.$t('op.配置成功') })
-                        this.$store.dispatch('tool/rules', this.$route.params.toolId)
+                        this.$bkMessage({ theme: 'success', message: this.$t('配置成功') })
+                        
+                        this.$store.dispatch('tool/rules', { taskId, toolName: toolId })
                     }
                 }).catch(e => {
-                    this.$bkMessage({ theme: 'error', message: this.$t('op.配置失败') })
+                    this.$bkMessage({ theme: 'error', message: this.$t('配置失败') })
                 }).finally(() => {
                     this.operateText = ''
                     this.switcher = this.isSelected !== 0
@@ -261,11 +344,11 @@
             },
             cellStyle ({ row, column, rowIndex, columnIndex }) {
                 if (column.property === 'severity') {
-                    if (row.severity === this.$t('defect.严重')) {
+                    if (row.severity === this.$t('严重')) {
                         return 'majorColor'
-                    } else if (row.severity === this.$t('defect.一般')) {
+                    } else if (row.severity === this.$t('一般')) {
                         return 'minorColor'
-                    } else if (row.severity === this.$t('defect.提示')) {
+                    } else if (row.severity === this.$t('提示')) {
                         return 'infoColor'
                     }
                 }
@@ -288,33 +371,37 @@
                         }
                     }
                 } else {
-                    this.$bkMessage({ theme: 'error', message: this.$t('op.规则不能为空') })
+                    this.$bkMessage({ theme: 'error', message: this.$t('规则不能为空') })
                     return
                 }
+                const { taskId, toolId } = this.$route.params
                 const postData = {
                     pkgId: this.data.pkgId,
-                    toolName: this.$route.params.toolId,
-                    openedCheckers: openedCheckers,
-                    closedCheckers: closedCheckers
+                    toolName: toolId,
+                    taskId,
+                    openedCheckers,
+                    closedCheckers
                 }
                 this.$store.dispatch('tool/changeRules', postData).then(res => {
                     if (res === true) {
-                        this.$bkMessage({ theme: 'success', message: this.$t('op.配置成功') })
-                        this.$store.dispatch('tool/rules', this.$route.params.toolId)
+                        this.$bkMessage({ theme: 'success', message: this.$t('配置成功') })
+                        this.$store.dispatch('tool/rules', { taskId, toolName: toolId })
                     }
                 }).catch(e => {
-                    this.$bkMessage({ theme: 'error', message: this.$t('op.配置失败') })
+                    this.$bkMessage({ theme: 'error', message: this.$t('配置失败') })
                 })
             },
             position (i) {
                 setTimeout(() => {
                     if (this.$refs.rulesTable) {
+                        const childrens = this.$refs.rulesTable.$children
+                        const validChildrenlList = childrens[childrens.length - 1].$children.filter(child => child.$el.classList[0] === 'bk-form-checkbox')
                         if (this.onFocusItem) {
-                            this.$refs.rulesTable.$children[7].$children[this.onFocusItem].$el.parentNode.parentNode.parentNode.style.background = ''
+                            validChildrenlList[this.onFocusItem].$el.parentNode.parentNode.parentNode.style.background = ''
                         }
                         this.onFocusItem = i
-                        this.$refs.rulesTable.$children[7].$el.parentNode.scrollTop = i * 42
-                        this.$refs.rulesTable.$children[7].$children[i].$el.parentNode.parentNode.parentNode.style.background = '#f2f2f2'
+                        childrens[childrens.length - 1].$el.parentNode.scrollTop = i * 42
+                        validChildrenlList[i].$el.parentNode.parentNode.parentNode.style.background = '#f2f2f2'
                     }
                 }, 0)
             },
@@ -330,21 +417,98 @@
                         }
                     }
                     if (this.open === 0 && this.close !== 0) {
-                        this.editTitle = this.$t('checkers.关闭x条规则', { num: this.close })
-                        this.operateText = this.$t('checkers.规则减少可能会让扫描错过一些缺陷，增大代码质量风险。')
+                        this.editTitle = this.$t('关闭x条规则', { num: this.close })
+                        this.operateText = this.$t('规则减少可能会让扫描错过一些缺陷，增大代码质量风险。')
                     } else if (this.close === 0 && this.open !== 0) {
-                        this.editTitle = this.$t('checkers.启用x条规则', { num: this.open })
-                        this.operateText = this.$t('checkers.你的代码将接受更细致的扫描，告警误报率也会有所上升。')
+                        this.editTitle = this.$t('启用x条规则', { num: this.open })
+                        this.operateText = this.$t('你的代码将接受更细致的扫描，问题误报率也会有所上升。')
                     } else if (this.open !== 0 && this.close !== 0) {
-                        this.editTitle = this.$t('checkers.启用x条规则', { num: this.open }) + ',' + this.$t('checkers.关闭x条规则', { num: this.close })
-                        this.operateText = this.$t('checkers.你的代码将接受更细致的扫描，告警误报率也会有所上升。') + this.$t('checkers.加油，对代码质量永远追求卓越！')
+                        this.editTitle = this.$t('启用x条规则', { num: this.open }) + ',' + this.$t('关闭x条规则', { num: this.close })
+                        this.operateText = this.$t('你的代码将接受更细致的扫描，问题误报率也会有所上升。') + this.$t('加油，对代码质量永远追求卓越！')
                     } else {
-                        this.editTitle = this.$t('checkers.没有改动规则')
+                        this.editTitle = this.$t('没有改动规则')
                     }
                 } else {
-                    this.editTitle = this.$t('checkers.没有改动规则')
+                    this.editTitle = this.$t('没有改动规则')
                 }
                 this.singleVisiable = true
+            },
+            formatLang (num) {
+                return this.toolMeta.LANG.map(lang => lang.key & num ? lang.name : '').filter(name => name).join('; ')
+            },
+            showUpdateParameter (row) {
+                this.updateVisiable = true
+                this.ruleData = this.tableData.find(rule => rule.checkerKey === row)
+                this.parameter = this.ruleData.paramValue
+            },
+            updateParameter () {
+                const { taskId, toolId } = this.$route.params
+                const params = {
+                    taskId,
+                    toolName: toolId,
+                    checkerKey: this.ruleData.checkerName,
+                    paramValue: this.parameter
+                }
+                this.$store.dispatch('tool/updateCheckerParam', params).then(res => {
+                    if (res === true) {
+                        this.$bkMessage({
+                            theme: 'success',
+                            message: this.$t('修改成功')
+                        })
+                    }
+                }).catch(e => {
+                    this.$bkMessage({ theme: 'error', message: this.$t('配置失败') })
+                    console.error(e)
+                }).finally(() => {
+                    const { taskId, toolId } = this.$route.params
+                    this.$store.dispatch('tool/rules', { taskId, toolName: toolId })
+                })
+            },
+            showDetail (row) {
+                this.detailTitle = row.checkerKey
+                if (row.codeExample) {
+                    const data = pako.ungzip(row.codeExample, { to: 'String' })
+                    document.getElementsByClassName('detail-content')[this.index].innerHTML = this.Utf8ArrayToStr(data)
+                }
+                
+                this.detailVisiable = true
+            },
+            Utf8ArrayToStr (array) {
+                let out = ''
+                let c = ''
+                let char2 = ''
+                let char3 = ''
+                const len = array.length
+                let i = 0
+                while (i < len) {
+                    c = array[i++]
+                    switch (c >> 4) {
+                        case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+                            // 0xxxxxxx
+                            out += String.fromCharCode(c)
+                            break
+                        case 12: case 13:
+                            // 110x xxxx   10xx xxxx
+                            char2 = array[i++]
+                            out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F))
+                            break
+                        case 14:
+                            // 1110 xxxx  10xx xxxx  10xx xxxx
+                            char2 = array[i++]
+                            char3 = array[i++]
+                            out += String.fromCharCode(((c & 0x0F) << 12) | ((char2 & 0x3F) << 6) | ((char3 & 0x3F) << 0))
+                            break
+                    }
+                }
+                return out
+            },
+            sortSeverity (a, b) {
+                const obj = {
+                    '提示': 3,
+                    '一般': 2,
+                    '严重': 1
+                }
+                return obj[b.severity] - obj[a.severity]
             }
         }
     }
@@ -357,7 +521,7 @@
         width: 200px;
         height: 120px;
         background-color: #ffffff;
-        border-radius: 2px;
+        border-radius: 10px;
         border: 1px solid $itemBorderColor;
         color: #979ba5;
         .bk-switcher-xsmall {
@@ -415,6 +579,14 @@
                 >>>.minorColor {
                     color: $minorColor;
                 }
+                .edit-checker-true {
+                    display: inline-block;
+                    max-width: calc(100% - 70px);
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    line-height: 14px;
+                }
             }
             .bk-icon.icon-close {
                 float: right;
@@ -463,11 +635,30 @@
             top: 142px;
             margin-top: -18px;
         }
+        .tool-icon {
+            padding-right: 10px;
+        }
     }
     .card.active {
         border: 1px solid $goingColor;
     }
     .center {
         text-align: center;
+    }
+    .update-parameter-title {
+        width: 470px;
+        overflow: hidden;
+        position: relative;
+        top: -20px;
+        font-size: 20px;
+    }
+    .detail-footer {
+        text-align: center;
+    }
+    .detail-content {
+        background-color: #f6f9fa;
+        padding: 0 10px;
+        overflow: auto;
+        height: 350px;
     }
 </style>

@@ -5,11 +5,13 @@ const TaskDetail = () => import(/* webpackChunkName: 'task-detail' */'../views/t
 // 任务设置模块，使用嵌套路由方式
 const TaskSettings = () => import(/* webpackChunkName: 'task-settings' */'../views/task/settings')
 const ToolManage = () => import(/* webpackChunkName: 'tool-manage' */'../views/tool/manage')
-const TaskSettingsBasic = () => import(/* webpackChunkName: 'task-settings' */'../views/task/settings-basic')
-const TaskSettingsCode = () => import(/* webpackChunkName: 'task-settings-code' */'../views/task/settings-code')
+const TaskSettingsAuthority = () => import(/* webpackChunkName: 'task-settings' */'../views/task/settings-authority')
+const TaskSettingsCode = () => import(/* webpackChunkName: 'task-settings' */'../views/task/settings-code')
 const TaskSettingsTrigger = () => import(/* webpackChunkName: 'task-settings' */'../views/task/settings-trigger')
+const TaskSettingsReport = () => import(/* webpackChunkName: 'task-settings' */'../views/task/settings-report')
 const TaskSettingsIgnore = () => import(/* webpackChunkName: 'task-settings' */'../views/task/settings-ignore')
 const TaskSettingsManage = () => import(/* webpackChunkName: 'task-settings' */'../views/task/settings-manage')
+const TaskSettingsCheckerset = () => import(/* webpackChunkName: 'task-settings' */'../views/task/settings-checkerset')
 const TaskSettingsBlank = () => import(/* webpackChunkName: 'task-settings' */'../views/task/white-blank')
 
 const routes = [
@@ -19,8 +21,14 @@ const routes = [
         component: TaskList,
         meta: {
             layout: 'outer',
-            title: '我的任务'
+            title: '我的任务',
+            notNeedToolList: true
         }
+    },
+
+    {
+        path: '/codecc/:projectId/coverity/myproject',
+        redirect: { name: 'task-list' }
     },
 
     // 新建任务，包括已有任务未添加工具，当访问路径中带有taskId则识别为已有任务
@@ -49,12 +57,12 @@ const routes = [
         children: [
             {
                 path: '',
-                redirect: { name: 'task-settings-basic' }
+                redirect: { name: 'task-settings-code' }
             },
             {
-                path: 'basic',
-                name: 'task-settings-basic',
-                component: TaskSettingsBasic
+                path: 'authority',
+                name: 'task-settings-authority',
+                component: TaskSettingsAuthority
             },
             // 工具管理
             {
@@ -68,9 +76,19 @@ const routes = [
                 component: TaskSettingsCode
             },
             {
+                path: 'checkerset',
+                name: 'task-settings-checkerset',
+                component: TaskSettingsCheckerset
+            },
+            {
                 path: 'trigger',
                 name: 'task-settings-trigger',
                 component: TaskSettingsTrigger
+            },
+            {
+                path: 'report',
+                name: 'task-settings-report',
+                component: TaskSettingsReport
             },
             // 路径屏蔽
             {

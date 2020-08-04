@@ -72,6 +72,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BRANCH
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_COMMIT_MESSAGE
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_MR_COMMITTER
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_MR_ID
@@ -547,6 +548,14 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
         if (!matcher.getHookTargetUrl().isNullOrBlank()) {
             startParams[PIPELINE_WEBHOOK_TARGET_URL] = matcher.getHookTargetUrl()!!
+        }
+        if (!matcher.getMessage().isNullOrBlank()) {
+            val message = matcher.getMessage()!!
+            startParams[PIPELINE_WEBHOOK_COMMIT_MESSAGE] = if (message.length >= 128) {
+                message.substring(0, 128)
+            } else {
+                message
+            }
         }
 
         // set new params

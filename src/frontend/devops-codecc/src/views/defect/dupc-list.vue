@@ -1,18 +1,23 @@
 <template>
-    <div>
-        <div class="breadcrumb">
-            <div class="breadcrumb-name">{{breadcrumb.name}}</div>
-            <div class="breadcrumb-extra">
-                <a @click="openSlider"><i class="bk-icon icon-order"></i>{{$t('nav.操作记录')}}</a>
+    <div v-bkloading="{ isLoading: !mainContentLoading && contentLoading, opacity: 0.3 }">
+        <div class="dupc-list" v-if="taskDetail.enableToolList.find(item => item.toolName === 'DUPC')">
+            <div class="breadcrumb">
+                <div class="breadcrumb-name">
+                    <bk-tab :active.sync="active" @tab-change="handleTableChange" type="unborder-card">
+                        <bk-tab-panel
+                            v-for="(panel, index) in panels"
+                            v-bind="panel"
+                            :key="index">
+                        </bk-tab-panel>
+                    </bk-tab>
+                </div>
             </div>
-        </div>
-        <div class="main-container">
-            <div class="main-content-inner main-content-list">
-                <bk-form :label-width="90" class="search-form">
-                    <bk-container col="3" margin="0" gutter="20">
-                        <bk-row>
-                            <bk-col :span="1">
-                                <bk-form-item :label="$t('defect.风险级别')" label-width="64">
+            <div class="main-container">
+                <div class="main-content-inner main-content-list">
+                    <bk-form :label-width="90" class="search-form">
+                        <container class="cc-container">
+                            <div class="cc-col">
+                                <bk-form-item :label="$t('风险级别')">
                                     <bk-checkbox-group v-model="searchParams.severity" class="checkbox-group">
                                         <bk-checkbox
                                             v-for="(name, value, index) in defectSeverityMap"
@@ -23,9 +28,9 @@
                                         </bk-checkbox>
                                     </bk-checkbox-group>
                                 </bk-form-item>
-                            </bk-col>
-                            <bk-col :span="1">
-                                <bk-form-item :label="$t('defect.处理人')">
+                            </div>
+                            <div class="cc-col">
+                                <bk-form-item :label="$t('处理人')">
                                     <bk-select v-model="searchParams.author" searchable>
                                         <bk-option
                                             v-for="(author, index) in searchFormData.authorList"
@@ -36,96 +41,182 @@
                                         </bk-option>
                                     </bk-select>
                                 </bk-form-item>
-                            </bk-col>
-                            <bk-col :span="1">
-                                <bk-form-item :label="$t('defect.文件路径')" class="fixed-width">
-                                    <bk-dropdown-menu @show="isFilePathDropdownShow = true" @hide="isFilePathDropdownShow = false" align="right" trigger="click" ref="filePathDropdown">
+                            </div>
+                            <div class="cc-col">
+                                <bk-form-item :label="$t('文件路径')" class="fixed-width">
+                                    <bk-dropdown-menu @show="isFilePathDropdownShow = true" @hide="isFilePathDropdownShow = false" :align="isSmallScreen ? 'left' : 'right'" trigger="click" ref="filePathDropdown">
                                         <bk-button type="primary" slot="dropdown-trigger">
-                                            <div class="filepath-name" :title="searchFormData.filePathShow">{{searchFormData.filePathShow ? searchFormData.filePathShow : $t('st.请选择')}}</div>
+                                            <div style="font-size: 12px" class="filepath-name" :class="{ 'unselect': !searchFormData.filePathShow }" :title="searchFormData.filePathShow">{{searchFormData.filePathShow ? searchFormData.filePathShow : $t('请选择')}}</div>
                                             <i :class="['bk-icon icon-angle-down', { 'icon-flip': isFilePathDropdownShow }]"></i>
                                         </bk-button>
                                         <div class="filepath-dropdown-content" slot="dropdown-content" @click="e => e.stopPropagation()">
-                                            <div class="content-hd">
-                                                <bk-input v-model="searchInput" :clearable="true" :placeholder="$t('defect.搜索文件夹、告警路径名称')" @input="handleFilePathSearch"></bk-input>
-                                            </div>
-                                            <div class="content-bd">
-                                                <bk-tree
-                                                    ref="filePathTree"
-                                                    :data="searchFormData.filePathTree.name ? [searchFormData.filePathTree] : []"
-                                                    :node-key="'id'"
-                                                    :multiple="true"
-                                                    :has-border="true"
-                                                >
-                                                </bk-tree>
-                                            </div>
+                                            <bk-tab type="unborder-card" class="create-tab" @tab-change="changeTab">
+                                                <bk-tab-panel
+                                                    v-for="(panel, index) in pathPanels"
+                                                    v-bind="panel"
+                                                    :key="index">
+                                                </bk-tab-panel>
+                                                <div v-show="tabSelect === 'choose'" class="create-tab-1">
+                                                    <div>
+                                                        <div class="content-hd">
+                                                            <bk-input v-model="searchInput" class="search-input" :clearable="true" :placeholder="$t('搜索文件夹、问题路径名称')" @input="handleFilePathSearch"></bk-input>
+                                                        </div>
+                                                        <div class="content-bd" v-if="treeList.length">
+                                                            <bk-big-tree
+                                                                ref="filePathTree"
+                                                                :options="{ 'idKey': 'treeId' }"
+                                                                :show-checkbox="true"
+                                                                :data="treeList"
+                                                                :filter-method="filterMethod"
+                                                                :expand-icon="'bk-icon icon-folder-open'"
+                                                                :collapse-icon="'bk-icon icon-folder'"
+                                                                :has-border="true"
+                                                                :node-key="'name'">
+                                                            </bk-big-tree>
+                                                        </div>
+                                                        <div class="content-empty" v-if="!treeList.length">
+                                                            <empty size="small" :title="$t('无问题文件')" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div v-show="tabSelect === 'input'" class="create-tab-2">
+                                                    <div class="input-info">
+                                                        <div class="input-info-left"><i class="bk-icon icon-info-circle-shape"></i></div>
+                                                        <div class="input-info-right"></div>
+                                                        搜索文件夹如P2PLive，可以输入.*/P2PLive/.*<br />
+                                                        搜索某类文件如P2PLive下*.c，可以输入.*/P2PLive/.*\.c
+                                                    </div>
+                                                    <div class="input-paths">
+                                                        <div class="input-paths-item" v-for="(path, index) in inputFileList" :key="index">
+                                                            <bk-input :placeholder="$t('请输入')" class="input-style" v-model="inputFileList[index]"></bk-input>
+                                                            <span class="input-paths-icon">
+                                                                <i class="bk-icon icon-plus-circle-shape" @click="addPath(index)"></i>
+                                                                <i class="bk-icon icon-minus-circle-shape" v-if="inputFileList.length > 1" @click="cutPath(index)"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </bk-tab>
                                             <div class="content-ft">
-                                                <bk-button theme="primary" @click="handleFilePathConfirmClick">{{$t('op.确定')}}</bk-button>
-                                                <bk-button @click="handleFilePathCancelClick">{{$t('op.取消')}}</bk-button>
-                                                <bk-button class="clear-btn" theme="primary" @click="handleFilePathClearClick">{{$t('op.清空选择')}}</bk-button>
+                                                <bk-button theme="primary" @click="handleFilePathConfirmClick">{{$t('确定')}}</bk-button>
+                                                <bk-button @click="handleFilePathCancelClick">{{$t('取消')}}</bk-button>
+                                                <bk-button class="clear-btn" @click="handleFilePathClearClick">{{$t('清空选择')}}</bk-button>
                                             </div>
                                         </div>
                                     </bk-dropdown-menu>
                                 </bk-form-item>
-                            </bk-col>
-                        </bk-row>
-                    </bk-container>
-                </bk-form>
+                            </div>
+                        </container>
+                    </bk-form>
 
-                <bk-table
-                    highlight-current-row="true"
-                    class="file-list-table"
-                    row-class-name="list-row"
-                    :empty-text="$t('st.暂无数据')"
-                    ref="fileListTable"
-                    :data="defectList"
-                    :pagination="pagination"
-                    @page-change="handlePageChange"
-                    @page-limit-change="handlePageLimitChange"
-                    @row-click="handleListRowClick"
-                    @sort-change="handleSortChange"
-                >
-                    <bk-table-column type="index" :label="$t('defect.序号')" align="center" width="70"></bk-table-column>
-                    <bk-table-column :label="$t('defect.文件名')" prop="fileName"></bk-table-column>
-                    <bk-table-column :label="$t('defect.重复块数')" prop="blockNum"></bk-table-column>
-                    <bk-table-column :label="$t('defect.重复行数')" prop="dupLines" sortable="custom" label-class-name="col-sort-label" class-name="col-sort"></bk-table-column>
-                    <bk-table-column :label="$t('defect.函数总行数')" prop="totalLines"></bk-table-column>
-                    <bk-table-column :label="$t('defect.重复率')" prop="dupRate"></bk-table-column>
-                    <bk-table-column :label="$t('defect.相关作者')" prop="authorList"></bk-table-column>
-                    <bk-table-column :label="$t('defect.风险')" prop="riskFactor" :render-header="renderHeader">
-                        <template slot-scope="props">
-                            <span :class="`color-${{ 1: 'major', 2: 'minor', 4: 'info' }[props.row.riskFactor]}`">{{defectSeverityMap[props.row.riskFactor]}}</span>
+                    <bk-table
+                        v-show="isFetched"
+                        class="file-list-table"
+                        ref="fileListTable"
+                        v-bkloading="{ isLoading: tableLoading, opacity: 0.6 }"
+                        :data="defectList"
+                        :pagination="pagination"
+                        :row-class-name="handleRowClassName"
+                        @page-change="handlePageChange"
+                        @page-limit-change="handlePageLimitChange"
+                        @row-click="handleListRowClick"
+                        @sort-change="handleSortChange"
+                    >
+                        <bk-table-column type="index" :label="$t('序号')" align="center" width="70"></bk-table-column>
+                        <bk-table-column :label="$t('文件名')" prop="fileName">
+                            <template slot-scope="props">
+                                <span v-bk-tooltips="props.row.filePath">{{props.row.fileName}}</span>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column :label="$t('重复块数')" prop="blockNum"></bk-table-column>
+                        <bk-table-column :label="$t('重复行数')" prop="dupLines" sortable="custom" label-class-name="col-sort-label" class-name="col-sort"></bk-table-column>
+                        <bk-table-column :label="$t('函数总行数')" prop="totalLines"></bk-table-column>
+                        <bk-table-column :label="$t('重复率')" prop="dupRateValue" sortable="custom">
+                            <template slot-scope="props">
+                                <span>{{props.row.dupRate}}</span>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column :label="$t('相关作者')" prop="authorList">
+                            <template slot-scope="props">
+                                <span v-bk-tooltips="props.row.authorList">{{props.row.authorList}}</span>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column :label="$t('风险')" prop="riskFactor" :render-header="renderHeader">
+                            <template slot-scope="props">
+                                <span :class="`color-${{ 1: 'major', 2: 'minor', 4: 'info' }[props.row.riskFactor]}`">{{defectSeverityMap[props.row.riskFactor]}}</span>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column :label="$t('修改时间')" prop="fileChangeTime" sortable="custom">
+                            <template slot-scope="props">
+                                <span>{{formatTime(props.row.fileChangeTime, 'YYYY-MM-DD')}}</span>
+                            </template>
+                        </bk-table-column>
+                        <div slot="empty">
+                            <div class="codecc-table-empty-text">
+                                <img src="../../images/empty.png" class="empty-img">
+                                <div>{{$t('暂无数据')}}</div>
+                            </div>
+                        </div>
+                    </bk-table>
+                </div>
+            </div>
+            <new-analyse
+                @changeItem="changeItem"
+                @newAnalyse="newAnalyse"
+                :never-show="neverShow"
+                :visible.sync="dialogAnalyseVisible">
+            </new-analyse>
+        </div>
+        <div class="dupc-list" v-else>
+            <div class="main-container large boder-none">
+                <div class="no-task">
+                    <empty title="" :desc="$t('CodeCC集成了重复率工具，可以发现冗余和重复代码，以便代码抽象和重构')">
+                        <template v-slot:action>
+                            <bk-button size="large" theme="primary" @click="addTool({ from: 'ccndupc' })">{{$t('配置规则集')}}</bk-button>
                         </template>
-                    </bk-table-column>
-                    <bk-table-column :label="$t('defect.修改时间')" prop="fileChangeTime" sortable="custom">
-                        <template slot-scope="props">
-                            <span>{{formatTime(props.row.fileChangeTime, 'YYYY-MM-DD')}}</span>
-                        </template>
-                    </bk-table-column>
-                </bk-table>
+                    </empty>
+                </div>
             </div>
         </div>
-        <Record :visiable.sync="show" :data="this.$route.name" />
+        <bk-dialog
+            v-model="detailVisiable"
+            :fullscreen="true"
+            :show-footer="false">
+            <dupc-detail
+                :entity-id="entityId"
+                :file-path="filePath"
+            ></dupc-detail>
+        </bk-dialog>
     </div>
 </template>
 
 <script>
-    import util from '@/mixins/util'
     import { mapState } from 'vuex'
-    import Record from '@/components/operate-record/index'
+    import util from '@/mixins/defect-list'
+    import newAnalyse from '@/components/new-analyse'
+    import dupcDetail from './dupc-detail'
+    import Empty from '@/components/empty'
 
     export default {
         components: {
-            Record
+            newAnalyse,
+            dupcDetail,
+            Empty
         },
         mixins: [util],
         data () {
             const query = this.$route.query
 
             return {
+                contentLoading: false,
+                panels: [
+                    { name: 'defect', label: this.$t('重复文件') },
+                    { name: 'report', label: this.$t('数据报表') }
+                ],
                 defectSeverityMap: {
-                    1: this.$t('defect.极高'),
-                    2: this.$t('defect.高'),
-                    4: this.$t('defect.中')
+                    1: this.$t('极高'),
+                    2: this.$t('高'),
+                    4: this.$t('中')
                 },
                 searchParams: {
                     taskId: this.$route.params.taskId,
@@ -134,7 +225,7 @@
                     author: query.author,
                     severity: this.numToArray(query.severity),
                     fileList: [],
-                    sortField: 'dupLines',
+                    sortField: query.sortField || 'dupLines',
                     sortType: 'DESC',
                     pageNum: 1,
                     pageSize: 50
@@ -163,7 +254,16 @@
                 toolId: 'DUPC',
                 editor: null,
                 show: false,
-                searchInput: ''
+                isSmallScreen: document.body.clientWidth < 1360,
+                searchInput: '',
+                dialogAnalyseVisible: false,
+                neverShow: false,
+                detailVisiable: false,
+                entityId: '',
+                filePath: '',
+                fileIndex: 0,
+                tableLoading: false,
+                isFetched: false
             }
         },
         computed: {
@@ -172,6 +272,9 @@
             ]),
             ...mapState('tool', {
                 toolMap: 'mapList'
+            }),
+            ...mapState('task', {
+                taskDetail: 'detail'
             }),
             ...mapState('defect', [
                 'detail'
@@ -188,9 +291,9 @@
             breadcrumb () {
                 const toolId = this.toolId
                 let toolDisplayName = (this.toolMap[toolId] || {}).displayName || ''
-                const names = [this.$route.meta.title || this.$t('nav.重复文件')]
+                const names = [this.$route.meta.title || this.$t('重复文件')]
                 if (toolDisplayName) {
-                    toolDisplayName = this.$t(`toolName.${toolDisplayName}`)
+                    toolDisplayName = this.$t(`${toolDisplayName}`)
                     names.unshift(toolDisplayName)
                 }
 
@@ -204,16 +307,20 @@
             // 监听查询参数变化，则获取列表
             searchParams: {
                 handler () {
+                    this.tableLoading = true
                     this.fetchLintList().then(list => {
+                        this.fileIndex = 0
                         this.lintListData = { ...this.lintListData, ...list }
                         this.pagination.count = this.lintListData.defectList.totalElements
+                    }).finally(() => {
+                        this.tableLoading = false
                     })
                 },
                 deep: true
             },
             searchInput: {
                 handler () {
-                    if (this.searchFormData.filePathTree.name) {
+                    if (this.searchFormData.filePathTree.children) {
                         if (this.searchInput) {
                             // this.searchFormData.filePathTree.expanded = true
                             this.openTree(this.searchFormData.filePathTree)
@@ -226,20 +333,42 @@
             }
         },
         created () {
+            if (!this.taskDetail.nameEn || this.taskDetail.enableToolList.find(item => item.toolName === 'DUPC')) {
+                this.init()
+            }
         },
         mounted () {
+            // 读取缓存中是否展示首次分析弹窗
+            const neverShow = JSON.parse(window.localStorage.getItem('neverShow'))
+            neverShow === null ? this.neverShow = false : this.neverShow = neverShow
+            window.addEventListener('resize', () => {
+                this.isSmallScreen = document.body.clientWidth < 1360
+            })
+            this.openDetail()
+            this.keyOperate()
+        },
+        beforeDestroy () {
+            document.onkeydown = null
         },
         methods: {
-            async fetchPageData () {
+            async init () {
+                this.contentLoading = true
                 await Promise.all([
                     this.fetchLintList(),
                     this.fetchLintParams()
                 ]).then(([list, params]) => {
+                    this.isFetched = true
                     this.lintListData = list
                     this.formatFilePath(params.filePathTree)
                     this.searchFormData = Object.assign({}, this.searchFormData, params)
                     this.pagination.count = this.lintListData.defectList.totalElements
+                }).finally(() => {
+                    this.contentLoading = false
                 })
+                // 判断是否为切换到v2环境
+                if (this.taskDetail.nameEn.indexOf('LD_') === 0 || this.taskDetail.nameEn.indexOf('DEVOPS_') === 0) {
+                    this.dialogAnalyseVisible = !this.neverShow
+                }
             },
             // 给文件路径树加上icon
             formatFilePath (filepath) {
@@ -251,38 +380,45 @@
                     filepath.icon = 'icon-file'
                 }
             },
-            // 获取告警列表
+            // 获取问题列表
             fetchLintList () {
-                return this.$store.dispatch('defect/lintList', this.searchParams, { showLoading: true })
+                return this.$store.dispatch('defect/lintList', this.searchParams)
             },
-            // 获取告警筛选参数
+            // 获取问题筛选参数
             fetchLintParams () {
                 const params = this.$route.params
                 params.toolId = 'DUPC'
                 return this.$store.dispatch('defect/lintParams', params)
             },
             handleListRowClick (row, event, column) {
+                this.fileIndex = this.defectList.findIndex(file => file.entityId === row.entityId)
                 const { entityId, filePath } = row
-                const query = { entityId, filePath }
-                const resolved = this.$router.resolve({
-                    name: 'defect-dupc-detail',
-                    params: this.$route.params,
-                    query
-                })
-                const href = `${window.DEVOPS_SITE_URL}/console${resolved.href}`
-                window.open(href, '_blank')
+                this.entityId = entityId
+                this.filePath = filePath
+                this.detailVisiable = true
+                // const query = { entityId, filePath }
+                // const resolved = this.$router.resolve({
+                //     name: 'defect-dupc-detail',
+                //     params: this.$route.params,
+                //     query
+                // })
+                // const href = `${window.DEVOPS_SITE_URL}/console${resolved.href}`
+                // window.open(href, '_blank')
             },
             renderHeader (h, data) {
-                const extreHigh = this.$t('charts.极高风险(>=20%)')
-                const high = this.$t('charts.高风险11%20%')
+                const extreHigh = this.$t('极高风险(>=20%)')
+                const high = this.$t('高风险11%20%')
+                const medium = this.$t('中风险5%11%')
+                const low = this.$t('低风险0%5%')
+                const tips = this.$t('低风险文件不在列表中显示')
                 const directive = {
                     name: 'bkTooltips',
-                    content: `<p>${extreHigh}</p><p>${high}</p>`,
+                    content: `<p>${extreHigh}</p><p>${high}</p><p>${medium}</p><p>${low}</p><p>${tips}</p>`,
                     placement: 'right'
                 }
                 return <span class="custom-header-cell" v-bk-tooltips={ directive }>{ data.column.label }</span>
             },
-            // 告警列表排序
+            // 问题列表排序
             handleSortChange ({ column, prop, order }) {
                 const orders = { ascending: 'ASC', descending: 'DESC' }
                 this.searchParams = { ...this.searchParams, ...{ pageNum: 1, sortField: prop, sortType: orders[order] } }
@@ -302,79 +438,11 @@
                     4: 'mediumCount'
                 }
                 const count = this.lintListData[severityFieldMap[severity]]
-                return count > 100000 ? this.$t('st.10万+') : count
-            },
-
-            // 文件路径相关交互
-            handleFilePathSearch (val) {
-                this.$refs.filePathTree.searchNode(val)
-            },
-            handleFilePathConfirmClick () {
-                const filePathDropdown = this.$refs.filePathDropdown
-
-                const filePath = this.getFilePath()
-                this.searchFormData.filePathShow = filePath.join(';')
-
-                filePathDropdown.hide()
+                return count > 100000 ? this.$t('10万+') : count
             },
             handleFilePathCancelClick () {
                 const filePathDropdown = this.$refs.filePathDropdown
                 filePathDropdown.hide()
-            },
-            handleFilePathClearClick () {
-                const filePathDropdown = this.$refs.filePathDropdown
-                function cancelSelected (item) {
-                    item.checked = false
-                    item.halfcheck = false
-                    if (item.children) {
-                        item.children.forEach(cancelSelected)
-                    }
-                }
-                cancelSelected(this.searchFormData.filePathTree)
-
-                const filePath = this.getFilePath()
-                this.searchFormData.filePathShow = filePath.join(';')
-
-                filePathDropdown.hide()
-            },
-            getFilePath () {
-                const filePathTree = this.$refs.filePathTree
-                const checkedList = filePathTree.getNode(['name', 'parent'])
-
-                const pathMap = {}
-                const getPath = function (node, path) {
-                    if (node.parent) {
-                        if (node.parent.halfcheck === false && !node.hasOwnProperty('halfcheck')) {
-                            path.push(node.parent.name)
-                            if (node.parent.parent) {
-                                getPath(node.parent.parent, path)
-                            }
-                        } else {
-                            path.push(node.name)
-                            getPath(node.parent, path)
-                        }
-                    } else {
-                        path.push(node.name)
-                    }
-                }
-                checkedList.forEach(node => {
-                    pathMap[node.name] = []
-                    getPath(node, pathMap[node.name])
-                })
-                const pathList = Object.keys(pathMap).map(key => {
-                    // console.log(pathMap[key])
-                    const path = pathMap[key]
-                    path.pop()
-                    return path.reverse().join('/')
-                })
-
-                const pathListFinal = pathList.filter((item, index) => {
-                    return pathList.indexOf(item) === index
-                })
-
-                this.searchParams.fileList = pathListFinal
-
-                return pathListFinal
             },
             openSlider () {
                 this.show = true
@@ -391,6 +459,105 @@
                         this.openTree(item)
                     })
                 }
+            },
+            changeItem (data) {
+                this.neverShow = data
+            },
+            newAnalyse () {
+                const routeParams = { ...this.$route.params, ...{ dialogAnalyseVisible: false } }
+                this.dialogAnalyseVisible = false
+                this.$router.push({
+                    name: 'task-detail',
+                    params: routeParams
+                })
+            },
+            keyOperate () {
+                const vm = this
+                document.onkeydown = keyDown
+                function keyDown (event) {
+                    const e = event || window.event
+                    switch (e.code) {
+                        case 'Enter': // enter
+                            // e.path.length < 5 防止规则等搜索条件里面的回车触发打开详情
+                            if (!vm.detailVisiable && e.path.length < 5) vm.keyEnter()
+                            break
+                        case 'Escape': // esc
+                            vm.detailVisiable = false
+                            break
+                        case 'ArrowLeft': // left
+                            if (vm.fileIndex > 0) {
+                                if (vm.detailVisiable) {
+                                    vm.handleListRowClick(vm.defectList[--vm.fileIndex])
+                                } else {
+                                    --vm.fileIndex
+                                }
+                                vm.screenScroll()
+                            }
+                            break
+                        case 'ArrowUp': // up
+                            if (vm.fileIndex > 0) {
+                                if (vm.detailVisiable) {
+                                    vm.handleListRowClick(vm.defectList[--vm.fileIndex])
+                                } else {
+                                    --vm.fileIndex
+                                }
+                                vm.screenScroll()
+                            }
+                            break
+                        case 'ArrowRight': // right
+                            if (vm.fileIndex < vm.defectList.length - 1) {
+                                if (vm.detailVisiable) {
+                                    vm.handleListRowClick(vm.defectList[++vm.fileIndex])
+                                } else {
+                                    ++vm.fileIndex
+                                }
+                                vm.screenScroll()
+                            }
+                            break
+                        case 'ArrowDown': // down
+                            if (vm.fileIndex < vm.defectList.length - 1) {
+                                if (vm.detailVisiable) {
+                                    vm.handleListRowClick(vm.defectList[++vm.fileIndex])
+                                } else {
+                                    ++vm.fileIndex
+                                }
+                                vm.screenScroll()
+                            }
+                            break
+                    }
+                }
+            },
+            keyEnter () {
+                const row = this.defectList[this.fileIndex]
+                this.entityId = row.entityId
+                this.filePath = row.filePath
+                this.detailVisiable = true
+            },
+            screenScroll () {
+                const container = document.getElementsByClassName('main-container')[0]
+                if (container) {
+                    const height = this.fileIndex > 3 ? (this.fileIndex - 3) * 42 : 0
+                    container.scrollTo({
+                        top: height
+                    })
+                }
+            },
+            handleRowClassName ({ row, rowIndex }) {
+                return this.fileIndex === rowIndex ? 'list-row current-row' : 'list-row'
+            },
+            openDetail () {
+                const id = this.$route.query.entityId
+                if (id) {
+                    setTimeout(() => {
+                        if (!this.toolMap[this.toolId]) {
+                            this.openDetail()
+                        } else {
+                            this.detailVisiable = true
+                            this.entityId = id
+                            this.filePath = this.$route.query.filePath
+                        }
+                    }, 500)
+                }
             }
         }
     }
@@ -402,11 +569,31 @@
 
 <style lang="postcss" scoped>
     @import '../../css/mixins.css';
-    @import './index.css';
+    @import './defect-list.css';
 
+    .dupc-list {
+        padding: 16px 20px 0px 16px;
+    }
+    .breadcrumb {
+        padding: 0px!important;
+        .breadcrumb-name {
+            background: white;
+        }
+    }
     .main-container {
-        padding: 20px 33px 0!important;
-        margin: 0 -13px!important;
+        /* padding: 20px 33px 0!important;
+        margin: 0 -13px!important; */
+        border-top: 1px solid #dcdee5;
+        margin: 0px!important;
+        background: white;
+        .search-form {
+            >>>.bk-label {
+                font-size: 12px;
+            }
+            >>>.bk-select {
+                font-size: 12px!important;
+            }
+        }
     }
     .file-list-table {
         >>> .list-row {
@@ -417,7 +604,7 @@
         color: #737987;
 
         .content-hd {
-            margin: 16px;
+            margin: 0 16px 16px;
         }
         .content-bd {
             width: 480px;
@@ -450,5 +637,10 @@
         display: inline-block;
         float: left;
         @mixin ellipsis;
+    }
+    >>>.checkbox-group {
+        .bk-checkbox-text {
+            font-size: 12px;
+        }
     }
 </style>
