@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.utils
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.DefaultExecutor
@@ -79,7 +80,7 @@ object ExecutorUtil {
     }
 
     private fun setThreadLocal() {
-        val randomNum = ThreadLocalRandom.current().nextInt().toString()
+        val randomNum = UUIDUtil.generate()
         threadLocal.set(randomNum)
     }
 
