@@ -127,29 +127,6 @@ class JFrogApiService @Autowired constructor(private val objectMapper: ObjectMap
     /**
      * 获取带token鉴权的下载链接
      */
-    fun ioaDownloadUrl(path: String): String {
-        val url = "$JFROG_BASE_URL/api/plugins/execute/ioaDownloadUrl?params=path=$path"
-        val request = Request.Builder()
-            .url(url)
-            .header("Authorization", makeCredential())
-            .get()
-            .build()
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
-            if (!response.isSuccessful) {
-                logger.error("Fail to create jfrog $path ioaDownloadUrl. $responseContent")
-                throw RuntimeException("Fail to create ioaDownloadUrl")
-            }
-
-            val jFrogApiResponse = objectMapper.readValue<JFrogApiResponse<Url>>(responseContent)
-            val url = jFrogApiResponse.data!!.url
-            return RegionUtil.replaceRegionServer(url, RegionUtil.IDC)
-        }
-    }
-
-    /**
-     * 获取带token鉴权的下载链接
-     */
     fun thirdPartyDownloadUrl(path: List<String>, ttl: Int): String {
         val url = "$JFROG_BASE_URL/api/plugins/execute/thirdPartyDownloadUrl?params=path=${path.joinToString(",")};ttl=$ttl"
         val request = Request.Builder()

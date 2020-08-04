@@ -44,6 +44,7 @@ import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
@@ -83,7 +84,6 @@ class BkRepoService @Autowired constructor(
     val client: Client,
     val artifactoryAuthServiceCode: BSRepoAuthServiceCode
 ) : RepoService {
-
     override fun list(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): List<FileInfo> {
         return when (artifactoryType) {
             ArtifactoryType.PIPELINE -> {
@@ -168,24 +168,23 @@ class BkRepoService @Autowired constructor(
                 .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
 
             targetProjectId = crossProjectId!!
-            if (artifactoryType == ArtifactoryType.CUSTOM_DIR &&
-                !authProjectApi.getProjectUsers(artifactoryAuthServiceCode, targetProjectId).contains(lastModifyUser)) {
-                throw BadRequestException("用户（$lastModifyUser) 没有项目（$targetProjectId）下载权限)")
+            if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(lastModifyUser, targetProjectId)) {
+                throw PermissionForbiddenException("用户（$lastModifyUser) 没有项目（$targetProjectId）下载权限)")
             }
             if (artifactoryType == ArtifactoryType.PIPELINE) {
                 targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
                 pipelineService.validatePermission(
-                    lastModifyUser,
-                    targetProjectId,
-                    targetPipelineId,
-                    AuthPermission.DOWNLOAD,
-                    "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限")
+                    userId = lastModifyUser,
+                    projectId = targetProjectId,
+                    pipelineId = targetPipelineId,
+                    message = "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限"
+                )
 
                 val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
-                    targetProjectId,
-                    targetPipelineId,
-                    crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
-                    ChannelCode.BS
+                    projectId = targetProjectId,
+                    pipelineId = targetPipelineId,
+                    buildNum = crossBuildNo ?: throw BadRequestException("invalid buildNo"),
+                    channelCode = ChannelCode.BS
                 ).data
                 targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
             }
@@ -233,20 +232,17 @@ class BkRepoService @Autowired constructor(
         val startTimestamp = System.currentTimeMillis()
         try {
             val nodeList = bkRepoClient.queryByNameAndMetadata(
-                userId,
-                projectId,
-                listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
-                listOf(),
-                mapOf(
-                    ARCHIVE_PROPS_PIPELINE_ID to pipelineId,
-                    ARCHIVE_PROPS_BUILD_ID to buildId
-                ),
-                0,
-                10000
+                userId = userId,
+                projectId = projectId,
+                repoNames = listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
+                fileNames = listOf(),
+                metadata = mapOf(ARCHIVE_PROPS_PIPELINE_ID to pipelineId, ARCHIVE_PROPS_BUILD_ID to buildId),
+                page = 0,
+                pageSize = 10000
             )
 
             val fileInfoList = transferFileInfo(projectId, nodeList, listOf(), false)
-            val pipelineCanDownloadList = pipelineService.filterPipeline(userId, projectId, AuthPermission.DOWNLOAD)
+            val pipelineCanDownloadList = pipelineService.filterPipeline(userId, projectId)
             return fileInfoList.map {
                 val show = when {
                     it.name.endsWith(".apk") && !it.name.endsWith(".shell.apk") -> {
@@ -283,17 +279,14 @@ class BkRepoService @Autowired constructor(
                 var canDownload = false
                 if (it.properties != null) {
                     kotlin.run checkProperty@{
-                        it.properties!!.forEach {
-                            if (it.key == ARCHIVE_PROPS_PIPELINE_ID && pipelineCanDownloadList.contains(it.value)) {
+                        it.properties!!.forEach { property ->
+                            if (property.key == ARCHIVE_PROPS_PIPELINE_ID && pipelineCanDownloadList.contains(property.value)) {
                                 canDownload = true
                                 return@checkProperty
                             }
                         }
                     }
                 }
-
-                var appVersion: String? = null
-                appVersion = it.appVersion
 
                 AppFileInfo(
                     name = it.name,
@@ -306,7 +299,7 @@ class BkRepoService @Autowired constructor(
                     artifactoryType = it.artifactoryType,
                     show = show,
                     canDownload = canDownload,
-                    version = appVersion
+                    version = it.appVersion
                 )
             }
         } finally {

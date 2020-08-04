@@ -35,10 +35,7 @@ import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,9 +46,7 @@ import javax.ws.rs.NotFoundException
 
 @Service
 class BkRepoCustomDirService @Autowired constructor(
-    private val authProjectApi: BSAuthProjectApi,
-    private val bkRepoClient: BkRepoClient,
-    private val artifactoryAuthServiceCode: BSRepoAuthServiceCode
+    private val bkRepoClient: BkRepoClient
 ) : CustomDirService {
     override fun list(userId: String, projectId: String, argPath: String): List<FileInfo> {
         logger.info("list, userId: $userId, projectId: $projectId, argPath: $argPath")
@@ -168,16 +163,6 @@ class BkRepoCustomDirService @Autowired constructor(
                 normalizedPath
             )
         }
-    }
-
-    override fun validatePermission(userId: String, projectId: String) {
-        if (!isProjectUser(userId, projectId)) {
-            throw PermissionForbiddenException("用户($userId)不是工程($projectId)成员")
-        }
-    }
-
-    override fun isProjectUser(user: String, projectId: String): Boolean {
-        return authProjectApi.getProjectUsers(artifactoryAuthServiceCode, projectId).contains(user)
     }
 
     companion object {

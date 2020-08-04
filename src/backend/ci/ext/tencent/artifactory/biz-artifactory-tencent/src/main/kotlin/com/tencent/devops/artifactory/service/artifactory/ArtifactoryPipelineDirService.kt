@@ -26,10 +26,10 @@
 
 package com.tencent.devops.artifactory.service.artifactory
 
-import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.service.PipelineDirService
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.util.JFrogUtil
@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
-import com.tencent.devops.common.auth.api.AuthPermission
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -52,32 +51,27 @@ class ArtifactoryPipelineDirService @Autowired constructor(
     private val pipelineService: PipelineService
 ) : PipelineDirService {
     override fun list(userId: String, projectId: String, path: String): List<FileInfo> {
-        return list(userId, projectId, path, AuthPermission.VIEW)
-    }
-
-    override fun list(userId: String, projectId: String, argPath: String, authPermission: AuthPermission): List<FileInfo> {
-        val path = JFrogUtil.normalize(argPath)
-        if (!JFrogUtil.isValid(path)) {
+        val normalizedPath = JFrogUtil.normalize(path)
+        if (!JFrogUtil.isValid(normalizedPath)) {
             logger.error("Path $path is not valid")
             throw BadRequestException("非法路径")
         }
 
-        val realPath = JFrogUtil.getPipelinePath(projectId, path)
+        val realPath = JFrogUtil.getPipelinePath(projectId, normalizedPath)
         val jFrogFileInfoList = jFrogService.list(realPath, false, 1)
-
         return when {
-            pipelineService.isRootDir(path) -> {
-                pipelineService.getRootPathFileList(userId, projectId, path, jFrogFileInfoList, authPermission)
+            pipelineService.isRootDir(normalizedPath) -> {
+                pipelineService.getRootPathFileList(userId, projectId, normalizedPath, jFrogFileInfoList)
             }
-            pipelineService.isPipelineDir(path) -> {
-                val pipelineId = pipelineService.getPipelineId(path)
-                pipelineService.validatePermission(userId, projectId, pipelineId, authPermission, "用户($userId)在工程($projectId)下没有流水线${authPermission.alias}权限")
+            pipelineService.isPipelineDir(normalizedPath) -> {
+                val pipelineId = pipelineService.getPipelineId(normalizedPath)
+                pipelineService.validatePermission(userId, projectId, pipelineId)
                 pipelineService.getPipelinePathList(projectId, path, jFrogFileInfoList)
             }
             else -> {
-                val pipelineId = pipelineService.getPipelineId(path)
-                pipelineService.validatePermission(userId, projectId, pipelineId, authPermission, "用户($userId)在工程($projectId)下没有流水线${authPermission.alias}权限")
-                pipelineService.getBuildPathList(projectId, path, jFrogFileInfoList)
+                val pipelineId = pipelineService.getPipelineId(normalizedPath)
+                pipelineService.validatePermission(userId, projectId, pipelineId)
+                pipelineService.getBuildPathList(projectId, normalizedPath, jFrogFileInfoList)
             }
         }
     }

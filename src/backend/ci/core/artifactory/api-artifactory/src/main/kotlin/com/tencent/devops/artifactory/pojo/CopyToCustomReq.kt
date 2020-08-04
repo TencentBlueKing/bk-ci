@@ -33,6 +33,6 @@ import io.swagger.annotations.ApiModelProperty
 data class CopyToCustomReq(
     @ApiModelProperty("文件列表", required = true)
     val files: List<String>,
-    @ApiModelProperty("是否拷贝左右文件", required = true)
+    @ApiModelProperty("是否拷贝所有文件", required = true)
     val copyAll: Boolean
 )

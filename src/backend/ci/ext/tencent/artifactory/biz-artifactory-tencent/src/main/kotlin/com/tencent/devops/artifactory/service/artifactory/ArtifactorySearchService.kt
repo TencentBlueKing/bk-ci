@@ -37,7 +37,6 @@ import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_FILE_NAME
-import com.tencent.devops.common.auth.api.AuthPermission
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -63,7 +62,7 @@ class ArtifactorySearchService @Autowired constructor(
         val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(projectId).removePrefix(repoPathPrefix)
 
         val relativePathSet = setOf(pipelinePathPrefix, customDirPathPrefix)
-        val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId, AuthPermission.LIST)
+        val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId)
 
         val fileNameSet = mutableSetOf<String>()
         searchProps.fileNames?.forEach {
@@ -144,8 +143,7 @@ class ArtifactorySearchService @Autowired constructor(
         val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(projectId).removePrefix(repoPathPrefix)
 
         val relativePathSet = setOf(pipelinePathPrefix, customDirPathPrefix)
-        val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId, AuthPermission.LIST)
-
+        val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId)
         val fileNameSet = mutableSetOf<String>()
         searchProps.fileNames?.forEach {
             fileNameSet.add(it)

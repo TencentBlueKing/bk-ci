@@ -53,11 +53,8 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthServiceCode
-import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -75,18 +72,17 @@ import javax.ws.rs.BadRequestException
 
 @Service
 class ArtifactoryService @Autowired constructor(
-    val jFrogApiService: JFrogApiService,
-    val jFrogAQLService: JFrogAQLService,
-    val jFrogService: JFrogService,
-    val pipelineService: PipelineService,
-    val artifactoryPipelineDirService: ArtifactoryPipelineDirService,
-    val artifactoryCustomDirService: ArtifactoryCustomDirService,
-    val jFrogPropertiesApi: JFrogPropertiesApi,
-    val shortUrlApi: ShortUrlApi,
-    val authProjectApi: BSAuthProjectApi,
-    private val client: Client,
-    private val artifactoryAuthServiceCode: BSRepoAuthServiceCode
+    private val pipelineService: PipelineService,
+    private val jFrogApiService: JFrogApiService,
+    private val jFrogAQLService: JFrogAQLService,
+    private val jFrogService: JFrogService,
+    private val artifactoryPipelineDirService: ArtifactoryPipelineDirService,
+    private val artifactoryCustomDirService: ArtifactoryCustomDirService,
+    private val jFrogPropertiesApi: JFrogPropertiesApi,
+    private val shortUrlApi: ShortUrlApi,
+    private val client: Client
 ) : RepoService {
+    // 待下线
     fun hasDownloadPermission(
         userId: String,
         projectId: String,
@@ -94,12 +90,12 @@ class ArtifactoryService @Autowired constructor(
         resourceType: AuthResourceType,
         path: String
     ): Boolean {
-        return if (serviceCode == BkAuthServiceCode.PIPELINE && resourceType == AuthResourceType.PIPELINE_DEFAULT) {
-            val pipelineId = pipelineService.getPipelineId(path)
-            pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.EXECUTE)
+        val pipelineId = if (serviceCode == BkAuthServiceCode.PIPELINE && resourceType == AuthResourceType.PIPELINE_DEFAULT) {
+            pipelineService.getPipelineId(path)
         } else {
-            false
+            null
         }
+        return pipelineService.hasPermission(userId, projectId, pipelineId)
     }
 
     override fun list(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): List<FileInfo> {
@@ -234,19 +230,17 @@ class ArtifactoryService @Autowired constructor(
                 .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
 
             targetProjectId = crossProjectId!!
-            if (artifactoryType == ArtifactoryType.CUSTOM_DIR &&
-                !authProjectApi.getProjectUsers(artifactoryAuthServiceCode, targetProjectId).contains(lastModifyUser)) {
+            if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(lastModifyUser, targetProjectId)) {
                 throw BadRequestException("用户（$lastModifyUser) 没有项目（$targetProjectId）下载权限)")
             }
             if (artifactoryType == ArtifactoryType.PIPELINE) {
-                targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
+                targetPipelineId = crossPipineId ?: throw BadRequestException("invalid pipelineId")
                 pipelineService.validatePermission(
-                    lastModifyUser,
-                    targetProjectId,
-                    targetPipelineId,
-                    AuthPermission.DOWNLOAD,
-                    "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限")
-
+                    userId = lastModifyUser,
+                    projectId = targetProjectId,
+                    pipelineId = targetPipelineId,
+                    message = "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限"
+                )
                 val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
                     targetProjectId,
                     targetPipelineId,
@@ -304,7 +298,7 @@ class ArtifactoryService @Autowired constructor(
             val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(projectId).removePrefix(repoPathPrefix)
 
             val relativePathSet = setOf(pipelinePathPrefix, customDirPathPrefix)
-            val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId, AuthPermission.LIST)
+            val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId)
 
             val jFrogAQLFileInfoList =
                 jFrogAQLService.listByCreateTimeDesc(repoPathPrefix, relativePathSet, offset, limit)
@@ -334,8 +328,7 @@ class ArtifactoryService @Autowired constructor(
             val jFrogAQLFileInfoList =
                 jFrogAQLService.searchFileAndPropertyByPropertyByAnd(repoPathPrefix, relativePathSet, emptySet(), props)
             val fileInfoList = transferJFrogAQLFileInfo(projectId, jFrogAQLFileInfoList, emptyList(), false)
-            val pipelineCanDownloadList = pipelineService.filterPipeline(userId, projectId, AuthPermission.DOWNLOAD)
-
+            val pipelineCanDownloadList = pipelineService.filterPipeline(userId, projectId)
             return fileInfoList.map {
                 val show = when {
                     it.name.endsWith(".apk") && !it.name.endsWith(".shell.apk") -> {
@@ -693,13 +686,12 @@ class ArtifactoryService @Autowired constructor(
         copyToCustomReq: CopyToCustomReq
     ) {
         checkCopyToCustomReq(copyToCustomReq)
-        artifactoryCustomDirService.validatePermission(userId, projectId)
+        pipelineService.validatePermission(userId, projectId)
 
         val pipelineName = pipelineService.getPipelineName(projectId, pipelineId)
         val buildNo = pipelineService.getBuildName(buildId)
         val fromPath = JFrogUtil.getPipelineBuildPath(projectId, pipelineId, buildId)
         val toPath = JFrogUtil.getPipelineToCustomPath(projectId, pipelineName, buildNo)
-
         if (copyToCustomReq.copyAll) {
             jFrogService.tryDelete(toPath)
             jFrogService.copy(fromPath, toPath)
