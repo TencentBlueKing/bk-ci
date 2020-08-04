@@ -92,7 +92,7 @@
                         <div @click.stop="" class="errorCode-item" v-for="item in props.row.errorInfoList" :key="item.taskId">
                             <i :title="$t('userError')" v-if="item.errorType === 'USER'" class="devops-icon icon-user "></i>
                             <i :title="$t('systemError')" v-else-if="item.errorType === 'SYSTEM'" class="devops-icon icon-cog"></i>
-                            <span v-if="item.errorCode">{{ item.errorCode + ': ' + item. errorMsg }} </span>
+                            <span :title="item.errorCode + ': ' + item. errorMsg" v-if="item.errorCode">{{ item.errorCode + ': ' + item. errorMsg }} </span>
                         </div>
                     </template>
                     <span v-else>--</span>
@@ -603,7 +603,9 @@
                     @include ellipsis();
                 }
             }
-
+        }
+        .errorCode-item {
+            min-width: 800px;
         }
         .trigger-cell {
             display: flex;
