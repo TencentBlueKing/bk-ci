@@ -27,10 +27,12 @@
 package com.tencent.devops.websocket.cron
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 import com.tencent.devops.common.websocket.utils.RedisUtlis.cleanPageSessionByPage
 import com.tencent.devops.websocket.keys.WebsocketKeys
+import com.tencent.devops.websocket.lock.WebsocketCronLock
 import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -53,7 +55,14 @@ class ClearTimeoutCron(
     @Scheduled(cron = "0 */30 * * * ?")
     fun newClearTimeoutCache() {
         longSessionLog()
-        clearTimeoutSession()
+        val websocketCronLock = WebsocketCronLock(redisOperation)
+        try {
+            if(websocketCronLock.tryLock()) {
+                clearTimeoutSession()
+            }
+        } finally {
+            websocketCronLock.unlock()
+        }
     }
 
     private fun longSessionLog() {
