@@ -52,7 +52,6 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 @Service
 class PipelineSettingService @Autowired constructor(
@@ -65,8 +64,6 @@ class PipelineSettingService @Autowired constructor(
     private val pipelineResDao: PipelineResDao,
     private val client: Client
 ) {
-
-    private val executors = Executors.newFixedThreadPool(5)
 
     fun saveSetting(userId: String, setting: PipelineSetting, checkPermission: Boolean = true): String {
         with(setting) {
@@ -98,10 +95,6 @@ class PipelineSettingService @Autowired constructor(
                 userId = userId
             )
         )
-        // 异步进行删除最近maxPipelineResNum个编排之外的编排
-        executors.submit {
-            pipelineResDao.deleteEarlyVersion(dslContext, setting.pipelineId, setting.maxPipelineResNum)
-        }
         return id
     }
 
