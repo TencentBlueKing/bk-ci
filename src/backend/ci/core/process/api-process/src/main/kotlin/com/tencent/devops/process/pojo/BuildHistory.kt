@@ -80,7 +80,7 @@ data class BuildHistory(
     @ApiModelProperty("启动类型(新)", required = false)
     val startType: String?,
     @ApiModelProperty("推荐版本号", required = false)
-    val recommendVersion: String?,,
+    val recommendVersion: String?,
     @ApiModelProperty("是否重试", required = false)
     val retry: Boolean = false,
     @ApiModelProperty("流水线任务执行错误", required = false)
