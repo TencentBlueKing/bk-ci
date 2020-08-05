@@ -32,13 +32,14 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import java.io.InputStream
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.QueryParam
+import javax.ws.rs.GET
+import javax.ws.rs.PathParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_IPA"], description = "服务接口-IPA包")
@@ -56,7 +57,10 @@ interface ServiceIpaResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
         ipaSignInfoHeader: String,
         @ApiParam("ipa包文件", required = true)
-        ipaInputStream: InputStream
+        ipaInputStream: InputStream,
+        @ApiParam("md5Check", required = false)
+        @QueryParam("md5Check")
+        md5Check: Boolean = true
     ): Result<String>
 
     @ApiOperation("ipa包签名状态")

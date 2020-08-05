@@ -8,6 +8,7 @@ interface FileService {
 
     fun copyToTargetFile(
         ipaInputStream: InputStream,
-        ipaSignInfo: IpaSignInfo
+        ipaSignInfo: IpaSignInfo,
+        md5Check: Boolean = true
     ): File
 }

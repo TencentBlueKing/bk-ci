@@ -13,7 +13,8 @@ interface SignService {
         resignId: String,
         ipaSignInfo: IpaSignInfo,
         ipaSignInfoHeader: String,
-        ipaInputStream: InputStream
+        ipaInputStream: InputStream,
+        md5Check: Boolean = true
     ): Pair<File, Int>
 
     /*
