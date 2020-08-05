@@ -121,7 +121,7 @@
 
                 const res = []
                 if (this.isMultiple) {
-                    const valArr = this.value.split(',')
+                    const valArr = (this.value || '').split(',')
                     valArr.forEach((val) => {
                         const name = findItemName(val)
                         if (name !== undefined) res.push(name)
@@ -138,7 +138,7 @@
                     this.$refs.inputItem.$refs.input.blur()
                     this.toggleShowList()
                 } else {
-                    const valArr = this.value.split(',').filter(x => x !== '')
+                    const valArr = (this.value || '').split(',').filter(x => x !== '')
                     const index = valArr.findIndex(x => x === option.id)
                     if (index > -1) valArr.splice(index, 1)
                     else valArr.push(option.id)
@@ -169,7 +169,7 @@
 
                 const res = []
                 if (this.isMultiple) {
-                    (value.split(',') || []).forEach((val) => {
+                    ((value || '').split(',') || []).forEach((val) => {
                         const tempId = findItemId(val)
                         if (tempId !== '') res.push(tempId)
                     })
@@ -180,7 +180,7 @@
             },
 
             isActive (id) {
-                const valArr = this.value.split(',')
+                const valArr = (this.value || '').split(',')
                 return valArr.includes(id)
             },
 
