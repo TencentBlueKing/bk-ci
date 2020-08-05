@@ -279,6 +279,8 @@ export default {
                 if (res && res.id) {
                     message = this.$t('newlist.sucToStartBuild')
                     theme = 'success'
+                    setExecuteStatus(false)
+                    this.$store.commit('pipelines/updateCurAtomPrams', null)
                     if (goDetail) {
                         this.$router.push({
                             name: 'pipelinesDetail',
@@ -294,6 +296,8 @@ export default {
                     theme = 'error'
                 }
             } catch (err) {
+                setExecuteStatus(false)
+                this.$store.commit('pipelines/updateCurAtomPrams', null)
                 if (err.code === 403) { // 没有权限执行
                     this.setPermissionConfig(`${this.$t('pipeline')}：${this.curPipeline.pipelineName}`, this.$t('exec'), projectId, pipelineId)
                 } else {
@@ -301,7 +305,6 @@ export default {
                     theme = 'error'
                 }
             } finally {
-                setExecuteStatus(false)
                 message && this.$showTips({
                     message,
                     theme

@@ -1,62 +1,53 @@
 <template>
     <div class="main-content-outer">
-        <h2 class="main-title">{{$t('new.新增代码检查任务')}}</h2>
         <div class="new-task">
             <div class="new-task-main">
-                <div class="new-task-aside">
-                    <bk-steps :steps="newTaskSteps" :cur-step="currentStep + 1"></bk-steps>
-                </div>
+                <div class="main-top">{{$t('接入任务')}}</div>
+                <h2 class="main-title"></h2>
                 <div class="new-task-content">
-                    <div class="step-basic" v-if="step === 'basic'">
-                        <bk-form :label-width="120" v-if="formData" :model="formData" ref="basicForm">
-                            <bk-form-item :label="$t('basic.英文名称')" :required="true" :rules="formRules.nameEn" property="nameEn">
-                                <bk-input v-model.trim="formData.nameEn" :readonly="isEdit" @blur="handleNameEnBlur"></bk-input>
-                            </bk-form-item>
-                            <bk-form-item :label="$t('basic.中文名称')" :required="true" :rules="formRules.nameCn" property="nameCn">
+                    <div class="step-basic">
+                        <bk-form class="pb20" :label-width="130" :model="formData" ref="basicForm">
+                            <bk-form-item :label="$t('任务名称')" :required="true" :rules="formRules.nameCn" property="nameCn">
                                 <bk-input v-model.trim="formData.nameCn"></bk-input>
                             </bk-form-item>
-                            <bk-form-item :label="$t('basic.任务语言')" :required="true" property="codeLang" :rules="formRules.codeLang">
+                            <bk-form-item :label="$t('任务语言')" :required="true" property="codeLang" :rules="formRules.codeLang">
                                 <bk-checkbox-group v-model="formData.codeLang" @change="handleLangChange" class="checkbox-lang">
-                                    <bk-checkbox v-for="lang in toolMeta.LANG" :key="lang.key" :value="parseInt(lang.key, 10)" class="item">{{lang.name}}</bk-checkbox>
+                                    <bk-checkbox v-for="lang in toolMeta.LANG" :key="lang.key" :value="parseInt(lang.key, 10)" class="item fs12">{{lang.fullName}}</bk-checkbox>
                                 </bk-checkbox-group>
                             </bk-form-item>
+                            <bk-form-item :label="$t('规则集')" :required="true" style="height: 50px;" v-if="Object.keys(checkersetMap).length">
+                                <span class="select-tool cc-ellipsis" :title="toolCnList.join('、')" v-if="toolCnList.length">{{$t('涉及工具')}} {{toolCnList.join('、')}}</span>
+                            </bk-form-item>
+                            <checkerset-select
+                                ref="checkerSetList"
+                                :data="checkersetMap"
+                                @handleToolChange="handleToolChange">
+                            </checkerset-select>
                         </bk-form>
-                    </div>
-                    <div class="step-tools" v-else-if="step === 'tools'">
-                        <dl class="tool-list">
-                            <template v-for="(toolType, typeIndex) in toolMeta.TOOL_TYPE">
-                                <div v-if="toolListGroupByType[toolType.key]" :key="typeIndex" class="tool-list-group">
-                                    <dt class="group-title">{{toolType.fullName}}</dt>
-                                    <dd v-for="(tool, toolIndex) in toolListGroupByType[toolType.key]" :key="toolIndex" class="tool-item">
-                                        <tool-card :tool="tool" :picked="formData.tools.includes(tool.name)" @click="handleToolCardClick"></tool-card>
-                                    </dd>
-                                </div>
-                            </template>
-                        </dl>
-                    </div>
-                    <div class="step-code" v-else-if="step === 'code'">
+                        <bk-form :label-width="130">
+                            <div v-for="toolParam in toolConfigParams" class="pb20" :key="toolParam.name">
+                                <tool-params-form
+                                    v-for="param in toolParam.paramsList"
+                                    :key="param.key"
+                                    :param="param"
+                                    :tool="toolParam.name"
+                                    @handleFactorChange="handleFactorChange">
+                                </tool-params-form>
+                            </div>
+                        </bk-form>
                         <tool-config-form
                             class="form-add"
                             scenes="register-add"
-                            :tools="formData.tools"
+                            :tools="toolList"
+                            :code-lang="formData.codeLang"
                             ref="toolConfigForm"
                         />
                     </div>
-                    <div class="step-finish" v-else-if="step === 'finish'">
-                        <div class="result result-success">
-                            <i class="bk-icon icon-check-circle result-icon success-icon"></i>
-                            <p class="result-text">{{$t('new.恭喜，你已创建完成')}}</p>
-                            <bk-button theme="primary" type="button" @click="() => $router.push({ name: 'task-detail' })">{{$t('new.查看任务详情')}}</bk-button>
-                        </div>
-                    </div>
                 </div>
-            </div>
-            <div class="new-task-footer" v-show="currentStep < newTaskSteps.length - 1">
-                <bk-button type="button" @click="handleCancelClick">{{$t('op.取消')}}</bk-button>
-                <bk-button theme="primary" type="submit" :loading="buttonLoading.register" @click="handleRegisterAndNextClick" v-show="currentStep === 0">{{ isEdit ? $t("op.保存") : $t("op.注册")}}{{$t("op.并下一步")}}</bk-button>
-                <bk-button theme="primary" type="button" @click="handlePrevlClick" v-show="currentStep > 0">{{$t('op.上一步')}}</bk-button>
-                <bk-button theme="primary" type="button" @click="handleNextlClick" :disabled="step === 'tools' && !formData.tools.length" v-show="currentStep > 0 && currentStep < newTaskSteps.length - 2">{{$t('op.下一步')}}</bk-button>
-                <bk-button theme="primary" type="button" :loading="buttonLoading.complete" @click="handleCompletelClick" v-show="currentStep === newTaskSteps.length - 2">{{$t("op.保存")}}</bk-button>
+
+                <div class="new-task-footer">
+                    <bk-button theme="primary" :loading="buttonLoading" @click="handleCompletelClick">{{$t('完成')}}</bk-button>
+                </div>
             </div>
         </div>
     </div>
@@ -64,240 +55,108 @@
 
 <script>
     import { mapState } from 'vuex'
-    import ToolCard from '@/components/tool-card'
     import ToolConfigForm from '@/components/tool-config-form'
+    import ToolParamsForm from '@/components/tool-params-form'
+    import checkersetSelect from '@/components/checkerset-select'
 
     export default {
         components: {
-            ToolCard,
-            ToolConfigForm
+            ToolConfigForm,
+            ToolParamsForm,
+            checkersetSelect
         },
         data () {
             return {
-                newTaskSteps: [
-                    { name: 'basic', title: this.$t('nav.基本信息'), icon: 1 },
-                    { name: 'tools', title: this.$t('nav.添加工具'), icon: 2 },
-                    { name: 'code', title: this.$t('nav.配置代码库'), icon: 3 },
-                    { name: 'finish', title: this.$t('nav.完成'), icon: 4 }
-                ],
-                step: this.$route.query.step || 'basic',
                 formRules: {
-                    nameEn: [
-                        {
-                            required: true,
-                            message: this.$t('st.必填项'),
-                            trigger: 'blur'
-                        },
-                        {
-                            regex: /^\w+$/,
-                            message: this.$t('st.需由字母、数字或下划线组成'),
-                            trigger: 'blur'
-                        }
-                    ],
                     nameCn: [
                         {
                             required: true,
-                            message: this.$t('st.必填项'),
+                            message: this.$t('必填项'),
                             trigger: 'blur'
                         },
                         {
                             regex: /^[\u4e00-\u9fa5_a-zA-Z0-9]+$/,
-                            message: this.$t('st.需由中文、字母、数字或下划线组成'),
+                            message: this.$t('需由中文、字母、数字或下划线组成'),
                             trigger: 'blur'
                         }
                     ],
                     codeLang: [
                         {
                             required: true,
-                            message: this.$t('st.必填项'),
+                            message: this.$t('必填项'),
                             trigger: 'change'
                         }
                     ]
                 },
                 formData: {
-                    nameEn: '',
                     nameCn: '',
-                    codeLang: [],
-                    tools: []
+                    codeLang: []
                 },
+                toolList: [],
+                checkerset: {},
+                checkersetMap: {},
                 formValidator: {},
-                buttonLoading: {
-                    register: false,
-                    complete: false
-                }
+                buttonLoading: false,
+                paramsValue: {}
             }
         },
         computed: {
             ...mapState([
-                'toolMeta',
-                'taskId',
-                'constants'
+                'toolMeta'
             ]),
             ...mapState('tool', {
                 toolMap: 'mapList'
             }),
-            ...mapState('task', {
-                taskDetail: 'detail'
-            }),
-            isEdit () {
-                return this.$route.params.taskId > 0
-            },
-            currentStep () {
-                let stepIndex = this.newTaskSteps.findIndex(item => item.name === this.step)
-                stepIndex = stepIndex === -1 ? 0 : stepIndex
-                return stepIndex
-            },
-            toolListGroupByType () {
-                const { toolMap } = this
-                const list = {}
-
-                // 组织成以type为键的结构
-                Object.keys(toolMap).forEach(key => {
-                    const tool = toolMap[key]
-                    const type = tool.type
-                    if (list[type]) {
-                        list[type].push(tool)
-                    } else {
-                        list[type] = [tool]
+            toolConfigParams () {
+                const toolConfigParams = []
+                const toolParamList = ['PYLINT', 'GOML']
+                for (const key in this.toolMap) {
+                    if (toolParamList.includes(key) && this.toolList.includes(key)) {
+                        try {
+                            this.toolMap[key]['paramsList'] = this.toolMap[key] && JSON.parse(this.toolMap[key]['params'])
+                            toolConfigParams.push(this.toolMap[key])
+                        } catch (error) {
+                            console.error(error)
+                        }
                     }
-                })
-
-                return list
+                }
+                return toolConfigParams
+            },
+            toolCnList () {
+                return this.toolList.map(item => this.toolMap[item] && this.toolMap[item]['displayName'])
             }
         },
-        beforeRouteUpdate (to, from, next) {
-            this.step = to.query.step || 'basic'
-            next()
+        created () {
+            this.init()
         },
         methods: {
-            fetchPageData () {
-                if (this.step === 'basic' && this.$route.params.taskId) {
-                    const { nameEn, nameCn, codeLang } = this.taskDetail
-                    let initData = {}
-                    if (this.isEdit) {
-                        initData = {
-                            nameEn,
-                            nameCn,
-                            codeLang: this.toolMeta.LANG.map(lang => lang.key & codeLang).filter(lang => lang > 0)
-                        }
-                    }
-                    this.formData = Object.assign({}, this.formData, initData)
-                } else if (this.step === 'tools') {
-                    this.updateList()
-                }
-            },
-            async updateList () {
-                await this.$store.dispatch('tool/updated', { showLoading: true })
-            },
-            handleCancelClick () {
-                this.$router.push({ name: 'task-list' })
-            },
-            handlePrevlClick () {
-                if (this.currentStep === 1) {
-                    this.$router.push({
-                        name: 'task-new',
-                        params: this.$route.params
-                    })
-                } else {
-                    this.step = this.newTaskSteps[this.currentStep - 1].name
-                }
-            },
-            handleNextlClick () {
-                this.step = this.newTaskSteps[this.currentStep + 1].name
-            },
-            handleRegisterAndNextClick () {
-                this.$refs.basicForm.validate().then(validator => {
-                    // 触发任务语言是否选择验证
-                    this.handleLangChange()
-
-                    // 检查是否有验证错误
-                    let hasError = false
-                    Object.keys(this.formValidator).forEach(key => {
-                        const validator = this.formValidator[key]
-                        if (!validator.state) {
-                            this.hintFormItem(validator)
-                            hasError = true
-                        }
-                    })
-
-                    if (!hasError) {
-                        this.buttonLoading.register = true
-                        const { formData } = this
-                        const data = {
-                            taskId: this.$route.params.taskId,
-                            nameEn: formData.nameEn,
-                            nameCn: formData.nameCn,
-                            codeLang: String(formData.codeLang.reduce((n1, n2) => n1 + n2, 0))
-                        }
-
-                        const action = this.isEdit ? 'task/update' : 'task/create'
-                        this.$store.dispatch(action, data).then(res => {
-                            // 成功则进入一下步
-                            // this.handleNextlClick()
-                            this.$router.push({
-                                name: 'task-new',
-                                params: { taskId: res.taskId || data.taskId },
-                                query: { step: 'tools' }
-                            })
-                        }).catch(e => {
-                            console.error(e)
-                        }).finally(() => {
-                            this.buttonLoading.register = false
-                        })
-                    }
-                }, validator => {
-                    console.log(validator)
+            init () {
+                this.$store.commit('task/updateDetail', {})
+                this.$store.dispatch('checkerset/categoryList').then(res => {
+                    this.checkerset = res
                 })
-            },
-            handleCompletelClick () {
-                const toolConfigForm = this.$refs.toolConfigForm
-                toolConfigForm.$refs.codeForm.validate().then(validator => {
-                    const data = toolConfigForm.getSubmitData()
-
-                    this.buttonLoading.complete = true
-                    this.$store.dispatch('task/addTool', data).then(res => {
-                        // 成功则进入一下步
-                        this.handleNextlClick()
-                    }).catch(e => {
-                        console.error(e)
-                    }).finally(() => {
-                        this.buttonLoading.complete = false
-                    })
-                }, validator => {
-                    console.log(validator)
-                })
-            },
-            async handleNameEnBlur (value, event) {
-                if (value.length && this.formRules.nameEn[1].regex.test(value) && !this.isEdit) {
-                    try {
-                        const res = await this.$store.dispatch('task/checkname', { nameEn: value })
-                        const formItem = this.$refs.basicForm.formItems[0]
-                        const validator = { state: res.data === false, content: this.$t('st.该英文ID已存在'), formItem, field: 'nameEn' }
-                        this.hintFormItem(validator)
-                    } catch (e) {
-                        console.error(e)
-                    }
-                }
-            },
-            async handleNameCnBlur (value, event) {
-                if (value.length && this.formRules.nameCn[1].regex.test(value)) {
-                    try {
-                        const res = await this.$store.dispatch('task/checkname', { 'nameCn': value })
-                        const formItem = this.$refs.basicForm.formItems[1]
-                        const validator = { state: res.code === 0, content: this.$t('st.该任务名已存在'), formItem, field: 'nameCn' }
-                        this.hintFormItem(validator)
-                    } catch (e) {
-                        console.error(e)
-                    }
-                }
             },
             handleLangChange (newValue) {
-                const formItem = this.$refs.basicForm.formItems[2]
+                const formItem = this.$refs.basicForm.formItems[1]
                 if (!newValue) {
                     newValue = this.formData.codeLang
                 }
-                const validator = { state: newValue.length > 0, content: this.$t('st.请选择至少一种任务语言'), formItem, field: 'codeLang' }
+                const validator = { state: newValue.length > 0, content: this.$t('请选择至少一种任务语言'), formItem, field: 'codeLang' }
                 this.hintFormItem(validator)
+
+                const codeLang = this.formData.codeLang
+                const checkersetMap = {}
+                codeLang.map(item => {
+                    const name = this.toolMeta.LANG.find(lang => Number(lang.key) === item).fullName
+                    const checkerset = { ...this.checkerset }
+                    for (const key in checkerset) {
+                        checkerset[key] = checkerset[key].filter(checker => checker.codeLang & item)
+                    }
+                    const list = checkerset
+                    checkersetMap[name] = list
+                })
+                this.$refs.checkerSetList.handleChange()
+                this.checkersetMap = checkersetMap
             },
             hintFormItem (validator) {
                 const { state, formItem, field, content } = validator
@@ -312,28 +171,96 @@
                     }, 100)
                 }
             },
-            handleToolCardClick (e, { name }) {
-                const nameIndex = this.formData.tools.indexOf(name)
-                if (nameIndex !== -1) {
-                    this.formData.tools.splice(nameIndex, 1)
-                } else {
-                    this.formData.tools.push(name)
-                }
+            handleToolChange (toolList) {
+                this.toolList = toolList
+            },
+            handleCompletelClick () {
+                if (!this.$refs.checkerSetList.handleValidate()) return false // 规则集验证
+                this.handleLangChange()
+                this.$refs.basicForm.validate().then(validator => {
+                    let hasError = false
+                    Object.keys(this.formValidator).forEach(key => {
+                        const validator = this.formValidator[key]
+                        if (!validator.state) {
+                            this.hintFormItem(validator)
+                            hasError = true
+                        }
+                    })
+                    if (hasError) {
+                        return false
+                    } else {
+                        this.$refs.toolConfigForm.$refs.codeForm.validate().then(validator => {
+                            this.submitData()
+                        }, validator => {
+                            return false
+                        })
+                    }
+                }, validator => {
+                    return false
+                })
+            },
+            submitData () {
+                const codeData = this.$refs.toolConfigForm.getSubmitData()
+                console.log('submitData -> codeData', codeData)
+                debugger
+                const checkerSetList = this.$refs.checkerSetList.getCheckerset()
+                const devopsToolParams = this.getParamsValue()
+                const codeLang = String(this.formData.codeLang.reduce((n1, n2) => n1 + n2, 0))
+                const postData = { ...this.formData, ...codeData, checkerSetList, codeLang, devopsToolParams }
+                this.buttonLoading = true
+                this.$store.dispatch('task/addTool', postData).then(res => {
+                    // 成功则进入一下步
+                    this.$router.push({
+                        name: 'task-detail',
+                        params: { ...this.$route.params, taskId: res.data.taskId }
+                    })
+                }).catch(e => {
+                    console.error(e)
+                }).finally(() => {
+                    this.buttonLoading = false
+                })
+            },
+            handleFactorChange (factor, toolName) {
+                this.paramsValue[toolName] = Object.assign({}, this.paramsValue[toolName], factor)
+            },
+            getParamsValue () {
+                const tools = this.toolConfigParams.map(item => {
+                    const { name, paramsList } = item
+                    const paramObj = {}
+                    let varName = ''
+                    let chooseValue = ''
+                    paramsList.forEach(param => {
+                        const key = param.varName
+                        varName = param.varName
+                        paramObj[key] = (this.paramsValue[name] && this.paramsValue[name][key]) || param.varDefault
+                        chooseValue = paramObj[key]
+                    })
+                    const paramJson = Object.keys(paramObj).length ? JSON.stringify(paramObj) : ''
+                    return { toolName: name, paramJson, varName, chooseValue }
+                })
+                return tools
             }
         }
     }
 </script>
 
 <style lang="postcss" scoped>
-    @import '../../css/mixins.css';
-
+    .main-top {
+        background: #fafbfd;
+        border-bottom: 1px solid #dcdee5;
+        height: 56px;
+        line-height: 56px;
+        padding: 0 30px;
+    }
     .new-task-main {
         --asideHorizontalPadding: 32px;
-        display: flex;
+        display: block;
         background:#fff;
-        box-shadow:0px 2px 4px 0px rgba(0, 0, 0, 0.05);
         border-radius:2px;
-        border:1px solid #dcdee5;
+        box-shadow: 0 2px 12px 0 hsla(0, 0%, 87%, 0.5), 0 2px 13px 0 hsla(0, 0%, 87%, 0.5);
+        height: calc(100% - 140px);
+        min-height: 600px;
+        margin-bottom: 60px;
 
         .new-task-aside {
             flex: none;
@@ -341,128 +268,43 @@
             padding: 28px var(--asideHorizontalPadding);
             border-right: 1px solid #dcdee5;
         }
+        
         .new-task-content {
-            flex: 1;
-            margin: 28px 0;
+            margin: auto;
             padding: 12px;
-            height: 520px;
-            overflow: auto;
+            overflow: hidden;
+            width: 800px;
         }
     }
-
-    .bk-steps {
-        flex-direction: column;
-        height: 360px;
-        >>>.bk-step {
-            &:after {
-                content: "";
-                position: absolute;
-                left: 17px;
-                top: 0;
-                height: 100%;
-                width: auto;
-                border: 1px dashed #dcdee5;
-                background: none;
-            }
-            &.done:after {
-                border-color: #3a84ff;
-            }
-            &.current {
-                position: relative;
-                &:before {
-                    content: '';
-                    position: absolute;
-                    width: 10px;
-                    height: 10px;
-                    border: 1px solid #dcdee5;
-                    background-color: white;
-                    right: calc(-7px - var(--asideHorizontalPadding));
-                    top: 13px;
-                    transform: rotate(45deg);
-                    border-right-color: transparent;
-                    border-top-color: transparent;
-                }
-            }
-            .bk-step-title {
-                text-align: left;
-            }
-            .bk-step-indicator {
-                float: left;
-                margin-right: 12px;
-            }
-            .bk-step-title {
-                overflow: hidden;
-            }
+    .step-basic {
+        .bk-form {
+            width: 90%;
         }
     }
-
-    .new-task-footer {
-        text-align: right;
-        margin-top: 20px;
-    }
-
     .checkbox-lang {
         .item {
-            width: 112px;
-            margin-bottom: 16px;
+            width: 140px;
+            line-height: 30px;
         }
     }
-
-    .step-basic,
-    .step-code {
-        .bk-form {
-            width: 55%;
+    .bk-form-checkbox.fs12 {
+        >>>.bk-checkbox-text {
+            font-size: 12px;
         }
     }
-    .step-tools {
-        padding: 0 24px;
+    .new-task-footer {
+        text-align: center;
+        margin-top: 20px;
+        padding-bottom: 20px;
     }
-
-    .tool-list {
-        @mixin clearfix;
-        .tool-list-group {
-            float: left;
-            @mixin clearfix;
-            .group-title {
-                font-size: 14px;
-                color: #979ba5;
-                font-weight: bold;
-                margin-bottom: 8px;
-            }
-
-            .tool-item {
-                float: left;
-                margin-right: 16px;
-                margin-bottom: 16px;
-            }
-        }
+    >>> .bk-form .bk-label {
+        font-weight: bold;
     }
-
-    .step-finish {
-        display: flex;
-        align-items: center;
-        height: 100%;
-
-        .result {
-            text-align: center;
-            flex: 1;
-            margin-top: -120px;
-
-            .result-text {
-                color: #4a4a4a;
-                font-size: 18px;
-                margin: 18px 0;
-            }
-
-            .result-icon {
-                font-size: 54px;
-            }
-        }
-
-        .result-success {
-            .success-icon {
-                color: #00c873;
-            }
-        }
+    .select-tool {
+        font-size: 12px;
+        color: #999;
+        line-height: 31px;
+        max-width: 568px;
+        display: inline-block;
     }
 </style>

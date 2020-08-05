@@ -144,4 +144,8 @@ class SvnWebHookMatcher(
     override fun getEventType() = CodeEventType.POST_COMMIT
 
     override fun getCodeType() = CodeType.SVN
+
+    override fun getMessage(): String? {
+        return event.log
+    }
 }

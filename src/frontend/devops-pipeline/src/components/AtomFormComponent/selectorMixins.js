@@ -16,6 +16,7 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+import { rely } from '../../utils/util'
 
 export default {
     props: {
@@ -26,14 +27,16 @@ export default {
         optionsConf: {
             type: Object,
             default: () => ({})
+        },
+        getAtomKeyModal: {
+            type: Function,
+            default: () => () => {}
         }
     },
     data () {
         return {
             webUrl: WEB_URL_PIRFIX
         }
-    },
-    watch: {
     },
     computed: {
         addItemUrl () {
@@ -71,11 +74,27 @@ export default {
         },
         isLackParam () {
             return this.urlParamKeys.some(key => {
-                return this.queryParams.hasOwnProperty(key) && (typeof this.queryParams[key] === 'undefined' || this.queryParams[key] === null || this.queryParams[key] === '')
+                if (this.atomValue.hasOwnProperty(key)) {
+                    const keyModal = this.getAtomKeyModal(key)
+                    if (!keyModal) {
+                        return false
+                    }
+                    if (
+                        !keyModal.required // 字段允许为空时
+                        || keyModal.hidden // 字段不可见时
+                        || (keyModal.rely && !rely(keyModal, this.atomValue)) // 字段配置了rely且返回false时，字段不可见
+                    ) {
+                        return false
+                    }
+                }
+                return this.isNullValue(this.queryParams[key])
             })
         }
     },
     methods: {
+        isNullValue (val) {
+            return typeof val === 'undefined' || val === null || val === ''
+        },
         urlParse (originUrl, query) {
             /* eslint-disable */
             return new Function('ctx', `return '${originUrl.replace(/\{(.*?)\}/g, '\'\+ ctx.$1 \+\'')}'`)(query)

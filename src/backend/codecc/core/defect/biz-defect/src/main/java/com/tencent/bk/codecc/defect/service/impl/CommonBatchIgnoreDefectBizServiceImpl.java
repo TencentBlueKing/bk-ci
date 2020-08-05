@@ -1,0 +1,51 @@
+package com.tencent.bk.codecc.defect.service.impl;
+
+import com.tencent.bk.codecc.defect.dao.mongorepository.DefectRepository;
+import com.tencent.bk.codecc.defect.dao.mongotemplate.DefectDao;
+import com.tencent.bk.codecc.defect.model.DefectEntity;
+import com.tencent.bk.codecc.defect.vo.BatchDefectProcessReqVO;
+import com.tencent.devops.common.constant.ComConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+
+/**
+ * 批量忽略的处理器
+ *
+ * @version V1.0
+ * @date 2019/10/31
+ */
+@Slf4j
+@Service("CommonBatchIgnoreDefectBizService")
+public class CommonBatchIgnoreDefectBizServiceImpl extends AbstractCommonBatchDefectProcessBizService
+{
+    @Autowired
+    private DefectRepository defectRepository;
+
+    @Autowired
+    private DefectDao defectDao;
+
+    @Override
+    protected void doBiz(List defectList, BatchDefectProcessReqVO batchDefectProcessReqVO)
+    {
+        int status = ComConstants.DefectStatus.NEW.value() | ComConstants.DefectStatus.IGNORE.value();
+        defectList.forEach(defectEntity -> ((DefectEntity)defectEntity).setStatus(status));
+        defectDao.batchUpdateDefectStatusIgnoreBit(defectList, batchDefectProcessReqVO.getIgnoreReasonType(),
+                batchDefectProcessReqVO.getIgnoreReason(), batchDefectProcessReqVO.getIgnoreAuthor());
+
+        // 2.异步批量更新tapd告警状态
+//        asynBatchUpdateTapdDefects(taskId, defectKeySet);
+    }
+
+    /**
+     * 异步批量更新tapd告警状态
+     *
+     * @param projId
+     * @param defectKeySet
+     */
+    private void asynBatchUpdateTapdDefects(long projId, Set<String> defectKeySet)
+    {
+    }
+}
