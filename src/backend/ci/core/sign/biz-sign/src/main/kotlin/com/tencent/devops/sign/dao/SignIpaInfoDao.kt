@@ -32,6 +32,7 @@ import com.tencent.devops.sign.api.pojo.AppexSignInfo
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import com.fasterxml.jackson.module.kotlin.readValue
 
 @Repository
 class SignIpaInfoDao {
@@ -53,7 +54,7 @@ class SignIpaInfoDao {
                 ARCHIVE_PATH,
                 MOBILE_PROVISION_ID,
                 UNIVERSAL_LINKS,
-                APPLICATION_GROUPS,
+                KEYCHAIN_ACCESS_GROUPS,
                 REPLACE_BUNDLE,
                 APPEX_SIGN_INFO,
                 FILENAME,
@@ -72,7 +73,7 @@ class SignIpaInfoDao {
                 info?.archivePath,
                 info?.mobileProvisionId,
                 if (info?.universalLinks != null) JsonUtil.toJson(info.universalLinks!!) else null,
-                if (info?.applicationGroups != null) JsonUtil.toJson(info.applicationGroups!!) else null,
+                if (info?.keychainAccessGroups != null) JsonUtil.toJson(info.keychainAccessGroups!!) else null,
                 info?.replaceBundleId,
                 if (info?.appexSignInfo != null) JsonUtil.toJson(info.appexSignInfo!!) else null,
                 info?.fileName,
@@ -105,13 +106,15 @@ class SignIpaInfoDao {
                     archivePath = record.archivePath,
                     mobileProvisionId = record.mobileProvisionId,
                     universalLinks = if (record.universalLinks != null) {
-                        JsonUtil.getObjectMapper().readValue(record.universalLinks!!, listOf<String>()::class.java)
+                        JsonUtil.getObjectMapper().readValue<MutableList<String>>(record.universalLinks!!)
+//                        jacksonObjectMapper().readValue(record.universalLinks!!)
                     } else null,
-                    applicationGroups = if (record.applicationGroups != null) {
-                        JsonUtil.getObjectMapper().readValue(record.applicationGroups!!, listOf<String>()::class.java)
+                    keychainAccessGroups = if (record.keychainAccessGroups != null) {
+//                        jacksonObjectMapper().readValue(record.keychainAccessGroups!!)
+                        JsonUtil.getObjectMapper().readValue<MutableList<String>>(record.keychainAccessGroups!!)
                     } else null,
                     replaceBundleId = record.replaceBundle,
-                    appexSignInfo = if (record.appexSignInfo != null) JsonUtil.getObjectMapper().readValue(record.appexSignInfo!!, listOf<AppexSignInfo>()::class.java) else null,
+                    appexSignInfo = if (record.appexSignInfo != null) JsonUtil.getObjectMapper().readValue<MutableList<AppexSignInfo>>(record.appexSignInfo!!) else null,
                     fileName = record.filename,
                     fileSize = record.fileSize,
                     md5 = record.fileMd5,
@@ -133,5 +136,4 @@ class SignIpaInfoDao {
             return record?.requestContent
         }
     }
-
 }

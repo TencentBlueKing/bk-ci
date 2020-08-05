@@ -4,12 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.sign.api.constant.SignMessageCode
+import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
-import com.tencent.devops.sign.api.pojo.SignResult
 import com.tencent.devops.sign.dao.SignHistoryDao
 import com.tencent.devops.sign.dao.SignIpaInfoDao
 import com.tencent.devops.sign.utils.IpaFileUtil
-import com.tencent.devops.sign.utils.SignUtils.DEFAULT_CER_ID
 import org.jolokia.util.Base64Util
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -23,7 +22,7 @@ class SignInfoService(
     private val signIpaInfoDao: SignIpaInfoDao,
     private val signHistoryDao: SignHistoryDao,
     private val rabbitTemplate: RabbitTemplate
-){
+) {
 
     fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo): Int {
         logger.info("[$resignId] save ipaSignInfo|header=$ipaSignInfoHeader|info=$info")
@@ -56,7 +55,7 @@ class SignInfoService(
         if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
             buildId = info.buildId!!,
-            message = "Finished ipa package upload: $ipaFile",
+            message = "Finished ipa package upload: ${ipaFile.name}",
             tag = info.taskId!!,
             jobId = null,
             executeCount = executeCount
@@ -69,7 +68,7 @@ class SignInfoService(
         if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
             buildId = info.buildId!!,
-            message = "Finished unzip ipa package: $unzipDir",
+            message = "Finished unzip ipa package: ${unzipDir.name}",
             tag = info.taskId!!,
             jobId = null,
             executeCount = executeCount
@@ -77,16 +76,16 @@ class SignInfoService(
         signHistoryDao.finishUnzip(dslContext, resignId)
     }
 
-     fun finishResign(resignId: String, info: IpaSignInfo, executeCount: Int) {
+    fun finishResign(resignId: String, info: IpaSignInfo, executeCount: Int) {
         logger.info("[$resignId] finishResign|buildId=${info.buildId}")
-         if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) LogUtils.addLine(
-             rabbitTemplate = rabbitTemplate,
-             buildId = info.buildId!!,
-             message = "Finished resign!",
-             tag = info.taskId!!,
-             jobId = null,
-             executeCount = executeCount
-         )
+        if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) LogUtils.addLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = info.buildId!!,
+            message = "Finished resign!",
+            tag = info.taskId!!,
+            jobId = null,
+            executeCount = executeCount
+        )
         signHistoryDao.finishResign(dslContext, resignId)
     }
 
@@ -96,7 +95,7 @@ class SignInfoService(
         if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
             buildId = info.buildId!!,
-            message = "Finished zip the signed ipa file with result:$signedIpaFile",
+            message = "Finished zip the signed ipa file with result:${signedIpaFile.name}",
             tag = info.taskId!!,
             jobId = null,
             executeCount = executeCount
@@ -120,19 +119,52 @@ class SignInfoService(
         )
     }
 
+    fun successResign(resignId: String, info: IpaSignInfo, executeCount: Int) {
+        logger.info("[$resignId] success resign|buildId=${info.buildId}")
+        if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) LogUtils.addLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = info.buildId!!,
+            message = "End resign ipa file.",
+            tag = info.taskId!!,
+            jobId = null,
+            executeCount = executeCount
+        )
+        signHistoryDao.successResign(
+            dslContext = dslContext,
+            resignId = resignId
+        )
+    }
+
+    fun failResign(resignId: String, info: IpaSignInfo, executeCount: Int = 1) {
+        logger.info("[$resignId] fail resign|buildId=${info.buildId}")
+        if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) LogUtils.addLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = info.buildId!!,
+            message = "End resign ipa file.",
+            tag = info.taskId!!,
+            jobId = null,
+            executeCount = executeCount
+        )
+        signHistoryDao.failResign(
+            dslContext = dslContext,
+            resignId = resignId
+        )
+    }
+
     fun getSignResult(resignId: String): Boolean {
         val record = signHistoryDao.getSignHistory(dslContext, resignId)
-        return record?.archiveFinishTime != null
+        return EnumResignStatus.parse(record?.status) != EnumResignStatus.RUNNING
     }
 
     /*
     * 检查IpaSignInfo信息，并补齐默认值，如果返回null则表示IpaSignInfo的值不合法
     * */
     fun check(info: IpaSignInfo): IpaSignInfo {
-        if (info.certId.isBlank()) info.certId = DEFAULT_CER_ID
         if (!info.wildcard) {
             if (info.mobileProvisionId.isNullOrBlank())
                 throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER, defaultMessage = "非通配符重签未指定主描述文件")
+            if (info.certId.isBlank())
+                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CHECK_SIGN_INFO_HEADER, defaultMessage = "非通配符重签未指定证书SHA")
         }
         return info
     }
@@ -150,7 +182,7 @@ class SignInfoService(
     fun encodeIpaSignInfo(ipaSignInfo: IpaSignInfo): String {
         try {
             val objectMapper = ObjectMapper()
-            val ipaSignInfoJson =objectMapper.writeValueAsString(ipaSignInfo)
+            val ipaSignInfoJson = objectMapper.writeValueAsString(ipaSignInfo)
             return Base64Util.encode(ipaSignInfoJson.toByteArray())
         } catch (e: Exception) {
             logger.error("编码签名信息失败：$e")

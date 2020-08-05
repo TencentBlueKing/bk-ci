@@ -30,9 +30,9 @@ dependencies {
     compile project(":ext:tencent:common:common-archive-tencent")
     compile project(":core:common:common-client")
     compile project(":ext:tencent:artifactory:api-artifactory-tencent")
-    compile 'io.jsonwebtoken:jjwt-api:0.10.5'
-    compile 'io.jsonwebtoken:jjwt-impl:0.10.5'
-    compile 'io.jsonwebtoken:jjwt-jackson:0.10.5'
+    compile "io.jsonwebtoken:jjwt-api:0.10.8"
+    runtime "io.jsonwebtoken:jjwt-impl:0.10.8",
+            "io.jsonwebtoken:jjwt-jackson:0.10.8"
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

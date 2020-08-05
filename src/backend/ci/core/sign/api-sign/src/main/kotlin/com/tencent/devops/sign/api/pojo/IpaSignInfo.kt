@@ -33,8 +33,8 @@ data class IpaSignInfo(
     var mobileProvisionId: String? = null,
     @ApiModelProperty("Universal Link的设置", required = false)
     var universalLinks: List<String>? = null,
-    @ApiModelProperty("应用安全组", required = false)
-    var applicationGroups: List<String>? = null,
+    @ApiModelProperty("钥匙串访问组", required = false)
+    var keychainAccessGroups: List<String>? = null,
     @ApiModelProperty("是否替换bundleId", required = false)
     var replaceBundleId: Boolean? = false,
     @ApiModelProperty("拓展应用名和对应的描述文件ID", required = false)

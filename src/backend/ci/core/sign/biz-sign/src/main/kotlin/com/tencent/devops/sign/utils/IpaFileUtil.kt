@@ -1,11 +1,12 @@
 package com.tencent.devops.sign.utils
 
-import com.tencent.devops.common.api.util.FileUtil
 import org.apache.commons.codec.binary.Hex
 import org.apache.commons.codec.digest.DigestUtils
-import java.io.*
+import java.io.File
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.security.MessageDigest
-
 
 object IpaFileUtil {
     private val bufferSize = 8 * 1024
@@ -14,8 +15,8 @@ object IpaFileUtil {
     * 复制流到目标文件，并计算md5
     * */
     fun copyInputStreamToFile(
-            inputStream: InputStream,
-            target: File
+        inputStream: InputStream,
+        target: File
     ): String? {
         var outputStream: OutputStream? = null
         try {

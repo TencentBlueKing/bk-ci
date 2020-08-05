@@ -26,33 +26,48 @@
 
 package com.tencent.devops.sign.resources
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.sign.api.service.ServiceIpaResource
+import com.tencent.devops.sign.service.AsyncSignService
 import com.tencent.devops.sign.service.DownloadService
+import com.tencent.devops.sign.service.SignInfoService
 import com.tencent.devops.sign.service.SignService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseBody
-import org.springframework.web.context.request.async.WebAsyncTask
 import java.io.InputStream
-import java.util.concurrent.Callable
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.GET
-
 
 @RestResource
 class ServiceIpaResourceImpl @Autowired constructor(
-        private val signService: SignService,
-        private val downloadService: DownloadService
+    private val signService: SignService,
+    private val syncSignService: AsyncSignService,
+    private val downloadService: DownloadService,
+    private val signInfoService: SignInfoService,
+    private val objectMapper: ObjectMapper
 ) : ServiceIpaResource {
+
     companion object {
         val logger = LoggerFactory.getLogger(ServiceIpaResourceImpl::class.java)
     }
 
-    override fun ipaSign(ipaSignInfoHeader: String, ipaInputStream: InputStream): Result<String> {
-        return Result(signService.asyncSignIpaAndArchive(ipaSignInfoHeader, ipaInputStream))
+    override fun ipaSign(
+        ipaSignInfoHeader: String,
+        ipaInputStream: InputStream
+    ): Result<String> {
+        val resignId = "s-${UUIDUtil.generate()}"
+        val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
+        var taskExecuteCount = 1
+        try {
+            val (ipaFile, taskExecuteCount) =
+                    signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream)
+            syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
+            return Result(resignId)
+        } catch (e: Exception) {
+            signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount)
+            throw e
+        }
     }
 
     override fun getSignResult(resignId: String): Result<Boolean> {
@@ -61,9 +76,9 @@ class ServiceIpaResourceImpl @Autowired constructor(
 
     override fun downloadUrl(resignId: String): Result<String> {
         return Result(downloadService.getDownloadUrl(
-                userId = "",
-                resignId = resignId,
-                downloadType = "service")
+            userId = "",
+            resignId = resignId,
+            downloadType = "service")
         )
     }
 }

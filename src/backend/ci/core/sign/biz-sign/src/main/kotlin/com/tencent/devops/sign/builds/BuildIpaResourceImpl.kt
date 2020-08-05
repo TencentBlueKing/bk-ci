@@ -24,39 +24,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.sign.builds
+package com.tencent.devops.sign.api.enums
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.sign.api.builds.BuildIpaResource
-import com.tencent.devops.sign.api.pojo.SignResult
-import com.tencent.devops.sign.service.*
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
+import com.fasterxml.jackson.annotation.JsonValue
 
-@RestResource
-class BuildIpaResourceImpl @Autowired constructor(
-    private val signService: SignService,
-    private val downloadService: DownloadService
-) : BuildIpaResource {
+enum class EnumResignStatus(private val status: String) {
+    RUNNING("RUNNING"),
+    FAIL("FAIL"),
+    SUCCESS("SUCCESS");
+
+    @JsonValue
+    fun getValue(): String {
+        return status
+    }
+
     companion object {
-        val logger = LoggerFactory.getLogger(BuildIpaResourceImpl::class.java)
-    }
-
-    override fun ipaSign(ipaSignInfoHeader: String, ipaInputStream: InputStream): Result<String> {
-        return Result(signService.asyncSignIpaAndArchive(ipaSignInfoHeader, ipaInputStream))
-    }
-
-    override fun getSignResult(resignId: String): Result<Boolean> {
-        return Result(signService.getSignResult(resignId))
-    }
-
-    override fun downloadUrl(resignId: String): Result<String> {
-        return Result(downloadService.getDownloadUrl(
-            userId = "",
-            resignId = resignId,
-            downloadType = "service")
-        )
+        fun parse(status: String?): EnumResignStatus {
+            values().forEach { type ->
+                if (type.getValue() == status) {
+                    return type
+                }
+            }
+            return RUNNING
+        }
     }
 }

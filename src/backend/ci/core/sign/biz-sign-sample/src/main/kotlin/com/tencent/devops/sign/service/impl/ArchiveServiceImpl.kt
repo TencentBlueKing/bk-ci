@@ -1,27 +1,27 @@
 package com.tencent.devops.sign.service.impl
 
-import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.ArchiveService
-import com.tencent.devops.sign.service.SignService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
-import okhttp3.*
+import okhttp3.Headers
+import okhttp3.MediaType
+import okhttp3.MultipartBody
+import okhttp3.Request
+import okhttp3.RequestBody
 
 @Service
 class ArchiveServiceImpl @Autowired constructor(
-        private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig
 ) : ArchiveService {
 
     companion object {
@@ -29,9 +29,9 @@ class ArchiveServiceImpl @Autowired constructor(
     }
 
     override fun archive(
-            signedIpaFile: File,
-            ipaSignInfo: IpaSignInfo,
-            properties: Map<String, String>?
+        signedIpaFile: File,
+        ipaSignInfo: IpaSignInfo,
+        properties: Map<String, String>?
     ): Boolean {
         logger.info("uploadFile, userId: ${ipaSignInfo.userId}, projectId: ${ipaSignInfo.projectId},archiveType: ${ipaSignInfo.archiveType}, archivePath: ${ipaSignInfo.archivePath}")
         val artifactoryType = when (ipaSignInfo.archiveType.toLowerCase()) {

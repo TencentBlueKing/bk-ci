@@ -17,17 +17,17 @@ import java.io.InputStream
 @Service
 class FileServiceImpl(
     private val rabbitTemplate: RabbitTemplate
-): FileService {
-    @Value("\${bkci.sign.tmpDir:/data/enterprise_sign_tmp/}")
-    val tmpDir: String = "/data/enterprise_sign_tmp/"
+) : FileService {
+    @Value("\${bkci.sign.tmpDir:/data/enterprise_sign_tmp}")
+    val tmpDir: String = "/data/enterprise_sign_tmp"
 
     companion object {
         val logger = LoggerFactory.getLogger(FileServiceImpl::class.java)
     }
 
     override fun copyToTargetFile(
-            ipaInputStream: InputStream,
-            ipaSignInfo: IpaSignInfo
+        ipaInputStream: InputStream,
+        ipaSignInfo: IpaSignInfo
     ): File {
         val ipaTmpDir = "$tmpDir/${ipaSignInfo.projectId}/${ipaSignInfo.pipelineId}/${ipaSignInfo.buildId}/"
         val ipaTmpDirFile = File(ipaTmpDir)

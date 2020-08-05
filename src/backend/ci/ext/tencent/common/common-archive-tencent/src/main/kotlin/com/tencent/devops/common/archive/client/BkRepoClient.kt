@@ -197,7 +197,7 @@ class BkRepoClient constructor(
         }
     }
 
-    fun uploadFile(userId: String, projectId: String, repoName: String, path: String, inputStream: InputStream, properties: Map<String,String>? = null, gatewayUrl: String? ) {
+    fun uploadFile(userId: String, projectId: String, repoName: String, path: String, inputStream: InputStream, properties: Map<String,String>? = null, gatewayUrl: String? = null ) {
         logger.info("uploadFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
         val gateway = gatewayUrl ?: getGatewaytUrl()
         val url = "$gateway/bkrepo/api/service/generic/$projectId/$repoName/$path"

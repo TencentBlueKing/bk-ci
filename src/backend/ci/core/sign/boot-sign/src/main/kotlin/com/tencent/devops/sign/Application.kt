@@ -28,8 +28,10 @@ package com.tencent.devops.sign
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.scheduling.annotation.EnableAsync
 
 @MicroService
+@EnableAsync
 class Application
 
 fun main(args: Array<String>) {

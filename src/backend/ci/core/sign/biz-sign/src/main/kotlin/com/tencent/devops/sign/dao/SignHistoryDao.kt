@@ -28,6 +28,7 @@ package com.tencent.devops.sign.dao
 
 import com.tencent.devops.model.sign.tables.TSignHistory
 import com.tencent.devops.model.sign.tables.records.TSignHistoryRecord
+import com.tencent.devops.sign.api.enums.EnumResignStatus
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -50,7 +51,7 @@ class SignHistoryDao {
         with(TSignHistory.T_SIGN_HISTORY) {
             var executeCount = 1
             val record = dslContext.selectFrom(this)
-                .where(TASK_ID.eq(taskId))
+                .where(TASK_ID.eq(taskId)).and(BUILD_ID.eq(buildId))
                 .orderBy(TASK_EXECUTE_COUNT.desc())
                 .fetch()
             if (record.isNotEmpty && record.first().taskExecuteCount != null) {
@@ -68,6 +69,7 @@ class SignHistoryDao {
                 ARCHIVE_TYPE,
                 ARCHIVE_PATH,
                 FILE_MD5,
+                STATUS,
                 RESULT_FILE_MD5,
                 UPLOAD_FINISH_TIME,
                 UNZIP_FINISH_TIME,
@@ -85,6 +87,7 @@ class SignHistoryDao {
                 archiveType,
                 archivePath,
                 md5,
+                EnumResignStatus.RUNNING.getValue(),
                 null,
                 null,
                 null,
@@ -157,6 +160,32 @@ class SignHistoryDao {
                 .set(ARCHIVE_FINISH_TIME, LocalDateTime.now())
                 .where(RESIGN_ID.eq(resignId))
                 .execute()
+        }
+    }
+
+    fun successResign(
+        dslContext: DSLContext,
+        resignId: String
+    ) {
+        with(TSignHistory.T_SIGN_HISTORY) {
+            dslContext.update(this)
+                    .set(END_TIME, LocalDateTime.now())
+                    .set(STATUS, EnumResignStatus.SUCCESS.getValue())
+                    .where(RESIGN_ID.eq(resignId))
+                    .execute()
+        }
+    }
+
+    fun failResign(
+        dslContext: DSLContext,
+        resignId: String
+    ) {
+        with(TSignHistory.T_SIGN_HISTORY) {
+            dslContext.update(this)
+                    .set(END_TIME, LocalDateTime.now())
+                    .set(STATUS, EnumResignStatus.FAIL.getValue())
+                    .where(RESIGN_ID.eq(resignId))
+                    .execute()
         }
     }
 

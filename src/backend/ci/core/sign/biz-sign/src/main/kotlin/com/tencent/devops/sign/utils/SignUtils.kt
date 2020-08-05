@@ -10,7 +10,6 @@ import java.io.File
 import java.lang.Exception
 import java.lang.StringBuilder
 
-
 object SignUtils {
 
     private val logger = LoggerFactory.getLogger(SignUtils::class.java)
@@ -19,9 +18,6 @@ object SignUtils {
     const val MAIN_APP_FILENAME = "MAIN_APP"
     private const val APP_MOBILE_PROVISION_FILENAME = "embedded.mobileprovision"
     private const val APP_INFO_PLIST_FILENAME = "Info.plist"
-    const val EXPORT_CODESIGN_ALLOCATE="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/codesign_allocate"
-    const val EXPORT_PATH="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin:/Applications/xcode6.0.1_sdk8.0/Contents/Developer/usr/bin:/Library/Frameworks/Python.framework/Versions/2.7/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/X11/bin"
-    const val DEFAULT_CER_ID = "6E2D8E7C0967FFAD54C8113DA8557A84223AA5B2"
 
     /**
      *  APP目录递归签名-通配符
@@ -83,7 +79,7 @@ object SignUtils {
         certId: String,
         infos: Map<String, MobileProvisionInfo>,
         appName: String,
-        applicationGroups: List<String>? = null,
+        keychainAccessGroups: List<String>? = null,
         universalLinks: List<String>? = null
     ): Boolean {
         val info = infos[appName]
@@ -95,7 +91,7 @@ object SignUtils {
             if (appDir.isDirectory && appDir.extension.contains("app")) {
                 // 先将entitlements文件中补充所有ul和group
                 if (universalLinks != null) addUniversalLink(universalLinks, info.entitlementFile)
-                if (applicationGroups != null) addApplicationGroups(applicationGroups, info.entitlementFile)
+                if (keychainAccessGroups != null) addApplicationGroups(keychainAccessGroups, info.entitlementFile)
 
                 // 用主描述文件对外层app进行重签
                 overwriteInfo(appDir, info, true)
@@ -106,7 +102,7 @@ object SignUtils {
                     needResginDir.listFiles().forEach { subFile ->
                         // 如果是个拓展则递归进入进行重签
                         if (subFile.isDirectory && subFile.extension.contains("app")) {
-                            if (!resignApp(subFile, certId, infos, subFile.nameWithoutExtension, applicationGroups)) {
+                            if (!resignApp(subFile, certId, infos, subFile.nameWithoutExtension, keychainAccessGroups)) {
                                 return false
                             }
                         } else {

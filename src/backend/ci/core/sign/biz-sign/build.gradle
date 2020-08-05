@@ -35,7 +35,6 @@ dependencies {
     compile project(":core:sign:model-sign")
     compile project(":core:artifactory:api-artifactory")
     compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:common:common-auth:common-auth-mock")
     compile "mysql:mysql-connector-java"
     compile "org.json:json"
     compile "com.googlecode.plist:dd-plist:1.23"

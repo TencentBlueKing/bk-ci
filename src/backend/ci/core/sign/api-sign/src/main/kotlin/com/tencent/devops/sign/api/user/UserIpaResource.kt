@@ -29,12 +29,17 @@ package com.tencent.devops.sign.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import java.io.InputStream
-import javax.ws.rs.*
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_IPA"], description = "用户接口-IPA包")
@@ -82,12 +87,4 @@ interface UserIpaResource {
         @PathParam("resignId")
         resignId: String
     ): Result<String>
-
-    @ApiOperation("test")
-    @GET
-    @Path("/test")
-    fun test(
-        @ApiParam("签名信息", required = true)
-        ipaSignInfo: IpaSignInfo
-    )
 }

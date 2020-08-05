@@ -30,14 +30,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.sign.api.builds.BuildIpaResource
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
-import com.tencent.devops.sign.api.user.UserIpaResource
 import com.tencent.devops.sign.service.AsyncSignService
 import com.tencent.devops.sign.service.DownloadService
 import com.tencent.devops.sign.service.SignInfoService
@@ -47,31 +43,35 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
 @RestResource
-class UserIpaResourceImpl @Autowired constructor(
+class BuildIpaResourceImpl @Autowired constructor(
     private val signService: SignService,
     private val syncSignService: AsyncSignService,
     private val downloadService: DownloadService,
     private val signInfoService: SignInfoService,
-    private val objectMapper: ObjectMapper,
-    private val authPermissionApi: AuthPermissionApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
-) : UserIpaResource {
+    private val objectMapper: ObjectMapper
+
+) : BuildIpaResource {
+    companion object {
+        val logger = LoggerFactory.getLogger(BuildIpaResourceImpl::class.java)
+    }
 
     override fun ipaSign(
-        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
         ipaSignInfoHeader: String,
         ipaInputStream: InputStream
-    ): Result<String?> {
+    ): Result<String> {
         val resignId = "s-${UUIDUtil.generate()}"
         val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
-        if (!checkParams(ipaSignInfo, userId)) {
-            logger.warn("用户($userId)无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名.")
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_NOT_AUTH_UPLOAD, defaultMessage = "用户($userId)无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名。")
+        if (!checkParams(ipaSignInfo, projectId, pipelineId, buildId)) {
+            logger.warn("构建机无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名.")
+            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_NOT_AUTH_UPLOAD, defaultMessage = "构建机无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名.")
         }
         var taskExecuteCount = 1
         try {
             val (ipaFile, taskExecuteCount) =
-                    signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream)
+                signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream)
             syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
             return Result(resignId)
         } catch (e: Exception) {
@@ -80,28 +80,34 @@ class UserIpaResourceImpl @Autowired constructor(
         }
     }
 
-    override fun getSignResult(userId: String, resignId: String): Result<Boolean> {
+    override fun getSignResult(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        resignId: String
+    ): Result<Boolean> {
         return Result(signService.getSignResult(resignId))
     }
 
-    override fun downloadUrl(userId: String, resignId: String): Result<String> {
+    override fun downloadUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        resignId: String
+    ): Result<String> {
         return Result(downloadService.getDownloadUrl(
-                userId = userId,
-                resignId = resignId,
-                downloadType = "user")
+            userId = "",
+            resignId = resignId,
+            downloadType = "build")
         )
     }
 
     private fun checkParams(
         ipaSignInfo: IpaSignInfo,
-        userId: String
+        projectId: String,
+        pipelineId: String,
+        buildId: String
     ): Boolean {
-        val projectId = ipaSignInfo.projectId
-        val pipelineId = ipaSignInfo.pipelineId ?: ""
-        return authPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, AuthPermission.EXECUTE)
-    }
-
-    companion object {
-        val logger = LoggerFactory.getLogger(UserIpaResourceImpl::class.java)
+        return ipaSignInfo.projectId == projectId && ipaSignInfo.pipelineId == pipelineId && ipaSignInfo.buildId == buildId
     }
 }

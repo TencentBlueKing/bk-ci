@@ -60,4 +60,5 @@ object SignMessageCode {
     const val ERROR_INFO_PLIST_NOT_EXIST = "2122013" // 寻找Info.plist失败
     const val ERROR_WILDCARD_MP_NOT_EXIST = "2122014" // 通配符描述文件不存在
     const val ERROR_INSERT_KEYCHAIN_GROUPS = "2122015" // entitlement插入keychain失败
+    const val ERROR_NOT_AUTH_UPLOAD = "2122016" // 无发起iOS重签名权限。
 }

@@ -6,21 +6,16 @@ import com.dd.plist.PropertyListParser
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.FileUtil
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.script.CommandLineUtils
-import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaInfoPlist
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
-import com.tencent.devops.sign.api.pojo.SignResult
-import com.tencent.devops.sign.resources.UserIpaResourceImpl
 import com.tencent.devops.sign.service.ArchiveService
 import com.tencent.devops.sign.service.FileService
 import com.tencent.devops.sign.service.SignInfoService
 import com.tencent.devops.sign.service.SignService
 import com.tencent.devops.sign.service.MobileProvisionService
-import com.tencent.devops.sign.utils.IpaFileUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -29,56 +24,44 @@ import java.io.File
 import java.io.InputStream
 import com.tencent.devops.sign.utils.SignUtils
 import com.tencent.devops.sign.utils.SignUtils.MAIN_APP_FILENAME
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.scheduling.annotation.Async
 import java.lang.RuntimeException
-import java.util.concurrent.Executors
 import java.util.regex.Pattern
 
 @Service
 class SignServiceImpl @Autowired constructor(
-        private val fileService: FileService,
-        private val signInfoService: SignInfoService,
-        private val archiveService: ArchiveService,
-        private val objectMapper: ObjectMapper,
-        private val mobileProvisionService: MobileProvisionService
+    private val fileService: FileService,
+    private val signInfoService: SignInfoService,
+    private val archiveService: ArchiveService,
+    private val objectMapper: ObjectMapper,
+    private val mobileProvisionService: MobileProvisionService
 ) : SignService {
 
-    @Value("\${bkci.sign.tmpDir:/data/enterprise_sign_tmp/}")
-    private val tmpDir = "/data/enterprise_sign_tmp/"
+    @Value("\${bkci.sign.tmpDir:/data/enterprise_sign_tmp}")
+    private val tmpDir = "/data/enterprise_sign_tmp"
 
     private lateinit var ipaFile: File
     private lateinit var ipaUnzipDir: File
     private lateinit var mobileProvisionDir: File
 
-//    @Async("asyncSignExecutor")
-    override fun asyncSignIpaAndArchive(
-        ipaSignInfoHeader: String,
-        ipaInputStream: InputStream
-    ): String {
-        val resignId = "s-${UUIDUtil.generate()}"
-        try {
-            signIpaAndArchive(resignId, ipaSignInfoHeader, ipaInputStream)
-        } catch (e: Exception) {
-            logger.error("asyncSignIpaAndArchive error")
-        }
-        return resignId
-    }
-
-    @Async("asyncSignExecutor")
-    override fun signIpaAndArchive(
+    override fun uploadIpaAndDecodeInfo(
         resignId: String,
+        ipaSignInfo: IpaSignInfo,
         ipaSignInfoHeader: String,
         ipaInputStream: InputStream
-    ) {
-        var ipaSignInfo = signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper)
-
+    ): Pair<File, Int> {
         val taskExecuteCount = signInfoService.save(resignId, ipaSignInfoHeader, ipaSignInfo)
-        ipaSignInfo = signInfoService.check(ipaSignInfo)
-
         // 复制文件到临时目录
         ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo)
         signInfoService.finishUpload(resignId, ipaFile, ipaSignInfo, taskExecuteCount)
+        return Pair(ipaFile, taskExecuteCount)
+    }
+
+    override fun signIpaAndArchive(
+        resignId: String,
+        ipaSignInfo: IpaSignInfo,
+        ipaFile: File,
+        taskExecuteCount: Int
+    ) {
 
         // ipa解压后的目录
         ipaUnzipDir = File("${ipaFile.canonicalPath}.unzipDir")
@@ -111,7 +94,7 @@ class SignServiceImpl @Autowired constructor(
         signInfoService.finishResign(resignId, ipaSignInfo, taskExecuteCount)
 
         val fileName = ipaSignInfo.fileName
-        val uploadFileName = fileName.substring(0,fileName.lastIndexOf(".")) + "_enterprise_sign.ipa"
+        val uploadFileName = fileName.substring(0, fileName.lastIndexOf(".")) + "_enterprise_sign.ipa"
         // 压缩目录
         val signedIpaFile = SignUtils.zipIpaFile(ipaUnzipDir, ipaUnzipDir.parent + File.separator + uploadFileName)
         if (signedIpaFile == null) {
@@ -130,6 +113,9 @@ class SignServiceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA, defaultMessage = "归档IPA包失败")
         }
         signInfoService.finishArchive(resignId, ipaSignInfo, taskExecuteCount)
+
+        // 成功结束签名逻辑
+        signInfoService.successResign(resignId, ipaSignInfo, taskExecuteCount)
     }
 
     override fun getSignResult(resignId: String): Boolean {
@@ -159,7 +145,7 @@ class SignServiceImpl @Autowired constructor(
 
     private fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): MobileProvisionInfo? {
         val wildcardMobileProvision = mobileProvisionService.downloadWildcardMobileProvision(mobileProvisionDir, ipaSignInfo)
-        return if(wildcardMobileProvision == null)  null else  parseMobileProvision(wildcardMobileProvision)
+        return if (wildcardMobileProvision == null) null else parseMobileProvision(wildcardMobileProvision)
     }
 
     /*
@@ -238,7 +224,7 @@ class SignServiceImpl @Autowired constructor(
                 infos = mobileProvisionInfoList,
                 appName = MAIN_APP_FILENAME,
                 universalLinks = ipaSignInfo.universalLinks,
-                applicationGroups = ipaSignInfo.applicationGroups
+                keychainAccessGroups = ipaSignInfo.keychainAccessGroups
         )
     }
 
@@ -252,7 +238,7 @@ class SignServiceImpl @Autowired constructor(
         ipaSignInfo: IpaSignInfo,
         wildcardInfo: MobileProvisionInfo?
     ): Boolean {
-        if(wildcardInfo == null) {
+        if (wildcardInfo == null) {
             throw ErrorCodeException(
                     errorCode = SignMessageCode.ERROR_WILDCARD_MP_NOT_EXIST,
                     defaultMessage = "通配符描述文件不存在"
@@ -279,7 +265,7 @@ class SignServiceImpl @Autowired constructor(
     * 寻找Info.plist的信息
     * */
     private fun findInfoPlist(
-            unzipDir: File
+        unzipDir: File
     ): File {
         try {
             val payloadFile = File(unzipDir, "payload")
@@ -304,12 +290,11 @@ class SignServiceImpl @Autowired constructor(
         }
     }
 
-
     /*
     * 解析ipa包Info.plist的信息
     * */
     private fun parsInfoPlist(
-            infoPlist: File
+        infoPlist: File
     ): IpaInfoPlist {
         try {
             val rootDict = PropertyListParser.parse(infoPlist) as NSDictionary
@@ -344,8 +329,8 @@ class SignServiceImpl @Autowired constructor(
     * 解析ipa包Info.plist的信息
     * */
     private fun getProperties(
-            ipaSignInfo: IpaSignInfo,
-            ipaInfoPlist: IpaInfoPlist
+        ipaSignInfo: IpaSignInfo,
+        ipaInfoPlist: IpaInfoPlist
     ): Map<String, String> {
         val properties = mutableMapOf<String, String>()
         properties["bundleIdentifier"] = ipaInfoPlist.bundleIdentifier

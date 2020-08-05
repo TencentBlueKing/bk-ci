@@ -7,8 +7,8 @@ import java.io.File
 interface ArchiveService {
 
     fun archive(
-            signedIpaFile: File,
-            ipaSignInfo: IpaSignInfo,
-            properties: Map<String, String>? = null
+        signedIpaFile: File,
+        ipaSignInfo: IpaSignInfo,
+        properties: Map<String, String>? = null
     ): Boolean
 }

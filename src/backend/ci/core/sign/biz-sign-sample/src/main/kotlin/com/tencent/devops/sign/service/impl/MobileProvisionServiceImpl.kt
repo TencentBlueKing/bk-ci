@@ -6,7 +6,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
-import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import com.tencent.devops.sign.service.MobileProvisionService
 import com.tencent.devops.ticket.api.ServiceCertResource
 import org.slf4j.LoggerFactory
@@ -16,8 +15,8 @@ import java.io.File
 import java.util.Base64
 
 @Service
-class MobileProvisionServiceImpl  @Autowired constructor(
-        private val client: Client
+class MobileProvisionServiceImpl @Autowired constructor(
+    private val client: Client
 ) : MobileProvisionService {
 
     companion object {
@@ -40,11 +39,9 @@ class MobileProvisionServiceImpl  @Autowired constructor(
     }
 
     override fun handleEntitlement(entitlementFile: File) {
-
     }
 
     override fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): File? {
         return null
     }
-
 }
