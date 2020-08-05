@@ -107,20 +107,19 @@ class ArtifactoryDownloadService @Autowired constructor(
         }
 
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
-        if (artifactoryType == ArtifactoryType.CUSTOM_DIR) {
-            pipelineService.validatePermission(userId, projectId)
-        } else {
-            val properties = jFrogPropertiesApi.getProperties(realPath)
-            if (!properties.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
-                logger.warn("[$userId|$projectId|$artifactoryType|$argPath] The properties($properties) doesn't contain '$ARCHIVE_PROPS_PIPELINE_ID'")
-                throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
+        when (artifactoryType) {
+            ArtifactoryType.CUSTOM_DIR -> {
+                pipelineService.validatePermission(userId, projectId, null, "用户（$userId) 没有项目（$projectId）下载权限)")
             }
-            val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
-            if (channelCode == null || channelCode != ChannelCode.GIT) {
+            ArtifactoryType.PIPELINE -> {
+                val properties = jFrogPropertiesApi.getProperties(realPath)
+                if (!properties.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
+                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
+                }
+                val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
                 pipelineService.validatePermission(userId, projectId, pipelineId, "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限")
             }
         }
-
         val url = RegionUtil.replaceRegionServer(jFrogApiService.downloadUrl(realPath), RegionUtil.IDC)
         return Url(url, url)
     }
@@ -143,7 +142,14 @@ class ArtifactoryDownloadService @Autowired constructor(
         }
         val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
         val buildId = properties[ARCHIVE_PROPS_BUILD_ID]!!.first()
-        pipelineService.validatePermission(userId, projectId, pipelineId, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
+        when (artifactoryType) {
+            ArtifactoryType.CUSTOM_DIR -> {
+                pipelineService.validatePermission(userId, projectId, null, "用户（$userId) 没有项目（$projectId）下载权限)")
+            }
+            ArtifactoryType.PIPELINE -> {
+                pipelineService.validatePermission(userId, projectId, pipelineId, "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限")
+            }
+        }
 
         val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
         val shortUrl = shortUrlApi.getShortUrl(url, 300)
@@ -161,7 +167,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         when (artifactoryType) {
             ArtifactoryType.PIPELINE -> {
                 val pipelineId = pipelineService.getPipelineId(path)
-                pipelineService.validatePermission(userId, projectId, pipelineId, "用户($userId)在工程($projectId)下没有流水线${pipelineId}分享权限")
+                pipelineService.validatePermission(userId, projectId, pipelineId, "用户($userId)在项目($projectId)下没有流水线${pipelineId}分享权限")
             }
             ArtifactoryType.CUSTOM_DIR -> {
                 pipelineService.validatePermission(userId, projectId)

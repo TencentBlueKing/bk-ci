@@ -62,12 +62,19 @@ class ArtifactoryAppService @Autowired constructor(
         }
 
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
-        val properties = jFrogPropertiesApi.getProperties(realPath)
-        if (!properties.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
-            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
+        when (artifactoryType) {
+            ArtifactoryType.CUSTOM_DIR -> {
+                pipelineService.validatePermission(userId, projectId, null, "用户（$userId) 没有项目（$projectId）下载权限)")
+            }
+            ArtifactoryType.PIPELINE -> {
+                val properties = jFrogPropertiesApi.getProperties(realPath)
+                if (!properties.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
+                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
+                }
+                val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
+                pipelineService.validatePermission(userId, projectId, pipelineId, "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限")
+            }
         }
-        val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
-        pipelineService.validatePermission(userId, projectId, pipelineId, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
 
         val url = StringUtil.chineseUrlEncode(jFrogApiService.externalDownloadUrl(realPath, userId, ttl, directed))
         return Url(url)
@@ -86,12 +93,19 @@ class ArtifactoryAppService @Autowired constructor(
         }
 
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
-        val properties = jFrogPropertiesApi.getProperties(realPath)
-        if (!properties.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
-            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
+        when (artifactoryType) {
+            ArtifactoryType.CUSTOM_DIR -> {
+                pipelineService.validatePermission(userId, projectId, null, "用户（$userId) 没有项目（$projectId）下载权限)")
+            }
+            ArtifactoryType.PIPELINE -> {
+                val properties = jFrogPropertiesApi.getProperties(realPath)
+                if (!properties.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
+                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
+                }
+                val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
+                pipelineService.validatePermission(userId, projectId, pipelineId, "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限")
+            }
         }
-        val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
-        pipelineService.validatePermission(userId, projectId, pipelineId, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
         val url = StringUtil.chineseUrlEncode("${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?path=$argPath")
         return Url(url)
     }

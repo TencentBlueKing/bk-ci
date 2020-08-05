@@ -46,9 +46,9 @@ import javax.ws.rs.BadRequestException
 
 @Service
 class ArtifactoryPipelineDirService @Autowired constructor(
+    private val pipelineService: PipelineService,
     private val jFrogPropertiesApi: JFrogPropertiesApi,
-    private val jFrogService: JFrogService,
-    private val pipelineService: PipelineService
+    private val jFrogService: JFrogService
 ) : PipelineDirService {
     override fun list(userId: String, projectId: String, path: String): List<FileInfo> {
         logger.info("list, userId: $userId, projectId: $projectId, path: $path")

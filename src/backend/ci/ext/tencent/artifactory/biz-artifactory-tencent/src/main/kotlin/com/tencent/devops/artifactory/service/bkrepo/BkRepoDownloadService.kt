@@ -151,14 +151,8 @@ class BkRepoDownloadService @Autowired constructor(
             }
             ArtifactoryType.PIPELINE -> {
                 val pipelineId = pipelineService.getPipelineId(path)
-                pipelineService.validatePermission(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    message = "用户($userId)在工程($projectId)下没有流水线${pipelineId}分享权限"
-                )
+                pipelineService.validatePermission(userId, projectId, pipelineId, "用户($userId)在项目($projectId)下没有流水线${pipelineId}分享权限")
             }
-
         }
         val downloadUrl = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, path, ttl)
         val fileDetail = bkRepoClient.getFileDetail(

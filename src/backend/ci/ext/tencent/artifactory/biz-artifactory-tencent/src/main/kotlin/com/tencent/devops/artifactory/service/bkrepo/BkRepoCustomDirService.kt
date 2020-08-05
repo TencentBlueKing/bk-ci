@@ -31,6 +31,7 @@ import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.PathList
 import com.tencent.devops.artifactory.service.CustomDirService
+import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
@@ -46,10 +47,12 @@ import javax.ws.rs.NotFoundException
 
 @Service
 class BkRepoCustomDirService @Autowired constructor(
+    private val pipelineService: PipelineService,
     private val bkRepoClient: BkRepoClient
 ) : CustomDirService {
     override fun list(userId: String, projectId: String, argPath: String): List<FileInfo> {
         logger.info("list, userId: $userId, projectId: $projectId, argPath: $argPath")
+        pipelineService.validatePermission(userId, projectId)
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val fileList = bkRepoClient.listFile(
             userId,
@@ -66,6 +69,7 @@ class BkRepoCustomDirService @Autowired constructor(
 
     override fun show(userId: String, projectId: String, argPath: String): FileDetail {
         logger.info("show, userId: $userId, projectId: $projectId, argPath: $argPath")
+        pipelineService.validatePermission(userId, projectId)
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val fileDetail = bkRepoClient.getFileDetail(
             userId,
@@ -78,17 +82,20 @@ class BkRepoCustomDirService @Autowired constructor(
 
     override fun deploy(userId: String, projectId: String, argPath: String, inputStream: InputStream, disposition: FormDataContentDisposition) {
         logger.info("deploy file, userId: $userId, projectId: $projectId, path: $argPath")
+        pipelineService.validatePermission(userId, projectId)
         bkRepoClient.uploadFile(userId, projectId, RepoUtils.CUSTOM_REPO, argPath, inputStream)
     }
 
     override fun mkdir(userId: String, projectId: String, argPath: String) {
         logger.info("mkdir, userId: $userId, projectId: $projectId, argPath: $argPath")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
+        pipelineService.validatePermission(userId, projectId)
         bkRepoClient.mkdir(userId, projectId, RepoUtils.CUSTOM_REPO, normalizedPath)
     }
 
     override fun rename(userId: String, projectId: String, fromPath: String, toPath: String) {
         logger.info("rename, userId: $userId, projectId: $projectId, srcPath: $fromPath, toPath: $toPath")
+        pipelineService.validatePermission(userId, projectId)
         val normalizedFromPath = PathUtils.checkAndNormalizeAbsPath(fromPath)
         val normalizedToPath = PathUtils.checkAndNormalizeAbsPath(toPath)
         bkRepoClient.rename(userId, projectId, RepoUtils.CUSTOM_REPO, normalizedFromPath, normalizedToPath)
@@ -96,6 +103,7 @@ class BkRepoCustomDirService @Autowired constructor(
 
     override fun copy(userId: String, projectId: String, combinationPath: CombinationPath) {
         logger.info("copy, userId: $userId, projectId: $projectId, combinationPath: $combinationPath")
+        pipelineService.validatePermission(userId, projectId)
         val normalizeDestPath = PathUtils.checkAndNormalizeAbsPath(combinationPath.destPath)
 
         if (combinationPath.srcPaths.size > 1) {
@@ -126,13 +134,12 @@ class BkRepoCustomDirService @Autowired constructor(
 
     override fun move(userId: String, projectId: String, combinationPath: CombinationPath) {
         logger.info("move, projectId: $projectId, combinationPath: $combinationPath")
+        pipelineService.validatePermission(userId, projectId)
         val normalizedDestPath = PathUtils.checkAndNormalizeAbsPath(combinationPath.destPath)
-
         combinationPath.srcPaths.map { srcPath ->
             val normalizedSrcPath = JFrogUtil.normalize(srcPath)
 
-            if (normalizedSrcPath == normalizedDestPath ||
-                JFrogUtil.getParentFolder(normalizedSrcPath) == normalizedDestPath) {
+            if (normalizedSrcPath == normalizedDestPath || JFrogUtil.getParentFolder(normalizedSrcPath) == normalizedDestPath) {
                 logger.error("Cannot move in same path ($normalizedSrcPath, $normalizedDestPath)")
                 throw BadRequestException("不能移动到当前目录")
             }
@@ -154,6 +161,7 @@ class BkRepoCustomDirService @Autowired constructor(
 
     override fun delete(userId: String, projectId: String, pathList: PathList) {
         logger.info("delete, projectId: $projectId, pathList: $pathList")
+        pipelineService.validatePermission(userId, projectId)
         pathList.paths.map { path ->
             val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
             bkRepoClient.delete(
