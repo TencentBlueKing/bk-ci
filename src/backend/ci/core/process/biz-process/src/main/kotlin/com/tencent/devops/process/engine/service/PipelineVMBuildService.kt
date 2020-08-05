@@ -561,12 +561,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             errorMsg = result.message
         )
 
-        // 发送度量数据
-        sendElementData(
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            result = result
-        )
         logger.info("Complete the task(${result.taskId}) of build($buildId) and seqId($vmSeqId)")
         pipelineRuntimeService.completeClaimBuildTask(
             buildId = buildId,
@@ -592,12 +586,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         // 发送度量数据
         sendElementData(
             buildId = buildId,
-            taskId = result.taskId,
-            success = result.success,
-            type = result.type,
-            errorType = result.errorType,
-            errorCode = result.errorCode,
-            errorMsg = result.message
+            vmSeqId = vmSeqId,
+            result = result
         )
 
         LogUtils.stopLog(
