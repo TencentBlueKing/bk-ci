@@ -31,111 +31,121 @@ import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.common.auth.pojo.AncestorsApiReq
 import com.tencent.devops.common.auth.pojo.IamApiReq
 import com.tencent.devops.common.auth.service.IamEsbService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class BluekingV3ResourceApi @Autowired constructor(
-		val grantServiceImpl: GrantServiceImpl,
-		val iamConfiguration: IamConfiguration,
-		val iamEsbService: IamEsbService
+    val grantServiceImpl: GrantServiceImpl,
+    val iamConfiguration: IamConfiguration,
+    val iamEsbService: IamEsbService
 ) : AuthResourceApi {
 
-	override fun createGrantResource(
-			user: String,
-			serviceCode: AuthServiceCode,
-			resourceType: AuthResourceType,
-			projectCode: String,
-			resourceCode: String,
-			resourceName: String,
-			authGroupList: List<BkAuthGroup>?
-	) {
-	}
+    override fun createGrantResource(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String,
+        authGroupList: List<BkAuthGroup>?
+    ) {
+    }
 
-	override fun batchCreateResource(
-			principalId: String,
-			scopeType: String,
-			scopeId: String,
-			resourceType: AuthResourceType,
-			resourceList: List<ResourceRegisterInfo>,
-			systemId: AuthServiceCode
-	): Boolean {
-		return true
-	}
+    override fun batchCreateResource(
+        principalId: String,
+        scopeType: String,
+        scopeId: String,
+        resourceType: AuthResourceType,
+        resourceList: List<ResourceRegisterInfo>,
+        systemId: AuthServiceCode
+    ): Boolean {
+        return true
+    }
 
-	override fun deleteResource(
-			scopeType: String,
-			serviceCode: AuthServiceCode,
-			resourceType: AuthResourceType,
-			projectCode: String,
-			resourceCode: String
-	) {
-	}
+    override fun deleteResource(
+        scopeType: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String
+    ) {
+    }
 
-	override fun modifyResource(
-			scopeType: String,
-			serviceCode: AuthServiceCode,
-			resourceType: AuthResourceType,
-			projectCode: String,
-			resourceCode: String,
-			resourceName: String
-	) {
-	}
+    override fun modifyResource(
+        scopeType: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
+    ) {
+    }
 
-	override fun createResource(
-			scopeType: String,
-			user: String,
-			serviceCode: AuthServiceCode,
-			resourceType: AuthResourceType,
-			projectCode: String,
-			resourceCode: String,
-			resourceName: String
-	) {
-	}
+    override fun createResource(
+        scopeType: String,
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
+    ) {
+    }
 
-	override fun createResource(
-			user: String,
-			serviceCode: AuthServiceCode,
-			resourceType: AuthResourceType,
-			projectCode: String,
-			resourceCode: String,
-			resourceName: String
-	) {
-		val iamApiReq = IamApiReq(
-				creator = user,
-				name = resourceName, id = resourceCode, type = resourceType.value, system = iamConfiguration.systemId, ancestors = null
-		)
-		iamEsbService.createRelationResource(iamApiReq)
-	}
+    override fun createResource(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
+    ) {
+        logger.info("v3 createResource projectCode[$projectCode] resourceCode[$resourceCode] resourceName[$resourceName] resourceType[${resourceType.value}]")
+        val ancestors = mutableListOf<AncestorsApiReq>()
+        if(resourceType != AuthResourceType.PROJECT) {
+            ancestors.add(AncestorsApiReq(
+                    system = iamConfiguration.systemId,
+                    id = projectCode,
+                    type = AuthResourceType.PROJECT.value
+            ))
+        }
+        val iamApiReq = IamApiReq(
+                creator = user,
+                name = resourceName, id = resourceCode, type = resourceType.value, system = iamConfiguration.systemId, ancestors = ancestors, bk_app_code = "", bk_app_secret = "", bk_username = user
+        )
+        iamEsbService.createRelationResource(iamApiReq)
+    }
 
-	override fun modifyResource(
-			serviceCode: AuthServiceCode,
-			resourceType: AuthResourceType,
-			projectCode: String,
-			resourceCode: String,
-			resourceName: String
-	) {
-	}
+    override fun modifyResource(
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String,
+        resourceName: String
+    ) {
+    }
 
-	override fun deleteResource(
-			serviceCode: AuthServiceCode,
-			resourceType: AuthResourceType,
-			projectCode: String,
-			resourceCode: String
-	) {
-	}
+    override fun deleteResource(
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String
+    ) {
+    }
 
-	override fun batchCreateResource(
-			serviceCode: AuthServiceCode,
-			resourceType: AuthResourceType,
-			projectCode: String,
-			user: String,
-			resourceList: List<ResourceRegisterInfo>
-	) {
-	}
+    override fun batchCreateResource(
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        user: String,
+        resourceList: List<ResourceRegisterInfo>
+    ) {
+    }
 
-	companion object {
-		val logger = LoggerFactory.getLogger(this::class.java)
-	}
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
+    }
 }

@@ -10,65 +10,62 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
-@Service
-class IamEsbService @Autowired constructor(
-		val objectMapper: ObjectMapper
-) {
+class IamEsbService () {
 
-	@Value("\${esb.code:#{null}}")
-	val appCode: String? = null
-	@Value("\${esb.secret:#{null}}")
-	val appSecret: String? = null
+    @Value("\${esb.code:#{null}}")
+    val appCode: String? = null
+    @Value("\${esb.secret:#{null}}")
+    val appSecret: String? = null
+    @Value("\${esb.iam.url:#{null}}")
+    val iamHost: String? = null
 
-	@Value("\${esb.iam.url:#{null}}")
-	val iamHost: String? = null
+    fun createRelationResource(iamApiReq: IamApiReq): Boolean {
+        var url = "api/c/compapi/v2/iam/authorization/resource_creator_action/?bk_app_code=$appCode&bk_app_secret=$appSecret"
+        url = getAuthRequestUrl(url)
+        iamApiReq.bk_app_code = appCode!!
+        iamApiReq.bk_app_secret = appSecret!!
+        val content = objectMapper.writeValueAsString(iamApiReq)
+        logger.info("v3 createRelationResource url[$url]")
+        logger.info("v3 createRelationResource body[$content]")
+        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val requestBody = RequestBody.create(mediaType, content)
+        val request = Request.Builder().url(url)
+                .post(requestBody)
+                .build()
+        OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                // 请求错误
+                throw RemoteServiceException("bkiam v3 request failed, response: ($it)")
+            }
+            val responseStr = it.body()!!.string()
+            logger.info("v3 createRelationResource responseStr[$responseStr]")
+            val iamApiRes = objectMapper.readValue<Map<String, Any>>(responseStr)
+            if (iamApiRes["code"] != 0 || iamApiRes["result"] == false) {
+                // 请求错误
+                throw RemoteServiceException("bkiam v3 request failed, response: (${iamApiRes["message"]}, request_id[${iamApiRes["request_id"]}])")
+            }
 
-	fun createRelationResource(iamApiReq: IamApiReq) : Boolean {
-		var url = "api/c/compapi/v2/iam/authorization/resource_creator_action/?bk_app_code=$appCode&bk_app_secret=$appSecret"
-		url = getAuthRequestUrl(url)
-		val content = objectMapper.writeValueAsString(iamApiReq)
-		logger.info("v3 createRelationResource url[$url]")
-		logger.info("v3 createRelationResource body[$content]")
-		val mediaType = MediaType.parse("application/json; charset=utf-8")
-		val requestBody = RequestBody.create(mediaType, content)
-		val request = Request.Builder().url(url)
-				.post(requestBody)
-				.build()
-		OkhttpUtils.doHttp(request).use {
-			if(!it.isSuccessful) {
-				// 请求错误
-				throw RemoteServiceException("bkiam v3 request failed, response: ($it)")
-			}
-			val responseStr = it.body()!!.string()
-			val iamApiRes = objectMapper.readValue<IamApiRes>(responseStr)
-			if(iamApiRes.code != 0 || !iamApiRes.result) {
-				// 请求错误
-				throw RemoteServiceException("bkiam v3 request failed, response: (${iamApiRes.message})")
-			}
+            return true
+        }
 
-			return true
-		}
+        return false
+    }
 
-		return false
-	}
-
-	/**
+    /**
 	 * 生成请求url
 	 */
-	private fun getAuthRequestUrl(uri: String): String {
-		return if(iamHost?.endsWith("/")!!) {
-			iamHost + uri
-		} else {
-			"$iamHost/$uri"
-		}
-	}
+    private fun getAuthRequestUrl(uri: String): String {
+        return if (iamHost?.endsWith("/")!!) {
+            iamHost + uri
+        } else {
+            "$iamHost/$uri"
+        }
+    }
 
-	companion object {
-		val logger = LoggerFactory.getLogger(this::class.java)
-	}
-
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
+        val objectMapper = ObjectMapper()
+    }
 }

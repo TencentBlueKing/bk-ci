@@ -2,6 +2,8 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class V3ProjectPermissionServiceImpl @Autowired constructor(
     val client: Client,
     private val authProjectApi: AuthProjectApi,
+    private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val projectDao: ProjectDao,
@@ -52,7 +55,7 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
 //        }
 //        val groupId = initProjectGroup.data
 //        client.get(ServiceUserGroupResource::class).addUser2Group(userId, groupId!!)
-
+        authResourceApi.createResource(userId, projectAuthServiceCode, AuthResourceType.PROJECT, resourceRegisterInfo.resourceCode, resourceRegisterInfo.resourceCode, resourceRegisterInfo.resourceName)
         return ""
     }
 
