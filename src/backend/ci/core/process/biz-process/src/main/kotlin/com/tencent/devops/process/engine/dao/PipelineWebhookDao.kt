@@ -69,6 +69,7 @@ class PipelineWebhookDao {
                     .set(REPO_HASH_ID, repoHashId)
                     .set(REPO_NAME, repoName)
                     .set(PROJECT_NAME, projectName)
+                    .set(TASK_ID, taskId)
                     .execute()
             }
         }
