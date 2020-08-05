@@ -182,6 +182,6 @@ class BkRepoAppService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ArtifactoryDownloadService::class.java)
+        private val logger = LoggerFactory.getLogger(BkRepoAppService::class.java)
     }
 }

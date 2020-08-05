@@ -171,6 +171,6 @@ class ArtifactoryAppService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ArtifactoryDownloadService::class.java)
+        private val logger = LoggerFactory.getLogger(ArtifactoryAppService::class.java)
     }
 }
