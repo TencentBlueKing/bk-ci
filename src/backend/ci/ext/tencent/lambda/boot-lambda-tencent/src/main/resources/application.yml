@@ -38,12 +38,4 @@ kafkaJaasConfig:
   password: iBSQLfsOHegEH24Z
 
 elasticsearch:
-  ip: bk-test5614.sh.es.db
   port: 9300
-  cluster: bk-test5614
-  keystore:
-    filePath: /data/certificate/CN=sgadmin-keystore.jks
-    password: de9aee7c83910d86cb2a
-  truststore:
-    filePath: /data/certificate/truststore.jks
-    password: b79d1f43876458cb6c2f
