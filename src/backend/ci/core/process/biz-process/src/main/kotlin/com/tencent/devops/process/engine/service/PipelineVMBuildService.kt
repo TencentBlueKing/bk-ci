@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.constant.KEY_START_TIME
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.OrganizationDetailInfo
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
@@ -70,6 +71,8 @@ import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.common.KEY_VERSION
@@ -686,6 +689,12 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             } else {
                 DateTimeUtil.stringToLocalDateTime(endTimeStr.toString()).timestampmilli()
             }
+            var project: ProjectVO? = null
+            try {
+                project = client.get(ServiceProjectResource::class).get(task.projectId).data
+            } catch (e: Exception) {
+                logger.error("get project(${task.projectId}) info error", e)
+            }
             val atomMonitorData = AtomMonitorData(
                 errorCode = result.errorCode ?: -1,
                 errorMsg = result.message,
@@ -701,6 +710,14 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 elapseTime = (endTime ?: 0) - (startTime ?: 0),
                 channel = monitorDataMap?.get(KEY_CHANNEL) as? String,
                 starter = task.starter,
+                organizationDetailInfo = OrganizationDetailInfo(
+                    bgId = project?.bgId?.toInt(),
+                    bgName = project?.bgName,
+                    centerId = project?.centerId?.toInt(),
+                    centerName = project?.centerName,
+                    deptId = project?.deptId?.toInt(),
+                    deptName = project?.deptName
+                ),
                 extData = monitorDataMap?.get("extData") as? Map<String, Any>
             )
             atomMonitorEventDispatcher.dispatch(AtomMonitorReportBroadCastEvent(atomMonitorData))
