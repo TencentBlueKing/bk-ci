@@ -24,7 +24,6 @@
                             }"
                         >
                         </i>
-
                     </span>
                 </template>
                 <template v-else-if="col.prop === 'stageStatus'" v-slot="props">
@@ -114,6 +113,18 @@
                 </ul>
             </div>
         </portal>
+        <bk-pagination
+            class="pagination"
+            size="small"
+            :current.sync="pagingConfigOne.current"
+            :limit="pagingConfigOne.limit"
+            :count="pagingConfigOne.count"
+            :align="pagingConfigOne.align"
+            :show-limit="pagingConfigOne.showLimit"
+            :limit-list="pagingConfigOne.limitList"
+            @change="handleChangeCurrent"
+            @limit-change="handleChangeLimit">
+        </bk-pagination>
     </div>
 </template>
 
@@ -126,6 +137,7 @@
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import StageSteps from '@/components/StageSteps'
+    import { bus } from '@/utils/bus'
 
     export default {
         name: 'build-history-table',
@@ -168,7 +180,15 @@
                 visibleIndex: -1,
                 isShowAll: false,
                 retryingMap: {},
-                stoping: {}
+                stoping: {},
+                pagingConfigOne: {
+                    currentPage: 1,
+                    limit: 0,
+                    count: 0,
+                    align: 'center',
+                    showLimit: true,
+                    limitList: [0, 20, 30, 50]
+                }
             }
         },
         computed: {
@@ -264,7 +284,28 @@
                 this.resetRemark()
             }
         },
+        created () {
+            bus.$on('fetch-count', (val) => {
+                this.pagingConfigOne.count = val
+            })
+            this.pagingConfigOne.limit = Math.floor((document.body.clientHeight - 60) / 42 - 6)
+            this.pagingConfigOne.limitList[0] = Math.floor((document.body.clientHeight - 60) / 42 - 6)
+        },
         methods: {
+            handleChangeLimit (limit) {
+                this.pagingConfigOne.limit = limit
+                this.$emit('change-currentPage-limit', {
+                    page: this.pagingConfigOne.currentPage,
+                    pageSize: limit
+                })
+            },
+            handleChangeCurrent (page) {
+                this.pagingConfigOne.currentPage = page
+                this.$emit('change-currentPage-limit', {
+                    page: page,
+                    pageSize: this.pagingConfigOne.limit
+                })
+            },
             getStageTooltip (stage) {
                 switch (true) {
                     case !!stage.elapsed:
@@ -726,7 +767,9 @@
             }
         }
     }
-
+    .pagination {
+        margin: 10px 0 5px;
+    }
     .remark-edit-footer {
         margin: 10px 0;
         text-align: right;

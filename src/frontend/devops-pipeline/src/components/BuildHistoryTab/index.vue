@@ -1,7 +1,7 @@
 <template>
-    <infinite-scroll class="build-history-tab-content" ref="infiniteScroll" :data-fetcher="requestHistory" scroll-box-class-name="bkdevops-pipeline-history" v-slot="slotProps">
-        <filter-bar v-if="showFilterBar" @query="slotProps.queryList" :set-history-page-status="setHistoryPageStatus" :reset-query-condition="resetQueryCondition" v-bind="historyPageStatus.queryMap"></filter-bar>
-        <build-history-table :loading-more="slotProps.isLoadingMore" :current-pipeline-version="currentPipelineVersion" @update-table="updateBuildHistoryList" :build-list="slotProps.list" :columns="shownColumns" :empty-tips-config="emptyTipsConfig" :show-log="showLog"></build-history-table>
+    <div class="build-history-tab-content">
+        <filter-bar v-if="showFilterBar" @query="fetchData" :set-history-page-status="setHistoryPageStatus" :reset-query-condition="resetQueryCondition" v-bind="historyPageStatus.queryMap"></filter-bar>
+        <build-history-table :loading-more="isLoadingMore" ref="buildHistoryTable" :current-pipeline-version="currentPipelineVersion" @change-currentPage-limit="getHistoryData" @update-table="updateBuildHistoryList" :build-list="list" :columns="shownColumns" :empty-tips-config="emptyTipsConfig" :show-log="showLog"></build-history-table>
         <bk-dialog
             width="567"
             :title="$t('history.settingCols')"
@@ -11,7 +11,7 @@
             @cancel="resetColumns">
             <bk-transfer :source-list="sourceColumns" display-key="label" setting-key="prop" :sortable="true" :target-list="shownColumns" :title="[$t('history.canChooseList'), $t('history.choosedList')]" @change="handleColumnsChange"></bk-transfer>
         </bk-dialog>
-    </infinite-scroll>
+    </div>
 </template>
 
 <script>
@@ -24,14 +24,12 @@
     import { bus } from '@/utils/bus'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
-    import InfiniteScroll from '@/components/InfiniteScroll'
 
     const LS_COLUMNS_KEYS = 'shownColumns'
     export default {
         name: 'build-history-tab',
         components: {
             BuildHistoryTable,
-            InfiniteScroll,
             FilterBar
         },
 
@@ -55,7 +53,9 @@
                 currentBuildNum: '',
                 currentShowStatus: false,
                 triggerList: [],
-                queryStrMap: ['status', 'materialAlias', 'materialBranch', 'startTimeStartTime', 'endTimeEndTime']
+                queryStrMap: ['status', 'materialAlias', 'materialBranch', 'startTimeStartTime', 'endTimeEndTime'],
+                isLoadingMore: false,
+                list: []
             }
         },
 
@@ -142,7 +142,7 @@
                     this.$refs.infiniteScroll.setScrollTop(0)
                     this.$nextTick(async () => {
                         this.$refs.infiniteScroll.animateScroll(0)
-                        await this.$refs.infiniteScroll.queryList(1)
+                        await this.fetchData()
                         // this.initWebSocket()
                     })
                 }
@@ -159,6 +159,7 @@
         },
 
         async mounted () {
+            this.fetchData()
             await this.handleRemoteMethod()
             if (this.$route.hash) { // 带上buildId时，弹出日志弹窗
                 const isBuildId = /^#b-+/.test(this.$route.hash) // 检查是否是合法的buildId
@@ -190,6 +191,21 @@
             ...mapActions('atom', [
                 'togglePropertyPanel'
             ]),
+            async fetchData (page = 1, pageSize = this.$refs.buildHistoryTable.pagingConfigOne.limit) {
+                try {
+                    this.isLoadingMore = true
+                    const res = await this.requestHistory(page, pageSize)
+                    this.list = res.records
+                    return res
+                } catch (e) {
+                    this.$showTips({
+                        message: this.$t('history.loadingErr'),
+                        theme: 'error'
+                    })
+                } finally {
+                    this.isLoadingMore = false
+                }
+            },
             handleColumnsChange (source, target, tagetValueList) {
                 this.tempColumns = tagetValueList.sort((v1, v2) => this.BUILD_HISTORY_TABLE_COLUMNS_MAP[v1].index - this.BUILD_HISTORY_TABLE_COLUMNS_MAP[v2].index)
             },
@@ -227,7 +243,7 @@
 
             resetQueryCondition () {
                 this.resetHistoryFilterCondition()
-                this.$refs.infiniteScroll.queryList()
+                this.fetchData()
             },
 
             showLog (buildId, buildNum, status) {
@@ -305,14 +321,19 @@
 
                 }
             },
-
+            async updateList () {
+                const pageSize = this.$refs.buildHistoryTable.pagingConfigOne.limit
+                const res = await this.fetchData(1, pageSize)
+                this.list = res.records
+                return res
+            },
             async updateBuildHistoryList () {
                 try {
-                    if (!this.pipelineId || !this.projectId || !this.$refs.infiniteScroll) {
+                    if (!this.pipelineId || !this.projectId) {
                         webSocketMessage.unInstallWsMessage()
                         return
                     }
-                    const res = await this.$refs.infiniteScroll.updateList()
+                    const res = await this.updateList()
                     this.currentPipelineVersion = res.pipelineVersion || ''
                 } catch (err) {
                     if (err.code === 403) {
@@ -342,6 +363,7 @@
                         pageSize: pageLen
                     })
                     this.currentPipelineVersion = res.pipelineVersion || ''
+                    bus.$emit('fetch-count', res.count)
                     return res
                 } catch (err) {
                     if (err.code === 403) {
@@ -358,6 +380,9 @@
                         }
                     }
                 }
+            },
+            getHistoryData (payload) {
+                this.fetchData(payload.page, payload.pageSize)
             }
         }
     }
