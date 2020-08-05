@@ -114,7 +114,7 @@ class BluekingV3ResourceApi @Autowired constructor(
         }
         val iamApiReq = IamApiReq(
                 creator = user,
-                name = resourceName, id = resourceCode, type = resourceType.value, system = iamConfiguration.systemId, ancestors = ancestors, bk_app_code = "", bk_app_secret = "", bk_username = user
+                name = resourceName, id = resourceCode, type = resourceType.value, system = iamConfiguration.systemId, ancestors = ancestors, bkAppCode = "", bkAppSecret = "", bkUsername = user
         )
         iamEsbService.createRelationResource(iamApiReq)
     }

@@ -23,8 +23,8 @@ class IamEsbService() {
     fun createRelationResource(iamApiReq: IamApiReq): Boolean {
         var url = "api/c/compapi/v2/iam/authorization/resource_creator_action/?bk_app_code=$appCode&bk_app_secret=$appSecret"
         url = getAuthRequestUrl(url)
-        iamApiReq.bk_app_code = appCode!!
-        iamApiReq.bk_app_secret = appSecret!!
+        iamApiReq.bkAppCode = appCode!!
+        iamApiReq.bkAppSecret = appSecret!!
         val content = objectMapper.writeValueAsString(iamApiReq)
         logger.info("v3 createRelationResource url[$url]")
         logger.info("v3 createRelationResource body[$content]")

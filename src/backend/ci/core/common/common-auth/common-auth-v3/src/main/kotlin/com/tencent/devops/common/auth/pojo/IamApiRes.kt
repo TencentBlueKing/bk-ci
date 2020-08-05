@@ -4,6 +4,6 @@ data class IamApiRes(
     val result: Boolean,
     val code: Int,
     val message: String,
-//    val data: List<ActionPolicyRes>,
+    val data: List<ActionPolicyRes>,
     val request_id: String
 )
