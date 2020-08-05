@@ -47,11 +47,12 @@ class SignServiceImpl @Autowired constructor(
         resignId: String,
         ipaSignInfo: IpaSignInfo,
         ipaSignInfoHeader: String,
-        ipaInputStream: InputStream
+        ipaInputStream: InputStream,
+        md5Check: Boolean
     ): Pair<File, Int> {
         val taskExecuteCount = signInfoService.save(resignId, ipaSignInfoHeader, ipaSignInfo)
         // 复制文件到临时目录
-        ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo)
+        ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo, md5Check)
         signInfoService.finishUpload(resignId, ipaFile, ipaSignInfo, taskExecuteCount)
         return Pair(ipaFile, taskExecuteCount)
     }

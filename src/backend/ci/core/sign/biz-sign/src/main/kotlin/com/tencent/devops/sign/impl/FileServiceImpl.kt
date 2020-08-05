@@ -27,41 +27,46 @@ class FileServiceImpl(
 
     override fun copyToTargetFile(
         ipaInputStream: InputStream,
-        ipaSignInfo: IpaSignInfo
+        ipaSignInfo: IpaSignInfo,
+        md5Check: Boolean
     ): File {
         val ipaTmpDir = "$tmpDir/${ipaSignInfo.projectId}/${ipaSignInfo.pipelineId}/${ipaSignInfo.buildId}/"
         val ipaTmpDirFile = File(ipaTmpDir)
         val ipaFile = File("$ipaTmpDir/${ipaSignInfo.fileName}")
         FileUtil.mkdirs(ipaTmpDirFile)
         val md5 = IpaFileUtil.copyInputStreamToFile(ipaInputStream, ipaFile)
-        when {
-            md5 == null -> {
-                logger.error("copy file and calculate file md5 is failed.")
-                if (!ipaSignInfo.buildId.isNullOrBlank() && !ipaSignInfo.taskId.isNullOrBlank()) LogUtils.addRedLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = ipaSignInfo.buildId!!,
-                    message = "copy file and calculate file md5 is failed.",
-                    tag = ipaSignInfo.taskId!!,
-                    jobId = null,
-                    executeCount = 1
-                )
-                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_COPY_FILE, defaultMessage = "复制并计算文件md5失败。")
+        if (md5Check) {
+            when {
+                md5 == null -> {
+                    logger.error("copy file and calculate file md5 is failed.")
+                    if (!ipaSignInfo.buildId.isNullOrBlank() && !ipaSignInfo.taskId.isNullOrBlank()) LogUtils.addRedLine(
+                            rabbitTemplate = rabbitTemplate,
+                            buildId = ipaSignInfo.buildId!!,
+                            message = "copy file and calculate file md5 is failed.",
+                            tag = ipaSignInfo.taskId!!,
+                            jobId = null,
+                            executeCount = 1
+                    )
+                    throw ErrorCodeException(errorCode = SignMessageCode.ERROR_COPY_FILE, defaultMessage = "复制并计算文件md5失败。")
+                }
+                md5 != ipaSignInfo.md5 -> {
+                    logger.error("copy file success, but md5 is diff.")
+                    if (!ipaSignInfo.buildId.isNullOrBlank() && !ipaSignInfo.taskId.isNullOrBlank()) LogUtils.addRedLine(
+                            rabbitTemplate = rabbitTemplate,
+                            buildId = ipaSignInfo.buildId!!,
+                            message = "copy file success, but md5 is diff. (info=${ipaSignInfo.md5}, upload=$md5",
+                            tag = ipaSignInfo.taskId!!,
+                            jobId = null,
+                            executeCount = 1
+                    )
+                    throw ErrorCodeException(errorCode = SignMessageCode.ERROR_COPY_FILE, defaultMessage = "复制文件成功但md5不一致。")
+                }
+                else -> {
+                    return ipaFile
+                }
             }
-            md5 != ipaSignInfo.md5 -> {
-                logger.error("copy file success, but md5 is diff.")
-                if (!ipaSignInfo.buildId.isNullOrBlank() && !ipaSignInfo.taskId.isNullOrBlank()) LogUtils.addRedLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = ipaSignInfo.buildId!!,
-                    message = "copy file success, but md5 is diff. (info=${ipaSignInfo.md5}, upload=$md5",
-                    tag = ipaSignInfo.taskId!!,
-                    jobId = null,
-                    executeCount = 1
-                )
-                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_COPY_FILE, defaultMessage = "复制文件成功但md5不一致。")
-            }
-            else -> {
-                return ipaFile
-            }
+        } else {
+            return ipaFile
         }
     }
 }

@@ -54,7 +54,8 @@ class ServiceIpaResourceImpl @Autowired constructor(
 
     override fun ipaSign(
         ipaSignInfoHeader: String,
-        ipaInputStream: InputStream
+        ipaInputStream: InputStream,
+        md5Check: Boolean
     ): Result<String> {
         val resignId = "s-${UUIDUtil.generate()}"
         val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
