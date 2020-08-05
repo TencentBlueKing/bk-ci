@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.sign.api.enums
+package com.tencent.devops.sign.builds
 
 import com.fasterxml.jackson.annotation.JsonValue
 

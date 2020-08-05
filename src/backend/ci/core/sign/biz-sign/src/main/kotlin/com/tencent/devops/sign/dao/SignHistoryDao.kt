@@ -28,7 +28,7 @@ package com.tencent.devops.sign.dao
 
 import com.tencent.devops.model.sign.tables.TSignHistory
 import com.tencent.devops.model.sign.tables.records.TSignHistoryRecord
-import com.tencent.devops.sign.api.enums.EnumResignStatus
+import com.tencent.devops.sign.builds.EnumResignStatus
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
