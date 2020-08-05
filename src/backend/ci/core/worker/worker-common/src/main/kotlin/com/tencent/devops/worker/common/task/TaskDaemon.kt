@@ -26,6 +26,9 @@
 
 package com.tencent.devops.worker.common.task
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -61,7 +64,11 @@ class TaskDaemon(
             try {
                 f1.get(timeout, TimeUnit.MINUTES) ?: throw TimeoutException("插件执行超时, 超时时间:${timeout}分钟")
             } catch (e: TimeoutException) {
-                throw TimeoutException("插件执行超时, 超时时间:${timeout}分钟")
+                throw TaskExecuteException(
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorMsg = e.message ?: "插件执行超时, 超时时间:${timeout}分钟"
+                )
             } finally {
                 executor.shutdownNow()
             }
