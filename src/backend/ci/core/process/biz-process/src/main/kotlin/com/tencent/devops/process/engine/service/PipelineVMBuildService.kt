@@ -560,7 +560,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             errorCode = result.errorCode,
             errorMsg = result.message
         )
-        
+
         logger.info("Complete the task(${result.taskId}) of build($buildId) and seqId($vmSeqId)")
         pipelineRuntimeService.completeClaimBuildTask(
             buildId = buildId,

@@ -118,10 +118,9 @@ class InfluxdbClient {
         builder.tag(tags)
         builder.fields(fields)
         builder.time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
-        influxDB.write(dbName, monitoringRetentionPolicy, builder.build());
+        influxDB.write(dbName, monitoringRetentionPolicy, builder.build())
     }
 }
-
 
 /*
   create database monitoring

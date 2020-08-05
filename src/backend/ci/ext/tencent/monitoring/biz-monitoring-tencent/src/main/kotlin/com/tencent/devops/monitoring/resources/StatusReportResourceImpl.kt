@@ -47,6 +47,4 @@ class StatusReportResourceImpl @Autowired constructor(private val statusReportSe
     override fun dispatch(dispatchStatus: DispatchStatus): Result<Boolean> {
         return Result(statusReportService.reportDispatchStatus(dispatchStatus))
     }
-
-
 }

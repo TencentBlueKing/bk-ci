@@ -70,7 +70,6 @@ class AtomMonitorReportListener @Autowired constructor(
             } else {
                 field[it.name] = it.get(data)?.toString() ?: ""
             }
-
         }
         influxdbClient.insert(AtomMonitorData::class.java.simpleName, emptyMap(), field)
     }

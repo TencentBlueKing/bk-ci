@@ -26,7 +26,6 @@
 package com.tencent.devops.monitoring.pojo
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.type.BuildType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
