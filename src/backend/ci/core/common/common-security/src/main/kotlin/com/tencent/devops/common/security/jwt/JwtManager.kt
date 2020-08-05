@@ -122,7 +122,7 @@ class JwtManager(
 
     @Scheduled(fixedDelay = 5 * 60 * 1000)
     fun refreshToken() {
-        logger.info("Refresh token")
+        logger.info("Refresh service jwt token")
         generateToken()
     }
 
