@@ -14,10 +14,10 @@ import java.io.File
 
 @Service
 class BsArchiveServiceImpl @Autowired constructor(
-        private val bkRepoClient: BkRepoClient,
-        private val commonConfig: CommonConfig,
-        private val repoGray: RepoGray,
-        private val redisOperation: RedisOperation
+    private val bkRepoClient: BkRepoClient,
+    private val commonConfig: CommonConfig,
+    private val repoGray: RepoGray,
+    private val redisOperation: RedisOperation
 ) : ArchiveService {
 
     companion object {
@@ -27,9 +27,9 @@ class BsArchiveServiceImpl @Autowired constructor(
     }
 
     override fun archive(
-            signedIpaFile: File,
-            ipaSignInfo: IpaSignInfo,
-            properties: Map<String, String>?
+        signedIpaFile: File,
+        ipaSignInfo: IpaSignInfo,
+        properties: Map<String, String>?
     ): Boolean {
         val isRepoGray = repoGray.isGray(ipaSignInfo.projectId, redisOperation)
         val path = if (ipaSignInfo.archiveType.toLowerCase() == "pipeline") {

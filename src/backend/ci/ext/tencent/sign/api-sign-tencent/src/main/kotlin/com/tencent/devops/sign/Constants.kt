@@ -27,7 +27,7 @@
 package com.tencent.devops.sign
 
 object Constants {
-    const val  KEYSTORE_HTTP_HEADER_AUTH = "Authorization"
-    const val  KEYSTORE_HTTP_HEADER_IP = "X-Client-LocalIp"
-    const val  KEYSTORE_CATEGORY_PROVISION = "SignProvision"
+    const val KEYSTORE_HTTP_HEADER_AUTH = "Authorization"
+    const val KEYSTORE_HTTP_HEADER_IP = "X-Client-LocalIp"
+    const val KEYSTORE_CATEGORY_PROVISION = "SignProvision"
 }

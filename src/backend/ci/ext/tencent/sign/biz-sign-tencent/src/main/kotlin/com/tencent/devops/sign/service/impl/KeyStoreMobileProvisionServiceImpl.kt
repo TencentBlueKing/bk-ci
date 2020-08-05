@@ -12,7 +12,6 @@ import com.tencent.devops.sign.Constants.KEYSTORE_HTTP_HEADER_AUTH
 import com.tencent.devops.sign.Constants.KEYSTORE_HTTP_HEADER_IP
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
-import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import com.tencent.devops.sign.service.MobileProvisionService
 import com.tencent.devops.sign.utils.EncryptUtil
 import io.jsonwebtoken.Jwts
@@ -27,12 +26,10 @@ import java.io.File
 import java.net.InetAddress
 import java.nio.charset.StandardCharsets
 import java.time.Instant
-import java.util.*
-
+import java.util.Base64
 
 @Service
-class KeyStoreMobileProvisionServiceImpl @Autowired constructor(
-) : MobileProvisionService {
+class KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvisionService {
     @Value("\${keystore.url:}")
     private val keyStoreUrl = "https://proxy.test.keystore.oa.com"
 
@@ -65,7 +62,6 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor(
         private val publicKey = String(Base64.getEncoder().encode(pairKey.publicKey))
         private var token: String? = null
         private val teamIdentifier = "com.apple.developer.team-identifier"
-
     }
 
     override fun downloadMobileProvision(mobileProvisionDir: File, projectId: String, mobileProvisionId: String): File {
@@ -93,12 +89,11 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor(
         return mobileProvisionFile
     }
 
-
     override fun handleEntitlement(entitlementFile: File) {
-        if(keyChainGroups.isNullOrBlank()) {
+        if (keyChainGroups.isNullOrBlank()) {
             return
         }
-        val keyChainGroupsList =  keyChainGroups.split(";")
+        val keyChainGroupsList = keyChainGroups.split(";")
         // 解析entitlement文件
         try {
             val rootDict = PropertyListParser.parse(entitlementFile) as NSDictionary
@@ -106,23 +101,21 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor(
             if (rootDict.containsKey(TEAM_IDENTIFIER_KEY) && rootDict.containsKey(KEYCHAIN_ACCESS_GROUPS_KEY)) {
                 val teamId = (rootDict.objectForKey(TEAM_IDENTIFIER_KEY) as NSString).toString()
                 if (!teamId.isNullOrBlank() && keyChainGroupsList.isNotEmpty()) {
-                    keyChainGroupsList.forEach{
-                        if(it.isNotBlank()) {
+                    keyChainGroupsList.forEach {
+                        if (it.isNotBlank()) {
                             val insertKeyChainGroupCMD = "plutil -insert keychain-access-groups.0 -string '$teamId.$it' ${entitlementFile.canonicalPath}"
                             CommandLineUtils.execute(insertKeyChainGroupCMD, entitlementFile.parentFile, true)
                         }
                     }
-
                 }
             }
-        }catch (e: Exception) {
+        } catch (e: Exception) {
             logger.error("插入entitlement文件(${entitlementFile.canonicalPath})的keychain-access-groups失败。")
             throw ErrorCodeException(
                     errorCode = SignMessageCode.ERROR_INSERT_KEYCHAIN_GROUPS,
                     defaultMessage = "entitlement插入keychain失败"
             )
         }
-
     }
 
     override fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): File? {
@@ -132,7 +125,6 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor(
                 mobileProvisionId = wildcardMobileProvisionId
         )
     }
-
 
     private fun generateToken() {
         val claims = mutableMapOf<String, Any>()
@@ -151,11 +143,9 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor(
         logger.info("Refresh keystore jwt token")
         generateToken()
     }
-
-
 }
 //
-//fun main(args: Array<String>) {
+// fun main(args: Array<String>) {
 //    val keyStoreAuthId = "devops"
 //    val keyStoreAuthSecret = "a21c218df41f6d7fd032535fe20394e2"
 //    val mobileProvisionDir  = File("/data/enterprise_sign_tmp/freyzheng/11111111/222222222/test.ipa.mobileProvisionDir")
@@ -193,4 +183,4 @@ class KeyStoreMobileProvisionServiceImpl @Autowired constructor(
 //        mobileProvisionFile.writeBytes(decryptedMobileProvisionDecrypt)
 //    }
 //    val a = 1
-//}
+// }

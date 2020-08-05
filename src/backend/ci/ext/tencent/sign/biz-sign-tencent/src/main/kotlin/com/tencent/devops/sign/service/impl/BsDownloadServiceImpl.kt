@@ -1,36 +1,19 @@
 package com.tencent.devops.sign.service.impl
 
-import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
-import com.tencent.devops.artifactory.api.user.UserArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
-import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.sign.api.pojo.IpaSignInfo
-import com.tencent.devops.sign.service.ArchiveService
-import com.tencent.devops.sign.service.SignService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.io.File
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.pojo.enums.GatewayType
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.dao.SignHistoryDao
 import com.tencent.devops.sign.dao.SignIpaInfoDao
 import com.tencent.devops.sign.service.DownloadService
-import okhttp3.*
 import org.jooq.DSLContext
-import java.net.URLEncoder
 
 @Service
 class BsDownloadServiceImpl @Autowired constructor(
@@ -127,5 +110,4 @@ class BsDownloadServiceImpl @Autowired constructor(
         }
         return downloadUrl
     }
-
 }

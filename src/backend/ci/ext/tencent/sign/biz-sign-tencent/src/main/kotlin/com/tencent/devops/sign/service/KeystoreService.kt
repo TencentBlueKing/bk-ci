@@ -47,8 +47,8 @@ class KeystoreService {
         }
     }
 
-    private fun getKeystoreUrl(appId: String):String
-        = "${getHost()}/api/auth/getInHouseCertList?appId=$appId"
+    private fun getKeystoreUrl(appId: String): String =
+        "${getHost()}/api/auth/getInHouseCertList?appId=$appId"
 
     companion object {
         private val logger = LoggerFactory.getLogger(KeystoreService::class.java)
