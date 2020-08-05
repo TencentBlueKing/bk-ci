@@ -116,7 +116,7 @@
         <bk-pagination
             class="pagination"
             size="small"
-            :current.sync="pagingConfigOne.current"
+            :current.sync="pagingConfigOne.currentPage"
             :limit="pagingConfigOne.limit"
             :count="pagingConfigOne.count"
             :align="pagingConfigOne.align"
@@ -288,12 +288,13 @@
             bus.$on('fetch-count', (val) => {
                 this.pagingConfigOne.count = val
             })
-            this.pagingConfigOne.limit = Math.floor((document.body.clientHeight - 60) / 42 - 6)
-            this.pagingConfigOne.limitList[0] = Math.floor((document.body.clientHeight - 60) / 42 - 6)
+            this.pagingConfigOne.limit = Math.floor((document.body.clientHeight - 60) / 47 - 6)
+            this.pagingConfigOne.limitList[0] = Math.floor((document.body.clientHeight - 60) / 47 - 6)
         },
         methods: {
             handleChangeLimit (limit) {
                 this.pagingConfigOne.limit = limit
+                this.pagingConfigOne.currentPage = 1
                 this.$emit('change-currentPage-limit', {
                     page: this.pagingConfigOne.currentPage,
                     pageSize: limit
@@ -768,7 +769,7 @@
         }
     }
     .pagination {
-        margin: 10px 0 5px;
+        margin: 20px 0 5px;
     }
     .remark-edit-footer {
         margin: 10px 0;

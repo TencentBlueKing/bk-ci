@@ -151,6 +151,9 @@
                 let hashParam = ''
                 if (this.$route.hash && /^#b-+/.test(this.$route.hash)) hashParam = this.$route.hash
                 this.$router.push(`${this.$route.path}?${newStr}${hashParam}`)
+            },
+            '$route' () {
+                this.fetchData()
             }
         },
 
