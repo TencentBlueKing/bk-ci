@@ -10,11 +10,11 @@ data class IamApiReq(
     val creator: String,
     val ancestors: List<AncestorsApiReq>? = emptyList(),
     @JsonProperty("bk_app_code")
-	var bkAppCode: String,
+    var bkAppCode: String,
     @JsonProperty("bk_app_code")
-	var bkAppSecret: String,
+    var bkAppSecret: String,
     @JsonProperty("bk_app_code")
-	var bkUsername: String,
+    var bkUsername: String,
     @JsonProperty("bk_token")
-	val bk_token: String = ""
+    val bkToken: String = ""
 )
