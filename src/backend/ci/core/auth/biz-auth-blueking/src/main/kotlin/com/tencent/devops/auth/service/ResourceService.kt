@@ -27,9 +27,9 @@ class ResourceService @Autowired constructor(
 ) {
 
     fun getProjectInfo(callBackInfo: CallbackRequestDTO, method: CallbackMethodEnum, token: String): CallbackBaseResponseDTO {
-        if(method == CallbackMethodEnum.LIST_INSTANCE) {
+        if (method == CallbackMethodEnum.LIST_INSTANCE) {
             return getProjectList(callBackInfo.page, method, token)
-        } else if(method == CallbackMethodEnum.FETCH_INSTANCE_INFO) {
+        } else if (method == CallbackMethodEnum.FETCH_INSTANCE_INFO) {
             val ids = callBackInfo.filter.idList.map { it.toString() }
             return getProjectInfo(ids, callBackInfo.filter.attributeList)
         }
@@ -47,7 +47,7 @@ class ResourceService @Autowired constructor(
         checkToken(token)
         var offset = 0
         var limit = 10
-        if(page != null) {
+        if (page != null) {
             offset = page.offset.toInt()
             limit = page.limit.toInt()
         }
@@ -259,7 +259,7 @@ class ResourceService @Autowired constructor(
         checkToken(token)
         var offset = 0
         var limit = 10
-        if(page != null) {
+        if (page != null) {
             offset = page.offset.toInt()
             limit = page.limit.toInt()
         }

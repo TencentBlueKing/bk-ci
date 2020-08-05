@@ -40,14 +40,14 @@ interface ServiceAuthCallbackResource {
     @Path("/{projectId}/")
     @GET
     fun listCert(
-            @ApiParam("项目ID", required = true)
-            @PathParam("projectId")
-            projectId: String,
-            @ApiParam("第几页", required = false, defaultValue = "1")
-            @QueryParam("page")
-            page: Int?,
-            @ApiParam("每页多少条", required = false, defaultValue = "20")
-            @QueryParam("pageSize")
-            pageSize: Int?
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
     ): Result<Page<Cert>>
 }

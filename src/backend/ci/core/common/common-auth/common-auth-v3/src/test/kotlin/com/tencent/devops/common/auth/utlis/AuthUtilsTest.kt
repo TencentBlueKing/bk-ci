@@ -117,7 +117,6 @@ class AuthUtilsTest {
         expressionDTO4.content.add(childExpression4)
         newExpressionList.add(expressionDTO4)
 
-
         val expressionDTO5 = ExpressionDTO()
         expressionDTO5.content = mutableListOf()
         expressionDTO5.operator = ExpressionOperationEnum.OR

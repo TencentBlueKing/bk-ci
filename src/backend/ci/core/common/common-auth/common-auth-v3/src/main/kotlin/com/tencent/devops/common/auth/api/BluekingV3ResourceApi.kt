@@ -105,7 +105,7 @@ class BluekingV3ResourceApi @Autowired constructor(
     ) {
         logger.info("v3 createResource projectCode[$projectCode] resourceCode[$resourceCode] resourceName[$resourceName] resourceType[${resourceType.value}]")
         val ancestors = mutableListOf<AncestorsApiReq>()
-        if(resourceType != AuthResourceType.PROJECT) {
+        if (resourceType != AuthResourceType.PROJECT) {
             ancestors.add(AncestorsApiReq(
                     system = iamConfiguration.systemId,
                     id = projectCode,

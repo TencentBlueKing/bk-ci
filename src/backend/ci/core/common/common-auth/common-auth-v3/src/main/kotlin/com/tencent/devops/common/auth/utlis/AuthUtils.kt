@@ -128,7 +128,7 @@ object AuthUtils {
                     isReturn = true
                     successCount += 1
                 } else {
-                    if(!andCheck(cacheList, type)) {
+                    if (!andCheck(cacheList, type)) {
                         return emptySet()
                     }
                 }
@@ -136,7 +136,7 @@ object AuthUtils {
             }
 
             if (!checkField(it.field, resourceType) && !checkField(it.value.toString(), resourceType)) {
-                if(!andCheck(cacheList, type)) {
+                if (!andCheck(cacheList, type)) {
                     return emptySet()
                 }
                 return@map
@@ -156,9 +156,9 @@ object AuthUtils {
                 }
                 ExpressionOperationEnum.START_WITH -> {
                     val startWithPair = checkProject(projectId, it)
-                    if(!startWithPair.first && type == ExpressionOperationEnum.AND) {
+                    if (!startWithPair.first && type == ExpressionOperationEnum.AND) {
                         cacheList.clear()
-                        if(!andCheck(cacheList, type)) {
+                        if (!andCheck(cacheList, type)) {
                             return emptySet()
                         }
                     }
@@ -169,7 +169,7 @@ object AuthUtils {
                 }
                 else -> cacheList = emptySet<String>() as MutableSet<String>
             }
-            if(!andCheck(cacheList, type)) {
+            if (!andCheck(cacheList, type)) {
                 return emptySet()
             }
         }
@@ -227,14 +227,13 @@ object AuthUtils {
         return false
     }
 
-    private fun andCheck(instanceList: Set<String>, op: ExpressionOperationEnum) : Boolean {
-        if(op == ExpressionOperationEnum.AND) {
-            if(instanceList == null || instanceList.isEmpty()) {
+    private fun andCheck(instanceList: Set<String>, op: ExpressionOperationEnum): Boolean {
+        if (op == ExpressionOperationEnum.AND) {
+            if (instanceList == null || instanceList.isEmpty()) {
                 return false
             }
             return true
         }
         return true
     }
-
 }

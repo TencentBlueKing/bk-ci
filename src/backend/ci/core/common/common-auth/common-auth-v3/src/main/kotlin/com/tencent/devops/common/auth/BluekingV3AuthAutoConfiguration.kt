@@ -46,7 +46,6 @@ import com.tencent.devops.common.auth.code.BluekingV3QualityAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3RepoAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3TicketAuthServiceCode
 import com.tencent.devops.common.auth.service.IamEsbService
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
