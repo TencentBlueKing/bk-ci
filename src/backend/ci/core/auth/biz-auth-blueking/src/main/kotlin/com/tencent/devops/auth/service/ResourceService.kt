@@ -3,7 +3,11 @@ package com.tencent.devops.auth.service
 import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
 import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
-import com.tencent.bk.sdk.iam.dto.callback.response.*
+import com.tencent.bk.sdk.iam.dto.callback.response.BaseDataResponseDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.utils.ActionUtils
 import com.tencent.devops.common.api.exception.OperationException
