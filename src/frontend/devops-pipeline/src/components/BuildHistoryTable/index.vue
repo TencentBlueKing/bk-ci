@@ -379,6 +379,7 @@
             handleRowClick (row, e) {
                 this.hideArtifactoriesPopup()
                 if (this.activeIndex === row.index) {
+                    localStorage.setItem('pagingConfigOne-currentPage', this.pagingConfigOne.currentPage)
                     const url = this.getArchiveUrl(row)
                     this.$router.push(url)
                 } else {
@@ -416,6 +417,7 @@
                 if (row) {
                     const url = this.getArchiveUrl(row, 'codeRecords', aliasName)
                     url && this.$router.push(url)
+                    localStorage.setItem('pagingConfigOne-currentPage', this.pagingConfigOne.currentPage)
                 }
             },
 

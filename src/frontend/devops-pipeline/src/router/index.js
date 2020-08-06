@@ -35,6 +35,7 @@ const createRouter = (store) => {
     })
 
     router.beforeEach((to, from, next) => {
+        if (from.name === 'pipelinesList') localStorage.removeItem('pagingConfigOne-currentPage')
         next()
     })
 

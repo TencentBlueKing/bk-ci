@@ -137,22 +137,12 @@
         },
 
         watch: {
-            pipelineId () {
-                if (this.$refs.infiniteScroll) {
-                    this.$refs.infiniteScroll.setScrollTop(0)
-                    this.$nextTick(async () => {
-                        this.$refs.infiniteScroll.animateScroll(0)
-                        await this.fetchData()
-                        // this.initWebSocket()
-                    })
-                }
-            },
             queryStr (newStr) {
                 let hashParam = ''
                 if (this.$route.hash && /^#b-+/.test(this.$route.hash)) hashParam = this.$route.hash
                 this.$router.push(`${this.$route.path}?${newStr}${hashParam}`)
             },
-            '$route' () {
+            '$route' (to, from) {
                 this.fetchData()
             }
         },
@@ -183,7 +173,6 @@
             this.resetHistoryFilterCondition()
             webSocketMessage.unInstallWsMessage()
         },
-
         methods: {
             ...mapActions('pipelines', [
                 'requestPipelinesHistory',
@@ -195,6 +184,13 @@
                 'togglePropertyPanel'
             ]),
             async fetchData (page = 1, pageSize = this.$refs.buildHistoryTable.pagingConfigOne.limit) {
+                const currentPage = localStorage.getItem('pagingConfigOne-currentPage')
+                if (currentPage) {
+                    page = currentPage
+                    this.$refs.buildHistoryTable.pagingConfigOne.currentPage = Number(currentPage)
+                } else {
+                    this.$refs.buildHistoryTable.pagingConfigOne.currentPage = page
+                }
                 try {
                     this.isLoadingMore = true
                     const res = await this.requestHistory(page, pageSize)
@@ -207,6 +203,7 @@
                     })
                 } finally {
                     this.isLoadingMore = false
+                    localStorage.removeItem('pagingConfigOne-currentPage')
                 }
             },
             handleColumnsChange (source, target, tagetValueList) {
@@ -355,15 +352,14 @@
                 }
             },
 
-            async requestHistory (page, pageSize) {
+            async requestHistory (page = 1, pageSize) {
                 try {
-                    const { projectId, pipelineId, historyPageStatus: { pageSize: defaultPageSize } } = this
-                    const pageLen = pageSize || defaultPageSize
+                    const { projectId, pipelineId } = this
                     const res = await this.requestPipelinesHistory({
                         projectId,
                         pipelineId,
                         page,
-                        pageSize: pageLen
+                        pageSize
                     })
                     this.currentPipelineVersion = res.pipelineVersion || ''
                     bus.$emit('fetch-count', res.count)

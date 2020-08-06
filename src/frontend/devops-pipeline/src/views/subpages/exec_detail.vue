@@ -334,7 +334,6 @@
             })
             webSocketMessage.unInstallWsMessage()
         },
-
         methods: {
             ...mapActions('atom', [
                 'updateAtom',

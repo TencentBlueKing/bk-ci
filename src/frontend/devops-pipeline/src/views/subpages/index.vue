@@ -255,7 +255,6 @@
             ]),
             handleSelected (pipelineId, cur) {
                 const { projectId, $route } = this
-
                 this.$store.commit('pipelines/updateCurPipeline', cur)
 
                 const name = $route.params.buildNo ? 'pipelinesHistory' : $route.name
