@@ -170,28 +170,6 @@ class PipelineBuildStageDao {
         dslContext.batch(records).execute()
     }
 
-    fun batchUpdate(dslContext: DSLContext, taskList: List<TPipelineBuildStageRecord>) {
-        val records = mutableListOf<Query>()
-        with(T_PIPELINE_BUILD_STAGE) {
-            taskList.forEach {
-                records.add(
-                    dslContext.update(this)
-                        .set(PROJECT_ID, it.projectId)
-                        .set(PIPELINE_ID, it.pipelineId)
-                        .set(SEQ, it.seq)
-                        .set(STATUS, it.status)
-                        .set(START_TIME, it.startTime)
-                        .set(END_TIME, it.endTime)
-                        .set(COST, it.cost)
-                        .set(EXECUTE_COUNT, it.executeCount)
-                        .set(CONDITIONS, it.conditions)
-                        .where(BUILD_ID.eq(it.buildId).and(STAGE_ID.eq(it.stageId)))
-                )
-            }
-        }
-        dslContext.batch(records).execute()
-    }
-
     fun batchUpdateBakStage(dslContext: DSLContext, taskList: List<TPipelineBuildStageBakRecord>) {
         val records = mutableListOf<Query>()
         with(T_PIPELINE_BUILD_STAGE_BAK) {
