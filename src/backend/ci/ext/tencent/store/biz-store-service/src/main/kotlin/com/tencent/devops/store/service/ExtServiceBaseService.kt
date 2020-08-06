@@ -517,7 +517,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         logger.info("the getMyService userId is :$userId,records is :$records,count is :$count")
         // 获取项目ID对应的名称
         val projectCodeList = mutableListOf<String>()
-        val serviceItemIdMap = mutableMapOf<String, List<String>>()
+        val serviceItemIdMap = mutableMapOf<String, Set<String>>()
         val itemIdList = mutableSetOf<String>()
         records?.forEach {
             val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
@@ -532,7 +532,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 dslContext,
                 it["serviceId"] as String
             )
-            val itemIds = mutableListOf<String>()
+            val itemIds = mutableSetOf<String>()
             serviceItemRecords?.forEach { itemInfo ->
                 itemIds.add(itemInfo.itemId)
                 itemIdList.add(itemInfo.itemId)
@@ -564,15 +564,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             val language = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, serviceId)?.language
             val serviceItemList = serviceItemIdMap[serviceId]
             logger.info("the getMyService serviceId is :$serviceId, itemList is :$serviceItemList")
-            var itemName = ""
+            val itemNameList = mutableListOf<String>()
             serviceItemList?.forEach { itId ->
-                val itemInfo = itemInfoMap.get(itId)
+                val itemInfo = itemInfoMap[itId]
                 if (itemInfo != null) {
-                    itemName += itemInfo.parentName + "-" + itemInfo.itemName + ","
+                    itemNameList.add("${itemInfo.parentName}-${itemInfo.itemName}")
                 }
             }
-            itemName = itemName.substringBeforeLast(",")
-            logger.info("the getMyService serviceId is :$serviceId, itemName is :$itemName")
+            logger.info("the getMyService serviceId is :$serviceId, itemName is :${JsonUtil.toJson(itemNameList)}")
             myService.add(
                 ExtServiceRespItem(
                     serviceId = serviceId,
@@ -597,8 +596,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         )
                     ) ?: "",
                     language = language ?: "",
-                    itemName = itemName,
-                    itemIds = itemIdList,
+                    itemName = JsonUtil.toJson(itemNameList),
+                    itemIds = serviceItemList ?: emptySet(),
                     releaseFlag = releaseFlag
                 )
             )
