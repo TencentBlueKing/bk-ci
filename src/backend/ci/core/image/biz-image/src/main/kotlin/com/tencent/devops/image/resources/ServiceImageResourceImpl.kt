@@ -31,17 +31,21 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.image.api.ServiceImageResource
+import com.tencent.devops.image.pojo.CheckDockerImageRequest
+import com.tencent.devops.image.pojo.CheckDockerImageResponse
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.image.pojo.ImageListResp
 import com.tencent.devops.image.pojo.ImagePageData
 import com.tencent.devops.image.service.ImageArtifactoryService
+import com.tencent.devops.image.service.InspectImageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceImageResourceImpl @Autowired constructor(
-    private val artifactoryService: ImageArtifactoryService
+    private val artifactoryService: ImageArtifactoryService,
+    private val inspectImageService: InspectImageService
 ) : ServiceImageResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserImageResourceImpl::class.java)
@@ -111,6 +115,10 @@ class ServiceImageResourceImpl @Autowired constructor(
 
     override fun getTagInfo(userId: String, imageRepo: String, imageTag: String): Result<DockerTag?> {
         return Result(artifactoryService.getTagInfo(imageRepo, imageTag))
+    }
+
+    override fun checkDockerImage(userId: String, checkDockerImageRequestList: List<CheckDockerImageRequest>): Result<List<CheckDockerImageResponse>> {
+        return Result(inspectImageService.checkDockerImage(userId, checkDockerImageRequestList))
     }
 
     override fun listDevCloudImages(userId: String, projectId: String, public: Boolean): Result<List<DockerTag>> {

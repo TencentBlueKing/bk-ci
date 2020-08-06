@@ -29,6 +29,8 @@ package com.tencent.devops.image.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.image.pojo.CheckDockerImageRequest
+import com.tencent.devops.image.pojo.CheckDockerImageResponse
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.image.pojo.ImageListResp
@@ -180,6 +182,17 @@ interface ServiceImageResource {
         @QueryParam("imageTag")
         imageTag: String
     ): Result<DockerTag?>
+
+    @ApiOperation("检查镜像信息")
+    @Path("/checkDockerImage")
+    @POST
+    fun checkDockerImage(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "镜像repo", required = true)
+        checkDockerImageRequestList: List<CheckDockerImageRequest>
+    ): Result<List<CheckDockerImageResponse>>
 
     @ApiOperation("获取项目DevCloud构建镜像列表")
     @Path("/{projectId}/listDevCloudImages/{public}")

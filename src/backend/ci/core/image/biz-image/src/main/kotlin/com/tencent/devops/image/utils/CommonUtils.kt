@@ -26,10 +26,13 @@
 
 package com.tencent.devops.image.utils
 
+import com.github.dockerjava.api.model.AuthConfig
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
@@ -88,5 +91,18 @@ object CommonUtils {
         }
 
         return ticketMap
+    }
+
+    fun getAuthConfig(registryHost: String, imageName: String, registryUser: String?, registryPwd: String?): AuthConfig? {
+        logger.info("registry host: $registryHost")
+        return if (registryUser.isNullOrBlank()) {
+            AuthConfig().withRegistryAddress(registryHost)
+        } else {
+            logger.info("registryUser: $registryUser, registryPwd: $registryPwd")
+            AuthConfig()
+                .withUsername(registryUser)
+                .withPassword(registryPwd)
+                .withRegistryAddress(registryHost)
+        }
     }
 }
