@@ -25,10 +25,12 @@
  */
 package com.tencent.devops.lambda.service
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -107,9 +109,7 @@ class PipelineBuildService @Autowired constructor(
             deptName = projectInfo.deptName,
             centerName = projectInfo.centerName,
             model = model,
-            errorType = event.errorType,
-            errorCode = event.errorCode,
-            errorMsg = event.errorMsg
+            errorInfoList = event.errorInfoList
         )
         esService.build(data)
     }
@@ -378,9 +378,7 @@ class PipelineBuildService @Autowired constructor(
                 parentBuildId = t.parentBuildId,
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
-                errorType = if (t.errorType == null) null else ErrorType.values()[t.errorType],
-                errorCode = t.errorCode,
-                errorMsg = t.errorMsg
+                errorInfoList = if (t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo) as List<ErrorInfo> else null
             )
         }
     }
