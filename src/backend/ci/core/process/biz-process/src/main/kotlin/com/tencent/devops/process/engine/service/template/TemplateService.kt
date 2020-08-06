@@ -107,6 +107,8 @@ import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.template.dao.PipelineTemplateDao
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -131,6 +133,7 @@ class TemplateService @Autowired constructor(
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineRemoteAuthService: PipelineRemoteAuthService,
     private val pipelineService: PipelineService,
     private val pipelineStageService: PipelineStageService,
     private val client: Client,
@@ -1229,6 +1232,7 @@ class TemplateService @Autowired constructor(
                             pipelineName = pipelineName
                         )
                     }
+                    addRemoteAuth(instanceModel, projectId, pipelineId, userId)
                     successPipelines.add(instance.pipelineName)
                     successPipelinesId.add(pipelineId)
                 }
@@ -1910,6 +1914,20 @@ class TemplateService @Autowired constructor(
 
     fun listPipelineTemplate(pipelineIds: Collection<String>): Result<TTemplatePipelineRecord>? {
         return templatePipelineDao.listPipelineTemplate(dslContext, pipelineIds)
+    }
+
+    fun addRemoteAuth(model: Model, projectId: String, pipelineId: String, userId: String) {
+        val elementList = model.stages[0].containers[0].elements
+        var isAddRemoteAuth = false
+        elementList.map {
+            if (it is RemoteTriggerElement) {
+                isAddRemoteAuth = true
+            }
+        }
+        if (isAddRemoteAuth) {
+            logger.info("template Model has RemoteTriggerElement project[$projectId] pipeline[$pipelineId]")
+            pipelineRemoteAuthService.generateAuth(pipelineId, projectId, userId)
+        }
     }
 
     companion object {

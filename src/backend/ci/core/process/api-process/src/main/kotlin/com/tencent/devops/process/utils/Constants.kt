@@ -54,6 +54,7 @@ const val PIPELINE_WEBHOOK_EVENT_TYPE = "BK_CI_HOOK_EVENT_TYPE" // hookEventType
 const val PIPELINE_WEBHOOK_MR_ID = "BK_CI_HOOK_MR_ID" // bk_hookMergeRequestId
 const val PIPELINE_REPO_NAME = "BK_CI_REPO_NAME" // "repoName"
 const val PIPELINE_WEBHOOK_MR_COMMITTER = "BK_CI_HOOK_MR_COMMITTER" // "bk_hookMergeRequest_committer"
+const val PIPELINE_WEBHOOK_COMMIT_MESSAGE = "BK_CI_HOOK_MESSAGE" // hook message
 
 const val GIT_MR_NUMBER = "BK_CI_GIT_MR_NUMBER" // git_mr_number
 const val GITHUB_PR_NUMBER = "BK_CI_GITHUB_PR_NUMBER" // github_pr_number
@@ -145,9 +146,14 @@ const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN = 1
 const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX = 1440
 
 /**
- * 流水线设置-错误信息入库长度最大值 单位:分钟
+ * 流水线设置-插件错误信息入库长度最大值 单位:分钟
  */
-const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 4000
+const val PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX = 4000
+
+/**
+ * 流水线设置-流水线错误信息入库长度最大值 单位:分钟
+ */
+const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 30000
 
 /**
  * 流水线设置-启动的通知模板代码
