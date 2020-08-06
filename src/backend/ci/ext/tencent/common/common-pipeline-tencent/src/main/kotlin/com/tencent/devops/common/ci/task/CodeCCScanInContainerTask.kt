@@ -14,8 +14,6 @@ open class CodeCCScanInContainerTask(
     @ApiModelProperty("执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
-    override fun getTaskVersion() = taskVersion
-    override fun getTaskType() = taskType
 
     companion object {
         const val taskType = "codeCCScan"

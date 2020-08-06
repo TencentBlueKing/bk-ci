@@ -31,7 +31,7 @@ config = {
   allow_hosts = {
     "__BKCI_ALLOW_HOST__"
   },
-  allow_headers = "Authorization,Content-Type,withcredentials,credentials,Accept,Origin,User-Agent,Cache-Control,Keep-Alive,X-Requested-With,If-Modified-Since,X-CSRFToken,X-DEVOPS-PROJECT-ID,X-DEVOPS-TASK-ID",
+  allow_headers = "Authorization,Content-Type,withcredentials,credentials,Accept,Origin,User-Agent,Cache-Control,Keep-Alive,X-Requested-With,If-Modified-Since,X-CSRFToken,X-DEVOPS-PROJECT-ID,X-DEVOPS-TASK-ID,X-DEVOPS-TOKEN",
   ns = {
     ip = {
       "127.0.0.1"
@@ -114,7 +114,8 @@ config = {
   },
   bkrepo = {
     domain = "__BKREPO_HOST__"
-  }
+  },
+  jwtPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n__BKCI_RSA_PRIVATE_KEY__\n-----END RSA PRIVATE KEY-----" 
 }
   
 require("init_common")

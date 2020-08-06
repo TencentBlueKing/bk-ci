@@ -27,6 +27,7 @@
 package com.tencent.devops.gitci.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
@@ -71,11 +72,26 @@ import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.gitci.client.ScmClient
+import com.tencent.devops.gitci.pojo.git.GitEvent
+import com.tencent.devops.gitci.pojo.git.GitPushEvent
+import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
+import com.tencent.devops.gitci.utils.CommonUtils
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.pojo.BK_CI_REF
+import com.tencent.devops.scm.pojo.BK_CI_REPOSITORY
+import com.tencent.devops.scm.pojo.BK_CI_REPO_OWNER
+import com.tencent.devops.scm.pojo.BK_CI_RUN
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID_SHORT
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_MESSAGE
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH
+import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_NAME
+import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import org.jooq.DSLContext
@@ -139,8 +155,14 @@ class GitCIBuildService @Autowired constructor(
 
         logger.info("pipelineId: $pipelineId")
 
-        // 启动构建
-        val buildId = client.get(ServiceBuildResource::class).manualStartup(event.userId, gitProjectConf.projectCode!!, pipelineId, mapOf(), channelCode).data!!.id
+            // 启动构建
+            val buildId = client.get(ServiceBuildResource::class).manualStartup(
+            userId = event.userId,
+            projectId = gitProjectConf.projectCode!!,
+            pipelineId = pipelineId,
+            values = mapOf(),
+            channelCode = channelCode
+        ).data!!.id
         gitRequestEventBuildDao.update(dslContext, event.id!!, pipelineId, buildId)
         logger.info("buildId: $buildId")
 
@@ -231,7 +253,8 @@ class GitCIBuildService @Autowired constructor(
                             user = job.job.pool!!.credential?.user ?: "",
                             password = job.job.pool!!.credential?.password ?: ""
                         ),
-                        macOS = null
+                        macOS = null,
+                        third = null
                     )
                 }
 
@@ -244,13 +267,14 @@ class GitCIBuildService @Autowired constructor(
                         macOS = MacOS(
                             systemVersion = job.job.pool!!.macOS?.systemVersion ?: "",
                             xcodeVersion = job.job.pool!!.macOS?.xcodeVersion ?: ""
-                        )
+                        ),
+                        third = null
                     )
                 }
 
                 // 假设都没有配置，使用默认镜像
                 else -> {
-                    Pool(buildConfig.registryImage, Credential("", ""), null)
+                    Pool(buildConfig.registryImage, Credential("", ""), null, null)
                 }
             }
 
@@ -317,52 +341,52 @@ class GitCIBuildService @Autowired constructor(
         val gitCiCodeRepoInput = when (event.objectKind) {
             OBJECT_KIND_PUSH -> {
                 GitCiCodeRepoInput(
-                        gitProjectConf.name,
-                        gitProjectConf.gitHttpUrl,
-                        gitToken.accessToken,
-                        null,
-                        CodePullStrategy.REVERT_UPDATE,
-                        GitPullModeType.COMMIT_ID,
-                        event.commitId
+                    repositoryName = gitProjectConf.name,
+                    repositoryUrl = gitProjectConf.gitHttpUrl,
+                    oauthToken = gitToken.accessToken,
+                    localPath = null,
+                    strategy = CodePullStrategy.REVERT_UPDATE,
+                    pullType = GitPullModeType.COMMIT_ID,
+                    refName = event.commitId
                 )
             }
             OBJECT_KIND_TAG_PUSH -> {
                 GitCiCodeRepoInput(
-                        gitProjectConf.name,
-                        gitProjectConf.gitHttpUrl,
-                        gitToken.accessToken,
-                        null,
-                        CodePullStrategy.REVERT_UPDATE,
-                        GitPullModeType.TAG,
-                        event.branch.removePrefix("refs/tags/")
+                    repositoryName = gitProjectConf.name,
+                    repositoryUrl = gitProjectConf.gitHttpUrl,
+                    oauthToken = gitToken.accessToken,
+                    localPath = null,
+                    strategy = CodePullStrategy.REVERT_UPDATE,
+                    pullType = GitPullModeType.TAG,
+                    refName = event.branch.removePrefix("refs/tags/")
                 )
             }
             OBJECT_KIND_MERGE_REQUEST -> {
                 GitCiCodeRepoInput(
-                        gitProjectConf.name,
-                        gitProjectConf.gitHttpUrl,
-                        gitToken.accessToken,
-                        null,
-                        CodePullStrategy.REVERT_UPDATE,
-                        GitPullModeType.BRANCH,
-                        "",
-                        StartType.WEB_HOOK,
-                        CodeEventType.MERGE_REQUEST.name,
-                        event.branch,
-                        event.targetBranch,
-                        gitProjectConf.gitHttpUrl,
-                        gitProjectConf.gitHttpUrl
+                    repositoryName = gitProjectConf.name,
+                    repositoryUrl = gitProjectConf.gitHttpUrl,
+                    oauthToken = gitToken.accessToken,
+                    localPath = null,
+                    strategy = CodePullStrategy.REVERT_UPDATE,
+                    pullType = GitPullModeType.BRANCH,
+                    refName = "",
+                    pipelineStartType = StartType.WEB_HOOK,
+                    hookEventType = CodeEventType.MERGE_REQUEST.name,
+                    hookSourceBranch = event.branch,
+                    hookTargetBranch = event.targetBranch,
+                    hookSourceUrl = gitProjectConf.gitHttpUrl,
+                    hookTargetUrl = gitProjectConf.gitHttpUrl
                 )
             }
             OBJECT_KIND_MANUAL -> {
                 GitCiCodeRepoInput(
-                        gitProjectConf.name,
-                        gitProjectConf.gitHttpUrl,
-                        gitToken.accessToken,
-                        null,
-                        CodePullStrategy.REVERT_UPDATE,
-                        GitPullModeType.BRANCH,
-                        event.branch.removePrefix("refs/heads/")
+                    repositoryName = gitProjectConf.name,
+                    repositoryUrl = gitProjectConf.gitHttpUrl,
+                    oauthToken = gitToken.accessToken,
+                    localPath = null,
+                    strategy = CodePullStrategy.REVERT_UPDATE,
+                    pullType = GitPullModeType.BRANCH,
+                    refName = event.branch.removePrefix("refs/heads/")
                 )
             }
             else -> {
@@ -372,12 +396,12 @@ class GitCIBuildService @Autowired constructor(
         }
 
         return MarketBuildAtomElement(
-                "拉代码",
-                null,
-                null,
-                GitCiCodeRepoTask.atomCode,
-                "1.*",
-                mapOf("input" to gitCiCodeRepoInput!!)
+            name = "拉代码",
+            id = null,
+            status = null,
+            atomCode = GitCiCodeRepoTask.atomCode,
+            version = "1.*",
+            data = mapOf("input" to gitCiCodeRepoInput!!)
         )
     }
 
@@ -447,15 +471,61 @@ class GitCIBuildService @Autowired constructor(
 
         val startParams = mutableMapOf<String, String>()
 
-        // 代码库相关固定参数
-        startParams["BK_CI_REPO_GIT_WEBHOOK_BRANCH"] = event.branch
-        startParams["BK_CI_REPO_GIT_WEBHOOK_PUSH_USERNAME"] = event.userId
-        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_AUTHOR"] = event.userId
-        startParams["BK_CI_REPO_GIT_WEBHOOK_TARGET_BRANCH"] = event.targetBranch ?: ""
-        startParams["BK_CI_REPO_GIT_WEBHOOK_SOURCE_BRANCH"] = event.branch
-        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP"] = event.commitTimeStamp ?: ""
-        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_ID"] = event.mergeRequestId.toString()
-        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_TITLE"] = event.mrTitle ?: ""
+        // 通用参数
+        startParams[BK_CI_RUN] = "true"
+        startParams[BK_CI_REPO_OWNER] = CommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl)
+        startParams[BK_CI_REPOSITORY] = CommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl) + "/" + gitProjectConf.name
+        startParams[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] = event.objectKind
+        startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] = event.branch
+        startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = event.commitId
+        startParams[BK_REPO_WEBHOOK_REPO_NAME] = gitProjectConf.name
+        startParams[BK_REPO_WEBHOOK_REPO_URL] = gitProjectConf.url
+        startParams[BK_REPO_GIT_WEBHOOK_COMMIT_MESSAGE] = event.commitMsg.toString()
+        if (!event.commitId.isBlank() && event.commitId.length >= 8)
+            startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID_SHORT] = event.commitId.substring(0, 8)
+
+        // 写入WEBHOOK触发环境变量
+        val originEvent = try {
+            objectMapper.readValue<GitEvent>(event.event)
+        } catch (e: Exception) {
+            logger.warn("Fail to parse the git web hook commit event, errMsg: ${e.message}")
+        }
+
+        when (originEvent) {
+            is GitPushEvent -> {
+                startParams[BK_CI_REF] = originEvent.ref
+//                startParams[BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT] = originEvent.before
+//                startParams[BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT] = originEvent.after
+//                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
+//                startParams[BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND] = originEvent.operation_kind
+            }
+            is GitTagPushEvent -> {
+                startParams[BK_CI_REF] = originEvent.ref
+//                startParams[BK_REPO_GIT_WEBHOOK_TAG_NAME] = event.branch
+//                startParams[BK_REPO_GIT_WEBHOOK_TAG_OPERATION] = originEvent.operation_kind ?: ""
+//                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
+//                startParams[BK_REPO_GIT_WEBHOOK_TAG_USERNAME] = event.userId
+//                startParams[BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM] = originEvent.create_from.toString()
+            }
+//            is GitMergeRequestEvent -> {
+//                startParams[BK_REPO_GIT_WEBHOOK_MR_ACTION] = originEvent.object_attributes.action
+//                startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = originEvent.user.username
+//                startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = originEvent.object_attributes.target_branch
+//                startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = originEvent.object_attributes.source_branch
+//                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = originEvent.object_attributes.created_at
+//                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] =
+//                    DateTimeUtil.zoneDateToTimestamp(originEvent.object_attributes.created_at).toString()
+//                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = originEvent.object_attributes.updated_at
+//                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] =
+//                    DateTimeUtil.zoneDateToTimestamp(originEvent.object_attributes.updated_at).toString()
+//                startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = originEvent.object_attributes.iid.toString()
+//                startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = originEvent.object_attributes.title
+//                startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = originEvent.object_attributes.url
+//                startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = originEvent.object_attributes.id.toString()
+//                startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = originEvent.object_attributes.description
+//                startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = originEvent.object_attributes.assignee_id.toString()
+//            }
+        }
 
         // 用户自定义变量
         startParams.putAll(yaml.variables ?: mapOf())

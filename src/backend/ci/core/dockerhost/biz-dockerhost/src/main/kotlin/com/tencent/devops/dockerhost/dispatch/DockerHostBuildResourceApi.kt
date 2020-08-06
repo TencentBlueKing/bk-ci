@@ -134,20 +134,19 @@ class DockerHostBuildResourceApi constructor(
         }
     }
 
-    fun postLog(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = ""): Result<Boolean>? {
-        val path = "/$urlPrefix/api/dockerhost/postlog?buildId=$buildId&red=$red&tag=$tag&jobId=$jobId"
-        val request = buildPost(path, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), message))
+    fun postLog(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
+        try {
+            val path = "/$urlPrefix/api/dockerhost/postlog?buildId=$buildId&red=$red&tag=$tag&jobId=$jobId"
+            val request = buildPost(path, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), message))
 
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
-            if (!response.isSuccessful) {
-                logger.error("DockerHostBuildResourceApi $path fail. $responseContent")
-                throw TaskExecuteException(
-                    errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
-                    errorType = ErrorType.SYSTEM,
-                    errorMsg = "DockerHostBuildResourceApi $path fail")
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body()!!.string()
+                if (!response.isSuccessful) {
+                    logger.error("DockerHostBuildResourceApi $path fail. $responseContent")
+                }
             }
-            return objectMapper.readValue(responseContent)
+        } catch (e: Exception) {
+            logger.error("DockerHostBuildResourceApi postLog error.", e)
         }
     }
 
@@ -175,6 +174,7 @@ class DockerHostBuildResourceApi constructor(
             RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(dockerIpInfoVO))
         )
 
+        logger.info("Start refreshDockerIpStatus $path")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -184,6 +184,7 @@ class DockerHostBuildResourceApi constructor(
                     errorType = ErrorType.SYSTEM,
                     errorMsg = "DockerHostBuildResourceApi $path fail")
             }
+            logger.info("End refreshDockerIpStatus.")
             return objectMapper.readValue(responseContent)
         }
     }

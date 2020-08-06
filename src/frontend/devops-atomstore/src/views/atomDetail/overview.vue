@@ -42,36 +42,6 @@
                                 <div class="info-label"> {{ $t('store.开发语言：') }} </div>
                                 <div class="info-value">{{ codeForm.language }}</div>
                             </div>
-                            <template v-if="!isEnterprise">
-                                <div class="code-form-item">
-                                    <div class="info-label"> {{ $t('store.已托管至：') }} </div>
-                                    <div class="info-value link-text" @click="toLink()"> {{ $t('store.工蜂') }} </div>
-                                </div>
-                                <div class="code-form-item codelib-form-item">
-                                    <div class="info-label"> {{ $t('store.代码库：') }} </div>
-                                    <div class="info-value codelib-url">
-                                        <span class="codelib-text">{{ codeForm.codeSrc }}</span>
-                                        <span class="link-text copy-btn" :data-clipboard-text="codeForm.codeSrc" @click="copyUrl"> {{ $t('store.复制') }} </span>
-                                    </div>
-                                </div>
-                                <div class="code-form-item codelib-form-item">
-                                    <div class="info-label"> {{ $t('store.授权人：') }} </div>
-                                    <div class="info-value codelib-url">
-                                        {{codeForm.repositoryAuthorizer}}
-                                        <bk-popover placement="top">
-                                            <i class="bk-icon icon-info-circle"></i>
-                                            <template slot="content">
-                                                <p> {{ $t('store.在发布插件时，使用授权人的身份拉取插件代码自动构建打包，或设置插件可见范围') }} </p>
-                                            </template>
-                                        </bk-popover>
-                                        <span class="link-text repo-outh"
-                                            @click="modifyRepoMemInfo"
-                                            :title="$t('store.将使用你的身份进行插件代码库相关操作')"
-                                            v-if="userInfo.isProjectAdmin && userInfo.userName !== codeForm.repositoryAuthorizer"
-                                        > {{ $t('store.重置授权') }} </span>
-                                    </div>
-                                </div>
-                            </template>
                         </div>
                     </div>
                     <div class="atom-latest-news">
@@ -89,14 +59,12 @@
 
 <script>
     import { mapGetters } from 'vuex'
-    import Clipboard from 'clipboard'
     import imgBuilding from '@/images/building.png'
 
     export default {
         data () {
             return {
                 showContent: false,
-                factoryUrl: 'https://git.code.oa.com/',
                 image: imgBuilding,
                 statisticList: [
                     { name: 'downloads', label: this.$t('store.安装量'), value: 0 },
@@ -120,9 +88,6 @@
             },
             atomCode () {
                 return this.$route.params.atomCode
-            },
-            isEnterprise () {
-                return VERSION_TYPE === 'ee'
             }
         },
         created () {
@@ -141,25 +106,6 @@
                 })
             },
 
-            modifyRepoMemInfo () {
-                const atomCode = this.atomCode
-                const projectCode = this.codeForm.projectCode
-                this.$store.dispatch('store/checkIsOAuth', { type: 'ATOM_REPOSITORY', atomCode }).then((res) => {
-                    if (res.status === 403) {
-                        window.open(res.url, '_self')
-                        return
-                    }
-
-                    return this.$store.dispatch('store/modifyRepoMemInfo', { atomCode, projectCode }).then((res) => {
-                        if (res) {
-                            this.codeForm.repositoryAuthorizer = this.userInfo.userName
-                            this.$store.dispatch('store/updateCurrentaAtom', { res: this.codeForm })
-                            this.$bkMessage({ message: '重置授权成功', theme: 'success', limit: 1 })
-                        }
-                    })
-                }).catch(err => this.$bkMessage({ message: err.message || err, theme: 'error' }))
-            },
-
             requestAtomStatistic () {
                 return this.$store.dispatch('store/requestAtomStatistic', {
                     atomCode: this.atomCode
@@ -168,21 +114,6 @@
                         item.value = res[item.name]
                     })
                 })
-            },
-
-            copyUrl () {
-                this.clipboardInstance = new Clipboard('.copy-btn')
-                this.clipboardInstance.on('success', e => {
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: '复制成功',
-                        limit: 1
-                    })
-                })
-            },
-
-            toLink () {
-                window.open(this.factoryUrl, '_blank')
             }
         }
     }

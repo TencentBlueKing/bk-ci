@@ -6,5 +6,6 @@ import com.fasterxml.jackson.annotation.JsonInclude
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ExtraParam(
-    val codeccScanPath: String? = null
+    val codeccScanPath: String? = null,
+    val incrementFileList: List<String>? = null
 )

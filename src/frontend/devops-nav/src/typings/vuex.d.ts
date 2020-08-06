@@ -14,6 +14,7 @@ interface RootState {
     isShowPreviewTips: boolean
     fetchError: object
     headerConfig: object,
+    currentNotice: object,
     moduleLoading: boolean,
     isPermissionDialogShow: boolean
 }
@@ -41,12 +42,6 @@ interface Project {
     ccAppId?: number
     deployType?: object[]
     kind?: string
-    bgId?: string
-    bgName?: string
-    deptId?: string
-    deptName?: string
-    centerId?: string
-    centerName?: string
     isSecrecy?: boolean
     ccAppName?: string
     approvalStatus?: number

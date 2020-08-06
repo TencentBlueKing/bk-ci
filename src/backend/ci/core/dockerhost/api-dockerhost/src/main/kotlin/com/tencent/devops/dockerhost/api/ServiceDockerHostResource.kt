@@ -154,6 +154,9 @@ interface ServiceDockerHostResource {
         @ApiParam("logStartTimeStamp", required = true)
         @PathParam("logStartTimeStamp")
         logStartTimeStamp: Int,
+        @ApiParam("printLog", required = false)
+        @QueryParam("printLog")
+        printLog: Boolean? = true,
         @Context request: HttpServletRequest
     ): Result<DockerLogsResponse>
 

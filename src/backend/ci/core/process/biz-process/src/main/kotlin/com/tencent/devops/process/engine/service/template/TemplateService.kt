@@ -106,7 +106,7 @@ import com.tencent.devops.process.pojo.template.TemplateVersion
 import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.template.dao.PipelineTemplateDao
-import com.tencent.devops.process.util.DateTimeUtils
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -458,7 +458,7 @@ class TemplateService @Autowired constructor(
                         content = it.get(FAIL_CONTENT) ?: ""
                     ),
                     labels = labels,
-                    waitQueueTimeMinute = DateTimeUtils.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
+                    waitQueueTimeMinute = DateTimeUtil.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
                     maxQueueSize = it.get(MAX_QUEUE_SIZE),
                     hasPermission = hasPermission
                 )
@@ -513,6 +513,10 @@ class TemplateService @Autowired constructor(
             )
         }
         return TemplateListModel(projectId, hasManagerPermission, result, count)
+    }
+
+    fun getSrcTemplateCodes(projectId: String): com.tencent.devops.common.api.pojo.Result<List<String>> {
+        return com.tencent.devops.common.api.pojo.Result(templateDao.getSrcTemplateCodes(dslContext, projectId))
     }
 
     /**
@@ -763,7 +767,16 @@ class TemplateService @Autowired constructor(
         val templateCount = templateDao.countTemplate(dslContext, projectId, true, templateType, null, null)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val templates = templateDao.listTemplate(context, projectId, true, templateType, templateIds, null, page, pageSize)
+            val templates = templateDao.listTemplate(
+                dslContext = context,
+                projectId = projectId,
+                includePublicFlag = true,
+                templateType = templateType,
+                templateIdList = templateIds,
+                storeFlag = null,
+                page = page,
+                pageSize = pageSize
+            )
 
             val constrainedTemplateList = mutableListOf<String>()
             val templateIdList = mutableSetOf<String>()
@@ -773,7 +786,16 @@ class TemplateService @Autowired constructor(
                 }
                 templateIdList.add(tempTemplate["templateId"] as String)
             }
-            val srcTemplateRecords = templateDao.listTemplate(context, null, null, null, constrainedTemplateList, null, null, null)
+            val srcTemplateRecords = templateDao.listTemplate(
+                dslContext = context,
+                projectId = null,
+                includePublicFlag = null,
+                templateType = null,
+                templateIdList = constrainedTemplateList,
+                storeFlag = null,
+                page = null,
+                pageSize = null
+            )
             val srcTemplates = srcTemplateRecords?.associateBy { it["templateId"] as String }
 
             val settings = pipelineSettingDao.getSettings(context, templateIdList).map { it.pipelineId to it }.toMap()
@@ -1185,7 +1207,8 @@ class TemplateService @Autowired constructor(
                         fixPipelineId = null,
                         instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
                         buildNo = buildNo,
-                        param = param
+                        param = param,
+                        tempalteVersion = version
                     )
                     if (useTemplateSettings) {
                         val setting = copySetting(

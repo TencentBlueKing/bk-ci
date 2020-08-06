@@ -237,7 +237,7 @@ class DownloadAgentInstallService @Autowired constructor(
     }
 
     fun downloadJre(agentId: String, eTag: String?): Response {
-        logger.info("Trying to download the jre($agentId)")
+        logger.info("downloadJre, agentId: $agentId, eTag: $eTag")
         val record = getAgentRecord(agentId)
         val file = getJreZipFile(record.os)
 
@@ -246,10 +246,7 @@ class DownloadAgentInstallService @Autowired constructor(
                 return Response.status(Response.Status.NOT_MODIFIED).build()
             }
         }
-        return Response.ok(StreamingOutput { output ->
-            output.write(file.readBytes())
-            output.flush()
-        }, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+        return Response.ok(file.inputStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
             .header("content-disposition", "attachment; filename = jre.zip")
             .build()
     }

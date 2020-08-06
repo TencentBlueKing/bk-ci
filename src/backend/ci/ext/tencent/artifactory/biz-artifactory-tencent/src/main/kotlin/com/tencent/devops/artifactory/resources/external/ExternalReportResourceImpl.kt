@@ -35,7 +35,6 @@ import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import javax.ws.rs.core.Response
 
 @RestResource
 class ExternalReportResourceImpl @Autowired constructor(
@@ -54,7 +53,7 @@ class ExternalReportResourceImpl @Autowired constructor(
         buildId: String,
         elementId: String,
         path: String
-    ): Response {
+    ) {
         if (suffix != null) {
             val indexOf = path.lastIndexOf(".")
             if (indexOf == -1) {
@@ -81,7 +80,7 @@ class ExternalReportResourceImpl @Autowired constructor(
         if (path.isBlank()) {
             throw ParamBlankException("Invalid path")
         }
-        return if (repoGray.isGray(projectId, redisOperation)) {
+        if (repoGray.isGray(projectId, redisOperation)) {
             bkRepoReportService.get(projectId, pipelineId, buildId, elementId, path)
         } else {
             artifactoryReportService.get(projectId, pipelineId, buildId, elementId, path)

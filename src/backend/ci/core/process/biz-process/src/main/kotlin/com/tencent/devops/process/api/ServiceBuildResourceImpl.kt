@@ -119,7 +119,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
                     values = values,
                     channelCode = channelCode,
                     buildNo = buildNo,
-                    checkPermission = ChannelCode.isNeedAuth(channelCode)
+                    checkPermission = ChannelCode.isNeedAuth(channelCode),
+                    frequencyLimit = false
                 )
             )
         )
@@ -283,6 +284,30 @@ class ServiceBuildResourceImpl @Autowired constructor(
         }
         return Result(
             buildService.getBuildStatusWithVars(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                channelCode = channelCode,
+                checkPermission = false
+            )
+        )
+    }
+
+    override fun getBuildDetailStatusWithoutPermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode
+    ): Result<String> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            buildService.getBuildDetailStatus(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,

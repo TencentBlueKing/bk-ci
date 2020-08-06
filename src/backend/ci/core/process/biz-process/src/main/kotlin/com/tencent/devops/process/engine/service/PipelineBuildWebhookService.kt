@@ -66,7 +66,7 @@ import com.tencent.devops.process.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
 import com.tencent.devops.process.service.scm.GitScmService
-import com.tencent.devops.process.util.DateTimeUtils
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.process.utils.PIPELINE_REPO_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
@@ -473,6 +473,8 @@ class PipelineBuildWebhookService @Autowired constructor(
                 params.codeType = CodeType.GIT
                 params.tagName = EnvUtils.parseEnv(element.tagName ?: "", variables)
                 params.excludeTagName = EnvUtils.parseEnv(element.excludeTagName ?: "", variables)
+                params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)
+                params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
             }
             is CodeGithubWebHookTriggerElement -> {
                 params = WebHookParams(
@@ -601,9 +603,9 @@ class PipelineBuildWebhookService @Autowired constructor(
                 startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = mrInfo?.createTime ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = mrInfo?.updateTime ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] =
-                    DateTimeUtils.zoneDateToTimestamp(mrInfo?.createTime)
+                    DateTimeUtil.zoneDateToTimestamp(mrInfo?.createTime)
                 startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] =
-                    DateTimeUtils.zoneDateToTimestamp(mrInfo?.updateTime)
+                    DateTimeUtil.zoneDateToTimestamp(mrInfo?.updateTime)
                 startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = mrInfo?.mrId ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = mrInfo?.mrNumber ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = mrInfo?.description ?: ""
@@ -704,7 +706,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_PREFIX + curIndex] = gitCommit.id
             startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_MSG_PREFIX + curIndex] = gitCommit.message
             startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_TIMESTAMP_PREFIX + curIndex] =
-                DateTimeUtils.zoneDateToTimestamp(gitCommit.timestamp)
+                DateTimeUtil.zoneDateToTimestamp(gitCommit.timestamp)
             startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_AUTHOR_PREFIX + curIndex] = gitCommit.author
             startParams[BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_COUNT] = gitCommit.added?.size ?: 0
             startParams[BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_COUNT] = gitCommit.modified?.size ?: 0

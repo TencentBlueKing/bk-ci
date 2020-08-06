@@ -12,6 +12,8 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des back-home" @click="toAtomList()"> {{ $t('store.工作台') }} </span>
                 <i class="right-arrow banner-arrow"></i>
+                <span class="banner-des back-home" @click="toTemplateDetail"> {{ templateDetail.templateName }} </span>
+                <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des"> {{ $t('store.上架模板') }} </span>
             </p>
             <a class="title-work" target="_blank" :href="docsLink"> {{ $t('store.模板指引') }} </a>
@@ -124,7 +126,7 @@
                 isOverflow: false,
                 isDropdownShow: false,
                 timer: -1,
-                docsLink: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008944',
+                docsLink: 'http://tempdocklink/pages/viewpage.action?pageId=15008944',
                 progressStatus: [{
                     'name': this.$t('store.开始'),
                     'step': 1,
@@ -171,6 +173,15 @@
             clearTimeout(this.timer)
         },
         methods: {
+            toTemplateDetail () {
+                this.$router.push({
+                    name: 'tplOverview',
+                    params: {
+                        templateCode: this.templateDetail.templateCode
+                    }
+                })
+            },
+
             async requestTemplateDetail (atomId) {
                 this.loading.isLoading = true
 

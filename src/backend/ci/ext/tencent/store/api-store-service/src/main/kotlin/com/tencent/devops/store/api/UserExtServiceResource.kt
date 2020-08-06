@@ -79,9 +79,9 @@ interface UserExtServiceResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("服务扩展名称", required = false)
-        @QueryParam("serviceName")
-        serviceName: String?,
+        @ApiParam("搜索关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?,
         @ApiParam("服务扩展分类", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,

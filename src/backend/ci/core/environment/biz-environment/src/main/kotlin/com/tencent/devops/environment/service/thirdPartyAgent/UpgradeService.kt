@@ -44,7 +44,6 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
 
 @Service
 class UpgradeService @Autowired constructor(
@@ -145,7 +144,7 @@ class UpgradeService @Autowired constructor(
         file: String,
         md5: String?
     ): Response {
-        logger.info("Trying the download file($file - $md5) of agent($agentId)")
+        logger.info("downloadUpgradeFile, projectId: $projectId, agentId: $agentId, file: $file, md5: $md5")
         val status = checkAgent(projectId, agentId, secretKey)
         if (status == AgentStatus.DELETE) {
             logger.warn("The agent($agentId)'s status($status) is DELETE")
@@ -171,10 +170,8 @@ class UpgradeService @Autowired constructor(
             }
         }
         return if (modify) {
-            Response.ok(StreamingOutput { output ->
-                output.write(upgradeFile.readBytes())
-                output.flush()
-            }, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            logger.info("upgrade file($file) changed, server file md5: $existMD5")
+            Response.ok(upgradeFile.inputStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
                 .header("content-disposition", "attachment; filename = $fileName")
                 .header("X-Checksum-Md5", existMD5)
                 .build()

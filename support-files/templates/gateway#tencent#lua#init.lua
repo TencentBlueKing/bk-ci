@@ -29,7 +29,7 @@ config = {
   allow_hosts = {
     __BKCI_ALLOW_HOST__
   },
-  allow_headers = "Authorization,Content-Type,withcredentials,credentials,Accept,Origin,User-Agent,Cache-Control,Keep-Alive,X-Requested-With,If-Modified-Since,X-CSRFToken,X-DEVOPS-PROJECT-ID,X-DEVOPS-TASK-ID",
+  allow_headers = "Authorization,Content-Type,withcredentials,credentials,Accept,Origin,User-Agent,Cache-Control,Keep-Alive,X-Requested-With,If-Modified-Since,X-CSRFToken,X-DEVOPS-PROJECT-ID,X-DEVOPS-TASK-ID,X-DEVOPS-TOKEN",
   ns = {
     ip = {
       "127.0.0.1"
@@ -101,7 +101,11 @@ config = {
     host = "__BKCI_GATEWAY_IP0__",
     domain = "__JFROG_FQDN__",
     user = "__JFROG_USERNAME__",
-    password = "__JFROG_PASSWORD__"
+    password = "__JFROG_PASSWORD__",
+    userToken = "__JFROG_USERNAME_TOKEN__",
+    passwordToken = "__JFROG_PASSWORD_TOKEN__",
+    userAnonym = "__JFROG_USERNAME_ANONYM__",
+    passwordAnonym = "__JFROG_PASSWORD_ANONYM__"
   },
   influxdb = {
     ip = "__INFLUXDB_IP0__",
@@ -134,7 +138,9 @@ config = {
   buglyQcloudHost = "__BKCI_BULGY_QCLOUD_HOST__",
   wechatWorkHost = "__BKCI_WECHART_WORK_HOST__",
   docsUrl = "__BKCI_DOCS_URL__",
-  apigwUrl = "__BKCI_APIGW_URL__"
+  apigwUrl = "__BKCI_APIGW_URL__",
+  apigwHost = "__BKCI_APIGW_HOST__",
+  jwtPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n__BKCI_RSA_PRIVATE_KEY__\n-----END RSA PRIVATE KEY-----"
 }
   
 require("init_common")

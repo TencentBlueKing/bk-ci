@@ -40,42 +40,43 @@ class GitRequestEventDao {
         event: GitRequestEvent
     ): Long {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
-            val record = dslContext.insertInto(this,
-                    OBJECT_KIND,
-                    OPERATION_KIND,
-                    EXTENSION_ACTION,
-                    GIT_PROJECT_ID,
-                    BRANCH,
-                    TARGET_BRANCH,
-                    COMMIT_ID,
-                    COMMIT_MSG,
-                    COMMIT_TIMESTAMP,
-                    USER_NAME,
-                    TOTAL_COMMIT_COUNT,
-                    MERGE_REQUEST_ID,
-                    EVENT,
-                    CREATE_TIME,
-                    DESCRIPTION,
-                    MR_TITLE
-                ).values(
-                    event.objectKind,
-                    event.operationKind,
-                    event.extensionAction,
-                    event.gitProjectId,
-                    event.branch,
-                    event.targetBranch,
-                    event.commitId,
-                    event.commitMsg,
-                    event.commitTimeStamp,
-                    event.userId,
-                    event.totalCommitCount,
-                    event.mergeRequestId,
-                    event.event,
-                    LocalDateTime.now(),
-                    event.description,
-                    event.mrTitle
+            val record = dslContext.insertInto(
+                this,
+                OBJECT_KIND,
+                OPERATION_KIND,
+                EXTENSION_ACTION,
+                GIT_PROJECT_ID,
+                BRANCH,
+                TARGET_BRANCH,
+                COMMIT_ID,
+                COMMIT_MSG,
+                COMMIT_TIMESTAMP,
+                USER_NAME,
+                TOTAL_COMMIT_COUNT,
+                MERGE_REQUEST_ID,
+                EVENT,
+                CREATE_TIME,
+                DESCRIPTION,
+                MR_TITLE
+            ).values(
+                event.objectKind,
+                event.operationKind,
+                event.extensionAction,
+                event.gitProjectId,
+                event.branch,
+                event.targetBranch,
+                event.commitId,
+                event.commitMsg,
+                event.commitTimeStamp,
+                event.userId,
+                event.totalCommitCount,
+                event.mergeRequestId,
+                event.event,
+                LocalDateTime.now(),
+                event.description,
+                event.mrTitle
             ).returning(ID)
-            .fetchOne()
+                .fetchOne()
             return record.id
         }
     }
@@ -86,28 +87,28 @@ class GitRequestEventDao {
     ): GitRequestEvent? {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             val record = dslContext.selectFrom(this)
-                    .where(ID.eq(id))
-                    .fetchOne()
+                .where(ID.eq(id))
+                .fetchOne()
             return if (record == null) {
                 null
             } else {
                 GitRequestEvent(
-                        record.id,
-                        record.objectKind,
-                        record.operationKind,
-                        record.extensionAction,
-                        record.gitProjectId,
-                        record.branch,
-                        record.targetBranch,
-                        record.commitId,
-                        record.commitMsg,
-                        record.commitTimestamp,
-                        record.userName,
-                        record.totalCommitCount,
-                        record.mergeRequestId,
-                        "", // record.event,
-                        record.description,
-                        record.mrTitle
+                    id = record.id,
+                    objectKind = record.objectKind,
+                    operationKind = record.operationKind,
+                    extensionAction = record.extensionAction,
+                    gitProjectId = record.gitProjectId,
+                    branch = record.branch,
+                    targetBranch = record.targetBranch,
+                    commitId = record.commitId,
+                    commitMsg = record.commitMsg,
+                    commitTimeStamp = record.commitTimestamp,
+                    userId = record.userName,
+                    totalCommitCount = record.totalCommitCount,
+                    mergeRequestId = record.mergeRequestId,
+                    event = "", // record.event,
+                    description = record.description,
+                    mrTitle = record.mrTitle
                 )
             }
         }
@@ -121,30 +122,31 @@ class GitRequestEventDao {
     ): List<GitRequestEvent> {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             val records = dslContext.selectFrom(this)
-                    .where(GIT_PROJECT_ID.eq(gitProjectId))
-                    .orderBy(ID.desc())
-                    .limit(pageSize).offset((page - 1) * pageSize)
-                    .fetch()
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .orderBy(ID.desc())
+                .limit(pageSize).offset((page - 1) * pageSize)
+                .fetch()
             val result = mutableListOf<GitRequestEvent>()
             records.forEach {
-                result.add(GitRequestEvent(
-                            it.id,
-                            it.objectKind,
-                            it.operationKind,
-                            it.extensionAction,
-                            it.gitProjectId,
-                            it.branch,
-                            it.targetBranch,
-                            it.commitId,
-                            it.commitMsg,
-                            it.commitTimestamp,
-                            it.userName,
-                            it.totalCommitCount,
-                            it.mergeRequestId,
-                            "", // record.event,
-                            it.description,
-                            it.mrTitle
-                        )
+                result.add(
+                    GitRequestEvent(
+                        id = it.id,
+                        objectKind = it.objectKind,
+                        operationKind = it.operationKind,
+                        extensionAction = it.extensionAction,
+                        gitProjectId = it.gitProjectId,
+                        branch = it.branch,
+                        targetBranch = it.targetBranch,
+                        commitId = it.commitId,
+                        commitMsg = it.commitMsg,
+                        commitTimeStamp = it.commitTimestamp,
+                        userId = it.userName,
+                        totalCommitCount = it.totalCommitCount,
+                        mergeRequestId = it.mergeRequestId,
+                        event = "", // record.event,
+                        description = it.description,
+                        mrTitle = it.mrTitle
+                    )
                 )
             }
             return result
@@ -157,10 +159,41 @@ class GitRequestEventDao {
     ): Long {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             return dslContext.selectCount()
-                    .from(this)
-                    .where(GIT_PROJECT_ID.eq(gitProjectId))
-                    .orderBy(ID.desc())
-                    .fetchOne(0, Long::class.java)
+                .from(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .orderBy(ID.desc())
+                .fetchOne(0, Long::class.java)
+        }
+    }
+
+    /**
+     * 根据创建时间范围获取主键ID
+     */
+    fun getRequestIdByCreateTime(
+        dslContext: DSLContext,
+        beginTime: LocalDateTime = LocalDateTime.MIN,
+        endTime: LocalDateTime = LocalDateTime.MAX,
+        endId: Long = Long.MAX_VALUE,
+        limit: Int = 1000
+    ): List<Long> {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            return dslContext.select(ID).from(this)
+                .where(CREATE_TIME.gt(beginTime).and(CREATE_TIME.lt(endTime)).and(ID.lt(endId)))
+                .orderBy(ID.desc())
+                .limit(limit).fetch(ID)
+        }
+    }
+
+    /**
+     * 根据ID删除
+     */
+    fun deleteByIds(
+        dslContext: DSLContext,
+        ids: Collection<Long>
+    ): Int {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            return dslContext.delete(this)
+                .where(ID.`in`(ids)).execute()
         }
     }
 }

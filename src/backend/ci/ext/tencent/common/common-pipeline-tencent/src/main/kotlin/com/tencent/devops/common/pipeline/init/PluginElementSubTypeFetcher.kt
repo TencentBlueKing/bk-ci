@@ -86,7 +86,8 @@ import com.tencent.devops.common.pipeline.element.XcodeBuildElement2
 import com.tencent.devops.common.pipeline.element.ZhiyunInstanceMaintenanceElement
 import com.tencent.devops.common.pipeline.element.ZhiyunPushFileElement
 import com.tencent.devops.common.pipeline.element.ZhiyunUpdateAsyncEXElement
-import com.tencent.devops.common.pipeline.element.market.ExtServiceBuildDeployElement
+import com.tencent.devops.common.pipeline.element.store.ExtServiceBuildDeployElement
+import com.tencent.devops.common.pipeline.element.store.StoreCodeccValidateElement
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveElement
 
@@ -155,7 +156,8 @@ class PluginElementSubTypeFetcher : ElementSubTypeFetcher {
             XcodeBuildElement.classType to XcodeBuildElement::class.java,
             XcodeBuildElement2.classType to XcodeBuildElement2::class.java,
             SensitiveScanElement.classType to SensitiveScanElement::class.java,
-            ExtServiceBuildDeployElement.classType to ExtServiceBuildDeployElement::class.java
+            ExtServiceBuildDeployElement.classType to ExtServiceBuildDeployElement::class.java,
+            StoreCodeccValidateElement.classType to StoreCodeccValidateElement::class.java
         )
     }
 }

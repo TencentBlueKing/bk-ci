@@ -26,22 +26,23 @@
 
 package com.tencent.devops.store.dao.atom
 
-import com.tencent.devops.model.store.tables.TStoreBuildInfo
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
+import com.tencent.devops.model.store.tables.TStoreBuildInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
-import org.jooq.Record2
+import org.jooq.Record3
 import org.springframework.stereotype.Repository
 
 @Repository
 class MarketAtomBuildInfoDao {
 
-    fun getAtomBuildInfo(dslContext: DSLContext, atomId: String): Record2<String, String> {
+    fun getAtomBuildInfo(dslContext: DSLContext, atomId: String): Record3<String, String, String> {
         val a = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("a")
         val b = TStoreBuildInfo.T_STORE_BUILD_INFO.`as`("b")
         return dslContext.select(
             b.SCRIPT.`as`("script"),
-            b.REPOSITORY_PATH.`as`("repositoryPath")
+            b.REPOSITORY_PATH.`as`("repositoryPath"),
+            b.LANGUAGE.`as`("language")
         ).from(a)
             .join(b)
             .on(a.LANGUAGE.eq(b.LANGUAGE))

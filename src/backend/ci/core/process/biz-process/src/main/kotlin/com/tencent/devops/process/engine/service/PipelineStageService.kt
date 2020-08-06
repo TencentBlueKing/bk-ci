@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
@@ -37,6 +38,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -53,7 +55,8 @@ class PipelineStageService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildStageDao: PipelineBuildStageDao,
-    private val stageTagService: StageTagService
+    private val stageTagService: StageTagService,
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineStageService::class.java)
@@ -75,6 +78,20 @@ class PipelineStageService @Autowired constructor(
             stageId = stageId,
             buildStatus = buildStatus
         )
+        val moveStageDataBakSwitch = redisOperation.get("moveStageDataBakSwitch")
+        // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+        if (moveStageDataBakSwitch == "true") {
+            try {
+                pipelineBuildStageDao.updateBakStageStatus(
+                    dslContext = dslContext,
+                    buildId = buildId,
+                    stageId = stageId,
+                    buildStatus = buildStatus
+                )
+            } catch (e: Exception) {
+                logger.warn("build($buildId) updateBakStageStatus error", e)
+            }
+        }
     }
 
     fun listStages(buildId: String): List<PipelineBuildStage> {
@@ -86,6 +103,51 @@ class PipelineStageService @Autowired constructor(
             }
         }
         return result
+    }
+
+    fun skipStage(
+        buildId: String,
+        stageId: String
+    ) {
+        updateStageStatus(buildId, stageId, BuildStatus.SKIP)
+        SpringContextUtil.getBean(PipelineBuildDetailService::class.java).stageSkip(buildId, stageId)
+    }
+
+    fun pauseStage(
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        controlOption: PipelineBuildStageControlOption
+    ) {
+        logger.info("[$buildId]|pauseStage|stageId=$stageId|controlOption=$controlOption")
+        pipelineBuildStageDao.updateStatus(
+            dslContext = dslContext,
+            buildId = buildId,
+            stageId = stageId,
+            buildStatus = BuildStatus.PAUSE,
+            controlOption = controlOption
+        )
+        val moveStageDataBakSwitch = redisOperation.get("moveStageDataBakSwitch")
+        // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+        if (moveStageDataBakSwitch == "true") {
+            try {
+                pipelineBuildStageDao.updateBakStageStatus(
+                    dslContext = dslContext,
+                    buildId = buildId,
+                    stageId = stageId,
+                    buildStatus = BuildStatus.PAUSE,
+                    controlOption = controlOption
+                )
+            } catch (e: Exception) {
+                logger.warn("build($buildId) updateBakStageStatus error", e)
+            }
+        }
+        SpringContextUtil.getBean(PipelineBuildDetailService::class.java).stagePause(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            controlOption = controlOption
+        )
     }
 
     fun startStage(

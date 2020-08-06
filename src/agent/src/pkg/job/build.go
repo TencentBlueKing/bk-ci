@@ -175,9 +175,11 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 
 	if systemutil.IsWindows() {
 		startCmd := config.GetJava()
+		agentLogPrefix := fmt.Sprintf("%s_%s_agent", buildInfo.BuildId, buildInfo.VmSeqId)
 		args := []string{
 			"-Ddevops.slave.agent.role=devops.slave.agent.role.slave",
 			"-Dbuild.type=AGENT",
+			"-DAGENT_LOG_PREFIX=" + agentLogPrefix,
 			"-jar",
 			config.BuildAgentJarPath(),
 			getEncodedBuildInfo(buildInfo)}
@@ -230,6 +232,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo) (string, err
 		buildInfo.VmSeqId)
 
 	logs.Info("start agent script: ", scriptFile)
+	agentLogPrefix := fmt.Sprintf("%s_%s_agent", buildInfo.BuildId, buildInfo.VmSeqId)
 	lines := []string{
 		"#!/bin/bash",
 		"source /etc/profile",
@@ -237,8 +240,8 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo) (string, err
 		"  source ~/.bash_profile",
 		"fi",
 		fmt.Sprintf("cd %s", systemutil.GetWorkDir()),
-		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Dbuild.type=AGENT -Ddevops.slave.agent.role=devops.slave.agent.role.slave -jar %s %s",
-			config.GetJava(), scriptFile, config.BuildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
+		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Dbuild.type=AGENT -Ddevops.slave.agent.role=devops.slave.agent.role.slave -DAGENT_LOG_PREFIX=%s -jar %s %s",
+			config.GetJava(), scriptFile, agentLogPrefix, config.BuildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
 	}
 	scriptContent := strings.Join(lines, "\n")
 

@@ -7,7 +7,6 @@ import com.tencent.devops.artifactory.service.artifactory.ArtifactoryDownloadSer
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
@@ -75,13 +74,15 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         artifactoryType: ArtifactoryType,
         userId: String,
         path: String,
-        channelCode: ChannelCode?
+        ttl: Int,
+        directed: Boolean?
     ): Result<Url> {
         checkParam(projectId, path)
+        val isDirected = directed ?: false
         return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path))
+            Result(bkRepoDownloadService.serviceGetInnerDownloadUrl(userId, projectId, artifactoryType, path, ttl, isDirected))
         } else {
-            Result(artifactoryDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path, channelCode))
+            Result(artifactoryDownloadService.serviceGetInnerDownloadUrl(userId, projectId, artifactoryType, path, ttl, isDirected))
         }
     }
 

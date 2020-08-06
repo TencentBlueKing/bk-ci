@@ -103,6 +103,12 @@
             },
             handleValue (val) {
                 setTimeout(() => {
+                    if (val.endsWith(',') || val.endsWith(';')) {
+                        val = val.substr(0, val.length - 1)
+                    }
+                    if (val.endsWith('<') || val.endsWith(':')) {
+                        return
+                    }
                     let temp = []
                     const value = val.trim()
                     let resList = value.split(',')
@@ -171,7 +177,9 @@
                             this.$refs.staffInput.focus()
                         }
                         break
-                    // 确认
+                    // 确认, 输入回车，逗号和分号，都当作确定输入分隔符
+                    case 186:
+                    case 188:
                     case 13:
                         this.isEdit = true
                         this.handleValue(this.curInsertVal)

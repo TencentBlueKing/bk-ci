@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
@@ -62,7 +63,8 @@ class SubPipelineStartUpService(
     private val buildVariableService: BuildVariableService,
     private val buildService: PipelineBuildService,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineStartUpService::class.java)
@@ -101,7 +103,9 @@ class SubPipelineStartUpService(
             runVariables[PIPELINE_START_USER_ID] ?: runVariables[PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_ID)]
             ?: "null"
         val triggerUser =
-            runVariables[PIPELINE_START_USER_NAME] ?: runVariables[PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_NAME)]
+            runVariables[PIPELINE_START_USER_NAME] ?: runVariables[PipelineVarUtil.newVarToOldVar(
+                PIPELINE_START_USER_NAME
+            )]
             ?: userId
 
         logger.info("[$buildId]|callPipelineStartup|$userId|$triggerUser|$project|$callProjectId|$projectId|$parentPipelineId|$callPipelineId|$taskId")
@@ -146,6 +150,20 @@ class SubPipelineStartUpService(
             taskId = taskId,
             subBuildId = subBuildId
         )
+        val moveTaskDataBakSwitch = redisOperation.get("moveTaskDataBakSwitch")
+        // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+        if (moveTaskDataBakSwitch == "true") {
+            try {
+                pipelineBuildTaskDao.updateBakSubBuildId(
+                    dslContext = dslContext,
+                    buildId = buildId,
+                    taskId = taskId,
+                    subBuildId = subBuildId
+                )
+            } catch (e: Exception) {
+                logger.warn("build($buildId) updateBakSubBuildId error", e)
+            }
+        }
 
         return Result(
             ProjectBuildId(
@@ -214,7 +232,9 @@ class SubPipelineStartUpService(
                         val subPip = msg["subPip"]
                         logger.info("callPipelineStartup: ${msg["projectId"]} $projectId")
                         val subPro =
-                            if (msg["projectId"] == null || msg["projectId"].toString().isBlank()) projectId else msg["projectId"]
+                            if (msg["projectId"] == null || msg["projectId"].toString()
+                                    .isBlank()
+                            ) projectId else msg["projectId"]
                         val exist = HashSet(currentExistPipelines)
                         checkSubpipeline(atomCode, subPro as String, subPip as String, exist)
                         existPipelines.addAll(exist)
@@ -314,6 +334,19 @@ class SubPipelineStartUpService(
             }
         }
         return Result(parameter)
+    }
+
+    fun getSubVar(buildId: String, taskId: String): Result<Map<String, String>> {
+        logger.info("getSubVar | $buildId | $taskId")
+        val taskRecord = pipelineBuildTaskDao.get(
+            dslContext = dslContext,
+            buildId = buildId,
+            taskId = taskId
+        ) ?: return Result(emptyMap())
+        logger.info("getSubVar sub buildId :${taskRecord.subBuildId}")
+
+        val subBuildId = taskRecord.subBuildId
+        return Result(buildVariableService.getAllVariable(subBuildId))
     }
 
     fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {

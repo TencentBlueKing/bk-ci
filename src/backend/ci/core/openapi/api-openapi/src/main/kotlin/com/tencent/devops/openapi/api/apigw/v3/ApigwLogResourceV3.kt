@@ -18,13 +18,13 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
 @Api(tags = ["OPENAPI_LOG_V2"], description = "OPENAPI-构建日志资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/logs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwLogResourceV3 {
     @ApiOperation("根据构建ID获取初始化所有日志")
     @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/logs")
+    @Path("/init")
     fun getInitLogs(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -60,7 +60,7 @@ interface ApigwLogResourceV3 {
 
     @ApiOperation("获取更多日志")
     @GET
-    @Path("/{projectId}/{pipelineId}/{buildId}/more")
+    @Path("/more")
     fun getMoreLogs(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -102,7 +102,7 @@ interface ApigwLogResourceV3 {
 
     @ApiOperation("获取某行后的日志")
     @GET
-    @Path("/{projectId}/{pipelineId}/{buildId}/after")
+    @Path("/after")
     fun getAfterLogs(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -141,7 +141,7 @@ interface ApigwLogResourceV3 {
 
     @ApiOperation("下载日志接口")
     @GET
-    @Path("/{projectId}/{pipelineId}/{buildId}/download")
+    @Path("/download")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadLogs(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)

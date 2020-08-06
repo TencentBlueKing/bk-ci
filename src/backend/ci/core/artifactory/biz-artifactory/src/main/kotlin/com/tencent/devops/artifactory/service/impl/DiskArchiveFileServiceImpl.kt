@@ -26,6 +26,7 @@
 
 package com.tencent.devops.artifactory.service.impl
 
+import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
@@ -34,15 +35,18 @@ import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.util.AntPathMatcher
 import org.springframework.util.FileCopyUtils
 import java.io.File
 import java.io.FileInputStream
+import java.io.InputStream
 import java.io.UnsupportedEncodingException
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -55,6 +59,8 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
     @Value("\${artifactory.archiveLocalBasePath:/data/bkee/public/ci/artifactory/}")
     private lateinit var archiveLocalBasePath: String
 
+    private val matcher = AntPathMatcher()
+
     override fun uploadFileToRepo(destPath: String, file: File) {
         val targetFile = File(destPath)
         val parentFile = targetFile.parentFile
@@ -66,6 +72,11 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
 
     override fun getCommonFileFolderName(): String {
         return "file"
+    }
+
+    override fun getInputStreamByFilePath(filePath: String): InputStream {
+        val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
+        return FileInputStream(file)
     }
 
     override fun downloadFile(filePath: String, response: HttpServletResponse) {
@@ -81,13 +92,16 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
             return
         }
         val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
+        response.contentType = MimeUtil.mediaType(filePath)
         FileCopyUtils.copy(FileInputStream(file), response.outputStream)
     }
 
     override fun downloadFile(filePath: String): Response {
+        logger.info("downloadFile, filePath: $filePath")
         val file = File("${getBasePath()}$fileSeparator${URLDecoder.decode(filePath, "UTF-8")}")
         // 如果文件不存在，提示404
         if (!file.exists()) {
+            logger.warn("file not found, filePath: $filePath")
             return Response.status(Response.Status.NOT_FOUND).build()
         }
         val fileName: String?
@@ -99,6 +113,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
 
         return Response
             .ok(file)
+            .header("Content-Type", MimeUtil.STREAM_MIME_TYPE)
             .header("Content-disposition", "attachment;filename=" + fileName!!)
             .header("Cache-Control", "no-cache").build()
     }
@@ -121,7 +136,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
         fileChannelType: FileChannelTypeEnum
     ): Result<GetFileDownloadUrlsResponse?> {
         logger.info("[$buildId]|getFileDownloadUrls|fileChannelType=$fileChannelType|userId=$userId|projectId=$projectId|pipelineId=$pipelineId" +
-        "|artifactoryType=$artifactoryType|customFilePath=$customFilePath")
+            "|artifactoryType=$artifactoryType|customFilePath=$customFilePath")
         val fileType = if (artifactoryType == ArtifactoryType.PIPELINE) FileTypeEnum.BK_ARCHIVE else FileTypeEnum.BK_CUSTOM
         val result = generateDestPath(
             fileType = fileType,
@@ -244,6 +259,45 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
         } else {
             "$urlPrefix?filePath=$filePath"
         }
+    }
+
+    override fun doAcrossProjectCopy(
+        sourceParentPath: String,
+        sourcePathPattern: String,
+        destPath: String,
+        targetProjectId: String
+    ): Result<Count> {
+        val sourceFile = File(sourceParentPath)
+        if (!sourceFile.exists()) {
+            logger.info("acrossProjectCopy source file not exist, $sourceParentPath")
+            return Result(Count(0))
+        }
+        val fileList = mutableListOf<File>()
+        if (sourceFile.isDirectory) {
+            sourceFile.listFiles()?.forEach {
+                if (it.isDirectory) {
+                    return@forEach
+                }
+                if (matcher.match(sourcePathPattern, it.absolutePath)) {
+                    fileList.add(it)
+                }
+            }
+        } else {
+            if (matcher.match(sourcePathPattern, sourceFile.absolutePath)) {
+                fileList.add(sourceFile)
+            }
+        }
+        fileList.forEach {
+            uploadFile(
+                userId = "",
+                file = it,
+                projectId = targetProjectId,
+                filePath = "$destPath$fileSeparator${it.name}",
+                fileType = FileTypeEnum.BK_CUSTOM,
+                fileChannelType = FileChannelTypeEnum.BUILD
+            )
+        }
+        return Result(Count(fileList.size))
     }
 
     companion object {

@@ -48,9 +48,6 @@ data class MarketBuildTask(
         const val taskVersion = "@latest"
     }
 
-    override fun getTaskType() = taskType
-    override fun getTaskVersion() = taskVersion
-
     override fun covertToElement(config: CiBuildConfig): MarketBuildAtomElement {
         return MarketBuildAtomElement(
                 displayName ?: "插件市场插件,atomCode: ${inputs.atomCode}",

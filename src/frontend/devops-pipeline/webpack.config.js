@@ -16,23 +16,18 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 const path = require('path')
 const webpack = require('webpack')
 const ReplacePlugin = require('../webpackPlugin/replace-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const webpackBaseConfig = require('../webpack.base')
-const getConfig = require('./constConfig.js')
-
 module.exports = (env, argv) => {
     const isProd = argv.mode === 'production'
     const urlPrefix = env && env.name ? `${env.name}` : ''
     const envDist = env && env.dist ? env.dist : 'frontend'
-    const version = env && env.version ? env.version : 'tencent'
     const extUrlPrefix = env && env.name ? `${env.name}-` : ''
     const dist = path.join(__dirname, `../${envDist}/pipeline`)
-    const constConfig = getConfig(version)
     const config = webpackBaseConfig({
         env,
         argv,
@@ -50,7 +45,6 @@ module.exports = (env, argv) => {
         new webpack.ContextReplacementPlugin(/brace\/mode$/, /^\.\/(javascript|yaml|json|python|sh|text|powershell|batchfile)$/),
         // brace 优化，只提取需要的 theme
         new webpack.ContextReplacementPlugin(/brace\/theme$/, /^\.\/(monokai)$/),
-        new webpack.DefinePlugin(constConfig),
         new HtmlWebpackPlugin({
             filename: isProd ? `${dist}/frontend#pipeline#index.html` : `${dist}/index.html`,
             template: 'index.html',
@@ -68,11 +62,10 @@ module.exports = (env, argv) => {
             '__HTTP_SCHEMA__://__BKCI_FQDN__': urlPrefix
         })])
     ]
-
     config.devServer.historyApiFallback = {
         rewrites: [
             { from: /^\/pipeline/, to: '/pipeline/index.html' }
         ]
-      }
+    }
     return config
 }
