@@ -116,6 +116,34 @@ class AuthUtilsTest {
         childExpression4.value = "/project,demo/"
         expressionDTO4.content.add(childExpression4)
         newExpressionList.add(expressionDTO4)
+
+        val expressionDTO5 = ExpressionDTO()
+        expressionDTO5.content = mutableListOf()
+        expressionDTO5.operator = ExpressionOperationEnum.OR
+        val childExpression5 = ExpressionDTO()
+        childExpression5.field = "credential.id"
+        childExpression5.operator = ExpressionOperationEnum.EQUAL
+        childExpression5.value = "test_3"
+
+        val childExpression6 = ExpressionDTO()
+        val childExpression7 = ExpressionDTO()
+        val childExpression8 = ExpressionDTO()
+        childExpression5.content = mutableListOf()
+        childExpression6.content = mutableListOf()
+        childExpression7.operator = ExpressionOperationEnum.EQUAL
+        childExpression7.value = "test"
+        childExpression7.field = "credential.id"
+
+        childExpression8.operator = ExpressionOperationEnum.START_WITH
+        childExpression8.value = "/project,v3test/"
+        childExpression8.field = "credential._bk_iam_path_"
+
+        childExpression6.content.add(childExpression7)
+        childExpression6.content.add(childExpression8)
+        childExpression6.operator = ExpressionOperationEnum.AND
+        expressionDTO5.content.add(childExpression5)
+        expressionDTO5.content.add(childExpression6)
+        newExpressionList.add(expressionDTO5)
     }
 
     fun buildExpression() {
@@ -243,6 +271,31 @@ class AuthUtilsTest {
         mockList1.add("p-54fb8b6562584df4b3693f7c787c105a")
         Assert.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[3], "demo", resourceType))
         Assert.assertEquals(mockList1, AuthUtils.getResourceInstance(newExpressionList[3], "v3test", resourceType))
+    }
+
+    @Test
+    fun getResourceInstanceTest5() {
+        val resourceType = AuthResourceType.TICKET_CREDENTIAL
+        val mockList = mutableSetOf<String>()
+        mockList.add("test_3")
+        val mockList1 = mutableSetOf<String>()
+        mockList1.add("test")
+        mockList1.add("test_3")
+        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[4], "", resourceType))
+        Assert.assertEquals(mockList1, AuthUtils.getResourceInstance(newExpressionList[4], "v3test", resourceType))
+    }
+
+    @Test
+    fun getResourceInstanceTest6() {
+        val resourceType = AuthResourceType.TICKET_CREDENTIAL
+        val mockList = mutableSetOf<String>()
+        mockList.add("test_3")
+        mockList.add("test")
+        val mockList1 = mutableSetOf<String>()
+        mockList1.add("test")
+        mockList1.add("test_3")
+        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[4], "v3test", resourceType))
+        Assert.assertEquals(mockList1, AuthUtils.getResourceInstance(newExpressionList[4], "v3test", resourceType))
     }
 
     fun print(projectList: List<String>) {

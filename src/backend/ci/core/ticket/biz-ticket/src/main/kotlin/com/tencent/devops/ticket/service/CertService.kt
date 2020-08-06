@@ -154,6 +154,12 @@ interface CertService {
         limit: Int
     ): SQLPage<CertWithPermission>
 
+    fun list(
+        projectId: String,
+        offset: Int,
+        limit: Int
+    ): SQLPage<Cert>
+
     fun hasPermissionList(
         userId: String,
         projectId: String,
