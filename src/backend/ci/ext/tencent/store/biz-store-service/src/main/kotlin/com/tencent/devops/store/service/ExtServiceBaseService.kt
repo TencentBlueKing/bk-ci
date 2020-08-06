@@ -596,7 +596,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         )
                     ) ?: "",
                     language = language ?: "",
-                    itemName = JsonUtil.toJson(itemNameList),
+                    itemName = itemNameList,
                     itemIds = serviceItemList ?: emptySet(),
                     releaseFlag = releaseFlag
                 )
