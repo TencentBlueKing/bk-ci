@@ -28,8 +28,6 @@ dependencies {
     compile project(":core:common:common-log")
     compile project(":core:common:common-event")
     compile project(":core:common:common-web")
-    // 解决依赖冲突：process要求lucene-8.6.0，es-transport-client要求lucene-6.6.1
-    compile "org.apache.lucene:lucene-core:6.6.1"
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"
