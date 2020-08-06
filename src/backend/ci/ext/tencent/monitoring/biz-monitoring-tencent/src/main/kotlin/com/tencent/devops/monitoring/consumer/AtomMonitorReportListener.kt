@@ -33,6 +33,7 @@ import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.event.pojo.measure.AtomMonitorReportBroadCastEvent
 import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.constant.MonitoringMessageCode.ERROR_MONITORING_INSERT_DATA_FAIL
+import com.tencent.devops.monitoring.consumer.processor.monitor.AbstractMonitorProcessor
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -40,22 +41,23 @@ import kotlin.reflect.full.declaredMemberProperties
 
 @Component
 class AtomMonitorReportListener @Autowired constructor(
-    private val influxdbClient: InfluxdbClient
+        private val influxdbClient: InfluxdbClient,
+        private val monitorProcessors: List<AbstractMonitorProcessor>
 ) : Listener<AtomMonitorReportBroadCastEvent> {
 
     override fun execute(event: AtomMonitorReportBroadCastEvent) {
         try {
-            logger.info("Receive atom monitor event - $event")
-            insertAtomMonitorData(event.monitorData)
-            if (event.monitorData.atomCode == "CodeccCheckAtomDebug" && event.monitorData.extData != null && event.monitorData.extData!!.isNotEmpty()) {
-                logger.info("CodeCC atom, insert extDAta - ${jacksonObjectMapper().writeValueAsString(event.monitorData.extData)}")
-                insertExtMap(event.monitorData.extData!!)
-            }
+            val monitorData = event.monitorData
+            logger.info("Receive monitorData - $monitorData")
+            insertAtomMonitorData(monitorData)
+
+            monitorProcessors.filter { it.atomCode() == monitorData.atomCode }.forEach { it.process(influxdbClient, monitorData.atomCode, monitorData.extData) }
+
         } catch (t: Throwable) {
             logger.warn("Fail to insert the atom monitor data", t)
             throw ErrorCodeException(
-                errorCode = ERROR_MONITORING_INSERT_DATA_FAIL,
-                defaultMessage = "Fail to insert the atom monitor data"
+                    errorCode = ERROR_MONITORING_INSERT_DATA_FAIL,
+                    defaultMessage = "Fail to insert the atom monitor data"
             )
         }
     }
@@ -72,14 +74,6 @@ class AtomMonitorReportListener @Autowired constructor(
             }
         }
         influxdbClient.insert(AtomMonitorData::class.java.simpleName, emptyMap(), field)
-    }
-
-    fun insertExtMap(extData: Map<String, Any>) {
-        val field: MutableMap<String, String> = mutableMapOf()
-        extData.forEach { (t, u) ->
-            field[t] = jacksonObjectMapper().writeValueAsString(u)
-        }
-        influxdbClient.insert(AtomMonitorData::class.java.simpleName + "_extData", emptyMap(), field)
     }
 
     companion object {
