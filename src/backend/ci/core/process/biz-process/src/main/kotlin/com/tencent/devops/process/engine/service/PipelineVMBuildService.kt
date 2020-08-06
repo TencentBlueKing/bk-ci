@@ -38,6 +38,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
@@ -45,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -69,6 +71,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 
@@ -136,9 +139,10 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                             throw IllegalStateException("Deny to start VM! startVMStatus=${it.startVMStatus}")
                         }
                     }
-
+                    var timeoutMills: Long? = null
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
                     val buildEnvs = if (it is VMBuildContainer) {
+                        timeoutMills = Timeout.transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
                         if (it.buildEnv == null) {
                             emptyList<BuildEnv>()
                         } else {
@@ -154,6 +158,9 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                             list
                         }
                     } else {
+                        if (it is NormalContainer) {
+                            timeoutMills = Timeout.transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
+                        }
                         emptyList()
                     }
                     pipelineBuildDetailService.containerStart(buildId = buildId, containerId = vmSeqId.toInt())
@@ -175,7 +182,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         buildEnvs = buildEnvs,
                         containerId = it.id!!,
                         containerHashId = it.containerId ?: "",
-                        variablesWithType = variablesWithType
+                        variablesWithType = variablesWithType,
+                        timeoutMills = timeoutMills!!
                     )
                 }
                 vmId++
@@ -217,6 +225,18 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 userId = startUpVMTask.starter,
                 buildStatus = buildStatus
             )
+
+            // #2043 上报启动构建机状态时，重新刷新开始时间，以防止调度的耗时占用了Job的超时时间
+            if (!BuildStatus.isFinish(startUpVMTask.status)) { // #2043 构建机当前启动状态是未结束状态，才进行刷新开妈时间
+                pipelineRuntimeService.updateContainerStatus(
+                    buildId = buildId,
+                    stageId = startUpVMTask.stageId,
+                    containerId = startUpVMTask.containerId,
+                    startTime = LocalDateTime.now(),
+                    endTime = null,
+                    buildStatus = BuildStatus.RUNNING
+                )
+            }
         }
 
         // 失败的话就发终止事件
@@ -249,10 +269,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         )
         return true
     }
-
-//    fun pluginClaimTask(buildId: String, vmSeqId: String, vmName: String): BuildTask {
-//        return buildClaim(buildId, vmSeqId, vmName)
-//    }
 
     /**
      * 构建机请求执行任务
