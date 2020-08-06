@@ -54,6 +54,6 @@ class ExternalCodeccRepoResourceImpl @Autowired constructor(
     }
 
     override fun getGitFileContentOAuth(userId: String, repoName: String, filePath: String, ref: String?): Result<String> {
-        return Result(commonRepoFileService.getGitFileContentOauth(userId, repoName, filePath, ref))
+        return commonRepoFileService.getGitFileContentOauth(userId, repoName, filePath, ref)
     }
 }
