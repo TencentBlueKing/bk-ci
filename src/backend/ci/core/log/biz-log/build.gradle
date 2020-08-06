@@ -34,6 +34,4 @@ dependencies {
     compile project(":core:common:common-auth:common-auth-api")
     compile project(":core:common:common-db")
     compile project(":core:common:common-client")
-    // 解决依赖冲突：process要求lucene-8.6.0，es-transport-client要求lucene-6.6.1
-    compile "org.apache.lucene:lucene-core:6.6.1"
 }
