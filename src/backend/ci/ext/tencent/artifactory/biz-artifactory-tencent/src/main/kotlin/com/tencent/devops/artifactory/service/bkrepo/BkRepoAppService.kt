@@ -30,7 +30,6 @@ import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.AppService
 import com.tencent.devops.artifactory.service.PipelineService
-import com.tencent.devops.artifactory.service.artifactory.ArtifactoryDownloadService
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil

@@ -36,7 +36,7 @@ data class CopyToCustomReq(
     val files: List<String>,
     @ApiModelProperty("是否拷贝所有文件", required = true)
     val copyAll: Boolean
-){
+) {
     fun check() {
         if (!copyAll && files.isEmpty()) {
             throw OperationException("invalid request")
