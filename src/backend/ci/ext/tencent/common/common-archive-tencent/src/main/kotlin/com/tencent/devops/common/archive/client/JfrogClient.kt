@@ -35,7 +35,6 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.io.InputStream
 import java.nio.file.Paths
 
 class JfrogClient constructor(
@@ -147,10 +146,10 @@ class JfrogClient constructor(
         }
     }
 
-    fun uploadFile(userId: String? = null, repoName: String, path: String, file: File, properties: Map<String,String>? = null) {
+    fun uploadFile(userId: String? = null, repoName: String, path: String, file: File, properties: Map<String, String>? = null) {
         logger.info("uploadFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
 
-        var url = if(repoName.toLowerCase() == "pipeline") "${getHost()}/service/result/$projectId/$path" else "${getHost()}/custom/service/result/$projectId/$path?"
+        var url = if (repoName.toLowerCase() == "pipeline") "${getHost()}/service/result/$projectId/$path" else "${getHost()}/custom/service/result/$projectId/$path?"
         properties?.forEach {
             url += ";${it.key}=${it.value}"
         }
@@ -158,15 +157,13 @@ class JfrogClient constructor(
                 .url(url)
                 .put(RequestBody.create(MediaType.parse("application/octet-stream"), file))
                 .build()
-        OkhttpUtils.doHttp(request).use {response ->
+        OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.error("jfrog upload file failed. url:$url. response:$responseContent")
                 throw RemoteServiceException("jfrog upload file failed. url:$url. response:$responseContent")
             }
-
         }
-
     }
 
     private fun getPathPair(regex: String): Map<String, String> {
