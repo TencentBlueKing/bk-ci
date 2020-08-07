@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.OrganizationDetailInfo
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -677,18 +676,10 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 }
             }
             val version = taskParams[KEY_VERSION] as String? ?: ""
-            val startTimeStr = monitorDataMap?.get(KEY_START_TIME)
-            val startTime = if (startTimeStr == null) {
-                task.startTime?.timestampmilli()
-            } else {
-                DateTimeUtil.stringToLocalDateTime(startTimeStr.toString()).timestampmilli()
-            }
-            val endTimeStr = monitorDataMap?.get(KEY_END_TIME)
-            val endTime = if (endTimeStr == null) {
-                task.endTime?.timestampmilli()
-            } else {
-                DateTimeUtil.stringToLocalDateTime(endTimeStr.toString()).timestampmilli()
-            }
+            val monitorStartTime = monitorDataMap?.get(KEY_START_TIME)
+            val startTime = (monitorStartTime as? Long) ?: task.startTime?.timestampmilli()
+            val monitorEndTime = monitorDataMap?.get(KEY_END_TIME)
+            val endTime = (monitorEndTime as? Long) ?: task.endTime?.timestampmilli()
             var project: ProjectVO? = null
             try {
                 project = client.get(ServiceProjectResource::class).get(task.projectId).data
