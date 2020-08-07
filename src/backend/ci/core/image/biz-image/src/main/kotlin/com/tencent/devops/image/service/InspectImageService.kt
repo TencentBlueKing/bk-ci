@@ -120,7 +120,10 @@ class InspectImageService @Autowired constructor(
                     virtualSize = imageInfo.virtualSize
                 )
             )
+            logger.info("==========================")
         }
+
+        logger.info("imageInspectList: $imageInspectList")
 
         return imageInspectList
     }
