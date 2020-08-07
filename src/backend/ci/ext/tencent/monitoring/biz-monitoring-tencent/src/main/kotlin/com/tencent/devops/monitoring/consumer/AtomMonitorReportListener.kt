@@ -41,8 +41,8 @@ import kotlin.reflect.full.declaredMemberProperties
 
 @Component
 class AtomMonitorReportListener @Autowired constructor(
-        private val influxdbClient: InfluxdbClient,
-        private val monitorProcessors: List<AbstractMonitorProcessor>
+    private val influxdbClient: InfluxdbClient,
+    private val monitorProcessors: List<AbstractMonitorProcessor>
 ) : Listener<AtomMonitorReportBroadCastEvent> {
 
     override fun execute(event: AtomMonitorReportBroadCastEvent) {
@@ -51,8 +51,7 @@ class AtomMonitorReportListener @Autowired constructor(
             logger.info("Receive monitorData - $monitorData")
             insertAtomMonitorData(monitorData)
 
-            monitorProcessors.filter { it.atomCode() == monitorData.atomCode }.forEach { it.process(influxdbClient, monitorData.atomCode, monitorData.extData) }
-
+            monitorProcessors.asSequence().filter { it.atomCode() == monitorData.atomCode }.forEach { it.process(influxdbClient, monitorData) }
         } catch (t: Throwable) {
             logger.warn("Fail to insert the atom monitor data", t)
             throw ErrorCodeException(
