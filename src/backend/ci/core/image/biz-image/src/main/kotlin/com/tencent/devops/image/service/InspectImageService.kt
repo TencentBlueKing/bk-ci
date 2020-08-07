@@ -79,7 +79,7 @@ class InspectImageService @Autowired constructor(
                 imageInspectList.add(
                     CheckDockerImageResponse(
                         errorCode = 0,
-                        errorMessage = "",
+                        errorMessage = t.message,
                         arch = "",
                         author = "",
                         comment = "",

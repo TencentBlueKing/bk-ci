@@ -33,7 +33,7 @@ data class CheckDockerImageResponse(
 
     val errorCode: Int,
 
-    val errorMessage: String,
+    val errorMessage: String? = "",
 
     val arch: String? = "",
 
