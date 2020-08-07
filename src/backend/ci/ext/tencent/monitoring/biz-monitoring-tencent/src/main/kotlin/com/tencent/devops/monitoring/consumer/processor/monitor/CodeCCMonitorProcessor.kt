@@ -43,6 +43,7 @@ class CodeCCMonitorProcessor : AbstractMonitorProcessor() {
             monitorData["status"] = it["status"]?.toString() ?: ""
             monitorData["errorCode"] = it["errorCode"]?.toString() ?: ""
             monitorData["errorMsg"] = it["errorMsg"]?.toString() ?: ""
+            return monitorData
         }
         return MonitorData()
     }
