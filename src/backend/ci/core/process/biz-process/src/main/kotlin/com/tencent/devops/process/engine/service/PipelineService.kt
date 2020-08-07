@@ -945,8 +945,8 @@ class PipelineService @Autowired constructor(
         projectId: String,
         authPermission: AuthPermission,
         excludePipelineId: String?,
-        offset: Int,
-        limit: Int
+        page: Int?,
+        pageSize: Int?
     ): SQLPage<Pipeline> {
 
         val watch = StopWatch()
@@ -966,8 +966,8 @@ class PipelineService @Autowired constructor(
                     projectId = projectId,
                     channelCode = ChannelCode.BS,
                     pipelineIds = hasPermissionList,
-                    page = offset,
-                    pageSize = limit
+                    page = page,
+                    pageSize = pageSize
                 )
             watch.stop()
 
