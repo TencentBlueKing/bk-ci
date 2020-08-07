@@ -28,20 +28,20 @@ class CodeCCMonitorProcessor : AbstractMonitorProcessor() {
     private fun buildMonitorData(it: Any?, extData: Map<String, Any>): MonitorData {
         logger.info("run data : $it")
         if (it is Map<*, *>) {
-            val startTime = it["startTime"] ?: 0
-            val endTime = it["endTime"] ?: 0
-            val elapseTime = it["elapseTime"] ?: 0
+            val startTime = (it["startTime"]?.toString() ?: "0").toLong()
+            val endTime = (it["endTime"]?.toString() ?: "0").toLong()
+            val elapseTime = endTime - startTime
 
             val monitorData = MonitorData()
-            monitorData["bgId"] = extData["BK_CI_CODECC_TASK_BG_ID"]?.toString() ?: ""
-            monitorData["centerId"] = extData["BK_CI_CODECC_TASK_CENTER_ID"]?.toString() ?: ""
-            monitorData["deptId"] = extData["BK_CI_CODECC_TASK_DEPT_ID"]?.toString() ?: ""
-            monitorData["toolName"] = it["toolName"]?.toString() ?: ""
+            monitorData["bgId"] = extData["BK_CI_CODECC_TASK_BG_ID"]?.toString() ?: "0"
+            monitorData["centerId"] = extData["BK_CI_CODECC_TASK_CENTER_ID"]?.toString() ?: "0"
+            monitorData["deptId"] = extData["BK_CI_CODECC_TASK_DEPT_ID"]?.toString() ?: "0"
+            monitorData["toolName"] = it["toolName"]?.toString() ?: "Unknown"
             monitorData["startTime"] = startTime.toString()
             monitorData["endTime"] = endTime.toString()
             monitorData["elapseTime"] = elapseTime.toString()
-            monitorData["status"] = it["status"]?.toString() ?: ""
-            monitorData["errorCode"] = it["errorCode"]?.toString() ?: ""
+            monitorData["status"] = it["status"]?.toString() ?: "Unknown"
+            monitorData["errorCode"] = it["errorCode"]?.toString() ?: "0"
             monitorData["errorMsg"] = it["errorMsg"]?.toString() ?: ""
             return monitorData
         }
