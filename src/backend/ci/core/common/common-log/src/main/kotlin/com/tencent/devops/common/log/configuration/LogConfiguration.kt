@@ -24,21 +24,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.model.pojo
+package com.tencent.devops.common.log.configuration
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.log.model.message.LogMessageWithLineNo
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.LogMQEventDispatcher
+import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
-/**
- * deng
- * 2019-01-23
- */
-@Event(MQ.EXCHANGE_LOG_BATCH_BUILD_EVENT, MQ.ROUTE_LOG_BATCH_BUILD_EVENT)
-data class LogBatchEvent(
-    override val buildId: String,
-    val logs: List<LogMessageWithLineNo>,
-    override val retryTime: Int = 2,
-    override val delayMills: Int = 0,
-    override var esName: String? = null
-) : ILogEvent(buildId, retryTime, delayMills, esName)
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class LogConfiguration {
+
+    @Bean
+    fun logMQEventDispatcher(
+        @Qualifier(value = "extendRabbitTemplate")
+        rabbitTemplate: RabbitTemplate
+    ) = LogMQEventDispatcher(rabbitTemplate)
+
+    @Bean
+    fun buildLogPrinter(
+        @Qualifier(value = "extendRabbitTemplate")
+        rabbitTemplate: RabbitTemplate
+    ) = BuildLogPrinter(logMQEventDispatcher(rabbitTemplate))
+}

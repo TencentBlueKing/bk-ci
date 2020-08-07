@@ -28,7 +28,7 @@ package com.tencent.devops.process.engine.atom.quality
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -38,7 +38,6 @@ import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.engine.utils.QualityUtils
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 

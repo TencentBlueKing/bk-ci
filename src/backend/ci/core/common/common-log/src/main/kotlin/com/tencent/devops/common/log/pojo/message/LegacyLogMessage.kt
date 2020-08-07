@@ -24,40 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.model.pojo
-
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+package com.tencent.devops.common.log.pojo.message
 
 /**
  *
  * Powered By Tencent
  */
-@ApiModel("日志模型")
-data class LogLine(
-    @ApiModelProperty("日志行号", required = true)
-    val lineNo: Long,
-    @ApiModelProperty("日志时间戳", required = true)
-    val timestamp: Long,
-    @ApiModelProperty("日志消息体", required = true)
+data class LegacyLogMessage(
+    val tag: String,
+    val buildId: String,
     val message: String,
-    @ApiModelProperty("日志权重级", required = true)
-    val priority: Byte = 0,
-    @ApiModelProperty("日志tag", required = true)
-    val tag: String = "",
-    @ApiModelProperty("日志jobId", required = true)
-    val jobId: String = "",
-    @ApiModelProperty("日志执行次数", required = true)
-    val executeCount: Int? = 1
+    val timestamp: Long,
+    val nanoTime: Long
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other == null || javaClass != other.javaClass) return false
+        if (other == null || other.javaClass != this.javaClass) return false
 
-        return lineNo == (other as LogLine).lineNo
+        val otherObj = other as LegacyLogMessage
+        return this.buildId == otherObj.buildId &&
+            this.nanoTime == otherObj.nanoTime
     }
 
     override fun hashCode(): Int {
-        return (lineNo xor lineNo.ushr(32)).toInt()
+        return "${buildId}_$nanoTime".hashCode()
+    }
+
+    override fun toString(): String {
+        return "LegacyLogMessage(tag='$tag', buildId='$buildId', " +
+            "message='$message', timestamp=$timestamp, nanoTime=$nanoTime)"
     }
 }

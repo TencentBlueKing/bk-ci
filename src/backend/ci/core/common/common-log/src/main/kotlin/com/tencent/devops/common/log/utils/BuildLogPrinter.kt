@@ -24,13 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.utils
+package com.tencent.devops.common.log.utils
 
 import com.tencent.devops.common.log.Ansi
-import com.tencent.devops.log.model.message.LogMessage
-import com.tencent.devops.log.model.pojo.LogEvent
-import com.tencent.devops.log.model.pojo.LogStatusEvent
-import com.tencent.devops.log.model.pojo.enums.LogType
+import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.log.pojo.LogEvent
+import com.tencent.devops.common.log.pojo.LogStatusEvent
+import com.tencent.devops.common.log.pojo.enums.LogType
 
 class BuildLogPrinter (
     private val logMQEventDispatcher: LogMQEventDispatcher
@@ -107,7 +107,8 @@ class BuildLogPrinter (
         jobId: String? = null,
         executeCount: Int?
     ) {
-        logMQEventDispatcher.dispatch(LogStatusEvent(buildId, finished, tag, jobId ?: "", executeCount))
+        logMQEventDispatcher.dispatch(LogStatusEvent(buildId, finished, tag, jobId
+            ?: "", executeCount))
     }
 
     fun stopLog(buildId: String, tag: String, jobId: String?, executeCount: Int? = null) {

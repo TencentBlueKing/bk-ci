@@ -24,28 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.model.pojo
+package com.tencent.devops.common.log.pojo.enums
 
-import com.tencent.devops.log.model.pojo.enums.LogStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-/**
- *
- * Powered By Tencent
- */
-@ApiModel("结尾的日志查询模型")
-data class EndPageQueryLogs(
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("开始行号", required = true)
-    val startLineNo: Long = 0L,
-    @ApiModelProperty("结束行号", required = true)
-    val endLineNo: Long = 0L,
-    @ApiModelProperty("日志列表", required = true)
-    val logs: List<LogLine> = listOf(),
-    @ApiModelProperty("所用时间", required = false)
-    var timeUsed: Long = 0,
-    @ApiModelProperty("日志查询状态", required = false)
-    var status: LogStatus = LogStatus.SUCCEED
-)
+@ApiModel("日志类型")
+enum class LogType {
+    @ApiModelProperty("启动日志")
+    START,
+    @ApiModelProperty("结束日志")
+    END,
+    @ApiModelProperty("普通的日志")
+    LOG
+}

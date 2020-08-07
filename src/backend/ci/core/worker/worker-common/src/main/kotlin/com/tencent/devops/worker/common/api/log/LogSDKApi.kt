@@ -27,7 +27,7 @@
 package com.tencent.devops.worker.common.api.log
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.log.model.message.LogMessage
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
 interface LogSDKApi : WorkerRestApiSDK {
