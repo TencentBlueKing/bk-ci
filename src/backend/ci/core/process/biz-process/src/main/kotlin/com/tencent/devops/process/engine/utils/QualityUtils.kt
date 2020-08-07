@@ -378,7 +378,12 @@ object QualityUtils {
                 if (checkResult.failEnd) {
                     logger.info("[$buildId]|QUALITY_$position|taskId=$elementId|quality check fail stop directly")
                     // LogUtils.addFoldEndLine(rabbitTemplate, buildId, elementName, elementId, task.containerHashId,task.executeCount ?: 1)
-                    return AtomResponse(BuildStatus.QUALITY_CHECK_FAIL) // 拦截到直接失败
+                    return AtomResponse(
+                        buildStatus = BuildStatus.QUALITY_CHECK_FAIL,
+                        errorType = ErrorType.USER,
+                        errorCode = ErrorCode.USER_QUALITY_CHECK_FAIL,
+                        errorMsg = "quality check fail"
+                    ) // 拦截到直接失败
                 }
 
                 // 产生MQ消息，等待5分钟审核时间
