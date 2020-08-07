@@ -78,7 +78,7 @@ class InspectImageService @Autowired constructor(
                 logger.warn("Fail to pull the image $imageName of userId $userId", t)
                 imageInspectList.add(
                     CheckDockerImageResponse(
-                        errorCode = 0,
+                        errorCode = -1,
                         errorMessage = t.message,
                         arch = "",
                         author = "",

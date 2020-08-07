@@ -30,9 +30,7 @@ import com.github.dockerjava.api.model.AuthConfig
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DHUtil
-import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
