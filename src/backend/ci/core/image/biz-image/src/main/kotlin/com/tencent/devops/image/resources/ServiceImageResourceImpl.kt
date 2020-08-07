@@ -36,14 +36,12 @@ import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.image.pojo.ImageListResp
 import com.tencent.devops.image.pojo.ImagePageData
 import com.tencent.devops.image.service.ImageArtifactoryService
-import com.tencent.devops.image.service.InspectImageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceImageResourceImpl @Autowired constructor(
-    private val artifactoryService: ImageArtifactoryService,
-    private val inspectImageService: InspectImageService
+    private val artifactoryService: ImageArtifactoryService
 ) : ServiceImageResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserImageResourceImpl::class.java)
