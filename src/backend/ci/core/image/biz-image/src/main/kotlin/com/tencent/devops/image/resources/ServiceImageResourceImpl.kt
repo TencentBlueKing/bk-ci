@@ -31,8 +31,6 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.image.api.ServiceImageResource
-import com.tencent.devops.image.pojo.CheckDockerImageRequest
-import com.tencent.devops.image.pojo.CheckDockerImageResponse
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.image.pojo.ImageListResp
@@ -115,10 +113,6 @@ class ServiceImageResourceImpl @Autowired constructor(
 
     override fun getTagInfo(userId: String, imageRepo: String, imageTag: String): Result<DockerTag?> {
         return Result(artifactoryService.getTagInfo(imageRepo, imageTag))
-    }
-
-    override fun checkDockerImage(userId: String, checkDockerImageRequestList: List<CheckDockerImageRequest>): Result<List<CheckDockerImageResponse>> {
-        return Result(inspectImageService.checkDockerImage(userId, checkDockerImageRequestList))
     }
 
     override fun listDevCloudImages(userId: String, projectId: String, public: Boolean): Result<List<DockerTag>> {
