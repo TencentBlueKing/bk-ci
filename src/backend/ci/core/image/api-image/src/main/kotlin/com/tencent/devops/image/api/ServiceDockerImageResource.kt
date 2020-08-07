@@ -48,8 +48,8 @@ import javax.ws.rs.core.MediaType
 interface ServiceDockerImageResource {
 
     @ApiOperation("检查镜像信息")
-    @Path("/checkDockerImage")
     @POST
+    @Path("/checkDockerImage")
     fun checkDockerImage(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

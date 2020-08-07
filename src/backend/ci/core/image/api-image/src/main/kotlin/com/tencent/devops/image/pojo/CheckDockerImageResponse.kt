@@ -31,33 +31,33 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class CheckDockerImageResponse(
 
-    private val errorCode: Int,
+    val errorCode: Int,
 
-    private val errorMessage: String,
+    val errorMessage: String,
 
-    private val arch: String? = null,
+    val arch: String? = "",
 
-    private val author: String? = null,
+    val author: String? = "",
 
-    private val comment: String? = null,
+    val comment: String? = "",
 
-    private val created: String? = null,
+    val created: String? = "",
 
-    private val dockerVersion: String? = null,
+    val dockerVersion: String? = "",
 
-    private val id: String? = null,
+    val id: String? = "",
 
-    private val os: String? = null,
+    val os: String? = "",
 
-    private val osVersion: String? = null,
+    val osVersion: String? = "",
 
-    private val parent: String? = null,
+    val parent: String? = "",
 
-    private val size: Long? = null,
+    val size: Long? = 0,
 
-    private val repoTags: List<String>? = null,
+    val repoTags: List<String>? = null,
 
-    private val repoDigests: List<String>? = null,
+    val repoDigests: List<String>? = null,
 
-    private val virtualSize: Long? = null
+    val virtualSize: Long? = 0
 )
