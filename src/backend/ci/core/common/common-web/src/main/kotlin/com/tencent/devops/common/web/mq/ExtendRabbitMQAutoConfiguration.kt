@@ -29,13 +29,15 @@ package com.tencent.devops.common.web.mq
 import org.springframework.amqp.rabbit.annotation.EnableRabbit
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
+import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.amqp.RabbitProperties
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
 
@@ -45,29 +47,36 @@ import org.springframework.core.Ordered
  */
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
+@EnableConfigurationProperties(RabbitProperties::class)
 @EnableRabbit
 class ExtendRabbitMQAutoConfiguration {
 
     @Bean(name = ["extendConnectionFactory"])
     fun extendConnectionFactory(
-        @Value("\${spring.rabbitmq.extend.host}") host: String,
-        @Value("\${spring.rabbitmq.extend.port}") port: Int,
         @Value("\${spring.rabbitmq.extend.username}") username: String,
         @Value("\${spring.rabbitmq.extend.password}") password: String,
-        @Value("\${spring.rabbitmq.extend.virtual-host}") virtualHost: String
+        @Value("\${spring.rabbitmq.extend.virtual-host}") virtualHost: String,
+        @Value("\${spring.rabbitmq.extend.addresses}") addresses: String,
+        config: RabbitProperties
     ): ConnectionFactory {
         val connectionFactory = CachingConnectionFactory()
-        connectionFactory.host = host
-        connectionFactory.port = port
+        if (config.determineHost() != null) {
+            connectionFactory.host = config.determineHost()
+        }
+        connectionFactory.port = config.determinePort()
+        connectionFactory.virtualHost = virtualHost
         connectionFactory.username = username
         connectionFactory.setPassword(password)
-        connectionFactory.virtualHost = virtualHost
+        connectionFactory.setAddresses(addresses)
         return connectionFactory
     }
 
+    @Bean(value = ["extendRabbitAdmin"])
+    fun extendRabbitAdmin(@Qualifier("extendConnectionFactory") connectionFactory: ConnectionFactory?): RabbitAdmin? {
+        return RabbitAdmin(connectionFactory)
+    }
 
     @Bean(name = ["extendRabbitTemplate"])
-    @Primary
     fun extendRabbitTemplate(
         @Qualifier("extendConnectionFactory")
         connectionFactory: ConnectionFactory

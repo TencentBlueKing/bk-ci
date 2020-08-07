@@ -31,9 +31,8 @@ import com.tencent.devops.log.model.message.LogMessage
 import com.tencent.devops.log.model.pojo.LogEvent
 import com.tencent.devops.log.model.pojo.LogStatusEvent
 import com.tencent.devops.log.model.pojo.enums.LogType
-import org.springframework.beans.factory.annotation.Autowired
 
-class BuildLogPrinter @Autowired constructor(
+class BuildLogPrinter (
     private val logMQEventDispatcher: LogMQEventDispatcher
 ) {
 
