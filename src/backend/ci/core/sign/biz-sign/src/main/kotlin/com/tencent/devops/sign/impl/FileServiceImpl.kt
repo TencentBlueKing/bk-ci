@@ -61,6 +61,7 @@ class FileServiceImpl(
         val ipaFile = File("$ipaTmpDir/${ipaSignInfo.fileName}")
         FileUtil.mkdirs(ipaTmpDirFile)
         val md5 = IpaFileUtil.copyInputStreamToFile(ipaInputStream, ipaFile)
+        logger.info("copy file md5 check:$md5Check")
         if (md5Check) {
             when {
                 md5 == null -> {

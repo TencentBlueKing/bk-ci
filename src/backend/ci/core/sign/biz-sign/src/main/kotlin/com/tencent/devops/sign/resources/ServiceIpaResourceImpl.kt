@@ -62,7 +62,7 @@ class ServiceIpaResourceImpl @Autowired constructor(
         var taskExecuteCount = 1
         try {
             val (ipaFile, taskExecuteCount) =
-                    signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream)
+                    signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream, md5Check)
             syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
             return Result(resignId)
         } catch (e: Exception) {
