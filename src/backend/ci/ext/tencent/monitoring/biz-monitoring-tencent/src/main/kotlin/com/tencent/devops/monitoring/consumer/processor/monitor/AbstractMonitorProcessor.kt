@@ -29,7 +29,7 @@ abstract class AbstractMonitorProcessor {
             return
         }
 
-        if (atomMonitorData.atomCode == this.atomCode()) {
+        if (atomMonitorData.atomCode != this.atomCode()) {
             return
         }
 
