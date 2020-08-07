@@ -45,17 +45,6 @@ import org.springframework.core.Ordered
 class LogClientConfiguration {
 
     @Bean
-    fun logClient(@Autowired transportClient: ESClient) = LogClientImpl(transportClient)
-
-    @Bean
-    fun logMQEventDispatcher(
-        @Qualifier(value = "extendRabbitTemplate")
-        rabbitTemplate: RabbitTemplate
-    ) = LogMQEventDispatcher(rabbitTemplate)
-
-    @Bean
-    fun buildLogPrinter(
-        @Qualifier(value = "extendRabbitTemplate")
-        rabbitTemplate: RabbitTemplate
-    ) = BuildLogPrinter(logMQEventDispatcher(rabbitTemplate))
+    fun logClient(@Autowired transportClient: ESClient)
+        = LogClientImpl(transportClient)
 }
