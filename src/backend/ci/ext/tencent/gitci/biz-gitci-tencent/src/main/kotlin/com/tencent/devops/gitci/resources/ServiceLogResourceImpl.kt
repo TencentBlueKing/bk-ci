@@ -33,7 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.ServiceLogResource
 import com.tencent.devops.gitci.service.RepositoryConfService
 import com.tencent.devops.gitci.service.LogService
-import com.tencent.devops.log.model.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogs
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 

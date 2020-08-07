@@ -61,7 +61,6 @@ dependencies {
     //compile project(":common:common-tcm")
     compile project(":core:common:common-db")
     compile project(":ext:tencent:common:common-wechatwork")
-    compile project(":core:log:api-log")
     compile project(":ext:tencent:project:api-project-tencent")
     compile project(":ext:tencent:environment:api-environment-tencent")
     compile project(":ext:tencent:prebuild:model-prebuild")

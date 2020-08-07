@@ -40,14 +40,13 @@ import com.tencent.devops.dispatch.pojo.enums.TstackVmStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.dispatch.service.vm.TstackClient
 import com.tencent.devops.dispatch.utils.TstackRedisUtils
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.model.dispatch.tables.records.TDispatchTstackBuildRecord
 import com.tencent.devops.model.dispatch.tables.records.TDispatchTstackVmRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildMessage
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
