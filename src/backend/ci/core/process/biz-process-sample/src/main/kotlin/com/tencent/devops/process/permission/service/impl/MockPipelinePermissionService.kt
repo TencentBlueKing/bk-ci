@@ -41,8 +41,8 @@ class MockPipelinePermissionService constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val authProjectApi: AuthProjectApi,
     private val authResourceApi: AuthResourceApi,
-    private val authPermissionApi: AuthPermissionApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    override val authPermissionApi: AuthPermissionApi,
+    override val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : AbstractPipelinePermissionService(
     authProjectApi = authProjectApi,
     authResourceApi = authResourceApi,

@@ -35,6 +35,8 @@ import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
+import com.github.dockerjava.okhttp.OkDockerHttpClient
+import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.ContainerInfo
@@ -78,7 +80,14 @@ class DockerHostDebugService(
             .withApiVersion(dockerHostConfig.apiVersion)
             .build()
 
-    private val dockerCli = DockerClientBuilder.getInstance(config).build()
+    final var longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
+        .dockerHost(config.dockerHost)
+        .sslConfig(config.sslConfig)
+        .connectTimeout(5000)
+        .readTimeout(300000)
+        .build()
+
+    private val dockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
 
     fun startDebug(): ContainerInfo? {
         val result = dockerHostDebugApi.startDebug(CommonUtils.getInnerIP())

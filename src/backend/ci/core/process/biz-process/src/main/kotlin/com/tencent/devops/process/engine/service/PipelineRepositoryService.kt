@@ -580,17 +580,22 @@ class PipelineRepositoryService constructor(
         return pipelineId
     }
 
-    fun getPipelineInfo(projectId: String?, pipelineId: String, channelCode: ChannelCode? = null): PipelineInfo? {
+    fun getPipelineInfo(
+        projectId: String?,
+        pipelineId: String,
+        channelCode: ChannelCode? = null,
+        delete: Boolean? = false
+    ): PipelineInfo? {
         val template = templatePipelineDao.get(dslContext, pipelineId)
         val templateId = template?.templateId
         return pipelineInfoDao.convert(
-            pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode, false, null),
+            pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode, delete, null),
             templateId
         )
     }
 
-    fun getPipelineInfo(pipelineId: String, channelCode: ChannelCode? = null): PipelineInfo? {
-        return getPipelineInfo(projectId = null, pipelineId = pipelineId, channelCode = channelCode)
+    fun getPipelineInfo(pipelineId: String, channelCode: ChannelCode? = null, delete: Boolean? = false): PipelineInfo? {
+        return getPipelineInfo(projectId = null, pipelineId = pipelineId, channelCode = channelCode, delete = delete)
     }
 
     fun getModel(pipelineId: String, version: Int? = null): Model? {

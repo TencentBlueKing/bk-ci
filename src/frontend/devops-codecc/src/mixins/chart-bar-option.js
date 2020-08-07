@@ -2,7 +2,7 @@ export default {
     data () {
         return {
             chartBarOption: {
-                color: ['#7572dc', '#ff9c01', '#ff5656'],
+                color: ['#7572dc', '#ff9c01', '#ff5656', '#ff5656'],
                 title: {
                     text: '',
                     textStyle: {
@@ -12,9 +12,9 @@ export default {
                 },
                 grid: {
                     left: '5%',
-                    right: '20',
-                    top: '50',
-                    bottom: '50'
+                    right: '20'
+                    // top: '50',
+                    // bottom: '50'
                 },
                 tooltip: {
                     trigger: 'axis',
@@ -38,11 +38,11 @@ export default {
                     },
                     selectedMode: false,
                     data: [{
-                        name: this.$t('defect.严重')
+                        name: this.$t('严重')
                     }, {
-                        name: this.$t('defect.一般')
+                        name: this.$t('一般')
                     }, {
-                        name: this.$t('defect.提示')
+                        name: this.$t('提示')
                     }]
                 },
                 xAxis: {
@@ -89,9 +89,9 @@ export default {
                 animation: false,
                 series: [
                     {
-                        name: this.$t('defect.提示'),
+                        name: this.$t('提示'),
                         type: 'bar',
-                        stack: this.$t('st.状态'),
+                        stack: this.$t('状态'),
                         data: [],
                         barWidth: 42,
                         barGap: '50',
@@ -102,9 +102,9 @@ export default {
                         }
                     },
                     {
-                        name: this.$t('defect.一般'),
+                        name: this.$t('一般'),
                         type: 'bar',
-                        stack: this.$t('st.状态'),
+                        stack: this.$t('状态'),
                         data: [],
                         itemStyle: {
                             normal: {
@@ -113,9 +113,20 @@ export default {
                         }
                     },
                     {
-                        name: this.$t('defect.严重'),
+                        name: this.$t('严重'),
                         type: 'bar',
-                        stack: this.$t('st.状态'),
+                        stack: this.$t('状态'),
+                        data: [],
+                        itemStyle: {
+                            normal: {
+                                // color: '#ff5656'
+                            }
+                        }
+                    },
+                    {
+                        name: this.$t('极高风险'),
+                        type: 'bar',
+                        stack: this.$t('状态'),
                         data: [],
                         itemStyle: {
                             normal: {

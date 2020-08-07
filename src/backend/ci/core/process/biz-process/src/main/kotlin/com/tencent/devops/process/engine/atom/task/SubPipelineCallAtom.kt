@@ -119,9 +119,9 @@ class SubPipelineCallAtom constructor(
 
                 AtomResponse(
                     buildStatus = status,
-                    errorType = subBuildInfo.errorType,
-                    errorCode = subBuildInfo.errorCode,
-                    errorMsg = subBuildInfo.errorMsg
+                    errorType = subBuildInfo.errorInfoList?.last()?.errorType,
+                    errorCode = subBuildInfo.errorInfoList?.last()?.errorCode,
+                    errorMsg = subBuildInfo.errorInfoList?.last()?.errorMsg
                 )
             }
         }

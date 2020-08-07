@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -658,10 +659,12 @@ class PipelineRuntimeService @Autowired constructor(
                 },
                 startType = getStartType(trigger, webhookType),
                 recommendVersion = recommendVersion,
-                errorType = if (errorType != null) ErrorType.values()[errorType].name else null,
-                errorCode = errorCode,
-                errorMsg = errorMsg,
-                retry = isRetry ?: false
+                retry = isRetry ?: false,
+                errorInfoList = if (errorInfo != null) {
+                    JsonUtil.getObjectMapper().readValue(errorInfo) as List<ErrorInfo>
+                } else {
+                    null
+                }
             )
         }
     }
@@ -840,7 +843,6 @@ class PipelineRuntimeService @Autowired constructor(
 
             // 如果是stage重试不是当前stage，则直接进入下一个stage
             if (isStageRetry && !retryStage) {
-                logger.info("[$buildId|RETRY|STAGE(#$stageId)(${stage.name}) is not in retry STAGE($retryStartTaskId)")
                 containerSeq += stage.containers.size // Job跳过计数也需要增加
                 return@nextStage
             }
@@ -875,15 +877,6 @@ class PipelineRuntimeService @Autowired constructor(
                         return@nextContainer
                     }
                 }
-                // 如果重试的插件不在当前Job内，则跳过
-                if (!retryStage && !retryStartTaskId.isNullOrBlank() && lastTimeBuildContainerRecords.isNotEmpty()) {
-                    if (null == findTaskRecord(lastTimeBuildTaskRecords = lastTimeBuildTaskRecords, container = container, retryStartTaskId = retryStartTaskId!!)) {
-                        logger.info("[$buildId|RETRY|JOB(#$containerId)(${container.name}) is not in retry range")
-                        containerSeq++
-                        return@nextContainer
-                    }
-                }
-
                 // --- 第3层循环：Element遍历处理 ---
                 container.elements.forEach nextElement@{ atomElement ->
                     taskSeq++ // 跳过的也要+1，Seq不需要连续性
@@ -1748,9 +1741,7 @@ class PipelineRuntimeService @Autowired constructor(
     fun finishLatestRunningBuild(
         latestRunningBuild: LatestRunningBuild,
         currentBuildStatus: BuildStatus,
-        errorType: ErrorType?,
-        errorCode: Int?,
-        errorMsg: String?
+        errorInfoList: List<ErrorInfo>?
     ) {
         if (BuildStatus.isReadyToRun(currentBuildStatus)) {
             // 减1,当作没执行过
@@ -1800,9 +1791,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildParameters = JsonUtil.toJson(buildParameters),
                 recommendVersion = recommendVersion,
                 remark = remark,
-                errorType = errorType,
-                errorCode = errorCode,
-                errorMsg = errorMsg
+                errorInfoList = errorInfoList
             )
             webSocketDispatcher.dispatch(
                 pipelineWebsocketService.buildHistoryMessage(

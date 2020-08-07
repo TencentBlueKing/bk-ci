@@ -34,6 +34,7 @@ import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -49,7 +50,14 @@ class ProjectServiceImpl @Autowired constructor(
     projectDispatcher: ProjectDispatcher
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher) {
 
-    override fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean) {
-        projectDao.updateUsableStatus(dslContext, userId, projectId, enabled)
+    override fun updateUsableStatus(userId: String, englishName: String, enabled: Boolean) {
+        logger.info("updateUsableStatus userId[$userId], englishName[$englishName] , enabled[$enabled]")
+        val projectInfo = projectDao.getByEnglishName(dslContext, englishName) ?: return
+        logger.info("updateUsableStatus userId[$userId], projectInfo[${projectInfo.projectId}]")
+        projectDao.updateUsableStatus(dslContext, userId, projectInfo.projectId, enabled)
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }
