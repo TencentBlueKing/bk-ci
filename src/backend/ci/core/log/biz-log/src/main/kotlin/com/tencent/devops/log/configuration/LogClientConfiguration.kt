@@ -42,7 +42,7 @@ import org.springframework.core.Ordered
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class LogConfiguration {
+class LogClientConfiguration {
 
     @Bean
     fun logClient(@Autowired transportClient: ESClient) = LogClientImpl(transportClient)
