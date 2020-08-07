@@ -40,7 +40,6 @@ import com.tencent.devops.lambda.pojo.BuildResultWithPage
 import com.tencent.devops.lambda.pojo.DataType
 import com.tencent.devops.lambda.pojo.ElementData
 import org.elasticsearch.action.search.MultiSearchResponse
-import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.xcontent.XContentBuilder
 import org.elasticsearch.common.xcontent.XContentFactory
@@ -54,10 +53,11 @@ import org.springframework.stereotype.Service
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
+import org.elasticsearch.client.Client
 
 @Service
 class ESService @Autowired constructor(
-    private val client: TransportClient,
+    private val client: Client,
     private val redisOperation: RedisOperation,
     private val indexService: IndexService,
     private val objectMapper: ObjectMapper
