@@ -96,6 +96,12 @@ const pipelineConstMixin = {
                         type: 'output',
                         label: this.$t('details.outputReport')
                     }]
+                },
+                errorCode: {
+                    index: 13,
+                    width: 300,
+                    prop: 'errorCode',
+                    label: this.$t('history.errorCode')
                 }
             }
         }
