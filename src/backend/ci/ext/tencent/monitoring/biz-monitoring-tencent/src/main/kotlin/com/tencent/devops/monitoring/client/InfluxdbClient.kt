@@ -109,7 +109,23 @@ class InfluxdbClient {
         val builder: Point.Builder = measurement(measurement)
         builder.tag(tags)
         builder.fields(fields)
-        builder.time(System.currentTimeMillis() * 1000 + atomInt.incrementAndGet() % 1000, TimeUnit.MICROSECONDS)
+        builder.time(System.currentTimeMillis() * 1000000 + getTail() % 1000000, TimeUnit.MICROSECONDS)
         influxDB.write(dbName, monitoringRetentionPolicy, builder.build())
+    }
+
+    /**
+     * 添加尾巴,避免被覆盖
+     */
+    private fun getTail(): Int {
+        val tail = atomInt.incrementAndGet()
+        return if (tail < 0) {
+            if (atomInt.compareAndSet(tail, 0)) {
+                0
+            } else {
+                atomInt.incrementAndGet()
+            }
+        } else {
+            tail
+        }
     }
 }
