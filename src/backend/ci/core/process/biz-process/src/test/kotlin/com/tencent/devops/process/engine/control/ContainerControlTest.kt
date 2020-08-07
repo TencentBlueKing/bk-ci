@@ -8,15 +8,14 @@ import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.utils.BuildLogPrinter
-import com.tencent.devops.log.utils.LogMQEventDispatcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.LogMQEventDispatcher
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import org.junit.Assert
 import org.junit.Test
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.time.LocalDateTime
 
 class ContainerControlTest {

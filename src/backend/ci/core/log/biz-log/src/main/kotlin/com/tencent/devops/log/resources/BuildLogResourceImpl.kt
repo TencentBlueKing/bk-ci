@@ -30,9 +30,8 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.BuildLogResource
-import com.tencent.devops.log.model.message.LogMessage
-import com.tencent.devops.log.utils.BuildLogPrinter
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import org.springframework.beans.factory.annotation.Autowired
 
 /**

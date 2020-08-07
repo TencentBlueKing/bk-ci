@@ -31,13 +31,12 @@ import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.utils.BuildLogPrinter
-import com.tencent.devops.log.utils.LogMQEventDispatcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.LogMQEventDispatcher
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 class MutexControlTest {
 

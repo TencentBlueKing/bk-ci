@@ -34,7 +34,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.dao.DispatchPipelineBuildDao
 import com.tencent.devops.dispatch.pojo.PipelineBuild
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -42,7 +42,6 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.jooq.DSLContext
 import org.reflections.Reflections
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException

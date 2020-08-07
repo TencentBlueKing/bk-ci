@@ -64,7 +64,7 @@ import com.tencent.devops.dispatch.utils.DockerHostLock
 import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.dispatch.utils.DockerUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.VmInfo
@@ -81,7 +81,6 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service

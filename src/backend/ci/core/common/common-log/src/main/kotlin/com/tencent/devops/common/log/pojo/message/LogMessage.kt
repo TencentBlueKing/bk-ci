@@ -24,9 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.model.v2
+package com.tencent.devops.common.log.pojo.message
 
-data class IndexAndType(
-    val index: String,
-    val type: String
-)
+import com.tencent.devops.common.log.pojo.enums.LogType
+
+/**
+ *
+ * Powered By Tencent
+ */
+data class LogMessage(
+    val message: String,
+    val timestamp: Long,
+    val tag: String = "",
+    val jobId: String = "",
+    val logType: LogType = LogType.LOG,
+    val executeCount: Int? = null
+) {
+    override fun toString(): String {
+        return "LogMessage(tag='$tag', message='$message', " +
+            "timestamp=$timestamp), logType=$logType, executeCount=$executeCount)"
+    }
+}

@@ -30,13 +30,12 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_ATOM_NOT_FOUND
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 object AtomUtils {
 

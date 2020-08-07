@@ -24,21 +24,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.model.pojo
+package com.tencent.devops.common.log.utils
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.log.model.message.LogMessage
+import com.tencent.devops.common.log.pojo.ILogEvent
+import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
+import javax.annotation.Resource
 
-/**
- * deng
- * 2019-01-23
- */
-@Event(MQ.EXCHANGE_LOG_BUILD_EVENT, MQ.ROUTE_LOG_BUILD_EVENT)
-data class LogEvent(
-    override val buildId: String,
-    val logs: List<LogMessage>,
-    override val retryTime: Int = 2,
-    override val delayMills: Int = 0,
-    override var esName: String? = null
-) : ILogEvent(buildId, retryTime, delayMills, esName)
+class LogMQEventDispatcher (
+    @Resource(name="extendRabbitTemplate")
+    private val rabbitTemplate: RabbitTemplate
+) {
+
+    fun dispatch(event: ILogEvent) {
+        try {
+//            logger.info("[${event.buildId}] Dispatch the event")
+            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
+                // 事件中的变量指定
+                if (event.delayMills > 0) {
+                    message.messageProperties.setHeader("x-delay", event.delayMills)
+                } else if (eventType.delayMills > 0) { // 事件类型固化默认值
+                    message.messageProperties.setHeader("x-delay", eventType.delayMills)
+                }
+                message
+            }
+        } catch (ignored: Throwable) {
+            logger.error("Fail to dispatch the event($event)", ignored)
+        }
+    }
+
+    private val logger = LoggerFactory.getLogger(LogMQEventDispatcher::class.java)
+}
