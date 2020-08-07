@@ -17,7 +17,7 @@ abstract class AbstractMonitorProcessor {
     /**
      * 处理数据
      */
-    protected abstract fun process(extData: Map<String, Any>, monitorData: ArrayList<MonitorData>)
+    protected abstract fun process(extData: Map<String, Any>, monitorDatas: ArrayList<MonitorData>)
 
     fun process(influxdbClient: InfluxdbClient, atomMonitorData: AtomMonitorData) {
 
