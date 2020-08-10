@@ -26,61 +26,55 @@
 
 package com.tencent.devops.common.web.mq
 
-import org.springframework.amqp.rabbit.annotation.EnableRabbit
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.web.mq.property.ExtendRabbitMQProperties
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.amqp.RabbitProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
 
 
-/**
- *
- * Powered By Tencent
- */
 @Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-@EnableConfigurationProperties(RabbitProperties::class)
-@EnableRabbit
-class ExtendRabbitMQAutoConfiguration {
+@EnableConfigurationProperties(ExtendRabbitMQProperties::class)
+class ExtendRabbitMQConfiguration {
 
-    @Bean(name = ["extendConnectionFactory"])
-    fun extendConnectionFactory(
-        @Value("\${spring.rabbitmq.extend.username}") username: String,
-        @Value("\${spring.rabbitmq.extend.password}") password: String,
-        @Value("\${spring.rabbitmq.extend.virtual-host}") virtualHost: String,
-        @Value("\${spring.rabbitmq.extend.addresses}") addresses: String,
-        config: RabbitProperties
-    ): ConnectionFactory {
+    @Bean(name = [EXTEND_CONNECTION_FACTORY_NAME])
+    fun connectionFactory(config: ExtendRabbitMQProperties): ConnectionFactory {
         val connectionFactory = CachingConnectionFactory()
-        if (config.determineHost() != null) {
-            connectionFactory.host = config.determineHost()
-        }
-        connectionFactory.port = config.determinePort()
-        connectionFactory.virtualHost = virtualHost
-        connectionFactory.username = username
-        connectionFactory.setPassword(password)
-        connectionFactory.setAddresses(addresses)
+        connectionFactory.host = config.host
+        connectionFactory.port = config.port
+        connectionFactory.username = config.username
+        connectionFactory.setPassword(config.password)
+        connectionFactory.virtualHost = config.virtualHost
+        connectionFactory.setAddresses(config.addresses)
         return connectionFactory
     }
 
-    @Bean(value = ["extendRabbitAdmin"])
-    fun extendRabbitAdmin(@Qualifier("extendConnectionFactory") connectionFactory: ConnectionFactory?): RabbitAdmin? {
+    @Bean(name = [EXTEND_RABBIT_TEMPLATE_NAME])
+    fun extendRabbitTemplate(
+        @Qualifier(value = EXTEND_CONNECTION_FACTORY_NAME)
+        connectionFactory: ConnectionFactory,
+        objectMapper: ObjectMapper
+    ): RabbitTemplate {
+        val rabbitTemplate = RabbitTemplate(connectionFactory)
+        rabbitTemplate.messageConverter = messageConverter(objectMapper)
+        return rabbitTemplate
+    }
+
+    @Bean(value = [EXTEND_RABBIT_ADMIN_NAME])
+    fun extendRabbitAdmin(
+        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME)
+        connectionFactory: ConnectionFactory
+    ): RabbitAdmin? {
         return RabbitAdmin(connectionFactory)
     }
 
-    @Bean(name = ["extendRabbitTemplate"])
-    fun extendRabbitTemplate(
-        @Qualifier("extendConnectionFactory")
-        connectionFactory: ConnectionFactory
-    ): RabbitTemplate {
-        return RabbitTemplate(connectionFactory)
-    }
+    @Bean
+    fun messageConverter(objectMapper: ObjectMapper)
+        = Jackson2JsonMessageConverter(objectMapper)
 }
