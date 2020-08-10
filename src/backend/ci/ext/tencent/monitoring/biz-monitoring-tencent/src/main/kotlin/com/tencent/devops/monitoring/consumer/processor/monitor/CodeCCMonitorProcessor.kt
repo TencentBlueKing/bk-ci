@@ -20,12 +20,10 @@ class CodeCCMonitorProcessor : AbstractMonitorProcessor() {
             return
         }
 
-        resultMap.values.asSequence().map {
-            buildMonitorData(it, extData)
-        }.filter { it.isNotEmpty() }.forEach { monitorDatas.add(it) }
+        resultMap.values.asSequence().map { buildMonitorData(it, extData) }.filterNotNull().forEach { monitorDatas.add(it) }
     }
 
-    private fun buildMonitorData(it: Any?, extData: Map<String, Any>): MonitorData {
+    private fun buildMonitorData(it: Any?, extData: Map<String, Any>): MonitorData? {
         logger.info("run data : $it")
         if (it is Map<*, *>) {
             val startTime = (it["startTime"]?.toString() ?: "0").toLong()
@@ -33,19 +31,19 @@ class CodeCCMonitorProcessor : AbstractMonitorProcessor() {
             val elapseTime = endTime - startTime
 
             val monitorData = MonitorData()
-            monitorData["bgId"] = extData["BK_CI_CODECC_TASK_BG_ID"]?.toString() ?: "0"
-            monitorData["centerId"] = extData["BK_CI_CODECC_TASK_CENTER_ID"]?.toString() ?: "0"
-            monitorData["deptId"] = extData["BK_CI_CODECC_TASK_DEPT_ID"]?.toString() ?: "0"
-            monitorData["toolName"] = it["toolName"]?.toString() ?: "Unknown"
-            monitorData["startTime"] = startTime.toString()
-            monitorData["endTime"] = endTime.toString()
-            monitorData["elapseTime"] = elapseTime.toString()
-            monitorData["status"] = it["status"]?.toString() ?: "Unknown"
-            monitorData["errorCode"] = it["errorCode"]?.toString() ?: "0"
-            monitorData["errorMsg"] = it["errorMsg"]?.toString() ?: ""
+            monitorData.tags["bgId"] = extData["BK_CI_CODECC_TASK_BG_ID"]?.toString() ?: "0"
+            monitorData.fields["centerId"] = extData["BK_CI_CODECC_TASK_CENTER_ID"]?.toString() ?: "0"
+            monitorData.fields["deptId"] = extData["BK_CI_CODECC_TASK_DEPT_ID"]?.toString() ?: "0"
+            monitorData.tags["toolName"] = it["toolName"]?.toString() ?: "Unknown"
+            monitorData.fields["startTime"] = startTime.toString()
+            monitorData.fields["endTime"] = endTime.toString()
+            monitorData.fields["elapseTime"] = elapseTime.toString()
+            monitorData.fields["status"] = it["status"]?.toString() ?: "Unknown"
+            monitorData.fields["errorCode"] = it["errorCode"]?.toString() ?: "0"
+            monitorData.fields["errorMsg"] = it["errorMsg"]?.toString() ?: ""
             return monitorData
         }
-        return MonitorData()
+        return null
     }
 
     companion object {

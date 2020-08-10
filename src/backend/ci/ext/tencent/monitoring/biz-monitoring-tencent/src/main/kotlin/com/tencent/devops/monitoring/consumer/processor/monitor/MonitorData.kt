@@ -1,3 +1,6 @@
 package com.tencent.devops.monitoring.consumer.processor.monitor
 
-class MonitorData : HashMap<String, String>()
+data class MonitorData(
+        val fields: HashMap<String, String> = HashMap(),
+        val tags: HashMap<String, String> = HashMap()
+)

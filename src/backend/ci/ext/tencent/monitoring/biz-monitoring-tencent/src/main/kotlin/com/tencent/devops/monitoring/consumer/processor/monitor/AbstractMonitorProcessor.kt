@@ -37,13 +37,13 @@ abstract class AbstractMonitorProcessor {
         process(extData, monitorDatas)
 
         monitorDatas.asSequence().onEach {
-            it["projectId"] = atomMonitorData.projectId
-            it["pipelineId"] = atomMonitorData.pipelineId
-            it["buildId"] = atomMonitorData.buildId
-            it["vmSeqId"] = atomMonitorData.vmSeqId
-            it["channel"] = atomMonitorData.channel ?: ""
-            it["starter"] = atomMonitorData.starter
-        }.forEach { influxdbClient.insert(this.measurement(), emptyMap(), it) }
+            it.fields["projectId"] = atomMonitorData.projectId
+            it.fields["pipelineId"] = atomMonitorData.pipelineId
+            it.fields["buildId"] = atomMonitorData.buildId
+            it.fields["vmSeqId"] = atomMonitorData.vmSeqId
+            it.fields["channel"] = atomMonitorData.channel ?: ""
+            it.fields["starter"] = atomMonitorData.starter
+        }.forEach { influxdbClient.insert(this.measurement(), it.tags, it.fields) }
     }
 
     companion object {
