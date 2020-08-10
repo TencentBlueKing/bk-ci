@@ -31,6 +31,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwCredentialResourceV3
 import com.tencent.devops.ticket.api.ServiceCredentialResource
+import com.tencent.devops.ticket.api.UserCredentialResource
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
@@ -64,7 +65,13 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         )
     }
 
-    override fun list(projectId: String, page: Int?, pageSize: Int?): Result<Page<Credential>> {
+    override fun list(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<Credential>> {
         logger.info("get all credential of project($projectId)")
         return client.get(ServiceCredentialResource::class).list(
             projectId = projectId,
@@ -73,7 +80,13 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         )
     }
 
-    override fun create(userId: String, projectId: String, credential: CredentialCreate): Result<Boolean> {
+    override fun create(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        credential: CredentialCreate
+    ): Result<Boolean> {
         logger.info("create credential of project($projectId)")
         return client.get(ServiceCredentialResource::class).create(
             userId = userId,
@@ -82,7 +95,14 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         )
     }
 
-    override fun get(projectId: String, credentialId: String, publicKey: String): Result<CredentialInfo> {
+    override fun get(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        credentialId: String,
+        publicKey: String
+    ): Result<CredentialInfo> {
         logger.info("get credential of project($projectId),credentialId($credentialId)")
         return client.get(ServiceCredentialResource::class).get(
             projectId = projectId,
@@ -91,7 +111,13 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         )
     }
 
-    override fun check(projectId: String, credentialId: String) {
+    override fun check(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        credentialId: String
+    ) {
         logger.info("check credential of project($projectId),credentialId($credentialId)")
         return client.get(ServiceCredentialResource::class).check(
             projectId = projectId,
@@ -99,9 +125,17 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         )
     }
 
-    override fun edit(projectId: String, credentialId: String, credential: CredentialUpdate): Result<Boolean> {
+    override fun edit(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        credentialId: String,
+        credential: CredentialUpdate
+    ): Result<Boolean> {
         logger.info("edit credential of project($projectId),credentialId($credentialId)")
-        return client.get(ServiceCredentialResource::class).edit(
+        return client.get(UserCredentialResource::class).edit(
+            userId = userId,
             projectId = projectId,
             credentialId = credentialId,
             credential = credential
