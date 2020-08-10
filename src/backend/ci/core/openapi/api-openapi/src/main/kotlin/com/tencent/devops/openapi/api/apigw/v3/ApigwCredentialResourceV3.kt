@@ -152,26 +152,6 @@ interface ApigwCredentialResourceV3 {
         credentialId: String
     ): Result<CredentialWithPermission>
 
-    @ApiOperation("检查凭据是否存在")
-    @Path("/{credentialId}")
-    @OPTIONS
-    fun check(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("凭据ID", required = true)
-        @PathParam("credentialId")
-        credentialId: String
-    )
 
     @ApiOperation("编辑凭据")
     @Path("/{credentialId}")

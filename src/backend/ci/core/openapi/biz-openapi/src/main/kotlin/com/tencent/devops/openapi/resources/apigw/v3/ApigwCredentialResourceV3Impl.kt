@@ -109,20 +109,6 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         )
     }
 
-    override fun check(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        projectId: String,
-        credentialId: String
-    ) {
-        logger.info("check credential of project($projectId),credentialId($credentialId)")
-        return client.get(ServiceCredentialResource::class).check(
-            projectId = projectId,
-            credentialId = credentialId
-        )
-    }
-
     override fun edit(
         appCode: String?,
         apigwType: String?,
