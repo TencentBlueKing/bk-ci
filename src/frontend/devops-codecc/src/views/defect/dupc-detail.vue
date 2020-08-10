@@ -4,22 +4,22 @@
             <bk-row>
                 <bk-col :span="1" class="source-code" id="sourceCodeCol">
                     <div class="title-bar">
-                        <div class="field">{{$t('defect.重复源代码块')}}</div>
+                        <div class="field">{{$t('重复源代码块')}}</div>
                         <div class="filename">( {{sourceData.fileName}} )</div>
                         <div class="select-chunk">
                             <bk-dropdown-menu class="select-chunk-text" align="right" trigger="click">
                                 <bk-button type="primary" slot="dropdown-trigger">
-                                    <span class="t1">{{selectText.source.row || $t('defect.点击选择重复源代码块')}}</span>
-                                    <em class="t2" v-show="selectText.source.chunk">{{$t('defect.x块重复', { num: selectText.source.chunk })}}</em>
+                                    <span class="t1">{{selectText.source.row || $t('点击选择重复源代码块')}}</span>
+                                    <em class="t2" v-show="selectText.source.chunk">{{$t('x块重复', { num: selectText.source.chunk })}}</em>
                                     <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
                                 </bk-button>
                                 <div class="chunk-list custom-scroll" slot="dropdown-content">
                                     <table class="table-chunk">
                                         <thead>
                                             <tr>
-                                                <th>{{$t('defect.代码行')}}</th>
-                                                <th>{{$t('defect.作者')}}</th>
-                                                <th width="60">{{$t('defect.重复块数')}}</th>
+                                                <th>{{$t('代码行')}}</th>
+                                                <th>{{$t('作者')}}</th>
+                                                <th width="60">{{$t('重复块数')}}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -28,6 +28,7 @@
                                                 :key="index"
                                                 :data-index="index"
                                                 :data-id="`${item.startLines}-${item.endLines}-0`"
+                                                :class="{ 'selected': index === selectText.source.index }"
                                                 @click="clickGutterLine(index, item)"
                                             >
                                                 <td>{{item.startLines}}-{{item.endLines}}</td>
@@ -41,18 +42,18 @@
                         </div>
                     </div>
                     <div class="path-bar">
-                        <div class="field">{{$t('defect.源文件路径')}}：</div>
+                        <div class="field">{{$t('源文件路径')}}：</div>
                         <div class="file-path"><input type="text" readonly spellcheck="false" :value="sourceData.filePath"></div>
                     </div>
                     <div class="code-editor" id="codeSource">
                         <div class="placeholder" v-show="!sourceData.fileContent">
-                            <div class="placeholder-content">{{$t('defect.正在加载文件内容')}}</div>
+                            <div class="placeholder-content">{{$t('正在加载文件内容')}}</div>
                         </div>
                     </div>
                 </bk-col>
                 <bk-col :span="1" class="target-code" id="targetCodeCol">
                     <div class="title-bar">
-                        <div class="field">{{$t('defect.重复目标代码块')}}</div>
+                        <div class="field">{{$t('重复目标代码块')}}</div>
                         <div class="filename"></div>
                         <div class="select-chunk" v-if="targetData.fileContent">
                             <bk-dropdown-menu class="select-chunk-text" align="right" trigger="click">
@@ -66,10 +67,10 @@
                                     <table class="table-chunk">
                                         <thead>
                                             <tr>
-                                                <th>{{$t('defect.块号')}}</th>
-                                                <th>{{$t('defect.文件名')}}</th>
-                                                <th>{{$t('defect.代码行')}}</th>
-                                                <th>{{$t('defect.作者')}}</th>
+                                                <th>{{$t('块号')}}</th>
+                                                <th>{{$t('文件名')}}</th>
+                                                <th>{{$t('代码行')}}</th>
+                                                <th>{{$t('作者')}}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -93,12 +94,12 @@
                         </div>
                     </div>
                     <div class="path-bar">
-                        <div class="field">{{$t('defect.目标文件路径')}}：</div>
-                        <div class="file-path"><input type="text" readonly spellcheck="false" :value="targetData.fileName"></div>
+                        <div class="field">{{$t('目标文件路径')}}：</div>
+                        <div class="file-path"><input type="text" readonly spellcheck="false" :value="targetData.filePath"></div>
                     </div>
                     <div class="code-editor" id="codeTarget">
                         <div class="placeholder" v-show="!targetData.fileContent">
-                            <div class="placeholder-content">{{$t('defect.未选择左侧源文件重复块')}}</div>
+                            <div class="placeholder-content">{{$t('未选择左侧源文件重复块')}}</div>
                         </div>
                     </div>
                 </bk-col>
@@ -112,6 +113,16 @@
     import { addClass, removeClass } from '@/common/util'
 
     export default {
+        props: {
+            entityId: {
+                type: String,
+                default: ''
+            },
+            filePath: {
+                type: String,
+                default: ''
+            }
+        },
         data () {
             const toolId = 'DUPC'
             const pattern = 'DUPC'
@@ -170,36 +181,51 @@
                 return mergeResult
             }
         },
+        watch: {
+            entityId (value) {
+                if (value) this.init()
+            }
+        },
         created () {
         },
         mounted () {
             this.editorSource = CodeMirror(document.getElementById('codeSource'), {
                 lineNumbers: true,
                 scrollbarStyle: 'simple',
-                theme: 'darcula',
-                placeholder: this.$t('st.未选择文件'),
-                readOnly: 'nocursor'
+                theme: 'summerfruit',
+                placeholder: this.$t('加载中'),
+                readOnly: true
             })
             this.editorTarget = CodeMirror(document.getElementById('codeTarget'), {
                 lineNumbers: true,
                 scrollbarStyle: 'simple',
-                theme: 'darcula',
-                placeholder: this.$t('st.未选择文件'),
-                readOnly: 'nocursor'
+                theme: 'summerfruit',
+                placeholder: this.$t('未选择文件'),
+                readOnly: true
             })
         },
         methods: {
-            async fetchPageData () {
+            async init () {
                 try {
-                    const query = this.$route.query
-                    const params = Object.assign(this.params, query)
+                    // const query = this.$route.query
+                    this.clear()
+                    const { entityId, filePath, editorSource } = this
+                    const params = { ...this.params, entityId, filePath }
                     const res = await this.$store.dispatch('defect/lintDetail', params)
+                    res.fileContent = res.fileContent || this.$t('文件内容为空')
                     this.sourceData = res
+                    editorSource.setValue('')
+                    editorSource.refresh()
 
                     // 更新代码展示组件内容等
-                    this.updateEditor()
+                    setTimeout(() => {
+                        this.updateEditor()
 
-                    this.drawGutterLine()
+                        this.drawGutterLine()
+                    }, 1)
+                    // this.updateEditor()
+
+                    // this.drawGutterLine()
                 } catch (e) {
                     console.error(e)
                 }
@@ -209,10 +235,12 @@
                 const { fileName, fileContent, trimBeginLine } = this.sourceData
 
                 // 通过文件后缀动态获取并设置代码展示的mode
-                const { mode } = CodeMirror.findModeByFileName(fileName)
-                import(`codemirror/mode/${mode}/${mode}.js`).then(m => {
-                    editorSource.setOption('mode', mode)
-                })
+                if (fileName) {
+                    const { mode } = CodeMirror.findModeByFileName(fileName)
+                    import(`codemirror/mode/${mode}/${mode}.js`).then(m => {
+                        editorSource.setOption('mode', mode)
+                    })
+                }
 
                 // 合并后的列，创建gutter
                 const gutters = ['CodeMirror-linenumbers']
@@ -233,7 +261,7 @@
                 editorSource.refresh()
             },
             updateTargetEditor (index) {
-                const { editorTarget, mergedLines } = this
+                const { editorTarget } = this
                 const { fileName, fileContent, trimBeginLine } = this.targetData
 
                 // 通过文件后缀动态获取并设置代码展示的mode
@@ -338,7 +366,7 @@
                 const { startLines, endLines } = chunk
                 this.selectText.source.index = index
                 const lineId = `${startLines}-${endLines}`
-                this.selectText.source.row = this.$t('defect.x行', { num: lineId })
+                this.selectText.source.row = this.$t('x行', { num: lineId })
                 const blockInfoList = this.getTargetChunksBySourceChunk(chunk)
                 this.selectText.source.chunk = blockInfoList.length
                 this.targetData = Object.assign(this.targetData, { blockInfoList })
@@ -376,7 +404,7 @@
                 this.selectText.target.index = index
                 this.selectText.target.file = fileName
                 const lineId = `${startLines}-${endLines}`
-                this.selectText.target.row = this.$t('defect.x行', { num: lineId })
+                this.selectText.target.row = this.$t('x行', { num: lineId })
 
                 this.updateTargetEditor(index)
             },
@@ -390,6 +418,16 @@
                 }
                 const fileData = await this.$store.dispatch('defect/fileContent', fileParams)
                 this.targetData = Object.assign({}, this.targetData, fileData)
+            },
+            clear () {
+                this.sourceData = {}
+                this.targetData = {}
+                this.gutterLines = {}
+                this.selectText.source = {
+                    index: '',
+                    row: '',
+                    chunk: ''
+                }
             }
         }
     }
@@ -400,7 +438,7 @@
 </style>
 
 <style lang="postcss" scoped>
-    @import './index.css';
+    @import './defect-list.css';
 
     .main {
         padding: 20px;
@@ -444,7 +482,7 @@
         width: 100%;
         background-color: #fff;
         z-index: 101;
-        color: #777;
+        color: #63656e;
         text-align: left;
     }
     .table-chunk th,
@@ -464,12 +502,12 @@
     }
 
     .table-chunk tbody tr:hover {
-        color:#777;
-        background-color: rgba(98, 147, 177, .2);
+        color:#3a84ff;
+        background-color: #eaf3ff;
     }
     .table-chunk tbody tr.selected {
-        color:#fff;
-        background-color: #6293b1;
+        color:#3a84ff;
+        background-color: #f4f6fa;
     }
 
     .path-bar {
@@ -506,7 +544,7 @@
     }
 
     .code-editor {
-        height: calc(100vh - 140px);
+        height: calc(100vh - 170px);
         border: 1px solid #d1d1d1;
         max-width: 100%;
         position: relative;
@@ -562,4 +600,7 @@
         display: inline;
     }
 
+    >>>.bk-dropdown-menu .bk-dropdown-content {
+        padding: 0;
+    }
 </style>

@@ -34,6 +34,7 @@ import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.permission.service.impl.BluekingEnvironmentPermissionService
 import com.tencent.devops.environment.permission.service.impl.MockEnvironmentPermissionService
+import com.tencent.devops.environment.permission.service.impl.V3EnvironmentPermissionService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -70,6 +71,24 @@ class EnvironmentPermConfiguration {
         authPermissionApi: AuthPermissionApi,
         environmentAuthServiceCode: EnvironmentAuthServiceCode
     ): EnvironmentPermissionService = MockEnvironmentPermissionService(
+        dslContext = dslContext,
+        envDao = envDao,
+        nodeDao = nodeDao,
+        authResourceApi = authResourceApi,
+        authPermissionApi = authPermissionApi,
+        environmentAuthServiceCode = environmentAuthServiceCode
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    fun v3EnvironmentPermissionService(
+        dslContext: DSLContext,
+        envDao: EnvDao,
+        nodeDao: NodeDao,
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        environmentAuthServiceCode: EnvironmentAuthServiceCode
+    ): EnvironmentPermissionService = V3EnvironmentPermissionService(
         dslContext = dslContext,
         envDao = envDao,
         nodeDao = nodeDao,

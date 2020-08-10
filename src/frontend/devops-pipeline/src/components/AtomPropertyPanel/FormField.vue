@@ -89,11 +89,13 @@
             position: relative;
         }
     }
-    .bk-form-item.is-required .bk-label,
-    .bk-form-inline-item.is-required .bk-label {
-        margin-right: 10px;
-        .form-field-icon {
-            right:  -4px;
+    .bk-form-vertical {
+        .bk-form-item.is-required .bk-label,
+        .bk-form-inline-item.is-required .bk-label {
+            margin-right: 10px;
+            .form-field-icon {
+                right:  -4px;
+            }
         }
     }
     .desc-link {

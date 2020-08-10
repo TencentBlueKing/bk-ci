@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
 import javax.annotation.PostConstruct
 
@@ -43,16 +44,6 @@ import javax.annotation.PostConstruct
 class InfluxdbClient {
     companion object {
         private val logger = LoggerFactory.getLogger(InfluxdbClient::class.java)
-//        private const val TIME_RANGE_HOUR = "HOUR"
-//        private const val TIME_RANGE_DAY = "DAY"
-//        private const val TIME_RANGE_WEEK = "WEEK"
-//        private const val DB = "agentMetrix"
-//        private const val TIME_PART_HOUR = "time >= now() - 1h and time <= now() - 30s GROUP BY time(10s)"
-//        private const val TIME_PART_DAY = "time >= now() - 24h and time <= now() - 30s GROUP BY time(2m)"
-//        private const val TIME_PART_WEEK = "time >= now() - 7d and time <= now() - 30s GROUP BY time(10m)"
-//        private const val TIME_GROUP_BY_HOUR = "10s"
-//        private const val TIME_GROUP_BY_DAY = "2m"
-//        private const val TIME_GROUP_BY_WEEK = "10m"
     }
 
     @Value("\${influxdb.server:}")
@@ -66,6 +57,7 @@ class InfluxdbClient {
 
     private val dbName = "monitoring"
     private val monitoringRetentionPolicy = "monitoring_retention"
+    private val atomInt = AtomicInteger()
 
     private lateinit var influxDB: InfluxDB
 
@@ -86,17 +78,17 @@ class InfluxdbClient {
         }
         influxDB.setLogLevel(InfluxDB.LogLevel.NONE)
         influxDB.enableBatch(BatchOptions.DEFAULTS
-            .actions(1000)
-            .flushDuration(100)
-            .bufferLimit(100)
-            .exceptionHandler { points: Iterable<Point>, e: Throwable? ->
-                val target: MutableList<Point> = ArrayList()
-                points.forEach(Consumer { e: Point -> target.add(e) })
-                logger.error("failed to write points:${target.toString().substring(0, 10000)}", e)
-            }
-            .threadFactory(
-                Executors.defaultThreadFactory()
-            ))
+                .actions(1000)
+                .flushDuration(100)
+                .bufferLimit(100)
+                .exceptionHandler { points: Iterable<Point>, e: Throwable? ->
+                    val target: MutableList<Point> = ArrayList()
+                    points.forEach(Consumer { e: Point -> target.add(e) })
+                    logger.error("failed to write points:${target.toString().substring(0, 10000)}", e)
+                }
+                .threadFactory(
+                        Executors.defaultThreadFactory()
+                ))
     }
 
     private fun createDatabase() {
@@ -117,20 +109,23 @@ class InfluxdbClient {
         val builder: Point.Builder = measurement(measurement)
         builder.tag(tags)
         builder.fields(fields)
-        builder.time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+        builder.time(System.currentTimeMillis() * 1000000 + getTail() % 1000000, TimeUnit.NANOSECONDS)
         influxDB.write(dbName, monitoringRetentionPolicy, builder.build())
     }
+
+    /**
+     * 添加尾巴,避免被覆盖
+     */
+    private fun getTail(): Int {
+        val tail = atomInt.incrementAndGet()
+        return if (tail < 0) {
+            if (atomInt.compareAndSet(tail, 0)) {
+                0
+            } else {
+                atomInt.incrementAndGet()
+            }
+        } else {
+            tail
+        }
+    }
 }
-
-/*
-  create database monitoring
-  CREATE USER admin WITH PASSWORD 'password'
-  GRANT ALL PRIVILEGES ON monitoring TO admin
-  CREATE RETENTION POLICY "monitoring_retention" ON "monitoring" DURATION 30d REPLICATION 1 DEFAULT ## 创建默认的数据保留策略，设置保存时间30天，副本为1
-
-  CREATE CONTINUOUS QUERY cq_users_total_count ON monitoring  BEGIN SELECT count(statusCode) as total_count INTO commitCheckStatus_count FROM usersStatus group by time(5m) END
-  CREATE CONTINUOUS QUERY cq_users_failed_count ON monitoring  BEGIN SELECT count(statusCode) as failed_count INTO commitCheckStatus_count FROM usersStatus where statusCode != '200' group by time(5m) END
-  CREATE CONTINUOUS QUERY cq_users_success_count ON monitoring  BEGIN SELECT count(statusCode) as success_count INTO commitCheckStatus_count FROM usersStatus where statusCode = '200' group by time(5m) END
-
-
- */

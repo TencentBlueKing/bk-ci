@@ -39,6 +39,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_TASK_BAK
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskBakRecord
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.DSLContext
 import org.jooq.InsertSetMoreStep
 import org.jooq.Query
@@ -442,7 +443,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
             if (errorType != null) {
                 update.set(ERROR_TYPE, errorType.ordinal)
                 update.set(ERROR_CODE, errorCode)
-                update.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX))
+                update.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
             }
             update.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
 

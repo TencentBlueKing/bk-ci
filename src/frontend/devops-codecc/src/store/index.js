@@ -5,16 +5,18 @@
 
 import Vue from 'vue'
 import Vuex from 'vuex'
-import jsonp from 'jsonp'
 
 import project from './modules/project'
 import task from './modules/task'
 import defect from './modules/defect'
 import tool from './modules/tool'
+import checker from './modules/checker'
+import checkerset from './modules/checkerset'
+import devops from './modules/devops'
 import http from '@/api'
 import { unifyObjectStyle } from '@/common/util'
 
-if (NODE_ENV === 'local') {
+if (NODE_ENV === 'development') {
     Vue.config.devtools = true
 }
 
@@ -35,7 +37,10 @@ const store = new Vuex.Store({
         project,
         defect,
         tool,
-        task
+        task,
+        checker,
+        checkerset,
+        devops
     },
     plugins: [loadedPlugin],
     // 公共 store
@@ -55,7 +60,10 @@ const store = new Vuex.Store({
             TOOL_PATTERN: {
                 LINT: 'LINT',
                 CCN: 'CCN',
-                DUPC: 'DUPC'
+                DUPC: 'DUPC',
+                COVERITY: 'COVERITY',
+                KLOCWORK: 'KLOCWORK',
+                PINPOINT: 'PINPOINT'
             }
         },
         projectId: undefined
