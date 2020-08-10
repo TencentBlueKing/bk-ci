@@ -28,6 +28,7 @@ package com.tencent.devops.common.web.mq
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.web.mq.property.CoreRabbitMQProperties
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
@@ -40,11 +41,12 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 
+
 @Configuration
 @EnableConfigurationProperties(CoreRabbitMQProperties::class)
 class CoreRabbitMQConfiguration {
 
-    @Value("\${spring.rabbitmq.core.virtualHost}")
+    @Value("\${spring.rabbitmq.core.virtual-host}")
     private val virtualHost: String? = null
     @Value("\${spring.rabbitmq.core.username}")
     private val username: String? = null
@@ -52,6 +54,10 @@ class CoreRabbitMQConfiguration {
     private val password: String? = null
     @Value("\${spring.rabbitmq.core.addresses}")
     private val addresses: String? = null
+    @Value("\${spring.rabbitmq.core.listener.simple.concurrency}")
+    private val concurrency: Int? = null
+    @Value("\${spring.rabbitmq.core.listener.simple.max-concurrency}")
+    private val maxConcurrency: Int? = null
 
     @Bean(name = [CORE_CONNECTION_FACTORY_NAME])
     @Primary
@@ -85,6 +91,23 @@ class CoreRabbitMQConfiguration {
         connectionFactory: ConnectionFactory
     ): RabbitAdmin {
         return RabbitAdmin(connectionFactory)
+    }
+
+    @Bean(value = [CORE_FACTORY_NAME])
+    fun coreFactory(
+        @Qualifier(CORE_CONNECTION_FACTORY_NAME)
+        connectionFactory: ConnectionFactory
+    ): SimpleRabbitListenerContainerFactory {
+        val factory = SimpleRabbitListenerContainerFactory()
+        factory.setConnectionFactory(connectionFactory)
+        if (concurrency != null) {
+            factory.setConcurrentConsumers(concurrency)
+        }
+        if (maxConcurrency != null) {
+            factory.setMaxConcurrentConsumers(maxConcurrency)
+        }
+
+        return factory
     }
 
     @Bean
