@@ -76,7 +76,9 @@ class ServicePTemplateResourceImpl @Autowired constructor(
             projectId = projectId,
             userId = userId,
             templateType = templateType,
-            storeFlag = storeFlag
+            storeFlag = storeFlag,
+            page = 1,
+            pageSize = 1000
         ))
     }
 
@@ -102,7 +104,9 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         return Result(templateService.listAllTemplate(
             projectId = projectId,
             templateType = templateType,
-            templateIds = null
+            templateIds = null,
+            page = 1,
+            pageSize = 1000
         ))
     }
 

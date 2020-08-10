@@ -486,32 +486,29 @@ class TemplateService @Autowired constructor(
             templateName = null,
             storeFlag = storeFlag
         )
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            val templates = templateDao.listTemplate(
-                dslContext = context,
-                projectId = projectId,
-                includePublicFlag = null,
-                templateType = templateType,
-                templateIdList = null,
-                storeFlag = storeFlag,
-                page = page,
-                pageSize = pageSize
-            )
-            logger.info("after get templates")
-            fillResult(
-                context = context,
-                templates = templates,
-                hasManagerPermission = hasManagerPermission,
-                userId = userId,
-                templateType = templateType,
-                storeFlag = storeFlag,
-                page = page,
-                pageSize = pageSize,
-                keywords = keywords,
-                result = result
-            )
-        }
+        val templates = templateDao.listTemplate(
+            dslContext = dslContext,
+            projectId = projectId,
+            includePublicFlag = null,
+            templateType = templateType,
+            templateIdList = null,
+            storeFlag = storeFlag,
+            page = page,
+            pageSize = pageSize
+        )
+        logger.info("after get templates")
+        fillResult(
+            context = dslContext,
+            templates = templates,
+            hasManagerPermission = hasManagerPermission,
+            userId = userId,
+            templateType = templateType,
+            storeFlag = storeFlag,
+            page = page,
+            pageSize = pageSize,
+            keywords = keywords,
+            result = result
+        )
         return TemplateListModel(projectId, hasManagerPermission, result, count)
     }
 
