@@ -30,13 +30,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwCredentialResourceV3
-import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.api.UserCredentialResource
-import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
-import com.tencent.devops.ticket.pojo.enums.Permission
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -87,7 +84,7 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         credential: CredentialCreate
     ): Result<Boolean> {
         logger.info("create credential of project($projectId)")
-        return client.get(ServiceCredentialResource::class).create(
+        return client.get(UserCredentialResource::class).create(
             userId = userId,
             projectId = projectId,
             credential = credential
@@ -123,6 +120,21 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
             projectId = projectId,
             credentialId = credentialId,
             credential = credential
+        )
+    }
+
+    override fun delete(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        credentialId: String
+    ): Result<Boolean> {
+        logger.info("get credential of project($projectId),credentialId($credentialId)")
+        return client.get(UserCredentialResource::class).delete(
+            userId = userId,
+            projectId = projectId,
+            credentialId = credentialId
         )
     }
 
