@@ -184,7 +184,7 @@ class ExtServiceBuildDeployTask : ITask() {
         if (dockerBuildAndPushImageResult.isNotOk() || (pushFlag != null && !pushFlag)) {
             LoggerService.addRedLine(JsonUtil.toJson(dockerBuildAndPushImageResult))
             throw TaskExecuteException(
-                errorMsg = "dockerBuildAndPushImage fail: ${dockerBuildAndPushImageResult.message}",
+                errorMsg = "dockerBuildAndPushImage fail",
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
             )
