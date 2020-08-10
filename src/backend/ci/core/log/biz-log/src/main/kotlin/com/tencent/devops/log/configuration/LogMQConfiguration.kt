@@ -34,6 +34,8 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.QUEUE_LOG_BATCH
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.QUEUE_LOG_BUILD_EVENT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_BATCH_BUILD_EVENT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_BUILD_EVENT
+import com.tencent.devops.common.web.mq.EXTEND_CONNECTION_FACTORY_NAME
+import com.tencent.devops.common.web.mq.EXTEND_RABBIT_ADMIN_NAME
 import com.tencent.devops.log.mq.LogListener
 import com.tencent.devops.log.service.v2.LogServiceV2
 import org.slf4j.LoggerFactory
@@ -62,7 +64,7 @@ class LogMQConfiguration @Autowired constructor() {
 
     @Bean
     fun rabbitAdmin(
-        @Qualifier("extendConnectionFactory")
+        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME)
         connectionFactory: ConnectionFactory
     ): RabbitAdmin {
         return RabbitAdmin(connectionFactory)
@@ -113,10 +115,11 @@ class LogMQConfiguration @Autowired constructor() {
 
     @Bean
     fun logEventListener(
-        @Qualifier("extendConnectionFactory")
+        @Qualifier(value = EXTEND_CONNECTION_FACTORY_NAME)
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired logEventQueue: Queue,
+        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME)
         @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired logEventQueue: Queue,
         @Autowired logListener: LogListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
@@ -135,10 +138,11 @@ class LogMQConfiguration @Autowired constructor() {
 
     @Bean
     fun logBatchEventListener(
-        @Qualifier("extendConnectionFactory")
+        @Qualifier(value = EXTEND_CONNECTION_FACTORY_NAME)
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired logBatchEventQueue: Queue,
+        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME)
         @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired logBatchEventQueue: Queue,
         @Autowired logListener: LogListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
@@ -178,7 +182,7 @@ class LogMQConfiguration @Autowired constructor() {
 
     @Bean
     fun pipelineBuildFinishListenerContainer(
-        @Qualifier("extendConnectionFactory")
+        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME)
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired pipelineBuildFinishQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,

@@ -28,6 +28,7 @@ package com.tencent.devops.common.log.configuration
 
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.log.utils.LogMQEventDispatcher
+import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -43,13 +44,13 @@ class LogConfiguration {
 
     @Bean
     fun logMQEventDispatcher(
-        @Qualifier(value = "extendRabbitTemplate")
+        @Qualifier(value = EXTEND_RABBIT_TEMPLATE_NAME)
         rabbitTemplate: RabbitTemplate
     ) = LogMQEventDispatcher(rabbitTemplate)
 
     @Bean
     fun buildLogPrinter(
-        @Qualifier(value = "extendRabbitTemplate")
+        @Qualifier(value = EXTEND_RABBIT_TEMPLATE_NAME)
         rabbitTemplate: RabbitTemplate
     ) = BuildLogPrinter(logMQEventDispatcher(rabbitTemplate))
 }
