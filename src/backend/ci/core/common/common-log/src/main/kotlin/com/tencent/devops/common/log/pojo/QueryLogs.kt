@@ -26,7 +26,6 @@
 
 package com.tencent.devops.common.log.pojo
 
-import com.tencent.devops.common.log.pojo.LogLine
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty

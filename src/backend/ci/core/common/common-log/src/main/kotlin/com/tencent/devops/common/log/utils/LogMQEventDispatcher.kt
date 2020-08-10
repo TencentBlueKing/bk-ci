@@ -28,12 +28,13 @@ package com.tencent.devops.common.log.utils
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.log.pojo.ILogEvent
+import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import javax.annotation.Resource
 
-class LogMQEventDispatcher (
-    @Resource(name=EXTEND_RABBIT_TEMPLATE_NAME)
+class LogMQEventDispatcher(
+    @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME)
     private val rabbitTemplate: RabbitTemplate
 ) {
 

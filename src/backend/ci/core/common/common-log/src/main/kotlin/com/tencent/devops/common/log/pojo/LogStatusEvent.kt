@@ -28,7 +28,6 @@ package com.tencent.devops.common.log.pojo
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.log.pojo.ILogEvent
 
 /**
  * deng
