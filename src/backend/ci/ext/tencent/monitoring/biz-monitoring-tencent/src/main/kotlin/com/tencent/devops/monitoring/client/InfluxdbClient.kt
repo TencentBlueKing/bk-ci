@@ -109,7 +109,7 @@ class InfluxdbClient {
         val builder: Point.Builder = measurement(measurement)
         builder.tag(tags)
         builder.fields(fields)
-        builder.time(System.currentTimeMillis() * 1000000 + getTail() % 1000000, TimeUnit.MICROSECONDS)
+        builder.time(System.currentTimeMillis() * 1000000 + getTail() % 1000000, TimeUnit.NANOSECONDS)
         influxDB.write(dbName, monitoringRetentionPolicy, builder.build())
     }
 
