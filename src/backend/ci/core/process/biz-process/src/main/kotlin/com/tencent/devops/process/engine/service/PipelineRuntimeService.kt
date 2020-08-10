@@ -841,7 +841,7 @@ class PipelineRuntimeService @Autowired constructor(
                                 taskId = atomElement.id!!,
                                 taskName = if (atomElement.name.length > 128) atomElement.name.substring(0, 128) else atomElement.name,
                                 taskType = atomElement.getClassType(),
-                                taskAtom = atomElement.getAtomCode(),
+                                taskAtom = atomElement.getTaskAtom(),
                                 status = status,
                                 taskParams = atomElement.genTaskParams(),
                                 additionalOptions = atomElement.additionalOptions,
