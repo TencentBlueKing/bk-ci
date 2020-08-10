@@ -105,7 +105,7 @@ class InfluxdbClient {
         return influxDB.databaseExists(database)
     }
 
-    fun insert(measurement: String, tags: Map<String, String?>, fields: Map<String, String>) {
+    fun insert(measurement: String, tags: Map<String, String?>, fields: Map<String, Any>) {
         val builder: Point.Builder = measurement(measurement)
         builder.tag(tags)
         builder.fields(fields)

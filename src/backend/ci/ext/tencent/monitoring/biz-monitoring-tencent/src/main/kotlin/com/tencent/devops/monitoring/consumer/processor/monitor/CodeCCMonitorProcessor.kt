@@ -38,9 +38,9 @@ class CodeCCMonitorProcessor : AbstractMonitorProcessor() {
 
             monitorData.fields["centerId"] = extData["BK_CI_CODECC_TASK_CENTER_ID"]?.toString() ?: "0"
             monitorData.fields["deptId"] = extData["BK_CI_CODECC_TASK_DEPT_ID"]?.toString() ?: "0"
-            monitorData.fields["startTime"] = startTime.toString()
-            monitorData.fields["endTime"] = endTime.toString()
-            monitorData.fields["elapseTime"] = elapseTime.toString()
+            monitorData.fields["startTime"] = startTime
+            monitorData.fields["endTime"] = endTime
+            monitorData.fields["elapseTime"] = elapseTime
             monitorData.fields["status"] = it["status"]?.toString() ?: "Unknown"
             monitorData.fields["errorMsg"] = it["errorMsg"]?.toString() ?: ""
             return monitorData

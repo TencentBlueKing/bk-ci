@@ -33,6 +33,4 @@ CREATE CONTINUOUS QUERY cq_dispatch_devcloud_success_count ON monitoring BEGIN S
 CREATE CONTINUOUS QUERY cq_dispatch_devcloud_success_rat ON monitoring BEGIN SELECT sum(devcloud_success_count) * 100 / sum(devcloud_total_count) AS devcloud_success_rat INTO monitoring.monitoring_retention.DispatchStatus_success_rat_count FROM monitoring.monitoring_retention.DispatchStatus_success_rat_count GROUP BY time(5m) END
 
 -- codecc相关
-CREATE CONTINUOUS QUERY cq_codecc_monitor_total_count ON monitoring BEGIN SELECT count(errorCode) AS codecc_total_count INTO monitoring.monitoring_retention.CodeccMonitor_success_rat_count FROM monitoring.monitoring_retention.CodeccMonitor GROUP BY time(5m),errorCode END
-CREATE CONTINUOUS QUERY cq_codecc_monitor_toolName_total_count ON monitoring BEGIN SELECT count(errorCode) AS codecc_total_count INTO monitoring.monitoring_retention.CodeccMonitor_toolName_success_rat_count FROM monitoring.monitoring_retention.CodeccMonitor GROUP BY time(5m),toolName,errorCode END
-CREATE CONTINUOUS QUERY cq_codecc_monitor_bg_total_count ON monitoring BEGIN SELECT count(errorCode) AS codecc_total_count INTO monitoring.monitoring_retention.CodeccMonitor_bg_success_rat_count FROM monitoring.monitoring_retention.CodeccMonitor GROUP BY time(5m),bgId,errorCode END
+CREATE CONTINUOUS QUERY cq_codecc_reduce ON monitoring BEGIN SELECT count(buildId) as total_count,mean(elapseTime) as avg_time INTO monitoring.monitoring_retention.CodeccMonitor_reduce FROM monitoring.monitoring_retention.CodeccMonitor GROUP BY time(5m),errorCode,bgId,toolName END
