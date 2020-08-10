@@ -49,16 +49,15 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         userId: String,
         projectId: String,
         credentialTypesString: String?,
-        permission: Permission,
         page: Int?,
-        pageSize: Int?
-    ): Result<Page<Credential>> {
+        pageSize: Int?,
+        keyword: String?
+    ): Result<Page<CredentialWithPermission>> {
         logger.info("get credential of project($projectId) by user($userId)")
-        return client.get(ServiceCredentialResource::class).hasPermissionList(
+        return client.get(UserCredentialResource::class).list(
             userId = userId,
             projectId = projectId,
             credentialTypesString = credentialTypesString,
-            permission = permission,
             page = page,
             pageSize = pageSize,
             keyword = null

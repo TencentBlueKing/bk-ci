@@ -70,8 +70,8 @@ interface ApigwCredentialResourceV3 {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -79,16 +79,16 @@ interface ApigwCredentialResourceV3 {
         @ApiParam("凭证类型列表，用逗号分隔", required = false, defaultValue = "")
         @QueryParam("credentialTypes")
         credentialTypesString: String?,
-        @ApiParam("对应权限", required = true, defaultValue = "")
-        @QueryParam("permission")
-        permission: Permission,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<Page<Credential>>
+        pageSize: Int?,
+        @ApiParam("关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?
+    ): Result<Page<CredentialWithPermission>>
 
 //    @ApiOperation("获取所有凭据列表")
 //    @Path("/")
