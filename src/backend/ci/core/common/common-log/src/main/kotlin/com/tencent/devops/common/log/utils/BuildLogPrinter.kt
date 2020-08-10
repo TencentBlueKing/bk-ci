@@ -32,7 +32,7 @@ import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.enums.LogType
 
-class BuildLogPrinter (
+class BuildLogPrinter(
     private val logMQEventDispatcher: LogMQEventDispatcher
 ) {
 
@@ -126,5 +126,4 @@ class BuildLogPrinter (
         val logs = listOf(LogMessage(message, System.currentTimeMillis(), tag, jobId ?: "", logType, executeCount))
         return LogEvent(buildId, logs)
     }
-
 }

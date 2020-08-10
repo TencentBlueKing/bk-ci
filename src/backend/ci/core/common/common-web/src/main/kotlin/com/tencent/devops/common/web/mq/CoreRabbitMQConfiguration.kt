@@ -78,6 +78,6 @@ class CoreRabbitMQConfiguration {
     }
 
     @Bean
-    fun messageConverter(objectMapper: ObjectMapper)
-        = Jackson2JsonMessageConverter(objectMapper)
+    fun messageConverter(objectMapper: ObjectMapper) =
+        Jackson2JsonMessageConverter(objectMapper)
 }
