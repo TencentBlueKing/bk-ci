@@ -55,7 +55,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_CREDENTIAL_V3"], description = "OPEN-API-证书资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/certs")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/projects/{projectId}/credentials")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwCredentialResourceV3 {
