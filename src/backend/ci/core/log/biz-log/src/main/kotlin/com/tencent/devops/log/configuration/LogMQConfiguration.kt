@@ -30,10 +30,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.EXCHANGE_LOG_BATCH_BUILD_EVENT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.EXCHANGE_LOG_BUILD_EVENT
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.EXCHANGE_LOG_STATUS_BUILD_EVENT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.QUEUE_LOG_BATCH_BUILD_EVENT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.QUEUE_LOG_BUILD_EVENT
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.QUEUE_LOG_STATUS_BUILD_EVENT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_BATCH_BUILD_EVENT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_BUILD_EVENT
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_STATUS_BUILD_EVENT
 import com.tencent.devops.common.web.mq.EXTEND_CONNECTION_FACTORY_NAME
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_ADMIN_NAME
 import com.tencent.devops.log.mq.LogListener
@@ -85,6 +88,13 @@ class LogMQConfiguration @Autowired constructor() {
     }
 
     @Bean
+    fun logStatusEventExchange(): DirectExchange {
+        val directExchange = DirectExchange(EXCHANGE_LOG_STATUS_BUILD_EVENT, true, false)
+        directExchange.isDelayed = true
+        return directExchange
+    }
+
+    @Bean
     fun logEventQueue(): Queue {
         return Queue(QUEUE_LOG_BUILD_EVENT, true)
     }
@@ -92,6 +102,11 @@ class LogMQConfiguration @Autowired constructor() {
     @Bean
     fun logBatchEventQueue(): Queue {
         return Queue(QUEUE_LOG_BATCH_BUILD_EVENT, true)
+    }
+
+    @Bean
+    fun logStatusEventQueue(): Queue {
+        return Queue(QUEUE_LOG_STATUS_BUILD_EVENT, true)
     }
 
     @Bean
@@ -108,6 +123,14 @@ class LogMQConfiguration @Autowired constructor() {
         @Autowired logBatchEventExchange: DirectExchange
     ): Binding {
         return BindingBuilder.bind(logBatchEventQueue).to(logBatchEventExchange).with(ROUTE_LOG_BATCH_BUILD_EVENT)
+    }
+
+    @Bean
+    fun logStatusEventBind(
+        @Autowired logStatusEventQueue: Queue,
+        @Autowired logStatusEventExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(logStatusEventQueue).to(logStatusEventExchange).with(ROUTE_LOG_STATUS_BUILD_EVENT)
     }
 
     @Bean
@@ -159,6 +182,29 @@ class LogMQConfiguration @Autowired constructor() {
         return container
     }
 
+    @Bean
+    fun logStatusEventListener(
+        @Qualifier(value = EXTEND_CONNECTION_FACTORY_NAME)
+        @Autowired connectionFactory: ConnectionFactory,
+        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME)
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired logStatusEventQueue: Queue,
+        @Autowired logListener: LogListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val container = SimpleMessageListenerContainer(connectionFactory)
+        container.setQueueNames(logStatusEventQueue.name)
+        container.setConcurrentConsumers(5)
+        container.setMaxConcurrentConsumers(10)
+        container.setRabbitAdmin(rabbitAdmin)
+        container.setMismatchedQueuesFatal(true)
+        val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logStatusEvent.name)
+        messageListenerAdapter.setMessageConverter(messageConverter)
+        container.messageListener = messageListenerAdapter
+        logger.info("Start log status event listener")
+        return container
+    }
+
     /**
      * 构建结束广播交换机
      */
@@ -182,7 +228,6 @@ class LogMQConfiguration @Autowired constructor() {
 
     @Bean
     fun pipelineBuildFinishListenerContainer(
-        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME)
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired pipelineBuildFinishQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
