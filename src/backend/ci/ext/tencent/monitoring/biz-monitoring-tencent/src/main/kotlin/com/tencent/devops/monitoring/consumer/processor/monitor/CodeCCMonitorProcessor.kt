@@ -31,15 +31,17 @@ class CodeCCMonitorProcessor : AbstractMonitorProcessor() {
             val elapseTime = endTime - startTime
 
             val monitorData = MonitorData()
+
             monitorData.tags["bgId"] = extData["BK_CI_CODECC_TASK_BG_ID"]?.toString() ?: "0"
+            monitorData.tags["toolName"] = it["toolName"]?.toString() ?: "Unknown"
+            monitorData.tags["errorCode"] = it["errorCode"]?.toString() ?: "0"
+
             monitorData.fields["centerId"] = extData["BK_CI_CODECC_TASK_CENTER_ID"]?.toString() ?: "0"
             monitorData.fields["deptId"] = extData["BK_CI_CODECC_TASK_DEPT_ID"]?.toString() ?: "0"
-            monitorData.tags["toolName"] = it["toolName"]?.toString() ?: "Unknown"
             monitorData.fields["startTime"] = startTime.toString()
             monitorData.fields["endTime"] = endTime.toString()
             monitorData.fields["elapseTime"] = elapseTime.toString()
             monitorData.fields["status"] = it["status"]?.toString() ?: "Unknown"
-            monitorData.fields["errorCode"] = it["errorCode"]?.toString() ?: "0"
             monitorData.fields["errorMsg"] = it["errorMsg"]?.toString() ?: ""
             return monitorData
         }
