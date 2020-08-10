@@ -38,6 +38,7 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
@@ -195,7 +196,7 @@ object Runner {
                 val file = workspacePathFile.absoluteFile.normalize()
                 logger.warn("Need to clean up the workspace(${file.absolutePath})")
                 // 去除workspace目录下的软连接
-                CommandLineUtils.execute("find $workspacePathFile -type l | xargs rm -rf;", workspacePathFile, true, "")
+                CommonScriptUtils.execute("find ${file.absolutePath} -type l | xargs rm -rf;", file.parentFile)
                 if (!file.deleteRecursively()) {
                     logger.warn("Fail to clean up the workspace")
                 }
