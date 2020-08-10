@@ -1655,6 +1655,23 @@ class PipelineRuntimeService @Autowired constructor(
         )
     }
 
+    fun setTaskErrorInfo(
+        buildId: String,
+        taskId: String,
+        errorType: ErrorType,
+        errorCode: Int,
+        errorMsg: String
+    ) {
+        pipelineBuildTaskDao.setTaskErrorInfo(
+            dslContext = dslContext,
+            buildId = buildId,
+            taskId = taskId,
+            errorType = errorType,
+            errorCode = errorCode,
+            errorMsg = errorMsg
+        )
+    }
+
     fun updateTaskStatus(
         buildId: String,
         taskId: String,
