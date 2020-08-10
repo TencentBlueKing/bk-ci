@@ -81,16 +81,6 @@ class LogListener constructor(
         }
     }
 
-    @RabbitListener(
-        bindings = [QueueBinding(
-            key = MQ.ROUTE_LOG_STATUS_BUILD_EVENT,
-            value = Queue(value = MQ.QUEUE_LOG_STATUS_BUILD_EVENT, durable = "true"),
-            exchange = Exchange(
-                value = MQ.EXCHANGE_LOG_STATUS_BUILD_EVENT,
-                durable = "true", delayed = "true", type = ExchangeTypes.DIRECT
-            )
-        )]
-    )
     fun logStatusEvent(event: LogStatusEvent) {
         var result = false
         try {
