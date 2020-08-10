@@ -34,8 +34,8 @@ import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.api.UserCredentialResource
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
-import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.CredentialUpdate
+import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.Permission
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,7 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: Client) :
     ApigwCredentialResourceV3 {
-    override fun hasPermissionList(
+    override fun list(
         appCode: String?,
         apigwType: String?,
         userId: String,
@@ -65,20 +65,20 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         )
     }
 
-    override fun list(
-        appCode: String?,
-        apigwType: String?,
-        projectId: String,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<Credential>> {
-        logger.info("get all credential of project($projectId)")
-        return client.get(ServiceCredentialResource::class).list(
-            projectId = projectId,
-            page = page,
-            pageSize = pageSize
-        )
-    }
+//    override fun list(
+//        appCode: String?,
+//        apigwType: String?,
+//        projectId: String,
+//        page: Int?,
+//        pageSize: Int?
+//    ): Result<Page<Credential>> {
+//        logger.info("get all credential of project($projectId)")
+//        return client.get(ServiceCredentialResource::class).list(
+//            projectId = projectId,
+//            page = page,
+//            pageSize = pageSize
+//        )
+//    }
 
     override fun create(
         appCode: String?,
@@ -100,14 +100,13 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         apigwType: String?,
         userId: String,
         projectId: String,
-        credentialId: String,
-        publicKey: String
-    ): Result<CredentialInfo> {
+        credentialId: String
+    ): Result<CredentialWithPermission> {
         logger.info("get credential of project($projectId),credentialId($credentialId)")
-        return client.get(ServiceCredentialResource::class).get(
+        return client.get(UserCredentialResource::class).get(
+            userId = userId,
             projectId = projectId,
-            credentialId = credentialId,
-            publicKey = publicKey
+            credentialId = credentialId
         )
     }
 

@@ -36,8 +36,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
-import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.CredentialUpdate
+import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.Permission
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -61,9 +61,9 @@ import javax.ws.rs.core.MediaType
 interface ApigwCredentialResourceV3 {
 
     @ApiOperation("获取用户拥有对应权限凭据列表")
-    @Path("/hasPermissionList")
+    @Path("/")
     @GET
-    fun hasPermissionList(
+    fun list(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
@@ -90,26 +90,26 @@ interface ApigwCredentialResourceV3 {
         pageSize: Int?
     ): Result<Page<Credential>>
 
-    @ApiOperation("获取所有凭据列表")
-    @Path("/")
-    @GET
-    fun list(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<Page<Credential>>
+//    @ApiOperation("获取所有凭据列表")
+//    @Path("/")
+//    @GET
+//    fun list(
+//        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+//        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+//        appCode: String?,
+//        @ApiParam(value = "apigw Type", required = true)
+//        @PathParam("apigwType")
+//        apigwType: String?,
+//        @ApiParam("项目ID", required = true)
+//        @PathParam("projectId")
+//        projectId: String,
+//        @ApiParam("第几页", required = false, defaultValue = "1")
+//        @QueryParam("page")
+//        page: Int?,
+//        @ApiParam("每页多少条", required = false, defaultValue = "20")
+//        @QueryParam("pageSize")
+//        pageSize: Int?
+//    ): Result<Page<Credential>>
 
     @ApiOperation("新增凭据")
     @Path("/")
@@ -132,7 +132,7 @@ interface ApigwCredentialResourceV3 {
     ): Result<Boolean>
 
     @ApiOperation("获取凭据")
-    @Path("/{credentialId}/")
+    @Path("/{credentialId}")
     @GET
     fun get(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -149,14 +149,11 @@ interface ApigwCredentialResourceV3 {
         projectId: String,
         @ApiParam("凭据ID", required = true)
         @PathParam("credentialId")
-        credentialId: String,
-        @ApiParam("Base64编码的加密公钥", required = true)
-        @QueryParam("publicKey")
-        publicKey: String
-    ): Result<CredentialInfo>
+        credentialId: String
+    ): Result<CredentialWithPermission>
 
     @ApiOperation("检查凭据是否存在")
-    @Path("/{credentialId}/")
+    @Path("/{credentialId}")
     @OPTIONS
     fun check(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -177,7 +174,7 @@ interface ApigwCredentialResourceV3 {
     )
 
     @ApiOperation("编辑凭据")
-    @Path("/{credentialId}/")
+    @Path("/{credentialId}")
     @PUT
     fun edit(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
