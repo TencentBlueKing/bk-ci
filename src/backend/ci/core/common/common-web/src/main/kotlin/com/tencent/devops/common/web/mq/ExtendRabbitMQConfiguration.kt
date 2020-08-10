@@ -34,6 +34,7 @@ import org.springframework.amqp.rabbit.core.RabbitAdmin
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -42,15 +43,24 @@ import org.springframework.context.annotation.Configuration
 @EnableConfigurationProperties(ExtendRabbitMQProperties::class)
 class ExtendRabbitMQConfiguration {
 
+    @Value("\${spring.rabbitmq.extend.virtualHost}")
+    private val virtualHost: String? = null
+    @Value("\${spring.rabbitmq.extend.username}")
+    private val username: String? = null
+    @Value("\${spring.rabbitmq.extend.password}")
+    private val password: String? = null
+    @Value("\${spring.rabbitmq.extend.addresses}")
+    private val addresses: String? = null
+
     @Bean(name = [EXTEND_CONNECTION_FACTORY_NAME])
     fun connectionFactory(config: ExtendRabbitMQProperties): ConnectionFactory {
         val connectionFactory = CachingConnectionFactory()
         connectionFactory.host = config.host
         connectionFactory.port = config.port
-        connectionFactory.username = config.username
-        connectionFactory.setPassword(config.password)
-        connectionFactory.virtualHost = config.virtualHost
-        connectionFactory.setAddresses(config.addresses)
+        connectionFactory.username = username
+        connectionFactory.setPassword(password)
+        connectionFactory.virtualHost = virtualHost
+        connectionFactory.setAddresses(addresses)
         return connectionFactory
     }
 
