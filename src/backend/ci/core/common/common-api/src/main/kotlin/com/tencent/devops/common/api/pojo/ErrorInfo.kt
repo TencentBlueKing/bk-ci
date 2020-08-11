@@ -35,6 +35,8 @@ data class ErrorInfo(
     val taskId: String,
     @ApiModelProperty("插件名称", required = false)
     val taskName: String,
+    @ApiModelProperty("插件编号", required = false)
+    val atomCode: String,
     @ApiModelProperty("错误类型", required = false)
     val errorType: ErrorType,
     @ApiModelProperty("错误码", required = true)
