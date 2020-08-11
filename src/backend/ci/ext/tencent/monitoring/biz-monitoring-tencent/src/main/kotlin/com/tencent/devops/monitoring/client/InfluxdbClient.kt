@@ -37,7 +37,6 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.function.Consumer
 import javax.annotation.PostConstruct
 
 @Component
@@ -81,10 +80,13 @@ class InfluxdbClient {
                 .actions(1000)
                 .flushDuration(100)
                 .bufferLimit(100)
+                .jitterDuration(100)
                 .exceptionHandler { points: Iterable<Point>, e: Throwable? ->
-                    val target: MutableList<Point> = ArrayList()
-                    points.forEach(Consumer { e: Point -> target.add(e) })
-                    logger.error("failed to write points:${target.toString().substring(0, 10000)}", e)
+                    try {
+                        points.forEach { logger.error("failed to write point $it", e) }
+                    } catch (e: Exception) {
+                        // Do nothing , 这个handler不能抛异常,否则influxdb批量插入的线程就会停止
+                    }
                 }
                 .threadFactory(
                         Executors.defaultThreadFactory()
