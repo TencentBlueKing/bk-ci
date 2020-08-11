@@ -87,6 +87,16 @@
                         </bk-popover>
                     </div>
                 </template>
+                <template v-else-if="col.prop === 'errorCode'" v-slot="props">
+                    <template v-if="Array.isArray(props.row.errorInfoList) && props.row.errorInfoList.length > 0">
+                        <div @click.stop="" class="error-code-item" v-for="item in props.row.errorInfoList" :key="item.taskId">
+                            <i :title="$t('userError')" v-if="item.errorType === 'USER'" class="devops-icon icon-user "></i>
+                            <i :title="$t('systemError')" v-else-if="item.errorType === 'SYSTEM'" class="devops-icon icon-cog"></i>
+                            <span :title="item.errorCode + ': ' + item. errorMsg" v-if="item.errorCode">{{ item.errorCode + ': ' + item. errorMsg }} </span>
+                        </div>
+                    </template>
+                    <span v-else>--</span>
+                </template>
                 <template v-else v-slot="props">
                     {{ props.row[col.prop] }}
                 </template>
@@ -245,7 +255,8 @@
                         sumSize: convertFileSize(sumSize, 'B'),
                         artifactories: needShowAll ? artifactories.slice(0, 11) : artifactories,
                         visible: this.visibleIndex === index,
-                        stageStatus
+                        stageStatus,
+                        errorInfoList: !active && Array.isArray(item.errorInfoList) && item.errorInfoList.length > 1 ? item.errorInfoList.slice(0, 1) : item.errorInfoList
                     }
                 })
             },
@@ -261,7 +272,7 @@
                 return this.data[this.visibleIndex].needShowAll
             },
             columnList () {
-                return this.columns.map(key => this.column[key])
+                return this.columns.map(key => this.column[key]).filter(m => !!m)
             },
             column () {
                 Object.keys(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).map(item => {
@@ -679,6 +690,12 @@
                     color: $primaryColor;
                 }
             }
+        }
+
+        .error-code-item {
+            @include ellipsis();
+            display: block;
+            width: 100%;
         }
     }
     .artifact-list-popup {

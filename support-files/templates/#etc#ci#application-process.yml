@@ -21,3 +21,9 @@ queueConcurrency:
   container: __PROCESS_EVENT_CONCURRENT__     # Job消息并发处理数量
   task: __PROCESS_EVENT_CONCURRENT__          # Task消息并发处理数量
   buildFinish: __PROCESS_EVENT_CONCURRENT__   # 构建结束消息并发处理数量
+
+build:
+  atomMonitorData:
+    report:
+      switch: false  
+      maxMonitorDataSize: 1677216

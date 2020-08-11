@@ -158,7 +158,7 @@
                 const isBuildId = /^#b-+/.test(this.$route.hash) // 检查是否是合法的buildId
                 isBuildId && this.showLog(this.$route.hash.slice(1), '', true)
             }
-            webSocketMessage.installWsMessage(this.updateBuildHistoryList)
+            webSocketMessage.installWsMessage(this.refreshBuildHistoryList)
         },
 
         updated () {

@@ -164,7 +164,7 @@ export const BOOLEAN_LIST = [
 
 export function getRepoOption (type = 'CODE_SVN') {
     return {
-        url: `/repository/api/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=500`,
+        url: `/repository/api/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`,
         paramId: 'repositoryHashId',
         paramName: 'aliasName',
         searchable: true,
