@@ -385,7 +385,14 @@ class DockerHostBuildService(
                 .withRegistryPassword(password)
                 .build()
 
-            dockerClient = DockerClientBuilder.getInstance(config).build()
+            val longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
+                .dockerHost(config.dockerHost)
+                .sslConfig(config.sslConfig)
+                .connectTimeout(5000)
+                .readTimeout(300000)
+                .build()
+
+            dockerClient = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
             val authConfig = AuthConfig()
                 .withUsername(userName)
                 .withPassword(password)
