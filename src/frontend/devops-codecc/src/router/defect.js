@@ -1,19 +1,48 @@
-const DefectCoverityList = () => import(/* webpackChunkName: 'coverity-list' */'../views/defect/coverity-list')
-const DefectDupcList = () => import(/* webpackChunkName: 'dupc-list' */'../views/defect/dupc-list')
+const DefectList = () => import(/* webpackChunkName: 'defect-list' */'../views/defect/list')
+const DefectCoverityList = () => import(/* webpackChunkName: 'defect-list' */'../views/defect/coverity-list')
+const DefectCoverityCharts = () => import(/* webpackChunkName: 'defect-charts' */'../views/defect/coverity-charts')
+const DefectDupcList = () => import(/* webpackChunkName: 'defect-list' */'../views/defect/dupc-list')
 const DefectDupcDetail = () => import(/* webpackChunkName: 'dupc-detail' */'../views/defect/dupc-detail')
-const DefectDupcCharts = () => import(/* webpackChunkName: 'dupc-charts' */'../views/defect/dupc-charts')
-const DefectCcnList = () => import(/* webpackChunkName: 'ccn-list' */'../views/defect/ccn-list')
-const DefectCcnCharts = () => import(/* webpackChunkName: 'ccn-charts' */'../views/defect/ccn-charts')
-const DefectLintList = () => import(/* webpackChunkName: 'lint-list' */'../views/defect/lint-list')
-const DefectLintCharts = () => import(/* webpackChunkName: 'lint-charts' */'../views/defect/lint-charts')
+const DefectDupcCharts = () => import(/* webpackChunkName: 'defect-charts' */'../views/defect/dupc-charts')
+const DefectCcnList = () => import(/* webpackChunkName: 'defect-list' */'../views/defect/ccn-list')
+const DefectCcnCharts = () => import(/* webpackChunkName: 'defect-charts' */'../views/defect/ccn-charts')
+// const DefectLintList = () => import(/* webpackChunkName: 'defect-list' */'../views/defect/lint-list')
+const DefectLintCharts = () => import(/* webpackChunkName: 'defect-charts' */'../views/defect/lint-charts')
 
 const routes = [
+    {
+        path: '/codecc/:projectId/task/:taskId/defect/tool/:toolId/list',
+        name: 'defect-list',
+        component: DefectList,
+        meta: {
+            breadcrumb: 'inside'
+        }
+    },
     // 按工具模型划分路由，如果模型下暂只有一个工具，则仅使用模型表示，如 ccn/list
     // 如果以后面模型下扩展出新工具则修改为 ccn/:toolId/list
     {
-        path: '/codecc/:projectId/task/:taskId/defect/coverity/list',
+        path: '/codecc/:projectId/task/:taskId/defect/compile/:toolId/list',
         name: 'defect-coverity-list',
-        component: DefectCoverityList
+        component: DefectCoverityList,
+        meta: {
+            breadcrumb: 'inside'
+        }
+    },
+    {
+        path: '/codecc/:projectId/task/:taskId/defect/compile/:toolId/list',
+        name: 'defect-klocwork-list',
+        component: DefectCoverityList,
+        meta: {
+            breadcrumb: 'inside'
+        }
+    },
+    {
+        path: '/codecc/:projectId/task/:taskId/defect/compile/:toolId/list',
+        name: 'defect-pinpoint-list',
+        component: DefectCoverityList,
+        meta: {
+            breadcrumb: 'inside'
+        }
     },
     {
         path: '/codecc/:projectId/task/:taskId/defect/dupc/list',
@@ -44,19 +73,43 @@ const routes = [
     {
         path: '/codecc/:projectId/task/:taskId/defect/lint/:toolId/list',
         name: 'defect-lint-list',
-        component: DefectLintList,
+        component: DefectList,
         meta: {
             breadcrumb: 'inside'
         }
     },
 
-    // 数据图表，本质上是告警的一种展现形式，因此属于告警模块，并且同样使用工具模块划分
+    // 数据图表，本质上是问题的一种展现形式，因此属于问题模块，并且同样使用工具模块划分
+    {
+        path: '/codecc/:projectId/task/:taskId/defect/compile/:toolId/charts',
+        name: 'defect-coverity-charts',
+        component: DefectCoverityCharts,
+        meta: {
+            breadcrumb: 'inside'
+        }
+    },
+    {
+        path: '/codecc/:projectId/task/:taskId/defect/compile/:toolId/charts',
+        name: 'defect-klocwork-charts',
+        component: DefectCoverityCharts,
+        meta: {
+            breadcrumb: 'inside'
+        }
+    },
+    {
+        path: '/codecc/:projectId/task/:taskId/defect/compile/:toolId/charts',
+        name: 'defect-pinpoint-charts',
+        component: DefectCoverityCharts,
+        meta: {
+            breadcrumb: 'inside'
+        }
+    },
     {
         path: '/codecc/:projectId/task/:taskId/defect/lint/:toolId/charts',
         name: 'defect-lint-charts',
         component: DefectLintCharts,
         meta: {
-            record: 'none'
+            breadcrumb: 'inside'
         }
     },
     {
@@ -64,7 +117,7 @@ const routes = [
         name: 'defect-dupc-charts',
         component: DefectDupcCharts,
         meta: {
-            record: 'none'
+            breadcrumb: 'inside'
         }
     },
     {
@@ -72,7 +125,7 @@ const routes = [
         name: 'defect-ccn-charts',
         component: DefectCcnCharts,
         meta: {
-            record: 'none'
+            breadcrumb: 'inside'
         }
     }
 ]
