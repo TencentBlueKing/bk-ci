@@ -53,11 +53,11 @@ class ExtendRabbitMQConfiguration {
     @Value("\${spring.rabbitmq.extend.addresses}")
     private val addresses: String? = null
     @Value("\${spring.rabbitmq.extend.listener.simple.concurrency}")
-    private val concurrency: Int? = null
+    private var concurrency: Int? = null
     @Value("\${spring.rabbitmq.extend.listener.simple.max-concurrency}")
-    private val maxConcurrency: Int? = null
+    private var maxConcurrency: Int? = null
     @Value("\${spring.rabbitmq.extend.cache.channel.size}")
-    private val cacheChannelSize: Int? = null
+    private var channeCachelSize: Int? = null
 
     @Bean(name = [EXTEND_CONNECTION_FACTORY_NAME])
     fun connectionFactory(config: ExtendRabbitMQProperties): ConnectionFactory {
@@ -68,8 +68,8 @@ class ExtendRabbitMQConfiguration {
         connectionFactory.setPassword(password)
         connectionFactory.virtualHost = virtualHost
         connectionFactory.setAddresses(addresses)
-        if (cacheChannelSize != null) {
-            connectionFactory.channelCacheSize = cacheChannelSize
+        if (channeCachelSize != null && channeCachelSize!! > 0) {
+            connectionFactory.channelCacheSize = channeCachelSize!!
         }
         return connectionFactory
     }
