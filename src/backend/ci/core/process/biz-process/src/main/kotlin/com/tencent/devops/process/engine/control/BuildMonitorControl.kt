@@ -212,7 +212,7 @@ class BuildMonitorControl @Autowired constructor(
                     containerType = containerType,
                     actionType = ActionType.TERMINATE,
                     reason = errorInfo.message ?: "Job运行达到($minute)分钟，超时结束运行!",
-                    isTimeout = true
+                    timeout = true
                 )
             )
         }

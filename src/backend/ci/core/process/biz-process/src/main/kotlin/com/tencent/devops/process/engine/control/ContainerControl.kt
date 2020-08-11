@@ -200,7 +200,7 @@ class ContainerControl @Autowired constructor(
                 // 要求启动执行的请求
                 ActionType.isStart(actionType) || ActionType.REFRESH == actionType -> checkStartAction(containerTaskList) ?: return
                 // 要求强制终止
-                ActionType.isTerminate(actionType) -> checkTerminateAction(containerTaskList, reason, isTimeout)
+                ActionType.isTerminate(actionType) -> checkTerminateAction(containerTaskList, reason, timeout)
                 // 要求停止执行的请求
                 ActionType.isEnd(actionType) -> checkEndAction(containerTaskList)
                 else -> { // 未规定的类型，打回上一级处理
