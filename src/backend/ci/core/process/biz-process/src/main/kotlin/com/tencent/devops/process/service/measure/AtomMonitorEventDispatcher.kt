@@ -24,45 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.init
+package com.tencent.devops.process.service.measure
 
-import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.cron.UpdateAgentRunner
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.scheduling.annotation.EnableScheduling
-import org.springframework.scheduling.annotation.SchedulingConfigurer
-import org.springframework.scheduling.config.ScheduledTaskRegistrar
-import java.util.concurrent.Executors
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.EventDispatcher
+import com.tencent.devops.common.event.pojo.measure.AtomMonitorReportBroadCastEvent
+import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 
-/**
- * 有构建环境的docker集群下才会生效
- * @version 1.0
- */
+class AtomMonitorEventDispatcher constructor(
+    private val rabbitTemplate: RabbitTemplate
+) : EventDispatcher<AtomMonitorReportBroadCastEvent> {
 
-@Configuration
-@EnableScheduling
-class TXBuildClusterCronConfiguration : SchedulingConfigurer {
-
-    @Value("\${dockerCli.downloadAgentCron:0 0/30 * * * ?}")
-    var downloadAgentCron: String? = null
-
-    override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {
-        scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(100))
-
-        scheduledTaskRegistrar.addCronTask(
-            { updateAgentRunner.update() }, downloadAgentCron!!
-        )
+    override fun dispatch(vararg events: AtomMonitorReportBroadCastEvent) {
+        try {
+            events.forEach { event ->
+                val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+                val routeKey = eventType.routeKey
+                logger.info("dispatch the event|Route=$routeKey|exchange=${eventType.exchange}|source=(${event.javaClass.name})")
+                rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
+                    if (eventType.delayMills > 0) { // 事件类型固化默认值
+                        message.messageProperties.setHeader("x-delay", eventType.delayMills)
+                    }
+                    message
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("Fail to dispatch the event($events)", e)
+        }
     }
 
-    @Autowired
-    private lateinit var updateAgentRunner: UpdateAgentRunner
-
-    @Bean
-    fun updateAgentRunner(dockerHostConfig: DockerHostConfig, gray: Gray): UpdateAgentRunner {
-        return UpdateAgentRunner(dockerHostConfig, gray)
+    companion object {
+        private val logger = LoggerFactory.getLogger(AtomMonitorEventDispatcher::class.java)
     }
 }
