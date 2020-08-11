@@ -71,8 +71,8 @@ class ServiceIpaResourceImpl @Autowired constructor(
         }
     }
 
-    override fun getSignResult(resignId: String): Result<Boolean> {
-        return Result(signService.getSignResult(resignId))
+    override fun getSignStatus(resignId: String): Result<String> {
+        return Result(signService.getSignStatus(resignId).getValue())
     }
 
     override fun downloadUrl(resignId: String): Result<String> {

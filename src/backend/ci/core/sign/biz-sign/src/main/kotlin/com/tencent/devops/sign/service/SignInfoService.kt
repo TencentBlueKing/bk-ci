@@ -177,9 +177,9 @@ class SignInfoService(
         )
     }
 
-    fun getSignResult(resignId: String): Boolean {
+    fun getSignStatus(resignId: String): EnumResignStatus {
         val record = signHistoryDao.getSignHistory(dslContext, resignId)
-        return EnumResignStatus.parse(record?.status) != EnumResignStatus.RUNNING
+        return EnumResignStatus.parse(record?.status)
     }
 
     /*

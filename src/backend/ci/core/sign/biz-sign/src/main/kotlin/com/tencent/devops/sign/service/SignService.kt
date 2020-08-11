@@ -26,6 +26,7 @@
 
 package com.tencent.devops.sign.service
 
+import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import java.io.File
 import java.io.InputStream
@@ -56,5 +57,5 @@ interface SignService {
     /*
     * 查询某次签名任务是否完成
     * */
-    fun getSignResult(resignId: String): Boolean
+    fun getSignStatus(resignId: String): EnumResignStatus
 }

@@ -67,14 +67,14 @@ interface UserIpaResource {
     @GET
     @Path("/sign/{resignId}/status")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
-    fun getSignResult(
+    fun getSignStatus(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("签名任务ID", required = true)
         @PathParam("resignId")
         resignId: String
-    ): Result<Boolean>
+    ): Result<String>
 
     @ApiOperation("获取签名后IPA的下载地址")
     @GET
