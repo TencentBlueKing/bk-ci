@@ -54,12 +54,12 @@ class CoreRabbitMQConfiguration {
     private val password: String? = null
     @Value("\${spring.rabbitmq.core.addresses}")
     private val addresses: String? = null
-    @Value("\${spring.rabbitmq.core.listener.simple.concurrency}")
+    @Value("\${spring.rabbitmq.core.listener.simple.concurrency:#{null}}")
     private var concurrency: Int? = null
-    @Value("\${spring.rabbitmq.core.listener.simple.max-concurrency}")
+    @Value("\${spring.rabbitmq.core.listener.simple.max-concurrency:#{null}}")
     private var maxConcurrency: Int? = null
-    @Value("\${spring.rabbitmq.core.cache.channel.size}")
-    private var channeCachelSize: Int? = null
+    @Value("\${spring.rabbitmq.core.cache.channel.size:#{null}}")
+    private var channelCacheSize: Int? = null
 
     @Bean(name = [CORE_CONNECTION_FACTORY_NAME])
     @Primary
@@ -71,8 +71,8 @@ class CoreRabbitMQConfiguration {
         connectionFactory.setPassword(password)
         connectionFactory.virtualHost = virtualHost
         connectionFactory.setAddresses(addresses)
-        if (channeCachelSize != null && channeCachelSize!! > 0) {
-            connectionFactory.channelCacheSize = channeCachelSize!!
+        if (channelCacheSize != null && channelCacheSize!! > 0) {
+            connectionFactory.channelCacheSize = channelCacheSize!!
         }
         return connectionFactory
     }
