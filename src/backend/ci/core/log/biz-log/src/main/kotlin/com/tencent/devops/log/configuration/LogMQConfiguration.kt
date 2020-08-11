@@ -194,8 +194,8 @@ class LogMQConfiguration @Autowired constructor() {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(logStatusEventQueue.name)
-        container.setConcurrentConsumers(5)
-        container.setMaxConcurrentConsumers(10)
+        container.setConcurrentConsumers(20)
+        container.setMaxConcurrentConsumers(20)
         container.setRabbitAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)
         val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logStatusEvent.name)
