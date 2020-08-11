@@ -1,7 +1,7 @@
 <template>
     <div class="build-history-tab-content">
         <filter-bar v-if="showFilterBar" @query="fetchData" :set-history-page-status="setHistoryPageStatus" :reset-query-condition="resetQueryCondition" v-bind="historyPageStatus.queryMap"></filter-bar>
-        <build-history-table :loading-more="isLoadingMore" ref="buildHistoryTable" :current-pipeline-version="currentPipelineVersion" @change-currentPage-limit="getHistoryData" @update-table="updateBuildHistoryList" :build-list="list" :columns="shownColumns" :empty-tips-config="emptyTipsConfig" :show-log="showLog"></build-history-table>
+        <build-history-table ref="buildHistoryTable" :current-pipeline-version="currentPipelineVersion" @change-currentPage-limit="getHistoryData" @update-table="updateBuildHistoryList" :build-list="list" :columns="shownColumns" :empty-tips-config="emptyTipsConfig" :show-log="showLog"></build-history-table>
         <bk-dialog
             width="567"
             :title="$t('history.settingCols')"
@@ -54,7 +54,6 @@
                 currentShowStatus: false,
                 triggerList: [],
                 queryStrMap: ['status', 'materialAlias', 'materialBranch', 'startTimeStartTime', 'endTimeEndTime'],
-                isLoadingMore: false,
                 list: []
             }
         },
@@ -142,7 +141,7 @@
                 if (this.$route.hash && /^#b-+/.test(this.$route.hash)) hashParam = this.$route.hash
                 this.$router.push(`${this.$route.path}?${newStr}${hashParam}`)
             },
-            '$route' (to, from) {
+            '$route.params.pipelineId' () {
                 this.fetchData()
             }
         },
@@ -184,16 +183,14 @@
                 'togglePropertyPanel'
             ]),
             async fetchData (page = 1, pageSize = this.$refs.buildHistoryTable.pagingConfigOne.limit) {
-                const currentPage = localStorage.getItem('pagingConfigOne-currentPage')
-                if (currentPage) {
-                    page = currentPage
-                    this.$refs.buildHistoryTable.pagingConfigOne.currentPage = Number(currentPage)
-                } else {
-                    this.$refs.buildHistoryTable.pagingConfigOne.currentPage = page
-                }
+                const currentPage = sessionStorage.getItem('pagingConfigOne-currentPage')
+                const savePipelineId = sessionStorage.getItem('pipeline-id')
+                const setPage = (savePipelineId && this.$route.params.pipelineId !== savePipelineId)
+                    ? 1
+                    : Number(currentPage) || page
+                this.$refs.buildHistoryTable.pagingConfigOne.currentPage = setPage
                 try {
-                    this.isLoadingMore = true
-                    const res = await this.requestHistory(page, pageSize)
+                    const res = await this.requestHistory(setPage, pageSize)
                     this.list = res.records
                     return res
                 } catch (e) {
@@ -202,8 +199,8 @@
                         theme: 'error'
                     })
                 } finally {
-                    this.isLoadingMore = false
-                    localStorage.removeItem('pagingConfigOne-currentPage')
+                    sessionStorage.removeItem('pagingConfigOne-currentPage')
+                    sessionStorage.removeItem('pipeline-id')
                 }
             },
             handleColumnsChange (source, target, tagetValueList) {

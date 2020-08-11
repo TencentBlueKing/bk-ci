@@ -176,9 +176,6 @@
             },
             showLog: {
                 type: Function
-            },
-            loadingMore: {
-                type: Boolean
             }
         },
         data () {
@@ -390,7 +387,8 @@
             handleRowClick (row, e) {
                 this.hideArtifactoriesPopup()
                 if (this.activeIndex === row.index) {
-                    localStorage.setItem('pagingConfigOne-currentPage', this.pagingConfigOne.currentPage)
+                    sessionStorage.setItem('pagingConfigOne-currentPage', this.pagingConfigOne.currentPage)
+                    sessionStorage.setItem('pipeline-id', this.$route.params.pipelineId)
                     const url = this.getArchiveUrl(row)
                     this.$router.push(url)
                 } else {
@@ -428,7 +426,8 @@
                 if (row) {
                     const url = this.getArchiveUrl(row, 'codeRecords', aliasName)
                     url && this.$router.push(url)
-                    localStorage.setItem('pagingConfigOne-currentPage', this.pagingConfigOne.currentPage)
+                    sessionStorage.setItem('pagingConfigOne-currentPage', this.pagingConfigOne.currentPage)
+                    sessionStorage.setItem('pipeline-id', this.$route.params.pipelineId)
                 }
             },
 
