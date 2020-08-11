@@ -80,13 +80,13 @@ class BuildIpaResourceImpl @Autowired constructor(
         }
     }
 
-    override fun getSignResult(
+    override fun getSignStatus(
         projectId: String,
         pipelineId: String,
         buildId: String,
         resignId: String
-    ): Result<Boolean> {
-        return Result(signService.getSignResult(resignId))
+    ): Result<String> {
+        return Result(signService.getSignStatus(resignId).getValue())
     }
 
     override fun downloadUrl(
