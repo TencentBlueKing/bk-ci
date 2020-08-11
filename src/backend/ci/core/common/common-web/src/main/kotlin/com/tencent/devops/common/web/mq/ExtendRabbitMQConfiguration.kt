@@ -52,11 +52,11 @@ class ExtendRabbitMQConfiguration {
     private val password: String? = null
     @Value("\${spring.rabbitmq.extend.addresses}")
     private val addresses: String? = null
-    @Value("\${spring.rabbitmq.extend.listener.simple.concurrency}")
+    @Value("\${spring.rabbitmq.extend.listener.simple.concurrency:#{null}}")
     private var concurrency: Int? = null
-    @Value("\${spring.rabbitmq.extend.listener.simple.max-concurrency}")
+    @Value("\${spring.rabbitmq.extend.listener.simple.max-concurrency:#{null}}")
     private var maxConcurrency: Int? = null
-    @Value("\${spring.rabbitmq.extend.cache.channel.size}")
+    @Value("\${spring.rabbitmq.extend.cache.channel.size:#{null}}")
     private var channelCacheSize: Int? = null
 
     @Bean(name = [EXTEND_CONNECTION_FACTORY_NAME])
