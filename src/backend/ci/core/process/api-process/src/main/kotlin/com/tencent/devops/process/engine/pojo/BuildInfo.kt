@@ -27,7 +27,6 @@
 package com.tencent.devops.process.engine.pojo
 
 import com.tencent.devops.common.api.pojo.ErrorInfo
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 

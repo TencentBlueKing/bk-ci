@@ -67,7 +67,7 @@
             }
         },
         computed: {
-            ...mapGetters('soda', {
+            ...mapGetters({
                 curParamList: 'pipelines/getCurAtomPrams'
             }),
             ...mapGetters('atom', [
@@ -141,6 +141,7 @@
             this.togglePropertyPanel({
                 isShow: false
             })
+            this.$store.commit('pipelines/updateCurAtomPrams', null)
             this.setPipeline()
             this.setPipelineEditing(false)
 
@@ -156,6 +157,7 @@
             async init () {
                 this.isLoading = true
                 try {
+                    this.requestPipeline(this.$route.params)
                     if (!this.curParamList) {
                         const res = await this.$store.dispatch('pipelines/requestStartupInfo', {
                             projectId: this.projectId,
@@ -176,7 +178,6 @@
                         this.versionParamList = this.curPipelineInfo.properties.filter(p => allVersionKeyList.includes(p.id))
                         this.paramValues = getParamsValuesMap(this.paramList)
                         this.versionParamValues = getParamsValuesMap(this.versionParamList)
-                        this.requestPipeline(this.$route.params)
                     } else {
                         throw new Error(this.$t('newlist.withoutManualAtom'))
                     }

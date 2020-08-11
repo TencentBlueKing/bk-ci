@@ -14,16 +14,18 @@ class RemoteAuthService @Autowired constructor(
     val tokenServiceImpl: TokenServiceImpl
 ) {
 
-    @Value("\${auth:iamCallBackUser}")
+    @Value("\${auth.iamCallBackUser}")
     val iamClientName = ""
 
     fun checkToken(token: String): Boolean {
         val pair = StringUtils.decodeAuth(token)
         if (pair.first != iamClientName) {
+            logger.warn("iam tokenCheck: userName error ${pair.first}")
             return false
         }
         val redisToken = redisOperation.get(TOKEN_REDIS_KEY)
         if (redisToken.isNullOrEmpty()) {
+            logger.info("iam tokenCheck: redis is empty")
             val remoteToken = getRemoteToken()
             return if (remoteToken == pair.second) {
                 redisOperation.set(TOKEN_REDIS_KEY, remoteToken)
@@ -32,15 +34,18 @@ class RemoteAuthService @Autowired constructor(
                 false
             }
         }
+        logger.info("iam tokenCheck: redis data $redisToken")
         if (pair.second == redisToken) {
             return true
         }
 
+        logger.info("iam tokenCheck: redis notEqual input, redis[$redisToken], input[${pair.second}]")
         // 最终验证权在auth服务端
         val remoteToken = getRemoteToken()
         if (pair.second == remoteToken) {
             return true
         }
+        logger.info("iam tokenCheck fail]")
         return false
     }
 
