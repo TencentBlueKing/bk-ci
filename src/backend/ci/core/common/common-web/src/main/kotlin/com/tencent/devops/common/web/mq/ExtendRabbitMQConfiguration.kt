@@ -44,7 +44,7 @@ import org.springframework.context.annotation.Configuration
 @EnableConfigurationProperties(ExtendRabbitMQProperties::class)
 class ExtendRabbitMQConfiguration {
 
-    @Value("\${spring.rabbitmq.extend.virtualHost}")
+    @Value("\${spring.rabbitmq.extend.virtual-host}")
     private val virtualHost: String? = null
     @Value("\${spring.rabbitmq.extend.username}")
     private val username: String? = null
@@ -57,10 +57,10 @@ class ExtendRabbitMQConfiguration {
     @Value("\${spring.rabbitmq.extend.listener.simple.max-concurrency}")
     private var maxConcurrency: Int? = null
     @Value("\${spring.rabbitmq.extend.cache.channel.size}")
-    private var channeCachelSize: Int? = null
+    private var channelCacheSize: Int? = null
 
     @Bean(name = [EXTEND_CONNECTION_FACTORY_NAME])
-    fun connectionFactory(config: ExtendRabbitMQProperties): ConnectionFactory {
+    fun extendConnectionFactory(config: ExtendRabbitMQProperties): ConnectionFactory {
         val connectionFactory = CachingConnectionFactory()
         connectionFactory.host = config.host
         connectionFactory.port = config.port
@@ -68,8 +68,8 @@ class ExtendRabbitMQConfiguration {
         connectionFactory.setPassword(password)
         connectionFactory.virtualHost = virtualHost
         connectionFactory.setAddresses(addresses)
-        if (channeCachelSize != null && channeCachelSize!! > 0) {
-            connectionFactory.channelCacheSize = channeCachelSize!!
+        if (channelCacheSize != null && channelCacheSize!! > 0) {
+            connectionFactory.channelCacheSize = channelCacheSize!!
         }
         return connectionFactory
     }
@@ -94,7 +94,7 @@ class ExtendRabbitMQConfiguration {
     }
 
     @Bean(value = [EXTEND_FACTORY_NAME])
-    fun coreFactory(
+    fun extendFactory(
         @Qualifier(EXTEND_CONNECTION_FACTORY_NAME)
         connectionFactory: ConnectionFactory
     ): SimpleRabbitListenerContainerFactory {
