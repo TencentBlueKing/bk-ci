@@ -27,7 +27,6 @@
 dependencies {
     compile project(":core:log:api-log")
     compile project(":core:log:model-log")
-
     compile project(":core:process:api-process")
     compile project(":core:common:common-service")
     compile project(":core:common:common-es")
