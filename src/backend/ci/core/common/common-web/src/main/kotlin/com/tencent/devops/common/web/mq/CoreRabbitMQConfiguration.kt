@@ -58,6 +58,8 @@ class CoreRabbitMQConfiguration {
     private val concurrency: Int? = null
     @Value("\${spring.rabbitmq.core.listener.simple.max-concurrency}")
     private val maxConcurrency: Int? = null
+    @Value("\${spring.rabbitmq.core.cache.channel.size}")
+    private val cacheChannelSize: Int? = null
 
     @Bean(name = [CORE_CONNECTION_FACTORY_NAME])
     @Primary
@@ -69,6 +71,9 @@ class CoreRabbitMQConfiguration {
         connectionFactory.setPassword(password)
         connectionFactory.virtualHost = virtualHost
         connectionFactory.setAddresses(addresses)
+        if (cacheChannelSize != null) {
+            connectionFactory.channelCacheSize = cacheChannelSize
+        }
         return connectionFactory
     }
 
@@ -94,6 +99,7 @@ class CoreRabbitMQConfiguration {
     }
 
     @Bean(value = [CORE_FACTORY_NAME])
+    @Primary
     fun coreFactory(
         @Qualifier(CORE_CONNECTION_FACTORY_NAME)
         connectionFactory: ConnectionFactory
@@ -106,7 +112,6 @@ class CoreRabbitMQConfiguration {
         if (maxConcurrency != null) {
             factory.setMaxConcurrentConsumers(maxConcurrency)
         }
-
         return factory
     }
 
