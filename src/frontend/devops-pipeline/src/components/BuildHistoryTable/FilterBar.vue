@@ -84,7 +84,7 @@
                         this.query.materialBranch = []
                         this.handleFilterItemChange(...args)
                     }, 500),
-                    isMultiple: true,
+                    isMultiple: false,
                     optionsConf: {
                         url: `${PROCESS_API_URL_PREFIX}/user/builds/{projectId}/{pipelineId}/historyCondition/repo`,
                         searchable: true,
@@ -101,7 +101,7 @@
                     value: this.query.materialBranch,
                     component: 'select-input',
                     handleChange: debounce(this.handleFilterItemChange, 500),
-                    isMultiple: true,
+                    isMultiple: false,
                     optionsConf: {
                         url: `${PROCESS_API_URL_PREFIX}/user/builds/{projectId}/{pipelineId}/historyCondition/branchName?${getQueryParamList(this.query.materialAlias, 'alias')}`,
                         searchable: true,

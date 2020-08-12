@@ -13,7 +13,7 @@
                         <div class="option-group-item"
                             v-for="(child, childIndex) in item.children"
                             :key="child.id"
-                            :class="{ active: child.id === value, selected: isChecked(child.id) && selectedGroupPointer === index }"
+                            :class="{ active: child.id === value, selected: (selectedPointer === childIndex || isChecked(child.id)) && selectedGroupPointer === index }"
                             :disabled="child.disabled"
                             @click.stop="selectOption(child)"
                             @mouseover="setSelectGroupPointer(index, childIndex)"
@@ -24,7 +24,7 @@
                     </li>
                 </template>
                 <template v-else>
-                    <li class="option-item" v-for="(item, index) in filteredList" :key="item.id" :class="{ active: item.id === value, selected: isChecked(item.id) }" :disabled="item.disabled" @click.stop="selectOption(item)" @mouseover="setSelectPointer(index)" :title="item.name">
+                    <li class="option-item" v-for="(item, index) in filteredList" :key="item.id" :class="{ active: item.id === value, selected: isChecked(item.id) || selectedPointer === index }" :disabled="item.disabled" @click.stop="selectOption(item)" @mouseover="setSelectPointer(index)" :title="item.name">
                         {{ item.name }}
                         <i v-if="isMultiple && isChecked(item.id)" class="bk-option-icon bk-icon icon-check-1 checkIcon"></i>
                     </li>
@@ -64,7 +64,7 @@
                 optionListVisible: false,
                 isFocused: false,
                 loading: this.isLoading,
-                // selectedPointer: 0,
+                selectedPointer: 0,
                 selectedGroupPointer: 0,
                 displayName: '',
                 checkeds: []
@@ -193,7 +193,7 @@
                 if (child.disabled) return
                 if (!this.isMultiple) {
                     this.handleBlur()
-                    this.handleChange(this.name)
+                    this.handleChange(this.name, child.id)
                 } else {
                     this.toggleChecked(child)
                     this.handleChange(this.name, this.paramsToString())
@@ -221,7 +221,7 @@
             },
             handleBlur () {
                 this.optionListVisible = false
-                // this.selectedPointer = 0
+                this.selectedPointer = 0
                 this.selectedGroupPointer = 0
                 this.isFocused = false
                 this.$refs.inputArea && this.$refs.inputArea.blur()
@@ -243,13 +243,13 @@
             },
 
             setSelectPointer (index) {
-                // this.selectedPointer = index
+                this.selectedPointer = index
                 this.adjustViewPort()
             },
 
             setSelectGroupPointer (index, childIndex) {
                 this.selectedGroupPointer = index
-                // this.selectedPointer = childIndex
+                this.selectedPointer = childIndex
                 this.adjustViewPort()
             },
 
