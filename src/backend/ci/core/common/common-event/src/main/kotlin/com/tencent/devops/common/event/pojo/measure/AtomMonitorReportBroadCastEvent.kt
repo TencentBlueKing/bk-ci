@@ -24,9 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.common.event.pojo.measure
 
-dependencies {
-    compile project(":core:common:common-api")
-    compileOnly "org.springframework.boot:spring-boot-starter-amqp"
-}
+import com.tencent.devops.common.api.pojo.AtomMonitorData
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+
+@Event(exchange = MQ.EXCHANGE_ATOM_MONITOR_DATA_REPORT_FANOUT)
+data class AtomMonitorReportBroadCastEvent(
+    val monitorData: AtomMonitorData
+)

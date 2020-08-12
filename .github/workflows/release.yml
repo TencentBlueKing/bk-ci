@@ -109,7 +109,10 @@ jobs:
               mkdir -p $GITHUB_WORKSPACE/bkci/$servicename/
               cp -v boot-$servicename.jar $GITHUB_WORKSPACE/bkci/$servicename/
           done
-      
+
+          mkdir -p $GITHUB_WORKSPACE/bkci/agentless/
+          cp -v boot-dockerhost.jar $GITHUB_WORKSPACE/bkci/agentless/boot-agentless.jar
+
       - name: Create artifact - Step3:Agent
         uses: actions/download-artifact@v1
         with:
