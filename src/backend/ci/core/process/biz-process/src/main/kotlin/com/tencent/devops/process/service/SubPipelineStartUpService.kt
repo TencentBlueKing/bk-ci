@@ -153,12 +153,16 @@ class SubPipelineStartUpService(
         val moveTaskDataBakSwitch = redisOperation.get("moveTaskDataBakSwitch")
         // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
         if (moveTaskDataBakSwitch == "true") {
-            pipelineBuildTaskDao.updateBakSubBuildId(
-                dslContext = dslContext,
-                buildId = buildId,
-                taskId = taskId,
-                subBuildId = subBuildId
-            )
+            try {
+                pipelineBuildTaskDao.updateBakSubBuildId(
+                    dslContext = dslContext,
+                    buildId = buildId,
+                    taskId = taskId,
+                    subBuildId = subBuildId
+                )
+            } catch (e: Exception) {
+                logger.warn("build($buildId) updateBakSubBuildId error", e)
+            }
         }
 
         return Result(
