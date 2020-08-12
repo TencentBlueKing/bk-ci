@@ -36,11 +36,14 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureBefore
+import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
+@AutoConfigureBefore(RabbitAutoConfiguration::class)
 @EnableConfigurationProperties(ExtendRabbitMQProperties::class)
 class ExtendRabbitMQConfiguration {
 
