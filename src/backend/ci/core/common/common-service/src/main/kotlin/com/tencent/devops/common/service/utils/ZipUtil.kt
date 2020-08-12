@@ -78,17 +78,20 @@ object ZipUtil {
     }
 
     fun zipDir(srcDir: File, zipFile: String) {
-        ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { it ->
-            try {
-                it.use {
-                    zipFiles(it, srcDir, "")
+        FileOutputStream(zipFile).use { fileOutputStream ->
+            ZipOutputStream(BufferedOutputStream(fileOutputStream)).use { it ->
+                try {
+                    it.use {
+                        zipFiles(it, srcDir, "")
+                    }
+                } catch (e: Exception) {
+                    logger.error("zip error: ", e)
+                    it.closeEntry()
+                    it.close()
                 }
-            } catch (e: Exception) {
-                logger.error("zip error: ", e)
-                it.closeEntry()
-                it.close()
             }
         }
+
     }
 
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
