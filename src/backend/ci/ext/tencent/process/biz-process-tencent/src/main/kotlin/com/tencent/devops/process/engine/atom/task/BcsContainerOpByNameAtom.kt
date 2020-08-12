@@ -53,7 +53,6 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE
@@ -333,7 +332,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 }
 
                 val command = parseVariable(param.category, runVariables)
-                buildLogPrinter.addLine( task.buildId,
+                buildLogPrinter.addLine(task.buildId,
                         "BCS opType is command,command : $command", task.taskId, task.containerHashId, task.executeCount ?: 1
                 )
 
@@ -984,7 +983,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 }
                 !success -> {
                     logger.error("Send Command for bcsApp running failed, msg: $msg")
-                    buildLogPrinter.addRedLine( pipelintTask.buildId, "命令执行失败，详情： $msg", pipelintTask.taskId, null, pipelintTask.executeCount ?: 1
+                    buildLogPrinter.addRedLine(pipelintTask.buildId, "命令执行失败，详情： $msg", pipelintTask.taskId, null, pipelintTask.executeCount ?: 1
                     )
                     Pair(400, "Send Command for bcsApp running failed, msg: $msg")
                 }

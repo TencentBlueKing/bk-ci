@@ -34,7 +34,6 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 class GcloudTaskExecutor(
     var buildLogPrinter: BuildLogPrinter,

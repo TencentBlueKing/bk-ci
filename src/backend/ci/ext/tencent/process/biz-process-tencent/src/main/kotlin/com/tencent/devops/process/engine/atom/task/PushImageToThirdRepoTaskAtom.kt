@@ -46,7 +46,6 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.math.NumberUtils
 import org.apache.poi.util.StringUtil
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope

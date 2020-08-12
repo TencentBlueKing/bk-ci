@@ -55,7 +55,6 @@ import com.tencent.devops.process.service.ReportService
 import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.process.utils.REPORT_DYNAMIC_ROOT_URL
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope

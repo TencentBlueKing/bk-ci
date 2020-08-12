@@ -43,7 +43,6 @@ import okhttp3.RequestBody
 import okio.BufferedSink
 import okio.Okio
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File

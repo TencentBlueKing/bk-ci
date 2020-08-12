@@ -43,7 +43,6 @@ import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import net.sf.json.JSONObject
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE
 import org.springframework.context.annotation.Scope
