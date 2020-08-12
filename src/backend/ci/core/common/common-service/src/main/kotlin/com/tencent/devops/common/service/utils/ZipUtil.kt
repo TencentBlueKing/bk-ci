@@ -78,7 +78,8 @@ object ZipUtil {
     }
 
     fun zipDir(srcDir: File, zipFile: String) {
-        FileOutputStream(zipFile).use { fileOutputStream ->
+        val fileOutputStream = FileOutputStream(zipFile)
+        try {
             ZipOutputStream(BufferedOutputStream(fileOutputStream)).use { it ->
                 try {
                     it.use {
@@ -90,6 +91,8 @@ object ZipUtil {
                     it.close()
                 }
             }
+        }finally {
+            fileOutputStream.close()
         }
 
     }
