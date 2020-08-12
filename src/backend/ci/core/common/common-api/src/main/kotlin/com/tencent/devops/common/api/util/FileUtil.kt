@@ -242,14 +242,14 @@ object FileUtil {
     /*
     *  创建目录
     * */
-    fun mkdirs(dir: File): Boolean {
-        return if (!dir.exists()) {
+    fun mkdirs(dir: File, delete: Boolean = true) {
+        if (!dir.exists()) {
             dir.mkdirs()
-            true
         } else {
-            dir.deleteRecursively()
-            dir.mkdirs()
-            true
+            if(delete || dir.isFile) {
+                dir.deleteRecursively()
+                dir.mkdirs()
+            }
         }
     }
 }
