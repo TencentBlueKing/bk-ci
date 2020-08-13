@@ -102,6 +102,8 @@ object IpaFileUtil {
      */
     fun getMD5(file: File): String {
         if (!file.exists()) return ""
-        return DigestUtils.md5Hex(file.inputStream())
+        return file.inputStream().use {
+            DigestUtils.md5Hex(it)
+        }
     }
 }
