@@ -58,7 +58,7 @@ class SignInfoService(
             resignId = resignId,
             userId = info.userId,
             projectId = info.projectId,
-            pipelineId = info.projectId,
+            pipelineId = info.pipelineId,
             buildId = info.buildId,
             taskId = info.taskId,
             archiveType = info.archiveType,
