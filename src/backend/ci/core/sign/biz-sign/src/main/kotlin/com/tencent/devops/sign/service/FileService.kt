@@ -37,4 +37,20 @@ interface FileService {
         ipaSignInfo: IpaSignInfo,
         md5Check: Boolean = true
     ): File
+
+    fun getIpaFile(
+        ipaSignInfo: IpaSignInfo
+    ): File
+
+    fun getIpaUnzipDir(
+        ipaSignInfo: IpaSignInfo
+    ): File
+
+    fun getMobileProvisionDir(
+        ipaSignInfo: IpaSignInfo
+    ): File
+
+    fun getIpaTmpDir(
+        ipaSignInfo: IpaSignInfo
+    ): File
 }
