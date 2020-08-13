@@ -147,7 +147,8 @@ class ExtServiceBuildDeployTask : ITask() {
             imageTag = imageTag,
             userName = username,
             password = password,
-            args = listOf("packageName=$packageName", "filePath=$filePath")
+            args = listOf("packageName=$packageName", "filePath=$filePath"),
+            poolNo = System.getenv("pool_no")
         )
         val dockerHostIp = System.getenv("docker_host_ip")
         val projectId = buildVariables.projectId
@@ -183,7 +184,7 @@ class ExtServiceBuildDeployTask : ITask() {
         if (dockerBuildAndPushImageResult.isNotOk() || (pushFlag != null && !pushFlag)) {
             LoggerService.addRedLine(JsonUtil.toJson(dockerBuildAndPushImageResult))
             throw TaskExecuteException(
-                errorMsg = "dockerBuildAndPushImage fail: ${dockerBuildAndPushImageResult.message}",
+                errorMsg = "dockerBuildAndPushImage fail",
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
             )
