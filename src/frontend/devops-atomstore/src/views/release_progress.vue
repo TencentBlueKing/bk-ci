@@ -647,11 +647,14 @@
         }
         .version-detail-title {
             padding-top: 16px;
+            z-index: 3;
             position: relative;
         }
         .atom-version-detail {
             margin-top: 20px;
             width: 80%;
+            position: relative;
+            z-index: 100;
             .detail-form-item {
                 display: flex;
                 margin-top: 18px;
@@ -690,6 +693,7 @@
                 margin-top: 0;
             }
             .markdown-editor-show.info-value {
+                overflow-y: auto;
                 /deep/ .v-note-panel {
                     border: none;
                 }
@@ -723,7 +727,7 @@
         .is-border {
             border: 1px solid $lineColor;
         }
-        .overflow {
+        .info-value.markdown-editor-show.overflow {
             max-height: 180px;
             overflow: hidden;
         }

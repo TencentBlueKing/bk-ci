@@ -945,8 +945,8 @@ class PipelineService @Autowired constructor(
         projectId: String,
         authPermission: AuthPermission,
         excludePipelineId: String?,
-        offset: Int,
-        limit: Int
+        page: Int?,
+        pageSize: Int?
     ): SQLPage<Pipeline> {
 
         val watch = StopWatch()
@@ -954,26 +954,36 @@ class PipelineService @Autowired constructor(
             watch.start("perm_r_perm")
             val hasPermissionList = pipelinePermissionService.getResourceByPermission(
                 userId = userId, projectId = projectId, permission = authPermission
-            )
+            ).toMutableList()
             watch.stop()
             watch.start("s_r_summary")
+            if (excludePipelineId != null) {
+                // 移除需排除的流水线ID
+                hasPermissionList.remove(excludePipelineId)
+            }
             val pipelineBuildSummary =
-                pipelineRuntimeService.getBuildSummaryRecords(projectId, ChannelCode.BS, hasPermissionList)
+                pipelineRuntimeService.getBuildSummaryRecords(
+                    projectId = projectId,
+                    channelCode = ChannelCode.BS,
+                    pipelineIds = hasPermissionList,
+                    page = page,
+                    pageSize = pageSize
+                )
             watch.stop()
 
             watch.start("s_r_fav")
             val count = pipelineBuildSummary.size + 0L
-            val allPipelines =
+            val pagePipelines =
                 if (count > 0) {
                     val favorPipelines = pipelineGroupService.getFavorPipelines(userId, projectId)
-                    buildPipelines(pipelineBuildSummary, favorPipelines, emptyList(), excludePipelineId)
+                    buildPipelines(
+                        pipelineBuildSummary = pipelineBuildSummary,
+                        favorPipelines = favorPipelines,
+                        authPipelines = emptyList()
+                    )
                 } else {
                     mutableListOf()
                 }
-
-            val toIndex =
-                if (limit == -1 || allPipelines.size <= (offset + limit)) allPipelines.size else offset + limit
-            val pagePipelines = allPipelines.subList(offset, toIndex)
 
             watch.stop()
             return SQLPage(count, pagePipelines)
@@ -1831,7 +1841,8 @@ class PipelineService @Autowired constructor(
         val offset = slqLimit?.offset ?: 0
         val limit = slqLimit?.limit ?: -1
         // 数据量不多，直接全拉
-        val pipelines = pipelineRepositoryService.listDeletePipelineIdByProject(projectId, deletedPipelineStoreDays.toLong())
+        val pipelines =
+            pipelineRepositoryService.listDeletePipelineIdByProject(projectId, deletedPipelineStoreDays.toLong())
         val list: List<PipelineInfo> = when {
             offset >= pipelines.size -> emptyList()
             limit < 0 -> pipelines.subList(offset, pipelines.size)
@@ -1890,6 +1901,35 @@ class PipelineService @Autowired constructor(
             }
         }
         return stages
+    }
+
+    fun getPipeline(projectId: String, page: Int?, pageSize: Int?): PipelineViewPipelinePage<PipelineInfo> {
+        logger.info("getPipeline |$projectId| $page| $pageSize")
+        var offset = pageSize
+        // 最多一次拉取50条数据, 后续可以改为配置
+        if (pageSize!! > 50) {
+            offset = 50
+        }
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = offset ?: 20
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val pipelineRecords =
+            pipelineInfoDao.listPipelineInfoByProject(dslContext, projectId, sqlLimit.limit, sqlLimit.offset)
+        val pipelineInfos = mutableListOf<PipelineInfo>()
+        pipelineRecords?.map {
+            pipelineInfoDao.convert(it, null)?.let { it1 -> pipelineInfos.add(it1) }
+        }
+        val count = pipelineInfoDao.countByProjectIds(
+            dslContext = dslContext,
+            projectIds = arrayListOf(projectId),
+            channelCode = null
+        )
+        return PipelineViewPipelinePage(
+            page = pageNotNull,
+            pageSize = offset!!,
+            records = pipelineInfos,
+            count = count.toLong()
+        )
     }
 
     fun getPipelineIdByNames(

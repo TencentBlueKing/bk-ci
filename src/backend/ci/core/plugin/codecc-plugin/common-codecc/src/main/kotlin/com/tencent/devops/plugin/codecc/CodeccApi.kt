@@ -44,9 +44,11 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
+import java.net.URLEncoder
 
 open class CodeccApi constructor(
     private val codeccApiUrl: String,
+    private val codeccApiProxyUrl: String,
     private val createPath: String = "/ms/task/api/service/task",
     private val updatePath: String = "/ms/task/api/service/task",
     private val existPath: String = "/ms/task/api/service/task/exists",
@@ -197,7 +199,13 @@ open class CodeccApi constructor(
             MediaType.parse("application/json; charset=utf-8"), jsonBody
         )
 
-        logger.info("taskExecution url: ${codeccApiUrl + path}")
+        val execUrl = if (codeccApiProxyUrl.isBlank()) {
+            codeccApiUrl + path
+        } else {
+            "$codeccApiProxyUrl?url=${URLEncoder.encode(codeccApiUrl + path, "UTF-8")}"
+        }
+        logger.info("taskExecution url: $execUrl")
+
         val builder = Request.Builder()
             .url(codeccApiUrl + path)
 
