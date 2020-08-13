@@ -125,6 +125,20 @@ class PipelineBuildService @Autowired constructor(
         pushTaskDetail(event, task)
     }
 
+    private fun getAtomCodeFromTask(task: TPipelineBuildTaskRecord): String {
+        return if (!task.taskAtom.isNullOrBlank()) {
+            task.taskAtom
+        } else {
+            val taskParams = JsonUtil.toMutableMapSkipEmpty(task.taskParams ?: "{}")
+            if (taskParams.keys.contains("atomCode")) {
+                taskParams["atomCode"] as String
+            } else {
+                logger.warn("unexpected taskParams with no atomCode:${task.taskParams}")
+                ""
+            }
+        }
+    }
+
     private fun pushElementData2Es(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord) {
         val data = ElementData(
             projectId = event.projectId,
@@ -136,7 +150,7 @@ class PipelineBuildService @Autowired constructor(
             beginTime = task.startTime?.timestampmilli() ?: 0,
             endTime = task.endTime?.timestampmilli() ?: 0,
             type = task.taskType ?: "",
-            atomCode = task.taskAtom ?: "",
+            atomCode = getAtomCodeFromTask(task),
             errorType = event.errorType,
             errorCode = event.errorCode,
             errorMsg = event.errorMsg

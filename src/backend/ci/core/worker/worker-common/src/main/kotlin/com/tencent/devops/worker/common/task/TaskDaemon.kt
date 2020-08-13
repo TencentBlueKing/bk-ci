@@ -71,4 +71,8 @@ class TaskDaemon(
     fun getAllEnv(): Map<String, String> {
         return task.getAllEnv()
     }
+
+    fun getMonitorData(): Map<String, Any> {
+        return task.getMonitorData()
+    }
 }
