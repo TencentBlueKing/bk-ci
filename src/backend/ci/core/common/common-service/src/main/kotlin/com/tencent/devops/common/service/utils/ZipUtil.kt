@@ -78,21 +78,19 @@ object ZipUtil {
     }
 
     fun zipDir(srcDir: File, zipFile: String) {
-        val fileOutputStream = FileOutputStream(zipFile)
-        try {
-            ZipOutputStream(BufferedOutputStream(fileOutputStream)).use { it ->
+        ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { it ->
+            try {
+                zipFiles(it, srcDir, "")
+            } catch (e: Exception) {
+                logger.error("zip error: ", e)
+            }finally {
                 try {
-                    it.use {
-                        zipFiles(it, srcDir, "")
-                    }
-                } catch (e: Exception) {
-                    logger.error("zip error: ", e)
                     it.closeEntry()
                     it.close()
+                } catch (e: IOException) {
+                    logger.error("zip close error:",e)
                 }
             }
-        }finally {
-            fileOutputStream.close()
         }
 
     }
