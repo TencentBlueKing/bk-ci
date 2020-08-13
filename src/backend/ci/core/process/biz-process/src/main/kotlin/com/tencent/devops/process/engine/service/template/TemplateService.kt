@@ -535,29 +535,12 @@ class TemplateService @Autowired constructor(
         keywords: String? = null,
         result: ArrayList<TemplateModel>
     ) {
-        val constrainedTemplateList = mutableListOf<String>()
-        val templateIdList = mutableSetOf<String>()
         if (templates == null || templates.isEmpty()) {
             // 如果查询模板列表为空，则不再执行后续逻辑
             return
         }
-        templates.forEach { template ->
-            if ((template["templateType"] as String) == TemplateType.CONSTRAINT.name) {
-                constrainedTemplateList.add(template["srcTemplateId"] as String)
-            }
-            templateIdList.add(template["templateId"] as String)
-        }
-        val srcTemplateRecords = templateDao.listTemplate(
-            dslContext = context,
-            projectId = null,
-            includePublicFlag = null,
-            templateType = null,
-            templateIdList = constrainedTemplateList,
-            storeFlag = null,
-            page = null,
-            pageSize = null
-        )
-        val srcTemplates = srcTemplateRecords?.associateBy { it["templateId"] as String }
+        val templateIdList = mutableSetOf<String>()
+        val srcTemplates = getConstrainedSrcTemplates(templates, templateIdList, context)
 
         val settings = pipelineSettingDao.getSettings(context, templateIdList).map { it.pipelineId to it }.toMap()
         templates.forEach { record ->
@@ -622,6 +605,31 @@ class TemplateService @Autowired constructor(
                 )
             }
         }
+    }
+
+    private fun getConstrainedSrcTemplates(
+        templates: Result<out Record>?,
+        templateIdList: MutableSet<String>,
+        context: DSLContext
+    ): Map<String, Record>? {
+        val constrainedTemplateList = mutableListOf<String>()
+        templates?.forEach { template ->
+            if ((template["templateType"] as String) == TemplateType.CONSTRAINT.name) {
+                constrainedTemplateList.add(template["srcTemplateId"] as String)
+            }
+            templateIdList.add(template["templateId"] as String)
+        }
+        val srcTemplateRecords = if (constrainedTemplateList.isNotEmpty()) templateDao.listTemplate(
+            dslContext = context,
+            projectId = null,
+            includePublicFlag = null,
+            templateType = null,
+            templateIdList = constrainedTemplateList,
+            storeFlag = null,
+            page = null,
+            pageSize = null
+        ) else null
+        return srcTemplateRecords?.associateBy { it["templateId"] as String }
     }
 
     fun listTemplateByProjectIds(
@@ -788,25 +796,8 @@ class TemplateService @Autowired constructor(
                 templates = result
             )
         }
-        val constrainedTemplateList = mutableListOf<String>()
         val templateIdList = mutableSetOf<String>()
-        templates.forEach { tempTemplate ->
-            if ((tempTemplate["templateType"] as String) == TemplateType.CONSTRAINT.name) {
-                constrainedTemplateList.add(tempTemplate["srcTemplateId"] as String)
-            }
-            templateIdList.add(tempTemplate["templateId"] as String)
-        }
-        val srcTemplateRecords = templateDao.listTemplate(
-            dslContext = dslContext,
-            projectId = null,
-            includePublicFlag = null,
-            templateType = null,
-            templateIdList = constrainedTemplateList,
-            storeFlag = null,
-            page = null,
-            pageSize = null
-        )
-        val srcTemplates = srcTemplateRecords?.associateBy { it["templateId"] as String }
+        val srcTemplates = getConstrainedSrcTemplates(templates, templateIdList, dslContext)
 
         val settings = pipelineSettingDao.getSettings(dslContext, templateIdList).map { it.pipelineId to it }.toMap()
         templates.forEach { record ->
