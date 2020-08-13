@@ -72,7 +72,7 @@ class SignServiceImpl @Autowired constructor(
     ): Pair<File, Int> {
         val taskExecuteCount = signInfoService.save(resignId, ipaSignInfoHeader, ipaSignInfo)
         // 复制文件到临时目录
-        val ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo, md5Check)
+        val ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo, md5Check, resignId)
         signInfoService.finishUpload(resignId, ipaFile, ipaSignInfo, taskExecuteCount)
         return Pair(ipaFile, taskExecuteCount)
     }
@@ -85,11 +85,11 @@ class SignServiceImpl @Autowired constructor(
     ) {
 
         // ipa解压后的目录
-        val ipaUnzipDir = fileService.getIpaUnzipDir(ipaSignInfo)
+        val ipaUnzipDir = fileService.getIpaUnzipDir(ipaSignInfo, resignId)
         FileUtil.mkdirs(ipaUnzipDir)
 
         // 描述文件的目录
-        val mobileProvisionDir = fileService.getMobileProvisionDir(ipaSignInfo)
+        val mobileProvisionDir = fileService.getMobileProvisionDir(ipaSignInfo, resignId)
         FileUtil.mkdirs(mobileProvisionDir)
 
         // 解压ipa包

@@ -54,10 +54,11 @@ class FileServiceImpl(
     override fun copyToTargetFile(
         ipaInputStream: InputStream,
         ipaSignInfo: IpaSignInfo,
-        md5Check: Boolean
+        md5Check: Boolean,
+        resignId: String?
     ): File {
-        val ipaTmpDirFile = getIpaTmpDir(ipaSignInfo)
-        val ipaFile = getIpaFile(ipaSignInfo)
+        val ipaTmpDirFile = getIpaTmpDir(ipaSignInfo, resignId)
+        val ipaFile = getIpaFile(ipaSignInfo, resignId)
         FileUtil.mkdirs(ipaTmpDirFile, false)
         val md5 = IpaFileUtil.copyInputStreamToFile(ipaInputStream, ipaFile)
         logger.info("copy file md5 check:$md5Check")
@@ -96,19 +97,31 @@ class FileServiceImpl(
         }
     }
 
-    override fun getIpaFile(ipaSignInfo: IpaSignInfo): File {
-        return File("${getIpaTmpDir(ipaSignInfo).canonicalPath}/${ipaSignInfo.fileName}")
+    override fun getIpaFile(
+        ipaSignInfo: IpaSignInfo,
+        resignId: String?
+    ): File {
+        return File("${getIpaTmpDir(ipaSignInfo, resignId).canonicalPath}/${ipaSignInfo.fileName}")
     }
 
-    override fun getIpaUnzipDir(ipaSignInfo: IpaSignInfo): File {
-        return File("${getIpaFile(ipaSignInfo).canonicalPath}.unzipDir")
+    override fun getIpaUnzipDir(
+        ipaSignInfo: IpaSignInfo,
+        resignId: String?
+    ): File {
+        return File("${getIpaFile(ipaSignInfo, resignId).canonicalPath}.unzipDir")
     }
 
-    override fun getMobileProvisionDir(ipaSignInfo: IpaSignInfo): File {
-        return File("${getIpaFile(ipaSignInfo).canonicalPath}.mobileProvisionDir")
+    override fun getMobileProvisionDir(
+        ipaSignInfo: IpaSignInfo,
+        resignId: String?
+    ): File {
+        return File("${getIpaFile(ipaSignInfo, resignId).canonicalPath}.mobileProvisionDir")
     }
 
-    override fun getIpaTmpDir(ipaSignInfo: IpaSignInfo): File {
-        return File("$tmpDir/${ipaSignInfo.projectId}/${ipaSignInfo.pipelineId}/${ipaSignInfo.buildId}/")
+    override fun getIpaTmpDir(
+        ipaSignInfo: IpaSignInfo,
+        resignId: String?
+    ): File {
+        return File("$tmpDir/${ipaSignInfo.projectId}/${ipaSignInfo.pipelineId}/${ipaSignInfo.buildId}/$resignId/")
     }
 }
