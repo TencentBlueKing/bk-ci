@@ -945,8 +945,8 @@ class PipelineService @Autowired constructor(
         projectId: String,
         authPermission: AuthPermission,
         excludePipelineId: String?,
-        offset: Int,
-        limit: Int
+        page: Int?,
+        pageSize: Int?
     ): SQLPage<Pipeline> {
 
         val watch = StopWatch()
@@ -954,26 +954,36 @@ class PipelineService @Autowired constructor(
             watch.start("perm_r_perm")
             val hasPermissionList = pipelinePermissionService.getResourceByPermission(
                 userId = userId, projectId = projectId, permission = authPermission
-            )
+            ).toMutableList()
             watch.stop()
             watch.start("s_r_summary")
+            if (excludePipelineId != null) {
+                // 移除需排除的流水线ID
+                hasPermissionList.remove(excludePipelineId)
+            }
             val pipelineBuildSummary =
-                pipelineRuntimeService.getBuildSummaryRecords(projectId, ChannelCode.BS, hasPermissionList)
+                pipelineRuntimeService.getBuildSummaryRecords(
+                    projectId = projectId,
+                    channelCode = ChannelCode.BS,
+                    pipelineIds = hasPermissionList,
+                    page = page,
+                    pageSize = pageSize
+                )
             watch.stop()
 
             watch.start("s_r_fav")
             val count = pipelineBuildSummary.size + 0L
-            val allPipelines =
+            val pagePipelines =
                 if (count > 0) {
                     val favorPipelines = pipelineGroupService.getFavorPipelines(userId, projectId)
-                    buildPipelines(pipelineBuildSummary, favorPipelines, emptyList(), excludePipelineId)
+                    buildPipelines(
+                        pipelineBuildSummary = pipelineBuildSummary,
+                        favorPipelines = favorPipelines,
+                        authPipelines = emptyList()
+                    )
                 } else {
                     mutableListOf()
                 }
-
-            val toIndex =
-                if (limit == -1 || allPipelines.size <= (offset + limit)) allPipelines.size else offset + limit
-            val pagePipelines = allPipelines.subList(offset, toIndex)
 
             watch.stop()
             return SQLPage(count, pagePipelines)
