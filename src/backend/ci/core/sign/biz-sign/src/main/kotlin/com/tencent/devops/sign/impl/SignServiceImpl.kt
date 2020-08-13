@@ -45,7 +45,6 @@ import com.tencent.devops.sign.service.SignService
 import com.tencent.devops.sign.service.MobileProvisionService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.InputStream
@@ -59,14 +58,15 @@ class SignServiceImpl @Autowired constructor(
     private val fileService: FileService,
     private val signInfoService: SignInfoService,
     private val archiveService: ArchiveService,
-    private val objectMapper: ObjectMapper,
     private val mobileProvisionService: MobileProvisionService
 ) : SignService {
+
+    private var ipaFile: File? = null
+    private var ipaUnzipDir: File? = null
+    private var mobileProvisionDir: File? = null
+
     companion object {
         private val logger = LoggerFactory.getLogger(SignServiceImpl::class.java)
-        private lateinit var ipaFile: File
-        private lateinit var ipaUnzipDir: File
-        private lateinit var mobileProvisionDir: File
     }
 
     override fun uploadIpaAndDecodeInfo(
@@ -79,8 +79,8 @@ class SignServiceImpl @Autowired constructor(
         val taskExecuteCount = signInfoService.save(resignId, ipaSignInfoHeader, ipaSignInfo)
         // 复制文件到临时目录
         ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo, md5Check)
-        signInfoService.finishUpload(resignId, ipaFile, ipaSignInfo, taskExecuteCount)
-        return Pair(ipaFile, taskExecuteCount)
+        signInfoService.finishUpload(resignId, ipaFile!!, ipaSignInfo, taskExecuteCount)
+        return Pair(ipaFile!!, taskExecuteCount)
     }
 
     override fun signIpaAndArchive(
@@ -92,27 +92,27 @@ class SignServiceImpl @Autowired constructor(
 
         // ipa解压后的目录
         ipaUnzipDir = File("${ipaFile.canonicalPath}.unzipDir")
-        FileUtil.mkdirs(ipaUnzipDir)
+        FileUtil.mkdirs(ipaUnzipDir!!)
 
         // 描述文件的目录
         mobileProvisionDir = File("${ipaFile.canonicalPath}.mobileProvisionDir")
-        FileUtil.mkdirs(mobileProvisionDir)
+        FileUtil.mkdirs(mobileProvisionDir!!)
 
         // 解压ipa包
-        SignUtils.unzipIpa(ipaFile, ipaUnzipDir)
-        signInfoService.finishUnzip(resignId, ipaUnzipDir, ipaSignInfo, taskExecuteCount)
+        SignUtils.unzipIpa(ipaFile, ipaUnzipDir!!)
+        signInfoService.finishUnzip(resignId, ipaUnzipDir!!, ipaSignInfo, taskExecuteCount)
 
         // 解析Info.plist
-        val ipaInfoPlist = parsInfoPlist(findInfoPlist(ipaUnzipDir))
+        val ipaInfoPlist = parsInfoPlist(findInfoPlist(ipaUnzipDir!!))
 
         // 下载描述文件
-        val wildcardMobileProvisionInfo = downloadWildcardMobileProvision(mobileProvisionDir, ipaSignInfo)
-        val mobileProvisionInfoMap = downloadMobileProvision(mobileProvisionDir, ipaSignInfo)
+        val wildcardMobileProvisionInfo = downloadWildcardMobileProvision(mobileProvisionDir!!, ipaSignInfo)
+        val mobileProvisionInfoMap = downloadMobileProvision(mobileProvisionDir!!, ipaSignInfo)
         // 签名操作
         val signFinished = if (ipaSignInfo.wildcard) {
-            resignIpaPackageWildcard(ipaUnzipDir, ipaSignInfo, wildcardMobileProvisionInfo)
+            resignIpaPackageWildcard(ipaUnzipDir!!, ipaSignInfo, wildcardMobileProvisionInfo)
         } else {
-            resignIpaPackage(ipaUnzipDir, ipaSignInfo, mobileProvisionInfoMap)
+            resignIpaPackage(ipaUnzipDir!!, ipaSignInfo, mobileProvisionInfoMap)
         }
         if (!signFinished) {
             logger.error("[$resignId]|[${ipaSignInfo.buildId}] sign ipa failed.")
@@ -123,7 +123,7 @@ class SignServiceImpl @Autowired constructor(
         val fileName = ipaSignInfo.fileName
         val uploadFileName = fileName.substring(0, fileName.lastIndexOf(".")) + "_enterprise_sign.ipa"
         // 压缩目录
-        val signedIpaFile = SignUtils.zipIpaFile(ipaUnzipDir, ipaUnzipDir.parent + File.separator + uploadFileName)
+        val signedIpaFile = SignUtils.zipIpaFile(ipaUnzipDir!!, ipaUnzipDir!!.parent + File.separator + uploadFileName)
         if (signedIpaFile == null) {
             logger.error("[$resignId]|[${ipaSignInfo.buildId}] zip ipa failed.")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA文件生成失败")
