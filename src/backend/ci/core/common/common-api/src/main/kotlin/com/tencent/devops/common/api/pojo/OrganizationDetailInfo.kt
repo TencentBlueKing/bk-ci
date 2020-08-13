@@ -24,14 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:log:api-log")
-    compile project(":core:log:model-log")
-    compile project(":core:process:api-process")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-es")
-    compile project(":core:common:common-websocket")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-client")
-}
+package com.tencent.devops.common.api.pojo
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("组织架构详细信息")
+data class OrganizationDetailInfo(
+    @ApiModelProperty("事业群ID")
+    val bgId: Int?,
+    @ApiModelProperty("事业群名字")
+    val bgName: String?,
+    @ApiModelProperty("部门ID")
+    val deptId: Int?,
+    @ApiModelProperty("部门名字")
+    val deptName: String?,
+    @ApiModelProperty("中心ID")
+    val centerId: Int?,
+    @ApiModelProperty("中心名字")
+    val centerName: String?
+)

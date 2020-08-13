@@ -1278,21 +1278,6 @@ class PipelineRuntimeService @Autowired constructor(
         return buildId
     }
 
-    private fun getWebhookInfo(params: Map<String, Any>): String? {
-        if (params[PIPELINE_START_TYPE] != StartType.WEB_HOOK.name) {
-            return null
-        }
-        return JsonUtil.toJson(
-            WebhookInfo(
-                webhookMessage = params[PIPELINE_WEBHOOK_COMMIT_MESSAGE] as String?,
-                webhookRepoUrl = params[BK_REPO_WEBHOOK_REPO_URL] as String?,
-                webhookType = params[PIPELINE_WEBHOOK_TYPE] as String?,
-                webhookBranch = params[PIPELINE_WEBHOOK_BRANCH] as String?,
-                webhookEventType = params[PIPELINE_WEBHOOK_EVENT_TYPE] as String?
-            )
-        )
-    }
-
     private fun addBuildTaskBakRecord(
         updateBakTaskExistsRecord: MutableList<TPipelineBuildTaskBakRecord>,
         taskRecord: TPipelineBuildTaskRecord
@@ -1325,6 +1310,21 @@ class PipelineRuntimeService @Autowired constructor(
                 taskRecord.errorMsg,
                 taskRecord.containerHashId,
                 LocalDateTime.now()
+            )
+        )
+    }
+
+    private fun getWebhookInfo(params: Map<String, Any>): String? {
+        if (params[PIPELINE_START_TYPE] != StartType.WEB_HOOK.name) {
+            return null
+        }
+        return JsonUtil.toJson(
+            WebhookInfo(
+                webhookMessage = params[PIPELINE_WEBHOOK_COMMIT_MESSAGE] as String?,
+                webhookRepoUrl = params[BK_REPO_WEBHOOK_REPO_URL] as String?,
+                webhookType = params[PIPELINE_WEBHOOK_TYPE] as String?,
+                webhookBranch = params[PIPELINE_WEBHOOK_BRANCH] as String?,
+                webhookEventType = params[PIPELINE_WEBHOOK_EVENT_TYPE] as String?
             )
         )
     }
