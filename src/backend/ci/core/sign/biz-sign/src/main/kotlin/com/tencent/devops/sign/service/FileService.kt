@@ -35,22 +35,27 @@ interface FileService {
     fun copyToTargetFile(
         ipaInputStream: InputStream,
         ipaSignInfo: IpaSignInfo,
-        md5Check: Boolean = true
+        md5Check: Boolean = true,
+        resignId: String? = null
     ): File
 
     fun getIpaFile(
-        ipaSignInfo: IpaSignInfo
+        ipaSignInfo: IpaSignInfo,
+        resignId: String? = null
     ): File
 
     fun getIpaUnzipDir(
-        ipaSignInfo: IpaSignInfo
+        ipaSignInfo: IpaSignInfo,
+        resignId: String? = null
     ): File
 
     fun getMobileProvisionDir(
-        ipaSignInfo: IpaSignInfo
+        ipaSignInfo: IpaSignInfo,
+        resignId: String? = null
     ): File
 
     fun getIpaTmpDir(
-        ipaSignInfo: IpaSignInfo
+        ipaSignInfo: IpaSignInfo,
+        resignId: String? = null
     ): File
 }
