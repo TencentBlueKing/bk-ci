@@ -62,13 +62,12 @@ class SignServiceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val mobileProvisionService: MobileProvisionService
 ) : SignService {
-
-    @Value("\${bkci.sign.tmpDir:/data/enterprise_sign_tmp}")
-    private val tmpDir = "/data/enterprise_sign_tmp"
-
-    private lateinit var ipaFile: File
-    private lateinit var ipaUnzipDir: File
-    private lateinit var mobileProvisionDir: File
+    companion object {
+        private val logger = LoggerFactory.getLogger(SignServiceImpl::class.java)
+        private lateinit var ipaFile: File
+        private lateinit var ipaUnzipDir: File
+        private lateinit var mobileProvisionDir: File
+    }
 
     override fun uploadIpaAndDecodeInfo(
         resignId: String,
@@ -370,9 +369,5 @@ class SignServiceImpl @Autowired constructor(
         properties["source"] = "pipeline"
         properties["ipa.sign.status"] = "true"
         return properties
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(SignServiceImpl::class.java)
     }
 }
