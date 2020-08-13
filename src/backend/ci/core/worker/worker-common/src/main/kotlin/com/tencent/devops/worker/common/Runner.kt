@@ -27,26 +27,27 @@
 package com.tencent.devops.worker.common
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
-import com.tencent.devops.common.api.pojo.ErrorCode
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
-import com.tencent.devops.worker.common.env.BuildEnv
-import com.tencent.devops.worker.common.env.BuildType
-import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import com.tencent.devops.worker.common.env.BuildEnv
+import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.ProcessService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
+import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.system.exitProcess
@@ -196,8 +197,20 @@ object Runner {
             if (workspacePathFile != null && checkIfNeed2CleanWorkspace()) {
                 val file = workspacePathFile.absoluteFile.normalize()
                 logger.warn("Need to clean up the workspace(${file.absolutePath})")
-                if (!file.deleteRecursively()) {
-                    logger.warn("Fail to clean up the workspace")
+                // 去除workspace目录下的软连接，再清空workspace
+                try {
+                    ShellUtil.execute(
+                        buildId = "",
+                        script = "find ${file.absolutePath} -type l | xargs rm -rf;",
+                        dir = file,
+                        buildEnvs = emptyList(),
+                        runtimeVariables = emptyMap()
+                    )
+                    if (!file.deleteRecursively()) {
+                        logger.warn("Fail to clean up the workspace")
+                    }
+                } catch (e: Exception) {
+                    logger.error("Fail to clean up the workspace.", e)
                 }
             }
 
