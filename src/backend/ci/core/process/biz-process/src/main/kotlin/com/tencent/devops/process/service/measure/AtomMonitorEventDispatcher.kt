@@ -29,13 +29,10 @@ package com.tencent.devops.process.service.measure
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
 import com.tencent.devops.common.event.pojo.measure.AtomMonitorReportBroadCastEvent
-import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import javax.annotation.Resource
 
 class AtomMonitorEventDispatcher constructor(
-    @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME)
     private val rabbitTemplate: RabbitTemplate
 ) : EventDispatcher<AtomMonitorReportBroadCastEvent> {
 
