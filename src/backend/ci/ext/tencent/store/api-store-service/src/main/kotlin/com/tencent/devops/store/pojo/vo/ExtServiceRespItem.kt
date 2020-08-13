@@ -61,7 +61,7 @@ data class ExtServiceRespItem(
     @ApiModelProperty("扩展点Id", required = true)
     val itemIds: Set<String>,
     @ApiModelProperty("扩展点", required = true)
-    val itemName: String,
+    val itemName: List<String>,
     @ApiModelProperty("是否可卸载标签")
     val isUninstall: Boolean? = false,
     @ApiModelProperty("修改人", required = true)
