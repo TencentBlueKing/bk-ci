@@ -135,11 +135,11 @@ class SignServiceImpl @Autowired constructor(
         val properties = getProperties(ipaSignInfo, ipaInfoPlist)
 
         // 归档ipa包
-//        val archiveResult = archiveService.archive(signedIpaFile, ipaSignInfo, properties)
-//        if (!archiveResult) {
-//            logger.error("[$resignId]|[${ipaSignInfo.buildId}] archive signed ipa failed.")
-//            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA, defaultMessage = "归档IPA包失败")
-//        }
+        val archiveResult = archiveService.archive(signedIpaFile, ipaSignInfo, properties)
+        if (!archiveResult) {
+            logger.error("[$resignId]|[${ipaSignInfo.buildId}] archive signed ipa failed.")
+            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA, defaultMessage = "归档IPA包失败")
+        }
         signInfoService.finishArchive(resignId, ipaSignInfo, taskExecuteCount)
         // 成功结束签名逻辑
         signInfoService.successResign(resignId, ipaSignInfo, taskExecuteCount)
