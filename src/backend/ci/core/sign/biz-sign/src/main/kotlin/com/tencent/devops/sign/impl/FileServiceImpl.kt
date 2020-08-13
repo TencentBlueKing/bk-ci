@@ -56,9 +56,8 @@ class FileServiceImpl(
         ipaSignInfo: IpaSignInfo,
         md5Check: Boolean
     ): File {
-        val ipaTmpDir = "$tmpDir/${ipaSignInfo.projectId}/${ipaSignInfo.pipelineId}/${ipaSignInfo.buildId}/"
-        val ipaTmpDirFile = File(ipaTmpDir)
-        val ipaFile = File("$ipaTmpDir/${ipaSignInfo.fileName}")
+        val ipaTmpDirFile = getIpaTmpDir(ipaSignInfo)
+        val ipaFile = getIpaFile(ipaSignInfo)
         FileUtil.mkdirs(ipaTmpDirFile, false)
         val md5 = IpaFileUtil.copyInputStreamToFile(ipaInputStream, ipaFile)
         logger.info("copy file md5 check:$md5Check")
@@ -95,5 +94,21 @@ class FileServiceImpl(
         } else {
             return ipaFile
         }
+    }
+
+    override fun getIpaFile(ipaSignInfo: IpaSignInfo): File {
+        return File("${getIpaTmpDir(ipaSignInfo).canonicalPath}/${ipaSignInfo.fileName}")
+    }
+
+    override fun getIpaUnzipDir(ipaSignInfo: IpaSignInfo): File {
+        return File("${getIpaFile(ipaSignInfo).canonicalPath}.unzipDir")
+    }
+
+    override fun getMobileProvisionDir(ipaSignInfo: IpaSignInfo): File {
+        return File("${getIpaFile(ipaSignInfo).canonicalPath}.mobileProvisionDir")
+    }
+
+    override fun getIpaTmpDir(ipaSignInfo: IpaSignInfo): File {
+        return File("$tmpDir/${ipaSignInfo.projectId}/${ipaSignInfo.pipelineId}/${ipaSignInfo.buildId}/")
     }
 }
