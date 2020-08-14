@@ -31,6 +31,7 @@ import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
 import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.monitoring.pojo.UsersStatus
 import com.tencent.devops.monitoring.pojo.annotions.InfluxTag
+import org.apache.commons.lang3.reflect.FieldUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.context.config.annotation.RefreshScope
@@ -84,12 +85,12 @@ class StatusReportService @Autowired constructor(
         val field: MutableMap<String, Any> = mutableMapOf()
         val tag: MutableMap<String, String> = mutableMapOf()
 
-        any::class.declaredMemberProperties.forEach {
-            logger.info("declaredMemberProperties , ${it.javaField}")
-            if (it.javaField?.isAnnotationPresent(InfluxTag::class.java) == true) {
-                tag[it.name] = it.getter.call(any)?.toString() ?: ""
+        FieldUtils.getAllFields(any.javaClass).forEach {
+            it.isAccessible = true
+            if (it.isAnnotationPresent(InfluxTag::class.java)) {
+                tag[it.name] = it.get(any)?.toString() ?: ""
             } else {
-                val value = it.getter.call(any)
+                val value = it.get(any)
                 field[it.name] = if (value == null) "" else {
                     if (value is Number) value else value.toString()
                 }
