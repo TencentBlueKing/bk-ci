@@ -319,6 +319,24 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         }
     }
 
+    fun setTaskErrorInfo(
+        dslContext: DSLContext,
+        buildId: String,
+        taskId: String,
+        errorType: ErrorType,
+        errorCode: Int,
+        errorMsg: String
+    ) {
+        with(T_PIPELINE_BUILD_TASK) {
+            dslContext.update(this)
+                .set(ERROR_TYPE, errorType.ordinal)
+                .set(ERROR_CODE, errorCode)
+                .set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX))
+                .where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId))
+                .execute()
+        }
+    }
+
     fun updateTaskParam(dslContext: DSLContext, buildId: String, taskId: String, taskParam: String): Int {
         with(T_PIPELINE_BUILD_TASK) {
             return dslContext.update(this)

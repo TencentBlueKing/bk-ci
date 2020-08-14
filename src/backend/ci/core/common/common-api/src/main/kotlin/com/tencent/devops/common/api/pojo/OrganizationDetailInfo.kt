@@ -24,30 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
+package com.tencent.devops.common.api.pojo
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile "org.jetbrains.kotlin:kotlin-reflect"
-    testCompile "junit:junit"
-    testCompile "org.springframework.boot:spring-boot-starter-test"
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    compile project(":core:artifactory:biz-artifactory-store")
-    compile project(":core:artifactory:biz-artifactory-sample")
-    compile project(":core:dispatch:biz-dispatch-docker")
-    compile project(":core:environment:biz-environment-sample")
-    compile project(":core:image:biz-image")
-    compile project(":core:log:biz-log")
-    compile project(":core:misc:biz-misc")
-    compile project(":core:notify:biz-notify-blueking")
-    compile project(":core:openapi:biz-openapi")
-    compile project(":core:plugin:biz-plugin")
-    compile project(":core:process:biz-process-sample")
-    compile project(":core:project:biz-project-sample")
-    compile project(":core:quality:biz-quality")
-    compile project(":core:repository:biz-repository-sample")
-    compile project(":core:store:biz-store-sample")
-    compile project(":core:ticket:biz-ticket-sample")
-    compile project(":core:websocket:biz-websocket")
-}
-
-apply from: "$rootDir/task_spring_boot_package.gradle"
+@ApiModel("组织架构详细信息")
+data class OrganizationDetailInfo(
+    @ApiModelProperty("事业群ID")
+    val bgId: Int?,
+    @ApiModelProperty("事业群名字")
+    val bgName: String?,
+    @ApiModelProperty("部门ID")
+    val deptId: Int?,
+    @ApiModelProperty("部门名字")
+    val deptName: String?,
+    @ApiModelProperty("中心ID")
+    val centerId: Int?,
+    @ApiModelProperty("中心名字")
+    val centerName: String?
+)

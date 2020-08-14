@@ -47,6 +47,7 @@ import com.tencent.devops.worker.common.service.ProcessService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
+import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.system.exitProcess
@@ -196,8 +197,20 @@ object Runner {
             if (workspacePathFile != null && checkIfNeed2CleanWorkspace()) {
                 val file = workspacePathFile.absoluteFile.normalize()
                 logger.warn("Need to clean up the workspace(${file.absolutePath})")
-                if (!file.deleteRecursively()) {
-                    logger.warn("Fail to clean up the workspace")
+                // 去除workspace目录下的软连接，再清空workspace
+                try {
+                    ShellUtil.execute(
+                        buildId = "",
+                        script = "find ${file.absolutePath} -type l | xargs rm -rf;",
+                        dir = file,
+                        buildEnvs = emptyList(),
+                        runtimeVariables = emptyMap()
+                    )
+                    if (!file.deleteRecursively()) {
+                        logger.warn("Fail to clean up the workspace")
+                    }
+                } catch (e: Exception) {
+                    logger.error("Fail to clean up the workspace.", e)
                 }
             }
 

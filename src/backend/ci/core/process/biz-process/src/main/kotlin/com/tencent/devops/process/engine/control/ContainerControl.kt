@@ -200,7 +200,7 @@ class ContainerControl @Autowired constructor(
                 // 要求启动执行的请求
                 ActionType.isStart(actionType) || ActionType.REFRESH == actionType -> checkStartAction(containerTaskList) ?: return
                 // 要求强制终止
-                ActionType.isTerminate(actionType) -> checkTerminateAction(containerTaskList, reason)
+                ActionType.isTerminate(actionType) -> checkTerminateAction(containerTaskList, reason, timeout)
                 // 要求停止执行的请求
                 ActionType.isEnd(actionType) -> checkEndAction(containerTaskList)
                 else -> { // 未规定的类型，打回上一级处理
@@ -402,7 +402,11 @@ class ContainerControl @Autowired constructor(
             runCondition == RunCondition.PRE_TASK_FAILED_ONLY
     }
 
-    private fun checkTerminateAction(containerTaskList: Collection<PipelineBuildTask>, message: String?): Triple<Nothing?, BuildStatus, Boolean> {
+    private fun checkTerminateAction(
+        containerTaskList: Collection<PipelineBuildTask>,
+        message: String?,
+        isTimeout: Boolean?
+    ): Triple<Nothing?, BuildStatus, Boolean> {
         var startVMFail = false
         var containerFinalStatus: BuildStatus = BuildStatus.FAILED
         containerTaskList.forEach { task ->
@@ -420,15 +424,35 @@ class ContainerControl @Autowired constructor(
                         buildId = task.buildId, message = "终止执行插件[${task.taskName}]: $message",
                         tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
                     )
-                    pipelineBuildDetailService.taskEnd(
-                        buildId = task.buildId,
-                        taskId = task.taskId,
-                        buildStatus = containerFinalStatus,
-                        canRetry = true,
-                        errorType = ErrorType.SYSTEM,
-                        errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
-                        errorMsg = message ?: "插件执行意外终止"
-                    )
+                    if (isTimeout == true) {
+                        pipelineBuildDetailService.taskEnd(
+                            buildId = task.buildId,
+                            taskId = task.taskId,
+                            buildStatus = containerFinalStatus,
+                            canRetry = true,
+                            errorType = ErrorType.USER,
+                            errorCode = ErrorCode.USER_JOB_OUTTIME_LIMIT,
+                            errorMsg = message ?: "Job执行时间超过限制"
+                        )
+                        // Job超时错误存于startVM插件中
+                        pipelineRuntimeService.setTaskErrorInfo(
+                            buildId = task.buildId,
+                            taskId = VMUtils.genStartVMTaskId(task.containerId),
+                            errorType = ErrorType.USER,
+                            errorCode = ErrorCode.USER_JOB_OUTTIME_LIMIT,
+                            errorMsg = message ?: "Job执行时间超过限制"
+                        )
+                    } else {
+                        pipelineBuildDetailService.taskEnd(
+                            buildId = task.buildId,
+                            taskId = task.taskId,
+                            buildStatus = containerFinalStatus,
+                            canRetry = true,
+                            errorType = ErrorType.SYSTEM,
+                            errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
+                            errorMsg = message ?: "插件执行意外终止"
+                        )
+                    }
                     startVMFail = startVMFail || isStartVMTask(task)
                 }
                 BuildStatus.isFailure(task.status) -> {
