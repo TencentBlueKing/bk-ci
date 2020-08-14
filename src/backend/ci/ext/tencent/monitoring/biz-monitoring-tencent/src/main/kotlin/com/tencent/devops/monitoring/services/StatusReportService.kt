@@ -103,7 +103,7 @@ class StatusReportService @Autowired constructor(
 fun main(args: Array<String>) {
     val dispatchStatus = DispatchStatus("1", "1", "1", "1", "1", 2, ChannelCode.BS, 1, 2, "1", "1", "1")
     dispatchStatus::class.declaredMemberProperties.forEach {
-        println(it.annotations)//这里居然是空的?
+        println(it.annotations) // 这里居然是空的?
         println(it.javaField?.annotations?.asSequence()?.toList())
 //        println(it.javaField?.isAnnotationPresent(InfluxTag::class.java))
 //      println(it.get(dispatchStatus))
