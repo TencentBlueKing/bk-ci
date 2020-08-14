@@ -101,8 +101,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         param: VMBuildContainer,
         runVariables: Map<String, String>
     ): AtomResponse {
+        var atomResponse: AtomResponse
         try {
-            return execute(task, param)
+            atomResponse = execute(task, param)
         } catch (e: BuildTaskException) {
             LogUtils.addRedLine(
                 rabbitTemplate = rabbitTemplate,
@@ -113,7 +114,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 executeCount = task.executeCount ?: 1
             )
             logger.warn("Fail to execute the task atom", e)
-            return AtomResponse(
+            atomResponse = AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = e.errorType,
                 errorCode = e.errorCode,
@@ -125,13 +126,14 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 "Fail to execute the task atom: ${t.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
             )
             logger.warn("Fail to execute the task atom", t)
-            return AtomResponse(
+            atomResponse =  AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                 errorMsg = t.message
             )
         }
+        return atomResponse
     }
 
     fun execute(task: PipelineBuildTask, param: VMBuildContainer): AtomResponse {

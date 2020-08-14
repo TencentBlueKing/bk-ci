@@ -88,8 +88,9 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         param: NormalContainer,
         runVariables: Map<String, String>
     ): AtomResponse {
+        var atomResponse: AtomResponse
         try {
-            return startUpDocker(task, param)
+            atomResponse = startUpDocker(task, param)
         } catch (e: BuildTaskException) {
             LogUtils.addRedLine(
                 rabbitTemplate = rabbitTemplate,
@@ -100,7 +101,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 executeCount = task.executeCount ?: 1
             )
             logger.warn("Build container init failed", e)
-            return AtomResponse(
+            atomResponse = AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = e.errorType,
                 errorCode = e.errorCode,
@@ -112,13 +113,14 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 "Build container init failed: ${t.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
             )
             logger.warn("Build container init failed", t)
-            return AtomResponse(
+            atomResponse = AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                 errorMsg = t.message
             )
         }
+        return atomResponse
     }
 
     // TODO Exception中的错误码对应提示信息修改提取
