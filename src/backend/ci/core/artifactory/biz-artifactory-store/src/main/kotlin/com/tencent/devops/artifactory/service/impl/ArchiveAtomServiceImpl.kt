@@ -191,7 +191,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             val frontendFileDir = File(atomArchivePath, FRONTEND_PATH)
             if (frontendFileDir.exists()){
                 // 把前端文件拷贝到指定目录
-                FileUtils.copyDirectory(frontendFileDir, File("${getAtomArchiveBasePath()}/$BK_CI_PLUGIN_FE_DIR"))
+                FileUtils.copyDirectory(frontendFileDir, File("${getAtomArchiveBasePath()}/$BK_CI_PLUGIN_FE_DIR/$atomCode/$version"))
                 FileSystemUtils.deleteRecursively(frontendFileDir)
             }
         } finally {
