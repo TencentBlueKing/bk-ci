@@ -24,10 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package com.tencent.devops.common.archive.util
 
-const val AGENT_VERSION = 12.3
+object PathUtil {
+    fun getParentFolder(path: String): String {
+        val tmpPath = path.removeSuffix("/")
+        return tmpPath.removeSuffix(getFileName(tmpPath))
+    }
 
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
+    fun isFolder(path: String): Boolean {
+        return path.endsWith("/")
+    }
+
+    fun getFileName(path: String): String {
+        return path.removeSuffix("/").split("/").last()
+    }
 }

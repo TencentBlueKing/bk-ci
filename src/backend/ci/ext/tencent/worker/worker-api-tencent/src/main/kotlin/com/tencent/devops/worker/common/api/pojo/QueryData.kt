@@ -24,10 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package com.tencent.devops.worker.common.api.pojo
 
-const val AGENT_VERSION = 12.3
-
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
-}
+data class QueryData(
+    var count: Int,
+    var page: Int,
+    var pageSize: Int,
+    var totalPages: Int,
+    var records: List<QueryNodeInfo>
+)

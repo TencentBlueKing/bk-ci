@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.artifactory.constant.PushMessageCode
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -19,7 +20,8 @@ import java.nio.file.Paths
 @Service
 class FileServiceExt @Autowired constructor(
     private val repoGray: RepoGray,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val bkRepoClient: BkRepoClient
 ) : FileService {
     @Value("\${gateway.url:#{null}}")
     private val gatewayUrl: String? = null
@@ -40,7 +42,7 @@ class FileServiceExt @Autowired constructor(
             it.trim().removePrefix("/").removePrefix("./")
         }.forEach { path ->
             if (isRepoGray) {
-                val fileList = matchBkRepoFile(path, projectId, pipelineId, buildId, isCustom)
+                val fileList = bkRepoClient.matchBkRepoFile("", path, projectId, pipelineId, buildId, isCustom)
                 val repoName = if (isCustom) "custom" else "pipeline"
                 fileList.forEach { bkrepoFile ->
                     logger.info("BKRepoFile匹配到文件：(${bkrepoFile.displayPath})")
@@ -70,65 +72,6 @@ class FileServiceExt @Autowired constructor(
             throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.FILE_NOT_EXITS, arrayOf(fileName)))
         }
         return downloadFiles
-    }
-
-    private fun matchBkRepoFile(
-        srcPath: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        isCustom: Boolean
-    ): List<BkRepoFile> {
-        val result = mutableListOf<BkRepoFile>()
-        val bkRepoData = getAllBkRepoFiles(projectId, pipelineId, buildId, isCustom)
-        val matcher = FileSystems.getDefault().getPathMatcher("glob:$srcPath")
-        val pipelinePathPrefix = "/$pipelineId/$buildId"
-        bkRepoData.data?.forEach { bkrepoFile ->
-            val repoPath = if (isCustom) {
-                bkrepoFile.fullPath.removePrefix("/")
-            } else {
-                bkrepoFile.fullPath.removePrefix(pipelinePathPrefix)
-            }
-            if (matcher.matches(Paths.get(repoPath))) {
-                bkrepoFile.displayPath = repoPath
-                result.add(bkrepoFile)
-            }
-        }
-        return result
-    }
-
-    private fun getAllBkRepoFiles(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        isCustom: Boolean
-    ): BkRepoData {
-        logger.info("getAllBkrepoFiles, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, isCustom: $isCustom")
-        var url = if (isCustom) {
-            "http://$gatewayUrl/bkrepo/api/service/generic/list/$projectId/custom?includeFolder=true&deep=true"
-        } else {
-            "http://$gatewayUrl/bkrepo/api/service/generic/list/$projectId/pipeline/$pipelineId/$buildId?includeFolder=true&deep=true"
-        }
-        val request = Request.Builder()
-            .url(url)
-            .header("X-BKREPO-UID", "admin") // todo user
-            .get()
-            .build()
-
-        // 获取所有的文件和文件夹
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseBody = response.body()!!.string()
-            if (!response.isSuccessful) {
-                logger.warn("get bkrepo files fail: $responseBody")
-                throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.GET_FILE_FAIL, null))
-            }
-            try {
-                return JsonUtil.getObjectMapper().readValue(responseBody, BkRepoData::class.java)
-            } catch (e: Exception) {
-                logger.warn("get bkrepo files fail: $responseBody")
-                throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.GET_FILE_FAIL, null))
-            }
-        }
     }
 
     // 匹配文件
