@@ -24,47 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.common.api.pojo
 
-import com.tencent.devops.common.api.pojo.ErrorInfo
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.enums.ChannelCode
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-data class BuildInfo(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val version: Int,
-    val buildNum: Int,
-    val trigger: String,
-    val status: BuildStatus,
-    val queueTime: Long,
-    val startUser: String,
-    val startTime: Long?,
-    val endTime: Long?,
-    val taskCount: Int,
-    val firstTaskId: String,
-    val parentBuildId: String?,
-    val parentTaskId: String?,
-    val channelCode: ChannelCode,
-    var errorInfoList: List<ErrorInfo>?
-) {
-
-    fun isFinish() = when {
-        status.name == BuildStatus.STAGE_SUCCESS.name && endTime != null && endTime > 0 && startTime != null && endTime > startTime -> true
-        else -> BuildStatus.isFinish(status)
-    }
-
-    fun isSuccess() = when {
-        status.name == BuildStatus.STAGE_SUCCESS.name && endTime != null && endTime > 0 && startTime != null && endTime > startTime -> true
-        else -> BuildStatus.isSuccess(status)
-    }
-
-    fun isFailure() = BuildStatus.isFailure(status)
-
-    fun isCancel() = BuildStatus.isCancel(status)
-
-    fun isStageSuccess() = status == BuildStatus.STAGE_SUCCESS
-
-    fun isReadyToRun() = BuildStatus.isReadyToRun(status)
-}
+@ApiModel("第三方Agent数据返回包装模型")
+data class ErrorInfo(
+    @ApiModelProperty("插件ID", required = false)
+    val taskId: String,
+    @ApiModelProperty("插件名称", required = false)
+    val taskName: String,
+    @ApiModelProperty("插件编号", required = false)
+    val atomCode: String,
+    @ApiModelProperty("错误类型", required = false)
+    val errorType: ErrorType,
+    @ApiModelProperty("错误码", required = true)
+    val errorCode: Int,
+    @ApiModelProperty("错误信息", required = false)
+    val errorMsg: String
+)

@@ -137,7 +137,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         } else null)
                         .set(ERROR_TYPE, it.errorType?.ordinal)
                         .set(ERROR_CODE, it.errorCode)
-                        .set(ERROR_MSG, CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX))
+                        .set(ERROR_MSG, CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
                         .set(CONTAINER_HASH_ID, it.containerHashId)
                 )
             }
@@ -397,7 +397,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
             if (errorType != null) {
                 update.set(ERROR_TYPE, errorType.ordinal)
                 update.set(ERROR_CODE, errorCode)
-                update.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX))
+                update.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
             }
             update.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
 
@@ -427,7 +427,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
             dslContext.update(this)
                 .set(ERROR_TYPE, errorType.ordinal)
                 .set(ERROR_CODE, errorCode)
-                .set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX))
+                .set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
                 .where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId))
                 .execute()
         }
