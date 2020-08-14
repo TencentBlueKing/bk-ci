@@ -1655,6 +1655,23 @@ class PipelineRuntimeService @Autowired constructor(
         )
     }
 
+    fun setTaskErrorInfo(
+        buildId: String,
+        taskId: String,
+        errorType: ErrorType,
+        errorCode: Int,
+        errorMsg: String
+    ) {
+        pipelineBuildTaskDao.setTaskErrorInfo(
+            dslContext = dslContext,
+            buildId = buildId,
+            taskId = taskId,
+            errorType = errorType,
+            errorCode = errorCode,
+            errorMsg = errorMsg
+        )
+    }
+
     fun updateTaskStatus(
         buildId: String,
         taskId: String,
@@ -1664,7 +1681,7 @@ class PipelineRuntimeService @Autowired constructor(
         errorCode: Int? = null,
         errorMsg: String? = null
     ) {
-        logger.info("[$buildId]|updateTaskStatus|buildStatus=$buildStatus|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
+        logger.info("[$buildId]|updateTaskStatus|taskId=$taskId|buildStatus=$buildStatus|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
         val task = getBuildTask(buildId, taskId)
         if (task != null) {
             updateTaskStatus(
