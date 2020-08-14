@@ -142,12 +142,22 @@ interface IAtomTask<T> {
     ): AtomResponse {
         return if (force) {
             if (BuildStatus.isFinish(task.status)) {
-                AtomResponse(task.status)
+                AtomResponse(
+                    buildStatus = task.status,
+                    errorType = task.errorType,
+                    errorCode = task.errorCode,
+                    errorMsg = task.errorMsg
+                )
             } else { // 强制终止的设置为失败
                 defaultFailAtomResponse
             }
         } else {
-            AtomResponse(task.status)
+            AtomResponse(
+                buildStatus = task.status,
+                errorType = task.errorType,
+                errorCode = task.errorCode,
+                errorMsg = task.errorMsg
+            )
         }
     }
 

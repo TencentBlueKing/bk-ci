@@ -26,7 +26,8 @@
 
 package com.tencent.devops.common.api.pojo
 
-enum class ErrorType(val statusName: String, val visiable: Boolean) {
+enum class ErrorType(val typeName: String, val visiable: Boolean) {
     SYSTEM("系统运行错误", true), // 0 平台运行报错
-    USER("业务逻辑错误", true) // 1 任务执行报错
+    USER("业务逻辑错误", true), // 1 任务执行报错
+    THIRD_PARTY("第三方系统错误", true) // 2 接入系统错误
 }
