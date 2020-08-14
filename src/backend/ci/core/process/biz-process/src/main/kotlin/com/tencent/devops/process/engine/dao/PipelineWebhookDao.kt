@@ -175,6 +175,7 @@ class PipelineWebhookDao {
     ): List<Pair<String, String>>? {
         with(T_PIPELINE_WEBHOOK) {
             return dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
+                .where(PROJECT_NAME.isNull)
                 .groupBy(PROJECT_ID, PIPELINE_ID)
                 .orderBy(PIPELINE_ID.desc())
                 .limit(offset, limit)
