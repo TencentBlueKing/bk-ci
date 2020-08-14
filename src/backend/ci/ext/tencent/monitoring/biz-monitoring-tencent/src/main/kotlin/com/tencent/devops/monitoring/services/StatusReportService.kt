@@ -84,8 +84,8 @@ class StatusReportService @Autowired constructor(
         val field: MutableMap<String, Any> = mutableMapOf()
         val tag: MutableMap<String, String> = mutableMapOf()
 
-        val properties = any::class.declaredMemberProperties
-        properties.forEach {
+        any::class.declaredMemberProperties.forEach {
+            logger.info("declaredMemberProperties , ${it.javaField}")
             if (it.javaField?.isAnnotationPresent(InfluxTag::class.java) == true) {
                 tag[it.name] = it.getter.call(any)?.toString() ?: ""
             } else {
@@ -103,9 +103,12 @@ class StatusReportService @Autowired constructor(
 fun main(args: Array<String>) {
     val dispatchStatus = DispatchStatus("1", "1", "1", "1", "1", 2, ChannelCode.BS, 1, 2, "1", "1", "1")
     dispatchStatus::class.declaredMemberProperties.forEach {
+        println("=========================================")
+        println(it.name)
         println(it.annotations) // 这里居然是空的?
         println(it.javaField?.annotations?.asSequence()?.toList())
-//        println(it.javaField?.isAnnotationPresent(InfluxTag::class.java))
+        println(it.javaField?.isAnnotationPresent(InfluxTag::class.java))
+        println(it.javaField?.isAnnotationPresent(InfluxTag::class.java) == true)
 //      println(it.get(dispatchStatus))
     }
 }
