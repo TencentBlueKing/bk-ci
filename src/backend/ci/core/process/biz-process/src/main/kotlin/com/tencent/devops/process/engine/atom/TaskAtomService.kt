@@ -44,7 +44,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -113,7 +113,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             logger.warn("[${task.buildId}]|Fail to execute the task [${task.taskName}]", t)
         } finally {
             // 文本长度保护
-            atomResponse.errorMsg = CommonUtils.interceptStringInLength(atomResponse.errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX)
+            atomResponse.errorMsg = CommonUtils.interceptStringInLength(atomResponse.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX)
             // 存储变量
             if (atomResponse.outputVars != null && atomResponse.outputVars!!.isNotEmpty()) {
                 buildVariableService.batchSetVariable(

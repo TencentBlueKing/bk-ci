@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -597,10 +598,12 @@ class PipelineRuntimeService @Autowired constructor(
                 },
                 startType = getStartType(trigger, webhookType),
                 recommendVersion = recommendVersion,
-                errorType = if (errorType != null) ErrorType.values()[errorType].name else null,
-                errorCode = errorCode,
-                errorMsg = errorMsg,
-                retry = isRetry ?: false
+                retry = isRetry ?: false,
+                errorInfoList = if (errorInfo != null) {
+                    JsonUtil.getObjectMapper().readValue(errorInfo) as List<ErrorInfo>
+                } else {
+                    null
+                }
             )
         }
     }
@@ -1516,9 +1519,7 @@ class PipelineRuntimeService @Autowired constructor(
     fun finishLatestRunningBuild(
         latestRunningBuild: LatestRunningBuild,
         currentBuildStatus: BuildStatus,
-        errorType: ErrorType?,
-        errorCode: Int?,
-        errorMsg: String?
+        errorInfoList: List<ErrorInfo>?
     ) {
         if (BuildStatus.isReadyToRun(currentBuildStatus)) {
             // 减1,当作没执行过
@@ -1568,9 +1569,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildParameters = JsonUtil.toJson(buildParameters),
                 recommendVersion = recommendVersion,
                 remark = remark,
-                errorType = errorType,
-                errorCode = errorCode,
-                errorMsg = errorMsg
+                errorInfoList = errorInfoList
             )
             webSocketDispatcher.dispatch(
                 pipelineWebsocketService.buildHistoryMessage(
