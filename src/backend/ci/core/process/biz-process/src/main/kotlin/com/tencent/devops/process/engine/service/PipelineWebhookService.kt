@@ -52,6 +52,7 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
@@ -71,6 +72,8 @@ class PipelineWebhookService @Autowired constructor(
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
+    @Value("\${webhook.redis.enable:true}")
+    private val enableRedis: Boolean = true
 
     fun saveWebhook(
         pipelineWebhook: PipelineWebhook,
@@ -117,12 +120,14 @@ class PipelineWebhookService @Autowired constructor(
             logger.info("add $projectName webhook to [$pipelineWebhook]")
             if (!projectName.isNullOrBlank()) {
                 saveOrUpdateWebhook(pipelineWebhook)
-                webhookRedisUtils.addWebhook2Redis(
-                    pipelineWebhook.pipelineId,
-                    projectName!!,
-                    pipelineWebhook.repositoryType,
-                    ::getExistWebhookPipelineByType
-                )
+                if (enableRedis) {
+                    webhookRedisUtils.addWebhook2Redis(
+                        pipelineWebhook.pipelineId,
+                        projectName!!,
+                        pipelineWebhook.repositoryType,
+                        ::getExistWebhookPipelineByType
+                    )
+                }
             }
         }
         return Result(true)
@@ -250,7 +255,18 @@ class PipelineWebhookService @Autowired constructor(
     }
 
     fun getWebhookPipelines(name: String, type: String): Set<String> {
-        return webhookRedisUtils.getWebhookPipelines(name, type, ::getExistWebhookPipelineByType)
+        return if (enableRedis) {
+            logger.info("get webhook pipelines from redis, name:$name, type:$type")
+            webhookRedisUtils.getWebhookPipelines(name, type, ::getExistWebhookPipelineByType)
+        } else {
+            logger.info("get webhook pipelines from db, name:$name, type:$type")
+            val pipelineWebhooks = pipelineWebhookDao.getByProjectNameAndType(
+                dslContext = dslContext,
+                projectName = name,
+                repositoryType = getWebhookScmType(type).name
+            ) ?: return setOf()
+            pipelineWebhooks.map { it.pipelineId }.toSet()
+        }
     }
 
     fun getRelativePath(url: String): String {
@@ -350,7 +366,8 @@ class PipelineWebhookService @Autowired constructor(
                 val variable = triggerContainer.params.associate { it.id to it.defaultValue.toString() }
                 val pipelineWebhooks = mutableListOf<PipelineWebhook>()
                 triggerContainer.elements.forEach element@{ element ->
-                    val (repositoryConfig, repositoryType) = getRepositoryConfig(element, variable)
+                    // 如果仓库名采用变量的形式,在更新的时候也应该用变量,getRepositoryConfig会把仓库名转换成具体的，所以要保留原仓库名
+                    val (repositoryConfig, repositoryType, originRepoName) = getRepositoryConfig(element, variable)
                         ?: return@element
                     try {
                         val repo = client.get(ServiceRepositoryResource::class)
@@ -370,7 +387,7 @@ class PipelineWebhookService @Autowired constructor(
                                 repositoryType = repositoryType,
                                 repoType = repositoryConfig.repositoryType,
                                 repoHashId = repositoryConfig.repositoryHashId,
-                                repoName = repositoryConfig.repositoryName,
+                                repoName = originRepoName,
                                 projectName = getProjectName(repo.projectName),
                                 taskId = element.id
                             )
@@ -391,50 +408,73 @@ class PipelineWebhookService @Autowired constructor(
     private fun getRepositoryConfig(
         element: Element,
         variable: Map<String, String>
-    ): Pair<RepositoryConfig, ScmType>? {
+    ): Triple<RepositoryConfig, ScmType, String?>? {
         return when (element) {
             is CodeGitWebHookTriggerElement ->
-                Pair(
+                Triple(
                     getRepositoryConfig(
                         repoHashId = element.repositoryHashId,
                         repoName = element.repositoryName,
                         repoType = element.repositoryType,
                         variable = variable
                     ),
-                    ScmType.CODE_GIT
+                    ScmType.CODE_GIT,
+                    element.repositoryName
                 )
             is CodeGithubWebHookTriggerElement ->
-                Pair(
+                Triple(
                     getRepositoryConfig(
                         repoHashId = element.repositoryHashId,
                         repoName = element.repositoryName,
                         repoType = element.repositoryType,
                         variable = variable
                     ),
-                    ScmType.GITHUB
+                    ScmType.GITHUB,
+                    element.repositoryName
                 )
             is CodeGitlabWebHookTriggerElement ->
-                Pair(
+                Triple(
                     getRepositoryConfig(
                         repoHashId = element.repositoryHashId,
                         repoName = element.repositoryName,
                         repoType = element.repositoryType,
                         variable = variable
                     ),
-                    ScmType.CODE_GITLAB
+                    ScmType.CODE_GITLAB,
+                    element.repositoryName
                 )
             is CodeSVNWebHookTriggerElement ->
-                Pair(
+                Triple(
                     getRepositoryConfig(
                         repoHashId = element.repositoryHashId,
                         repoName = element.repositoryName,
                         repoType = element.repositoryType,
                         variable = variable
                     ),
-                    ScmType.CODE_SVN
+                    ScmType.CODE_SVN,
+                    element.repositoryName
                 )
 
             else -> null
         }
     }
+
+    fun getWebhookScmType(type: String) =
+        when (type) {
+            CodeGitWebHookTriggerElement.classType -> {
+                ScmType.CODE_GIT
+            }
+            CodeSVNWebHookTriggerElement.classType -> {
+                ScmType.CODE_SVN
+            }
+            CodeGitlabWebHookTriggerElement.classType -> {
+                ScmType.CODE_GITLAB
+            }
+            CodeGithubWebHookTriggerElement.classType -> {
+                ScmType.GITHUB
+            }
+            else -> {
+                throw RuntimeException("Unknown web hook type($type)")
+            }
+        }
 }
