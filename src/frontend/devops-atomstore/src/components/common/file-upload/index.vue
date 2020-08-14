@@ -82,7 +82,8 @@
                 default () {
                     return []
                 }
-            }
+            },
+            jobType: String
         },
         data () {
             return {
@@ -120,7 +121,7 @@
                     if (this.maxSize && (fileObj.size > this.maxSize)) {
                         fileObj.status = 'error'
                         fileObj.statusText = `${this.$t('store.`文件不能超过')}${this.maxSize}M`
-                    } else if (!this.os.length) {
+                    } else if (!this.os.length && this.jobType === 'AGENT') {
                         fileObj.status = 'error'
                         fileObj.statusText = `${this.$t('store.请先选择操作系统')}`
                     } else if (lastname.toLowerCase() !== '.zip') {
@@ -135,7 +136,7 @@
                 this.isUploadLoading = true
                 const formData = new FormData()
                 formData.append('file', fileObj.origin)
-                formData.append('os', `["${this.os.join('","')}"]`)
+                formData.append('os', JSON.stringify(this.os))
                 fileObj.status = 'uploading'
                 fileObj.statusText = this.$t('store.上传中')
 

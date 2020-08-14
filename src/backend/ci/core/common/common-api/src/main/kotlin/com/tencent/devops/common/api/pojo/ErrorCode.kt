@@ -58,4 +58,5 @@ object ErrorCode {
     const val USER_RESOURCE_NOT_FOUND = 2199003 // 找不到对应系统资源
     const val USER_TASK_OPERATE_FAIL = 2199004 // 插件执行过程出错
     const val USER_JOB_OUTTIME_LIMIT = 2199005 // 用户Job排队超时（自行限制）
+    const val USER_QUALITY_CHECK_FAIL = 2199007 // 质量红线检查失败
 }

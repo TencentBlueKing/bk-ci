@@ -48,9 +48,7 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
-import io.swagger.annotations.ApiParam
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.QueryParam
 
 @RestResource
 class ServiceBuildResourceImpl @Autowired constructor(

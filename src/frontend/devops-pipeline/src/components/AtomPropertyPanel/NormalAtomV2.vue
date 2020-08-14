@@ -1,10 +1,10 @@
 <template>
     <section class="bk-form bk-form-vertical" v-if="showFormUI">
         <template v-for="(group, groupKey) in paramsGroupMap">
-            <template v-if="groupKey === &quot;rootProps&quot;">
+            <template v-if="groupKey === 'rootProps'">
                 <template v-for="(obj, key) in group.props">
                     <form-field v-if="!isHidden(obj, atomValue) && rely(obj, atomValue)" :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                        <component :is="obj.type" :container="container" :atom-value="atomValue" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateAtomInput" :value="atomValue[key]" v-bind="obj" :placeholder="getPlaceholder(obj, atomValue)"></component>
+                        <component :is="obj.type" :container="container" :atom-value="atomValue" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateAtomInput" :value="atomValue[key]" v-bind="obj" :get-atom-key-modal="getAtomKeyModal" :placeholder="getPlaceholder(obj, atomValue)"></component>
                         <route-tips v-bind="getComponentTips(obj, atomValue)"></route-tips>
                     </form-field>
                 </template>
@@ -30,7 +30,7 @@
                 <i class="devops-icon icon-angle-down" style="display: block"></i>
             </header>
             <div slot="content">
-                <form-field class="output-namespace" :desc="outputNamespaceDesc" :label="$t('editPage.outputNamespace')" :is-error="errors.has(&quot;namespace&quot;)" :error-msg="errors.first(&quot;namespace&quot;)">
+                <form-field class="output-namespace" :desc="outputNamespaceDesc" :label="$t('editPage.outputNamespace')" :is-error="errors.has('namespace')" :error-msg="errors.first('namespace')">
                     <vuex-input name="namespace" v-validate.initial="{ varRule: true }" :handle-change="handleUpdateAtomOutputNameSpace" :value="namespace" placeholder="" />
                 </form-field>
                 <div class="atom-output-var-list">
@@ -189,6 +189,11 @@
         updated () {
             if (this.appIdPropsKey && this.atomValue[this.appIdPropsName] !== this.appId) {
                 this.handleUpdateAtomInput(this.appIdPropsName, this.appId)
+            }
+        },
+        methods: {
+            getAtomKeyModal (key) {
+                return this.inputProps[key] || null
             }
         }
     }
