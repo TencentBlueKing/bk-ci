@@ -27,6 +27,7 @@
 package com.tencent.devops.artifactory.service.impl
 
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
+import com.tencent.devops.artifactory.constant.BK_CI_PLUGIN_FE_DIR
 import com.tencent.devops.artifactory.dao.FileDao
 import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.artifactory.pojo.ArchiveAtomResponse
@@ -41,11 +42,13 @@ import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
+import org.apache.commons.io.FileUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.util.FileSystemUtils
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
@@ -54,6 +57,8 @@ import java.util.concurrent.TimeUnit
 abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
 
     private val logger = LoggerFactory.getLogger(ArchiveAtomServiceImpl::class.java)
+
+    private val FRONTEND_PATH = "frontend"
 
     @Autowired
     lateinit var redisOperation: RedisOperation
@@ -182,6 +187,13 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         val atomArchivePath = "${getAtomArchiveBasePath()}/$BK_CI_ATOM_DIR/$projectCode/$atomCode/$version"
         try {
             ZipUtil.unZipFile(file, atomArchivePath, false)
+            // 判断解压目录下面是否有自定义UI前端文件
+            val frontendFileDir = File(atomArchivePath, FRONTEND_PATH)
+            if (frontendFileDir.exists()){
+                // 把前端文件拷贝到指定目录
+                FileUtils.copyDirectory(frontendFileDir, File("${getAtomArchiveBasePath()}/$BK_CI_PLUGIN_FE_DIR"))
+                FileSystemUtils.deleteRecursively(frontendFileDir)
+            }
         } finally {
             file.delete() // 删除临时文件
         }
