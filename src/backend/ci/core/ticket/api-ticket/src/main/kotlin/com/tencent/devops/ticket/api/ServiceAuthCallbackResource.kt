@@ -22,7 +22,7 @@ import javax.ws.rs.core.MediaType
 interface ServiceAuthCallbackResource {
 
     @ApiOperation("其他服务获取凭据列表")
-    @Path("/{projectId}/")
+    @Path("/{projectId}/credential")
     @GET
     fun listCredential(
         @ApiParam("项目ID", required = true)
@@ -37,7 +37,7 @@ interface ServiceAuthCallbackResource {
     ): Result<Page<Credential>>
 
     @ApiOperation("其他服务获取证书列表")
-    @Path("/{projectId}/")
+    @Path("/{projectId}/cert")
     @GET
     fun listCert(
         @ApiParam("项目ID", required = true)
