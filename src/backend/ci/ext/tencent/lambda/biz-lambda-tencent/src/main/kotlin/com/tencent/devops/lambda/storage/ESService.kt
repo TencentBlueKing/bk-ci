@@ -189,9 +189,7 @@ class ESService @Autowired constructor(
             deptName = source["deptName"]?.toString() ?: "",
             centerName = source["centerName"]?.toString() ?: "",
             model = source["model"]?.toString() ?: "",
-            errorType = source["errorType"]?.toString() ?: "",
-            errorMsg = source["errorMsg"]?.toString() ?: "",
-            errorCode = try { source["errorCode"]?.toString()?.toInt() ?: 0 } catch (e: NumberFormatException) { 0 }
+            errorInfoList = source["errorInfoList"]?.toString() ?: ""
         )
     }
 
