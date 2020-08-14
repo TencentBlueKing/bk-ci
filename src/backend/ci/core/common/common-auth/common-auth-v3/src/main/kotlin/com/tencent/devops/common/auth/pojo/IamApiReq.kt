@@ -1,7 +1,5 @@
 package com.tencent.devops.common.auth.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 data class IamApiReq(
     val system: String,
     val type: String,
@@ -9,12 +7,8 @@ data class IamApiReq(
     val name: String,
     val creator: String,
     val ancestors: List<AncestorsApiReq>? = emptyList(),
-    @JsonProperty("bk_app_code")
-    var bkAppCode: String,
-    @JsonProperty("bk_app_code")
-    var bkAppSecret: String,
-    @JsonProperty("bk_app_code")
-    var bkUsername: String,
-    @JsonProperty("bk_token")
-    val bkToken: String = ""
+    var bk_app_code: String,
+    var bk_app_secret: String,
+    var bk_username: String,
+    val bk_token: String = ""
 )
