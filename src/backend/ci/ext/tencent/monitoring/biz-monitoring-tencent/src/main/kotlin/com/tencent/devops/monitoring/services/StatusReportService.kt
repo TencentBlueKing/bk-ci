@@ -25,6 +25,7 @@
  */
 package com.tencent.devops.monitoring.services
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
 import com.tencent.devops.monitoring.pojo.DispatchStatus
@@ -35,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.jvm.javaField
 
 @Service
 @RefreshScope
@@ -83,15 +84,28 @@ class StatusReportService @Autowired constructor(
         val field: MutableMap<String, Any> = mutableMapOf()
         val tag: MutableMap<String, String> = mutableMapOf()
 
-        val properties = any.javaClass.kotlin.declaredMemberProperties
+        val properties = any::class.declaredMemberProperties
         properties.forEach {
-            if (it.findAnnotation<InfluxTag>() == null) {
-                field[it.name] = it.get(any) ?: ""
+            if (it.javaField?.isAnnotationPresent(InfluxTag::class.java) == true) {
+                tag[it.name] = it.getter.call(any)?.toString() ?: ""
             } else {
-                tag[it.name] = it.get(any)?.toString() ?: ""
+                val value = it.getter.call(any)
+                field[it.name] = if (value == null) "" else {
+                    if (value is Number) value else value.toString()
+                }
             }
         }
 
         return field to tag
+    }
+}
+
+fun main(args: Array<String>) {
+    val dispatchStatus = DispatchStatus("1", "1", "1", "1", "1", 2, ChannelCode.BS, 1, 2, "1", "1", "1")
+    dispatchStatus::class.declaredMemberProperties.forEach {
+        println(it.annotations)//这里居然是空的?
+        println(it.javaField?.annotations?.asSequence()?.toList())
+//        println(it.javaField?.isAnnotationPresent(InfluxTag::class.java))
+//      println(it.get(dispatchStatus))
     }
 }

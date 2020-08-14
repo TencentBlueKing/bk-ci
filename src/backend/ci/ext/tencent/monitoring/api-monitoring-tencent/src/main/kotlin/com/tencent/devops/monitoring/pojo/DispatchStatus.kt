@@ -55,7 +55,6 @@ data class DispatchStatus(
     @ApiModelProperty("失败原因", required = false)
     val errorMsg: String?,
 
-    @InfluxTag
     @ApiModelProperty("BuildType", required = false)
-    val buildType: String
+    @InfluxTag val buildType: String
 )
