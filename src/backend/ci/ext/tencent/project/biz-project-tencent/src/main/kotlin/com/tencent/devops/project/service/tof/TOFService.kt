@@ -29,8 +29,8 @@ package com.tencent.devops.project.service.tof
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
+import com.tencent.devops.common.api.constant.CommonMessageCode.SUCESSS
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.pojo.ErrorCode.SUCESSS
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
