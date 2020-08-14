@@ -73,7 +73,7 @@ class PipelineWebhookService @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
     @Value("\${webhook.redis.enable:true}")
-    private val enableRedis: Boolean = true
+    private val enableWebhookRedis: Boolean = true
 
     fun saveWebhook(
         pipelineWebhook: PipelineWebhook,
@@ -120,7 +120,7 @@ class PipelineWebhookService @Autowired constructor(
             logger.info("add $projectName webhook to [$pipelineWebhook]")
             if (!projectName.isNullOrBlank()) {
                 saveOrUpdateWebhook(pipelineWebhook)
-                if (enableRedis) {
+                if (enableWebhookRedis) {
                     webhookRedisUtils.addWebhook2Redis(
                         pipelineWebhook.pipelineId,
                         projectName!!,
@@ -255,7 +255,7 @@ class PipelineWebhookService @Autowired constructor(
     }
 
     fun getWebhookPipelines(name: String, type: String): Set<String> {
-        return if (enableRedis) {
+        return if (enableWebhookRedis) {
             logger.info("get webhook pipelines from redis, name:$name, type:$type")
             webhookRedisUtils.getWebhookPipelines(name, type, ::getExistWebhookPipelineByType)
         } else {
