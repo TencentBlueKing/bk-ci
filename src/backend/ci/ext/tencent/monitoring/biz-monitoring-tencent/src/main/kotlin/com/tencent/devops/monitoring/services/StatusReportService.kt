@@ -29,11 +29,13 @@ import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
 import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.monitoring.pojo.UsersStatus
+import com.tencent.devops.monitoring.pojo.annotions.InfluxTag
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.findAnnotation
 
 @Service
 @RefreshScope
@@ -44,12 +46,8 @@ class StatusReportService @Autowired constructor(
 
     fun reportScmCommitCheck(addCommitCheckStatus: AddCommitCheckStatus): Boolean {
         return try {
-            val field: MutableMap<String, String> = mutableMapOf()
-            val properties = addCommitCheckStatus.javaClass.kotlin.declaredMemberProperties
-            properties.forEach {
-                field[it.name] = it.get(addCommitCheckStatus)?.toString() ?: ""
-            }
-            influxdbClient.insert(AddCommitCheckStatus::class.java.simpleName, emptyMap(), field)
+            val (field, tag) = getFieldTagMap(addCommitCheckStatus)
+            influxdbClient.insert(AddCommitCheckStatus::class.java.simpleName, tag, field)
 
             true
         } catch (e: Throwable) {
@@ -60,12 +58,8 @@ class StatusReportService @Autowired constructor(
 
     fun reportUserUsers(users: UsersStatus): Boolean {
         return try {
-            val field: MutableMap<String, String> = mutableMapOf()
-            val properties = users.javaClass.kotlin.declaredMemberProperties
-            properties.forEach {
-                field[it.name] = it.get(users)?.toString() ?: ""
-            }
-            influxdbClient.insert(UsersStatus::class.java.simpleName, emptyMap(), field)
+            val (field, tag) = getFieldTagMap(users)
+            influxdbClient.insert(UsersStatus::class.java.simpleName, tag, field)
 
             true
         } catch (e: Throwable) {
@@ -76,17 +70,28 @@ class StatusReportService @Autowired constructor(
 
     fun reportDispatchStatus(dispatchStatus: DispatchStatus): Boolean {
         return try {
-            val field: MutableMap<String, String> = mutableMapOf()
-            val properties = dispatchStatus.javaClass.kotlin.declaredMemberProperties
-            properties.forEach {
-                field[it.name] = it.get(dispatchStatus)?.toString() ?: ""
-            }
-            influxdbClient.insert(DispatchStatus::class.java.simpleName, emptyMap(), field)
-
+            val (field, tag) = getFieldTagMap(dispatchStatus)
+            influxdbClient.insert(DispatchStatus::class.java.simpleName, tag, field)
             true
         } catch (e: Throwable) {
             logger.error("reportDispatchStatus exception:", e)
             false
         }
+    }
+
+    private fun getFieldTagMap(any: Any): Pair<Map<String, Any>/*field*/, Map<String, String>/*tag*/> {
+        val field: MutableMap<String, Any> = mutableMapOf()
+        val tag: MutableMap<String, String> = mutableMapOf()
+
+        val properties = any.javaClass.kotlin.declaredMemberProperties
+        properties.forEach {
+            if (it.findAnnotation<InfluxTag>() == null) {
+                field[it.name] = it.get(any) ?: ""
+            } else {
+                tag[it.name] = it.get(any)?.toString() ?: ""
+            }
+        }
+
+        return field to tag
     }
 }

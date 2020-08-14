@@ -26,6 +26,7 @@
 package com.tencent.devops.monitoring.pojo
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.monitoring.pojo.annotions.InfluxTag
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -45,8 +46,6 @@ data class DispatchStatus(
     val retryCount: Long? = 0,
     @ApiModelProperty("channelCode", required = false)
     val channelCode: ChannelCode?,
-    @ApiModelProperty("BuildType", required = false)
-    val buildType: String,
     @ApiModelProperty("开机时间", required = true)
     val startTime: Long,
     @ApiModelProperty("关机时间", required = false)
@@ -54,5 +53,9 @@ data class DispatchStatus(
     @ApiModelProperty("蓝盾错误码", required = true)
     val errorCode: String,
     @ApiModelProperty("失败原因", required = false)
-    val errorMsg: String?
+    val errorMsg: String?,
+
+    @InfluxTag
+    @ApiModelProperty("BuildType", required = false)
+    val buildType: String
 )
