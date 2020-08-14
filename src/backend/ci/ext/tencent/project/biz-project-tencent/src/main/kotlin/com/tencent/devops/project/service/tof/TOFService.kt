@@ -29,7 +29,7 @@ package com.tencent.devops.project.service.tof
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
-import com.tencent.devops.common.api.constant.CommonMessageCode.SUCESSS
+import com.tencent.devops.common.api.constant.CommonMessageCode.SUCCESS
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
@@ -197,7 +197,7 @@ class TOFService @Autowired constructor(
                 requestTime = startTime,
                 statusCode = response.code,
                 statusMessage = "success",
-                errorCode = SUCESSS,
+                errorCode = SUCCESS,
                 errorMessage = "call tof success"
             )
             val deptInfoResp = response.data
@@ -247,7 +247,7 @@ class TOFService @Autowired constructor(
                 requestTime = startTime,
                 statusCode = response.code,
                 statusMessage = "success",
-                errorCode = SUCESSS,
+                errorCode = SUCCESS,
                 errorMessage = "call tof success"
             )
             return response.data!![0].DisplayName
@@ -286,7 +286,7 @@ class TOFService @Autowired constructor(
                 requestTime = startTime,
                 statusCode = response.code,
                 statusMessage = "success",
-                errorCode = SUCESSS,
+                errorCode = SUCCESS,
                 errorMessage = "call tof success"
             )
             return response.data!!
@@ -332,7 +332,7 @@ class TOFService @Autowired constructor(
                     requestTime = startTime,
                     statusCode = response.code,
                     statusMessage = "success",
-                    errorCode = SUCESSS,
+                    errorCode = SUCCESS,
                     errorMessage = "call tof success"
                 )
                 info = response.data
@@ -378,7 +378,7 @@ class TOFService @Autowired constructor(
                 requestTime = startTime,
                 statusCode = response.code,
                 statusMessage = "success",
-                errorCode = SUCESSS,
+                errorCode = SUCCESS,
                 errorMessage = "call tof success"
             )
 

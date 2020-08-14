@@ -78,7 +78,7 @@ class ScmMonitorService @Autowired constructor(
                         elapseTime = responseTime - responseTime,
                         statusCode = statusCode,
                         statusMessage = statusMessage,
-                        errorCode = CommonMessageCode.SUCESSS,
+                        errorCode = CommonMessageCode.SUCCESS,
                         errorMsg = statusMessage
                     )
                 )
