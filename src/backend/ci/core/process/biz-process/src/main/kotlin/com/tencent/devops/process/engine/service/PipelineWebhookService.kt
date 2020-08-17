@@ -295,7 +295,7 @@ class PipelineWebhookService @Autowired constructor(
                 logger.info("webhook refresh db, projectName:$projectName, type: $type, dbPipelineIds:$dbPipelineIds, redisPipelineIds:$redisPipelineIds")
                 val modifyPipelineIds = mutableListOf<String>()
                 redisPipelineIds.forEach { pipelineId ->
-                    if (doUpdateProjectNameAndTaskId(pipelineId)) {
+                    if (doUpdateProjectNameAndTaskId(pipelineId = pipelineId, oldProjectName = projectName)) {
                         modifyPipelineIds.add(pipelineId)
                     }
                 }
