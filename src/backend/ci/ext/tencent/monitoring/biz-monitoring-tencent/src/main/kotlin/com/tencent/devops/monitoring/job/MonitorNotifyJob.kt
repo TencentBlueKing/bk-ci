@@ -45,7 +45,7 @@ class MonitorNotifyJob @Autowired constructor(
         登录成功率*/
 
         val startTime = 0L
-        val endTime = 1597664799999L
+        val endTime = 2597664799999L
         val moduleMap = HashMap<String/*模块*/, List<Triple<String/*名称*/, String/*成功率*/, String/*详情链接*/>>>()
 
         codecc(startTime, endTime).run { moduleMap[first] = second }
