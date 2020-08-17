@@ -805,7 +805,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             )
 
             when {
-                webhookCommit.eventType == CodeEventType.MERGE_REQUEST && webhookCommit.codeType == CodeType.GIT -> {
+                webhookCommit.codeType == CodeType.GIT -> {
                     logger.info("Web hook add git commit check [pipelineId=$pipelineId, buildId=$buildId, repo=$repositoryConfig, commitId=$commitId]")
                     pipelineEventDispatcher.dispatch(
                         GitCommitCheckEvent(
