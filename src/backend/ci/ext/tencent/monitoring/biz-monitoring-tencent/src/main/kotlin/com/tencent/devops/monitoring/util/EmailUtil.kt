@@ -49,23 +49,18 @@ object EmailUtil {
         """
     }
 
-    private val BODY_TITLE_TEMPLATE = "#{bodyTitle}"
-    private val TABLE_COLUMN1_TITLE = "#{column1Title}"
-    private val TABLE_COLUMN2_TITLE = "#{column2Title}"
-    private val TABLE_COLUMN3_TITLE = "#{column3Title}"
+    private const val BODY_TITLE_TEMPLATE = "#{bodyTitle}"
+    private const val TABLE_COLUMN1_TITLE = "#{column1Title}"
+    private const val TABLE_COLUMN2_TITLE = "#{column2Title}"
+    private const val TABLE_COLUMN3_TITLE = "#{column3Title}"
 
-    private val SHARE_EMAIL_TABLE_PREFIX = """
+    private const val SHARE_EMAIL_TABLE_PREFIX = """
     <table border="0" cellpadding="0" cellspacing="0" width="100%">
         <tbody>
             <tr>
                 <td>
                     <table align="center" border="0" cellpadding="0" cellspacing="0" width="963">
                         <tbody>
-                            <tr>
-                                <td colspan="3">
-                                    <img src="http://devops.oa.com/console/devops_bg.png" alt="img" style="width:963px;height:104px;">
-                                </td>
-                            </tr>
                             <tr>
                                 <td class="table-lr-blue"></td>
                                 <td>
@@ -99,7 +94,7 @@ object EmailUtil {
                                                                         <tbody>
     """
 
-    private val SHARE_EMAIL_TABLE_SUFFIX = """
+    private const val SHARE_EMAIL_TABLE_SUFFIX = """
                                                                                    </tbody>
                                                                     </table>
                                                                 </td>
@@ -130,7 +125,7 @@ object EmailUtil {
     </table>        
     """
 
-    private val SHARE_EMAIL_HTML_PREFIX =
+    private const val SHARE_EMAIL_HTML_PREFIX =
         """
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <!-- saved from url=(0064)http://open.oa.com/static_api/v3/templates/template10/index.html -->
@@ -216,7 +211,7 @@ object EmailUtil {
 <body>
         """
 
-    private val SHARE_EMAIL_HTML_SUFFIX =
+    private const val SHARE_EMAIL_HTML_SUFFIX =
         """
 </body>
 </html> 

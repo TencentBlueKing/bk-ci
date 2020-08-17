@@ -80,14 +80,14 @@ class MonitorNotifyJob @Autowired constructor(
             queryResult.results.forEach { result ->
                 result.series.forEach { serie ->
                     serie.run {
-                        totalCount = serie.values[0][0].let { if (it is Number) it.toInt() else 0 }
-                        totalSuccess = serie.values[0][1].let { if (it is Number) it.toInt() else 0 }
-                        gitCount = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
-                        gitSuccess = serie.values[0][3].let { if (it is Number) it.toInt() else 0 }
-                        artiCount = serie.values[0][4].let { if (it is Number) it.toInt() else 0 }
-                        artiSuccess = serie.values[0][5].let { if (it is Number) it.toInt() else 0 }
-                        shCount = serie.values[0][6].let { if (it is Number) it.toInt() else 0 }
-                        shSuccess = serie.values[0][7].let { if (it is Number) it.toInt() else 0 }
+                        totalCount = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
+                        totalSuccess = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
+                        gitCount = serie.values[0][3].let { if (it is Number) it.toInt() else 1 }
+                        gitSuccess = serie.values[0][4].let { if (it is Number) it.toInt() else 0 }
+                        artiCount = serie.values[0][5].let { if (it is Number) it.toInt() else 1 }
+                        artiSuccess = serie.values[0][6].let { if (it is Number) it.toInt() else 0 }
+                        shCount = serie.values[0][7].let { if (it is Number) it.toInt() else 1 }
+                        shSuccess = serie.values[0][8].let { if (it is Number) it.toInt() else 0 }
                     }
                 }
             }
