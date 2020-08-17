@@ -28,8 +28,13 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.KEY_CHANNEL
+import com.tencent.devops.common.api.constant.KEY_END_TIME
+import com.tencent.devops.common.api.constant.KEY_START_TIME
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.OrganizationDetailInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -37,7 +42,9 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.measure.AtomMonitorReportBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
@@ -45,6 +52,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -57,18 +65,25 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskService
+import com.tencent.devops.process.service.measure.AtomMonitorEventDispatcher
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
+import com.tencent.devops.store.pojo.common.KEY_VERSION
 import okhttp3.Request
+import org.apache.lucene.util.RamUsageEstimator
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 
@@ -81,12 +96,19 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     private val measureService: MeasureService?,
     private val rabbitTemplate: RabbitTemplate,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val atomMonitorEventDispatcher: AtomMonitorEventDispatcher,
     private val pipelineTaskService: PipelineTaskService,
     private val redisOperation: RedisOperation,
     private val jmxElements: JmxElements,
     private val consulClient: ConsulDiscoveryClient?,
     private val client: Client
 ) {
+
+    @Value("\${build.atomMonitorData.report.switch:false}")
+    private val atomMonitorSwitch: String = "false"
+
+    @Value("\${build.atomMonitorData.report.maxMonitorDataSize:1677216}")
+    private val maxMonitorDataSize: String = "1677216"
 
     /**
      * Dispatch service startup the vm for the build and then notify to process service
@@ -136,9 +158,10 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                             throw IllegalStateException("Deny to start VM! startVMStatus=${it.startVMStatus}")
                         }
                     }
-
+                    var timeoutMills: Long? = null
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
                     val buildEnvs = if (it is VMBuildContainer) {
+                        timeoutMills = Timeout.transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
                         if (it.buildEnv == null) {
                             emptyList<BuildEnv>()
                         } else {
@@ -154,6 +177,9 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                             list
                         }
                     } else {
+                        if (it is NormalContainer) {
+                            timeoutMills = Timeout.transMinuteTimeoutToMills(it.jobControlOption?.timeout).second
+                        }
                         emptyList()
                     }
                     pipelineBuildDetailService.containerStart(buildId = buildId, containerId = vmSeqId.toInt())
@@ -175,7 +201,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         buildEnvs = buildEnvs,
                         containerId = it.id!!,
                         containerHashId = it.containerId ?: "",
-                        variablesWithType = variablesWithType
+                        variablesWithType = variablesWithType,
+                        timeoutMills = timeoutMills!!
                     )
                 }
                 vmId++
@@ -217,6 +244,18 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 userId = startUpVMTask.starter,
                 buildStatus = buildStatus
             )
+
+            // #2043 上报启动构建机状态时，重新刷新开始时间，以防止调度的耗时占用了Job的超时时间
+            if (!BuildStatus.isFinish(startUpVMTask.status)) { // #2043 构建机当前启动状态是未结束状态，才进行刷新开妈时间
+                pipelineRuntimeService.updateContainerStatus(
+                    buildId = buildId,
+                    stageId = startUpVMTask.stageId,
+                    containerId = startUpVMTask.containerId,
+                    startTime = LocalDateTime.now(),
+                    endTime = null,
+                    buildStatus = BuildStatus.RUNNING
+                )
+            }
         }
 
         // 失败的话就发终止事件
@@ -249,10 +288,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         )
         return true
     }
-
-//    fun pluginClaimTask(buildId: String, vmSeqId: String, vmName: String): BuildTask {
-//        return buildClaim(buildId, vmSeqId, vmName)
-//    }
 
     /**
      * 构建机请求执行任务
@@ -553,12 +588,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         // 发送度量数据
         sendElementData(
             buildId = buildId,
-            taskId = result.taskId,
-            success = result.success,
-            type = result.type,
-            errorType = result.errorType,
-            errorCode = result.errorCode,
-            errorMsg = result.message
+            vmSeqId = vmSeqId,
+            result = result
         )
 
         LogUtils.stopLog(
@@ -597,22 +628,22 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         return true
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun sendElementData(
         buildId: String,
-        taskId: String,
-        success: Boolean,
-        type: String?,
-        errorType: String?,
-        errorCode: Int?,
-        errorMsg: String?
+        vmSeqId: String,
+        result: BuildTaskResult
     ) {
-        if (measureService == null) {
+        val switchFlag = redisOperation.get("atomMonitorSwitch") ?: atomMonitorSwitch
+        if (measureService == null && !switchFlag.toBoolean()) {
             return
         }
+        val taskId = result.taskId
         try {
             val task = pipelineRuntimeService.getBuildTask(buildId, taskId)!!
-            val buildStatus = if (success) BuildStatus.SUCCEED else BuildStatus.FAILED
-            val atomCode = task.taskParams["atomCode"] as String? ?: ""
+            val buildStatus = if (result.success) BuildStatus.SUCCEED else BuildStatus.FAILED
+            val taskParams = task.taskParams
+            val atomCode = taskParams["atomCode"] as String? ?: ""
             measureService?.postTaskData(
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
@@ -622,13 +653,65 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 buildId = buildId,
                 startTime = task.startTime?.timestampmilli() ?: 0L,
                 status = buildStatus,
-                type = type!!,
+                type = result.type!!,
                 executeCount = task.executeCount,
-                errorType = errorType,
-                errorCode = errorCode,
-                errorMsg = errorMsg,
+                errorType = result.errorType,
+                errorCode = result.errorCode,
+                errorMsg = result.message,
                 userId = task.starter
             )
+            // 上报插件监控数据
+            val specReportAtoms = redisOperation.get("specReportAtoms")
+            if (!switchFlag.toBoolean() || (specReportAtoms != null && specReportAtoms.split(",").contains(atomCode))) {
+                // 上报开关关闭或者不在指定上报插件范围内则无需上报监控数据
+                return
+            }
+            val monitorDataMap = result.monitorData
+            if (monitorDataMap != null) {
+                val monitorDataSize = RamUsageEstimator.sizeOfMap(monitorDataMap)
+                if (monitorDataSize > maxMonitorDataSize.toLong()) {
+                    // 上报的监控对象大小大于规定的值则不上报
+                    logger.info("the build($buildId) of atom($atomCode) monitorDataSize($monitorDataSize) is too large,maxMonitorDataSize is:$maxMonitorDataSize")
+                    return
+                }
+            }
+            val version = taskParams[KEY_VERSION] as String? ?: ""
+            val monitorStartTime = monitorDataMap?.get(KEY_START_TIME)
+            val startTime = (monitorStartTime as? Long) ?: task.startTime?.timestampmilli()
+            val monitorEndTime = monitorDataMap?.get(KEY_END_TIME)
+            val endTime = (monitorEndTime as? Long) ?: task.endTime?.timestampmilli()
+            var project: ProjectVO? = null
+            try {
+                project = client.get(ServiceProjectResource::class).get(task.projectId).data
+            } catch (e: Exception) {
+                logger.error("get project(${task.projectId}) info error", e)
+            }
+            val atomMonitorData = AtomMonitorData(
+                errorCode = result.errorCode ?: -1,
+                errorMsg = result.message,
+                errorType = result.errorType,
+                atomCode = atomCode,
+                version = version,
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                startTime = startTime,
+                endTime = endTime,
+                elapseTime = (endTime ?: 0) - (startTime ?: 0),
+                channel = monitorDataMap?.get(KEY_CHANNEL) as? String,
+                starter = task.starter,
+                organizationDetailInfo = OrganizationDetailInfo(
+                    bgId = project?.bgId?.toInt(),
+                    bgName = project?.bgName,
+                    centerId = project?.centerId?.toInt(),
+                    centerName = project?.centerName,
+                    deptId = project?.deptId?.toInt(),
+                    deptName = project?.deptName
+                ),
+                extData = monitorDataMap?.get("extData") as? Map<String, Any>
+            )
+            atomMonitorEventDispatcher.dispatch(AtomMonitorReportBroadCastEvent(atomMonitorData))
         } catch (t: Throwable) {
             logger.warn("[$buildId]| Fail to send the measure element data", t)
         }

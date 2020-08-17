@@ -99,16 +99,31 @@ func LoadAgentEnv() {
 
 func DetectAgentVersion() string {
 	workDir := systemutil.GetWorkDir()
-	output, err := command.RunCommand(workDir+"/"+GetClienAgentFile(), []string{"version"}, workDir, nil)
+	agentExecutable := workDir + "/" + GetClienAgentFile()
+
+	if systemutil.IsLinux() || systemutil.IsMacos() {
+		if !fileutil.Exists(agentExecutable) {
+			logs.Warn("agent executable not exists")
+			return ""
+		}
+		err := fileutil.SetExecutable(agentExecutable)
+		if err != nil {
+			logs.Warn(fmt.Errorf("chmod agent file failed: %v", err))
+			return ""
+		}
+	}
+
+	output, err := command.RunCommand(agentExecutable, []string{"version"}, workDir, nil)
 	if err != nil {
 		logs.Warn("detect agent version failed: ", err.Error())
 		logs.Warn("output: ", string(output))
 		GAgentEnv.AgentVersion = ""
 		return ""
 	}
-	logs.Info("agent version: ", string(output))
+	agentVersion := strings.TrimSpace(string(output))
+	logs.Info("agent version: ", agentVersion)
 
-	return strings.TrimSpace(string(output))
+	return strings.TrimSpace(agentVersion)
 }
 
 func DetectWorkerVersion() string {
@@ -121,9 +136,23 @@ func DetectWorkerVersion() string {
 		GAgentEnv.SlaveVersion = ""
 		return ""
 	}
-	logs.Info("worker version: ", string(output))
 
-	return strings.TrimSpace(string(output))
+	return parseWorkerVersion(string(output))
+}
+
+func parseWorkerVersion(output string) string {
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if !(line == "") && !strings.Contains(line, " ") && !strings.Contains(line, "OPTIONS") {
+			if len(line) > 64 {
+				line = line[:64]
+			}
+			logs.Info("worker version: ", line)
+			return line
+		}
+	}
+	return ""
 }
 
 func BuildAgentJarPath() string {

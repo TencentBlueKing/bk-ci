@@ -39,7 +39,7 @@ function rootCommit (commit, ACTION_CONST, payload) {
 const state = {
     pipelineList: [],
     curPipeline: {},
-    curPipelineAtomParams: {},
+    curPipelineAtomParams: null,
     allPipelineList: [],
     hasCreatePermission: false,
     pipelineSetting: {},
@@ -216,8 +216,8 @@ const actions = {
         return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/image/imageCodes/${imageCode}/version/list`)
     },
 
-    requestMarketImage ({ commit }, { projectCode, agentType, imageNamePart, recommendFlag }) {
-        return ajax.post(`/${STORE_API_URL_PREFIX}/user/market/image/jobMarketImages/search?projectCode=${projectCode}&imageNamePart=${imageNamePart}&agentType=${agentType}&recommendFlag=${recommendFlag}&page=1&pageSize=1000`)
+    requestMarketImage ({ commit }, { projectCode, agentType, keyword, recommendFlag }) {
+        return ajax.post(`/${STORE_API_URL_PREFIX}/user/market/image/jobMarketImages/search?projectCode=${projectCode}&keyword=${keyword}&agentType=${agentType}&recommendFlag=${recommendFlag}&page=1&pageSize=1000`)
     },
 
     requestImageClassifys ({ commit }) {

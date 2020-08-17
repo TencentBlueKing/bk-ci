@@ -26,11 +26,11 @@
 
 package com.tencent.devops.dockerhost.init
 
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.cron.UpdateAgentRunner
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.EnableScheduling
@@ -44,7 +44,6 @@ import java.util.concurrent.Executors
  */
 
 @Configuration
-@ConditionalOnProperty(prefix = "dockerhost", name = ["mode"], havingValue = "docker_build")
 @EnableScheduling
 class TXBuildClusterCronConfiguration : SchedulingConfigurer {
 
@@ -55,7 +54,6 @@ class TXBuildClusterCronConfiguration : SchedulingConfigurer {
         scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(100))
 
         scheduledTaskRegistrar.addCronTask(
-//                { updateAgentRunner.update() }, "0 0 3 * * ?"
             { updateAgentRunner.update() }, downloadAgentCron!!
         )
     }
@@ -64,7 +62,7 @@ class TXBuildClusterCronConfiguration : SchedulingConfigurer {
     private lateinit var updateAgentRunner: UpdateAgentRunner
 
     @Bean
-    fun updateAgentRunner(dockerHostConfig: DockerHostConfig): UpdateAgentRunner {
-        return UpdateAgentRunner(dockerHostConfig)
+    fun updateAgentRunner(dockerHostConfig: DockerHostConfig, gray: Gray): UpdateAgentRunner {
+        return UpdateAgentRunner(dockerHostConfig, gray)
     }
 }

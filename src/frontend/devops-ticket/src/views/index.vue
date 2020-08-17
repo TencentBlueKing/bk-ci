@@ -10,7 +10,7 @@
     export default {
         computed: {
             nav () {
-                const navConf = {
+                return {
                     icon: 'ticket',
                     title: this.$t('ticket.credentialManage'),
                     menu: [
@@ -58,10 +58,6 @@
                         }
                     ]
                 }
-                if (VERSION_TYPE === 'ee') {
-                    navConf.menu.splice(2, 2)
-                }
-                return navConf
             }
         },
         methods: {

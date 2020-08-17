@@ -18,7 +18,6 @@
  */
 
 import { mapActions, mapGetters, mapState } from 'vuex'
-import cookie from 'cookie'
 import {
     navConfirm
 } from '@/utils/util'
@@ -280,6 +279,8 @@ export default {
                 if (res && res.id) {
                     message = this.$t('newlist.sucToStartBuild')
                     theme = 'success'
+                    setExecuteStatus(false)
+                    this.$store.commit('pipelines/updateCurAtomPrams', null)
                     if (goDetail) {
                         this.$router.push({
                             name: 'pipelinesDetail',
@@ -295,6 +296,8 @@ export default {
                     theme = 'error'
                 }
             } catch (err) {
+                setExecuteStatus(false)
+                this.$store.commit('pipelines/updateCurAtomPrams', null)
                 if (err.code === 403) { // 没有权限执行
                     this.setPermissionConfig(`${this.$t('pipeline')}：${this.curPipeline.pipelineName}`, this.$t('exec'), projectId, pipelineId)
                 } else {
@@ -302,7 +305,6 @@ export default {
                     theme = 'error'
                 }
             } finally {
-                setExecuteStatus(false)
                 message && this.$showTips({
                     message,
                     theme
@@ -344,25 +346,6 @@ export default {
                 console.warn(e)
                 return setting
             }
-        },
-        savePipelineAuthority () {
-            const { role, policy } = this.pipelineAuthority
-            const longProjectId = this.curProject && this.curProject.projectId ? this.curProject.projectId : ''
-            const { pipelineId } = this.$route.params
-            const data = {
-                project_id: longProjectId,
-                resource_type_code: 'pipeline',
-                resource_code: pipelineId,
-                role: role.map(item => {
-                    item.group_list = item.selected
-                    return item
-                }),
-                policy: policy.map(item => {
-                    item.group_list = item.selected
-                    return item
-                })
-            }
-            return this.$ajax.put(`/backend/api/perm/service/pipeline/mgr_resource/permission/`, data, { headers: { 'X-CSRFToken': cookie.parse(document.cookie).backend_csrftoken } })
         },
         getPipelineSetting () {
             const { pipelineSetting } = this
@@ -490,8 +473,7 @@ export default {
                 this.setSaveStatus(true)
                 const saveAction = this.isTemplatePipeline ? this.saveSetting : this.savePipelineAndSetting
                 const responses = await Promise.all([
-                    saveAction(),
-                    ...(this.authSettingEditing ? [this.savePipelineAuthority()] : [])
+                    saveAction()
                 ])
 
                 if (responses.some(res => res.code === 403)) {

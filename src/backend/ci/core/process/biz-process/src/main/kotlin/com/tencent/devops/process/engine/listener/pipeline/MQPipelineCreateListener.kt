@@ -106,14 +106,15 @@ class MQPipelineCreateListener @Autowired constructor(
             logger.info("[${event.pipelineId}]| Trying to add the $scmType web hook for repo($repositoryConfig)")
             try {
                 pipelineWebhookService.saveWebhook(
-                        pipelineWebhook = PipelineWebhook(
-                                projectId = event.projectId,
-                                pipelineId = event.pipelineId,
-                                repositoryType = scmType,
-                                repoType = repositoryConfig.repositoryType,
-                                repoHashId = repositoryConfig.repositoryHashId,
-                                repoName = repositoryConfig.repositoryName
-                        ), codeEventType = eventType, variables = event.variables as Map<String, String>,
+                    pipelineWebhook = PipelineWebhook(
+                        projectId = event.projectId,
+                        pipelineId = event.pipelineId,
+                        repositoryType = scmType,
+                        repoType = repositoryConfig.repositoryType,
+                        repoHashId = repositoryConfig.repositoryHashId,
+                        repoName = repositoryConfig.repositoryName,
+                        taskId = e.id
+                    ), codeEventType = eventType, variables = event.variables as Map<String, String>,
                         // TODO 此处需做成传入参数
                         createPipelineFlag = true
                 )

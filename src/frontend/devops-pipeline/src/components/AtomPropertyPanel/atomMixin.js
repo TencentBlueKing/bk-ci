@@ -21,17 +21,14 @@ import { mapActions, mapGetters } from 'vuex'
 import Accordion from '@/components/atomFormField/Accordion'
 import EnumInput from '@/components/atomFormField/EnumInput'
 import VuexInput from '@/components/atomFormField/VuexInput'
-import ExperienceInput from '@/components/atomFormField/ExperienceInput'
 import VuexTextarea from '@/components/atomFormField/VuexTextarea'
 import Selector from '@/components/atomFormField/Selector'
 import SelectInput from '@/components/AtomFormComponent/SelectInput'
 import DevopsSelect from '@/components/AtomFormComponent/DevopsSelect'
 import AtomAceEditor from '@/components/atomFormField/AtomAceEditor'
 import CronTimer from '@/components/atomFormField/CronTimer/week'
-import StaffInput from '@/components/atomFormField/StaffInput'
-import CompanyStaffInput from '@/components/atomFormField/CompanyStaffInput'
+import UserInput from '@/components/atomFormField/UserInput'
 import RequestSelector from '@/components/atomFormField/RequestSelector'
-import GitRequestSelector from '@/components/atomFormField/GitRequestSelector'
 import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
 import AtomCheckboxList from '@/components/atomFormField/AtomCheckboxList'
 import AtomDatePicker from '@/components/atomFormField/AtomDatePicker'
@@ -44,12 +41,11 @@ import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
 import NameSpaceVar from '@/components/atomFormField/NameSpaceVar'
 import RouteTips from '@/components/atomFormField/RouteTips'
 import QualitygateTips from '@/components/atomFormField/QualitygateTips'
-import CheckInline from '@/components/atomFormField/CheckInline'
 import FormField from './FormField'
 import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
 import RemoteCurlUrl from '@/components/atomFormField/RemoteCurlUrl'
 import AutoComplete from '@/components/atomFormField/AutoComplete'
-import { urlJoin, hasIntersection } from '../../utils/util'
+import { urlJoin, rely } from '../../utils/util'
 
 const atomMixin = {
     props: {
@@ -74,24 +70,20 @@ const atomMixin = {
         SelectInput,
         AtomAceEditor,
         CronTimer,
-        StaffInput,
-        CompanyStaffInput,
+        UserInput,
         RequestSelector,
-        GitRequestSelector,
         AtomCheckbox,
         AtomCheckboxList,
         FormField,
         AtomDatePicker,
         CodeModeSelector,
         CodeModeInput,
-        ExperienceInput,
         ParamsView,
         SvnpathInput,
         KeyValue,
         KeyValueNormal,
         NameSpaceVar,
         RouteTips,
-        CheckInline,
         GroupIdSelector,
         QualitygateTips,
         AutoComplete,
@@ -204,35 +196,7 @@ const atomMixin = {
             }
         },
         rely (obj, element) {
-            try {
-                const { rely: { expression = [], operation = 'AND' } } = obj
-                const cb = item => {
-                    const { key, value, regex } = item
-                    if (Array.isArray(value)) {
-                        if (Array.isArray(element[key])) {
-                            return hasIntersection(value, element[key])
-                        }
-                        return typeof element[key] !== 'undefined' && value.includes(element[key])
-                    } else if (regex) {
-                        const reg = new RegExp(regex, 'i')
-                        return Array.isArray(element[key]) ? element[key].some(item => reg.test(item)) : reg.test(element[key])
-                    } else {
-                        return Array.isArray(element[key]) ? element[key].some(item => item === value) : element[key] === value
-                    }
-                }
-                switch (operation) {
-                    case 'AND':
-                        return expression.every(cb)
-                    case 'OR':
-                        return expression.length > 0 ? expression.some(cb) : true
-                    case 'NOT':
-                        return expression.length > 0 ? !expression.some(cb) : true
-                    default:
-                        return true
-                }
-            } catch (e) {
-                return true
-            }
+            return rely(obj, element)
         }
     }
 }

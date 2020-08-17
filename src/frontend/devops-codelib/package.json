@@ -1,6 +1,6 @@
 {
     "name": "devops-codelib",
-    "version": "1.0.1",
+    "version": "1.0.0",
     "description": "",
     "dependencies": {
         "vuex-class": "^0.3.0"
@@ -57,6 +57,5 @@
         "type": "git",
         "url": ""
     },
-    "license": "ISC",
-    "gitHead": "afc92dde9341d36ec28514ede9e7cca0af3edb1b"
+    "license": "ISC"
 }

@@ -1,6 +1,6 @@
 {
   "name": "devops-ticket",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "",
   "dependencies": {
     "brace": "^0.10.0",
@@ -61,6 +61,5 @@
     "url": ""
   },
   "author": "",
-  "license": "ISC",
-  "gitHead": "afc92dde9341d36ec28514ede9e7cca0af3edb1b"
+  "license": "ISC"
 }

@@ -17,13 +17,9 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 const webpackBaseConfig = require('../webpack.base')
-const webpack = require('webpack')
-const getConfig = require('./constConfig.js')
 
 module.exports = (env, argv) => {
-    const version = env && env.version ? env.version : 'tencent'
-    const constConfig = getConfig(version)
-    const config = webpackBaseConfig({
+    return webpackBaseConfig({
         env,
         argv,
         entry: {
@@ -33,9 +29,4 @@ module.exports = (env, argv) => {
         dist: '/ticket',
         port: 8004
     })
-    config.plugins = [
-        ...config.plugins,
-        new webpack.DefinePlugin(constConfig)
-    ]
-    return config
 }

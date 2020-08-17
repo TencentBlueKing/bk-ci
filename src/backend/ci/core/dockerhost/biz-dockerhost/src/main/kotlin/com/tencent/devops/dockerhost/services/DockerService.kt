@@ -27,6 +27,7 @@
 package com.tencent.devops.dockerhost.services
 
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
+import com.tencent.devops.dockerhost.common.Constants
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.DockerHostLoad
@@ -106,7 +107,7 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
         buildId: String,
         dockerRunParam: DockerRunParam
     ): DockerRunResponse {
-        logger.info("projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, dockerRunParam: $dockerRunParam")
+        logger.info("Start dockerRun projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, dockerRunParam: $dockerRunParam.")
 
         val (containerId, timeStamp) = dockerHostBuildService.dockerRun(
             projectId = projectId,
@@ -115,6 +116,7 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
             buildId = buildId,
             dockerRunParam = dockerRunParam
         )
+        logger.info("End dockerRun projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, dockerRunParam: $dockerRunParam")
         return DockerRunResponse(containerId, timeStamp)
     }
 
@@ -132,17 +134,26 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
         logStartTimeStamp: Int,
         printLog: Boolean? = true
     ): DockerLogsResponse {
-        val isRunning = dockerHostBuildService.isContainerRunning(containerId)
+        logger.info("[$buildId]|[$vmSeqId]|[$containerId]|[$logStartTimeStamp] Enter DockerService.getDockerRunLogs...")
+        val containerState = dockerHostBuildService.getContainerState(containerId)
+        val isRunning = if (containerState != null) {
+            containerState.running ?: false
+        } else {
+            true
+        }
+
         val exitCode = when {
-            !isRunning -> dockerHostBuildService.getDockerRunExitCode(containerId)
+            containerState != null -> if (containerState.exitCodeLong == null) Constants.DOCKER_EXIST_CODE else containerState.exitCodeLong!!.toInt()
             else -> null
         }
+
         val logs = if (printLog != null && !printLog) {
             emptyList()
         } else {
             dockerHostBuildService.getDockerLogs(containerId, logStartTimeStamp)
         }
 
+        logger.info("[$buildId]|[$vmSeqId]|[$containerId] Finish DockerService.getDockerRunLogs...")
         return DockerLogsResponse(isRunning, exitCode, logs)
     }
 

@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
@@ -62,7 +63,8 @@ class SubPipelineStartUpService(
     private val buildVariableService: BuildVariableService,
     private val buildService: PipelineBuildService,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineStartUpService::class.java)
@@ -148,6 +150,20 @@ class SubPipelineStartUpService(
             taskId = taskId,
             subBuildId = subBuildId
         )
+        val moveTaskDataBakSwitch = redisOperation.get("moveTaskDataBakSwitch")
+        // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
+        if (moveTaskDataBakSwitch == "true") {
+            try {
+                pipelineBuildTaskDao.updateBakSubBuildId(
+                    dslContext = dslContext,
+                    buildId = buildId,
+                    taskId = taskId,
+                    subBuildId = subBuildId
+                )
+            } catch (e: Exception) {
+                logger.warn("build($buildId) updateBakSubBuildId error", e)
+            }
+        }
 
         return Result(
             ProjectBuildId(

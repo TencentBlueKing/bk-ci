@@ -125,6 +125,20 @@ class PipelineBuildService @Autowired constructor(
         pushTaskDetail(event, task)
     }
 
+    private fun getAtomCodeFromTask(task: TPipelineBuildTaskRecord): String {
+        return if (!task.taskAtom.isNullOrBlank()) {
+            task.taskAtom
+        } else {
+            val taskParams = JsonUtil.toMutableMapSkipEmpty(task.taskParams ?: "{}")
+            if (taskParams.keys.contains("atomCode")) {
+                taskParams["atomCode"] as String
+            } else {
+                logger.warn("unexpected taskParams with no atomCode:${task.taskParams}")
+                ""
+            }
+        }
+    }
+
     private fun pushElementData2Es(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord) {
         val data = ElementData(
             projectId = event.projectId,
@@ -136,7 +150,7 @@ class PipelineBuildService @Autowired constructor(
             beginTime = task.startTime?.timestampmilli() ?: 0,
             endTime = task.endTime?.timestampmilli() ?: 0,
             type = task.taskType ?: "",
-            atomCode = task.taskAtom ?: "",
+            atomCode = getAtomCodeFromTask(task),
             errorType = event.errorType,
             errorCode = event.errorCode,
             errorMsg = event.errorMsg
@@ -156,42 +170,69 @@ class PipelineBuildService @Autowired constructor(
             val taskAtom = task.taskAtom
             val taskParamMap = JsonUtil.toMap(task.taskParams)
 
-            if (taskAtom == "dispatchVMShutdownTaskAtom") {
-                Thread.sleep(3000)
-                val buildContainer = buildContainerDao.getContainer(
-                    dslContext = dslContext,
-                    buildId = task.buildId,
-                    stageId = task.stageId,
-                    containerId = task.containerId
-                )
-                if (buildContainer != null) {
-                    val dispatchType = taskParamMap["dispatchType"] as Map<String, Any>
-                    val dataPlatJobDetail = DataPlatJobDetail(
-                        pipelineId = task.pipelineId,
+            if (task.taskType == "VM" || task.taskType == "NORMAL") {
+                if (taskAtom == "dispatchVMShutdownTaskAtom") {
+                    Thread.sleep(3000)
+                    val buildContainer = buildContainerDao.getContainer(
+                        dslContext = dslContext,
                         buildId = task.buildId,
-                        containerType = dispatchType["buildType"].toString(),
-                        projectEnglishName = task.projectId,
                         stageId = task.stageId,
-                        containerId = task.containerId,
-                        jobParams = JSONObject(JsonUtil.toMap(task.taskParams)),
-                        status = buildContainer.status.toString(),
-                        seq = buildContainer.seq.toString(),
-                        startTime = buildContainer.startTime.format(dateTimeFormatter),
-                        endTime = buildContainer.endTime.format(dateTimeFormatter),
-                        costTime = buildContainer.cost.toLong(),
-                        executeCount = buildContainer.executeCount,
-                        conditions = JSONObject(JsonUtil.toMap(buildContainer.conditions)),
-                        washTime = LocalDateTime.now().format(dateTimeFormatter)
+                        containerId = task.containerId
                     )
+                    if (buildContainer != null) {
+                        val dispatchType = taskParamMap["dispatchType"] as Map<String, Any>
+                        val dataPlatJobDetail = DataPlatJobDetail(
+                            pipelineId = task.pipelineId,
+                            buildId = task.buildId,
+                            containerType = dispatchType["buildType"].toString(),
+                            projectEnglishName = task.projectId,
+                            stageId = task.stageId,
+                            containerId = task.containerId,
+                            jobParams = JSONObject(JsonUtil.toMap(task.taskParams)),
+                            status = buildContainer.status.toString(),
+                            seq = buildContainer.seq.toString(),
+                            startTime = buildContainer.startTime.format(dateTimeFormatter),
+                            endTime = buildContainer.endTime.format(dateTimeFormatter),
+                            costTime = buildContainer.cost.toLong(),
+                            executeCount = buildContainer.executeCount,
+                            conditions = JSONObject(JsonUtil.toMap(buildContainer.conditions)),
+                            washTime = LocalDateTime.now().format(dateTimeFormatter)
+                        )
 
-                    logger.info("pushJobDetail: ${JsonUtil.toJson(dataPlatJobDetail)}")
-                    kafkaClient.send(KafkaTopic.LANDUN_JOB_DETAIL_TOPIC, JsonUtil.toJson(dataPlatJobDetail))
+                        logger.info("pushJobDetail: ${JsonUtil.toJson(dataPlatJobDetail)}")
+                        kafkaClient.send(KafkaTopic.LANDUN_JOB_DETAIL_TOPIC, JsonUtil.toJson(dataPlatJobDetail))
+                    }
                 }
             } else {
                 val atomCode = taskParamMap["atomCode"].toString()
 
-                val taskParams = if (taskParamMap["@type"] != "marketBuild" || taskParamMap["@type"] != "marketBuildLess") {
-                    val inputMap = mutableMapOf("key" to "value")
+                val taskParams = if (taskParamMap["@type"] != "marketBuild" && taskParamMap["@type"] != "marketBuildLess") {
+                    val inputMap = mutableMapOf<String, String>()
+                    when {
+                        taskParamMap["@type"] == "linuxScript" -> {
+                            inputMap["scriptType"] = taskParamMap["scriptType"] as String
+                            inputMap["script"] = taskParamMap["script"] as String
+                            inputMap["continueNoneZero"] = (taskParamMap["continueNoneZero"] as Boolean).toString()
+                            inputMap["enableArchiveFile"] = (taskParamMap["enableArchiveFile"] as Boolean).toString()
+                            if (taskParamMap["archiveFile"] != null) {
+                                inputMap["archiveFile"] = taskParamMap["archiveFile"] as String
+                            }
+                        }
+                        taskParamMap["@type"] == "windowsScript" -> {
+                            inputMap["scriptType"] = taskParamMap["scriptType"] as String
+                            inputMap["script"] = taskParamMap["script"] as String
+                        }
+                        taskParamMap["@type"] == "manualReviewUserTask" -> {
+                            inputMap["reviewUsers"] = taskParamMap["reviewUsers"] as String
+                            if (taskParamMap["params"] != null) {
+                                inputMap["desc"] = taskParamMap["params"] as String
+                            }
+                        }
+                        else -> {
+                            inputMap["key"] = "value"
+                        }
+                    }
+
                     val dataMap = mutableMapOf("input" to inputMap)
                     val taskParamMap1 = mutableMapOf("data" to dataMap)
                     JSONObject(taskParamMap1)

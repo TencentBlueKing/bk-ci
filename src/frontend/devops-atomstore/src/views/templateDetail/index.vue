@@ -64,13 +64,6 @@
                                     //     id: 'member',
                                     //     name: '成员管理',
                                     //     icon: ''
-                                    // },
-                                    {
-                                        id: 'tplVisible',
-                                        selectId: ['tplVisible'],
-                                        name: this.$t('store.可见范围'),
-                                        icon: ''
-                                    }
                                 ]
                             }
                         ]
@@ -102,7 +95,6 @@
             if (this.routeName === 'tplVisible' || this.routeName === 'member') {
                 this.sideMenuList[0].list[1].isOpen = true
             }
-            this.hanldeEnterprise()
         },
         methods: {
             goBack () {
@@ -127,11 +119,6 @@
                         message,
                         theme
                     })
-                }
-            },
-            hanldeEnterprise () {
-                if (VERSION_TYPE === 'ee') {
-                    this.sideMenuList[0].list.splice(1, 1)
                 }
             }
         }

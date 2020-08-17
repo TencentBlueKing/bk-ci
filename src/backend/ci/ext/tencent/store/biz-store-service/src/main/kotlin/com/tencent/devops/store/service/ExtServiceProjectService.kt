@@ -200,7 +200,7 @@ class ExtServiceProjectService @Autowired constructor(
                     creator = it["creator"] as String,
                     releaseFlag = true,
                     modifier = it["modifier"] as String,
-                    itemName = "",
+                    itemName = emptyList(),
                     isUninstall = canUninstall(publicFlag, projectType),
                     publisher = installUser,
                     publishTime = installTime,

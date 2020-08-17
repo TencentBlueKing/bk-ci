@@ -158,9 +158,7 @@
             },
             async handleDeleteCredentail (id) {
                 this.$bkInfo({
-                    type: 'warning',
-                    theme: 'warning',
-                    title: `${this.$t('ticket.credential.deleteCredentialTips', [id])}`,
+                    title: `${this.$t('ticket.credential.deleteCredentialTips')}?`,
                     confirmFn: async () => {
                         let message, theme
 

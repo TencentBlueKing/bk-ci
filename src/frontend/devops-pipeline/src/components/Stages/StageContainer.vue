@@ -1,11 +1,15 @@
 <template>
     <div
         ref="stageContainer"
-        :class="{ 'devops-stage-container': true, 'first-container': stageIndex === 0, 'readonly': !editable || containerDisabled }"
+        :class="{ 'devops-stage-container': true, 'first-stage-container': stageIndex === 0, 'readonly': !editable || containerDisabled }"
     >
-        <template v-if="!isOnlyOneContainer && containerLength - 1 !== containerIndex">
-            <cruve-line :straight="true" :width="60" :height="cruveHeight" class="connect-line left" />
-            <cruve-line :straight="true" :width="60" :height="cruveHeight" :direction="false" class="connect-line right" />
+        <template v-if="containerIndex > 0">
+            <cruve-line :straight="true" :width="60" :style="`margin-top: -${cruveHeight}px`" :height="cruveHeight" class="connect-line left" />
+            <cruve-line :straight="true" :width="60" :style="`margin-top: -${cruveHeight}px`" :height="cruveHeight" :direction="false" class="connect-line right" />
+        </template>
+        <template v-else>
+            <cruveLine v-if="stageIndex !== 0" class="first-connect-line connect-line left" :width="60" :height="60"></cruveLine>
+            <cruve-line class="first-connect-line connect-line right" :width="60" :direction="false" :height="60"></cruve-line>
         </template>
 
         <h3 :class="{ 'container-title': true, 'first-ctitle': containerIndex === 0, [container.status]: container.status }" @click.stop="showContainerPanel">
@@ -23,7 +27,6 @@
             <span @click.stop v-if="showCheckedToatal && canSkipElement">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="containerDisabled"></bk-checkbox>
             </span>
-            <bk-button v-if="showDebugBtn" class="debug-btn" theme="warning" @click.stop="debugDocker">{{ $t('editPage.docker.debugConsole') }}</bk-button>
         </h3>
         <atom-list
             :container="container"
@@ -57,6 +60,7 @@
             CruveLine
         },
         props: {
+            preContainer: Object,
             container: Object,
             stageIndex: Number,
             containerIndex: Number,
@@ -90,7 +94,7 @@
             ]),
             ...mapGetters('atom', [
                 'isTriggerContainer',
-                'isDockerBuildResource',
+
                 'getAllContainers'
             ]),
             showCheckedToatal () {
@@ -110,18 +114,12 @@
             projectId () {
                 return this.$route.params.projectId
             },
-            isDocker () {
-                return this.isDockerBuildResource(this.container)
-            },
-            showDebugBtn () {
-                return this.container.baseOS === 'LINUX' && this.isDocker && (this.container.status === 'FAILED' && this.$route.name === 'pipelinesDetail' && this.execDetail && this.execDetail.buildNum === this.execDetail.latestBuildNum && this.execDetail.curVersion === this.execDetail.latestVersion)
-            },
             containerDisabled () {
                 return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false) || this.stageDisabled
             }
         },
         watch: {
-            'container.elements.length': function (newVal, oldVal) {
+            'preContainer.elements.length': function (newVal, oldVal) {
                 if (newVal !== oldVal) {
                     this.$forceUpdate()
                 }
@@ -152,9 +150,6 @@
             this.updateCruveConnectHeight()
         },
         methods: {
-            ...mapActions('soda', [
-                'startDebugDocker'
-            ]),
             ...mapActions('atom', [
                 'togglePropertyPanel',
                 'addAtom',
@@ -180,10 +175,9 @@
                 }
             },
             updateCruveConnectHeight () {
-                if (!this.$refs.stageContainer) {
-                    return
+                if (this.$refs.stageContainer && this.$refs.stageContainer.previousSibling) {
+                    this.cruveHeight = getOuterHeight(this.$refs.stageContainer.previousSibling)
                 }
-                this.cruveHeight = getOuterHeight(this.$refs.stageContainer)
             },
             showContainerPanel () {
                 const { stageIndex, containerIndex } = this
@@ -194,59 +188,6 @@
                         containerIndex
                     }
                 })
-            },
-            async debugDocker () {
-                const vmSeqId = this.getRealSeqId()
-                const projectId = this.$route.params.projectId
-                const pipelineId = this.$route.params.pipelineId
-                let url = ''
-                const tab = window.open('about:blank')
-                try {
-                    const res = await this.startDebugDocker({
-                        projectId: projectId,
-                        pipelineId: pipelineId,
-                        vmSeqId,
-                        imageCode: this.container.dispatchType && this.container.dispatchType.imageCode,
-                        imageVersion: this.container.dispatchType && this.container.dispatchType.imageVersion,
-                        imageName: this.container.dispatchType && this.container.dispatchType.value ? this.container.dispatchType.value : this.container.dockerBuildVersion,
-                        buildEnv: this.container.buildEnv,
-                        imageType: this.container.dispatchType && this.container.dispatchType.imageType ? this.container.dispatchType.imageType : 'BKDEVOPS',
-                        credentialId: this.container.dispatchType && this.container.dispatchType.credentialId ? this.container.dispatchType.credentialId : ''
-                    })
-                    if (res === true) {
-                        url = `${WEB_URL_PIRFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&vmSeqId=${vmSeqId}`
-                    }
-                    tab.location = url
-                } catch (err) {
-                    tab.close()
-                    if (err.code === 403) {
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: this.$t('pipeline'),
-                                option: this.$t('edit')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${projectId}&service_code=pipeline&role_manager=pipeline:${pipelineId}`
-                        })
-                    } else {
-                        this.$showTips({
-                            theme: 'error',
-                            message: err.message || err
-                        })
-                    }
-                }
-            },
-            getRealSeqId () {
-                let i = 0
-                let seqId = 0
-                this.execDetail && this.execDetail.model.stages && this.execDetail.model.stages.map((stage, sIndex) => {
-                    stage.containers.map((container, cIndex) => {
-                        if (sIndex === this.stageIndex && cIndex === this.containerIndex) {
-                            seqId = i
-                        }
-                        i++
-                    })
-                })
-                return seqId
             },
             copyContainer () {
                 try {
@@ -303,12 +244,11 @@
             z-index: 2;
         }
 
-        &.first-container {
+        &.first-stage-container {
             &:before {
                 display: none;
             }
         }
-
         .container-title {
             display: flex;
             height: $itemHeight;
@@ -385,12 +325,28 @@
             stroke: $primaryColor;
             stroke-width: 1;
             fill: none;
+            z-index: 0;
 
              &.left {
                 left: -$svgWidth + 4;
+
             }
             &.right {
-                right: -$addIconLeftMargin - $containerMargin;
+                right: -$StageMargin - $addIconLeft - $addBtnSize - 2;
+            }
+
+            &.first-connect-line {
+                height: 76px;
+                width: $svgWidth;
+                top: -$stageEntryHeight / 2 - 2 - 16px;
+                &.left {
+                    left: -$svgWidth - $addBtnSize / 2 + 4;
+                }
+                &.right {
+                    left: auto;
+                    right: -$addIconLeftMargin - $containerMargin - $addBtnSize / 2;
+
+                }
             }
         }
     }

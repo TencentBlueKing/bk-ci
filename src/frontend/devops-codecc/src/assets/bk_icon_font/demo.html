@@ -4,243 +4,1250 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="./style.css">
+  <script src="./iconcool.js"></script>
   <style>
-    ul, li {
+    html,
+    body,
+    ul,
+    li {
       margin: 0;
       padding: 0;
     }
-    li {
+    .container {
+      margin: 0 auto;
+      padding: 50px;
+      width: 980px;
+    }
+    .container .page-title {
+      margin: 0;
+      padding: 0;
+    }
+    .container .page-title .logo {
+      height: 50px;
+    }
+    .tab-wrapper {
+      padding-top: 26px;
+      border-bottom: 1px solid #dcdee5;
+      overflow: hidden;
+    }
+    .tab-wrapper .tab-panel {
+      float: left;
+      padding: 9px;
+      min-width: 124px;
+      font-size: 16px;
+      color: #979ba5;
+      text-align: center;
+      cursor: pointer;
+    }
+    .tab-wrapper .tab-panel.active {
+      color: #313238;
+      border-bottom: 3px solid #361ec6;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .icon-list .icon-item {
+      display: inline-block;
+      margin-top: 20px;
+      width: 116px;
+      color: #313238;
+      text-align: center;
+      vertical-align: top;
+      overflow: hidden;
       list-style: none;
     }
-    .container {
-      padding: 20px 50px;
-      min-width: 1200px;
-      overflow: hidden;
+    .icon-list .icon-item .icon {
+      display: inline-block;
+      height: 92px;
+      line-height: 92px;
+      font-size: 44px;
     }
-    .section {
-      clear: both;
-      margin-bottom: 40px;
-    }
-    .container h2 {
-      font-size: 18px;
-      color: #333;
-      padding: 10px;
-      border-bottom: 1px solid #eee;
-    }
-    .container h2 span{
-      font-size: 18px;
-      color: #999999;
-    }
-    .icon-list {
-      overflow: hidden;
-    }
-    .icon-item {
-      float: left;
-      margin: 0 10px 10px 0;
-      width: 64px;
-    }
-    .section p {
+    .icon-list .icon-text {
+      margin: 0;
       font-size: 14px;
-      color: #666;
+      word-break: break-all;
     }
-    .icon-wrapper {
-      width: 64px;
-      height: 64px;
-      line-height: 64px;
+    .icon-list .colorful-icon {
+      display: inline-block;
+      margin-top: 20px;
+      width: 116px;
       text-align: center;
-      background: #fafafa;
-      border-radius: 2px;
-      font-size: 29px;
-      display: block;
-    }
-    .icon-text {
-      font-size: 12px;
-      display: block;
-      text-align: center;
-      margin-top: 5px;
-      width: 64px;
-      white-space: nowrap;
+      vertical-align: top;
       overflow: hidden;
-      text-overflow: ellipsis;
+      list-style: none;
+    }
+    .icon-list .colorful-icon .icon {
+      display: block;
+      margin: 0 auto;
+      width: 1em;
+      height: 92px;
+      font-size: 44px;
+    }
+    .describe-title {
+      margin: 60px 0 0;
+      padding-bottom: 10px;
+      font-size: 20px;
+      font-weight: normal;
+      color: #313238;
+      border-bottom: 1px solid #dcdee5;
+    }
+    .use-describe {
+      padding-left: 20px;
+    }
+    .use-describe li {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #313238;
+      line-height: 20px;
     }
   </style>
-  <title>iconcool</title>
+  <title>Icon Cool</title>
 </head>
 <body>
   <div class="container">
-    <h2>iconcool</h2>
-
-    <section class="section">
+    <h2 class="page-title">
+      <img class="logo" src="data:image/svg+xml;base64,PHN2ZyBpZD0i5Zu+5bGCXzEiIGRhdGEtbmFtZT0i5Zu+5bGCIDEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDMzMSA2NCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiNlNWVlZmY7fS5jbHMtMntmaWxsOiMzNjFlYzY7fS5jbHMtM3tmaWxsOiNiNWNiZmY7fS5jbHMtNHtmaWxsOiNkY2U5ZmY7fTwvc3R5bGU+PC9kZWZzPjx0aXRsZT5pY29uIGNvb2wgbG9nbzwvdGl0bGU+PHBvbHlnb24gY2xhc3M9ImNscy0xIiBwb2ludHM9IjI2LjkgNjIuOTQgMC42OCA0Ny4yMSAwLjY4IDE1LjczIDI2LjkgMzEuNDcgMjYuOSA2Mi45NCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSIyMC4zNCA1MS4xNCA3LjIzIDQzLjI3IDcuMjMgMjcuNTQgMjAuMzQgMzUuNCAyMC4zNCA1MS4xNCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMyIgcG9pbnRzPSIyNi45IDYyLjk0IDUzLjEzIDQ3LjIxIDUzLjEzIDE1LjczIDI2LjkgMzEuNDcgMjYuOSA2Mi45NCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtNCIgcG9pbnRzPSIyNi45IDAgMC42OCAxNS43MyAyNi45IDMxLjQ3IDUzLjEzIDE1LjczIDI2LjkgMCIvPjxlbGxpcHNlIGNsYXNzPSJjbHMtMiIgY3g9IjI2LjkiIGN5PSIxNS43NCIgcng9IjEwLjQ5IiByeT0iNS44MyIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSIzNC4yMyA1MS4xNCA0OC4xOCA0Mi43NyA0MS4zMSAzOS4zNCAzNC4yMyA1MS4xNCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSI0OC4xOCAyNy41NCAzNC4yMyAzNS45MSA0MS4xIDM5LjM0IDQ4LjE4IDI3LjU0Ii8+PHBhdGggZD0iTTcxLjIzLDE4LjU0aDkuOTRWMTUuOGgzLjg5djIuNzRoOC42N1YxNS44aDMuOXYyLjc0aDkuNjd2My4zMUg5Ny42M3YyaC0zLjl2LTJIODUuMDZ2MS45M0g4MS4xN1YyMS44NUg3MS4yM1ptMCwyOS4xSDc1VjM4LjI3aDI4LjY0djkuMzdoMy43VjUxSDcxLjIzWm0yLjg1LTIyaDMuN1YzNi4zNWgtMy43Wm01LDIyaDQuNDNWNDEuNDdINzkuMDlabTIuODUtMjNIODUuOHYxMkg4MS45NFptNC41OSw5LjgzYTI3LjI2LDI3LjI2LDAsMCwwLDUuMzktMTBsMy45LjU3TDk1LDI3LjI1aDExLjY3djMuMjhIOTMuNThhMzcuMjIsMzcuMjIsMCwwLDEtMy44NSw2LjEyQzg4LjgsMzYsODcuNjUsMzUuMTksODYuNTMsMzQuNVptLjU4LDEzLjE0aDQuNDNWNDEuNDdIODcuMTFabTcuMzYtMTQuNDksMi4yNy0yLjI4YzIuMzEsMS40Nyw0LjE2LDIuNyw2LjQsNC4yOGwtMi40MywyLjU0Qzk4LjY3LDM2LjExLDk2Ljc4LDM0LjczLDk0LjQ3LDMzLjE1Wm0uNjEsOC4zMnY2LjE3aDQuNDdWNDEuNDdaIi8+PHBhdGggZD0iTTEwOS4zNCwyNS40YTM2LjgzLDM2LjgzLDAsMCwwLDUuMzYtOS42M2wzLjUxLjVjLS40MywxLS44MSwxLjkyLTEuMjQsMi44MWg2djNsLTIuMiw0LjA5aDMuNTFWNDMuNTlIMTExLjEyVjI4LjUybC0uMzEuMzlBMzcuMTQsMzcuMTQsMCwwLDAsMTA5LjM0LDI1LjRaTTEyNCw0OC4xNGMwLC4zNSwwLC42OSwwLDEuMDgtNS4xMi40Mi05LjgyLjg1LTE0LDEuMzVsLS40Ny0zLjUxYzQuMDUtLjI3LDkuMjEtLjY5LDE0LjQ5LTEuMjMsMCwuNzMsMCwxLjM1LDAsMmE1NSw1NSwwLDAsMCw0Ljc0LTcuNTFsMywxLjYyYy0xLjc3LDMtMy4zMSw1LjQ3LTUuMiw4LjE3QzEyNS43Miw0OS4zNywxMjUsNDguNzksMTI0LDQ4LjE0Wm0tOC42OC0yNS44NmEzOS44MSwzOS44MSwwLDAsMS0yLjUsMy45M2g0LjU1bDIuMTktMy45M1ptLTEuNDIsMTEuMjFoMi41OFYyOS4xOGgtMi41OFptMCw3LjFoMi41OFYzNi4yN2gtMi41OFpNMTE5LDI5LjE4djQuMzFoMi41OFYyOS4xOFptMCwxMS40MWgyLjU4VjM2LjI3SDExOVpNMTI1LjQ1LDIwaDguMzdjLS40My0xLjI3LS44OS0yLjYyLTEuMzItMy43N2w0LjA5LS41Yy40NiwxLjM4LjkyLDIuODUsMS4zNSw0LjI3SDE0NlYyMy40SDEyNS40NVpNMTI5LDQ4LjFjMSwuMDgsMi4xMi4xMiwzLjEyLjEyLDEuMzUsMCwxLjg1LS41NCwxLjg1LTEuODV2LThoLTYuNzVWMjYuNTZoMTYuNjFWMzguMzVoLTYuMjR2OS4yMWMwLDIuNjYtMSw0LTMuNjYsNC4xMi0xLjE2LDAtMi43OC4wOC00LjE2LjA4QzEyOS41OCw1MC41MywxMjkuMzEsNDkuMjYsMTI5LDQ4LjFabTEuNzMtMTNoOS42VjI5LjgzaC05LjZaTTEzOSw0MS43OCwxNDIsNDAuMzVjMS42OSwyLjc4LDIuOTMsNSw0LjQ3LDcuNzlMMTQzLjMsNDkuOEMxNDIsNDcuMSwxNDAuNjgsNDQuNzEsMTM5LDQxLjc4WiIvPjxwYXRoIGQ9Ik0xNjAuNDUsMTcuNDR2NC43N2gtNVYxNy40NFptMCw5LjIyVjUyLjNoLTVWMjYuNjZaIi8+PHBhdGggZD0iTTE4MS41Miw0Mi43NWg1cTAsNC44OS0xLjMyLDYuODJhNi4xNiw2LjE2LDAsMCwxLTMuMzIsMi4zNywyMywyMywwLDAsMS02LjQxLjY4LDI0Ljc1LDI0Ljc1LDAsMCwxLTUuNDUtLjQ4LDguMjgsOC4yOCwwLDAsMS0zLjM4LTEuNTgsNy4yMiw3LjIyLDAsMCwxLTIuMjYtMy44OCwzMS4yMiwzMS4yMiwwLDAsMS0uNjYtNy4zOSwyNCwyNCwwLDAsMSwuODgtNy42Nyw3LjE2LDcuMTYsMCwwLDEsMy42My00LjEzcTIuMy0xLjE1LDcuMDgtMS4xNWExOSwxOSwwLDAsMSw2LjcxLjk0LDUuNzIsNS43MiwwLDAsMSwzLjMyLDMsMTMsMTMsMCwwLDEsLjc3LDUuMWgtNWE3LDcsMCwwLDAtLjUzLTMuMjcsMi44MywyLjgzLDAsMCwwLTEuNzQtMS4zLDEzLjIsMTMuMiwwLDAsMC0zLjcxLS4zOWMtMi41MywwLTQuMjEuNDMtNSwxLjMxcy0xLjIzLDMuNTEtMS4yMyw3LjgzcTAsNS44MiwxLjI2LDcuNTksMSwxLjQsNS42OCwxLjRjMi40MywwLDQtLjM1LDQuNjUtMVMxODEuNTIsNDUuMjQsMTgxLjUyLDQyLjc1WiIvPjxwYXRoIGQ9Ik0yMDAuMjUsMjYuMzRhMjQuMTMsMjQuMTMsMCwwLDEsNi40OS42Miw2LjY5LDYuNjksMCwwLDEsNC43OCw1LjEyLDI5Ljc1LDI5Ljc1LDAsMCwxLC41OSw2Ljg3cTAsNi0uODYsOC41NWE2LjQ2LDYuNDYsMCwwLDEtMy4zMSw0cS0yLjMzLDEuMDgtNy42MywxLjA4YTE5LjY5LDE5LjY5LDAsMCwxLTcuMTEtLjk0LDYuMzEsNi4zMSwwLDAsMS0yLjM5LTEuNjIsNy42NCw3LjY0LDAsMCwxLTEuNDQtMi43NSwzMC41LDMwLjUsMCwwLDEtLjc2LTguMjMsMzMuMjIsMzMuMjIsMCwwLDEsLjQ5LTYuNDEsOC4zOCw4LjM4LDAsMCwxLDEuNjEtMy43LDYuNDQsNi40NCwwLDAsMSwzLjM2LTJBMjQuNjEsMjQuNjEsMCwwLDEsMjAwLjI1LDI2LjM0Wm0uMDgsNC4wNXEtNC41LDAtNS40NywxLjUzdC0xLDcuMzJhNDIuNTQsNDIuNTQsMCwwLDAsLjI0LDUuMjYsNS45LDUuOSwwLDAsMCwuODYsMi42MnExLDEuNDYsNS41MiwxLjQ1LDMuOTIsMCw1LjA3LTEuMTVhNC44MSw0LjgxLDAsMCwwLDEuMDktMi42LDM3LjQzLDM3LjQzLDAsMCwwLC4zLTUuNTVxMC02LTEuMTItNy41MVEyMDQuNzYsMzAuNCwyMDAuMzMsMzAuMzlaIi8+PHBhdGggZD0iTTIxNS4zOSwyNi42Nmg1LjA1bC0uMTYsMi4xNmMxLjMxLTIuMTksNC0yLjQ4LDguMzEtMi40OHM3LDEuMSw4LjI5LDMuM3EuODgsMS41Ljg4LDUuNThWNTIuM2gtNVYzNi40MmExMC4zOSwxMC4zOSwwLDAsMC0uNTQtNC4xMywyLjc0LDIuNzQsMCwwLDAtMS42MS0xLjQsOS40OCw5LjQ4LDAsMCwwLTMuMTktLjQycS0zLjY3LDAtNS4zMSwxLjUzdC0xLjYzLDVWNTIuM2gtNS4wNVoiLz48cGF0aCBkPSJNMjY0LjQ4LDQyLjc1aDVjMCwzLjI2LS40Miw1LjUzLTEuMzIsNi44MmE2LjE2LDYuMTYsMCwwLDEtMy4zMiwyLjM3LDIzLDIzLDAsMCwxLTYuNDEuNjgsMjQuNzUsMjQuNzUsMCwwLDEtNS40NS0uNDgsOC4yOCw4LjI4LDAsMCwxLTMuMzgtMS41OCw3LjI5LDcuMjksMCwwLDEtMi4yNi0zLjg4LDMxLjIyLDMxLjIyLDAsMCwxLS42Ni03LjM5LDI0LDI0LDAsMCwxLC44OS03LjY3LDcuMTEsNy4xMSwwLDAsMSwzLjYyLTQuMTNxMi4yOS0xLjE1LDcuMDgtMS4xNWExOSwxOSwwLDAsMSw2LjcxLjk0LDUuNzIsNS43MiwwLDAsMSwzLjMyLDMsMTMsMTMsMCwwLDEsLjc3LDUuMWgtNWE3LjEsNy4xLDAsMCwwLS41NC0zLjI3LDIuODMsMi44MywwLDAsMC0xLjc0LTEuMywxMy4yLDEzLjIsMCwwLDAtMy43MS0uMzljLTIuNTMsMC00LjIxLjQzLTUsMS4zMXMtMS4yMywzLjUxLTEuMjMsNy44M3EwLDUuODIsMS4yNiw3LjU5Yy42NC45MywyLjU0LDEuNCw1LjY4LDEuNCwyLjQzLDAsNC0uMzUsNC42Ni0xUzI2NC40OCw0NS4yNCwyNjQuNDgsNDIuNzVaIi8+PHBhdGggZD0iTTI4My4yMSwyNi4zNGEyNC4xMywyNC4xMywwLDAsMSw2LjQ5LjYyLDYuNjksNi42OSwwLDAsMSw0Ljc4LDUuMTIsMjkuNzUsMjkuNzUsMCwwLDEsLjU5LDYuODdxMCw2LS44Niw4LjU1YTYuNDYsNi40NiwwLDAsMS0zLjMxLDRxLTIuMzIsMS4wOC03LjYzLDEuMDhhMTkuNjksMTkuNjksMCwwLDEtNy4xMS0uOTQsNi4zMSw2LjMxLDAsMCwxLTIuMzktMS42Miw3LjY0LDcuNjQsMCwwLDEtMS40NC0yLjc1LDMwLjYxLDMwLjYxLDAsMCwxLS43NS04LjIzLDMzLjM2LDMzLjM2LDAsMCwxLC40OC02LjQxLDguMzgsOC4zOCwwLDAsMSwxLjYxLTMuNyw2LjQ4LDYuNDgsMCwwLDEsMy4zNi0yQTI0LjYxLDI0LjYxLDAsMCwxLDI4My4yMSwyNi4zNFptLjA5LDQuMDVjLTMsMC00LjgzLjUxLTUuNDgsMS41M3MtMSwzLjUzLTEsNy4zMkE0Mi41NCw0Mi41NCwwLDAsMCwyNzcsNDQuNWE1LjksNS45LDAsMCwwLC44NiwyLjYycTEsMS40Niw1LjUyLDEuNDUsMy45MiwwLDUuMDctMS4xNWE0LjgxLDQuODEsMCwwLDAsMS4wOS0yLjYsMzcuMTMsMzcuMTMsMCwwLDAsLjMxLTUuNTVxMC02LTEuMTMtNy41MVEyODcuNzIsMzAuNCwyODMuMywzMC4zOVoiLz48cGF0aCBkPSJNMzA5LjE2LDI2LjM0YTI0LjEzLDI0LjEzLDAsMCwxLDYuNDkuNjIsNi42OSw2LjY5LDAsMCwxLDQuNzgsNS4xMkEyOS43NSwyOS43NSwwLDAsMSwzMjEsMzlxMCw2LS44Niw4LjU1YTYuNDYsNi40NiwwLDAsMS0zLjMxLDRxLTIuMzMsMS4wOC03LjYzLDEuMDhhMTkuNjksMTkuNjksMCwwLDEtNy4xMS0uOTQsNi4zMSw2LjMxLDAsMCwxLTIuMzktMS42Miw3LjgsNy44LDAsMCwxLTEuNDUtMi43NSwzMC42MSwzMC42MSwwLDAsMS0uNzUtOC4yMywzMi40NCwzMi40NCwwLDAsMSwuNDktNi40MSw4LjI2LDguMjYsMCwwLDEsMS42MS0zLjcsNi40NCw2LjQ0LDAsMCwxLDMuMzYtMkEyNC42MSwyNC42MSwwLDAsMSwzMDkuMTYsMjYuMzRabS4wOCw0LjA1cS00LjUsMC01LjQ3LDEuNTNjLS43LDEuMDktMSwzLjUzLTEsNy4zMkE0Mi41NCw0Mi41NCwwLDAsMCwzMDMsNDQuNWE1Ljc3LDUuNzcsMCwwLDAsLjg2LDIuNjJxMSwxLjQ2LDUuNTIsMS40NSwzLjkxLDAsNS4wNy0xLjE1YTQuODEsNC44MSwwLDAsMCwxLjA5LTIuNiwzNy40MywzNy40MywwLDAsMCwuMy01LjU1cTAtNi0xLjEyLTcuNTFRMzEzLjY3LDMwLjQsMzA5LjI0LDMwLjM5WiIvPjxwYXRoIGQ9Ik0zMjkuMzQsMTUuNjlWNTIuM2gtNVYxNS42OVoiLz48L3N2Zz4=">
+    </h2>
+    <div class="tab-wrapper">
+      <div class="tab-panel active" data-type="singleColor">单色图标</div>
+      <div class="tab-panel"  data-type="multipleColor">彩色图标</div>
+    </div>
+    <section class="tab-content single-color active" data-type="singleColor">
       <ul class="icon-list">
-        <li class="icon-item" title=" tongzhi-shi">
-          <span class="icon-wrapper bk-icon- tongzhi-shi"></span>
-          <span class="icon-text"> tongzhi-shi</span>
+        <li class="icon-item" title="codecc">
+          <span class="icon codecc-icon icon-codecc"></span>
+          <p class="icon-text">codecc</p>
         </li>
-        <li class="icon-item" title="anquan-shi">
-          <span class="icon-wrapper bk-icon-anquan-shi"></span>
-          <span class="icon-text">anquan-shi</span>
+        <li class="icon-item" title="notify">
+          <span class="icon codecc-icon icon-notify"></span>
+          <p class="icon-text">notify</p>
         </li>
-        <li class="icon-item" title="bangzhu-shi">
-          <span class="icon-wrapper bk-icon-bangzhu-shi"></span>
-          <span class="icon-text">bangzhu-shi</span>
+        <li class="icon-item" title="change">
+          <span class="icon codecc-icon icon-change"></span>
+          <p class="icon-text">change</p>
         </li>
-        <li class="icon-item" title="caozuojilu">
-          <span class="icon-wrapper bk-icon-caozuojilu"></span>
-          <span class="icon-text">caozuojilu</span>
+        <li class="icon-item" title="sort">
+          <span class="icon codecc-icon icon-sort"></span>
+          <p class="icon-text">sort</p>
         </li>
-        <li class="icon-item" title="chengxu">
-          <span class="icon-wrapper bk-icon-chengxu"></span>
-          <span class="icon-text">chengxu</span>
+        <li class="icon-item" title="pause">
+          <span class="icon codecc-icon icon-pause"></span>
+          <p class="icon-text">pause</p>
         </li>
-        <li class="icon-item" title="chuliren">
-          <span class="icon-wrapper bk-icon-chuliren"></span>
-          <span class="icon-text">chuliren</span>
+        <li class="icon-item" title="pipeline">
+          <span class="icon codecc-icon icon-pipeline"></span>
+          <p class="icon-text">pipeline</p>
         </li>
-        <li class="icon-item" title="cuowu-shi">
-          <span class="icon-wrapper bk-icon-cuowu-shi"></span>
-          <span class="icon-text">cuowu-shi</span>
+        <li class="icon-item" title="star-gray">
+          <span class="icon codecc-icon icon-star-gray"></span>
+          <p class="icon-text">star-gray</p>
         </li>
-        <li class="icon-item" title="cuowu">
-          <span class="icon-wrapper bk-icon-cuowu"></span>
-          <span class="icon-text">cuowu</span>
+        <li class="icon-item" title="repeat-rate">
+          <span class="icon codecc-icon icon-repeat-rate"></span>
+          <p class="icon-text">repeat-rate</p>
         </li>
-        <li class="icon-item" title="fengxianhanshu-shi">
-          <span class="icon-wrapper bk-icon-fengxianhanshu-shi"></span>
-          <span class="icon-text">fengxianhanshu-shi</span>
+        <li class="icon-item" title="codecc-record">
+          <span class="icon codecc-icon icon-codecc-record"></span>
+          <p class="icon-text">codecc-record</p>
         </li>
-        <li class="icon-item" title="fengxianwenjian-shi">
-          <span class="icon-wrapper bk-icon-fengxianwenjian-shi"></span>
-          <span class="icon-text">fengxianwenjian-shi</span>
+        <li class="icon-item" title="codecc-data-report">
+          <span class="icon codecc-icon icon-codecc-data-report"></span>
+          <p class="icon-text">codecc-data-report</p>
         </li>
-        <li class="icon-item" title="guolv">
-          <span class="icon-wrapper bk-icon-guolv"></span>
-          <span class="icon-text">guolv</span>
+        <li class="icon-item" title="setting">
+          <span class="icon codecc-icon icon-setting"></span>
+          <p class="icon-text">setting</p>
         </li>
-        <li class="icon-item" title="jia">
-          <span class="icon-wrapper bk-icon-jia"></span>
-          <span class="icon-text">jia</span>
+        <li class="icon-item" title="complexity">
+          <span class="icon codecc-icon icon-complexity"></span>
+          <p class="icon-text">complexity</p>
         </li>
-        <li class="icon-item" title="jian">
-          <span class="icon-wrapper bk-icon-jian"></span>
-          <span class="icon-text">jian</span>
+        <li class="icon-item" title="code-statistics">
+          <span class="icon codecc-icon icon-code-statistics"></span>
+          <p class="icon-text">code-statistics</p>
         </li>
-        <li class="icon-item" title="lingdang">
-          <span class="icon-wrapper bk-icon-lingdang"></span>
-          <span class="icon-text">lingdang</span>
+        <li class="icon-item" title="repeat-file">
+          <span class="icon codecc-icon icon-repeat-file"></span>
+          <p class="icon-text">repeat-file</p>
         </li>
-        <li class="icon-item" title="jiantou">
-          <span class="icon-wrapper bk-icon-jiantou"></span>
-          <span class="icon-text">jiantou</span>
+        <li class="icon-item" title="complex-fn">
+          <span class="icon codecc-icon icon-complex-fn"></span>
+          <p class="icon-text">complex-fn</p>
         </li>
-        <li class="icon-item" title="liushuixian">
-          <span class="icon-wrapper bk-icon-liushuixian"></span>
-          <span class="icon-text">liushuixian</span>
+        <li class="icon-item" title="norm">
+          <span class="icon codecc-icon icon-norm"></span>
+          <p class="icon-text">norm</p>
         </li>
-        <li class="icon-item" title="moren-shi">
-          <span class="icon-wrapper bk-icon-moren-shi"></span>
-          <span class="icon-text">moren-shi</span>
+        <li class="icon-item" title="defect">
+          <span class="icon codecc-icon icon-defect"></span>
+          <p class="icon-text">defect</p>
         </li>
-        <li class="icon-item" title="mulu">
-          <span class="icon-wrapper bk-icon-mulu"></span>
-          <span class="icon-text">mulu</span>
+        <li class="icon-item" title="loophole">
+          <span class="icon codecc-icon icon-loophole"></span>
+          <p class="icon-text">loophole</p>
         </li>
-        <li class="icon-item" title="paixu">
-          <span class="icon-wrapper bk-icon-paixu"></span>
-          <span class="icon-text">paixu</span>
+        <li class="icon-item" title="new">
+          <span class="icon codecc-icon icon-new"></span>
+          <p class="icon-text">new</p>
         </li>
-        <li class="icon-item" title="pingjuzhi-shi">
-          <span class="icon-wrapper bk-icon-pingjuzhi-shi"></span>
-          <span class="icon-text">pingjuzhi-shi</span>
+        <li class="icon-item" title="checkstyle">
+          <span class="icon codecc-icon icon-checkstyle"></span>
+          <p class="icon-text">checkstyle</p>
         </li>
-        <li class="icon-item" title="qushi">
-          <span class="icon-wrapper bk-icon-qushi"></span>
-          <span class="icon-text">qushi</span>
+        <li class="icon-item" title="coverity">
+          <span class="icon codecc-icon icon-coverity"></span>
+          <p class="icon-text">coverity</p>
         </li>
-        <li class="icon-item" title="sanjiao">
-          <span class="icon-wrapper bk-icon-sanjiao"></span>
-          <span class="icon-text">sanjiao</span>
+        <li class="icon-item" title="cpplint">
+          <span class="icon codecc-icon icon-cpplint"></span>
+          <p class="icon-text">cpplint</p>
         </li>
-        <li class="icon-item" title="shezhi">
-          <span class="icon-wrapper bk-icon-shezhi"></span>
-          <span class="icon-text">shezhi</span>
+        <li class="icon-item" title="goml">
+          <span class="icon codecc-icon icon-goml"></span>
+          <p class="icon-text">goml</p>
         </li>
-        <li class="icon-item" title="shijian-shi">
-          <span class="icon-wrapper bk-icon-shijian-shi"></span>
-          <span class="icon-text">shijian-shi</span>
+        <li class="icon-item" title="expression">
+          <span class="icon codecc-icon icon-expression"></span>
+          <p class="icon-text">expression</p>
         </li>
-        <li class="icon-item" title="shijian">
-          <span class="icon-wrapper bk-icon-shijian"></span>
-          <span class="icon-text">shijian</span>
+        <li class="icon-item" title="sys_api-selected">
+          <span class="icon codecc-icon icon-sys_api-selected"></span>
+          <p class="icon-text">sys_api-selected</p>
         </li>
-        <li class="icon-item" title="sousuo">
-          <span class="icon-wrapper bk-icon-sousuo"></span>
-          <span class="icon-text">sousuo</span>
+        <li class="icon-item" title="expression-selected">
+          <span class="icon codecc-icon icon-expression-selected"></span>
+          <p class="icon-text">expression-selected</p>
         </li>
-        <li class="icon-item" title="tishi-shi">
-          <span class="icon-wrapper bk-icon-tishi-shi"></span>
-          <span class="icon-text">tishi-shi</span>
+        <li class="icon-item" title="sys_api_selected">
+          <span class="icon codecc-icon icon-sys_api_selected"></span>
+          <p class="icon-text">sys_api_selected</p>
         </li>
-        <li class="icon-item" title="tishi">
-          <span class="icon-wrapper bk-icon-tishi"></span>
-          <span class="icon-text">tishi</span>
+        <li class="icon-item" title="security">
+          <span class="icon codecc-icon icon-security"></span>
+          <p class="icon-text">security</p>
         </li>
-        <li class="icon-item" title="tiaozhuanlianjie">
-          <span class="icon-wrapper bk-icon-tiaozhuanlianjie"></span>
-          <span class="icon-text">tiaozhuanlianjie</span>
+        <li class="icon-item" title="security-selected">
+          <span class="icon codecc-icon icon-security-selected"></span>
+          <p class="icon-text">security-selected</p>
         </li>
-        <li class="icon-item" title="weixian">
-          <span class="icon-wrapper bk-icon-weixian"></span>
-          <span class="icon-text">weixian</span>
+        <li class="icon-item" title="performance">
+          <span class="icon codecc-icon icon-performance"></span>
+          <p class="icon-text">performance</p>
         </li>
-        <li class="icon-item" title="weixian1-shi">
-          <span class="icon-wrapper bk-icon-weixian1-shi"></span>
-          <span class="icon-text">weixian1-shi</span>
+        <li class="icon-item" title="performance-selected">
+          <span class="icon codecc-icon icon-performance-selected"></span>
+          <p class="icon-text">performance-selected</p>
         </li>
-        <li class="icon-item" title="weixian1">
-          <span class="icon-wrapper bk-icon-weixian1"></span>
-          <span class="icon-text">weixian1</span>
+        <li class="icon-item" title="memory">
+          <span class="icon codecc-icon icon-memory"></span>
+          <p class="icon-text">memory</p>
         </li>
-        <li class="icon-item" title="wenjian">
-          <span class="icon-wrapper bk-icon-wenjian"></span>
-          <span class="icon-text">wenjian</span>
+        <li class="icon-item" title="compile">
+          <span class="icon codecc-icon icon-compile"></span>
+          <p class="icon-text">compile</p>
         </li>
-        <li class="icon-item" title="wenjianjia">
-          <span class="icon-wrapper bk-icon-wenjianjia"></span>
-          <span class="icon-text">wenjianjia</span>
+        <li class="icon-item" title="compile-selected">
+          <span class="icon codecc-icon icon-compile-selected"></span>
+          <p class="icon-text">compile-selected</p>
         </li>
-        <li class="icon-item" title="xiangshang-shi">
-          <span class="icon-wrapper bk-icon-xiangshang-shi"></span>
-          <span class="icon-text">xiangshang-shi</span>
+        <li class="icon-item" title="memory-selected">
+          <span class="icon codecc-icon icon-memory-selected"></span>
+          <p class="icon-text">memory-selected</p>
         </li>
-        <li class="icon-item" title="xinxi">
-          <span class="icon-wrapper bk-icon-xinxi"></span>
-          <span class="icon-text">xinxi</span>
+        <li class="icon-item" title="sys_api">
+          <span class="icon codecc-icon icon-sys_api"></span>
+          <p class="icon-text">sys_api</p>
         </li>
-        <li class="icon-item" title="zhengque-shi">
-          <span class="icon-wrapper bk-icon-zhengque-shi"></span>
-          <span class="icon-text">zhengque-shi</span>
+        <li class="icon-item" title="sys_api-open">
+          <span class="icon codecc-icon icon-sys_api-open"></span>
+          <p class="icon-text">sys_api-open</p>
         </li>
-        <li class="icon-item" title="zhengque">
-          <span class="icon-wrapper bk-icon-zhengque"></span>
-          <span class="icon-text">zhengque</span>
+        <li class="icon-item" title="specs-copy-12">
+          <span class="icon codecc-icon icon-specs-copy-12"></span>
+          <p class="icon-text">specs-copy-12</p>
+        </li>
+        <li class="icon-item" title="specs-copy-13">
+          <span class="icon codecc-icon icon-specs-copy-13"></span>
+          <p class="icon-text">specs-copy-13</p>
+        </li>
+        <li class="icon-item" title="headerfile">
+          <span class="icon codecc-icon icon-headerfile"></span>
+          <p class="icon-text">headerfile</p>
+        </li>
+        <li class="icon-item" title="headerfile-selected">
+          <span class="icon codecc-icon icon-headerfile-selected"></span>
+          <p class="icon-text">headerfile-selected</p>
+        </li>
+        <li class="icon-item" title="logical">
+          <span class="icon codecc-icon icon-logical"></span>
+          <p class="icon-text">logical</p>
+        </li>
+        <li class="icon-item" title="logical-selected">
+          <span class="icon codecc-icon icon-logical-selected"></span>
+          <p class="icon-text">logical-selected</p>
+        </li>
+        <li class="icon-item" title="bestpractices">
+          <span class="icon codecc-icon icon-bestpractices"></span>
+          <p class="icon-text">bestpractices</p>
+        </li>
+        <li class="icon-item" title="bestpractices-selected">
+          <span class="icon codecc-icon icon-bestpractices-selected"></span>
+          <p class="icon-text">bestpractices-selected</p>
+        </li>
+        <li class="icon-item" title="stylistic">
+          <span class="icon codecc-icon icon-stylistic"></span>
+          <p class="icon-text">stylistic</p>
+        </li>
+        <li class="icon-item" title="stylistic-selected">
+          <span class="icon codecc-icon icon-stylistic-selected"></span>
+          <p class="icon-text">stylistic-selected</p>
+        </li>
+        <li class="icon-item" title="variable">
+          <span class="icon codecc-icon icon-variable"></span>
+          <p class="icon-text">variable</p>
+        </li>
+        <li class="icon-item" title="variable-selected">
+          <span class="icon codecc-icon icon-variable-selected"></span>
+          <p class="icon-text">variable-selected</p>
+        </li>
+        <li class="icon-item" title="specs-copy-24">
+          <span class="icon codecc-icon icon-specs-copy-24"></span>
+          <p class="icon-text">specs-copy-24</p>
+        </li>
+        <li class="icon-item" title="specs-copy-25">
+          <span class="icon codecc-icon icon-specs-copy-25"></span>
+          <p class="icon-text">specs-copy-25</p>
+        </li>
+        <li class="icon-item" title="specs-copy-26">
+          <span class="icon codecc-icon icon-specs-copy-26"></span>
+          <p class="icon-text">specs-copy-26</p>
+        </li>
+        <li class="icon-item" title="specs-copy-27">
+          <span class="icon codecc-icon icon-specs-copy-27"></span>
+          <p class="icon-text">specs-copy-27</p>
+        </li>
+        <li class="icon-item" title="specs-copy-28">
+          <span class="icon codecc-icon icon-specs-copy-28"></span>
+          <p class="icon-text">specs-copy-28</p>
+        </li>
+        <li class="icon-item" title="specs-copy-29">
+          <span class="icon codecc-icon icon-specs-copy-29"></span>
+          <p class="icon-text">specs-copy-29</p>
+        </li>
+        <li class="icon-item" title="specs-copy-30">
+          <span class="icon codecc-icon icon-specs-copy-30"></span>
+          <p class="icon-text">specs-copy-30</p>
+        </li>
+        <li class="icon-item" title="specs-copy-31">
+          <span class="icon codecc-icon icon-specs-copy-31"></span>
+          <p class="icon-text">specs-copy-31</p>
+        </li>
+        <li class="icon-item" title="specs-copy-32">
+          <span class="icon codecc-icon icon-specs-copy-32"></span>
+          <p class="icon-text">specs-copy-32</p>
+        </li>
+        <li class="icon-item" title="findbugs">
+          <span class="icon codecc-icon icon-findbugs"></span>
+          <p class="icon-text">findbugs</p>
+        </li>
+        <li class="icon-item" title="findbugs-selected">
+          <span class="icon codecc-icon icon-findbugs-selected"></span>
+          <p class="icon-text">findbugs-selected</p>
+        </li>
+        <li class="icon-item" title="node">
+          <span class="icon codecc-icon icon-node"></span>
+          <p class="icon-text">node</p>
+        </li>
+        <li class="icon-item" title="node-selected">
+          <span class="icon codecc-icon icon-node-selected"></span>
+          <p class="icon-text">node-selected</p>
+        </li>
+        <li class="icon-item" title="es6">
+          <span class="icon codecc-icon icon-es6"></span>
+          <p class="icon-text">es6</p>
+        </li>
+        <li class="icon-item" title="es6-selected">
+          <span class="icon codecc-icon icon-es6-selected"></span>
+          <p class="icon-text">es6-selected</p>
+        </li>
+        <li class="icon-item" title="strictmode">
+          <span class="icon codecc-icon icon-strictmode"></span>
+          <p class="icon-text">strictmode</p>
+        </li>
+        <li class="icon-item" title="strictmode-selected">
+          <span class="icon codecc-icon icon-strictmode-selected"></span>
+          <p class="icon-text">strictmode-selected</p>
+        </li>
+        <li class="icon-item" title="specs-copy-41">
+          <span class="icon codecc-icon icon-specs-copy-41"></span>
+          <p class="icon-text">specs-copy-41</p>
+        </li>
+        <li class="icon-item" title="specs-copy-42">
+          <span class="icon codecc-icon icon-specs-copy-42"></span>
+          <p class="icon-text">specs-copy-42</p>
+        </li>
+        <li class="icon-item" title="specs-copy-43">
+          <span class="icon codecc-icon icon-specs-copy-43"></span>
+          <p class="icon-text">specs-copy-43</p>
+        </li>
+        <li class="icon-item" title="specs-copy-44">
+          <span class="icon codecc-icon icon-specs-copy-44"></span>
+          <p class="icon-text">specs-copy-44</p>
+        </li>
+        <li class="icon-item" title="specs-copy-45">
+          <span class="icon codecc-icon icon-specs-copy-45"></span>
+          <p class="icon-text">specs-copy-45</p>
+        </li>
+        <li class="icon-item" title="specs-copy-46">
+          <span class="icon codecc-icon icon-specs-copy-46"></span>
+          <p class="icon-text">specs-copy-46</p>
+        </li>
+        <li class="icon-item" title="specs-copy-47">
+          <span class="icon codecc-icon icon-specs-copy-47"></span>
+          <p class="icon-text">specs-copy-47</p>
+        </li>
+        <li class="icon-item" title="default">
+          <span class="icon codecc-icon icon-default"></span>
+          <p class="icon-text">default</p>
+        </li>
+        <li class="icon-item" title="default-selected">
+          <span class="icon codecc-icon icon-default-selected"></span>
+          <p class="icon-text">default-selected</p>
+        </li>
+        <li class="icon-item" title="pic-label-new">
+          <span class="icon codecc-icon icon-pic-label-new"></span>
+          <p class="icon-text">pic-label-new</p>
+        </li>
+        <li class="icon-item" title="edit">
+          <span class="icon codecc-icon icon-edit"></span>
+          <p class="icon-text">edit</p>
+        </li>
+        <li class="icon-item" title="record-2">
+          <span class="icon codecc-icon icon-record-2"></span>
+          <p class="icon-text">record-2</p>
+        </li>
+        <li class="icon-item" title="handler">
+          <span class="icon codecc-icon icon-handler"></span>
+          <p class="icon-text">handler</p>
+        </li>
+        <li class="icon-item" title="risky-file">
+          <span class="icon codecc-icon icon-risky-file"></span>
+          <p class="icon-text">risky-file</p>
+        </li>
+        <li class="icon-item" title="filter">
+          <span class="icon codecc-icon icon-filter"></span>
+          <p class="icon-text">filter</p>
+        </li>
+        <li class="icon-item" title="risky-function">
+          <span class="icon codecc-icon icon-risky-function"></span>
+          <p class="icon-text">risky-function</p>
+        </li>
+        <li class="icon-item" title="pipeline-2">
+          <span class="icon codecc-icon icon-pipeline-2"></span>
+          <p class="icon-text">pipeline-2</p>
+        </li>
+        <li class="icon-item" title="pie">
+          <span class="icon codecc-icon icon-pie"></span>
+          <p class="icon-text">pie</p>
+        </li>
+        <li class="icon-item" title="trend">
+          <span class="icon codecc-icon icon-trend"></span>
+          <p class="icon-text">trend</p>
+        </li>
+        <li class="icon-item" title="tips">
+          <span class="icon codecc-icon icon-tips"></span>
+          <p class="icon-text">tips</p>
+        </li>
+        <li class="icon-item" title="danger">
+          <span class="icon codecc-icon icon-danger"></span>
+          <p class="icon-text">danger</p>
+        </li>
+        <li class="icon-item" title="empty">
+          <span class="icon codecc-icon icon-empty"></span>
+          <p class="icon-text">empty</p>
+        </li>
+        <li class="icon-item" title="handler-2">
+          <span class="icon codecc-icon icon-handler-2"></span>
+          <p class="icon-text">handler-2</p>
+        </li>
+        <li class="icon-item" title="link">
+          <span class="icon codecc-icon icon-link"></span>
+          <p class="icon-text">link</p>
+        </li>
+        <li class="icon-item" title="manual-trigger">
+          <span class="icon codecc-icon icon-manual-trigger"></span>
+          <p class="icon-text">manual-trigger</p>
+        </li>
+        <li class="icon-item" title="refresh-2">
+          <span class="icon codecc-icon icon-refresh-2"></span>
+          <p class="icon-text">refresh-2</p>
+        </li>
+        <li class="icon-item" title="log-view">
+          <span class="icon codecc-icon icon-log-view"></span>
+          <p class="icon-text">log-view</p>
+        </li>
+        <li class="icon-item" title="top-nail">
+          <span class="icon codecc-icon icon-top-nail"></span>
+          <p class="icon-text">top-nail</p>
+        </li>
+        <li class="icon-item" title="filter-2">
+          <span class="icon codecc-icon icon-filter-2"></span>
+          <p class="icon-text">filter-2</p>
+        </li>
+        <li class="icon-item" title="default-mark">
+          <span class="icon codecc-icon icon-default-mark"></span>
+          <p class="icon-text">default-mark</p>
+        </li>
+        <li class="icon-item" title="codecc-arrow">
+          <span class="icon codecc-icon icon-codecc-arrow"></span>
+          <p class="icon-text">codecc-arrow</p>
+        </li>
+        <li class="icon-item" title="user-fill">
+          <span class="icon codecc-icon icon-user-fill"></span>
+          <p class="icon-text">user-fill</p>
+        </li>
+        <li class="icon-item" title="marked">
+          <span class="icon codecc-icon icon-marked"></span>
+          <p class="icon-text">marked</p>
+        </li>
+        <li class="icon-item" title="creator">
+          <span class="icon codecc-icon icon-creator"></span>
+          <p class="icon-text">creator</p>
+        </li>
+        <li class="icon-item" title="checker">
+          <span class="icon codecc-icon icon-checker"></span>
+          <p class="icon-text">checker</p>
+        </li>
+        <li class="icon-item" title="ignore">
+          <span class="icon codecc-icon icon-ignore"></span>
+          <p class="icon-text">ignore</p>
+        </li>
+        <li class="icon-item" title="comment">
+          <span class="icon codecc-icon icon-comment"></span>
+          <p class="icon-text">comment</p>
+        </li>
+        <li class="icon-item" title="commenter">
+          <span class="icon codecc-icon icon-commenter"></span>
+          <p class="icon-text">commenter</p>
+        </li>
+        <li class="icon-item" title="time3">
+          <span class="icon codecc-icon icon-time3"></span>
+          <p class="icon-text">time3</p>
+        </li>
+        <li class="icon-item" title="mark">
+          <span class="icon codecc-icon icon-mark"></span>
+          <p class="icon-text">mark</p>
+        </li>
+        <li class="icon-item" title="time">
+          <span class="icon codecc-icon icon-time"></span>
+          <p class="icon-text">time</p>
         </li>
       </ul>
+      <h3 class="describe-title">为什么使用</h3>
+      <ul class="use-describe">
+        <li>弹性，在网页或者 app 上，展示字体是很便捷的。用字体图标可以很方便的改变 icon 的颜色，或者加入一些其他的效果</li>
+        <li>可缩放，可以很方便的改变图标的大小</li>
+        <li>矢量，字体图标是矢量的并且具有独立的分辨率，不管在高分辨率还是低分辨率，不管是在网页还是手机端，都具有很好的展示效果，不会出现锯齿或者马赛克模糊</li>
+        <li>节省加载时间，字体图标很小，每个小图标只有几 kb，大大节省了加载时间</li>
+      </ul>
+      <h3 class="describe-title">如何使用</h3>
+      <ul class="use-describe">
+        <li>将整个目录复制到您的项目里</li>
+        <li>引入 style.css</li>
+        <li>挑选相应图标并获取类名，如 .bk-icon .icon-demo</li>
+      </ul>
     </section>
-
-    <h2>为什么使用</h2>
-    <section class="section">
-      <p>- 弹性，在网页或者 app 上，展示字体是很便捷的。用 字体图标 可以很方便的改变 icon 的颜色，或者加入一些其他的效果</p>
-      <p>- 可缩放，可以很方便的改变图标的大小</p>
-      <p>- 矢量，字体图标 是矢量的并且具有独立的分辨率，不管在高分辨率还是低分辨率，不管是在网页还是手机端，都具有很好的展示效果，不会出现锯齿或者马赛克模糊</p>
-      <p>- 节省加载时间，字体图标 很小，每个小图标只有几 kb，大大节省了加载时间</p>
-    </section>
-
-    <h2>如何使用</h2>
-    <section class="section">
-      <p>- 将整个目录复制到您的项目里</p>
-      <p>- 引入style.css</p>
-      <p>- 挑选相应图标并获取类名，如.bk-icon .icon-demo</p>
+    <section class="tab-content multiple-color"  data-type="multipleColor">
+      <ul class="icon-list">
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-codecc"></use>
+          </svg>
+          <p class="icon-text">codecc</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-notify"></use>
+          </svg>
+          <p class="icon-text">notify</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-change"></use>
+          </svg>
+          <p class="icon-text">change</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-sort"></use>
+          </svg>
+          <p class="icon-text">sort</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-pause"></use>
+          </svg>
+          <p class="icon-text">pause</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-pipeline"></use>
+          </svg>
+          <p class="icon-text">pipeline</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-star-gray"></use>
+          </svg>
+          <p class="icon-text">star-gray</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-repeat-rate"></use>
+          </svg>
+          <p class="icon-text">repeat-rate</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-codecc-record"></use>
+          </svg>
+          <p class="icon-text">codecc-record</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-codecc-data-report"></use>
+          </svg>
+          <p class="icon-text">codecc-data-report</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-setting"></use>
+          </svg>
+          <p class="icon-text">setting</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-complexity"></use>
+          </svg>
+          <p class="icon-text">complexity</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-code-statistics"></use>
+          </svg>
+          <p class="icon-text">code-statistics</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-repeat-file"></use>
+          </svg>
+          <p class="icon-text">repeat-file</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-complex-fn"></use>
+          </svg>
+          <p class="icon-text">complex-fn</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-norm"></use>
+          </svg>
+          <p class="icon-text">norm</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-defect"></use>
+          </svg>
+          <p class="icon-text">defect</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-loophole"></use>
+          </svg>
+          <p class="icon-text">loophole</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-new"></use>
+          </svg>
+          <p class="icon-text">new</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-checkstyle"></use>
+          </svg>
+          <p class="icon-text">checkstyle</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-coverity"></use>
+          </svg>
+          <p class="icon-text">coverity</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-cpplint"></use>
+          </svg>
+          <p class="icon-text">cpplint</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-goml"></use>
+          </svg>
+          <p class="icon-text">goml</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-expression"></use>
+          </svg>
+          <p class="icon-text">expression</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-sys_api-selected"></use>
+          </svg>
+          <p class="icon-text">sys_api-selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-expression-selected"></use>
+          </svg>
+          <p class="icon-text">expression-selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-sys_api_selected"></use>
+          </svg>
+          <p class="icon-text">sys_api_selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-security"></use>
+          </svg>
+          <p class="icon-text">security</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-security-selected"></use>
+          </svg>
+          <p class="icon-text">security-selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-performance"></use>
+          </svg>
+          <p class="icon-text">performance</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-performance-selected"></use>
+          </svg>
+          <p class="icon-text">performance-selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-memory"></use>
+          </svg>
+          <p class="icon-text">memory</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-compile"></use>
+          </svg>
+          <p class="icon-text">compile</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-compile-selected"></use>
+          </svg>
+          <p class="icon-text">compile-selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-memory-selected"></use>
+          </svg>
+          <p class="icon-text">memory-selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-sys_api"></use>
+          </svg>
+          <p class="icon-text">sys_api</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-sys_api-open"></use>
+          </svg>
+          <p class="icon-text">sys_api-open</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-12"></use>
+          </svg>
+          <p class="icon-text">specs-copy-12</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-13"></use>
+          </svg>
+          <p class="icon-text">specs-copy-13</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-headerfile"></use>
+          </svg>
+          <p class="icon-text">headerfile</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-headerfile-selected"></use>
+          </svg>
+          <p class="icon-text">headerfile-selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-logical"></use>
+          </svg>
+          <p class="icon-text">logical</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-logical-selected"></use>
+          </svg>
+          <p class="icon-text">logical-selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-bestpractices"></use>
+          </svg>
+          <p class="icon-text">bestpractices</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-bestpractices-selected"></use>
+          </svg>
+          <p class="icon-text">bestpractices-selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-stylistic"></use>
+          </svg>
+          <p class="icon-text">stylistic</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-stylistic-selected"></use>
+          </svg>
+          <p class="icon-text">stylistic-selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-variable"></use>
+          </svg>
+          <p class="icon-text">variable</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-variable-selected"></use>
+          </svg>
+          <p class="icon-text">variable-selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-24"></use>
+          </svg>
+          <p class="icon-text">specs-copy-24</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-25"></use>
+          </svg>
+          <p class="icon-text">specs-copy-25</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-26"></use>
+          </svg>
+          <p class="icon-text">specs-copy-26</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-27"></use>
+          </svg>
+          <p class="icon-text">specs-copy-27</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-28"></use>
+          </svg>
+          <p class="icon-text">specs-copy-28</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-29"></use>
+          </svg>
+          <p class="icon-text">specs-copy-29</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-30"></use>
+          </svg>
+          <p class="icon-text">specs-copy-30</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-31"></use>
+          </svg>
+          <p class="icon-text">specs-copy-31</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-32"></use>
+          </svg>
+          <p class="icon-text">specs-copy-32</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-findbugs"></use>
+          </svg>
+          <p class="icon-text">findbugs</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-findbugs-selected"></use>
+          </svg>
+          <p class="icon-text">findbugs-selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-node"></use>
+          </svg>
+          <p class="icon-text">node</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-node-selected"></use>
+          </svg>
+          <p class="icon-text">node-selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-es6"></use>
+          </svg>
+          <p class="icon-text">es6</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-es6-selected"></use>
+          </svg>
+          <p class="icon-text">es6-selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-strictmode"></use>
+          </svg>
+          <p class="icon-text">strictmode</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-strictmode-selected"></use>
+          </svg>
+          <p class="icon-text">strictmode-selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-41"></use>
+          </svg>
+          <p class="icon-text">specs-copy-41</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-42"></use>
+          </svg>
+          <p class="icon-text">specs-copy-42</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-43"></use>
+          </svg>
+          <p class="icon-text">specs-copy-43</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-44"></use>
+          </svg>
+          <p class="icon-text">specs-copy-44</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-45"></use>
+          </svg>
+          <p class="icon-text">specs-copy-45</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-46"></use>
+          </svg>
+          <p class="icon-text">specs-copy-46</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-specs-copy-47"></use>
+          </svg>
+          <p class="icon-text">specs-copy-47</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-default"></use>
+          </svg>
+          <p class="icon-text">default</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-default-selected"></use>
+          </svg>
+          <p class="icon-text">default-selected</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-pic-label-new"></use>
+          </svg>
+          <p class="icon-text">pic-label-new</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-edit"></use>
+          </svg>
+          <p class="icon-text">edit</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-record-2"></use>
+          </svg>
+          <p class="icon-text">record-2</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-handler"></use>
+          </svg>
+          <p class="icon-text">handler</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-risky-file"></use>
+          </svg>
+          <p class="icon-text">risky-file</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-filter"></use>
+          </svg>
+          <p class="icon-text">filter</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-risky-function"></use>
+          </svg>
+          <p class="icon-text">risky-function</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-pipeline-2"></use>
+          </svg>
+          <p class="icon-text">pipeline-2</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-pie"></use>
+          </svg>
+          <p class="icon-text">pie</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-trend"></use>
+          </svg>
+          <p class="icon-text">trend</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-tips"></use>
+          </svg>
+          <p class="icon-text">tips</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-danger"></use>
+          </svg>
+          <p class="icon-text">danger</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-empty"></use>
+          </svg>
+          <p class="icon-text">empty</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-handler-2"></use>
+          </svg>
+          <p class="icon-text">handler-2</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-link"></use>
+          </svg>
+          <p class="icon-text">link</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-manual-trigger"></use>
+          </svg>
+          <p class="icon-text">manual-trigger</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-refresh-2"></use>
+          </svg>
+          <p class="icon-text">refresh-2</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-log-view"></use>
+          </svg>
+          <p class="icon-text">log-view</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-top-nail"></use>
+          </svg>
+          <p class="icon-text">top-nail</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-filter-2"></use>
+          </svg>
+          <p class="icon-text">filter-2</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-default-mark"></use>
+          </svg>
+          <p class="icon-text">default-mark</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-codecc-arrow"></use>
+          </svg>
+          <p class="icon-text">codecc-arrow</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-user-fill"></use>
+          </svg>
+          <p class="icon-text">user-fill</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-marked"></use>
+          </svg>
+          <p class="icon-text">marked</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-creator"></use>
+          </svg>
+          <p class="icon-text">creator</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-checker"></use>
+          </svg>
+          <p class="icon-text">checker</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-ignore"></use>
+          </svg>
+          <p class="icon-text">ignore</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-comment"></use>
+          </svg>
+          <p class="icon-text">comment</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-commenter"></use>
+          </svg>
+          <p class="icon-text">commenter</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-time3"></use>
+          </svg>
+          <p class="icon-text">time3</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-mark"></use>
+          </svg>
+          <p class="icon-text">mark</p>
+        </li>
+        <li class="colorful-icon">
+          <svg class="icon svg-icon">
+            <use xlink:href="#icon-time"></use>
+          </svg>
+          <p class="icon-text">time</p>
+        </li>
+      </ul>
+      <h3 class="describe-title">为什么使用</h3>
+      <ul class="use-describe">
+          <li>支持彩色图标</li>
+          <li>跨 SVG 使用，使用 use 可调用文档中加载的所有 SVG 图标 </li>
+      </ul>
+      <h3 class="describe-title">如何使用</h3>
+      <ul class="use-describe">
+        <li>将下载的资源文件中 iconcool.js 文件外部资源通过 script 标签引入</li>
+        <li>在 html 模板文件中挑选对应的对应图标的名称使用，例如：
+          <pre>
+    &lt;svg aria-hidden="true"&gt;
+      &lt;use xlink:href="#icon-xxx"&gt;&lt;/use&gt;
+    &lt;/svg&gt;
+          </pre>
+        </li>
+      </ul>
+      </section>
     </section>
   </div>
+  <script>
+    document.addEventListener('click', function (e) {
+      if (event.target.classList.contains('tab-panel')) {
+        const type = event.target.dataset.type
+        const tabPanels = document.querySelectorAll('.tab-panel')
+        const tabContents = document.querySelectorAll('.tab-content')
+
+        tabPanels.forEach(function(item) {
+          item.classList.remove('active')
+        })
+
+        e.target.classList.add('active')
+        
+        tabContents.forEach(function (item) {
+          const contentType = item.dataset.type
+          if (contentType === type) {
+            item.classList.add('active')
+          } else {
+            item.classList.remove('active')
+          }
+        })
+      }
+      
+    })
+  </script>
 </body>
 </html>

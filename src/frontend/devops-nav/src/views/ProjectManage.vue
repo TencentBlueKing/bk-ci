@@ -94,12 +94,6 @@
                         </template>
                     </bk-table-column>
                     <bk-table-column
-                        label="关联CC业务"
-                        prop="ccAppName"
-                        :formatter="(row, column, cellValue, index) => cellValue || '--'"
-                    >
-                    </bk-table-column>
-                    <bk-table-column
                         :label="$t('projectDesc')"
                         prop="description"
                     />

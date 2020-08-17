@@ -27,6 +27,9 @@
 package com.tencent.devops.dockerhost.dispatch
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.dispatch.pojo.ContainerInfo
@@ -94,6 +97,23 @@ class DockerHostDebugResourceApi : AbstractBuildResourceApi() {
                 throw RuntimeException("DockerHostDebugResourceApi $path fail")
             }
             return objectMapper.readValue(responseContent)
+        }
+    }
+
+    fun getDockerJarLength(): Long? {
+        val path = "/dispatch/gw/build/docker.jar"
+        val request = buildHeader(path)
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val contentLength = response.header("Content-Length")?.toLong()
+            if (!response.isSuccessful) {
+                logger.error("DockerHostBuildResourceApi $path fail. ${response.code()}")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
+                    errorType = ErrorType.SYSTEM,
+                    errorMsg = "DockerHostBuildResourceApi $path fail")
+            }
+            return contentLength
         }
     }
 }

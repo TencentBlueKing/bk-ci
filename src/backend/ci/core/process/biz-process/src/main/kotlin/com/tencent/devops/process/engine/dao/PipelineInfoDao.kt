@@ -190,6 +190,15 @@ class PipelineInfoDao {
         }
     }
 
+    fun listPipelineInfoByProject(dslContext: DSLContext, projectId: String, limit: Int, offset: Int): Result<TPipelineInfoRecord>? {
+        return with(T_PIPELINE_INFO) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(DELETE.eq(false)).limit(limit!!).offset(offset!!)
+                .fetch()
+        }
+    }
+
     fun listPipelineInfoByProject(dslContext: DSLContext, projectId: String): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
             dslContext.selectFrom(this)
