@@ -25,7 +25,6 @@
  */
 package com.tencent.devops.monitoring.services
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
 import com.tencent.devops.monitoring.pojo.DispatchStatus
@@ -36,8 +35,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.jvm.javaField
+import java.util.Random
 
 @Service
 @RefreshScope
@@ -102,14 +100,19 @@ class StatusReportService @Autowired constructor(
 }
 
 fun main(args: Array<String>) {
-    val dispatchStatus = DispatchStatus("1", "1", "1", "1", "1", 2, ChannelCode.BS, 1, 2, "1", "1", "1")
-    dispatchStatus::class.declaredMemberProperties.forEach {
-        println("=========================================")
-        println(it.name)
-        println(it.annotations) // 这里居然是空的?
-        println(it.javaField?.annotations?.asSequence()?.toList())
-        println(it.javaField?.isAnnotationPresent(InfluxTag::class.java))
-        println(it.javaField?.isAnnotationPresent(InfluxTag::class.java) == true)
-//      println(it.get(dispatchStatus))
+    //insert DispatchStatus_success_rat_count,buildType='.pcg.sumeru' devcloud_failed_count=3i,devcloud_start_count=10i,devcloud_stop_count=4i,devcloud_success_count=5i,devcloud_success_rat=0.4,devcloud_total_count=2i
+    val random = Random()
+    for (type in listOf(".devcloud.public", ".pcg.sumeru", ".gitci.public", ".macos")) {
+        var startTime = System.currentTimeMillis() - 100 * 5 * 60 * 1000
+        for (i in 1..100) {
+            val template =
+                "insert DispatchStatus_success_rat_count,buildType=$type devcloud_failed_count=3i,devcloud_start_count=${3 + random.nextInt(
+                    3
+                )}i,devcloud_stop_count=" +
+                    "${3 + random.nextInt(3)}i,devcloud_success_count=2i,devcloud_success_rat=0.4,devcloud_total_count=5i ${startTime}000000"
+            println(template)
+
+            startTime += 5 * 60 * 1000
+        }
     }
 }
