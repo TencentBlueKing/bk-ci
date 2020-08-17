@@ -35,7 +35,7 @@ class MonitorNotifyJob @Autowired constructor(
         归档报告
         公共构建机准备成功率
         登录成功率*/
-        codecc(1597131600000, 1597656000000)
+        codecc(0, 1597664799999)
     }
 
     fun codecc(startTime: Long, endTime: Long) {
