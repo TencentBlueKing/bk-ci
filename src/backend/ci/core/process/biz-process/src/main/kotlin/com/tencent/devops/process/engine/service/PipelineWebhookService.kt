@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.process.tables.records.TPipelineWebhookRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResDao
@@ -70,11 +71,17 @@ class PipelineWebhookService @Autowired constructor(
     private val pipelineResDao: PipelineResDao,
     private val objectMapper: ObjectMapper,
     private val client: Client,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val redisOperation: RedisOperation
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
     private val executor = Executors.newFixedThreadPool(5)
+
+    companion object {
+        // 排除已经对比过的projectName的redis key
+        private val WEBHOOK_PROJECTNAME_EXCLUDE_KEY = "webhook_projectname_exclude"
+    }
 
     fun saveWebhook(
         pipelineWebhook: PipelineWebhook,
@@ -254,21 +261,23 @@ class PipelineWebhookService @Autowired constructor(
     }
 
     fun getWebhookPipelines(name: String, type: String): Set<String> {
+        val projectName = getProjectName(name)
         val pipelineWebhooks = pipelineWebhookDao.getByProjectNameAndType(
             dslContext = dslContext,
-            projectName = getProjectName(name),
+            projectName = projectName,
             repositoryType = getWebhookScmType(type).name
         ) ?: setOf<TPipelineWebhookRecord>()
         val dbPipelineIds = pipelineWebhooks.map { it.pipelineId }.toSet()
         val redisPipelineIds = webhookRedisUtils.getWebhookPipelines(name, type, ::getExistWebhookPipelineByType)
         val isEquals = comparePipelineWebhooks(dbPipelineIds = dbPipelineIds, redisPipelineIds = redisPipelineIds)
-        // 如果db与redis不同，则以redis为主,并异步刷新redis和db
-        if (!isEquals) {
-            logger.warn("db and redis data are not the same for pipeline webhook, name:$name, type:$type, db:$dbPipelineIds, redis:$redisPipelineIds")
+        val isExclude = redisOperation.isMember(WEBHOOK_PROJECTNAME_EXCLUDE_KEY, projectName)
+        // 如果redis与db数据不相等，并且没有被排除调，则以redis为主,并刷新数据库中的值
+        if (!isEquals && !isExclude) {
             refresh(
-                projectName = getProjectName(name),
+                projectName = projectName,
                 type = type,
-                pipelineIds = redisPipelineIds
+                dbPipelineIds = dbPipelineIds,
+                redisPipelineIds = redisPipelineIds
             )
             return redisPipelineIds
         }
@@ -278,31 +287,35 @@ class PipelineWebhookService @Autowired constructor(
     fun refresh(
         projectName: String,
         type: String,
-        pipelineIds: Set<String>
+        dbPipelineIds: Set<String>,
+        redisPipelineIds: Set<String>
     ) {
         executor.execute {
             try {
-                logger.info("current thread name: ${Thread.currentThread().name}")
-                refreshDB(
-                    projectName = projectName,
-                    type = type,
-                    pipelineIds = pipelineIds
-                )
-                webhookRedisUtils.refreshRedis(projectName = projectName, type = type)
+                logger.info("webhook refresh db, projectName:$projectName, type: $type, dbPipelineIds:$dbPipelineIds, redisPipelineIds:$redisPipelineIds")
+                val modifyPipelineIds = mutableListOf<String>()
+                redisPipelineIds.forEach { pipelineId ->
+                    if (doUpdateProjectNameAndTaskId(pipelineId)) {
+                        modifyPipelineIds.add(pipelineId)
+                    }
+                }
+                logger.info("webhook refresh db, projectName:$projectName, type: $type,modifyPipelineIds:$modifyPipelineIds")
+                val remainPipelines = redisPipelineIds.minus(modifyPipelineIds)
+                if (!comparePipelineWebhooks(
+                        dbPipelineIds = dbPipelineIds,
+                        redisPipelineIds = remainPipelines
+                    )
+                ) {
+                    logger.warn(
+                        "db and redis data are not the same for pipeline webhook, name:$projectName, " +
+                            "type:$type, db:$dbPipelineIds, redis:$redisPipelineIds, modifyPipelineIds:$modifyPipelineIds"
+                    )
+                } else {
+                    redisOperation.sadd(WEBHOOK_PROJECTNAME_EXCLUDE_KEY, projectName)
+                }
             } catch (e: Throwable) {
                 logger.error("refresh webhook error, projectName:$projectName, type:$type", e)
             }
-        }
-    }
-
-    private fun refreshDB(
-        projectName: String,
-        type: String,
-        pipelineIds: Set<String>
-    ) {
-        logger.info("webhook refresh db, projectName:$projectName, type: $type, pipelineIds:$pipelineIds")
-        pipelineIds.forEach { pipelineId ->
-            doUpdateProjectNameAndTaskId(pipelineId)
         }
     }
 
@@ -412,9 +425,10 @@ class PipelineWebhookService @Autowired constructor(
         }
     }
 
-    fun doUpdateProjectNameAndTaskId(pipelineId: String) {
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId) ?: return
-        val model = getModel(pipelineId = pipelineId) ?: return
+    fun doUpdateProjectNameAndTaskId(pipelineId: String, oldProjectName: String? = null): Boolean {
+        var isModifyOfProjectName = true
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId) ?: return isModifyOfProjectName
+        val model = getModel(pipelineId = pipelineId) ?: return isModifyOfProjectName
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         val variable = triggerContainer.params.associate { it.id to it.defaultValue.toString() }
         val pipelineWebhooks = mutableListOf<PipelineWebhook>()
@@ -431,6 +445,11 @@ class PipelineWebhookService @Autowired constructor(
                 if (repo == null) {
                     logger.warn("pipelineId:[$pipelineId],repo[$repositoryConfig] does not exist")
                     return@element
+                }
+                if (oldProjectName != null &&
+                    oldProjectName == repo.projectName
+                ) {
+                    isModifyOfProjectName = false
                 }
                 pipelineWebhooks.add(
                     PipelineWebhook(
@@ -452,6 +471,7 @@ class PipelineWebhookService @Autowired constructor(
             dslContext = dslContext,
             pipelinewebhooks = pipelineWebhooks
         )
+        return isModifyOfProjectName
     }
 
     private fun getRepositoryConfig(

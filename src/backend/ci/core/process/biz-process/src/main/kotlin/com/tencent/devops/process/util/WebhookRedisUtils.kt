@@ -129,22 +129,6 @@ class WebhookRedisUtils @Autowired constructor(
         } ?: emptySet()
     }
 
-    fun refreshRedis(
-        projectName: String,
-        type: String
-    ) {
-        val repoType = getWebhookScmType(type)
-        val key = getWebhookRedisProjectKey(repoType)
-        logger.info("refresh webhook redis, key:$key, projectName:$projectName")
-        val lock = RedisLock(redisOperation, getWebhookRedisLockKey(repoType), 30)
-        try {
-            lock.lock()
-            redisOperation.hdelete(key, projectName)
-        } finally {
-            lock.unlock()
-        }
-    }
-
     private fun getAndUpdate(
         type: ScmType,
         key: String,
