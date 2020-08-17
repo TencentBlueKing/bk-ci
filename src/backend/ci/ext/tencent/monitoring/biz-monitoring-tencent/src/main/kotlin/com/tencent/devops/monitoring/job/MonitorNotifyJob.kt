@@ -6,6 +6,7 @@ import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.util.EmailUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import org.apache.commons.lang3.math.NumberUtils
 import org.apache.commons.lang3.tuple.MutablePair
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -87,8 +88,8 @@ class MonitorNotifyJob @Autowired constructor(
                     serie.run {
                         val key = tags["toolName"]
                         if (null != key) {
-                            val value = if (values.size > 1 && values[1].size > 0) values[1][0] else 0
-                            codeCCMap[key] = value.toString().toInt()
+                            val value = if (values.size > 0 && values[0].size > 1) values[0][1] else 0
+                            codeCCMap[key] = if (value is Number) value.toInt() else 0
                         }
                     }
                 }
