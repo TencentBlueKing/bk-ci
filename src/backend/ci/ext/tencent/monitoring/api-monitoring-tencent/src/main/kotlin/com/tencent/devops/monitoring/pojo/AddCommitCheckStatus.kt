@@ -53,5 +53,9 @@ data class AddCommitCheckStatus(
     @ApiModelProperty("蓝盾错误码", required = true)
     val errorCode: String,
     @ApiModelProperty("错误信息", required = false)
-    val errorMsg: String?
+    val errorMsg: String?,
+    @ApiModelProperty("工蜂项目名", required = false)
+    val projectName: String,
+    @ApiModelProperty("commitId", required = false)
+    val commitId: String
 )

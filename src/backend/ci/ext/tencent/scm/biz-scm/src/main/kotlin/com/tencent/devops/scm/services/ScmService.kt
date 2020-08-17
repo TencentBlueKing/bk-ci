@@ -296,7 +296,9 @@ class ScmService @Autowired constructor(
                 requestTime = requestTime,
                 responseTime = responseTime,
                 statusCode = statusCode.toString(),
-                statusMessage = statusMessage
+                statusMessage = statusMessage,
+                projectName = request.projectName,
+                commitId = request.commitId
             )
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
         }

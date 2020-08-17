@@ -49,11 +49,20 @@ class ScmMonitorService @Autowired constructor(
         requestTime: Long,
         responseTime: Long,
         statusCode: String?,
-        statusMessage: String?
+        statusMessage: String?,
+        projectName: String,
+        commitId: String
     ) {
         try {
             executorService.execute {
-                sendReportCommitCheck(requestTime, responseTime, statusCode, statusMessage)
+                sendReportCommitCheck(
+                    requestTime = requestTime,
+                    responseTime = responseTime,
+                    statusCode = statusCode,
+                    statusMessage = statusMessage,
+                    projectName = projectName,
+                    commitId = commitId
+                )
             }
         } catch (e: Throwable) {
             logger.error(
@@ -67,7 +76,9 @@ class ScmMonitorService @Autowired constructor(
         requestTime: Long,
         responseTime: Long,
         statusCode: String?,
-        statusMessage: String?
+        statusMessage: String?,
+        projectName: String,
+        commitId: String
     ) {
         try {
             client.getGateway(StatusReportResource::class, GatewayType.DEVNET_PROXY)
@@ -75,11 +86,13 @@ class ScmMonitorService @Autowired constructor(
                     AddCommitCheckStatus(
                         requestTime = requestTime,
                         responseTime = responseTime,
-                        elapseTime = responseTime - responseTime,
+                        elapseTime = responseTime - requestTime,
                         statusCode = statusCode,
                         statusMessage = statusMessage,
                         errorCode = CommonMessageCode.SUCCESS,
-                        errorMsg = statusMessage
+                        errorMsg = statusMessage,
+                        projectName = projectName,
+                        commitId = commitId
                     )
                 )
         } catch (e: Throwable) {

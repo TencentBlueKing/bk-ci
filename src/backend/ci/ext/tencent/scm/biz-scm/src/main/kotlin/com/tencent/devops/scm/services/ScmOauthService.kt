@@ -228,7 +228,7 @@ class ScmOauthService @Autowired constructor(
         var requestTime = System.currentTimeMillis()
         var responseTime = System.currentTimeMillis()
         var statusCode: Int = HTTP_200
-        var statusMessage: String? = null
+        var statusMessage: String? = "OK"
         try {
             with(request) {
                 val scm = ScmOauthFactory.getScm(
@@ -269,7 +269,9 @@ class ScmOauthService @Autowired constructor(
                 requestTime = requestTime,
                 responseTime = responseTime,
                 statusCode = statusCode.toString(),
-                statusMessage = statusMessage
+                statusMessage = statusMessage,
+                projectName = request.projectName,
+                commitId = request.commitId
             )
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
         }
