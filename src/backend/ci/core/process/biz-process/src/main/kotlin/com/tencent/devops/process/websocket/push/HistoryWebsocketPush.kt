@@ -43,7 +43,6 @@ data class HistoryWebsocketPush(
     val pipelineId: String,
     val projectId: String,
     override val userId: String,
-//        override val pathClass: IPath,
     override val pushType: WebSocketType,
     override val redisOperation: RedisOperation,
     override val objectMapper: ObjectMapper,
