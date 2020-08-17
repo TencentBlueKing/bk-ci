@@ -126,7 +126,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 "Fail to execute the task atom: ${t.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
             )
             logger.warn("Fail to execute the task atom", t)
-            atomResponse =  AtomResponse(
+            atomResponse = AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
