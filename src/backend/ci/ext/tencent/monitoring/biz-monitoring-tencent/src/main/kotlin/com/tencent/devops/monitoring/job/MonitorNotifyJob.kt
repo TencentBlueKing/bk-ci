@@ -6,7 +6,6 @@ import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.util.EmailUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
-import org.apache.commons.lang3.math.NumberUtils
 import org.apache.commons.lang3.tuple.MutablePair
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -62,7 +61,7 @@ class MonitorNotifyJob @Autowired constructor(
         }
 
         val rowList =
-            reduceMap.asSequence().sortedBy { it.value.left / (it.value.left + it.value.right) }.take(10).map {
+            reduceMap.asSequence().sortedBy { it.value.left * 100 / it.value.right }.take(10).map {
                 Triple(
                     it.key,
                     "${it.value.left * 100 / (it.value.left + it.value.right)}%",

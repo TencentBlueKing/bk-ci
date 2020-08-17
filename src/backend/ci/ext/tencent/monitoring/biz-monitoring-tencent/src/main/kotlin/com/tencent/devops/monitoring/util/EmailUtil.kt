@@ -25,7 +25,7 @@ object EmailUtil {
             "${DATE_FORMAT.format(startTime)} - ${DATE_FORMAT.format(endTime)} 的 <$module> 统计"
         )
             .replace(TABLE_COLUMN1_TITLE, "名称")
-            .replace(TABLE_COLUMN2_TITLE, "失败率")
+            .replace(TABLE_COLUMN2_TITLE, "成功率")
             .replace(TABLE_COLUMN3_TITLE, "详情")
     }
 
