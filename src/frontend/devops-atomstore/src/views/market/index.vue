@@ -386,10 +386,10 @@
     }
 
     .home-main {
-        height: calc(100vh - 5.6vh - 40px);
+        height: calc(100vh - 5.6vh - 70px);
         min-height: 600px;
         width: 1200px;
-        margin: 20px auto;
+        margin: 20px auto 0;
         display: flex;
         flex-direction: row;
         .home-nav {

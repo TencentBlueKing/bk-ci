@@ -192,11 +192,6 @@ input[disabled="disabled"] {
     cursor: not-allowed !important;
 }
 
-::placeholder { color: $fontLigtherColor; font-size: 14px }
-::-moz-placeholder { color: $fontLigtherColor; font-size: 14px }
-::-webkit-input-placeholder { color:$fontLigtherColor; font-size: 14px }
-:-ms-input-placeholder { color:$fontLigtherColor; font-size: 14px }
-
 .g-empty {
     display: block;
     margin: 0 auto;
@@ -306,39 +301,6 @@ input[disabled="disabled"] {
     display: flex;
     .bk-form-item {
         flex: 1;
-    }
-}
-
-.ci-paging {
-    margin: 20px;
-    .paging-settings {
-        font-size: 14px;
-        color: $fontWeightColor;
-    }
-    .paging-total-count {
-        line-height: 36px;
-    }
-    .paging-per-page {
-        min-width: 107px;
-        margin-left: 20px;
-        font-size: 0;
-        &:before {
-            content: '每页';
-            vertical-align: top;
-            line-height: 36px;
-            font-size: 14px;
-        }
-        &:after {
-            content: '条';
-            vertical-align: top;
-            line-height: 36px;
-            font-size: 14px;
-        }
-        .bk-selector {
-            display: inline-block;
-            width: 62px;
-            margin: 0 5px;
-        }
     }
 }
 
