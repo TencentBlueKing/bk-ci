@@ -431,3 +431,39 @@ input[disabled="disabled"] {
     opacity: 0;
     transform: translateX(100%);
 }
+
+.g-progress-item {
+    display: flex;
+    align-items: flex-start;
+    margin: 10px 0;
+    font-size: 14px;
+    line-height: 19px;
+    .g-progress-label {
+        display: inline-block;
+        width: 100px;
+        margin-right: 14px;
+        color: $fontWeightColor;
+        text-align: right;
+    }
+    .g-progress-content {
+        flex: 1;
+        color: $fontBlack;
+        word-break: break-all;
+        max-width: calc(100vw - 400px);
+        /deep/ .v-note-panel {
+            border: none;
+            .v-show-content {
+                padding: 0 !important;
+                background: $bgHoverColor !important;
+                p {
+                    margin: 0;
+                }
+            }
+        }
+    }
+}
+.g-progress-image {
+    float: right;
+    width: 100px;
+    height: 100px;
+}
