@@ -311,6 +311,7 @@ class PipelineWebhookService @Autowired constructor(
                             "type:$type, db:$dbPipelineIds, redis:$redisPipelineIds, modifyPipelineIds:$modifyPipelineIds"
                     )
                 } else {
+                    logger.info("db and redis data are the same for pipeline webhook, name:$projectName,type:$type, redis mark")
                     redisOperation.sadd(WEBHOOK_PROJECTNAME_EXCLUDE_KEY, projectName)
                 }
             } catch (e: Throwable) {
