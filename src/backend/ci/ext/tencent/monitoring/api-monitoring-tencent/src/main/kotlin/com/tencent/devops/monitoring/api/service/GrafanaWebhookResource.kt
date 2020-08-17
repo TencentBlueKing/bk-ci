@@ -30,7 +30,6 @@ import com.tencent.devops.monitoring.pojo.GrafanaNotification
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.annotation.PostConstruct
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -54,5 +53,8 @@ interface GrafanaWebhookResource {
     @ApiOperation("测试quartz")
     @POST
     @Path("/quartz/test")
-    fun quartzTest(): Result<String>
+    fun quartzTest(
+        @ApiParam(value = "test", required = true)
+        test: String
+    ): Result<String>
 }
