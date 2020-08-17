@@ -1,56 +1,43 @@
 package com.tencent.devops.monitoring.util
 
-import com.tencent.devops.common.notify.enums.EnumEmailFormat
-import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import org.apache.commons.lang3.time.FastDateFormat
 
 object EmailUtil {
 
-    private val DATE_FORMAT = FastDateFormat.getInstance("yyyy-MM-dd")
-
-    fun getMessage(
-        startTime: Long,
-        endTime: Long,
-        rowList: List<Triple<String, String, String>>,
-        title: String,
-        module: String,
-        receivers: String?
-    ): EmailNotifyMessage? {
-        if (null == receivers || receivers.isNullOrBlank()) {
-            return null
-        }
-        val message = EmailNotifyMessage()
-        message.addAllReceivers(receivers.split(",").asSequence().toHashSet())
-        message.title = title
-        message.body = getEmailBody(startTime, endTime, module, rowList)
-        message.format = EnumEmailFormat.HTML
-        return message
-    }
+    private val DATE_FORMAT = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss")
 
     fun getEmailBody(
         startTime: Long,
         endTime: Long,
-        module: String,
-        rowList: List<Triple<String, String, String>>
+        moduleMap: Map<String/*模块*/, List<Triple<String/*名称*/, String/*成功率*/, String/*详情链接*/>>>
     ): String {
         val stringBuffer = StringBuilder()
         stringBuffer.append(SHARE_EMAIL_HTML_PREFIX)
-        rowList.forEach {
-            stringBuffer.append(getShareEmailBodyRow(it.first, it.second, it.third))
+
+        moduleMap.asSequence().forEach {
+            stringBuffer.append(
+                SHARE_EMAIL_TABLE_PREFIX.replace(
+                    BODY_TITLE_TEMPLATE,
+                    "${DATE_FORMAT.format(startTime)} - ${DATE_FORMAT.format(endTime)} 的 【${it.key}】 统计"
+                )
+                    .replace(TABLE_COLUMN1_TITLE, "名称")
+                    .replace(TABLE_COLUMN2_TITLE, "成功率")
+                    .replace(TABLE_COLUMN3_TITLE, "详情")
+            )
+            it.value.forEach { rowList ->
+                rowList.run {
+                    stringBuffer.append(getTableRow(first, second, third))
+                }
+            }
+
+            stringBuffer.append(SHARE_EMAIL_TABLE_SUFFIX)
         }
         stringBuffer.append(SHARE_EMAIL_HTML_SUFFIX)
-        val template = stringBuffer.toString()
 
-        return template.replace(
-            BODY_TITLE_TEMPLATE,
-            "${DATE_FORMAT.format(startTime)} - ${DATE_FORMAT.format(endTime)} 的 【$module】 统计"
-        )
-            .replace(TABLE_COLUMN1_TITLE, "名称")
-            .replace(TABLE_COLUMN2_TITLE, "成功率")
-            .replace(TABLE_COLUMN3_TITLE, "详情")
+        return stringBuffer.toString()
     }
 
-    fun getShareEmailBodyRow(name: String, projectName: String, url: String): String {
+    fun getTableRow(name: String, projectName: String, url: String): String {
         return """
                                                                             <tr>
                                                                                <td>$name</td>
@@ -66,6 +53,82 @@ object EmailUtil {
     private val TABLE_COLUMN1_TITLE = "#{column1Title}"
     private val TABLE_COLUMN2_TITLE = "#{column2Title}"
     private val TABLE_COLUMN3_TITLE = "#{column3Title}"
+
+    private val SHARE_EMAIL_TABLE_PREFIX = """
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tbody>
+            <tr>
+                <td>
+                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="963">
+                        <tbody>
+                            <tr>
+                                <td colspan="3">
+                                    <img src="http://devops.oa.com/console/devops_bg.png" alt="img" style="width:963px;height:104px;">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="table-lr-blue"></td>
+                                <td>
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="873" style="background:#fff;">
+                                        <tbody>
+                                            <tr>
+                                                <td style="width:20px;"></td>
+                                                <td>
+                                                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="833">
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>
+                                                                    <div style="margin-top:10px;">#{bodyTitle}</div>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <div style="margin-top:10px;"></div>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="833" class="table-email">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th align="left" style="width:40%;background-color:#F6F8F8;">#{column1Title}</th>
+                                                                                <th align="left" style="width:40%;background-color:#F6F8F8;">#{column2Title}</th>
+                                                                                <th style="width:20%;background-color:#F6F8F8;">#{column3Title}</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+    """
+
+    private val SHARE_EMAIL_TABLE_SUFFIX = """
+                                                                                   </tbody>
+                                                                    </table>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>
+                                                                    <div style="margin-bottom:10px;"></div>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </td>
+                                                <td style="width:20px;"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                                <td class="table-lr-blue"></td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" style="height:40px;background:#0b1731;"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>        
+    """
 
     private val SHARE_EMAIL_HTML_PREFIX =
         """
@@ -150,88 +213,16 @@ object EmailUtil {
         background: #0b1731;
     }
 </style></head>
-
-
 <body>
-    <table border="0" cellpadding="0" cellspacing="0" width="100%">
-        <tbody>
-            <tr>
-                <td>
-                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="963">
-                        <tbody>
-                            <tr>
-                                <td colspan="3">
-                                    <img src="http://devops.oa.com/console/devops_bg.png" alt="img" style="width:963px;height:104px;">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="table-lr-blue"></td>
-                                <td>
-                                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="873" style="background:#fff;">
-                                        <tbody>
-                                            <tr>
-                                                <td style="width:20px;"></td>
-                                                <td>
-                                                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="833">
-                                                        <tbody>
-                                                            <tr>
-                                                                <td>
-                                                                    <div style="margin-top:10px;">#{bodyTitle}</div>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>
-                                                                    <div style="margin-top:10px;"></div>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>
-                                                                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="833" class="table-email">
-                                                                        <thead>
-                                                                            <tr>
-                                                                                <th align="left" style="width:40%;background-color:#F6F8F8;">#{column1Title}</th>
-                                                                                <th align="left" style="width:40%;background-color:#F6F8F8;">#{column2Title}</th>
-                                                                                <th style="width:20%;background-color:#F6F8F8;">#{column3Title}</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody>
         """
 
     private val SHARE_EMAIL_HTML_SUFFIX =
         """
-                                                                                   </tbody>
-                                                                    </table>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>
-                                                                    <div style="margin-bottom:10px;"></div>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </td>
-                                                <td style="width:20px;"></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-                                <td class="table-lr-blue"></td>
-                            </tr>
-                            <tr>
-                                <td colspan="3" style="height:40px;background:#0b1731;"></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        </tbody>
-    </table>
 </body>
 </html> 
         """
 }
 
 fun main(args: Array<String>) {
-    println(EmailUtil.getShareEmailBodyRow("\$name", "\$projectName", "\$url"))
+    println(EmailUtil.getTableRow("\$name", "\$projectName", "\$url"))
 }
