@@ -40,9 +40,9 @@ class MonitorNotifyJob @Autowired constructor(
 
     fun codecc(startTime: Long, endTime: Long) {
         val successSql =
-            "SELECT SUM(total_count)  FROM CodeccMonitor_reduce WHERE startTime>$startTime AND endTime<$endTime AND errorCode='0' GROUP BY toolName"
+            "SELECT SUM(total_count)  FROM CodeccMonitor_reduce WHERE time>$startTime AND time<$endTime AND errorCode='0' GROUP BY toolName"
         val errorSql =
-            "SELECT SUM(total_count)  FROM CodeccMonitor_reduce WHERE startTime>$startTime AND endTime<$endTime AND errorCode!='0' GROUP BY toolName"
+            "SELECT SUM(total_count)  FROM CodeccMonitor_reduce WHERE time>$startTime AND time<$endTime AND errorCode!='0' GROUP BY toolName"
 
         val successMap = getCodeCCMap(successSql)
         val errorMap = getCodeCCMap(errorSql)
