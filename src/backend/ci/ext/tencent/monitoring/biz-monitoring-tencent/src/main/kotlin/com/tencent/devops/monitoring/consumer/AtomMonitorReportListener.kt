@@ -26,7 +26,6 @@
 
 package com.tencent.devops.monitoring.consumer
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.event.listener.Listener
@@ -37,7 +36,6 @@ import com.tencent.devops.monitoring.consumer.processor.monitor.AbstractMonitorP
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import kotlin.reflect.full.declaredMemberProperties
 
 @Component
 class AtomMonitorReportListener @Autowired constructor(
@@ -51,28 +49,19 @@ class AtomMonitorReportListener @Autowired constructor(
             logger.info("Receive monitorData - $monitorData")
             insertAtomMonitorData(monitorData)
 
-            monitorProcessors.asSequence().filter { it.atomCode() == monitorData.atomCode }.forEach { it.process(influxdbClient, monitorData) }
+            monitorProcessors.asSequence().filter { it.atomCode() == monitorData.atomCode }
+                .forEach { it.process(influxdbClient, monitorData) }
         } catch (t: Throwable) {
             logger.warn("Fail to insert the atom monitor data", t)
             throw ErrorCodeException(
-                    errorCode = ERROR_MONITORING_INSERT_DATA_FAIL,
-                    defaultMessage = "Fail to insert the atom monitor data"
+                errorCode = ERROR_MONITORING_INSERT_DATA_FAIL,
+                defaultMessage = "Fail to insert the atom monitor data"
             )
         }
     }
 
     fun insertAtomMonitorData(data: AtomMonitorData) {
-        val field: MutableMap<String, String> = mutableMapOf()
-        val properties = data.javaClass.kotlin.declaredMemberProperties
-        properties.forEach {
-            val value = it.get(data)
-            if (value is Map<*, *>) {
-                field[it.name] = jacksonObjectMapper().writeValueAsString(it.get(data))
-            } else {
-                field[it.name] = it.get(data)?.toString() ?: ""
-            }
-        }
-        influxdbClient.insert(AtomMonitorData::class.java.simpleName, emptyMap(), field)
+        influxdbClient.insert(data)
     }
 
     companion object {

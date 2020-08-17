@@ -49,4 +49,8 @@ interface GrafanaWebhookResource {
         @ApiParam(value = "grafana监控webhook回调通知消息", required = true)
         grafanaNotification: GrafanaNotification
     ): Result<Boolean>
+
+    @ApiOperation("测试quartz")
+    @Path("/quartz/test")
+    fun quartzTest(): Result<String>
 }

@@ -25,12 +25,15 @@
  */
 package com.tencent.devops.monitoring.client
 
+import com.tencent.devops.monitoring.pojo.annotions.InfluxTag
+import org.apache.commons.lang3.reflect.FieldUtils
 import org.influxdb.BatchOptions
 import org.influxdb.InfluxDB
 import org.influxdb.InfluxDBFactory
 import org.influxdb.dto.Point
 import org.influxdb.dto.Point.measurement
 import org.influxdb.dto.Query
+import org.influxdb.dto.QueryResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -78,20 +81,20 @@ class InfluxdbClient {
         }
         influxDB.setLogLevel(InfluxDB.LogLevel.NONE)
         influxDB.enableBatch(BatchOptions.DEFAULTS
-                .actions(1000)
-                .flushDuration(100)
-                .bufferLimit(100)
-                .jitterDuration(100)
-                .exceptionHandler { points: Iterable<Point>, e: Throwable? ->
-                    try {
-                        points.forEach { logger.error("failed to write point $it", e) }
-                    } catch (e: Exception) {
-                        // Do nothing , 这个handler不能抛异常,否则influxdb批量插入的线程就会停止
-                    }
+            .actions(1000)
+            .flushDuration(100)
+            .bufferLimit(100)
+            .jitterDuration(100)
+            .exceptionHandler { points: Iterable<Point>, e: Throwable? ->
+                try {
+                    points.forEach { logger.error("failed to write point $it", e) }
+                } catch (e: Exception) {
+                    // Do nothing , 这个handler不能抛异常,否则influxdb批量插入的线程就会停止
                 }
-                .threadFactory(
-                        Executors.defaultThreadFactory()
-                ))
+            }
+            .threadFactory(
+                Executors.defaultThreadFactory()
+            ))
     }
 
     private fun createDatabase() {
@@ -101,19 +104,52 @@ class InfluxdbClient {
     }
 
     private fun createRetentionPolicy() {
-        influxDB.query(Query("CREATE RETENTION POLICY $monitoringRetentionPolicy ON $dbName DURATION 30d REPLICATION 1 DEFAULT", ""))
+        influxDB.query(
+            Query(
+                "CREATE RETENTION POLICY $monitoringRetentionPolicy ON $dbName DURATION 30d REPLICATION 1 DEFAULT",
+                ""
+            )
+        )
     }
 
     private fun databaseExist(database: String?): Boolean {
         return influxDB.databaseExists(database)
     }
 
-    fun insert(measurement: String, tags: Map<String, String?>, fields: Map<String, Any>) {
+    fun insert(any: Any) {
+        val (fields, tags) = getFieldTagMap(any)
+        insert(any::class.java.simpleName, tags, fields)
+    }
+
+    fun insert(measurement: String, tags: Map<String, String>, fields: Map<String, Any>) {
         val builder: Point.Builder = measurement(measurement)
         builder.tag(tags)
         builder.fields(fields)
         builder.time(System.currentTimeMillis() * 1000000 + getTail() % 1000000, TimeUnit.NANOSECONDS)
         influxDB.write(dbName, monitoringRetentionPolicy, builder.build())
+    }
+
+    fun select(sql: String): QueryResult? {
+        return influxDB.query(Query(sql, dbName))
+    }
+
+    private fun getFieldTagMap(any: Any): Pair<Map<String, Any>/*field*/, Map<String, String>/*tag*/> {
+        val field: MutableMap<String, Any> = mutableMapOf()
+        val tag: MutableMap<String, String> = mutableMapOf()
+
+        FieldUtils.getAllFields(any.javaClass).forEach {
+            it.isAccessible = true
+            if (it.isAnnotationPresent(InfluxTag::class.java)) {
+                tag[it.name] = it.get(any)?.toString() ?: ""
+            } else {
+                val value = it.get(any)
+                field[it.name] = if (value == null) "" else {
+                    if (value is Number) value else value.toString()
+                }
+            }
+        }
+
+        return field to tag
     }
 
     /**
@@ -137,11 +173,25 @@ fun main(args: Array<String>) {
     val random = Random()
     val bgIds = listOf(14129, 953, 2233, 954, 2234, 955, 956, 29292, 957, 78, 958, 29294)
     val errorCode = 2199000
-    val toolNames = listOf("woodpecker_sensitive", "sensitive", "ip_check", "horuspy", "dupc", "cpplint", "coverity", "cloc", "checkstyle", "ccn")
+    val toolNames = listOf(
+        "woodpecker_sensitive",
+        "sensitive",
+        "ip_check",
+        "horuspy",
+        "dupc",
+        "cpplint",
+        "coverity",
+        "cloc",
+        "checkstyle",
+        "ccn"
+    )
     for (i in 0..100) {
         val startTime = System.currentTimeMillis()
         val elapseTime = 15000 + random.nextInt(1000)
-        val template = """insert CodeccMonitor,bgId=${bgIds[random.nextInt(bgIds.size)]},errorCode=${if (random.nextBoolean()) errorCode + random.nextInt(10) else 0},toolName=${toolNames[random.nextInt(toolNames.size)]} buildId="b-15118b7ccd33486a89c8527a85304ec5",centerId="0",channel="BS",deptId="0",elapseTime=${elapseTime}i,endTime=${startTime + elapseTime}i,errorMsg="test",pipelineId="p-4ce3f7479b15441e89e9908ebeaa8729",projectId="stuben-hello",startTime=${startTime}i,starter="stubenhuang",status="SUCCESS",vmSeqId="1""""
+        val template =
+            """insert CodeccMonitor,bgId=${bgIds[random.nextInt(bgIds.size)]},errorCode=${if (random.nextBoolean()) errorCode + random.nextInt(
+                10
+            ) else 0},toolName=${toolNames[random.nextInt(toolNames.size)]} buildId="b-15118b7ccd33486a89c8527a85304ec5",centerId="0",channel="BS",deptId="0",elapseTime=${elapseTime}i,endTime=${startTime + elapseTime}i,errorMsg="test",pipelineId="p-4ce3f7479b15441e89e9908ebeaa8729",projectId="stuben-hello",startTime=${startTime}i,starter="stubenhuang",status="SUCCESS",vmSeqId="1""""
         println(template)
     }
 }
