@@ -44,7 +44,7 @@ class GrafanaWebhookResourceImpl @Autowired constructor(
     }
 
     override fun quartzTest(test: String): Result<String> {
-        monitorNotifyJob.notifyByEmail()
+        monitorNotifyJob.notifyDaily()
         return Result("成功")
     }
 }

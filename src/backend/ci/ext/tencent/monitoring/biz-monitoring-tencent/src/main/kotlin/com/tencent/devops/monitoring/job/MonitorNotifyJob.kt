@@ -1,14 +1,13 @@
 package com.tencent.devops.monitoring.job
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.util.EmailUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
-import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import org.apache.commons.lang3.tuple.MutablePair
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
@@ -17,11 +16,18 @@ class MonitorNotifyJob @Autowired constructor(
     private val client: Client,
     private val influxdbClient: InfluxdbClient
 ) {
+
+    @Value("\${sla.receivers:#{null}}")
+    private lateinit var receivers: String
+
+    @Value("\${sla.title:#{null}}")
+    private lateinit var title: String
+
     /**
-     * 每天清理一次一个月前的数据
+     * 每天发送日报
      */
     @Scheduled(cron = "0 0 4 * * ?")
-    fun notifyByEmail() {
+    fun notifyDaily() {
         /*OpenAPI访问成功率
         页面500错误率
         CodeCC插件非编译型工具扫描成功率
@@ -69,13 +75,9 @@ class MonitorNotifyJob @Autowired constructor(
                 )
             }.toList()
 
-        val message = EmailNotifyMessage()
-        message.addAllReceivers(hashSetOf("stubenhuang@tencent.com"))
-        message.title = "测试"
-        message.body = EmailUtil.getEmailBody(startTime, endTime, "CodeCC工具", rowList)
-        message.format = EnumEmailFormat.HTML
-
-        client.get(ServiceNotifyResource::class).sendEmailNotify(message)
+        EmailUtil.getMessage(startTime, endTime, rowList, title, "CodeCC工具", receivers)?.let {
+            client.get(ServiceNotifyResource::class).sendEmailNotify(it)
+        }
     }
 
     private fun getCodeCCMap(sql: String): HashMap<String, Int> {

@@ -1,10 +1,31 @@
 package com.tencent.devops.monitoring.util
 
+import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import org.apache.commons.lang3.time.FastDateFormat
 
 object EmailUtil {
 
     private val DATE_FORMAT = FastDateFormat.getInstance("yyyy-MM-dd")
+
+    fun getMessage(
+        startTime: Long,
+        endTime: Long,
+        rowList: List<Triple<String, String, String>>,
+        title: String,
+        module: String,
+        receivers: String?
+    ): EmailNotifyMessage? {
+        if (null == receivers || receivers.isNullOrBlank()) {
+            return null
+        }
+        val message = EmailNotifyMessage()
+        message.addAllReceivers(receivers.split(",").asSequence().toHashSet())
+        message.title = title
+        message.body = getEmailBody(startTime, endTime, module, rowList)
+        message.format = EnumEmailFormat.HTML
+        return message
+    }
 
     fun getEmailBody(
         startTime: Long,
@@ -22,7 +43,7 @@ object EmailUtil {
 
         return template.replace(
             BODY_TITLE_TEMPLATE,
-            "${DATE_FORMAT.format(startTime)} - ${DATE_FORMAT.format(endTime)} 的 <$module> 统计"
+            "${DATE_FORMAT.format(startTime)} - ${DATE_FORMAT.format(endTime)} 的 【$module】 统计"
         )
             .replace(TABLE_COLUMN1_TITLE, "名称")
             .replace(TABLE_COLUMN2_TITLE, "成功率")
