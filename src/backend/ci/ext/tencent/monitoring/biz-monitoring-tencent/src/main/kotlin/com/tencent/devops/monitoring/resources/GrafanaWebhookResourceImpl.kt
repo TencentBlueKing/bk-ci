@@ -43,7 +43,7 @@ class GrafanaWebhookResourceImpl @Autowired constructor(
         return grafanaWebhookService.webhookCallBack(grafanaNotification)
     }
 
-    override fun quartzTest(): Result<String> {
+    override fun quartzTest(test: String): Result<String> {
         monitorNotifyJob.notifyByEmail()
         return Result("成功")
     }
