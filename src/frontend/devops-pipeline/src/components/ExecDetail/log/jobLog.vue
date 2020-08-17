@@ -1,6 +1,6 @@
 <template>
     <section class="job-log">
-        <bk-log-search :down-load-link="downLoadLink" :execute-count="executeCount" @change-execute="changeExecute" class="log-tools"></bk-log-search>
+        <bk-log-search :down-load-link="downLoadLink" :execute-count="executeCount" class="log-tools"></bk-log-search>
     
         <bk-multiple-log ref="multipleLog"
             class="bk-log"

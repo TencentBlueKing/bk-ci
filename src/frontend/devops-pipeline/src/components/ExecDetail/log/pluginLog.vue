@@ -133,7 +133,6 @@
             },
 
             changeExecute (execute) {
-                this.$refs.scroll.resetData()
                 this.postData.currentExe = execute
                 this.postData.lineNo = 0
                 this.closeLog()
