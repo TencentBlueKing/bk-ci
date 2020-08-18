@@ -28,7 +28,7 @@ package com.tencent.devops.monitoring.service
 
 import com.tencent.devops.monitoring.pojo.DispatchStatus
 
-interface StatusReportService {
+interface DispatchReportService {
 
     fun reportDispatchStatus(dispatchStatus: DispatchStatus): Boolean
 }
