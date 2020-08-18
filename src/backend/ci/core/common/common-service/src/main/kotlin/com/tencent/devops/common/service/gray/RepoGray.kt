@@ -85,6 +85,9 @@ class RepoGray {
         }
     }
 
+    fun grayProjectSet(redisOperation: RedisOperation) =
+        (redisOperation.getSetMembers(REPO_GREY_KEY) ?: emptySet()).filter { !it.isBlank() }.toSet()
+
     private fun defaultGray(redisOperation: RedisOperation): Boolean {
         return redisOperation.get(REPO_DEFAULT_GREY_KEY) == "true"
     }
