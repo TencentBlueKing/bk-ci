@@ -23,24 +23,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.monitoring.resources
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.monitoring.api.service.StatusReportResource
-import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
+package com.tencent.devops.monitoring.service
+
 import com.tencent.devops.monitoring.pojo.DispatchStatus
-import com.tencent.devops.monitoring.pojo.UsersStatus
-import com.tencent.devops.monitoring.services.StatusReportService
-import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
-class StatusReportResourceImpl @Autowired constructor(private val statusReportService: StatusReportService) : StatusReportResource {
-    override fun scmCommitCheck(addCommitCheckStatus: AddCommitCheckStatus): Result<Boolean> {
-        return Result(statusReportService.reportScmCommitCheck(addCommitCheckStatus))
-    }
+interface DispatchReportService {
 
-    override fun userUsers(users: UsersStatus): Result<Boolean> {
-        return Result(statusReportService.reportUserUsers(users))
-    }
+    fun reportDispatchStatus(dispatchStatus: DispatchStatus): Boolean
 }

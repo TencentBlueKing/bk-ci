@@ -27,7 +27,6 @@ package com.tencent.devops.monitoring.services
 
 import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
-import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.monitoring.pojo.UsersStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -60,16 +59,6 @@ class StatusReportService @Autowired constructor(
             true
         } catch (e: Throwable) {
             logger.error("reportUserUsers exception:", e)
-            false
-        }
-    }
-
-    fun reportDispatchStatus(dispatchStatus: DispatchStatus): Boolean {
-        return try {
-            influxdbClient.insert(dispatchStatus)
-            true
-        } catch (e: Throwable) {
-            logger.error("reportDispatchStatus exception:", e)
             false
         }
     }

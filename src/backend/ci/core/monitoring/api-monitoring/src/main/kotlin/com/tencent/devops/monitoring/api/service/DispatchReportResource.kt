@@ -23,24 +23,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.monitoring.resources
-
+package com.tencent.devops.monitoring.api.service
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.monitoring.api.service.StatusReportResource
-import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
 import com.tencent.devops.monitoring.pojo.DispatchStatus
-import com.tencent.devops.monitoring.pojo.UsersStatus
-import com.tencent.devops.monitoring.services.StatusReportService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+@Api(tags = ["SERVICE_MONITORING_REPORT"], description = "监控上报")
+@Path("/service/report")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface DispatchReportResource {
 
-@RestResource
-class StatusReportResourceImpl @Autowired constructor(private val statusReportService: StatusReportService) : StatusReportResource {
-    override fun scmCommitCheck(addCommitCheckStatus: AddCommitCheckStatus): Result<Boolean> {
-        return Result(statusReportService.reportScmCommitCheck(addCommitCheckStatus))
-    }
-
-    override fun userUsers(users: UsersStatus): Result<Boolean> {
-        return Result(statusReportService.reportUserUsers(users))
-    }
+    @ApiOperation("各个dispatch模块上报开机状态")
+    @POST
+    @Path("/dispatch/status")
+    fun dispatch(
+        @ApiParam("构建机开机关机状态", required = true)
+        dispatchStatus: DispatchStatus
+    ): Result<Boolean>
 }

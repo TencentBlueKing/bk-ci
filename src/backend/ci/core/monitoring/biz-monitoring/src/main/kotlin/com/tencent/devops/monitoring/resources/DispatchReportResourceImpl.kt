@@ -27,20 +27,16 @@ package com.tencent.devops.monitoring.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.monitoring.api.service.StatusReportResource
-import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
+import com.tencent.devops.monitoring.api.service.DispatchReportResource
 import com.tencent.devops.monitoring.pojo.DispatchStatus
-import com.tencent.devops.monitoring.pojo.UsersStatus
-import com.tencent.devops.monitoring.services.StatusReportService
+import com.tencent.devops.monitoring.service.DispatchReportService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class StatusReportResourceImpl @Autowired constructor(private val statusReportService: StatusReportService) : StatusReportResource {
-    override fun scmCommitCheck(addCommitCheckStatus: AddCommitCheckStatus): Result<Boolean> {
-        return Result(statusReportService.reportScmCommitCheck(addCommitCheckStatus))
-    }
+class DispatchReportResourceImpl @Autowired constructor(private val dispatchReportService: DispatchReportService) :
+    DispatchReportResource {
 
-    override fun userUsers(users: UsersStatus): Result<Boolean> {
-        return Result(statusReportService.reportUserUsers(users))
+    override fun dispatch(dispatchStatus: DispatchStatus): Result<Boolean> {
+        return Result(dispatchReportService.reportDispatchStatus(dispatchStatus))
     }
 }

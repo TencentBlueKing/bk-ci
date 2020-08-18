@@ -23,24 +23,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.monitoring.resources
+package com.tencent.devops.monitoring.service.impl
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.monitoring.api.service.StatusReportResource
-import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
 import com.tencent.devops.monitoring.pojo.DispatchStatus
-import com.tencent.devops.monitoring.pojo.UsersStatus
-import com.tencent.devops.monitoring.services.StatusReportService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.monitoring.service.DispatchReportService
+import org.slf4j.LoggerFactory
+import org.springframework.cloud.context.config.annotation.RefreshScope
+import org.springframework.stereotype.Service
 
-@RestResource
-class StatusReportResourceImpl @Autowired constructor(private val statusReportService: StatusReportService) : StatusReportResource {
-    override fun scmCommitCheck(addCommitCheckStatus: AddCommitCheckStatus): Result<Boolean> {
-        return Result(statusReportService.reportScmCommitCheck(addCommitCheckStatus))
-    }
+@Service
+@RefreshScope
+class DispatchReportServiceImpl : DispatchReportService {
+    private val logger = LoggerFactory.getLogger(DispatchReportServiceImpl::class.java)
 
-    override fun userUsers(users: UsersStatus): Result<Boolean> {
-        return Result(statusReportService.reportUserUsers(users))
+    override fun reportDispatchStatus(dispatchStatus: DispatchStatus): Boolean {
+        logger.info("DispatchReportServiceImpl reportDispatchStatus: $dispatchStatus")
+        return true
     }
 }

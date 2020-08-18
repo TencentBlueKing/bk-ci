@@ -23,24 +23,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.monitoring.resources
+package com.tencent.devops.monitoring
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.monitoring.api.service.StatusReportResource
-import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
-import com.tencent.devops.monitoring.pojo.DispatchStatus
-import com.tencent.devops.monitoring.pojo.UsersStatus
-import com.tencent.devops.monitoring.services.StatusReportService
-import org.springframework.beans.factory.annotation.Autowired
+const val EXCHANGE_EVENT = "exchange_event"
 
-@RestResource
-class StatusReportResourceImpl @Autowired constructor(private val statusReportService: StatusReportService) : StatusReportResource {
-    override fun scmCommitCheck(addCommitCheckStatus: AddCommitCheckStatus): Result<Boolean> {
-        return Result(statusReportService.reportScmCommitCheck(addCommitCheckStatus))
-    }
+const val QUEUE_NOTIFY_RTX = "queue_notify_rtx"
+const val QUEUE_NOTIFY_WECHAT = "queue_notify_wechat"
+const val QUEUE_NOTIFY_EMAIL = "queue_notify_email"
+const val QUEUE_NOTIFY_SMS = "queue_notify_sms"
+const val EXCHANGE_NOTIFY = "exchange_notify"
+const val ROUTE_RTX = "rtx"
+const val ROUTE_WECHAT = "wechat"
+const val ROUTE_EMAIL = "email"
+const val ROUTE_SMS = "sms"
 
-    override fun userUsers(users: UsersStatus): Result<Boolean> {
-        return Result(statusReportService.reportUserUsers(users))
-    }
-}
+const val PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE = "QUALITY_AUDIT_NOTIFY_TEMPLATE"
+const val PIPELINE_QUALITY_END_NOTIFY_TEMPLATE = "QUALITY_END_NOTIFY_TEMPLATE"
