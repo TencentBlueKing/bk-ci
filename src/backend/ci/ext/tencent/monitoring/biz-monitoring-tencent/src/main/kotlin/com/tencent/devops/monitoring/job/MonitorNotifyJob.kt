@@ -2,6 +2,7 @@ package com.tencent.devops.monitoring.job
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.dao.SlaDailyDao
 import com.tencent.devops.monitoring.util.EmailUtil
@@ -22,7 +23,8 @@ class MonitorNotifyJob @Autowired constructor(
     private val client: Client,
     private val influxdbClient: InfluxdbClient,
     private val slaDailyDao: SlaDailyDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val profile: Profile
 ) {
 
     @Value("\${sla.receivers:#{null}}")
@@ -79,17 +81,6 @@ class MonitorNotifyJob @Autowired constructor(
                 }
             }
         }
-//        CREATE TABLE T_SLA_DAILY (
-//         `ID` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-//         `MODULE` varchar(20) NOT NULL COMMENT '模块',
-//         `NAME` varchar(20) NOT NULL COMMENT '名称',
-//         `SUCCESS_PERCENT` INT NOT NULL COMMENT '成功率',
-//         `START_TIME` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '开始时间',
-//         `END_TIME` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '结束时间',
-//         PRIMARY KEY (`ID`),
-//         KEY `idx_module_name` (`MODULE`,`NAME`),
-//         KEY `idx_start_time` (`START_TIME`)
-//         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='通知模板表';
     }
 
     fun userStatus(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Int, String>>> {
@@ -108,7 +99,7 @@ class MonitorNotifyJob @Autowired constructor(
                             Triple(
                                 "userStatus",
                                 success * 100 / count,
-                                "www.tencent.com"
+                                getUrl(startTime, endTime, Module.USER_STATUS)
                             )
                         )
                     }
@@ -133,11 +124,12 @@ class MonitorNotifyJob @Autowired constructor(
                     serie.run {
                         val count = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
                         val success = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
+                        val name = tags["buildType"] ?: "Unknown"
                         rowList.add(
                             Triple(
-                                tags["buildType"] ?: "Unknown",
+                                name,
                                 success * 100 / count,
-                                "www.tencent.com"
+                                getUrl(startTime, endTime, Module.DISPATCH, name)
                             )
                         )
                     }
@@ -184,11 +176,16 @@ class MonitorNotifyJob @Autowired constructor(
             logger.error("atomMonitor , get map error , errorMsg:${queryResult?.error}")
         }
 
-        val rowList = mutableListOf<Triple<String, Int, String>>()
-        rowList.add(Triple("所有插件", totalSuccess * 100 / totalCount, "www.tencent.com"))
-        rowList.add(Triple("Git插件", gitSuccess * 100 / gitCount, "www.tencent.com"))
-        rowList.add(Triple("artifactory插件", artiSuccess * 100 / artiCount, "www.tencent.com"))
-        rowList.add(Triple("linuxScript插件", shSuccess * 100 / shCount, "www.tencent.com"))
+        val rowList = mutableListOf(
+            Triple("所有插件", totalSuccess * 100 / totalCount, getUrl(startTime, endTime, Module.ATOM)),
+            Triple("Git插件", gitSuccess * 100 / gitCount, getUrl(startTime, endTime, Module.ATOM, "CODE_GIT")),
+            Triple(
+                "artifactory插件",
+                artiSuccess * 100 / artiCount,
+                getUrl(startTime, endTime, Module.ATOM, "UploadArtifactory")
+            ),
+            Triple("linuxScript插件", shSuccess * 100 / shCount, getUrl(startTime, endTime, Module.ATOM, "linuxScript"))
+        )
 
         return "核心插件统计" to rowList.asSequence().sortedBy { it.second }.toList()
     }
@@ -220,7 +217,7 @@ class MonitorNotifyJob @Autowired constructor(
                 Triple(
                     it.key,
                     it.value.left * 100 / (it.value.left + it.value.right),
-                    "http://www.tencent.com"
+                    getUrl(startTime, endTime, Module.CODECC, it.key)
                 )
             }.toList()
 
@@ -246,6 +243,44 @@ class MonitorNotifyJob @Autowired constructor(
             logger.error("codecc , get map error , errorMsg:${queryResult?.error}")
         }
         return codeCCMap
+    }
+
+    private fun getUrl(startTime: Long, endTime: Long, module: Module, name: String = ""): String {
+        when {
+            profile.isDev() -> {
+                when (module) {
+                    Module.ATOM -> return "http://9.56.38.242:443/d/Z_R3JrVMz/cha-jian-shi-bai-xiang-qing?var-atomCode=$name&from=$startTime&to=$endTime"
+                    Module.DISPATCH -> return "http://9.56.38.242:443/d/ET3bo3VGz/gou-jian-ji-shi-bai-xiang-qing?var-buildType=$name&from=$startTime&to=$endTime"
+                    Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$startTime"
+                    Module.CODECC -> return "http://9.56.38.242:443/d/uJaL6mNMz/codeccgong-ju-shang-bao-xiang-qing?var-toolName=$name&from=$startTime&to=$endTime"
+                }
+            }
+            profile.isTest() -> { // TODO
+                when (module) {
+                    Module.ATOM -> return "http://9.56.38.242:443/d/Z_R3JrVMz/cha-jian-shi-bai-xiang-qing?var-atomCode=$name&from=$startTime&to=$endTime"
+                    Module.DISPATCH -> return "http://9.56.38.242:443/d/ET3bo3VGz/gou-jian-ji-shi-bai-xiang-qing?var-buildType=$name&from=$startTime&to=$endTime"
+                    Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$startTime"
+                    Module.CODECC -> return "http://9.56.38.242:443/d/uJaL6mNMz/codeccgong-ju-shang-bao-xiang-qing?var-toolName=$name&from=$startTime&to=$endTime"
+                }
+            }
+            profile.isProd() -> { // TODO
+                when (module) {
+                    Module.ATOM -> return "http://9.56.38.242:443/d/Z_R3JrVMz/cha-jian-shi-bai-xiang-qing?var-atomCode=$name&from=$startTime&to=$endTime"
+                    Module.DISPATCH -> return "http://9.56.38.242:443/d/ET3bo3VGz/gou-jian-ji-shi-bai-xiang-qing?var-buildType=$name&from=$startTime&to=$endTime"
+                    Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$startTime"
+                    Module.CODECC -> return "http://9.56.38.242:443/d/uJaL6mNMz/codeccgong-ju-shang-bao-xiang-qing?var-toolName=$name&from=$startTime&to=$endTime"
+                }
+            }
+        }
+
+        return "http://devops.oa.com/console"
+    }
+
+    enum class Module {
+        ATOM,
+        DISPATCH,
+        USER_STATUS,
+        CODECC;
     }
 
     companion object {
