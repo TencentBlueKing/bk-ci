@@ -105,7 +105,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         logger.info("setRepoNotGrayProject, projectCodeList: $projectCodeList, operateFlag: $operateFlag")
         for (item in projectCodeList) {
             if (1 == operateFlag) {
-                repoGray.addNotGrayProject((item, redisOperation)
+                repoGray.addNotGrayProject(item, redisOperation)
             } else if (2 == operateFlag) {
                 repoGray.removeNotGrayProject(item, redisOperation)
             }
