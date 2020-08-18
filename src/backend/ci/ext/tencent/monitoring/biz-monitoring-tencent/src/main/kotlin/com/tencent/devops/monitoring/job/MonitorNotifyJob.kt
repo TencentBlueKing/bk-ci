@@ -36,14 +36,16 @@ class MonitorNotifyJob @Autowired constructor(
      */
     @Scheduled(cron = "0 0 10 * * ?")
     fun notifyDaily() {
-        /*OpenAPI访问成功率
+        /*
+        OpenAPI访问成功率
         页面500错误率
         CodeCC插件非编译型工具扫描成功率(DONE)
         工蜂回写成功率
         日志API成功率
         核心插件故障率(DONE)
         公共构建机准备成功率(DONE)
-        登录成功率*/
+        登录成功率(DONE)
+        */
         if (null == receivers || null == title) {
             logger.info("notifyDaily no start , receivers:$receivers , title:$title")
             return
@@ -52,13 +54,14 @@ class MonitorNotifyJob @Autowired constructor(
         val startTime = 0L
         val endTime = 2597664799999L
 
-        val moduleMap = hashMapOf(
-            codecc(startTime, endTime),
+        val moduleMap = linkedMapOf(
             atomMonitor(startTime, endTime),
-            dispatchStatus(startTime, endTime)
+            dispatchStatus(startTime, endTime),
+            userStatus(startTime, endTime),
+            codecc(startTime, endTime)
         )
 
-        //发送邮件
+        // 发送邮件
         val message = EmailNotifyMessage()
         message.addAllReceivers(receivers!!.split(",").toHashSet())
         message.title = title as String
@@ -66,7 +69,7 @@ class MonitorNotifyJob @Autowired constructor(
         message.format = EnumEmailFormat.HTML
         client.get(ServiceNotifyResource::class).sendEmailNotify(message)
 
-        //落库
+        // 落库
         val startLocalTime = Instant.ofEpochMilli(startTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime()
         val endLocalTime = Instant.ofEpochMilli(endTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime()
         moduleMap.forEach { m ->
@@ -89,13 +92,41 @@ class MonitorNotifyJob @Autowired constructor(
 //         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='通知模板表';
     }
 
+    fun userStatus(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Int, String>>> {
+        val sql =
+            "SELECT sum(user_total_count),sum(user_success_count) FROM UsersStatus_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000"
+        val queryResult = influxdbClient.select(sql)
+
+        val rowList = mutableListOf<Triple<String, Int, String>>()
+        if (null != queryResult && !queryResult.hasError()) {
+            queryResult.results.forEach { result ->
+                result.series.forEach { serie ->
+                    serie.run {
+                        val count = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
+                        val success = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
+                        rowList.add(
+                            Triple(
+                                "userStatus",
+                                success * 100 / count,
+                                "www.tencent.com"
+                            )
+                        )
+                    }
+                }
+            }
+        } else {
+            logger.error("userStatus , get map error , errorMsg:${queryResult?.error}")
+        }
+
+        return "用户登录统计" to rowList
+    }
+
     fun dispatchStatus(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Int, String>>> {
         val sql =
             "SELECT sum(devcloud_total_count),sum(devcloud_success_count) FROM DispatchStatus_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000 GROUP BY buildType"
         val queryResult = influxdbClient.select(sql)
 
         val rowList = mutableListOf<Triple<String, Int, String>>()
-
         if (null != queryResult && !queryResult.hasError()) {
             queryResult.results.forEach { result ->
                 result.series.forEach { serie ->
@@ -113,7 +144,7 @@ class MonitorNotifyJob @Autowired constructor(
                 }
             }
         } else {
-            logger.error("atomMonitor , get map error , errorMsg:${queryResult?.error}")
+            logger.error("dispatchStatus , get map error , errorMsg:${queryResult?.error}")
         }
 
         return "公共构建机统计" to rowList.asSequence().sortedBy { it.second }.toList()
