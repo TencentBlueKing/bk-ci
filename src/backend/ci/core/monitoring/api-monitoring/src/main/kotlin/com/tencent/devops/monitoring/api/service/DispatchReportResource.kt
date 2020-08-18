@@ -38,7 +38,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/report")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface StatusReportResource {
+interface DispatchReportResource {
 
     @ApiOperation("各个dispatch模块上报开机状态")
     @POST
