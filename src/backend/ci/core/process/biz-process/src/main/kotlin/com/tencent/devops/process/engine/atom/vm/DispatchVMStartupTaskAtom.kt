@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.atom.vm
 
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -99,10 +100,10 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         param: VMBuildContainer,
         runVariables: Map<String, String>
     ): AtomResponse {
-        var status: BuildStatus = BuildStatus.FAILED
+        var atomResponse: AtomResponse
         try {
-            status = execute(task, param)
-        } catch (t: BuildTaskException) {
+            atomResponse = execute(task, param)
+        } catch (e: BuildTaskException) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
                 message = "Fail to execute the task atom: ${t.message}",
@@ -110,8 +111,14 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
             )
-            logger.warn("Fail to execute the task atom", t)
-        } catch (ignored: Throwable) {
+            logger.warn("Fail to execute the task atom", e)
+            atomResponse = AtomResponse(
+                buildStatus = BuildStatus.FAILED,
+                errorType = e.errorType,
+                errorCode = e.errorCode,
+                errorMsg = e.message
+            )
+        } catch (t: Throwable) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
                 message = "Fail to execute the task atom: ${ignored.message}",
@@ -119,13 +126,18 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
             )
-            logger.warn("Fail to execute the task atom", ignored)
-        } finally {
-            return AtomResponse(status)
+            logger.warn("Fail to execute the task atom", t)
+            atomResponse = AtomResponse(
+                buildStatus = BuildStatus.FAILED,
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
+                errorMsg = t.message
+            )
         }
+        return atomResponse
     }
 
-    fun execute(task: PipelineBuildTask, param: VMBuildContainer): BuildStatus {
+    fun execute(task: PipelineBuildTask, param: VMBuildContainer): AtomResponse {
         val projectId = task.projectId
         val pipelineId = task.pipelineId
         val buildId = task.buildId
@@ -228,7 +240,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             )
         )
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
-        return BuildStatus.CALL_WAITING
+        return AtomResponse(BuildStatus.CALL_WAITING)
     }
 
     private fun getDispatchType(
@@ -367,7 +379,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     override fun tryFinish(task: PipelineBuildTask, param: VMBuildContainer, runVariables: Map<String, String>, force: Boolean): AtomResponse {
         return if (force) {
             if (BuildStatus.isFinish(task.status)) {
-                AtomResponse(task.status)
+                AtomResponse(
+                    buildStatus = task.status,
+                    errorType = task.errorType,
+                    errorCode = task.errorCode,
+                    errorMsg = task.errorMsg
+                )
             } else { // 强制终止的设置为失败
                 logger.warn("[${task.buildId}]|[FORCE_STOP_IN_START_TASK]")
                 pipelineEventDispatcher.dispatch(
@@ -385,7 +402,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 defaultFailAtomResponse
             }
         } else {
-            AtomResponse(task.status)
+            AtomResponse(
+                buildStatus = task.status,
+                errorType = task.errorType,
+                errorCode = task.errorCode,
+                errorMsg = task.errorMsg
+            )
         }
     }
 

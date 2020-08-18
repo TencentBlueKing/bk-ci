@@ -87,9 +87,9 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         param: NormalContainer,
         runVariables: Map<String, String>
     ): AtomResponse {
-        var status: BuildStatus = BuildStatus.FAILED
+        var atomResponse: AtomResponse
         try {
-            status = startUpDocker(task, param)
+            atomResponse = startUpDocker(task, param)
         } catch (t: BuildTaskException) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
@@ -98,12 +98,12 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
             )
-            logger.warn("Build container init failed", t)
-            AtomResponse(
+            logger.warn("Build container init failed", e)
+            atomResponse = AtomResponse(
                 buildStatus = BuildStatus.FAILED,
-                errorType = t.errorType,
-                errorCode = t.errorCode,
-                errorMsg = t.message
+                errorType = e.errorType,
+                errorCode = e.errorCode,
+                errorMsg = e.message
             )
         } catch (t: Throwable) {
             buildLogPrinter.addRedLine(
@@ -114,19 +114,18 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 executeCount = task.executeCount ?: 1
             )
             logger.warn("Build container init failed", t)
-            AtomResponse(
+            atomResponse = AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                 errorMsg = t.message
             )
-        } finally {
-            return AtomResponse(status)
         }
+        return atomResponse
     }
 
     // TODO Exception中的错误码对应提示信息修改提取
-    fun startUpDocker(task: PipelineBuildTask, param: NormalContainer): BuildStatus {
+    fun startUpDocker(task: PipelineBuildTask, param: NormalContainer): AtomResponse {
         val projectId = task.projectId
         val pipelineId = task.pipelineId
         val buildId = task.buildId
@@ -207,13 +206,18 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             )
         )
         logger.info("[$buildId]|STARTUP_DOCKER|($vmSeqId)|Dispatch startup")
-        return BuildStatus.CALL_WAITING
+        return AtomResponse(BuildStatus.CALL_WAITING)
     }
 
     override fun tryFinish(task: PipelineBuildTask, param: NormalContainer, runVariables: Map<String, String>, force: Boolean): AtomResponse {
         return if (force) {
             if (BuildStatus.isFinish(task.status)) {
-                AtomResponse(task.status)
+                AtomResponse(
+                    buildStatus = task.status,
+                    errorType = task.errorType,
+                    errorCode = task.errorCode,
+                    errorMsg = task.errorMsg
+                )
             } else { // 强制终止的设置为失败
                 logger.warn("[${task.buildId}]|[FORCE_STOP_BUILD_LESS_IN_START_TASK]")
                 pipelineEventDispatcher.dispatch(
@@ -230,7 +234,12 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 defaultFailAtomResponse
             }
         } else {
-            AtomResponse(task.status)
+            AtomResponse(
+                buildStatus = task.status,
+                errorType = task.errorType,
+                errorCode = task.errorCode,
+                errorMsg = task.errorMsg
+            )
         }
     }
 

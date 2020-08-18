@@ -26,10 +26,12 @@
 
 package com.tencent.devops.dispatch.service.dispatcher
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -48,11 +50,13 @@ interface Dispatcher {
         buildLogPrinter: BuildLogPrinter,
         pipelineEventDispatcher: PipelineEventDispatcher,
         event: PipelineAgentStartupEvent,
+        errorType: ErrorType? = ErrorType.SYSTEM,
+        errorCode: Int? = 0,
         errorMessage: String? = null
     ) {
         if (event.retryTime > 3) {
             // 置为失败
-            onFailBuild(client, buildLogPrinter, event, errorMessage ?: "Fail to start up after 3 retries")
+            onFailBuild(client, buildLogPrinter, event, ErrorType.SYSTEM, ErrorCodeEnum.START_VM_FAIL.errorCode, errorMessage ?: "Fail to start up after 3 retries")
             return
         }
         event.retryTime += 1
@@ -64,18 +68,26 @@ interface Dispatcher {
         client: Client,
         buildLogPrinter: BuildLogPrinter,
         event: PipelineAgentStartupEvent,
-        errorMessage: String
+        errorType: ErrorType,
+        errorCode: Int,
+        errorMsg: String
     ) {
         buildLogPrinter.addRedLine(
             buildId = event.buildId,
-            message = errorMessage,
+            message = errorMsg,
             tag = VMUtils.genStartVMTaskId(event.containerId),
             jobId = event.containerHashId,
             executeCount = event.executeCount ?: 1
         )
         client.get(ServiceBuildResource::class).setVMStatus(
-            projectId = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId,
-            vmSeqId = event.vmSeqId, status = BuildStatus.FAILED
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            status = BuildStatus.FAILED,
+            errorType = errorType,
+            errorCode = errorCode,
+            errorMsg = errorMsg
         )
     }
 }
