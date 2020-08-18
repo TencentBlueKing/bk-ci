@@ -24,20 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.model.message
+package com.tencent.devops.log.configuration
 
-import com.tencent.devops.log.model.pojo.enums.LogType
+import com.tencent.devops.common.es.ESClient
+import com.tencent.devops.log.client.impl.LogClientImpl
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
-/**
- *
- * Powered By Tencent
- */
-data class LogMessageWithLineNo(
-    val tag: String,
-    val jobId: String = "",
-    val message: String,
-    var timestamp: Long = 0,
-    val logType: LogType = LogType.LOG,
-    var lineNo: Long = 0,
-    var executeCount: Int? = 1
-)
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class LogClientConfiguration {
+
+    @Bean
+    fun logClient(@Autowired transportClient: ESClient) =
+        LogClientImpl(transportClient)
+}

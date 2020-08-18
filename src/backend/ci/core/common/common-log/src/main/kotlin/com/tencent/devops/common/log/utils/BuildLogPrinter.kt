@@ -24,101 +24,95 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.utils
+package com.tencent.devops.common.log.utils
 
 import com.tencent.devops.common.log.Ansi
-import com.tencent.devops.log.model.message.LogMessage
-import com.tencent.devops.log.model.pojo.LogEvent
-import com.tencent.devops.log.model.pojo.LogStatusEvent
-import com.tencent.devops.log.model.pojo.enums.LogType
-import com.tencent.devops.log.utils.LogDispatcher.dispatch
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.log.pojo.LogEvent
+import com.tencent.devops.common.log.pojo.LogStatusEvent
+import com.tencent.devops.common.log.pojo.enums.LogType
 
-object LogUtils {
+class BuildLogPrinter(
+    private val logMQEventDispatcher: LogMQEventDispatcher
+) {
 
-    fun addLine(rabbitTemplate: RabbitTemplate, buildId: String, message: String, tag: String, jobId: String? = null, executeCount: Int) {
-        dispatch(rabbitTemplate, genLogEvent(buildId, message, tag, jobId, LogType.LOG, executeCount))
+    fun addLine(buildId: String, message: String, tag: String, jobId: String? = null, executeCount: Int) {
+        logMQEventDispatcher.dispatch(genLogEvent(buildId, message, tag, jobId, LogType.LOG, executeCount))
     }
 
-    fun addLines(rabbitTemplate: RabbitTemplate, buildId: String, logMessages: List<LogMessage>) {
-        dispatch(rabbitTemplate, LogEvent(buildId, logMessages))
+    fun addLines(buildId: String, logMessages: List<LogMessage>) {
+        logMQEventDispatcher.dispatch(LogEvent(buildId, logMessages))
     }
 
     fun addFoldStartLine(
-        rabbitTemplate: RabbitTemplate,
         buildId: String,
         groupName: String,
         tag: String,
         jobId: String? = null,
         executeCount: Int
     ) {
-        dispatch(rabbitTemplate, genLogEvent(buildId, "##[group]$groupName", tag, jobId, LogType.LOG, executeCount))
+        logMQEventDispatcher.dispatch(genLogEvent(buildId, "##[group]$groupName", tag, jobId, LogType.LOG, executeCount))
     }
 
     fun addFoldEndLine(
-        rabbitTemplate: RabbitTemplate,
         buildId: String,
         groupName: String,
         tag: String,
         jobId: String? = null,
         executeCount: Int
     ) {
-        dispatch(rabbitTemplate, genLogEvent(buildId, "##[endgroup]$groupName", tag, jobId, LogType.LOG, executeCount))
+        logMQEventDispatcher.dispatch(genLogEvent(buildId, "##[endgroup]$groupName", tag, jobId, LogType.LOG, executeCount))
     }
 
     fun addRangeStartLine(
-        rabbitTemplate: RabbitTemplate,
         buildId: String,
         rangeName: String,
         tag: String,
         jobId: String? = null,
         executeCount: Int
     ) {
-        dispatch(rabbitTemplate, genLogEvent(buildId, "[START] $rangeName", tag, jobId, LogType.START, executeCount))
+        logMQEventDispatcher.dispatch(genLogEvent(buildId, "[START] $rangeName", tag, jobId, LogType.START, executeCount))
     }
 
     fun addRangeEndLine(
-        rabbitTemplate: RabbitTemplate,
         buildId: String,
         rangeName: String,
         tag: String,
         jobId: String? = null,
         executeCount: Int
     ) {
-        dispatch(rabbitTemplate, genLogEvent(buildId, "[END] $rangeName", tag, jobId, LogType.END, executeCount))
+        logMQEventDispatcher.dispatch(genLogEvent(buildId, "[END] $rangeName", tag, jobId, LogType.END, executeCount))
     }
 
     fun addYellowLine(
-        rabbitTemplate: RabbitTemplate,
         buildId: String,
         message: String,
         tag: String,
         jobId: String? = null,
         executeCount: Int
-    ) = addLine(rabbitTemplate, buildId, Ansi().bold().fgYellow().a(message).reset().toString(), tag, jobId, executeCount)
+    ) = addLine(buildId, Ansi().bold().fgYellow().a(message).reset().toString(), tag, jobId, executeCount)
 
     fun addRedLine(
-        rabbitTemplate: RabbitTemplate,
         buildId: String,
         message: String,
         tag: String,
         jobId: String?,
         executeCount: Int
-    ) = addLine(rabbitTemplate, buildId, Ansi().bold().fgRed().a(message).reset().toString(), tag, jobId, executeCount)
+    ) = addLine(buildId, Ansi().bold().fgRed().a(message).reset().toString(), tag, jobId, executeCount)
 
     fun updateLogStatus(
-        rabbitTemplate: RabbitTemplate,
         buildId: String,
         finished: Boolean,
         tag: String,
         jobId: String? = null,
         executeCount: Int?
     ) {
-        dispatch(rabbitTemplate, LogStatusEvent(buildId, finished, tag, jobId ?: "", executeCount))
+        logMQEventDispatcher.dispatch(LogStatusEvent(buildId, finished, tag, jobId
+            ?: "", executeCount))
     }
 
-    fun stopLog(rabbitTemplate: RabbitTemplate, buildId: String, tag: String, jobId: String?, executeCount: Int? = null) {
-        updateLogStatus(rabbitTemplate, buildId, true, tag, jobId, executeCount)
+    fun stopLog(buildId: String, tag: String, jobId: String?, executeCount: Int? = null) {
+        updateLogStatus(buildId, true, tag, jobId, executeCount)
     }
 
     private fun genLogEvent(

@@ -24,9 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.model.v2
+package com.tencent.devops.common.web.mq.property
 
-data class IndexAndType(
-    val index: String,
-    val type: String
+import org.springframework.boot.context.properties.ConfigurationProperties
+
+@ConfigurationProperties(prefix = "spring.rabbitmq.extend")
+data class ExtendRabbitMQProperties(
+    val host: String = "localhost",
+    val port: Int = 5672,
+    val username: String? = null,
+    val password: String? = null,
+    val addresses: String? = null,
+    val virtualHost: String? = null
 )

@@ -24,28 +24,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.model.pojo
+package com.tencent.devops.common.log.pojo.enums
 
-import com.tencent.devops.log.model.pojo.enums.LogStatus
+import com.fasterxml.jackson.annotation.JsonValue
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-/**
- *
- * Powered By Tencent
- */
-@ApiModel("日志查询模型")
-data class QueryLogs(
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("是否结束", required = true)
-    var finished: Boolean,
-    @ApiModelProperty("是否有后续日志", required = false)
-    var hasMore: Boolean? = false,
-    @ApiModelProperty("日志列表", required = true)
-    val logs: MutableList<LogLine> = mutableListOf(),
-    @ApiModelProperty("所用时间", required = false)
-    var timeUsed: Long = 0,
-    @ApiModelProperty("日志查询状态", required = false)
-    var status: LogStatus = LogStatus.SUCCEED
-)
+@ApiModel("日志状态")
+enum class LogStatus(private val status: Int) {
+    @ApiModelProperty("正常结束")
+    SUCCEED(0),
+    @ApiModelProperty("日志为空")
+    EMPTY(1),
+    @ApiModelProperty("日志被清除")
+    CLEAN(2),
+    @ApiModelProperty("日志被关闭")
+    CLOSED(3),
+    @ApiModelProperty("其他异常")
+    FAIL(999);
+
+    @JsonValue
+    fun jsonValue(): Int {
+        return status
+    }
+}

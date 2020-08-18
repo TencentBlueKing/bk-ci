@@ -24,7 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-event")
-    compile project(":core:common:common-web")
+package com.tencent.devops.common.log.utils
+
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.log.pojo.ILogEvent
+import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
+import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
+import javax.annotation.Resource
+
+class LogMQEventDispatcher(
+    @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME)
+    private val rabbitTemplate: RabbitTemplate
+) {
+
+    fun dispatch(event: ILogEvent) {
+        try {
+//            logger.info("[${event.buildId}] Dispatch the event")
+            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
+                // 事件中的变量指定
+                if (event.delayMills > 0) {
+                    message.messageProperties.setHeader("x-delay", event.delayMills)
+                } else if (eventType.delayMills > 0) { // 事件类型固化默认值
+                    message.messageProperties.setHeader("x-delay", eventType.delayMills)
+                }
+                message
+            }
+        } catch (ignored: Throwable) {
+            logger.error("Fail to dispatch the event($event)", ignored)
+        }
+    }
+
+    private val logger = LoggerFactory.getLogger(LogMQEventDispatcher::class.java)
 }

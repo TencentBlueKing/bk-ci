@@ -24,22 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.common.log.pojo.message
 
-import com.tencent.devops.common.es.ESClient
-import com.tencent.devops.log.client.impl.LogClientImpl
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+/**
+ *
+ * Powered By Tencent
+ */
+data class LegacyLogMessage(
+    val tag: String,
+    val buildId: String,
+    val message: String,
+    val timestamp: Long,
+    val nanoTime: Long
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || other.javaClass != this.javaClass) return false
 
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class LogConfiguration {
+        val otherObj = other as LegacyLogMessage
+        return this.buildId == otherObj.buildId &&
+            this.nanoTime == otherObj.nanoTime
+    }
 
-    @Bean
-    fun logClient(@Autowired transportClient: ESClient) = LogClientImpl(transportClient)
+    override fun hashCode(): Int {
+        return "${buildId}_$nanoTime".hashCode()
+    }
+
+    override fun toString(): String {
+        return "LegacyLogMessage(tag='$tag', buildId='$buildId', " +
+            "message='$message', timestamp=$timestamp, nanoTime=$nanoTime)"
+    }
 }
