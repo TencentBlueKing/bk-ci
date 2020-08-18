@@ -33,7 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.element.CosCdnDistributionElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.api.cos.ServicePluginCosResource
 import com.tencent.devops.plugin.pojo.cos.CdnUploadFileInfo
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -43,7 +43,6 @@ import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MIL
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -53,7 +52,7 @@ import org.springframework.stereotype.Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class CosCdnDistributionTaskAtom @Autowired constructor(
     private val client: Client,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation
 ) : IAtomTask<CosCdnDistributionElement> {
 
@@ -72,8 +71,7 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
         val buildId = task.buildId
         if (param.regexPaths.isBlank()) {
             logger.error("regexPaths is not initialized of build($buildId)")
-            LogUtils.addRedLine(
-                rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId,
                 "regexPaths is not initialized",
                 taskId,
@@ -90,7 +88,7 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
 
         if (param.ticketId.isBlank()) {
             logger.error("ticketId is not initialized of build($buildId)")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "ticketId is not initialized", taskId, task.containerHashId, task.executeCount
+            buildLogPrinter.addRedLine(buildId, "ticketId is not initialized", taskId, task.containerHashId, task.executeCount
                 ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -109,7 +107,7 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
 
         if (userId == null) {
             logger.warn("The start user is empty")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "启动用户名为空", taskId, task.containerHashId, task.executeCount
+            buildLogPrinter.addRedLine(buildId, "启动用户名为空", taskId, task.containerHashId, task.executeCount
                 ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -128,7 +126,7 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
                 ?: 1, cdnUploadFileInfo)
         if (taskResult.isNotOk() || taskResult.data == null) {
             logger.warn("Start upload to cdn task failed.msg:${taskResult.message}")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "上传CDN失败", taskId, task.containerHashId, task.executeCount
+            buildLogPrinter.addRedLine(buildId, "上传CDN失败", taskId, task.containerHashId, task.executeCount
                 ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -146,7 +144,7 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
             task.taskParams["bsCdnUploadTaskId"] = cdnUploadTaskId
             task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
             task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 5000
-            LogUtils.addLine(rabbitTemplate, buildId, "等待上传结果", taskId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addLine(buildId, "等待上传结果", taskId, task.containerHashId, task.executeCount ?: 1)
         }
         return if (buildStatus == BuildStatus.FAILED)
             AtomResponse(
@@ -166,7 +164,7 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
     ): AtomResponse {
         val buildId = task.buildId
         if (task.taskParams["bsCdnUploadTaskId"] == null) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "找不到CDN任务ID，请联系管理员", task.taskId, task.containerHashId, task.executeCount
+            buildLogPrinter.addRedLine(buildId, "找不到CDN任务ID，请联系管理员", task.taskId, task.containerHashId, task.executeCount
                 ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -193,7 +191,7 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
         logger.info("Waiting for upload task done...")
         if (System.currentTimeMillis() - startTime > maxRunningMins * 60 * 1000) {
             logger.warn("Upload to cdn timeout. timeout minutes:$maxRunningMins")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "上传CDN失败超时，超时时间:$maxRunningMins", taskId, containerId, retryCount)
+            buildLogPrinter.addRedLine(buildId, "上传CDN失败超时，超时时间:$maxRunningMins", taskId, containerId, retryCount)
             return BuildStatus.FAILED
         }
 
@@ -208,8 +206,7 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
             val uploadDetail = redisOperation.get(taskId + "_result")
             if (null != uploadDetail) {
                 logger.info("Upload to cdn success, total file: ${count?.toInt()}, detail information: $uploadDetail")
-                LogUtils.addLine(
-                    rabbitTemplate,
+                buildLogPrinter.addLine(
                     buildId,
                     "Upload to cdn success, total file: ${count?.toInt()}, detail: $uploadDetail%",
                     taskId,
@@ -220,7 +217,7 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
             }
         } else if (status.toInt() == 2) {
             logger.info("Upload to cdn failed!")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "上传CDN失败", taskId, containerId, retryCount)
+            buildLogPrinter.addRedLine(buildId, "上传CDN失败", taskId, containerId, retryCount)
             return BuildStatus.FAILED
         }
         return BuildStatus.LOOP_WAITING

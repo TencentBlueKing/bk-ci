@@ -40,7 +40,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.jsonMediaType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.JobExecuteTaskExtElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -51,7 +51,6 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE
@@ -61,7 +60,7 @@ import org.springframework.stereotype.Component
 @Component
 @Scope(SCOPE_PROTOTYPE)
 class JobExecuteTaskExtAtom @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val client: Client
 ) : IAtomTask<JobExecuteTaskExtElement> {
     override fun getParamElement(task: PipelineBuildTask): JobExecuteTaskExtElement {
@@ -116,19 +115,19 @@ class JobExecuteTaskExtAtom @Autowired constructor(
         val executeCount = task.executeCount ?: 1
         val appId = client.get(ServiceProjectResource::class).get(task.projectId).data?.ccAppId?.toInt()
             ?: run {
-                LogUtils.addLine(rabbitTemplate, task.buildId, "找不到绑定配置平台的业务ID/can not found CC Business ID", task.taskId,
+                buildLogPrinter.addLine(task.buildId, "找不到绑定配置平台的业务ID/can not found CC Business ID", task.taskId,
                 task.containerHashId,
                 executeCount
                 )
                 return defaultFailAtomResponse
             }
         if (appId < 0) {
-            LogUtils.addRedLine(rabbitTemplate, task.buildId, "绑定配置平台的业务ID错误/appId is not init", task.taskId, task.containerHashId, executeCount)
+            buildLogPrinter.addRedLine(task.buildId, "绑定配置平台的业务ID错误/appId is not init", task.taskId, task.containerHashId, executeCount)
             return defaultFailAtomResponse
         }
 
         if (param.taskId < 0) {
-            LogUtils.addRedLine(rabbitTemplate, task.buildId, "绑定的作业模板ID错误/taskId is not init", task.taskId, task.containerHashId, executeCount)
+            buildLogPrinter.addRedLine(task.buildId, "绑定的作业模板ID错误/taskId is not init", task.taskId, task.containerHashId, executeCount)
             return defaultFailAtomResponse
         }
 
@@ -144,7 +143,7 @@ class JobExecuteTaskExtAtom @Autowired constructor(
         val taskInstanceId = sendTaskRequest(task, appId, param.taskId, globalVar, operator, executeCount)
         if (taskInstanceId <= 0) {
             // 失败处理
-            LogUtils.addLine(rabbitTemplate, task.buildId, "作业执行失败/start job failed", task.taskId, task.containerHashId, executeCount)
+            buildLogPrinter.addLine(task.buildId, "作业执行失败/start job failed", task.taskId, task.containerHashId, executeCount)
             return defaultFailAtomResponse
         }
         val startTime = System.currentTimeMillis()
@@ -167,7 +166,7 @@ class JobExecuteTaskExtAtom @Autowired constructor(
         task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
 
         if (!BuildStatus.isFinish(buildStatus)) {
-            LogUtils.addLine(rabbitTemplate, task.buildId, "作业执行中/Waiting for job:$taskInstanceId", task.taskId, task.containerHashId, executeCount)
+            buildLogPrinter.addLine(task.buildId, "作业执行中/Waiting for job:$taskInstanceId", task.taskId, task.containerHashId, executeCount)
         }
         return if (buildStatus == BuildStatus.FAILED) AtomResponse(
             buildStatus = BuildStatus.FAILED,
@@ -250,8 +249,7 @@ class JobExecuteTaskExtAtom @Autowired constructor(
 
         if (System.currentTimeMillis() - startTime > maxRunningMills) {
             logger.warn("job getTimeout. getTimeout minutes:${maxRunningMills / 60000}")
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId = buildId,
                 message = "执行超时/Job getTimeout: ${maxRunningMills / 60000} Minutes",
                 tag = taskId,
@@ -266,11 +264,11 @@ class JobExecuteTaskExtAtom @Autowired constructor(
         return if (taskResult.isFinish) {
             if (taskResult.success) {
                 logger.info("[$buildId]|SUCCEED|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addLine(rabbitTemplate, buildId, taskResult.msg, taskId, containerHashId, executeCount)
+                buildLogPrinter.addLine(buildId, taskResult.msg, taskId, containerHashId, executeCount)
                 BuildStatus.SUCCEED
             } else {
                 logger.info("[$buildId]|FAIL|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addRedLine(rabbitTemplate, buildId, taskResult.msg, taskId, containerHashId, executeCount)
+                buildLogPrinter.addRedLine(buildId, taskResult.msg, taskId, containerHashId, executeCount)
                 BuildStatus.FAILED
             }
         } else {
@@ -308,16 +306,14 @@ class JobExecuteTaskExtAtom @Autowired constructor(
                     val responseData = response["data"] as Map<String, Any>
                     val taskInstanceId = responseData["taskInstanceId"].toString().toLong()
                     logger.info("start job success, taskInstanceId: $taskInstanceId")
-                    LogUtils.addLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addLine(
                         buildId = task.buildId,
                         message = "执行成功/start job success, taskInstanceId: $taskInstanceId",
                         tag = task.taskId,
                             jobId = task.containerHashId,
                 executeCount = executeCount
                     )
-                    LogUtils.addLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addLine(
                         buildId = task.buildId,
                         message = "Job detail: <a target='_blank' href='http://job.ied.com/?taskInstanceList&appId=$appId#taskInstanceId=$taskInstanceId'>查看详情</a>",
                         tag = task.taskId,
@@ -329,8 +325,7 @@ class JobExecuteTaskExtAtom @Autowired constructor(
                 } else {
                     val msg = response["message"] as String
                     logger.error("start job failed, msg: $msg")
-                    LogUtils.addRedLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addRedLine(
                         buildId = task.buildId,
                         message = "执行失败/start job failed, msg: $msg",
                         tag = task.taskId,
@@ -342,8 +337,7 @@ class JobExecuteTaskExtAtom @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("start job exception", e)
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId = task.buildId,
                 message = "执行发生异常/start job exception: ${e.message}",
                 tag = task.taskId,

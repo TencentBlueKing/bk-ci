@@ -38,7 +38,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -58,7 +58,6 @@ import okhttp3.RequestBody
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -71,7 +70,7 @@ import java.nio.file.Paths
 class ComDistributeTaskAtom @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val jobFastPushFile: JobFastPushFile,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val pipelineUserService: PipelineUserService,
     private val client: Client,
     private val commonConfig: CommonConfig,
@@ -133,10 +132,10 @@ class ComDistributeTaskAtom @Autowired constructor(
 
             task.taskParams[FIRST_STATUS] = buildStatus.name
             if (BuildStatus.isFailure(buildStatus)) { // 步骤1失败，终止
-                LogUtils.addRedLine(rabbitTemplate, buildId, "构件分发失败/send file to svr fail", taskId, containerId, executeCount)
+                buildLogPrinter.addRedLine(buildId, "构件分发失败/send file to svr fail", taskId, containerId, executeCount)
                 return AtomResponse(buildStatus)
             }
-            LogUtils.addLine(rabbitTemplate, buildId, "构件分发成功/send file to svr done", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "构件分发成功/send file to svr done", taskId, containerId, executeCount)
         }
 
         return defaultSuccessAtomResponse
@@ -162,10 +161,10 @@ class ComDistributeTaskAtom @Autowired constructor(
         clearTempFile(task) // 清理临时文件
 
         if (BuildStatus.isFailure(buildStatus)) { // 如果失败则结束
-            LogUtils.addRedLine(rabbitTemplate, buildId, "send file to svr fail", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, "send file to svr fail", taskId, containerId, executeCount)
             return AtomResponse(buildStatus)
         } else if (BuildStatus.isFinish(buildStatus)) { // 成功了，继续
-            LogUtils.addLine(rabbitTemplate, buildId, "send file to svr done", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "send file to svr done", taskId, containerId, executeCount)
         }
 
         return AtomResponse(buildStatus)
@@ -184,12 +183,12 @@ class ComDistributeTaskAtom @Autowired constructor(
         val executeCount = task.executeCount ?: 1
         val workspace = java.nio.file.Files.createTempDirectory("${DigestUtils.md5Hex("$buildId-$taskId")}_").toFile()
         val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
 
         val localFileList = mutableListOf<String>()
         val appId = client.get(ServiceProjectResource::class).get(task.projectId).data?.ccAppId?.toInt()
             ?: run {
-                LogUtils.addLine(rabbitTemplate, task.buildId, "找不到绑定业务ID/can not found business ID", task.taskId,
+                buildLogPrinter.addLine(task.buildId, "找不到绑定业务ID/can not found business ID", task.taskId,
                     containerId, executeCount
                 )
                 return BuildStatus.FAILED
@@ -207,7 +206,7 @@ class ComDistributeTaskAtom @Autowired constructor(
                     val fileList = bkRepoClient.matchBkRepoFile(userId, regex, projectId, pipelineId, buildId, isCustom)
                     val repoName = if (isCustom) "custom" else "pipeline"
                     fileList.forEach { bkrepoFile ->
-                        LogUtils.addLine(rabbitTemplate, buildId, "匹配到文件：(${bkrepoFile.displayPath})", taskId, containerId, executeCount)
+                        buildLogPrinter.addLine(buildId, "匹配到文件：(${bkrepoFile.displayPath})", taskId, containerId, executeCount)
                         count++
                         val destFile = File(workspace, File(bkrepoFile.displayPath).name)
                         bkRepoClient.downloadFile(userId, projectId, repoName, bkrepoFile.fullPath, destFile)
@@ -216,8 +215,7 @@ class ComDistributeTaskAtom @Autowired constructor(
                     }
                 } else {
                     val requestBody = getRequestBody(regex.trim(), isCustom)
-                    LogUtils.addLine(
-                        rabbitTemplate,
+                    buildLogPrinter.addLine(
                         buildId,
                         "requestBody:" + requestBody.removePrefix("items.find(").removeSuffix(")"),
                         taskId,
@@ -250,10 +248,9 @@ class ComDistributeTaskAtom @Autowired constructor(
                 }
             }
 
-            LogUtils.addLine(rabbitTemplate, buildId, "$count 个文件将被分发/$count file(s) will be distribute...", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "$count 个文件将被分发/$count file(s) will be distribute...", taskId, containerId, executeCount)
             if (count == 0) {
-                LogUtils.addRedLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "找不到传输文件/Can not find any file! regex: $regexPathsStr",
                     tag = taskId,
@@ -282,7 +279,7 @@ class ComDistributeTaskAtom @Autowired constructor(
                 )
             )
 
-            LogUtils.addLine(rabbitTemplate, buildId, "准备发送文件至服务器/Prepare send file to svr", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "准备发送文件至服务器/Prepare send file to svr", taskId, containerId, executeCount)
 
             val targetIpList =
                 targetIpsStr.split(",", ";", "\n").filter { StringUtils.isNotBlank(it) }.map { SourceIp(it.trim()) }
@@ -292,8 +289,7 @@ class ComDistributeTaskAtom @Autowired constructor(
             if (null != lastModifyUser && userId != lastModifyUser) {
                 // 以流水线的最后一次修改人身份执行；如果最后一次修改人也没有这个环境的操作权限，这种情况不考虑，有问题联系产品!
                 logger.info("userId:$userId, lastModifyUser:$lastModifyUser")
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addLine(
                     buildId = buildId,
                     message = "将以用户${lastModifyUser}执行文件传输/Will use $lastModifyUser to distribute file...",
                     tag = taskId,
@@ -304,7 +300,7 @@ class ComDistributeTaskAtom @Autowired constructor(
             }
             task.taskParams[STARTER] = userId
             task.taskParams[WORKSPACE] = workspace.absolutePath
-            LogUtils.addLine(rabbitTemplate, buildId, "开始传输文件/start send file", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "开始传输文件/start send file", taskId, containerId, executeCount)
             val taskInstanceId = jobFastPushFile.fastPushFile(
                 buildId = buildId,
                 operator = userId,

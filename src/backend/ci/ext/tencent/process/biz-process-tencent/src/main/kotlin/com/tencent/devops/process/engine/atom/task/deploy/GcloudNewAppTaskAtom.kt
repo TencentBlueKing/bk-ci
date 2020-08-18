@@ -46,14 +46,13 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.api.ServiceGcloudConfResource
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.util.gcloud.TicketUtil
 import org.apache.commons.lang.math.NumberUtils
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -65,7 +64,7 @@ import java.nio.file.Files
 class GcloudNewAppTaskAtom @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val commonConfig: CommonConfig,
     private val redisOperation: RedisOperation,
     private val repoGray: RepoGray,
@@ -78,7 +77,7 @@ class GcloudNewAppTaskAtom @Autowired constructor(
 
     override fun execute(task: PipelineBuildTask, param: GcloudAppElement, runVariables: Map<String, String>): AtomResponse {
         parseParam(param, runVariables)
-        LogUtils.addLine(rabbitTemplate, task.buildId, "gcloud element params:\n $param", task.taskId, task.containerHashId, task.executeCount
+        buildLogPrinter.addLine(task.buildId, "gcloud element params:\n $param", task.taskId, task.containerHashId, task.executeCount
             ?: 1)
 
         val gcloudUtil = TicketUtil(client)
@@ -146,7 +145,7 @@ class GcloudNewAppTaskAtom @Autowired constructor(
         val destPath = Files.createTempDirectory("gcloud").toAbsolutePath().toString()
 
         val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", taskId, task.containerHashId, task.executeCount
+        buildLogPrinter.addLine(buildId, "use bkrepo: $isRepoGray", taskId, task.containerHashId, task.executeCount
             ?: 1)
 
         val downloadFileList = if (isRepoGray) {
@@ -183,7 +182,7 @@ class GcloudNewAppTaskAtom @Autowired constructor(
 
         val host = client.get(ServiceGcloudConfResource::class).getByConfigId(configId.toInt()).data
         if (host == null) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "unknown configId($configId)", taskId, task.containerHashId, task.executeCount
+            buildLogPrinter.addRedLine(buildId, "unknown configId($configId)", taskId, task.containerHashId, task.executeCount
                 ?: 1)
             return AtomResponse(BuildStatus.FAILED)
         }
@@ -191,7 +190,7 @@ class GcloudNewAppTaskAtom @Autowired constructor(
         val gcloudClient = HistoryTaskGcloudClient(objectMapper, host.address, host.fileAddress)
 
         if (downloadFileList.isEmpty()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "匹配不到待分发的文件: $filePath", taskId, task.containerHashId, task.executeCount
+            buildLogPrinter.addRedLine(buildId, "匹配不到待分发的文件: $filePath", taskId, task.containerHashId, task.executeCount
                 ?: 1)
             return AtomResponse(BuildStatus.FAILED)
         }
@@ -199,38 +198,38 @@ class GcloudNewAppTaskAtom @Autowired constructor(
         val diffVersions = getPreVersion(productId, preVersionCount, commonParam, gcloudClient)?.joinToString("|")
 
         downloadFileList.forEach { downloadFile ->
-            LogUtils.addLine(rabbitTemplate, buildId, "开始对文件（${downloadFile.path}）执行Gcloud相关操作，详情请去gcloud官方地址查看：<a target='_blank' href='http://console.gcloud.oa.com/dolphin/channel/$gameId'>查看详情</a>\n", taskId, task.containerHashId, task.executeCount
+            buildLogPrinter.addLine(buildId, "开始对文件（${downloadFile.path}）执行Gcloud相关操作，详情请去gcloud官方地址查看：<a target='_blank' href='http://console.gcloud.oa.com/dolphin/channel/$gameId'>查看详情</a>\n", taskId, task.containerHashId, task.executeCount
                 ?: 1)
 
             try {
                 // step1
-                LogUtils.addLine(rabbitTemplate, buildId, "开始执行 \"创建上传任务\" 操作\n", taskId, task.containerHashId, task.executeCount
+                buildLogPrinter.addLine(buildId, "开始执行 \"创建上传任务\" 操作\n", taskId, task.containerHashId, task.executeCount
                     ?: 1)
                 val uploadTaskType = if (type == "newApp") 0 else 1
                 val taskParams = NewUploadTaskParam(userId, productId.toInt(), versionStr, uploadTaskType, diffVersions)
-                LogUtils.addLine(rabbitTemplate, buildId, "\"创建上传任务\" 参数: $taskParams\n", taskId, task.containerHashId, task.executeCount
+                buildLogPrinter.addLine(buildId, "\"创建上传任务\" 参数: $taskParams\n", taskId, task.containerHashId, task.executeCount
                     ?: 1)
                 val uploadResult = gcloudClient.newUploadTask(taskParams, commonParam)
-                LogUtils.addLine(rabbitTemplate, buildId, "\"创建上传任务\" 响应结果: $uploadResult\n", taskId, task.containerHashId, task.executeCount
+                buildLogPrinter.addLine(buildId, "\"创建上传任务\" 响应结果: $uploadResult\n", taskId, task.containerHashId, task.executeCount
                     ?: 1)
 
                 // step2
-                LogUtils.addLine(rabbitTemplate, buildId, "开始执行 \"上传更新文件\" 操作\n", taskId, task.containerHashId, task.executeCount
+                buildLogPrinter.addLine(buildId, "开始执行 \"上传更新文件\" 操作\n", taskId, task.containerHashId, task.executeCount
                     ?: 1)
                 val gCloudTaskId = uploadResult.result!!["UploadTaskID"] as String
                 val taskInfo = uploadResult.result!!["TaskInfo"] as String
                 val uploadUpdateFileParam = UploadUpdateFileParam(gCloudTaskId, taskInfo, FileUtil.getMD5(downloadFile))
-                LogUtils.addLine(rabbitTemplate, buildId, "\"上传更新文件\" 参数: $uploadUpdateFileParam\n", taskId, task.containerHashId, task.executeCount
+                buildLogPrinter.addLine(buildId, "\"上传更新文件\" 参数: $uploadUpdateFileParam\n", taskId, task.containerHashId, task.executeCount
                     ?: 1)
                 val uploadUpdateFileResult = gcloudClient.uploadUpdateFile(downloadFile, uploadUpdateFileParam, fileCommonParam)
-                LogUtils.addLine(rabbitTemplate, buildId, "\"上传更新文件\" 响应结果: $uploadUpdateFileResult\n", taskId, task.containerHashId, task.executeCount
+                buildLogPrinter.addLine(buildId, "\"上传更新文件\" 响应结果: $uploadUpdateFileResult\n", taskId, task.containerHashId, task.executeCount
                     ?: 1)
 
                 // step3
-                LogUtils.addLine(rabbitTemplate, buildId, "开始执行 \"查询上传任务状态\" 操作\n", taskId, task.containerHashId, task.executeCount
+                buildLogPrinter.addLine(buildId, "开始执行 \"查询上传任务状态\" 操作\n", taskId, task.containerHashId, task.executeCount
                     ?: 1)
                 val getUploadTaskParam = GetUploadTaskStatParam(gCloudTaskId)
-                LogUtils.addLine(rabbitTemplate, buildId, "\"查询上传任务状态\" 参数: $getUploadTaskParam\n", taskId, task.containerHashId, task.executeCount
+                buildLogPrinter.addLine(buildId, "\"查询上传任务状态\" 参数: $getUploadTaskParam\n", taskId, task.containerHashId, task.executeCount
                     ?: 1)
                 val versionInfo: String
                 loop@ while (true) {
@@ -239,20 +238,20 @@ class GcloudNewAppTaskAtom @Autowired constructor(
                     val message = getTaskResult.message
                     when (state) {
                         "new", "processing", "ready" -> {
-                            LogUtils.addLine(rabbitTemplate, buildId, "\"等待查询版本上传任务状态\" 操作执行完毕: \n", taskId, task.containerHashId, task.executeCount
+                            buildLogPrinter.addLine(buildId, "\"等待查询版本上传任务状态\" 操作执行完毕: \n", taskId, task.containerHashId, task.executeCount
                                 ?: 1)
-                            LogUtils.addLine(rabbitTemplate, buildId, "\"$getTaskResult\n\n", taskId, task.containerHashId, task.executeCount
+                            buildLogPrinter.addLine(buildId, "\"$getTaskResult\n\n", taskId, task.containerHashId, task.executeCount
                                 ?: 1)
                             Thread.sleep(1000 * 6)
                         }
                         "succeeded" -> {
-                            LogUtils.addLine(rabbitTemplate, buildId, "\"查询版本上传任务状态\" 操作 成功执行完毕\n", taskId, task.containerHashId, task.executeCount
+                            buildLogPrinter.addLine(buildId, "\"查询版本上传任务状态\" 操作 成功执行完毕\n", taskId, task.containerHashId, task.executeCount
                                 ?: 1)
                             versionInfo = getTaskResult.result!!["VersionInfo"] as String
                             break@loop
                         }
                         else -> {
-                            LogUtils.addRedLine(rabbitTemplate, buildId, "上传文件失败: $message($state)", taskId, task.containerHashId, task.executeCount
+                            buildLogPrinter.addRedLine(buildId, "上传文件失败: $message($state)", taskId, task.containerHashId, task.executeCount
                                 ?: 1)
                             return AtomResponse(BuildStatus.FAILED)
                         }
@@ -261,37 +260,37 @@ class GcloudNewAppTaskAtom @Autowired constructor(
 
                 // step 4
                 if (type == "newApp") {
-                    LogUtils.addLine(rabbitTemplate, buildId, "开始执行 \"创建程序版本\" 操作\n", taskId, task.containerHashId, task.executeCount
+                    buildLogPrinter.addLine(buildId, "开始执行 \"创建程序版本\" 操作\n", taskId, task.containerHashId, task.executeCount
                         ?: 1)
                     val newAppParam = NewAppParam(
                         userId, productId.toInt(), versionStr, versionInfo, diffVersions, availableType,
                         if (NumberUtils.isNumber(grayRuleID)) grayRuleID?.toInt() else null,
                         versionDes, customStr)
-                    LogUtils.addLine(rabbitTemplate, buildId, "\"创建程序版本\" 参数: $newAppParam\n", taskId, task.containerHashId, task.executeCount
+                    buildLogPrinter.addLine(buildId, "\"创建程序版本\" 参数: $newAppParam\n", taskId, task.containerHashId, task.executeCount
                         ?: 1)
                     val newResResult = gcloudClient.newApp(newAppParam, commonParam)
-                    LogUtils.addLine(rabbitTemplate, buildId, "\"创建程序版本\" 响应结果: $newResResult\n", taskId, task.containerHashId, task.executeCount
+                    buildLogPrinter.addLine(buildId, "\"创建程序版本\" 响应结果: $newResResult\n", taskId, task.containerHashId, task.executeCount
                         ?: 1)
                 } else {
-                    LogUtils.addLine(rabbitTemplate, buildId, "开始执行 \"创建资源版本\" 操作\n", taskId, task.containerHashId, task.executeCount
+                    buildLogPrinter.addLine(buildId, "开始执行 \"创建资源版本\" 操作\n", taskId, task.containerHashId, task.executeCount
                         ?: 1)
                     val newResParam = NewResParam(appVersionStr ?: "",
                         userId, productId.toInt(), versionStr, versionInfo, availableType,
                         if (NumberUtils.isNumber(grayRuleID)) grayRuleID?.toInt() else null,
                         versionDes, customStr)
-                    LogUtils.addLine(rabbitTemplate, buildId, "\"创建资源版本\" 参数: $newResParam\n", taskId, task.containerHashId, task.executeCount
+                    buildLogPrinter.addLine(buildId, "\"创建资源版本\" 参数: $newResParam\n", taskId, task.containerHashId, task.executeCount
                         ?: 1)
                     val newResResult = gcloudClient.newRes(newResParam, commonParam)
-                    LogUtils.addLine(rabbitTemplate, buildId, "\"创建资源版本\" 响应结果: $newResResult\n", taskId, task.containerHashId, task.executeCount
+                    buildLogPrinter.addLine(buildId, "\"创建资源版本\" 响应结果: $newResResult\n", taskId, task.containerHashId, task.executeCount
                         ?: 1)
                 }
 
                 // step5
-                LogUtils.addLine(rabbitTemplate, buildId, "开始执行 \"预发布单个或多个渠道\" 操作\n", taskId, task.containerHashId, task.executeCount
+                buildLogPrinter.addLine(buildId, "开始执行 \"预发布单个或多个渠道\" 操作\n", taskId, task.containerHashId, task.executeCount
                     ?: 1)
                 val prePublishParam = PrePublishParam(userId, productId)
                 val prePubResult = gcloudClient.prePublish(prePublishParam, commonParam)
-                LogUtils.addLine(rabbitTemplate, buildId, "预发布单个或多个渠道响应结果: $prePubResult\n", taskId, task.containerHashId, task.executeCount
+                buildLogPrinter.addLine(buildId, "预发布单个或多个渠道响应结果: $prePubResult\n", taskId, task.containerHashId, task.executeCount
                     ?: 1)
             } finally {
                 downloadFile.delete()

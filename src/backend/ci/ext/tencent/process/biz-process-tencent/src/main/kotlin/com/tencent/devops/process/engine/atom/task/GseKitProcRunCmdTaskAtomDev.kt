@@ -36,7 +36,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.GseKitProcRunCmdElementDev
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -46,7 +46,6 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE
@@ -56,7 +55,7 @@ import org.springframework.stereotype.Component
 @Component
 @Scope(SCOPE_PROTOTYPE)
 class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<GseKitProcRunCmdElementDev> {
 
     @Value("\${gsekit.proc}")
@@ -82,7 +81,7 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
 
         // 环境类型，配置平台集群的标准属性；可选值为 1（中文含义：测试环境），2（体验环境），3（正式环境）
         if (1 != param.envId && 2 != param.envId) {
-            LogUtils.addRedLine(rabbitTemplate, task.buildId, "envId is not validate", task.taskId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(task.buildId, "envId is not validate", task.taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -96,7 +95,7 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
 
         val sessionRs = createSession(param.appId, param.envId, operator)
         if (!sessionRs.success) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "Gsekit create sesssion failed, msg: ${sessionRs.message}", taskId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId, "Gsekit create sesssion failed, msg: ${sessionRs.message}", taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -107,7 +106,7 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
         val sessionId = sessionRs.data as String
         val runProcRs = procRunCmd(param.cmd, procIdValue, paramsValue, operator, sessionId)
         if (!runProcRs.success) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "Gsekit proc run cmd failed, msg: ${runProcRs.message}", taskId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId, "Gsekit proc run cmd failed, msg: ${runProcRs.message}", taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -123,7 +122,7 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
             task.taskParams["bsGseKitTaskId"] = gseKitTaskId
             task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
             task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 6000
-            LogUtils.addLine(rabbitTemplate, buildId, "等待上传结果", taskId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addLine(buildId, "等待上传结果", taskId, task.containerHashId, task.executeCount ?: 1)
         }
         return AtomResponse(buildStatus)
     }
@@ -131,7 +130,7 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
     override fun tryFinish(task: PipelineBuildTask, param: GseKitProcRunCmdElementDev, runVariables: Map<String, String>, force: Boolean): AtomResponse {
         val buildId = task.buildId
         if (task.taskParams["bsGseKitTaskId"] == null) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "找不到GseKit任务ID，请联系管理员", task.taskId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId, "找不到GseKit任务ID，请联系管理员", task.taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -165,7 +164,7 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
     ): BuildStatus {
         logger.info("waiting for gsekit done, timeout: $timeout min")
         if (System.currentTimeMillis() - startTime > timeout * 60 * 1000) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "execute gsekit timeout", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, "execute gsekit timeout", taskId, containerId, executeCount)
             return BuildStatus.FAILED
         }
 
@@ -176,11 +175,11 @@ class GseKitProcRunCmdTaskAtomDev @Autowired constructor(
                 BuildStatus.LOOP_WAITING
             }
             !success -> {
-                LogUtils.addRedLine(rabbitTemplate, buildId, "execute gsekit failed, msg: $msg", taskId, containerId, executeCount)
+                buildLogPrinter.addRedLine(buildId, "execute gsekit failed, msg: $msg", taskId, containerId, executeCount)
                 BuildStatus.FAILED
             }
             else -> {
-                LogUtils.addLine(rabbitTemplate, buildId, "execute gsekit success!", taskId, containerId, executeCount)
+                buildLogPrinter.addLine(buildId, "execute gsekit success!", taskId, containerId, executeCount)
                 BuildStatus.SUCCEED
             }
         }
