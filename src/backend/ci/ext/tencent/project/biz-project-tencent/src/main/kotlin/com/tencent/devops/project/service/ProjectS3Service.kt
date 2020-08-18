@@ -26,6 +26,7 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -44,7 +45,8 @@ class ProjectS3Service @Autowired constructor(
     private val s3Service: S3Service,
     private val projectDao: ProjectDao,
     private val tofService: TOFService,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val bkRepoClient: BkRepoClient
 ) {
 
     companion object {
@@ -65,6 +67,7 @@ class ProjectS3Service @Autowired constructor(
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "")
                 logger.info("get user dept info successfully!")
+                bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
                 projectDao.create(
                     dslContext, userId, logoAddress, projectCreateInfo, userDeptDetail,
                     projectCreateInfo.englishName, ProjectChannelCode.BS
