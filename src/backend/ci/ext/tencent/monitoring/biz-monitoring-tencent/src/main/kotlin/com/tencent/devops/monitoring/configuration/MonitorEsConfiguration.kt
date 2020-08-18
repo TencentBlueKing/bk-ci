@@ -28,7 +28,7 @@ class MonitorEsConfiguration {
         if (ip.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群地址尚未配置: elasticsearch.ip")
         }
-        if (port == null || port <= 0) {
+        if (port == null) {
             throw IllegalArgumentException("ES集群端口尚未配置: elasticsearch.port")
         }
         if (user.isNullOrBlank()) {
