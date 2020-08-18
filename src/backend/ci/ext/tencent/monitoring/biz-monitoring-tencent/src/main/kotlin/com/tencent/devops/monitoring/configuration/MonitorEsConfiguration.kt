@@ -11,24 +11,24 @@ import java.net.InetAddress
 
 @Configuration
 class MonitorEsConfiguration {
-    @Value("\${elasticsearch.ip}")
-    private val ip: String? = null
+    @Value("\${elasticsearch.ip:#{null}}")
+    private var ip: String? = null
 
-    @Value("\${elasticsearch.port}")
-    private val port: Int? = 0
+    @Value("\${elasticsearch.port:#{null}}")
+    private var port: Int? = 0
 
-    @Value("\${elasticsearch.user}")
-    private val user: String? = null
+    @Value("\${elasticsearch.user:#{null}}")
+    private var user: String? = null
 
-    @Value("\${elasticsearch.password}")
-    private val password: String? = null
+    @Value("\${elasticsearch.password:#{null}}")
+    private var password: String? = null
 
     @Bean
     fun transportClient(): TransportClient {
         if (ip.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群地址尚未配置: elasticsearch.ip")
         }
-        if (port == null) {
+        if (port == null || port!! <= 0) {
             throw IllegalArgumentException("ES集群端口尚未配置: elasticsearch.port")
         }
         if (user.isNullOrBlank()) {
@@ -41,6 +41,6 @@ class MonitorEsConfiguration {
             Settings.builder()
                 .put("xpack.security.user", "$user:$password")
                 .build()
-        ).addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ip), port))
+        ).addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ip), port!!))
     }
 }
