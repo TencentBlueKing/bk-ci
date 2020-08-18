@@ -34,6 +34,7 @@ dependencies {
     compile project(":ext:tencent:monitoring:model-monitoring-tencent")
     compile project(":ext:tencent:common:common-notify-tencent")
     compile project(":core:common:common-db")
+    compile project(":core:common:common-es")
     compile("org.apache.commons:commons-compress:1.15")
     compile("org.json:json:20140107")
     compile("org.influxdb:influxdb-java:2.10")

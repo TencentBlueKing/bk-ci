@@ -1,6 +1,7 @@
 package com.tencent.devops.monitoring.job
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.monitoring.client.InfluxdbClient
@@ -9,6 +10,7 @@ import com.tencent.devops.monitoring.util.EmailUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import org.apache.commons.lang3.tuple.MutablePair
+import org.elasticsearch.index.query.QueryBuilders
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,7 +26,8 @@ class MonitorNotifyJob @Autowired constructor(
     private val influxdbClient: InfluxdbClient,
     private val slaDailyDao: SlaDailyDao,
     private val dslContext: DSLContext,
-    private val profile: Profile
+    private val profile: Profile,
+    private val esClient: ESClient
 ) {
 
     @Value("\${sla.receivers:#{null}}")
@@ -63,6 +66,9 @@ class MonitorNotifyJob @Autowired constructor(
             codecc(startTime, endTime)
         )
 
+        //TODO
+        apiStatus(startTime, endTime)
+
         // 发送邮件
         val message = EmailNotifyMessage()
         message.addAllReceivers(receivers!!.split(",").toHashSet())
@@ -81,6 +87,24 @@ class MonitorNotifyJob @Autowired constructor(
                 }
             }
         }
+    }
+
+    fun apiStatus(startTime: Long, endTime: Long) {
+        val indices = esClient.client.admin().cluster()
+            .prepareState().get().state
+            .metaData.indices;
+
+        logger.info("apiStatus , indices:$indices")
+
+//        val query = QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("@timestamp").gte(startTime).lte(endTime))
+//            .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"process\" AND NOT(status: \"500\")"))
+//        logger.info("apiStatus , query:$query")
+//
+//        val response = esClient.client.prepareSearch("bkdevops-gateway-v2-access").setQuery(query).get()
+//        logger.info("apiStatus , response:$response")
+//
+//        val totalHits = response.hits.totalHits
+//        logger.info("apiStatus , totalHits:$totalHits")
     }
 
     fun userStatus(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Int, String>>> {
@@ -251,7 +275,7 @@ class MonitorNotifyJob @Autowired constructor(
                 when (module) {
                     Module.ATOM -> return "http://9.56.38.242:443/d/Z_R3JrVMz/cha-jian-shi-bai-xiang-qing?var-atomCode=$name&from=$startTime&to=$endTime"
                     Module.DISPATCH -> return "http://9.56.38.242:443/d/ET3bo3VGz/gou-jian-ji-shi-bai-xiang-qing?var-buildType=$name&from=$startTime&to=$endTime"
-                    Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$startTime"
+                    Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$endTime"
                     Module.CODECC -> return "http://9.56.38.242:443/d/uJaL6mNMz/codeccgong-ju-shang-bao-xiang-qing?var-toolName=$name&from=$startTime&to=$endTime"
                 }
             }
@@ -259,7 +283,7 @@ class MonitorNotifyJob @Autowired constructor(
                 when (module) {
                     Module.ATOM -> return "http://9.56.38.242:443/d/Z_R3JrVMz/cha-jian-shi-bai-xiang-qing?var-atomCode=$name&from=$startTime&to=$endTime"
                     Module.DISPATCH -> return "http://9.56.38.242:443/d/ET3bo3VGz/gou-jian-ji-shi-bai-xiang-qing?var-buildType=$name&from=$startTime&to=$endTime"
-                    Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$startTime"
+                    Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$endTime"
                     Module.CODECC -> return "http://9.56.38.242:443/d/uJaL6mNMz/codeccgong-ju-shang-bao-xiang-qing?var-toolName=$name&from=$startTime&to=$endTime"
                 }
             }
@@ -267,7 +291,7 @@ class MonitorNotifyJob @Autowired constructor(
                 when (module) {
                     Module.ATOM -> return "http://9.56.38.242:443/d/Z_R3JrVMz/cha-jian-shi-bai-xiang-qing?var-atomCode=$name&from=$startTime&to=$endTime"
                     Module.DISPATCH -> return "http://9.56.38.242:443/d/ET3bo3VGz/gou-jian-ji-shi-bai-xiang-qing?var-buildType=$name&from=$startTime&to=$endTime"
-                    Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$startTime"
+                    Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$endTime"
                     Module.CODECC -> return "http://9.56.38.242:443/d/uJaL6mNMz/codeccgong-ju-shang-bao-xiang-qing?var-toolName=$name&from=$startTime&to=$endTime"
                 }
             }
@@ -286,4 +310,11 @@ class MonitorNotifyJob @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(MonitorNotifyJob::class.java)
     }
+}
+
+fun main(args: Array<String>) {
+    val filter = QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("@timestamp").gte(111).lte(222))
+        .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"process\" AND NOT(status: \"500\")"))
+
+    println(filter)
 }
