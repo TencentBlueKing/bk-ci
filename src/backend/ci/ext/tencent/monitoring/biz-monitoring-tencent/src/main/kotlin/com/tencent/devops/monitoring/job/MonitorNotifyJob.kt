@@ -90,15 +90,21 @@ class MonitorNotifyJob @Autowired constructor(
     }
 
     fun apiStatus(startTime: Long, endTime: Long) {
-        val query = QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("@timestamp").gte(startTime).lte(endTime))
-            .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"process\" AND NOT(status: \"500\")"))
-        logger.info("apiStatus , query:$query")
+        val indices = esClient.client.admin().cluster()
+            .prepareState().get().state
+            .metaData.indices;
 
-        val response = esClient.client.prepareSearch("bkdevops-gateway-v2-access").setQuery(query).get()
-        logger.info("apiStatus , response:$response")
+        logger.info("apiStatus , indices:$indices")
 
-        val totalHits = response.hits.totalHits
-        logger.info("apiStatus , totalHits:$totalHits")
+//        val query = QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("@timestamp").gte(startTime).lte(endTime))
+//            .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"process\" AND NOT(status: \"500\")"))
+//        logger.info("apiStatus , query:$query")
+//
+//        val response = esClient.client.prepareSearch("bkdevops-gateway-v2-access").setQuery(query).get()
+//        logger.info("apiStatus , response:$response")
+//
+//        val totalHits = response.hits.totalHits
+//        logger.info("apiStatus , totalHits:$totalHits")
     }
 
     fun userStatus(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Int, String>>> {
