@@ -51,7 +51,7 @@ import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
@@ -78,7 +78,6 @@ import com.tencent.devops.store.pojo.common.KEY_VERSION
 import okhttp3.Request
 import org.apache.lucene.util.RamUsageEstimator
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
@@ -94,7 +93,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     private val buildVariableService: BuildVariableService,
     @Autowired(required = false)
     private val measureService: MeasureService?,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val atomMonitorEventDispatcher: AtomMonitorEventDispatcher,
     private val pipelineTaskService: PipelineTaskService,
@@ -596,8 +595,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 actionType = ActionType.END
             )
         )
-        LogUtils.stopLog(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.stopLog(
             buildId = buildId,
             tag = result.elementId,
             jobId = result.containerId ?: ""

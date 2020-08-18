@@ -39,7 +39,7 @@ import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
@@ -58,7 +58,6 @@ import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -75,7 +74,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
     private val client: Client,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<NormalContainer> {
     override fun getParamElement(task: PipelineBuildTask): NormalContainer {
         return JsonUtil.mapTo(task.taskParams, NormalContainer::class.java)
@@ -92,8 +91,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         try {
             atomResponse = startUpDocker(task, param)
         } catch (e: BuildTaskException) {
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId = task.buildId,
                 message = "Build container init failed: ${e.message}",
                 tag = task.taskId,
@@ -108,9 +106,12 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 errorMsg = e.message
             )
         } catch (t: Throwable) {
-            LogUtils.addRedLine(
-                rabbitTemplate, task.buildId,
-                "Build container init failed: ${t.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
+            buildLogPrinter.addRedLine(
+                buildId = task.buildId,
+                message = "Build container init failed: ${t.message}",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
             )
             logger.warn("Build container init failed", t)
             atomResponse = AtomResponse(
@@ -167,7 +168,12 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             buildStatus = BuildStatus.RUNNING
         )
         // 读取原子市场中的原子信息，写入待构建处理
-        val atoms = AtomUtils.parseContainerMarketAtom(container, task, client, rabbitTemplate)
+        val atoms = AtomUtils.parseContainerMarketAtom(
+            container = container,
+            task = task,
+            client = client,
+            buildLogPrinter = buildLogPrinter
+        )
 
         val source = "dockerStartupTaskAtom"
         val dispatchType =

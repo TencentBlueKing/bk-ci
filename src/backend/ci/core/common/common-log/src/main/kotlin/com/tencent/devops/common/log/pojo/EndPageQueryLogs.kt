@@ -24,32 +24,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.utils
+package com.tencent.devops.common.log.pojo
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.log.model.pojo.ILogEvent
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import com.tencent.devops.common.log.pojo.enums.LogStatus
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-object LogDispatcher {
-
-    fun dispatch(rabbitTemplate: RabbitTemplate, event: ILogEvent) {
-        try {
-//            logger.info("[${event.buildId}] Dispatch the event")
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
-                // 事件中的变量指定
-                if (event.delayMills > 0) {
-                    message.messageProperties.setHeader("x-delay", event.delayMills)
-                } else if (eventType.delayMills > 0) { // 事件类型固化默认值
-                    message.messageProperties.setHeader("x-delay", eventType.delayMills)
-                }
-                message
-            }
-        } catch (ignored: Throwable) {
-            logger.error("Fail to dispatch the event($event)", ignored)
-        }
-    }
-
-    private val logger = LoggerFactory.getLogger(LogDispatcher::class.java)
-}
+/**
+ *
+ * Powered By Tencent
+ */
+@ApiModel("结尾的日志查询模型")
+data class EndPageQueryLogs(
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("开始行号", required = true)
+    val startLineNo: Long = 0L,
+    @ApiModelProperty("结束行号", required = true)
+    val endLineNo: Long = 0L,
+    @ApiModelProperty("日志列表", required = true)
+    val logs: List<LogLine> = listOf(),
+    @ApiModelProperty("所用时间", required = false)
+    var timeUsed: Long = 0,
+    @ApiModelProperty("日志查询状态", required = false)
+    var status: LogStatus = LogStatus.SUCCEED
+)

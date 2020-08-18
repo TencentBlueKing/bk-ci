@@ -24,17 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.model.pojo.enums
+package com.tencent.devops.common.log.pojo.message
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("日志类型")
-enum class LogType {
-    @ApiModelProperty("启动日志")
-    START,
-    @ApiModelProperty("结束日志")
-    END,
-    @ApiModelProperty("普通的日志")
-    LOG
-}
+/**
+ *
+ * Powered By Tencent
+ */
+data class LogStatus(
+    val buildId: String,
+    val finished: Boolean,
+    val updateTime: Long
+)

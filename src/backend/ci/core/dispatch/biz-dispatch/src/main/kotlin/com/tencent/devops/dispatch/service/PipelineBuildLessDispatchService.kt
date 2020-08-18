@@ -31,21 +31,19 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.service.dispatcher.BuildLessDispatcher
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.reflections.Reflections
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class PipelineBuildLessDispatchService @Autowired constructor(
     private val client: Client,
-    private val logService: LogService,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     private var dispatchers: Set<BuildLessDispatcher>? = null
@@ -92,8 +90,7 @@ class PipelineBuildLessDispatchService @Autowired constructor(
         }
 
         if (pipelineBuildLessAgentStartupEvent.retryTime == 0) {
-            LogUtils.addLine(
-                rabbitTemplate,
+            buildLogPrinter.addLine(
                 buildId,
                 "Prepare BuildLess Job(#$vmSeqId)...",
                 "",
@@ -121,7 +118,7 @@ class PipelineBuildLessDispatchService @Autowired constructor(
                 it.shutdown(event)
             }
         } finally {
-            logService.stopLog(event.buildId)
+            buildLogPrinter.stopLog(buildId = event.buildId, tag = "", jobId = null)
         }
     }
 

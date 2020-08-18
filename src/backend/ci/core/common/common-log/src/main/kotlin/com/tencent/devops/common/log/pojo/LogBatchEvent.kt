@@ -24,31 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.service
+package com.tencent.devops.common.log.pojo
 
-import com.tencent.devops.log.utils.LogUtils
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 
-@Service
-class LogService @Autowired constructor(private val rabbitTemplate: RabbitTemplate) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(LogService::class.java)
-    }
-
-    /**
-     * 构建日志输出结束
-     * @param buildId 构建ID
-     */
-    fun stopLog(buildId: String): Boolean {
-        try {
-            LogUtils.stopLog(rabbitTemplate = rabbitTemplate, buildId = buildId, tag = "", jobId = null)
-        } catch (e: Exception) {
-            logger.error("Fail to stop log status of build($buildId)", e)
-        }
-        return false
-    }
-}
+/**
+ * deng
+ * 2019-01-23
+ */
+@Event(MQ.EXCHANGE_LOG_BATCH_BUILD_EVENT, MQ.ROUTE_LOG_BATCH_BUILD_EVENT)
+data class LogBatchEvent(
+    override val buildId: String,
+    val logs: List<LogMessageWithLineNo>,
+    override val retryTime: Int = 2,
+    override val delayMills: Int = 0,
+    override var esName: String? = null
+) : ILogEvent(buildId, retryTime, delayMills, esName)

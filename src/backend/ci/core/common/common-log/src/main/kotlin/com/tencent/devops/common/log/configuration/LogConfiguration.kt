@@ -24,48 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.mq
+package com.tencent.devops.common.log.configuration
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.amqp.rabbit.annotation.EnableRabbit
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.LogMQEventDispatcher
+import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
-import org.springframework.boot.autoconfigure.AutoConfigureBefore
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
-/**
- *
- * Powered By Tencent
- */
 @Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-@AutoConfigureBefore(RabbitAutoConfiguration::class)
-@EnableRabbit
-class RabbitMQAutoConfiguration {
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class LogConfiguration {
 
     @Bean
-    @Primary
-    fun rabbitTemplate(connectionFactory: ConnectionFactory, objectMapper: ObjectMapper): RabbitTemplate {
-        val rabbitTemplate = RabbitTemplate(connectionFactory)
-        rabbitTemplate.messageConverter = messageConverter(objectMapper)
-        return rabbitTemplate
-    }
+    fun logMQEventDispatcher(
+        @Qualifier(value = EXTEND_RABBIT_TEMPLATE_NAME)
+        rabbitTemplate: RabbitTemplate
+    ) = LogMQEventDispatcher(rabbitTemplate)
 
     @Bean
-    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
-// 默认配置从application.yml中配置
-//    @Bean
-//    fun rabbitListenerContainerFactory(connectionFactory: ConnectionFactory, objectMapper: ObjectMapper): SimpleRabbitListenerContainerFactory {
-//        val factory = SimpleRabbitListenerContainerFactory()
-//        factory.setConnectionFactory(connectionFactory)
-//        factory.setConcurrentConsumers(5)
-//        factory.setMessageConverter(messageConverter(objectMapper))
-//        return factory
-//    }
+    fun buildLogPrinter(
+        @Qualifier(value = EXTEND_RABBIT_TEMPLATE_NAME)
+        rabbitTemplate: RabbitTemplate
+    ) = BuildLogPrinter(logMQEventDispatcher(rabbitTemplate))
 }
