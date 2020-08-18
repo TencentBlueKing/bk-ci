@@ -90,10 +90,10 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         var atomResponse: AtomResponse
         try {
             atomResponse = startUpDocker(task, param)
-        } catch (t: BuildTaskException) {
+        } catch (e: BuildTaskException) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
-                message = "Build container init failed: ${t.message}",
+                message = "Build container init failed: ${e.message}",
                 tag = task.taskId,
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1

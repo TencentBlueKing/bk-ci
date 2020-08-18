@@ -106,7 +106,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         } catch (e: BuildTaskException) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
-                message = "Fail to execute the task atom: ${t.message}",
+                message = "Fail to execute the task atom: ${e.message}",
                 tag = task.taskId,
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
@@ -121,7 +121,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         } catch (t: Throwable) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
-                message = "Fail to execute the task atom: ${ignored.message}",
+                message = "Fail to execute the task atom: ${t.message}",
                 tag = task.taskId,
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
