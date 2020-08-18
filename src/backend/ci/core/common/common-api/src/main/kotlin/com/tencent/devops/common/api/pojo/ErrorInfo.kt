@@ -24,43 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.measure
+package com.tencent.devops.common.api.pojo
 
-import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.enums.BuildStatus
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface MeasureService {
-
-    fun postPipelineData(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        startTime: Long,
-        startType: String,
-        username: String,
-        buildStatus: BuildStatus,
-        buildNum: Int,
-        model: Model?,
-        errorInfoList: String? = null
-    )
-
-    fun postCancelData(projectId: String, pipelineId: String, buildId: String, userId: String)
-
-    fun postTaskData(
-        projectId: String,
-        pipelineId: String,
-        taskId: String,
-        atomCode: String,
-        name: String,
-        buildId: String,
-        startTime: Long,
-        status: BuildStatus,
-        type: String,
-        executeCount: Int?,
-        extraInfo: Map<String, Any>? = null,
-        errorType: String? = null,
-        errorCode: Int? = null,
-        errorMsg: String? = null,
-        userId: String
-    )
-}
+@ApiModel("第三方Agent数据返回包装模型")
+data class ErrorInfo(
+    @ApiModelProperty("插件ID", required = false)
+    val taskId: String,
+    @ApiModelProperty("插件名称", required = false)
+    val taskName: String,
+    @ApiModelProperty("插件编号", required = false)
+    val atomCode: String,
+    @ApiModelProperty("错误类型", required = false)
+    val errorType: ErrorType,
+    @ApiModelProperty("错误码", required = true)
+    val errorCode: Int,
+    @ApiModelProperty("错误信息", required = false)
+    val errorMsg: String
+)
