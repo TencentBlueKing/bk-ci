@@ -27,7 +27,6 @@ package com.tencent.devops.monitoring.services
 
 import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
-import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.monitoring.pojo.UsersStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
