@@ -1,7 +1,7 @@
 <template>
     <infinite-scroll class="build-history-tab-content" ref="infiniteScroll" :data-fetcher="requestHistory" scroll-box-class-name="bkdevops-pipeline-history" v-slot="slotProps">
         <filter-bar v-if="showFilterBar" @query="slotProps.queryList" :set-history-page-status="setHistoryPageStatus" :reset-query-condition="resetQueryCondition" v-bind="historyPageStatus.queryMap"></filter-bar>
-        <build-history-table :loading-more="slotProps.isLoadingMore" :current-pipeline-version="currentPipelineVersion" @update-table="updateBuildHistoryList" :build-list="slotProps.list" :columns="shownColumns" :empty-tips-config="emptyTipsConfig" :show-log="showLog"></build-history-table>
+        <build-history-table v-if="!slotProps.isLoading" :loading-more="slotProps.isLoadingMore" :current-pipeline-version="currentPipelineVersion" @update-table="updateBuildHistoryList" :build-list="slotProps.list" :columns="shownColumns" :empty-tips-config="emptyTipsConfig" :show-log="showLog"></build-history-table>
         <bk-dialog
             width="567"
             :title="$t('history.settingCols')"
@@ -164,7 +164,7 @@
                 const isBuildId = /^#b-+/.test(this.$route.hash) // 检查是否是合法的buildId
                 isBuildId && this.showLog(this.$route.hash.slice(1), '', true)
             }
-            webSocketMessage.installWsMessage(this.updateBuildHistoryList)
+            webSocketMessage.installWsMessage(this.refreshBuildHistoryList)
         },
 
         updated () {
@@ -306,13 +306,17 @@
                 }
             },
 
-            async updateBuildHistoryList () {
+            refreshBuildHistoryList () {
+                this.updateBuildHistoryList(true)
+            },
+
+            async updateBuildHistoryList (isRefresh = false) {
                 try {
                     if (!this.pipelineId || !this.projectId || !this.$refs.infiniteScroll) {
                         webSocketMessage.unInstallWsMessage()
                         return
                     }
-                    const res = await this.$refs.infiniteScroll.updateList()
+                    const res = await this.$refs.infiniteScroll.updateList(isRefresh)
                     this.currentPipelineVersion = res.pipelineVersion || ''
                 } catch (err) {
                     if (err.code === 403) {

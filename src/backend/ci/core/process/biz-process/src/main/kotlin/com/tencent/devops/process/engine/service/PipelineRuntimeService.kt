@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -106,6 +107,7 @@ import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
@@ -127,7 +129,11 @@ import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_VERSION
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BRANCH
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_COMMIT_MESSAGE
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -585,11 +591,19 @@ class PipelineRuntimeService @Autowired constructor(
                     null
                 },
                 webHookType = webhookType,
+                webhookInfo = if (webhookInfo != null) {
+                    JsonUtil.getObjectMapper().readValue(webhookInfo) as WebhookInfo
+                } else {
+                    null
+                },
                 startType = getStartType(trigger, webhookType),
                 recommendVersion = recommendVersion,
-                errorType = if (errorType != null) ErrorType.values()[errorType].name else null,
-                errorCode = errorCode,
-                errorMsg = errorMsg
+                retry = isRetry ?: false,
+                errorInfoList = if (errorInfo != null) {
+                    JsonUtil.getObjectMapper().readValue(errorInfo) as List<ErrorInfo>
+                } else {
+                    null
+                }
             )
         }
     }
@@ -1029,7 +1043,8 @@ class PipelineRuntimeService @Autowired constructor(
                     channelCode = channelCode,
                     parentBuildId = parentBuildId,
                     parentTaskId = parentTaskId,
-                    webhookType = params[PIPELINE_WEBHOOK_TYPE] as String?
+                    webhookType = params[PIPELINE_WEBHOOK_TYPE] as String?,
+                    webhookInfo = getWebhookInfo(params)
                 )
                 // detail记录,未正式启动，先排队状态
                 buildDetailDao.create(
@@ -1114,6 +1129,21 @@ class PipelineRuntimeService @Autowired constructor(
         )
 
         return buildId
+    }
+
+    private fun getWebhookInfo(params: Map<String, Any>): String? {
+        if (params[PIPELINE_START_TYPE] != StartType.WEB_HOOK.name) {
+            return null
+        }
+        return JsonUtil.toJson(
+            WebhookInfo(
+                webhookMessage = params[PIPELINE_WEBHOOK_COMMIT_MESSAGE] as String?,
+                webhookRepoUrl = params[BK_REPO_WEBHOOK_REPO_URL] as String?,
+                webhookType = params[PIPELINE_WEBHOOK_TYPE] as String?,
+                webhookBranch = params[PIPELINE_WEBHOOK_BRANCH] as String?,
+                webhookEventType = params[PIPELINE_WEBHOOK_EVENT_TYPE] as String?
+            )
+        )
     }
 
     private fun calculateStartVMTaskSeq(taskSeq: Int, container: Container, atomElement: Element): Int {
@@ -1489,9 +1519,7 @@ class PipelineRuntimeService @Autowired constructor(
     fun finishLatestRunningBuild(
         latestRunningBuild: LatestRunningBuild,
         currentBuildStatus: BuildStatus,
-        errorType: ErrorType?,
-        errorCode: Int?,
-        errorMsg: String?
+        errorInfoList: List<ErrorInfo>?
     ) {
         if (BuildStatus.isReadyToRun(currentBuildStatus)) {
             // 减1,当作没执行过
@@ -1541,9 +1569,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildParameters = JsonUtil.toJson(buildParameters),
                 recommendVersion = recommendVersion,
                 remark = remark,
-                errorType = errorType,
-                errorCode = errorCode,
-                errorMsg = errorMsg
+                errorInfoList = errorInfoList
             )
             webSocketDispatcher.dispatch(
                 pipelineWebsocketService.buildHistoryMessage(
@@ -1628,6 +1654,23 @@ class PipelineRuntimeService @Autowired constructor(
         )
     }
 
+    fun setTaskErrorInfo(
+        buildId: String,
+        taskId: String,
+        errorType: ErrorType,
+        errorCode: Int,
+        errorMsg: String
+    ) {
+        pipelineBuildTaskDao.setTaskErrorInfo(
+            dslContext = dslContext,
+            buildId = buildId,
+            taskId = taskId,
+            errorType = errorType,
+            errorCode = errorCode,
+            errorMsg = errorMsg
+        )
+    }
+
     fun updateTaskStatus(
         buildId: String,
         taskId: String,
@@ -1637,7 +1680,7 @@ class PipelineRuntimeService @Autowired constructor(
         errorCode: Int? = null,
         errorMsg: String? = null
     ) {
-        logger.info("[$buildId]|updateTaskStatus|buildStatus=$buildStatus|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
+        logger.info("[$buildId]|updateTaskStatus|taskId=$taskId|buildStatus=$buildStatus|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
         val task = getBuildTask(buildId, taskId)
         if (task != null) {
             updateTaskStatus(
