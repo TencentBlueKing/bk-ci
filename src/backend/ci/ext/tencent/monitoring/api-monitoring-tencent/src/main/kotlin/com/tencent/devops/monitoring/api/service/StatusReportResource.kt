@@ -27,7 +27,6 @@ package com.tencent.devops.monitoring.api.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
-import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.monitoring.pojo.UsersStatus
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -58,13 +57,5 @@ interface StatusReportResource {
     fun userUsers(
         @ApiParam("users接口状态", required = true)
         users: UsersStatus
-    ): Result<Boolean>
-
-    @ApiOperation("各个dispatch模块上报开机状态")
-    @POST
-    @Path("/dispatch/status")
-    fun dispatch(
-        @ApiParam("构建机开机关机状态", required = true)
-        dispatchStatus: DispatchStatus
     ): Result<Boolean>
 }

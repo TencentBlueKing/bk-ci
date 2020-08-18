@@ -43,8 +43,4 @@ class StatusReportResourceImpl @Autowired constructor(private val statusReportSe
     override fun userUsers(users: UsersStatus): Result<Boolean> {
         return Result(statusReportService.reportUserUsers(users))
     }
-
-    override fun dispatch(dispatchStatus: DispatchStatus): Result<Boolean> {
-        return Result(statusReportService.reportDispatchStatus(dispatchStatus))
-    }
 }

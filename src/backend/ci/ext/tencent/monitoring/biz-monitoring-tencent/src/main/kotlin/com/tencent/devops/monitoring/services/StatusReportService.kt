@@ -63,16 +63,6 @@ class StatusReportService @Autowired constructor(
             false
         }
     }
-
-    fun reportDispatchStatus(dispatchStatus: DispatchStatus): Boolean {
-        return try {
-            influxdbClient.insert(dispatchStatus)
-            true
-        } catch (e: Throwable) {
-            logger.error("reportDispatchStatus exception:", e)
-            false
-        }
-    }
 }
 
 fun main(args: Array<String>) {
