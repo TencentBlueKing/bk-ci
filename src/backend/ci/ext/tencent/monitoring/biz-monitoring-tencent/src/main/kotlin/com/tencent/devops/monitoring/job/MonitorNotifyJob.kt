@@ -3,27 +3,33 @@ package com.tencent.devops.monitoring.job
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.monitoring.client.InfluxdbClient
+import com.tencent.devops.monitoring.dao.SlaDailyDao
 import com.tencent.devops.monitoring.util.EmailUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import org.apache.commons.lang3.tuple.MutablePair
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.time.Instant
+import java.time.ZoneOffset
 
 @Component
 class MonitorNotifyJob @Autowired constructor(
     private val client: Client,
-    private val influxdbClient: InfluxdbClient
+    private val influxdbClient: InfluxdbClient,
+    private val slaDailyDao: SlaDailyDao,
+    private val dslContext: DSLContext
 ) {
 
     @Value("\${sla.receivers:#{null}}")
-    private lateinit var receivers: String
+    private var receivers: String? = null
 
     @Value("\${sla.title:#{null}}")
-    private lateinit var title: String
+    private var title: String? = null
 
     /**
      * 每天发送日报
@@ -36,8 +42,12 @@ class MonitorNotifyJob @Autowired constructor(
         工蜂回写成功率
         日志API成功率
         核心插件故障率(DONE)
-        公共构建机准备成功率
+        公共构建机准备成功率(DONE)
         登录成功率*/
+        if (null == receivers || null == title) {
+            logger.info("notifyDaily no start , receivers:$receivers , title:$title")
+            return
+        }
 
         val startTime = 0L
         val endTime = 2597664799999L
@@ -48,20 +58,43 @@ class MonitorNotifyJob @Autowired constructor(
             dispatchStatus(startTime, endTime)
         )
 
+        //发送邮件
         val message = EmailNotifyMessage()
-        message.addAllReceivers(receivers.split(",").toHashSet())
-        message.title = title
+        message.addAllReceivers(receivers!!.split(",").toHashSet())
+        message.title = title as String
         message.body = EmailUtil.getEmailBody(startTime, endTime, moduleMap)
         message.format = EnumEmailFormat.HTML
         client.get(ServiceNotifyResource::class).sendEmailNotify(message)
+
+        //落库
+        val startLocalTime = Instant.ofEpochMilli(startTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime()
+        val endLocalTime = Instant.ofEpochMilli(endTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime()
+        moduleMap.forEach { m ->
+            m.value.forEach { l ->
+                l.run {
+                    slaDailyDao.insert(dslContext, m.key, l.first, l.second, startLocalTime, endLocalTime)
+                }
+            }
+        }
+//        CREATE TABLE T_SLA_DAILY (
+//         `ID` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+//         `MODULE` varchar(20) NOT NULL COMMENT '模块',
+//         `NAME` varchar(20) NOT NULL COMMENT '名称',
+//         `SUCCESS_PERCENT` INT NOT NULL COMMENT '成功率',
+//         `START_TIME` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '开始时间',
+//         `END_TIME` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '结束时间',
+//         PRIMARY KEY (`ID`),
+//         KEY `idx_module_name` (`MODULE`,`NAME`),
+//         KEY `idx_start_time` (`START_TIME`)
+//         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='通知模板表';
     }
 
-    fun dispatchStatus(startTime: Long, endTime: Long): Pair<String, MutableList<Triple<String, String, String>>> {
+    fun dispatchStatus(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Int, String>>> {
         val sql =
             "SELECT sum(devcloud_total_count),sum(devcloud_success_count) FROM DispatchStatus_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000 GROUP BY buildType"
         val queryResult = influxdbClient.select(sql)
 
-        val rowList = mutableListOf<Triple<String, String, String>>()
+        val rowList = mutableListOf<Triple<String, Int, String>>()
 
         if (null != queryResult && !queryResult.hasError()) {
             queryResult.results.forEach { result ->
@@ -72,7 +105,7 @@ class MonitorNotifyJob @Autowired constructor(
                         rowList.add(
                             Triple(
                                 tags["buildType"] ?: "Unknown",
-                                "${success * 100 / count}%",
+                                success * 100 / count,
                                 "www.tencent.com"
                             )
                         )
@@ -83,10 +116,10 @@ class MonitorNotifyJob @Autowired constructor(
             logger.error("atomMonitor , get map error , errorMsg:${queryResult?.error}")
         }
 
-        return "公共构建机统计" to rowList
+        return "公共构建机统计" to rowList.asSequence().sortedBy { it.second }.toList()
     }
 
-    fun atomMonitor(startTime: Long, endTime: Long): Pair<String, List<Triple<String, String, String>>> {
+    fun atomMonitor(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Int, String>>> {
         val sql =
             "SELECT sum(total_count),sum(success_count),sum(CODE_GIT_total_count),sum(CODE_GIT_success_count),sum(UploadArtifactory_total_count),sum(UploadArtifactory_success_count)," +
                 "sum(linuxscript_total_count),sum(linuxscript_success_count) FROM AtomMonitorData_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000"
@@ -120,16 +153,16 @@ class MonitorNotifyJob @Autowired constructor(
             logger.error("atomMonitor , get map error , errorMsg:${queryResult?.error}")
         }
 
-        val rowList = mutableListOf<Triple<String, String, String>>()
-        rowList.add(Triple("所有插件", "${totalSuccess * 100 / totalCount}%", "www.tencent.com"))
-        rowList.add(Triple("Git插件", "${gitSuccess * 100 / gitCount}%", "www.tencent.com"))
-        rowList.add(Triple("artifactory插件", "${artiSuccess * 100 / artiCount}%", "www.tencent.com"))
-        rowList.add(Triple("linuxScript插件", "${shSuccess * 100 / shCount}%", "www.tencent.com"))
+        val rowList = mutableListOf<Triple<String, Int, String>>()
+        rowList.add(Triple("所有插件", totalSuccess * 100 / totalCount, "www.tencent.com"))
+        rowList.add(Triple("Git插件", gitSuccess * 100 / gitCount, "www.tencent.com"))
+        rowList.add(Triple("artifactory插件", artiSuccess * 100 / artiCount, "www.tencent.com"))
+        rowList.add(Triple("linuxScript插件", shSuccess * 100 / shCount, "www.tencent.com"))
 
-        return "核心插件统计" to rowList
+        return "核心插件统计" to rowList.asSequence().sortedBy { it.second }.toList()
     }
 
-    fun codecc(startTime: Long, endTime: Long): Pair<String, List<Triple<String, String, String>>> {
+    fun codecc(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Int, String>>> {
         val successSql =
             "SELECT SUM(total_count)  FROM CodeccMonitor_reduce WHERE time>${startTime}000000 AND time<${endTime}000000 AND errorCode='0' GROUP BY toolName"
         val errorSql =
@@ -155,7 +188,7 @@ class MonitorNotifyJob @Autowired constructor(
             reduceMap.asSequence().sortedBy { it.value.left * 100 / it.value.right }.take(10).map {
                 Triple(
                     it.key,
-                    "${it.value.left * 100 / (it.value.left + it.value.right)}%",
+                    it.value.left * 100 / (it.value.left + it.value.right),
                     "http://www.tencent.com"
                 )
             }.toList()
