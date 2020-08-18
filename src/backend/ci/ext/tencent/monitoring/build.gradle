@@ -29,6 +29,7 @@ subprojects {
     dependencies {
         compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
         compile "org.jetbrains.kotlin:kotlin-reflect"
+        compile "org.apache.lucene:lucene-core:6.6.1"
         testCompile "junit:junit"
         testCompile "org.springframework.boot:spring-boot-starter-test"
     }
