@@ -1,7 +1,7 @@
 <template>
     <div class="build-history-tab-content">
         <filter-bar v-if="showFilterBar" @query="fetchData" :set-history-page-status="setHistoryPageStatus" :reset-query-condition="resetQueryCondition" v-bind="historyPageStatus.queryMap"></filter-bar>
-        <build-history-table ref="buildHistoryTable" :current-pipeline-version="currentPipelineVersion" @change-currentPage-limit="getHistoryData" @update-table="updateBuildHistoryList" :build-list="list" :columns="shownColumns" :empty-tips-config="emptyTipsConfig" :show-log="showLog"></build-history-table>
+        <build-history-table v-bkloading="{ isLoading: basicLoading }" ref="buildHistoryTable" :current-pipeline-version="currentPipelineVersion" @change-currentPage-limit="getHistoryData" @update-table="updateBuildHistoryList" :build-list="list" :columns="shownColumns" :empty-tips-config="emptyTipsConfig" :show-log="showLog"></build-history-table>
         <bk-dialog
             width="567"
             :title="$t('history.settingCols')"
@@ -54,7 +54,8 @@
                 currentShowStatus: false,
                 triggerList: [],
                 queryStrMap: ['status', 'materialAlias', 'materialBranch', 'startTimeStartTime', 'endTimeEndTime'],
-                list: []
+                list: [],
+                basicLoading: false
             }
         },
 
@@ -143,6 +144,7 @@
             },
             '$route.params.pipelineId' () {
                 this.fetchData()
+                sessionStorage.removeItem('currentPage')
             }
         },
 
@@ -157,7 +159,7 @@
                 const isBuildId = /^#b-+/.test(this.$route.hash) // 检查是否是合法的buildId
                 isBuildId && this.showLog(this.$route.hash.slice(1), '', true)
             }
-            webSocketMessage.installWsMessage(this.refreshBuildHistoryList)
+            webSocketMessage.installWsMessage(this.updateList)
         },
 
         updated () {
@@ -190,6 +192,7 @@
                     : Number(currentPage) || page
                 this.$refs.buildHistoryTable.pagingConfigOne.currentPage = setPage
                 try {
+                    this.basicLoading = true
                     const res = await this.requestHistory(setPage, pageSize)
                     this.list = res.records
                     return res
@@ -201,6 +204,7 @@
                 } finally {
                     sessionStorage.removeItem('pagingConfigOne-currentPage')
                     sessionStorage.removeItem('pipeline-id')
+                    this.basicLoading = false
                 }
             },
             handleColumnsChange (source, target, tagetValueList) {
@@ -318,11 +322,24 @@
 
                 }
             },
-            async updateList () {
+            async updateList (message) {
+                this.message = message
+                const currentPage = sessionStorage.getItem('currentPage')
                 const pageSize = this.$refs.buildHistoryTable.pagingConfigOne.limit
-                const res = await this.fetchData(1, pageSize)
-                this.list = res.records
-                return res
+                if (Number(currentPage) === 1) {
+                    const res = await this.fetchData(Number(currentPage), pageSize)
+                    this.list = res.records
+                    return res
+                }
+                this.flag = null
+                this.list.forEach(item => {
+                    if (item.id === message.buildId) this.flag = true
+                })
+                if (this.flag) {
+                    const res = await this.fetchData(Number(currentPage), pageSize)
+                    this.list = res.records
+                    return res
+                }
             },
             async updateBuildHistoryList () {
                 try {
@@ -330,7 +347,7 @@
                         webSocketMessage.unInstallWsMessage()
                         return
                     }
-                    const res = await this.updateList()
+                    const res = await this.updateList(this.message)
                     this.currentPipelineVersion = res.pipelineVersion || ''
                 } catch (err) {
                     if (err.code === 403) {

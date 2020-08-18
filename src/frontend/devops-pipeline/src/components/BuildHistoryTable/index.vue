@@ -298,6 +298,7 @@
             })
             this.pagingConfigOne.limit = Math.floor((document.body.clientHeight - 60) / 47 - 6)
             this.pagingConfigOne.limitList[0] = Math.floor((document.body.clientHeight - 60) / 47 - 6)
+            sessionStorage.setItem('currentPage', this.pagingConfigOne.currentPage)
         },
         methods: {
             handleChangeLimit (limit) {
@@ -309,6 +310,9 @@
                 })
             },
             handleChangeCurrent (page) {
+                const currentPage = sessionStorage.getItem('currentPage')
+                if (Number(currentPage) === page) return
+                sessionStorage.setItem('currentPage', page)
                 this.pagingConfigOne.currentPage = page
                 this.$emit('change-currentPage-limit', {
                     page: page,
