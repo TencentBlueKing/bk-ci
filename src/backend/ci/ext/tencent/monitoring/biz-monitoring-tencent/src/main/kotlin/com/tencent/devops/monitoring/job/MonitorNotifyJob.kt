@@ -24,6 +24,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 
 @Component
@@ -342,15 +343,15 @@ class MonitorNotifyJob @Autowired constructor(
                     Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$endTime"
                     Module.CODECC -> return "http://9.56.38.242:443/d/uJaL6mNMz/codeccgong-ju-shang-bao-xiang-qing?var-toolName=$name&from=$startTime&to=$endTime"
                     Module.GATEWAY -> return "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
-                        DateFormatUtils.format(
-                            startTime,
-                            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-                        )
+                        LocalDateTime.ofInstant(
+                            Instant.ofEpochMilli(startTime),
+                            ZoneId.ofOffset("UTC", ZoneOffset.UTC)
+                        ).toString() + "Z"
                     }',mode:absolute,to:'${
-                        DateFormatUtils.format(
-                            endTime,
-                            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-                        )
+                        LocalDateTime.ofInstant(
+                            Instant.ofEpochMilli(endTime),
+                            ZoneId.ofOffset("UTC", ZoneOffset.UTC)
+                        ).toString() + "Z"
                     }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc)," +
                         "query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase," +
                         "value:$name),query:(match:(service:(query:$name,type:phrase))))),index:'68f5fd50-798e-11ea-8327-85de2e827c67',interval:auto,query:(language:lucene,query:'beat.hostname:%22v2-gateway-idc%22%20AND%20service:%22$name%22'),sort:!('@timestamp',desc))"
@@ -363,15 +364,15 @@ class MonitorNotifyJob @Autowired constructor(
                     Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$endTime"
                     Module.CODECC -> return "http://9.56.38.242:443/d/uJaL6mNMz/codeccgong-ju-shang-bao-xiang-qing?var-toolName=$name&from=$startTime&to=$endTime"
                     Module.GATEWAY -> return "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
-                        DateFormatUtils.format(
-                            startTime,
-                            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-                        )
+                        LocalDateTime.ofInstant(
+                            Instant.ofEpochMilli(startTime),
+                            ZoneId.ofOffset("UTC", ZoneOffset.UTC)
+                        ).toString() + "Z"
                     }',mode:absolute,to:'${
-                        DateFormatUtils.format(
-                            endTime,
-                            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-                        )
+                        LocalDateTime.ofInstant(
+                            Instant.ofEpochMilli(endTime),
+                            ZoneId.ofOffset("UTC", ZoneOffset.UTC)
+                        ).toString() + "Z"
                     }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc)," +
                         "query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase," +
                         "value:$name),query:(match:(service:(query:$name,type:phrase))))),index:'68f5fd50-798e-11ea-8327-85de2e827c67',interval:auto,query:(language:lucene,query:'beat.hostname:%22v2-gateway-idc%22%20AND%20service:%22$name%22'),sort:!('@timestamp',desc))"
@@ -385,15 +386,15 @@ class MonitorNotifyJob @Autowired constructor(
                     Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$endTime"
                     Module.CODECC -> return "http://9.56.38.242:443/d/uJaL6mNMz/codeccgong-ju-shang-bao-xiang-qing?var-toolName=$name&from=$startTime&to=$endTime"
                     Module.GATEWAY -> return "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
-                        DateFormatUtils.format(
-                            startTime,
-                            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-                        )
+                        LocalDateTime.ofInstant(
+                            Instant.ofEpochMilli(startTime),
+                            ZoneId.ofOffset("UTC", ZoneOffset.UTC)
+                        ).toString() + "Z"
                     }',mode:absolute,to:'${
-                        DateFormatUtils.format(
-                            endTime,
-                            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-                        )
+                        LocalDateTime.ofInstant(
+                            Instant.ofEpochMilli(endTime),
+                            ZoneId.ofOffset("UTC", ZoneOffset.UTC)
+                        ).toString() + "Z"
                     }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc)," +
                         "query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase," +
                         "value:$name),query:(match:(service:(query:$name,type:phrase))))),index:'68f5fd50-798e-11ea-8327-85de2e827c67',interval:auto,query:(language:lucene,query:'beat.hostname:%22v2-gateway-idc%22%20AND%20service:%22$name%22'),sort:!('@timestamp',desc))"
