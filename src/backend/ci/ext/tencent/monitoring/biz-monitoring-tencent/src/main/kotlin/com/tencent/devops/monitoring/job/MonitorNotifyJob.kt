@@ -65,6 +65,7 @@ class MonitorNotifyJob @Autowired constructor(
         val endTime = 2597664799999L
 
         val moduleMap = linkedMapOf(
+            apiStatus(startTime, endTime),
             atomMonitor(startTime, endTime),
             dispatchStatus(startTime, endTime),
             userStatus(startTime, endTime),
@@ -94,26 +95,46 @@ class MonitorNotifyJob @Autowired constructor(
         }
     }
 
-    fun apiStatus(startTime: Long, endTime: Long) {
+    fun apiStatus(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Int, String>>> {
+        val rowList = mutableListOf<Triple<String, Int, String>>()
+        for (name in arrayOf(
+            "process",
+            "dispatch",
+            "openapi",
+            "artifactory",
+            "websocket",
+            "store",
+            "log",
+            "environment"
+        )) {
+            val errorCount = getHits(startTime, endTime, name, true)
+            val totalCount = getHits(startTime, endTime, name)
+            rowList.add(
+                Triple(
+                    name,
+                    (errorCount * 100 / totalCount).toInt(),
+                    getUrl(startTime, endTime, Module.USER_STATUS)//TODO
+                )
+            )
+        }
+
+        return "网关统计" to rowList
+    }
+
+    private fun getHits(startTime: Long, endTime: Long, name: String, error: Boolean = false): Long {
         val sourceBuilder = SearchSourceBuilder()
-        val query = QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("@timestamp").gte(startTime).lte(endTime))
-            .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"process\" AND NOT(status: \"500\")"))
-        logger.info("apiStatus , query:$query")
+        val query =
+            QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("@timestamp").gte(startTime).lte(endTime))
+                .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"process\"" + (if (error) " AND status: \"500\"" else "")))
+        logger.info("apiStatus , hits:$query")
         sourceBuilder.query(query).size(1)
 
         val searchRequest = SearchRequest()
         searchRequest.indices("bkdevops-gateway-v2-access-2020.08.18") // TODO
         searchRequest.source(sourceBuilder)
-
-        val searchResult = restHighLevelClient.search(searchRequest)
-        logger.info("apiStatus , searchResult:$searchResult")
-
-//
-//        val response = esClient.client.prepareSearch("bkdevops-gateway-v2-access").setQuery(query).get()
-//        logger.info("apiStatus , response:$response")
-//
-//        val totalHits = response.hits.totalHits
-//        logger.info("apiStatus , totalHits:$totalHits")
+        val hits = restHighLevelClient.search(searchRequest).hits.getTotalHits()
+        logger.info("apiStatus , hits:$hits")
+        return hits
     }
 
     fun userStatus(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Int, String>>> {
