@@ -1,6 +1,7 @@
 package com.tencent.devops.monitoring.job
 
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.Profile
@@ -63,8 +64,8 @@ class MonitorNotifyJob @Autowired constructor(
 
         val yesterday = LocalDateTime.now().minusDays(1)
 
-        val startTime = yesterday.withHour(0).withMinute(0).withSecond(0).timestamp()
-        val endTime = yesterday.withHour(23).withMinute(59).withSecond(59).timestamp()
+        val startTime = yesterday.withHour(0).withMinute(0).withSecond(0).timestampmilli()
+        val endTime = yesterday.withHour(23).withMinute(59).withSecond(59).timestampmilli()
 
         val moduleMap = linkedMapOf(
             gatewayStatus(startTime, endTime),
