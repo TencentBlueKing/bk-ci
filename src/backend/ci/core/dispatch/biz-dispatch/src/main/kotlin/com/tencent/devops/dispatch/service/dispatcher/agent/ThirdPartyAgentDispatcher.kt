@@ -166,6 +166,22 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 errorCode = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL.errorCode,
                 errorMessage = "获取第三方构建机失败/Load build agent（${dispatchType.displayName}）fail!"
             )
+        } else {
+            // 上报monitor数据
+            sendDispatchMonitoring(
+                client = client,
+                projectId = pipelineAgentStartupEvent.projectId,
+                pipelineId = pipelineAgentStartupEvent.pipelineId,
+                buildId = pipelineAgentStartupEvent.buildId,
+                vmSeqId = pipelineAgentStartupEvent.vmSeqId,
+                actionType = pipelineAgentStartupEvent.actionType.name,
+                retryTime = pipelineAgentStartupEvent.retryTime,
+                routeKeySuffix = pipelineAgentStartupEvent.routeKeySuffix,
+                startTime = System.currentTimeMillis(),
+                stopTime = 0L,
+                errorCode = "0",
+                errorMessage = ""
+            )
         }
     }
 
