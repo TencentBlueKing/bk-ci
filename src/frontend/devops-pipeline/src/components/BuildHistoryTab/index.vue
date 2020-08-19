@@ -184,7 +184,7 @@
             ...mapActions('atom', [
                 'togglePropertyPanel'
             ]),
-            async fetchData (page = 1, pageSize = this.$refs.buildHistoryTable.pagingConfigOne.limit) {
+            async fetchData (page = 1, pageSize = this.$refs.buildHistoryTable.pagingConfigOne.limit, loading = true) {
                 const currentPage = sessionStorage.getItem('pagingConfigOne-currentPage')
                 const savePipelineId = sessionStorage.getItem('pipeline-id')
                 const setPage = (savePipelineId && this.$route.params.pipelineId !== savePipelineId)
@@ -192,7 +192,7 @@
                     : Number(currentPage) || page
                 this.$refs.buildHistoryTable.pagingConfigOne.currentPage = setPage
                 try {
-                    this.basicLoading = true
+                    this.basicLoading = loading
                     const res = await this.requestHistory(setPage, pageSize)
                     this.list = res.records
                     return res
@@ -322,24 +322,16 @@
 
                 }
             },
-            async updateList (message) {
-                this.message = message
+            
+            async updateList (message = {}) {
                 const currentPage = sessionStorage.getItem('currentPage')
                 const pageSize = this.$refs.buildHistoryTable.pagingConfigOne.limit
-                if (Number(currentPage) === 1) {
-                    const res = await this.fetchData(Number(currentPage), pageSize)
+                if (this.list.some(item => item.id === message.buildId) || Number(currentPage) === 1) {
+                    const res = await this.fetchData(Number(currentPage), pageSize, false)
                     this.list = res.records
                     return res
                 }
-                this.flag = null
-                this.list.forEach(item => {
-                    if (item.id === message.buildId) this.flag = true
-                })
-                if (this.flag) {
-                    const res = await this.fetchData(Number(currentPage), pageSize)
-                    this.list = res.records
-                    return res
-                }
+                return {}
             },
             async updateBuildHistoryList () {
                 try {
@@ -347,7 +339,7 @@
                         webSocketMessage.unInstallWsMessage()
                         return
                     }
-                    const res = await this.updateList(this.message)
+                    const res = await this.updateList()
                     this.currentPipelineVersion = res.pipelineVersion || ''
                 } catch (err) {
                     if (err.code === 403) {

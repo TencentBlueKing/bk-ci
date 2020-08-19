@@ -296,9 +296,13 @@
             bus.$on('fetch-count', (val) => {
                 this.pagingConfigOne.count = val
             })
+            bus.$on('set-currentPage', val => {
+                this.pagingConfigOne.currentPage = val
+                this.handleChangeCurrent(1)
+            })
             this.pagingConfigOne.limit = Math.floor((document.body.clientHeight - 60) / 47 - 6)
             this.pagingConfigOne.limitList[0] = Math.floor((document.body.clientHeight - 60) / 47 - 6)
-            sessionStorage.setItem('currentPage', this.pagingConfigOne.currentPage)
+            sessionStorage.setItem('currentPage', sessionStorage.getItem('pagingConfigOne-currentPage') || this.pagingConfigOne.currentPage)
         },
         methods: {
             handleChangeLimit (limit) {
@@ -651,7 +655,17 @@
                     @include ellipsis();
                 }
             }
+<<<<<<< HEAD
 
+=======
+        }
+        .errorCode-item {
+            display: flex;
+            .icon {
+                padding-top: 2px;
+                padding-right: 3px;
+            }
+>>>>>>> 1081120fc9... perf: 分页列表页根据执行历史id和webSocket返回消息进行页面数据更新 #2236
         }
         .trigger-cell {
             display: flex;

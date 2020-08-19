@@ -393,6 +393,7 @@
             toExecute (...args) {
                 const goDetail = ['pipelinesEdit', 'pipelinesDetail'].indexOf(this.$route.name) > -1
                 this.executePipeline(...args, goDetail)
+                bus.$emit('set-currentPage', 1)
             }
         }
     }
