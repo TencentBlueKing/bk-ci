@@ -43,10 +43,21 @@ const state = {
     allPipelineList: [],
     hasCreatePermission: false,
     pipelineSetting: {},
+<<<<<<< HEAD
     pipelineAuthority: {}
+=======
+    projectGroupAndUsers: [],
+    pipelineAuthority: {},
+    pagingConfigOneCurrentPage: null,
+    currentPage: null,
+    pipelineID: null
+>>>>>>> dc5a3ebb7d... perf: 分页列表页根据执行历史id和webSocket返回消息进行页面数据更新 #2236
 }
 
 const getters = {
+    getPagingConfigOneCurrentPage: state => state.pagingConfigOneCurrentPage,
+    getCurrentPage: state => state.currentPage,
+    getPipelineID: state => state.pipelineID,
     getPipelineList: state => state.pipelineList,
     getCurPipeline: state => state.curPipeline,
     getAllPipelineList: state => state.allPipelineList,
@@ -63,6 +74,15 @@ const getters = {
 // }
 
 const mutations = {
+    setPagingConfigOneCurrentPage (state, val) {
+        state.pagingConfigOneCurrentPage = val
+    },
+    setCurrentPage (state, val) {
+        state.currentPage = val
+    },
+    setPipelineID (state, val) {
+        state.pipelineID = val
+    },
     [PIPELINE_AUTHORITY_MUTATION]: (state, { pipelineAuthority }) => {
         return Object.assign(state, {
             pipelineAuthority: {

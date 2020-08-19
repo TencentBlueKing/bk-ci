@@ -148,6 +148,7 @@
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import StageSteps from '@/components/StageSteps'
     import { bus } from '@/utils/bus'
+    import { mapGetters, mapMutations } from 'vuex'
 
     export default {
         name: 'build-history-table',
@@ -199,6 +200,10 @@
             }
         },
         computed: {
+            ...mapGetters({
+                'PagingConfigOneCurrentPage1': 'pipelines/getPagingConfigOneCurrentPage',
+                'CurrentPage1': 'pipelines/getCurrentPage'
+            }),
             statusIconMap () {
                 return {
                     SUCCEED: 'check-circle-shape',
@@ -302,9 +307,14 @@
             })
             this.pagingConfigOne.limit = Math.floor((document.body.clientHeight - 60) / 47 - 6)
             this.pagingConfigOne.limitList[0] = Math.floor((document.body.clientHeight - 60) / 47 - 6)
-            sessionStorage.setItem('currentPage', sessionStorage.getItem('pagingConfigOne-currentPage') || this.pagingConfigOne.currentPage)
+            this.setCurrentPage(this.PagingConfigOneCurrentPage1 || this.pagingConfigOne.currentPage)
         },
         methods: {
+            ...mapMutations({
+                'setCurrentPage': 'pipelines/setCurrentPage',
+                'setPagingConfigOneCurrentPage': 'pipelines/setPagingConfigOneCurrentPage',
+                'setPipelineID': 'pipelines/setPipelineID'
+            }),
             handleChangeLimit (limit) {
                 this.pagingConfigOne.limit = limit
                 this.pagingConfigOne.currentPage = 1
@@ -314,9 +324,8 @@
                 })
             },
             handleChangeCurrent (page) {
-                const currentPage = sessionStorage.getItem('currentPage')
-                if (Number(currentPage) === page) return
-                sessionStorage.setItem('currentPage', page)
+                if (this.CurrentPage1 === page) return
+                this.setCurrentPage(page)
                 this.pagingConfigOne.currentPage = page
                 this.$emit('change-currentPage-limit', {
                     page: page,
@@ -395,8 +404,8 @@
             handleRowClick (row, e) {
                 this.hideArtifactoriesPopup()
                 if (this.activeIndex === row.index) {
-                    sessionStorage.setItem('pagingConfigOne-currentPage', this.pagingConfigOne.currentPage)
-                    sessionStorage.setItem('pipeline-id', this.$route.params.pipelineId)
+                    this.setPagingConfigOneCurrentPage(this.pagingConfigOne.currentPage)
+                    this.setPipelineID(this.$route.params.pipelineId)
                     const url = this.getArchiveUrl(row)
                     this.$router.push(url)
                 } else {
@@ -434,8 +443,8 @@
                 if (row) {
                     const url = this.getArchiveUrl(row, 'codeRecords', aliasName)
                     url && this.$router.push(url)
-                    sessionStorage.setItem('pagingConfigOne-currentPage', this.pagingConfigOne.currentPage)
-                    sessionStorage.setItem('pipeline-id', this.$route.params.pipelineId)
+                    this.setPagingConfigOneCurrentPage(this.pagingConfigOne.currentPage)
+                    this.setPipelineID(this.$route.params.pipelineId)
                 }
             },
 
