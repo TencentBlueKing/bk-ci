@@ -2,6 +2,12 @@ package com.tencent.devops.monitoring.util
 
 import org.apache.commons.lang3.time.FastDateFormat
 
+data class EmailModuleData(
+    val module: String,
+    val rowList: List<Triple<String/*名称*/, Double/*成功率*/, String/*详情链接*/>>,
+    val observableUrl: String? = null
+)
+
 object EmailUtil {
 
     private val DATE_FORMAT = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss")
@@ -9,22 +15,23 @@ object EmailUtil {
     fun getEmailBody(
         startTime: Long,
         endTime: Long,
-        moduleMap: Map<String/*模块*/, List<Triple<String/*名称*/, Double/*成功率*/, String/*详情链接*/>>>
+        emailModuleData: List<EmailModuleData>
     ): String {
         val stringBuffer = StringBuilder()
         stringBuffer.append(SHARE_EMAIL_HTML_PREFIX)
 
-        moduleMap.asSequence().forEach {
+        emailModuleData.forEach {
             stringBuffer.append(
                 SHARE_EMAIL_TABLE_PREFIX.replace(
                     BODY_TITLE_TEMPLATE,
-                    "${DATE_FORMAT.format(startTime)} - ${DATE_FORMAT.format(endTime)} 的 【${it.key}】 统计"
+                    "${DATE_FORMAT.format(startTime)} - ${DATE_FORMAT.format(endTime)} 的 【${it.module}】 统计" +
+                        it.observableUrl?.run { " <a href=\"${it.observableUrl}\">【图例】</a>" }
                 )
                     .replace(TABLE_COLUMN1_TITLE, "名称")
                     .replace(TABLE_COLUMN2_TITLE, "成功率")
                     .replace(TABLE_COLUMN3_TITLE, "详情")
             )
-            it.value.forEach { rowList ->
+            it.rowList.forEach { rowList ->
                 rowList.run {
                     stringBuffer.append(getTableRow(first, second, third))
                 }
@@ -41,7 +48,9 @@ object EmailUtil {
         return """
                                                                             <tr>
                                                                                <td>$name</td>
-                                                                               <td>${String.format("%.2f", percent).toDouble()}%</td>
+                                                                               <td>${
+            String.format("%.2f", percent).toDouble()
+        }%</td>
                                                                                <td align="center">
                                                                                    <a href="$url">查看</a>
                                                                                </td>
