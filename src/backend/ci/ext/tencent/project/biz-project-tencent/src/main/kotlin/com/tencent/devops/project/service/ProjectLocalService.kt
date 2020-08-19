@@ -151,12 +151,16 @@ class ProjectLocalService @Autowired constructor(
                 watch.start("tof get")
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
                 watch.stop()
+
                 watch.start("create bkrepo")
-                if (bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)) {
+                val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
+                logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
+                if (createSuccess) {
                     repoGray.addGrayProject(projectCreateInfo.englishName, redisOperation)
+                    logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
                 }
-                logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
                 watch.stop()
+
                 try {
                     watch.start("create dao")
                     projectDao.create(
@@ -339,10 +343,14 @@ class ProjectLocalService @Autowired constructor(
                     }
                 }
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息                try {
-                if (bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)) {
+
+                val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
+                logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
+                if (createSuccess) {
                     repoGray.addGrayProject(projectCreateInfo.englishName, redisOperation)
+                    logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
                 }
-                logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
+
                 try {
                     projectDao.create(
                         dslContext = dslContext,
@@ -793,9 +801,14 @@ class ProjectLocalService @Autowired constructor(
                 // 发送服务器
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户组织架构信息
-                if (bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)) {
+
+                val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
+                logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
+                if (createSuccess) {
                     repoGray.addGrayProject(projectCreateInfo.englishName, redisOperation)
+                    logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
                 }
+
                 logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
                 projectDao.create(
                     dslContext = dslContext,

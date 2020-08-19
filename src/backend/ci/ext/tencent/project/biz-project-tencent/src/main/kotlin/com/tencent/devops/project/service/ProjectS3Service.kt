@@ -71,10 +71,14 @@ class ProjectS3Service @Autowired constructor(
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "")
                 logger.info("get user dept info successfully!")
-                if (bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)) {
+
+                val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
+                logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
+                if (createSuccess) {
                     repoGray.addGrayProject(projectCreateInfo.englishName, redisOperation)
+                    logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
                 }
-                ProjectLocalService.logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
+
                 projectDao.create(
                     dslContext, userId, logoAddress, projectCreateInfo, userDeptDetail,
                     projectCreateInfo.englishName, ProjectChannelCode.BS
