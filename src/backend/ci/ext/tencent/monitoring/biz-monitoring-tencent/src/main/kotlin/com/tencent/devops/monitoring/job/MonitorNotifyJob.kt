@@ -111,7 +111,7 @@ class MonitorNotifyJob @Autowired constructor(
                 Triple(
                     name,
                     100 - (errorCount * 100.0 / totalCount),
-                    getUrl(startTime, endTime, Module.GATEWAY) // TODO
+                    getUrl(startTime, endTime, Module.GATEWAY, name)
                 )
             )
         }
@@ -308,12 +308,12 @@ class MonitorNotifyJob @Autowired constructor(
                     Module.GATEWAY -> return "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
                         DateFormatUtils.format(
                             startTime,
-                            "YYYY-MM-DD'T'HH:mm:ss.SSSZ"
+                            "YYYY-MM-DD'T'HH:mm:ss.SSS'Z'"
                         )
                     }',mode:absolute,to:'${
                         DateFormatUtils.format(
                             endTime,
-                            "YYYY-MM-DD'T'HH:mm:ss.SSSZ"
+                            "YYYY-MM-DD'T'HH:mm:ss.SSS'Z'"
                         )
                     }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc)," +
                         "query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase," +
@@ -329,12 +329,12 @@ class MonitorNotifyJob @Autowired constructor(
                     Module.GATEWAY -> return "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
                         DateFormatUtils.format(
                             startTime,
-                            "YYYY-MM-DD'T'HH:mm:ss.SSSZ"
+                            "YYYY-MM-DD'T'HH:mm:ss.SSS'Z'"
                         )
                     }',mode:absolute,to:'${
                         DateFormatUtils.format(
                             endTime,
-                            "YYYY-MM-DD'T'HH:mm:ss.SSSZ"
+                            "YYYY-MM-DD'T'HH:mm:ss.SSS'Z'"
                         )
                     }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc)," +
                         "query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase," +
@@ -350,12 +350,12 @@ class MonitorNotifyJob @Autowired constructor(
                     Module.GATEWAY -> return "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
                         DateFormatUtils.format(
                             startTime,
-                            "YYYY-MM-DD'T'HH:mm:ss.SSSZ"
+                            "YYYY-MM-DD'T'HH:mm:ss.SSS'Z'"
                         )
                     }',mode:absolute,to:'${
                         DateFormatUtils.format(
                             endTime,
-                            "YYYY-MM-DD'T'HH:mm:ss.SSSZ"
+                            "YYYY-MM-DD'T'HH:mm:ss.SSS'Z'"
                         )
                     }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc)," +
                         "query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase," +
