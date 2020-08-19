@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.element.ZhiyunInstanceMaintenanceElement
 import com.tencent.devops.common.pipeline.element.enums.ZhiyunOperation
 import com.tencent.devops.common.pipeline.zhiyun.ZhiyunConfig
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ZHIYUN_FAIL
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -46,7 +46,6 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -55,7 +54,7 @@ import org.springframework.stereotype.Component
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val zhiyunConfig: ZhiyunConfig
 ) : IAtomTask<ZhiyunInstanceMaintenanceElement> {
     override fun getParamElement(task: PipelineBuildTask): ZhiyunInstanceMaintenanceElement {
@@ -120,7 +119,7 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 11 * 60 * 1000) {
                 logger.error("Wait for zhiyun timeout")
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云操作失败,织云任务执行超时", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addRedLine(task.buildId, "织云操作失败,织云任务执行超时", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 throw BuildTaskException(
                     errorType = ErrorType.SYSTEM,
                     errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL.toInt(),
@@ -160,7 +159,7 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
             if ((responseData["code"] as String).toInt() != 0) {
                 val msg = responseData["msg"]
                 logger.error("zhiyun updateAsyncEX getInstanceInfo failed msg:$msg")
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云操作失败,织云返回错误信息：$msg", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addRedLine(task.buildId, "织云操作失败,织云返回错误信息：$msg", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 throw BuildTaskException(
                     errorType = ErrorType.SYSTEM,
                     errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL.toInt(),
@@ -175,7 +174,7 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
                         val errmsg = it["errmsg"] as String
                         val lastErrmsg = it["lastErrmsg"] as String
                         logger.error("zhiyun instanceMaintenance getInstanceInfo failed errmsg:$errmsg, lastErrmsg: $lastErrmsg")
-                        LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云操作失败,织云返回错误信息: errmsg：$errmsg, lastErrmsg: $lastErrmsg", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                        buildLogPrinter.addRedLine(task.buildId, "织云操作失败,织云返回错误信息: errmsg：$errmsg, lastErrmsg: $lastErrmsg", task.taskId, task.containerHashId, task.executeCount ?: 1)
                         throw BuildTaskException(
                             errorType = ErrorType.SYSTEM,
                             errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL.toInt(),
@@ -188,7 +187,7 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
                 }
 
                 logger.info("zhiyun instanceMaintenance getInstanceInfo finished and success")
-                LogUtils.addLine(rabbitTemplate, task.buildId, "织云操作成功！", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addLine(task.buildId, "织云操作成功！", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 return true
             }
         }
@@ -209,7 +208,7 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
             if ((responseData["code"] as String).toInt() != 0) {
                 val msg = responseData["msg"]
                 logger.error("zhiyun instanceMaintenance failed msg:$msg")
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云操作失败,织云返回错误信息：$msg", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addRedLine(task.buildId, "织云操作失败,织云返回错误信息：$msg", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 throw BuildTaskException(
                     errorType = ErrorType.SYSTEM,
                     errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL.toInt(),
@@ -219,7 +218,7 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
                 val responseData = responseData["data"] as Map<String, Any>
                 val mids = (responseData["mid"] as List<String>).map { it.toInt() }
                 logger.info("Zhiyun updateAsyncEX success, mid: $mids")
-                LogUtils.addLine(rabbitTemplate, task.buildId, "织云操作开始，等待任务结束...【<a target='_blank' href='http://ccc.oa.com/package/tasks'>查看详情</a>】", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addLine(task.buildId, "织云操作开始，等待任务结束...【<a target='_blank' href='http://ccc.oa.com/package/tasks'>查看详情</a>】", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 return mids
             }
         }
@@ -240,7 +239,7 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
             if ((responseData["code"] as String).toInt() != 0) {
                 val msg = responseData["msg"]
                 logger.error("zhiyun rollback failed msg:$msg")
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云操作失败,织云返回错误信息：$msg", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addRedLine(task.buildId, "织云操作失败,织云返回错误信息：$msg", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 throw BuildTaskException(
                     errorType = ErrorType.SYSTEM,
                     errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL.toInt(),
@@ -250,7 +249,7 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
                 val responseData = responseData["data"] as Map<String, Any>
                 val instanceIds = (responseData["instanceId"] as List<String>).map { it.toInt() }
                 logger.info("Zhiyun rollback success, instanceIds: $instanceIds")
-                LogUtils.addLine(rabbitTemplate, task.buildId, "织云操作开始，等待任务结束...【<a target='_blank' href='http://ccc.oa.com/package/tasks'>查看详情</a>】", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addLine(task.buildId, "织云操作开始，等待任务结束...【<a target='_blank' href='http://ccc.oa.com/package/tasks'>查看详情</a>】", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 return instanceIds
             }
         }

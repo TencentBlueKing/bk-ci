@@ -37,8 +37,8 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
@@ -164,7 +164,7 @@ object Runner {
                                     isSuccess = false,
                                     buildResult = env,
                                     type = buildTask.type,
-                                    message = CommonUtils.interceptStringInLength(message, PIPELINE_MESSAGE_STRING_LENGTH_MAX),
+                                    message = CommonUtils.interceptStringInLength(message, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX),
                                     errorType = errorType,
                                     errorCode = errorCode,
                                     monitorData = taskDaemon.getMonitorData()

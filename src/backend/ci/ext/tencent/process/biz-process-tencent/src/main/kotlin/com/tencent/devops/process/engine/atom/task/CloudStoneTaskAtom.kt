@@ -38,7 +38,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
@@ -48,7 +48,6 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -59,7 +58,7 @@ import java.nio.file.Files
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class CloudStoneTaskAtom @Autowired constructor(
     private val cloudStoneService: CloudStoneService,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val client: Client,
     private val commonConfig: CommonConfig,
     private val redisOperation: RedisOperation,
@@ -106,7 +105,7 @@ class CloudStoneTaskAtom @Autowired constructor(
         if (matchFiles.isEmpty()) throw OperationException("There is 0 file find in $sourcePath(custom: $isCustom)")
         val appId = client.get(ServiceProjectResource::class).get(task.projectId).data?.ccAppId?.toInt()
             ?: run {
-                LogUtils.addLine(rabbitTemplate, task.buildId, "找不到绑定配置平台的业务ID/can not found CC Business ID", task.taskId,
+                buildLogPrinter.addLine(task.buildId, "找不到绑定配置平台的业务ID/can not found CC Business ID", task.taskId,
                     task.containerHashId,
                     executeCount
                 )
@@ -117,11 +116,11 @@ class CloudStoneTaskAtom @Autowired constructor(
                 appId, pipelineId, buildNo, releaseNote, file, targetPath, versionId, fileType, customFiled)
             if (result.first) {
                 logger.info("Upload to cloudStone success. file:${file.name}")
-                LogUtils.addLine(rabbitTemplate, buildId, "上传云石成功，文件：${result.second}",
+                buildLogPrinter.addLine(buildId, "上传云石成功，文件：${result.second}",
                     taskId, task.containerHashId, task.executeCount ?: 1)
             } else {
                 logger.info("Upload to cloudStone failed. msg:${result.second}")
-                LogUtils.addRedLine(rabbitTemplate, buildId, "上传云石失败: ${result.second}",
+                buildLogPrinter.addRedLine(buildId, "上传云石失败: ${result.second}",
                     taskId, task.containerHashId, task.executeCount ?: 1)
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,

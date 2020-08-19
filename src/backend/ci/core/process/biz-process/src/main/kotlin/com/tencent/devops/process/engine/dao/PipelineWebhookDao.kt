@@ -172,14 +172,14 @@ class PipelineWebhookDao {
         dslContext: DSLContext,
         offset: Int,
         limit: Int
-    ): List<Pair<String, String>>? {
+    ): List<String>? {
         with(T_PIPELINE_WEBHOOK) {
-            return dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
-                .groupBy(PROJECT_ID, PIPELINE_ID)
+            return dslContext.select(PIPELINE_ID).from(this)
+                .groupBy(PIPELINE_ID)
                 .orderBy(PIPELINE_ID.desc())
                 .limit(offset, limit)
                 .fetch { record ->
-                    record[PROJECT_ID] as String to record[PIPELINE_ID] as String
+                    record[PIPELINE_ID] as String
                 }
         }
     }

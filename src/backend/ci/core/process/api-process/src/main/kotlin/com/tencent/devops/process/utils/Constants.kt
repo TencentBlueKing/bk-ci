@@ -146,9 +146,14 @@ const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN = 1
 const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX = 1440
 
 /**
- * 流水线设置-错误信息入库长度最大值 单位:分钟
+ * 流水线设置-插件错误信息入库长度最大值 单位:分钟
  */
-const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 4000
+const val PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX = 4000
+
+/**
+ * 流水线设置-流水线错误信息入库长度最大值 单位:分钟
+ */
+const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 30000
 
 /**
  * 流水线设置-启动的通知模板代码

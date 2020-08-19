@@ -352,7 +352,8 @@ class BkRepoService @Autowired constructor(
         projectId: String,
         fileList: List<QueryNodeInfo>,
         pipelineHasPermissionList: List<String>,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        generateShortUrl: Boolean = false
     ): List<FileInfo> {
         val startTimestamp = System.currentTimeMillis()
         try {
@@ -379,9 +380,8 @@ class BkRepoService @Autowired constructor(
                 if (RepoUtils.isPipelineFile(it)) {
                     val pipelineId = pipelineService.getPipelineId(it.path)
                     val buildId = pipelineService.getBuildId(it.path)
-                    val shortUrl = if (it.name.endsWith(".ipa") || it.name.endsWith(".apk")) {
-                        val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
-                        shortUrlApi.getShortUrl(url, 300)
+                    val shortUrl = if (generateShortUrl && (it.name.endsWith(".ipa") || it.name.endsWith(".apk"))) {
+                        shortUrlApi.getShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId, buildId), 300)
                     } else {
                         ""
                     }

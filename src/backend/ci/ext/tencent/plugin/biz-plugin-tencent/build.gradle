@@ -29,7 +29,6 @@ dependencies {
     compile project(":core:plugin:codecc-plugin:api-codecc")
     compile project(":ext:tencent:plugin:api-plugin-tencent")
     compile project(":ext:tencent:ticket:api-ticket-tencent")
-    compile project(":core:log:api-log")
     compile project(":ext:tencent:scm:api-scm")
     compile project(":ext:tencent:project:api-project-tencent")
     compile project(":core:notify:api-notify")

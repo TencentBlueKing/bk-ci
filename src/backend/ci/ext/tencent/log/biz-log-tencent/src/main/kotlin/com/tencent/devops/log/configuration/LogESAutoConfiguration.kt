@@ -55,7 +55,7 @@ import java.net.InetAddress
 @Configuration
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @AutoConfigureBefore(WebAutoConfiguration::class)
-@AutoConfigureAfter(LogConfiguration::class)
+@AutoConfigureAfter(LogClientConfiguration::class)
 @EnableConfigurationProperties(ESProperties::class)
 class LogESAutoConfiguration {
     @Value("\${elasticsearch.ip}")

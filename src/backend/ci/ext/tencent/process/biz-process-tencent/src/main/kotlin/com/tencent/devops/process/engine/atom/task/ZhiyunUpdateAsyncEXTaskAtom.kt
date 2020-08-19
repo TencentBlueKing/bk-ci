@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.element.ZhiyunUpdateAsyncEXElement
 import com.tencent.devops.common.pipeline.zhiyun.ZhiyunConfig
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ZHIYUN_UPGRADE_FAIL
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -45,7 +45,6 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -54,7 +53,7 @@ import org.springframework.stereotype.Component
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class ZhiyunUpdateAsyncEXTaskAtom @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val zhiyunConfig: ZhiyunConfig
 ) : IAtomTask<ZhiyunUpdateAsyncEXElement> {
 
@@ -121,7 +120,7 @@ class ZhiyunUpdateAsyncEXTaskAtom @Autowired constructor(
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 11 * 60 * 1000) {
                 logger.error("Wait for zhiyun timeout")
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云异步升级失败,织云任务执行超时", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addRedLine(task.buildId, "织云异步升级失败,织云任务执行超时", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 throw BuildTaskException(
                     errorType = ErrorType.SYSTEM,
                     errorCode = ERROR_BUILD_TASK_ZHIYUN_UPGRADE_FAIL.toInt(),
@@ -163,7 +162,7 @@ class ZhiyunUpdateAsyncEXTaskAtom @Autowired constructor(
             if ((responseData["code"] as String).toInt() != 0) {
                 val msg = responseData["msg"]
                 logger.error("zhiyun updateAsyncEX getInstanceInfo failed msg:$msg")
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云异步升级失败,织云返回错误信息：$msg", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addRedLine(task.buildId, "织云异步升级失败,织云返回错误信息：$msg", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 throw BuildTaskException(
                     errorType = ErrorType.SYSTEM,
                     errorCode = ERROR_BUILD_TASK_ZHIYUN_UPGRADE_FAIL.toInt(),
@@ -178,7 +177,7 @@ class ZhiyunUpdateAsyncEXTaskAtom @Autowired constructor(
                         val errmsg = it["errmsg"] as String
                         val lastErrmsg = it["lastErrmsg"] as String
                         logger.error("zhiyun updateAsyncEX getInstanceInfo failed errmsg:$errmsg, lastErrmsg: $lastErrmsg")
-                        LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云异步升级失败,织云返回错误信息: errmsg：$errmsg, lastErrmsg: $lastErrmsg", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                        buildLogPrinter.addRedLine(task.buildId, "织云异步升级失败,织云返回错误信息: errmsg：$errmsg, lastErrmsg: $lastErrmsg", task.taskId, task.containerHashId, task.executeCount ?: 1)
                         throw BuildTaskException(
                             errorType = ErrorType.SYSTEM,
                             errorCode = ERROR_BUILD_TASK_ZHIYUN_UPGRADE_FAIL.toInt(),
@@ -191,7 +190,7 @@ class ZhiyunUpdateAsyncEXTaskAtom @Autowired constructor(
                 }
 
                 logger.info("zhiyun updateAsyncEX getInstanceInfo finished and success")
-                LogUtils.addLine(rabbitTemplate, task.buildId, "织云异步升级成功！", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addLine(task.buildId, "织云异步升级成功！", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 return true
             }
         }
@@ -211,7 +210,7 @@ class ZhiyunUpdateAsyncEXTaskAtom @Autowired constructor(
             if ((responseData["code"] as String).toInt() != 0) {
                 val msg = responseData["msg"]
                 logger.error("zhiyun updateAsyncEX failed msg:$msg")
-                LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云异步升级失败,织云返回错误信息：$msg", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addRedLine(task.buildId, "织云异步升级失败,织云返回错误信息：$msg", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 throw BuildTaskException(
                     errorType = ErrorType.SYSTEM,
                     errorCode = ERROR_BUILD_TASK_ZHIYUN_UPGRADE_FAIL.toInt(),
@@ -221,7 +220,7 @@ class ZhiyunUpdateAsyncEXTaskAtom @Autowired constructor(
                 val responseData = responseData["data"] as Map<String, Any>
                 val taskInstanceIds = (responseData["instanceId"] as List<String>).map { it.toInt() }
                 logger.info("Zhiyun updateAsyncEX success, instanceId: $taskInstanceIds")
-                LogUtils.addLine(rabbitTemplate, task.buildId, "织云异步升级开始，等待任务结束...【<a target='_blank' href='http://ccc.oa.com/package/tasks'>查看详情</a>】", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addLine(task.buildId, "织云异步升级开始，等待任务结束...【<a target='_blank' href='http://ccc.oa.com/package/tasks'>查看详情</a>】", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 return taskInstanceIds
             }
         }

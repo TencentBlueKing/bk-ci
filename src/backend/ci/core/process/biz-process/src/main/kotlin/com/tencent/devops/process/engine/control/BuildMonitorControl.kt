@@ -33,7 +33,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_BUILD_QUEUE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_RUNNING
 import com.tencent.devops.process.engine.common.Timeout
@@ -49,7 +49,6 @@ import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineSettingService
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -61,7 +60,7 @@ import kotlin.math.min
  */
 @Service
 class BuildMonitorControl @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineSettingService: PipelineSettingService,
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -190,8 +189,7 @@ class BuildMonitorControl @Autowired constructor(
                 messageCode = ERROR_TIMEOUT_IN_RUNNING,
                 params = arrayOf("Job", "$minute")
             )
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId = buildId,
                 message = errorInfo.message ?: "Job运行达到($minute)分钟，超时结束运行!",
                 tag = tag,
@@ -211,7 +209,8 @@ class BuildMonitorControl @Autowired constructor(
                     containerId = containerId,
                     containerType = containerType,
                     actionType = ActionType.TERMINATE,
-                    reason = errorInfo.message ?: "Job运行达到($minute)分钟，超时结束运行!"
+                    reason = errorInfo.message ?: "Job运行达到($minute)分钟，超时结束运行!",
+                    timeout = true
                 )
             )
         }
@@ -247,8 +246,7 @@ class BuildMonitorControl @Autowired constructor(
 
         interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId = buildId,
                 message = "审核触发时间超过($hours)小时，流水线将无法继续执行",
                 tag = stageId,
@@ -270,8 +268,7 @@ class BuildMonitorControl @Autowired constructor(
                 messageCode = ERROR_TIMEOUT_IN_BUILD_QUEUE,
                 params = arrayOf(event.buildId)
             )
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId = event.buildId,
                 message = errorInfo.message ?: "排队超时，取消运行! [${event.buildId}]",
                 tag = "QUEUE_TIME_OUT",

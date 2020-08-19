@@ -26,6 +26,16 @@
 
 package com.tencent.devops.common.web.mq
 
+const val CORE_FACTORY_NAME = "core_factory"
+const val CORE_CONNECTION_FACTORY_NAME = "core_connection_factory"
+const val CORE_RABBIT_ADMIN_NAME = "core_rabbit_admin"
+const val CORE_RABBIT_TEMPLATE_NAME = "core_rabbit_template"
+
+const val EXTEND_FACTORY_NAME = "extend_factory"
+const val EXTEND_CONNECTION_FACTORY_NAME = "extend_connection_factory"
+const val EXTEND_RABBIT_ADMIN_NAME = "extend_rabbit_admin"
+const val EXTEND_RABBIT_TEMPLATE_NAME = "extend_rabbit_template"
+
 const val QUEUE_PIPELINE_BUILD = "queue_pipeline_build"
 const val QUEUE_PIPELINE_BUILD_NEED_END = "queue_pipeline_build_need_end"
 const val EXCHANGE_PIPELINE_BUILD = "exchange_pipeline_build"
