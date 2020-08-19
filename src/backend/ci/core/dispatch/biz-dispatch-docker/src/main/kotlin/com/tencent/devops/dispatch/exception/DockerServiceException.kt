@@ -26,4 +26,10 @@
 
 package com.tencent.devops.dispatch.exception
 
-open class DockerServiceException(message: String) : Exception(message)
+import com.tencent.devops.common.api.pojo.ErrorType
+
+open class DockerServiceException(
+    val errorType: ErrorType,
+    val errorCode: Int,
+    errorMsg: String
+) : Exception(errorMsg)

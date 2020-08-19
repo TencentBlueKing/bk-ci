@@ -33,7 +33,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.dao.v2.IndexDaoV2
 import com.tencent.devops.log.dao.v2.LogStatusDaoV2
-import com.tencent.devops.log.model.v2.IndexAndType
+import com.tencent.devops.log.model.IndexAndType
 import com.tencent.devops.log.util.IndexNameUtils
 import com.tencent.devops.log.util.IndexNameUtils.getTypeByIndex
 import org.jooq.DSLContext
