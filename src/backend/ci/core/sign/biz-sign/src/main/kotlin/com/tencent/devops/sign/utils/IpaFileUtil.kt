@@ -47,7 +47,7 @@ object IpaFileUtil {
         var outputStream: OutputStream? = null
         try {
             // 如果文件存在，则删除
-            if(target.exists()) {
+            if (target.exists()) {
                 target.delete()
             }
             outputStream = target.outputStream()

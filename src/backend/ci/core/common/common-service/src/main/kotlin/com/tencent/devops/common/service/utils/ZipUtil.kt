@@ -85,12 +85,12 @@ object ZipUtil {
                         zipFiles(zipOutputStream, srcDir, "")
                     } catch (e: Exception) {
                         logger.error("zip error: ", e)
-                    }finally {
+                    } finally {
                         try {
                             zipOutputStream.closeEntry()
                             zipOutputStream.close()
                         } catch (e: IOException) {
-                            logger.error("zip close error:",e)
+                            logger.error("zip close error:", e)
                         }
                     }
                 }
