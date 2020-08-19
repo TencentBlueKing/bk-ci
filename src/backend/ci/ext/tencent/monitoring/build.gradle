@@ -30,7 +30,7 @@ subprojects {
         compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
         compile "org.jetbrains.kotlin:kotlin-reflect"
         compile "org.apache.lucene:lucene-core:6.6.1"
-        compile "org.elasticsearch.client:x-pack-transport:6.8.11"
+        compile "org.elasticsearch.client:x-pack-transport:5.6.0"
         testCompile "junit:junit"
         testCompile "org.springframework.boot:spring-boot-starter-test"
     }
