@@ -95,8 +95,8 @@ class MonitorNotifyJob @Autowired constructor(
         }
     }
 
-    fun apiStatus(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Int, String>>> {
-        val rowList = mutableListOf<Triple<String, Int, String>>()
+    fun apiStatus(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Double, String>>> {
+        val rowList = mutableListOf<Triple<String, Double, String>>()
         for (name in arrayOf(
             "process",
             "dispatch",
@@ -112,37 +112,36 @@ class MonitorNotifyJob @Autowired constructor(
             rowList.add(
                 Triple(
                     name,
-                    (errorCount * 100 / totalCount).toInt(),
-                    getUrl(startTime, endTime, Module.USER_STATUS)//TODO
+                    100 - (errorCount * 100.0 / totalCount),
+                    getUrl(startTime, endTime, Module.USER_STATUS) // TODO
                 )
             )
         }
 
-        return "网关统计" to rowList
+        return "网关统计" to rowList.asSequence().sortedBy { it.second }.toList()
     }
 
     private fun getHits(startTime: Long, endTime: Long, name: String, error: Boolean = false): Long {
         val sourceBuilder = SearchSourceBuilder()
         val query =
             QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("@timestamp").gte(startTime).lte(endTime))
-                .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"process\"" + (if (error) " AND status: \"500\"" else "")))
-        logger.info("apiStatus , hits:$query")
+                .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"$name\"" + (if (error) " AND status: \"500\"" else "")))
         sourceBuilder.query(query).size(1)
 
         val searchRequest = SearchRequest()
         searchRequest.indices("bkdevops-gateway-v2-access-2020.08.18") // TODO
         searchRequest.source(sourceBuilder)
         val hits = restHighLevelClient.search(searchRequest).hits.getTotalHits()
-        logger.info("apiStatus , hits:$hits")
+        logger.info("apiStatus:$name , hits:$hits")
         return hits
     }
 
-    fun userStatus(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Int, String>>> {
+    fun userStatus(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Double, String>>> {
         val sql =
             "SELECT sum(user_total_count),sum(user_success_count) FROM UsersStatus_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000"
         val queryResult = influxdbClient.select(sql)
 
-        val rowList = mutableListOf<Triple<String, Int, String>>()
+        val rowList = mutableListOf<Triple<String, Double, String>>()
         if (null != queryResult && !queryResult.hasError()) {
             queryResult.results.forEach { result ->
                 result.series.forEach { serie ->
@@ -152,7 +151,7 @@ class MonitorNotifyJob @Autowired constructor(
                         rowList.add(
                             Triple(
                                 "userStatus",
-                                success * 100 / count,
+                                success * 100.0 / count,
                                 getUrl(startTime, endTime, Module.USER_STATUS)
                             )
                         )
@@ -166,12 +165,12 @@ class MonitorNotifyJob @Autowired constructor(
         return "用户登录统计" to rowList
     }
 
-    fun dispatchStatus(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Int, String>>> {
+    fun dispatchStatus(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Double, String>>> {
         val sql =
             "SELECT sum(devcloud_total_count),sum(devcloud_success_count) FROM DispatchStatus_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000 GROUP BY buildType"
         val queryResult = influxdbClient.select(sql)
 
-        val rowList = mutableListOf<Triple<String, Int, String>>()
+        val rowList = mutableListOf<Triple<String, Double, String>>()
         if (null != queryResult && !queryResult.hasError()) {
             queryResult.results.forEach { result ->
                 result.series.forEach { serie ->
@@ -182,7 +181,7 @@ class MonitorNotifyJob @Autowired constructor(
                         rowList.add(
                             Triple(
                                 name,
-                                success * 100 / count,
+                                success * 100.0 / count,
                                 getUrl(startTime, endTime, Module.DISPATCH, name)
                             )
                         )
@@ -196,7 +195,7 @@ class MonitorNotifyJob @Autowired constructor(
         return "公共构建机统计" to rowList.asSequence().sortedBy { it.second }.toList()
     }
 
-    fun atomMonitor(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Int, String>>> {
+    fun atomMonitor(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Double, String>>> {
         val sql =
             "SELECT sum(total_count),sum(success_count),sum(CODE_GIT_total_count),sum(CODE_GIT_success_count),sum(UploadArtifactory_total_count),sum(UploadArtifactory_success_count)," +
                 "sum(linuxscript_total_count),sum(linuxscript_success_count) FROM AtomMonitorData_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000"
@@ -231,20 +230,20 @@ class MonitorNotifyJob @Autowired constructor(
         }
 
         val rowList = mutableListOf(
-            Triple("所有插件", totalSuccess * 100 / totalCount, getUrl(startTime, endTime, Module.ATOM)),
-            Triple("Git插件", gitSuccess * 100 / gitCount, getUrl(startTime, endTime, Module.ATOM, "CODE_GIT")),
+            Triple("所有插件", totalSuccess * 100.0 / totalCount, getUrl(startTime, endTime, Module.ATOM)),
+            Triple("Git插件", gitSuccess * 100.0 / gitCount, getUrl(startTime, endTime, Module.ATOM, "CODE_GIT")),
             Triple(
                 "artifactory插件",
-                artiSuccess * 100 / artiCount,
+                artiSuccess * 100.0 / artiCount,
                 getUrl(startTime, endTime, Module.ATOM, "UploadArtifactory")
             ),
-            Triple("linuxScript插件", shSuccess * 100 / shCount, getUrl(startTime, endTime, Module.ATOM, "linuxScript"))
+            Triple("linuxScript插件", shSuccess * 100.0 / shCount, getUrl(startTime, endTime, Module.ATOM, "linuxScript"))
         )
 
         return "核心插件统计" to rowList.asSequence().sortedBy { it.second }.toList()
     }
 
-    fun codecc(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Int, String>>> {
+    fun codecc(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Double, String>>> {
         val successSql =
             "SELECT SUM(total_count)  FROM CodeccMonitor_reduce WHERE time>${startTime}000000 AND time<${endTime}000000 AND errorCode='0' GROUP BY toolName"
         val errorSql =
@@ -267,10 +266,10 @@ class MonitorNotifyJob @Autowired constructor(
         }
 
         val rowList =
-            reduceMap.asSequence().sortedBy { it.value.left * 100 / it.value.right }.take(10).map {
+            reduceMap.asSequence().sortedBy { it.value.left * 100.0 / it.value.right }.take(10).map {
                 Triple(
                     it.key,
-                    it.value.left * 100 / (it.value.left + it.value.right),
+                    it.value.left * 100.0 / (it.value.left + it.value.right),
                     getUrl(startTime, endTime, Module.CODECC, it.key)
                 )
             }.toList()

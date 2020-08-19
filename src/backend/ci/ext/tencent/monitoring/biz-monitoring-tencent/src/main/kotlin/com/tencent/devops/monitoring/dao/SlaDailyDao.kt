@@ -11,7 +11,7 @@ class SlaDailyDao {
         dslContext: DSLContext,
         module: String,
         name: String,
-        percent: Int,
+        percent: Double,
         startTime: LocalDateTime,
         endTime: LocalDateTime
     ) {
