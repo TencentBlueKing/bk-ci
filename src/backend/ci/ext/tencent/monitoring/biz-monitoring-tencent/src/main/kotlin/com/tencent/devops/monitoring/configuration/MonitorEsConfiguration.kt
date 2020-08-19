@@ -1,13 +1,16 @@
 package com.tencent.devops.monitoring.configuration
 
-import org.elasticsearch.client.transport.TransportClient
-import org.elasticsearch.common.settings.Settings
-import org.elasticsearch.common.transport.InetSocketTransportAddress
-import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient
+import org.apache.http.HttpHost
+import org.apache.http.auth.AuthScope
+import org.apache.http.auth.UsernamePasswordCredentials
+import org.apache.http.client.CredentialsProvider
+import org.apache.http.impl.client.BasicCredentialsProvider
+import org.elasticsearch.client.RestClient
+import org.elasticsearch.client.RestClientBuilder
+import org.elasticsearch.client.RestHighLevelClient
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.net.InetAddress
 
 @Configuration
 class MonitorEsConfiguration {
@@ -24,23 +27,16 @@ class MonitorEsConfiguration {
     private var password: String? = null
 
     @Bean
-    fun transportClient(): TransportClient {
-        if (ip.isNullOrBlank()) {
-            throw IllegalArgumentException("ES集群地址尚未配置: elasticsearch.ip")
-        }
-        if (port == null || port!! <= 0) {
-            throw IllegalArgumentException("ES集群端口尚未配置: elasticsearch.port")
-        }
-        if (user.isNullOrBlank()) {
-            throw IllegalArgumentException("ES集群名称尚未配置: elasticsearch.user")
-        }
-        if (password.isNullOrBlank()) {
-            throw IllegalArgumentException("ES唯一名称尚未配置: elasticsearch.password")
-        }
-        return PreBuiltXPackTransportClient(
-            Settings.builder()
-                .put("xpack.security.user", "$user:$password")
-                .build()
-        ).addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ip), port!!))
+    fun restHighLevelClient(): RestHighLevelClient {
+        val credentialsProvider: CredentialsProvider = BasicCredentialsProvider()
+        credentialsProvider.setCredentials(AuthScope.ANY, UsernamePasswordCredentials(user, password))
+        val builder: RestClientBuilder = RestClient.builder(HttpHost(ip, port!!))
+            .setHttpClientConfigCallback { httpClientBuilder ->
+                httpClientBuilder.setDefaultCredentialsProvider(
+                    credentialsProvider
+                )
+            }
+
+        return RestHighLevelClient(builder.build())
     }
 }

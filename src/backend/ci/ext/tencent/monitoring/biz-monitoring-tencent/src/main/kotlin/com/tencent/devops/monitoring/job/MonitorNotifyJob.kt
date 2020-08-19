@@ -8,9 +8,12 @@ import com.tencent.devops.monitoring.dao.SlaDailyDao
 import com.tencent.devops.monitoring.util.EmailUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import org.apache.commons.lang3.time.FastDateFormat
 import org.apache.commons.lang3.tuple.MutablePair
-import org.elasticsearch.client.transport.TransportClient
+import org.elasticsearch.action.search.SearchRequest
+import org.elasticsearch.client.RestHighLevelClient
 import org.elasticsearch.index.query.QueryBuilders
+import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -27,7 +30,7 @@ class MonitorNotifyJob @Autowired constructor(
     private val slaDailyDao: SlaDailyDao,
     private val dslContext: DSLContext,
     private val profile: Profile,
-    private val esClient: TransportClient
+    private val restHighLevelClient: RestHighLevelClient
 ) {
 
     @Value("\${sla.receivers:#{null}}")
@@ -35,6 +38,8 @@ class MonitorNotifyJob @Autowired constructor(
 
     @Value("\${sla.title:#{null}}")
     private var title: String? = null
+
+    private val DATE_FORMAT = FastDateFormat.getInstance("yyyy.MM.dd")
 
     /**
      * 每天发送日报
@@ -90,15 +95,19 @@ class MonitorNotifyJob @Autowired constructor(
     }
 
     fun apiStatus(startTime: Long, endTime: Long) {
-        val indices = esClient.admin().cluster()
-            .prepareState().get().state
-            .metaData.indices
+        val sourceBuilder = SearchSourceBuilder()
+        val query = QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("@timestamp").gte(startTime).lte(endTime))
+            .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"process\" AND NOT(status: \"500\")"))
+        logger.info("apiStatus , query:$query")
+        sourceBuilder.query(query)
 
-        logger.info("apiStatus , indices:$indices")
+        val searchRequest = SearchRequest()
+        searchRequest.indices("bkdevops-gateway-v2-access-2020.08.18") // TODO
+        searchRequest.source(sourceBuilder)
 
-//        val query = QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("@timestamp").gte(startTime).lte(endTime))
-//            .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"process\" AND NOT(status: \"500\")"))
-//        logger.info("apiStatus , query:$query")
+        val searchResult = restHighLevelClient.search(searchRequest)
+        logger.info("apiStatus , searchResult:$searchResult")
+
 //
 //        val response = esClient.client.prepareSearch("bkdevops-gateway-v2-access").setQuery(query).get()
 //        logger.info("apiStatus , response:$response")
