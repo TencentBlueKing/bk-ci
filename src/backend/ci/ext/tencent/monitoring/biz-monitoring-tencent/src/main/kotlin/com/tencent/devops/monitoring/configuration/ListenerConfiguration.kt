@@ -27,6 +27,8 @@
 package com.tencent.devops.monitoring.configuration
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.web.mq.EXTEND_CONNECTION_FACTORY_NAME
+import com.tencent.devops.common.web.mq.EXTEND_RABBIT_ADMIN_NAME
 import com.tencent.devops.monitoring.consumer.AtomMonitorReportListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -38,17 +40,13 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.lang.Integer.max
 
 @Configuration
 class ListenerConfiguration {
-
-    @Bean
-    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
 
     @Bean
     fun atomMonitorDataReportQueue() = Queue(QUEUE_ATOM_MONITOR_DATA_REPORT)
@@ -74,9 +72,9 @@ class ListenerConfiguration {
 
     @Bean
     fun atomMonitorDataReportListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
+        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME) @Autowired connectionFactory: ConnectionFactory,
         @Autowired atomMonitorDataReportQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
+        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME) @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired listener: AtomMonitorReportListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
