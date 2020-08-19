@@ -1,7 +1,6 @@
 package com.tencent.devops.monitoring.job
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.monitoring.client.InfluxdbClient
@@ -10,6 +9,7 @@ import com.tencent.devops.monitoring.util.EmailUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import org.apache.commons.lang3.tuple.MutablePair
+import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.index.query.QueryBuilders
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -27,7 +27,7 @@ class MonitorNotifyJob @Autowired constructor(
     private val slaDailyDao: SlaDailyDao,
     private val dslContext: DSLContext,
     private val profile: Profile,
-    private val esClient: ESClient
+    private val esClient: TransportClient
 ) {
 
     @Value("\${sla.receivers:#{null}}")
@@ -66,7 +66,7 @@ class MonitorNotifyJob @Autowired constructor(
             codecc(startTime, endTime)
         )
 
-        //TODO
+        // TODO
         apiStatus(startTime, endTime)
 
         // 发送邮件
@@ -90,9 +90,9 @@ class MonitorNotifyJob @Autowired constructor(
     }
 
     fun apiStatus(startTime: Long, endTime: Long) {
-        val indices = esClient.client.admin().cluster()
+        val indices = esClient.admin().cluster()
             .prepareState().get().state
-            .metaData.indices;
+            .metaData.indices
 
         logger.info("apiStatus , indices:$indices")
 
