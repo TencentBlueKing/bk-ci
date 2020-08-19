@@ -9,7 +9,7 @@ object EmailUtil {
     fun getEmailBody(
         startTime: Long,
         endTime: Long,
-        moduleMap: Map<String/*模块*/, List<Triple<String/*名称*/, Int/*成功率*/, String/*详情链接*/>>>
+        moduleMap: Map<String/*模块*/, List<Triple<String/*名称*/, Double/*成功率*/, String/*详情链接*/>>>
     ): String {
         val stringBuffer = StringBuilder()
         stringBuffer.append(SHARE_EMAIL_HTML_PREFIX)
@@ -37,7 +37,7 @@ object EmailUtil {
         return stringBuffer.toString()
     }
 
-    private fun getTableRow(name: String, percent: Int, url: String): String {
+    private fun getTableRow(name: String, percent: Double, url: String): String {
         return """
                                                                             <tr>
                                                                                <td>$name</td>
