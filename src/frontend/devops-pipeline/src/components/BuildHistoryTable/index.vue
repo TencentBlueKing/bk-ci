@@ -664,17 +664,6 @@
                     @include ellipsis();
                 }
             }
-<<<<<<< HEAD
-
-=======
-        }
-        .errorCode-item {
-            display: flex;
-            .icon {
-                padding-top: 2px;
-                padding-right: 3px;
-            }
->>>>>>> 1081120fc9... perf: 分页列表页根据执行历史id和webSocket返回消息进行页面数据更新 #2236
         }
         .trigger-cell {
             display: flex;

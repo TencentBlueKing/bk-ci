@@ -43,15 +43,11 @@ const state = {
     allPipelineList: [],
     hasCreatePermission: false,
     pipelineSetting: {},
-<<<<<<< HEAD
-    pipelineAuthority: {}
-=======
     projectGroupAndUsers: [],
     pipelineAuthority: {},
     pagingConfigOneCurrentPage: null,
     currentPage: null,
     pipelineID: null
->>>>>>> dc5a3ebb7d... perf: 分页列表页根据执行历史id和webSocket返回消息进行页面数据更新 #2236
 }
 
 const getters = {
