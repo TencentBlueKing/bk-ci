@@ -59,7 +59,14 @@ interface Dispatcher {
     ) {
         if (event.retryTime > 3) {
             // 置为失败
-            onFailBuild(client, buildLogPrinter, event, ErrorType.SYSTEM, ErrorCodeEnum.START_VM_FAIL.errorCode, errorMessage ?: "Fail to start up after 3 retries")
+            onFailBuild(
+                client,
+                buildLogPrinter,
+                event,
+                ErrorType.SYSTEM,
+                ErrorCodeEnum.START_VM_FAIL.errorCode,
+                errorMessage ?: "Fail to start up after 3 retries"
+            )
             return
         }
         event.retryTime += 1
@@ -95,20 +102,20 @@ interface Dispatcher {
         )
 
         if (third) {
-           sendDispatchMonitoring(
-               client = client,
-               projectId = event.projectId,
-               pipelineId = event.pipelineId,
-               buildId = event.buildId,
-               vmSeqId = event.vmSeqId,
-               actionType = event.actionType.name,
-               retryTime = event.retryTime,
-               routeKeySuffix = event.routeKeySuffix,
-               startTime = System.currentTimeMillis(),
-               stopTime = 0L,
-               errorCode = errorCode.toString(),
-               errorMessage = errorMsg
-           )
+            sendDispatchMonitoring(
+                client = client,
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                actionType = event.actionType.name,
+                retryTime = event.retryTime,
+                routeKeySuffix = event.routeKeySuffix,
+                startTime = System.currentTimeMillis(),
+                stopTime = 0L,
+                errorCode = errorCode.toString(),
+                errorMessage = errorMsg
+            )
         }
     }
 
