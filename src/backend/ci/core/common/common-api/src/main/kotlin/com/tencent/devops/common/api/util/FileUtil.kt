@@ -246,7 +246,7 @@ object FileUtil {
         if (!dir.exists()) {
             dir.mkdirs()
         } else {
-            if(delete || dir.isFile) {
+            if (delete || dir.isFile) {
                 dir.deleteRecursively()
                 dir.mkdirs()
             }

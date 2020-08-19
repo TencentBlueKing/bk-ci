@@ -364,6 +364,4 @@ class SignServiceImpl @Autowired constructor(
         properties["ipa.sign.status"] = "true"
         return properties
     }
-
-
 }
