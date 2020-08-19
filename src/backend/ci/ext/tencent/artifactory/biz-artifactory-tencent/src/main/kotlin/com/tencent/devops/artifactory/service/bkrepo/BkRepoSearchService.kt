@@ -48,7 +48,6 @@ class BkRepoSearchService @Autowired constructor(
     val pipelineService: PipelineService,
     val bkRepoService: BkRepoService
 ) : RepoSearchService {
-
     fun search(
         userId: String,
         projectId: String,
@@ -181,7 +180,8 @@ class BkRepoSearchService @Autowired constructor(
     override fun serviceSearchFileAndProperty(
         projectId: String,
         searchProps: List<Property>,
-        customized: Boolean?
+        customized: Boolean?,
+        generateShortUrl: Boolean
     ): Pair<Long, List<FileInfo>> {
         logger.info("serviceSearchFileAndProperty, projectId: $projectId, searchProps: $searchProps, customized: $customized")
         val repoNames = when (customized) {
@@ -210,7 +210,7 @@ class BkRepoSearchService @Autowired constructor(
             10000
         )
 
-        val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, emptyList(), false)
+        val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, emptyList(), false, generateShortUrl)
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 

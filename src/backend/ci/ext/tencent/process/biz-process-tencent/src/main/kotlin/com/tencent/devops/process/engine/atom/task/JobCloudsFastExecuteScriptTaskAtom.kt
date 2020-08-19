@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.JobCloudsFastExecuteScriptElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -41,7 +41,6 @@ import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.esb.JobCloudsFastExecuteScript
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE
 import org.springframework.context.annotation.Scope
@@ -52,7 +51,7 @@ import java.util.Base64
 @Scope(SCOPE_PROTOTYPE)
 class JobCloudsFastExecuteScriptTaskAtom @Autowired constructor(
     private val jobFastExecuteScript: JobCloudsFastExecuteScript,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<JobCloudsFastExecuteScriptElement> {
 
     override fun getParamElement(task: PipelineBuildTask): JobCloudsFastExecuteScriptElement {
@@ -140,7 +139,7 @@ class JobCloudsFastExecuteScriptTaskAtom @Autowired constructor(
         task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
 
         if (!BuildStatus.isFinish(buildStatus)) {
-            LogUtils.addLine(rabbitTemplate, buildId, "Waiting for job:$taskInstanceId", task.taskId, task.containerHashId, executeCount)
+            buildLogPrinter.addLine(buildId, "Waiting for job:$taskInstanceId", task.taskId, task.containerHashId, executeCount)
         }
         return if (buildStatus == BuildStatus.FAILED)
             AtomResponse(

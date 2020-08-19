@@ -28,7 +28,7 @@ package com.tencent.devops.log.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.log.model.message.LogMessage
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

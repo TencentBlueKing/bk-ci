@@ -34,7 +34,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.element.SendSmsNotifyElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -42,7 +42,6 @@ import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PROJECT_NAME
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -53,7 +52,7 @@ import org.springframework.stereotype.Component
 class SmsTaskAtom @Autowired constructor(
     private val client: Client,
     private val shortUrlApi: ShortUrlApi,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 )
     : IAtomTask<SendSmsNotifyElement> {
 
@@ -65,7 +64,7 @@ class SmsTaskAtom @Autowired constructor(
         val buildId = task.buildId
         val taskId = task.taskId
         if (param.receivers.isEmpty()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "The receivers is not init of build", taskId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId, "The receivers is not init of build", taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -90,7 +89,7 @@ class SmsTaskAtom @Autowired constructor(
             body = bodyStr
         }
         val receiversStr = parseVariable(param.receivers.joinToString(","), runVariables)
-        LogUtils.addLine(rabbitTemplate, buildId, "send SMS message (${message.body}) to $receiversStr", taskId, task.containerHashId, task.executeCount ?: 1)
+        buildLogPrinter.addLine(buildId, "send SMS message (${message.body}) to $receiversStr", taskId, task.containerHashId, task.executeCount ?: 1)
 
         message.addAllReceivers(receiversStr.split(",").toSet())
         client.get(ServiceNotifyResource::class).sendSmsNotify(message)

@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.element.TcmElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.api.ServiceTcmResource
 import com.tencent.devops.plugin.pojo.tcm.TcmReqParam
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -41,7 +41,6 @@ import com.tencent.devops.process.engine.atom.defaultSuccessAtomResponse
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.service.PipelineUserService
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -52,7 +51,7 @@ import org.springframework.stereotype.Component
 class TcmTaskAtom @Autowired constructor(
     private val pipelineUserService: PipelineUserService,
     private val client: Client,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 )
     : IAtomTask<TcmElement> {
     private val logger = LoggerFactory.getLogger(TcmTaskAtom::class.java)
@@ -84,15 +83,15 @@ class TcmTaskAtom @Autowired constructor(
         }
 
         val tcmReqParam = TcmReqParam(userId, appId, tcmAppId, templateId, taskName, workJson)
-        LogUtils.addLine(rabbitTemplate, buildId, "tcm原子请求参数:\n ${tcmReqParam.beanToMap()}", elementId, task.containerHashId, task.executeCount ?: 1)
+        buildLogPrinter.addLine(buildId, "tcm原子请求参数:\n ${tcmReqParam.beanToMap()}", elementId, task.containerHashId, task.executeCount ?: 1)
         return try {
             val pipelineId = task.pipelineId
             val lastUpdateUser = pipelineUserService.list(setOf(pipelineId)).firstOrNull()?.updateUser ?: ""
             client.get(ServiceTcmResource::class).startTask(tcmReqParam, buildId, lastUpdateUser)
-            LogUtils.addLine(rabbitTemplate, buildId, "tcm原子执行成功", elementId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addLine(buildId, "tcm原子执行成功", elementId, task.containerHashId, task.executeCount ?: 1)
             defaultSuccessAtomResponse
         } catch (e: Exception) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "tcm原子执行失败:${e.message}", elementId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId, "tcm原子执行失败:${e.message}", elementId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,

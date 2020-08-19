@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_OFFSET_LESS_THAN_ZERO
@@ -40,7 +41,6 @@ import com.tencent.devops.lambda.pojo.BuildResultWithPage
 import com.tencent.devops.lambda.pojo.DataType
 import com.tencent.devops.lambda.pojo.ElementData
 import org.elasticsearch.action.search.MultiSearchResponse
-import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.xcontent.XContentBuilder
 import org.elasticsearch.common.xcontent.XContentFactory
@@ -57,7 +57,7 @@ import java.util.concurrent.TimeUnit
 
 @Service
 class ESService @Autowired constructor(
-    private val client: TransportClient,
+    private val esClient: ESClient,
     private val redisOperation: RedisOperation,
     private val indexService: IndexService,
     private val objectMapper: ObjectMapper
@@ -68,7 +68,7 @@ class ESService @Autowired constructor(
         val type = getType(index, DataType.PipelineBuild)
         checkCondition(index, type, buildTypeMapping)
         indexService.updateTime(data.buildId, data.beginTime, data.endTime)
-        client.prepareIndex(index, type)
+        esClient.client.prepareIndex(index, type)
             .setCreate(false)
             .setSource(objectMapper.writeValueAsString(data), XContentType.JSON)
             .get()
@@ -78,7 +78,7 @@ class ESService @Autowired constructor(
         val index = indexService.getIndex(data.buildId)
         val type = getType(index, DataType.PipelineBuildElement)
         checkCondition(index, type, buildElementTypeMapping)
-        client.prepareIndex(index, type)
+        esClient.client.prepareIndex(index, type)
             .setCreate(false)
             .setSource(objectMapper.writeValueAsString(data), XContentType.JSON)
             .get()
@@ -189,9 +189,7 @@ class ESService @Autowired constructor(
             deptName = source["deptName"]?.toString() ?: "",
             centerName = source["centerName"]?.toString() ?: "",
             model = source["model"]?.toString() ?: "",
-            errorType = source["errorType"]?.toString() ?: "",
-            errorMsg = source["errorMsg"]?.toString() ?: "",
-            errorCode = try { source["errorCode"]?.toString()?.toInt() ?: 0 } catch (e: NumberFormatException) { 0 }
+            errorInfoList = source["errorInfoList"]?.toString() ?: ""
         )
     }
 
@@ -224,7 +222,7 @@ class ESService @Autowired constructor(
         centerName: String?,
         offset: Int,
         limit: Int
-    ) = client.prepareSearch(*index.toTypedArray())
+    ) = esClient.client.prepareSearch(*index.toTypedArray())
         .setTypes(*index.map { getType(it, DataType.PipelineBuild) }.toSet().toTypedArray())
         .setQuery(getBuildQuery(projectId, pipelineId, bgName, deptName, centerName, beginTime, endTime))
         .setFrom(offset)
@@ -235,11 +233,11 @@ class ESService @Autowired constructor(
         index: Set<String>,
         buildIds: Set<String>
     ): MultiSearchResponse {
-        val multiSearch = client.prepareMultiSearch()
+        val multiSearch = esClient.client.prepareMultiSearch()
         val types = index.map { getType(it, DataType.PipelineBuildElement) }.toSet()
         buildIds.forEach {
             multiSearch.add(
-                client.prepareSearch(*index.toTypedArray())
+                esClient.client.prepareSearch(*index.toTypedArray())
                     .setTypes(*types.toTypedArray())
                     .setQuery(QueryBuilders.boolQuery()
                         .must(QueryBuilders.matchQuery("buildId", it)))
@@ -334,7 +332,7 @@ class ESService @Autowired constructor(
         logger.info("[$index] Create the pipeline build index")
         return try {
             logger.info("[$index] Start to create the index and type")
-            val response = client.admin()
+            val response = esClient.client.admin()
                 .indices()
                 .prepareCreate(index)
                 .setSettings(
@@ -355,7 +353,7 @@ class ESService @Autowired constructor(
     private fun createType(index: String, type: String, typeMapping: XContentBuilder): Boolean {
         logger.info("[$index|$type] Create the type mapping - ($typeMapping)")
         return try {
-            client.admin()
+            esClient.client.admin()
                 .indices()
                 .preparePutMapping(index)
                 .setType(type)
@@ -481,7 +479,7 @@ class ESService @Autowired constructor(
     }
 
     private fun isExistIndex(index: String): Boolean {
-        val response = client.admin()
+        val response = esClient.client.admin()
             .indices()
             .prepareExists(index)
             .get()
@@ -489,7 +487,7 @@ class ESService @Autowired constructor(
     }
 
     private fun isExistType(index: String, type: String): Boolean {
-        return client.admin()
+        return esClient.client.admin()
             .indices()
             .prepareTypesExists(index)
             .setTypes(type)

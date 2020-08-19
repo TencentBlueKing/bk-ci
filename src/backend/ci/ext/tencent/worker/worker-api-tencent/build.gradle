@@ -35,6 +35,8 @@ dependencies {
     compile project(":ext:tencent:dispatch:api-dispatch-bcs")
     compile group: 'me.cassiano', name: 'ktlint-html-reporter', version: '0.1.2'
     compile group: 'com.github.shyiko', name: 'ktlint', version: '0.29.0'
+    compile group: 'com.tencent.bkrepo', name: 'api-repository', version: '0.7.0'
+    compile group: 'com.tencent.bkrepo', name: 'api-generic', version: '0.7.0'
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

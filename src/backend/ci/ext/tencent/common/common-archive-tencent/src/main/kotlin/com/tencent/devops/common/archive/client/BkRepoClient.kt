@@ -45,15 +45,13 @@ import com.tencent.bkrepo.repository.pojo.node.user.UserNodeRenameRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.config.BkRepoConfig
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
-import com.tencent.devops.common.archive.pojo.BkRepoData
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.QueryData
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
+import com.tencent.devops.common.archive.util.PathUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import okhttp3.Request
@@ -489,68 +487,53 @@ class BkRepoClient constructor(
         isCustom: Boolean
     ): List<BkRepoFile> {
         logger.info("matchBkRepoFile, userId: $userId, srcPath: $srcPath, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, isCustom: $isCustom")
-        val result = mutableListOf<BkRepoFile>()
-        val bkRepoData = getAllBkRepoFiles(userId, projectId, pipelineId, buildId, isCustom)
-        val matcher = FileSystems.getDefault().getPathMatcher("glob:${srcPath.removePrefix("/")}")
-        val pipelinePathPrefix = "/$pipelineId/$buildId/"
-        bkRepoData.data?.forEach { bkrepoFile ->
-            val repoPath = if (isCustom) {
-                bkrepoFile.fullPath.removePrefix("/")
-            } else {
-                bkrepoFile.fullPath.removePrefix(pipelinePathPrefix)
-            }
-            if (matcher.matches(Paths.get(repoPath))) {
-                bkrepoFile.displayPath = repoPath
-                result.add(bkrepoFile)
-            }
+        var repoName: String
+        var filePath: String
+        var fileName: String
+        if (isCustom) {
+            val normalizedPath = "/${srcPath.removePrefix("./").removePrefix("/")}"
+            repoName = "custom"
+            filePath = PathUtil.getParentFolder(normalizedPath)
+            fileName = PathUtil.getFileName(normalizedPath)
+        } else {
+            repoName = "pipeline"
+            filePath = "/$pipelineId/$buildId/"
+            fileName = PathUtil.getFileName(srcPath)
         }
-        return result
+
+        return queryByPathEqOrNameMatchOrMetadataEqAnd(
+            userId = userId,
+            projectId = projectId,
+            repoNames = listOf(repoName),
+            filePaths = listOf(filePath),
+            fileNames = listOf(fileName),
+            metadata = mapOf(),
+            page = 0,
+            pageSize = 10000
+        ).map {
+            BkRepoFile(
+                fullPath = it.fullPath,
+                displayPath = it.fullPath,
+                size = it.size,
+                folder = it.folder
+            )
+        }
     }
 
     fun getFileDownloadUrl(param: ArtifactorySearchParam): List<String> {
         logger.info("getFileDownloadUrl, param: $param")
         val repoName = if (param.custom) "custom" else "pipeline"
         val files = matchBkRepoFile(
-            "",
-            param.regexPath,
-            param.projectId,
-            param.pipelineId,
-            param.buildId,
-            param.custom
+            userId = "",
+            srcPath = param.regexPath,
+            projectId = param.projectId,
+            pipelineId = param.pipelineId,
+            buildId = param.buildId,
+            isCustom = param.custom
         )
         logger.info("match files: $files")
         return files.map {
             "${getGatewaytUrl()}/bkrepo/api/service/generic/${param.projectId}/$repoName${it.fullPath}"
-        }
-    }
-
-    private fun getAllBkRepoFiles(userId: String, projectId: String, pipelineId: String, buildId: String, isCustom: Boolean): BkRepoData {
-        logger.info("getAllBkrepoFiles, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, isCustom: $isCustom")
-        var url = if (isCustom) {
-            "${getGatewaytUrl()}/bkrepo/api/service/generic/list/$projectId/custom?includeFolder=false&deep=true"
-        } else {
-            "${getGatewaytUrl()}/bkrepo/api/service/generic/list/$projectId/pipeline/$pipelineId/$buildId?includeFolder=false&deep=true"
-        }
-        val request = Request.Builder()
-            .url(url)
-            .header(AUTH_HEADER_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .get()
-            .build()
-
-        // 获取所有的文件和文件夹
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseBody = response.body()!!.string()
-            if (!response.isSuccessful) {
-                logger.error("get bkrepo files fail: $responseBody")
-                throw RuntimeException("获取文件失败")
-            }
-            try {
-                return JsonUtil.getObjectMapper().readValue(responseBody, BkRepoData::class.java)
-            } catch (e: Exception) {
-                logger.error("get bkrepo files fail: $responseBody")
-                throw RuntimeException("获取文件失败")
-            }
         }
     }
 

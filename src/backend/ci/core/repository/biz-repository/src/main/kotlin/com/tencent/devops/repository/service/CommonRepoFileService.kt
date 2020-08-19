@@ -26,7 +26,10 @@
 
 package com.tencent.devops.repository.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.AESUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.scm.IGitService
@@ -61,17 +64,17 @@ class CommonRepoFileService @Autowired constructor(
                 ref = ref ?: "master")
     }
 
-    fun getGitFileContentOauth(userId: String, repoName: String, filePath: String, ref: String?): String {
+    fun getGitFileContentOauth(userId: String, repoName: String, filePath: String, ref: String?): Result<String> {
         val token = AESUtil.decrypt(
             key = aesKey,
             content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
-                ?: throw RuntimeException("get access token for fail: $userId, $repoName")
+                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
         )
-        return gitService.getGitFileContent(
+        return Result(gitService.getGitFileContent(
             repoName = repoName,
             filePath = filePath.removePrefix("/"),
             authType = RepoAuthType.OAUTH,
             token = token,
-            ref = ref ?: "master")
+            ref = ref ?: "master"))
     }
 }

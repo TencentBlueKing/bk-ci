@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.constant.KEY_START_TIME
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.pojo.OrganizationDetailInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -51,7 +51,7 @@ import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
@@ -70,13 +70,14 @@ import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.common.KEY_VERSION
 import okhttp3.Request
 import org.apache.lucene.util.RamUsageEstimator
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
@@ -92,7 +93,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     private val buildVariableService: BuildVariableService,
     @Autowired(required = false)
     private val measureService: MeasureService?,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val atomMonitorEventDispatcher: AtomMonitorEventDispatcher,
     private val pipelineTaskService: PipelineTaskService,
@@ -216,7 +217,10 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         pipelineId: String,
         buildId: String,
         vmSeqId: String,
-        buildStatus: BuildStatus
+        buildStatus: BuildStatus,
+        errorType: ErrorType? = null,
+        errorCode: Int? = null,
+        errorMsg: String? = null
     ): Boolean {
         // 针VM启动不是在第一个的情况，第一个可能是人工审核插件（避免占用VM）
         // agent上报状态需要判断根据ID来获取真正的启动VM的任务，否则兼容处理取第一个插件的状态（正常情况）
@@ -234,13 +238,16 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             return false
         }
 
-        // 如果是成功的状态，则更新构建机启动插件的状态
+        // 如果是完成状态，则更新构建机启动插件的状态
         if (BuildStatus.isFinish(buildStatus)) {
             pipelineRuntimeService.updateTaskStatus(
                 buildId = buildId,
                 taskId = startUpVMTask.taskId,
                 userId = startUpVMTask.starter,
-                buildStatus = buildStatus
+                buildStatus = buildStatus,
+                errorType = errorType,
+                errorCode = errorCode,
+                errorMsg = errorMsg
             )
 
             // #2043 上报启动构建机状态时，重新刷新开始时间，以防止调度的耗时占用了Job的超时时间
@@ -590,8 +597,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             result = result
         )
 
-        LogUtils.stopLog(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.stopLog(
             buildId = buildId,
             tag = result.elementId,
             jobId = result.containerId ?: ""
@@ -674,17 +680,15 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 }
             }
             val version = taskParams[KEY_VERSION] as String? ?: ""
-            val startTimeStr = monitorDataMap?.get(KEY_START_TIME)
-            val startTime = if (startTimeStr == null) {
-                task.startTime?.timestampmilli()
-            } else {
-                DateTimeUtil.stringToLocalDateTime(startTimeStr.toString()).timestampmilli()
-            }
-            val endTimeStr = monitorDataMap?.get(KEY_END_TIME)
-            val endTime = if (endTimeStr == null) {
-                task.endTime?.timestampmilli()
-            } else {
-                DateTimeUtil.stringToLocalDateTime(endTimeStr.toString()).timestampmilli()
+            val monitorStartTime = monitorDataMap?.get(KEY_START_TIME)
+            val startTime = (monitorStartTime as? Long) ?: task.startTime?.timestampmilli()
+            val monitorEndTime = monitorDataMap?.get(KEY_END_TIME)
+            val endTime = (monitorEndTime as? Long) ?: task.endTime?.timestampmilli()
+            var project: ProjectVO? = null
+            try {
+                project = client.get(ServiceProjectResource::class).get(task.projectId).data
+            } catch (e: Exception) {
+                logger.error("get project(${task.projectId}) info error", e)
             }
             val atomMonitorData = AtomMonitorData(
                 errorCode = result.errorCode ?: -1,
@@ -701,6 +705,14 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 elapseTime = (endTime ?: 0) - (startTime ?: 0),
                 channel = monitorDataMap?.get(KEY_CHANNEL) as? String,
                 starter = task.starter,
+                organizationDetailInfo = OrganizationDetailInfo(
+                    bgId = project?.bgId?.toInt(),
+                    bgName = project?.bgName,
+                    centerId = project?.centerId?.toInt(),
+                    centerName = project?.centerName,
+                    deptId = project?.deptId?.toInt(),
+                    deptName = project?.deptName
+                ),
                 extData = monitorDataMap?.get("extData") as? Map<String, Any>
             )
             atomMonitorEventDispatcher.dispatch(AtomMonitorReportBroadCastEvent(atomMonitorData))

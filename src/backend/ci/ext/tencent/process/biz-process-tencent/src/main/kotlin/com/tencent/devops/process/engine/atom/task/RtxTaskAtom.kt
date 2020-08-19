@@ -42,7 +42,7 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextT
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -50,7 +50,6 @@ import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.util.ServiceHomeUrlUtils
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -61,7 +60,7 @@ import org.springframework.stereotype.Component
 class RtxTaskAtom @Autowired constructor(
     private val client: Client,
     private val wechatWorkService: WechatWorkService,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 )
     : IAtomTask<SendRTXNotifyElement> {
     override fun getParamElement(task: PipelineBuildTask): SendRTXNotifyElement {
@@ -75,7 +74,7 @@ class RtxTaskAtom @Autowired constructor(
 
             logger.info("Enter RtxTaskDelegate run...")
             if (param.receivers.isEmpty()) {
-                LogUtils.addRedLine(rabbitTemplate, buildId, "Message Receivers is empty(接收人为空)", taskId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addRedLine(buildId, "Message Receivers is empty(接收人为空)", taskId, task.containerHashId, task.executeCount ?: 1)
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -84,7 +83,7 @@ class RtxTaskAtom @Autowired constructor(
                 )
             }
             if (param.body.isBlank()) {
-                LogUtils.addRedLine(rabbitTemplate, buildId, "Message Body is empty(消息内容为空)", taskId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addRedLine(buildId, "Message Body is empty(消息内容为空)", taskId, task.containerHashId, task.executeCount ?: 1)
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -93,7 +92,7 @@ class RtxTaskAtom @Autowired constructor(
                 )
             }
             if (param.title.isEmpty()) {
-                LogUtils.addRedLine(rabbitTemplate, buildId, "Message Title is empty(标题为空)", taskId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addRedLine(buildId, "Message Title is empty(标题为空)", taskId, task.containerHashId, task.executeCount ?: 1)
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -123,7 +122,7 @@ class RtxTaskAtom @Autowired constructor(
             }
 
             val receiversStr = parseVariable(param.receivers.joinToString(","), runVariables)
-            LogUtils.addLine(rabbitTemplate, buildId, "send enterprise wechat message(发送企业微信消息):\n${message.body}\nto\n$receiversStr", taskId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addLine(buildId, "send enterprise wechat message(发送企业微信消息):\n${message.body}\nto\n$receiversStr", taskId, task.containerHashId, task.executeCount ?: 1)
 
             message.addAllReceivers(getReceivers(receiversStr))
             client.get(ServiceNotifyResource::class).sendRtxNotify(message)
