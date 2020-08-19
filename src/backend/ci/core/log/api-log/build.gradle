@@ -26,8 +26,6 @@
 
 dependencies {
     compile project(":core:common:common-log")
-    compile project(":core:common:common-event")
-    compile project(":core:common:common-web")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

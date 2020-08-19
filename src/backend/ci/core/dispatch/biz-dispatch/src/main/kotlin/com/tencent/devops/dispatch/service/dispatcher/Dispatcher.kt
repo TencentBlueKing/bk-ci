@@ -30,16 +30,15 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
-import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.monitoring.api.service.DispatchReportResource
 import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 interface Dispatcher {
 
@@ -51,7 +50,7 @@ interface Dispatcher {
 
     fun retry(
         client: Client,
-        rabbitTemplate: RabbitTemplate,
+        buildLogPrinter: BuildLogPrinter,
         pipelineEventDispatcher: PipelineEventDispatcher,
         event: PipelineAgentStartupEvent,
         errorType: ErrorType? = ErrorType.SYSTEM,
@@ -60,7 +59,7 @@ interface Dispatcher {
     ) {
         if (event.retryTime > 3) {
             // 置为失败
-            onFailBuild(client, rabbitTemplate, event, ErrorType.SYSTEM, ErrorCodeEnum.START_VM_FAIL.errorCode, errorMessage ?: "Fail to start up after 3 retries")
+            onFailBuild(client, buildLogPrinter, event, ErrorType.SYSTEM, ErrorCodeEnum.START_VM_FAIL.errorCode, errorMessage ?: "Fail to start up after 3 retries")
             return
         }
         event.retryTime += 1
@@ -70,15 +69,14 @@ interface Dispatcher {
 
     fun onFailBuild(
         client: Client,
-        rabbitTemplate: RabbitTemplate,
+        buildLogPrinter: BuildLogPrinter,
         event: PipelineAgentStartupEvent,
         errorType: ErrorType,
         errorCode: Int,
         errorMsg: String,
         third: Boolean = true
     ) {
-        LogUtils.addRedLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addRedLine(
             buildId = event.buildId,
             message = errorMsg,
             tag = VMUtils.genStartVMTaskId(event.containerId),

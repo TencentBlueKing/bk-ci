@@ -43,7 +43,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.cfg.ModelStageIdGenerator
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
@@ -71,7 +71,6 @@ import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -93,7 +92,7 @@ class BuildStartControl @Autowired constructor(
     private val buildDetailService: PipelineBuildDetailService,
     private val buildVariableService: BuildVariableService,
     private val scmProxyService: ScmProxyService,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)!!
 
@@ -127,8 +126,7 @@ class BuildStartControl @Autowired constructor(
 
         val retryCount = buildVariableService.getVariable(buildId, PIPELINE_RETRY_COUNT)
         val executeCount = if (NumberUtils.isParsable(retryCount)) 1 + retryCount!!.toInt() else 1
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "Enter BuildStartControl",
             tag = tag,
@@ -152,8 +150,7 @@ class BuildStartControl @Autowired constructor(
         }
 
         // 单步重试不做操作，手动重试需还原各节点状态，启动需获取revision信息
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "Async fetch latest commit/revision, please wait...",
             tag = tag,
@@ -163,8 +160,7 @@ class BuildStartControl @Autowired constructor(
         watcher.start("buildModel")
         buildModel(this, model)
         watcher.stop()
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "Async fetch latest commit/revision is finish.",
             tag = tag,
@@ -227,8 +223,7 @@ class BuildStartControl @Autowired constructor(
             )
         )
 
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "BuildStartControl End",
             tag = tag,
@@ -236,8 +231,7 @@ class BuildStartControl @Autowired constructor(
             executeCount = executeCount
         )
 
-        LogUtils.stopLog(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.stopLog(
             buildId = buildId,
             tag = tag,
             jobId = "0",

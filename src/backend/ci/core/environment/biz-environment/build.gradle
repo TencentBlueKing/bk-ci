@@ -25,7 +25,6 @@
  */
 
 dependencies {
-    compile project(":core:log:api-log")
     compile project(":core:environment:api-environment")
     compile project(":core:dispatch:api-dispatch")
     compile project(":core:project:api-project")

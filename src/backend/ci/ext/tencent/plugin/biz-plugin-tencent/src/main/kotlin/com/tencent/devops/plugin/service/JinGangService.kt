@@ -56,7 +56,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.model.plugin.tables.TPluginJingang
 import com.tencent.devops.model.plugin.tables.TPluginJingangResult
 import com.tencent.devops.plugin.dao.JinGangAppDao
@@ -76,7 +76,6 @@ import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.json.XML
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -85,7 +84,7 @@ import java.time.LocalDate
 
 @Service
 class JinGangService @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val jinGangAppDao: JinGangAppDao,
     private val jinGangAppMetaDao: JinGangAppMetaDao,
     private val authPermissionApi: BSAuthPermissionApi,
@@ -129,8 +128,7 @@ class JinGangService @Autowired constructor(
                 resultJson
             )
 
-            LogUtils.addLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addLine(
                 buildId = data.buildId,
                 message = "金刚app扫描完成【<a target='_blank' href='${data.scanUrl}'>查看详情</a>】",
                 tag = data.elementId,
@@ -248,7 +246,13 @@ class JinGangService @Autowired constructor(
                 ?: throw RuntimeException("no pipeline name found for $pipelineId")
 
         val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", elementId, "", 1)
+        buildLogPrinter.addLine(
+            buildId = buildId,
+            message = "use bkrepo: $isRepoGray",
+            tag = elementId,
+            jobId = "",
+            executeCount = 1
+        )
 
         val fileUrl = if (isRepoGray) {
             val shareUri = bkRepoClient.createShareUri(

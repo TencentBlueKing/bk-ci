@@ -31,12 +31,11 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.archive.client.JfrogService
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.pojo.migcdn.MigCDNUploadParam
 import okhttp3.Request
 import okhttp3.internal.Util
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -46,7 +45,7 @@ import java.net.URLEncoder
 class MigCDNService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val jfrogService: JfrogService,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     @Value("\${gateway.url}")
@@ -86,7 +85,7 @@ class MigCDNService @Autowired constructor(
                 val fileNameType = getFileNameType(fileIter)
                 if (fileNameType.first.isBlank()) {
                     logger.info("File type invalid, file:$fileIter, skipped")
-                    LogUtils.addLine(rabbitTemplate, fileParams.buildId, "该文件不允许上传，文件:$fileIter，将跳过",
+                    buildLogPrinter.addLine(fileParams.buildId, "该文件不允许上传，文件:$fileIter，将跳过",
                         fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                     return@inside
                 }
@@ -106,21 +105,21 @@ class MigCDNService @Autowired constructor(
                     val retCode = jsonMap["ret_code"] as Int
                     if (retCode != 200) {
                         val msg = jsonMap["err_msg"] as String
-                        LogUtils.addLine(rabbitTemplate, fileParams.buildId, "上传CDN失败，文件：$path\n错误码：$retCode\n错误信息：$msg",
+                        buildLogPrinter.addLine(fileParams.buildId, "上传CDN失败，文件：$path\n错误码：$retCode\n错误信息：$msg",
                             fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                         throw RuntimeException("上传到CDN失败")
                     }
                     val cdnUrl = if (null == jsonMap["cdn_url"]) "" else jsonMap["cdn_url"] as String
                     val fileMd5 = if (null == jsonMap["file_md5"]) "" else jsonMap["file_md5"] as String
 
-                    LogUtils.addLine(rabbitTemplate, fileParams.buildId, "上传CDN成功，文件:$path:\ncdn_url:$cdnUrl\nfileMd5:$fileMd5",
+                    buildLogPrinter.addLine(fileParams.buildId, "上传CDN成功，文件:$path:\ncdn_url:$cdnUrl\nfileMd5:$fileMd5",
                         fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                 }
             }
         }
         if (!hasMatchedFile) {
             logger.info("File matched nothing")
-            LogUtils.addLine(rabbitTemplate, fileParams.buildId, "没有匹配到任何文件，请检查版本仓库以及源文件设置",
+            buildLogPrinter.addLine(fileParams.buildId, "没有匹配到任何文件，请检查版本仓库以及源文件设置",
                 fileParams.elementId, fileParams.containerId, fileParams.executeCount)
             throw RuntimeException("上传到CDN失败")
         }

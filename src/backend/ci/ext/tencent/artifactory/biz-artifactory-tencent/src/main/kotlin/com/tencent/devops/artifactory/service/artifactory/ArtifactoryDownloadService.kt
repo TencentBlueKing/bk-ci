@@ -54,7 +54,6 @@ import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -206,9 +205,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
         val buildId = properties[ARCHIVE_PROPS_BUILD_ID]!!.first()
         pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
-
-        val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
-        val shortUrl = shortUrlApi.getShortUrl(url, 300)
+        val shortUrl = shortUrlApi.getShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId, buildId), 300)
         return Url(shortUrl)
     }
 
@@ -326,18 +323,12 @@ class ArtifactoryDownloadService @Autowired constructor(
             val fileName = JFrogUtil.getFileName(path)
 
             val jFrogAQLFileInfoList = jFrogAQLService.searchFileByRegex(repoPathPrefix, setOf(pathPrefix), setOf(fileName))
-            logger.info("Path($path) match file list: $jFrogFileInfoList")
-
+            logger.info("match file list[$path]: $jFrogFileInfoList")
             jFrogFileInfoList.addAll(jFrogAQLFileInfoList)
         }
 
-        logger.info("Match file list: $jFrogFileInfoList")
         val fileInfoList = artifactoryService.transferJFrogAQLFileInfo(targetProjectId, jFrogFileInfoList, emptyList(), false)
-        logger.info("Transfer file list: $fileInfoList")
-
-        val filePathList = fileInfoList.map {
-            JFrogUtil.getRealPath(targetProjectId, artifactoryType, it.fullPath)
-        }
+        val filePathList = fileInfoList.map { JFrogUtil.getRealPath(targetProjectId, artifactoryType, it.fullPath) }
         return jFrogApiService.batchThirdPartyDownloadUrl(filePathList, ttl ?: 24 * 3600).map {
             RegionUtil.replaceRegionServer(it.value, region)
         }

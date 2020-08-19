@@ -26,7 +26,6 @@
 
 dependencies {
     compile project(":core:plugin:codecc-plugin:common-codecc")
-    compile project(":core:log:api-log")
     compile project(":core:process:api-process")
     compile project(":core:dispatch:api-dispatch")
     compile project(":core:dispatch:model-dispatch")

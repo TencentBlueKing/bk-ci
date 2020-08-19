@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.common.pipeline.element.SendEmailNotifyElement
@@ -40,7 +40,6 @@ import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.util.ServiceHomeUrlUtils
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -50,7 +49,7 @@ import org.springframework.stereotype.Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class EmailTaskAtom @Autowired constructor(
     private val client: Client,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<SendEmailNotifyElement> {
 
     override fun getParamElement(task: PipelineBuildTask): SendEmailNotifyElement {
@@ -62,7 +61,7 @@ class EmailTaskAtom @Autowired constructor(
         val taskId = task.taskId
         val containerId = task.containerHashId
         if (param.receivers.isEmpty()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "收件人为空", taskId, containerId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId, "收件人为空", taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -71,7 +70,7 @@ class EmailTaskAtom @Autowired constructor(
             )
         }
         if (param.body.isBlank()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "邮件通知内容为空", taskId, containerId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId, "邮件通知内容为空", taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -80,7 +79,7 @@ class EmailTaskAtom @Autowired constructor(
             )
         }
         if (param.title.isBlank()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "邮件主题为空", taskId, containerId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId, "邮件主题为空", taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -101,7 +100,7 @@ class EmailTaskAtom @Autowired constructor(
         }
 
         val receiversStr = parseVariable(param.receivers.joinToString(","), runVariables)
-        LogUtils.addLine(rabbitTemplate, buildId, "send Email message ($emailBody) to $receiversStr", taskId, containerId, task.executeCount ?: 1)
+        buildLogPrinter.addLine(buildId, "send Email message ($emailBody) to $receiversStr", taskId, containerId, task.executeCount ?: 1)
 
         message.addAllReceivers(getSet(receiversStr))
         message.addAllCcs(getCcSet(parseVariable(param.cc.joinToString(","), runVariables)))

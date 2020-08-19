@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitProjectPipelineDao
 import com.tencent.devops.log.api.ServiceLogResource
-import com.tencent.devops.log.model.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogs
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

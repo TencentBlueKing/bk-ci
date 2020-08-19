@@ -1,5 +1,6 @@
 package com.tencent.devops.monitoring.job
 
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.Profile
@@ -9,7 +10,6 @@ import com.tencent.devops.monitoring.util.EmailUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import org.apache.commons.lang3.time.DateFormatUtils
-import org.apache.commons.lang3.time.FastDateFormat
 import org.apache.commons.lang3.tuple.MutablePair
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.client.RestHighLevelClient
@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.Instant
+import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 @Component
@@ -39,8 +40,6 @@ class MonitorNotifyJob @Autowired constructor(
 
     @Value("\${sla.title:#{null}}")
     private var title: String? = null
-
-    private val DATE_FORMAT = FastDateFormat.getInstance("yyyy.MM.dd")
 
     /**
      * 每天发送日报
@@ -62,8 +61,10 @@ class MonitorNotifyJob @Autowired constructor(
             return
         }
 
-        val startTime = 0L
-        val endTime = 2597664799999L
+        val yesterday = LocalDateTime.now().minusDays(1)
+
+        val startTime = yesterday.withHour(0).withMinute(0).withSecond(0).timestamp()
+        val endTime = yesterday.withHour(23).withMinute(59).withSecond(59).timestamp()
 
         val moduleMap = linkedMapOf(
             gatewayStatus(startTime, endTime),
@@ -111,7 +112,7 @@ class MonitorNotifyJob @Autowired constructor(
                 Triple(
                     name,
                     100 - (errorCount * 100.0 / totalCount),
-                    getUrl(startTime, endTime, Module.GATEWAY) // TODO
+                    getUrl(startTime, endTime, Module.GATEWAY, name)
                 )
             )
         }
@@ -127,7 +128,7 @@ class MonitorNotifyJob @Autowired constructor(
         sourceBuilder.query(query).size(1)
 
         val searchRequest = SearchRequest()
-        searchRequest.indices("bkdevops-gateway-v2-access-2020.08.18") // TODO
+        searchRequest.indices("bkdevops-gateway-v2-access-${DateFormatUtils.format(startTime,"yyyy.MM.dd")}") // TODO
         searchRequest.source(sourceBuilder)
         val hits = restHighLevelClient.search(searchRequest).hits.getTotalHits()
         logger.info("apiStatus:$name , hits:$hits")
@@ -142,7 +143,7 @@ class MonitorNotifyJob @Autowired constructor(
         val rowList = mutableListOf<Triple<String, Double, String>>()
         if (null != queryResult && !queryResult.hasError()) {
             queryResult.results.forEach { result ->
-                result.series.forEach { serie ->
+                result.series?.forEach { serie ->
                     serie.run {
                         val count = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
                         val success = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
@@ -171,7 +172,7 @@ class MonitorNotifyJob @Autowired constructor(
         val rowList = mutableListOf<Triple<String, Double, String>>()
         if (null != queryResult && !queryResult.hasError()) {
             queryResult.results.forEach { result ->
-                result.series.forEach { serie ->
+                result.series?.forEach { serie ->
                     serie.run {
                         val count = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
                         val success = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
@@ -199,18 +200,18 @@ class MonitorNotifyJob @Autowired constructor(
                 "sum(linuxscript_total_count),sum(linuxscript_success_count) FROM AtomMonitorData_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000"
         val queryResult = influxdbClient.select(sql)
 
-        var totalCount = 0
+        var totalCount = 1
         var totalSuccess = 0
-        var gitCount = 0
+        var gitCount = 1
         var gitSuccess = 0
-        var artiCount = 0
+        var artiCount = 1
         var artiSuccess = 0
-        var shCount = 0
+        var shCount = 1
         var shSuccess = 0
 
         if (null != queryResult && !queryResult.hasError()) {
             queryResult.results.forEach { result ->
-                result.series.forEach { serie ->
+                result.series?.forEach { serie ->
                     serie.run {
                         totalCount = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
                         totalSuccess = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
@@ -280,7 +281,7 @@ class MonitorNotifyJob @Autowired constructor(
         val codeCCMap = HashMap<String/*toolName*/, Int/*count*/>()
         if (null != queryResult && !queryResult.hasError()) {
             queryResult.results.forEach { result ->
-                result.series.forEach { serie ->
+                result.series?.forEach { serie ->
                     serie.run {
                         val key = tags["toolName"]
                         if (null != key) {
@@ -308,12 +309,12 @@ class MonitorNotifyJob @Autowired constructor(
                     Module.GATEWAY -> return "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
                         DateFormatUtils.format(
                             startTime,
-                            "YYYY-MM-DDTHH:mm:ss.SSSZ"
+                            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
                         )
                     }',mode:absolute,to:'${
                         DateFormatUtils.format(
                             endTime,
-                            "YYYY-MM-DDTHH:mm:ss.SSSZ"
+                            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
                         )
                     }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc)," +
                         "query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase," +
@@ -329,12 +330,12 @@ class MonitorNotifyJob @Autowired constructor(
                     Module.GATEWAY -> return "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
                         DateFormatUtils.format(
                             startTime,
-                            "YYYY-MM-DDTHH:mm:ss.SSSZ"
+                            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
                         )
                     }',mode:absolute,to:'${
                         DateFormatUtils.format(
                             endTime,
-                            "YYYY-MM-DDTHH:mm:ss.SSSZ"
+                            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
                         )
                     }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc)," +
                         "query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase," +
@@ -350,12 +351,12 @@ class MonitorNotifyJob @Autowired constructor(
                     Module.GATEWAY -> return "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
                         DateFormatUtils.format(
                             startTime,
-                            "YYYY-MM-DDTHH:mm:ss.SSSZ"
+                            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
                         )
                     }',mode:absolute,to:'${
                         DateFormatUtils.format(
                             endTime,
-                            "YYYY-MM-DDTHH:mm:ss.SSSZ"
+                            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
                         )
                     }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc)," +
                         "query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase," +
