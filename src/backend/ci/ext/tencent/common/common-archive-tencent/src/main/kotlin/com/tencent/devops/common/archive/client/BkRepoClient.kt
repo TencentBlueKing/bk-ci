@@ -117,11 +117,9 @@ class BkRepoClient constructor(
             .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
-            if (response.code() == 400) {
-                val responseData = objectMapper.readValue<Response<Any>>(responseContent)
-                if (responseData.code != 251002) {
-                    logger.warn("project[$projectId] already exists")
-                }
+            val responseData = objectMapper.readValue<Response<Any>>(responseContent)
+            if (response.code() == 400 && responseData.code == 251002) {
+                logger.warn("project[$projectId] already exists")
             } else if (!response.isSuccessful) {
                 logger.error("http request failed, response.code: ${response.code()}, responseContent: $responseContent")
                 throw RuntimeException("http request failed")
@@ -153,11 +151,9 @@ class BkRepoClient constructor(
             .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
-            if (response.code() == 400) {
-                val responseData = objectMapper.readValue<Response<Any>>(responseContent)
-                if (responseData.code != 251004) {
-                    logger.warn("repo $projectId|$repoName already exists")
-                }
+            val responseData = objectMapper.readValue<Response<Any>>(responseContent)
+            if (response.code() == 400 && responseData.code == 251004) {
+                logger.warn("repo $projectId|$repoName already exists")
             } else if (!response.isSuccessful) {
                 logger.error("http request failed, response.code: ${response.code()}, responseContent: $responseContent")
                 throw RuntimeException("http request failed")
