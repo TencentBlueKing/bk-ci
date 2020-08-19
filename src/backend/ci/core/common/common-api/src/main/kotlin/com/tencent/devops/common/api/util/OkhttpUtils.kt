@@ -93,6 +93,14 @@ object OkhttpUtils {
         .hostnameVerifier { _, _ -> true }
         .build()!!
 
+    private val longHttpClientNew = OkHttpClient.Builder()
+        .connectTimeout(60L, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.MINUTES)
+        .writeTimeout(30, TimeUnit.MINUTES)
+        .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+        .hostnameVerifier { _, _ -> true }
+        .build()
+
     @Throws(UnsupportedEncodingException::class)
     fun joinParams(params: Map<String, String>): String {
         val paramItem = ArrayList<String>()
@@ -116,6 +124,10 @@ object OkhttpUtils {
 
     fun doLongHttp(request: Request): Response {
         return doHttp(longHttpClient, request)
+    }
+
+    fun doLongHttpNew(request: Request): Response {
+        return doHttp(longHttpClientNew, request)
     }
 
     private fun doGet(okHttpClient: OkHttpClient, url: String, headers: Map<String, String> = mapOf()): Response {

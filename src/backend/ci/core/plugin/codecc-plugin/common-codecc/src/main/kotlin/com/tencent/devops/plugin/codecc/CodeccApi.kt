@@ -231,7 +231,7 @@ open class CodeccApi constructor(
 
         val request = builder.build()
 
-        OkhttpUtils.doHttp(request).use { response ->
+        OkhttpUtils.doLongHttpNew(request).use { response ->
             val responseBody = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.warn("Fail to execute($path) task($body) because of ${response.message()} with response: $responseBody")
