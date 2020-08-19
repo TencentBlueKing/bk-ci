@@ -315,7 +315,7 @@ class MonitorNotifyJob @Autowired constructor(
     private fun getObservableUrl(startTime: Long, endTime: Long, module: Module): String {
         return when (module) {
             Module.GATEWAY -> "http://opdata.devops.oa.com/d/sL8BLj7Gk/v2-wang-guan-accessjian-kong?orgId=1&from=$startTime&to=$endTime"
-            Module.CODECC ->"http://9.56.38.242:443/d/l_M8W4HMz/codecckan-ban?orgId=1&from=$startTime&to=$endTime"
+            Module.CODECC -> "http://9.56.38.242:443/d/l_M8W4HMz/codecckan-ban?orgId=1&from=$startTime&to=$endTime"
             else -> {
                 when {
                     profile.isProd() -> "http://9.56.38.242:443/d/NH9FIfVGk/slakan-ban?orgId=1&from=$startTime&to=$endTime" // TODO
