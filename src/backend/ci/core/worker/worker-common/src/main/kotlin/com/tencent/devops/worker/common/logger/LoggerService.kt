@@ -27,8 +27,8 @@
 package com.tencent.devops.worker.common.logger
 
 import com.tencent.devops.common.log.Ansi
-import com.tencent.devops.log.model.message.LogMessage
-import com.tencent.devops.log.model.pojo.enums.LogType
+import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.log.LogSDKApi
 import org.slf4j.LoggerFactory

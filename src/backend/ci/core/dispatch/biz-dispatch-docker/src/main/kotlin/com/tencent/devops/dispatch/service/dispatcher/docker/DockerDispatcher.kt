@@ -43,13 +43,12 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
 import com.tencent.devops.dispatch.utils.DockerHostUtils
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -57,7 +56,7 @@ import org.springframework.stereotype.Component
 class DockerDispatcher @Autowired constructor(
     private val client: Client,
     private val gray: Gray,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostClient: DockerHostClient,
     private val dockerHostUtils: DockerHostUtils,
@@ -77,8 +76,7 @@ class DockerDispatcher @Autowired constructor(
 
     override fun startUp(pipelineAgentStartupEvent: PipelineAgentStartupEvent) {
         val dockerDispatch = pipelineAgentStartupEvent.dispatchType as DockerDispatchType
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = pipelineAgentStartupEvent.buildId,
             message = "Start docker ${dockerDispatch.dockerBuildVersion} for the build",
             tag = VMUtils.genStartVMTaskId(pipelineAgentStartupEvent.vmSeqId),
@@ -195,7 +193,7 @@ class DockerDispatcher @Autowired constructor(
                 )
             }
 
-            onFailBuild(client, rabbitTemplate, pipelineAgentStartupEvent, errMsgTriple.first, errMsgTriple.second, errMsgTriple.third)
+            onFailBuild(client, buildLogPrinter, pipelineAgentStartupEvent, errMsgTriple.first, errMsgTriple.second, errMsgTriple.third)
         }
     }
 

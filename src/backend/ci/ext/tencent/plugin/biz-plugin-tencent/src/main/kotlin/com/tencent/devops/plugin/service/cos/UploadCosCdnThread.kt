@@ -34,13 +34,12 @@ import com.tencent.devops.common.cos.COSClientConfig
 import com.tencent.devops.common.cos.model.exception.COSException
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import net.sf.json.JSONArray
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
@@ -67,13 +66,13 @@ class UploadCosCdnThread : Runnable {
     var executeCount: Int = 1
     var bkRepoClient: BkRepoClient? = null
     var isRepoGray: Boolean? = false
-    private var rabbitTemplate: RabbitTemplate? = null
+    private var buildLogPrinter: BuildLogPrinter? = null
 
     constructor()
 
     constructor(
         gatewayUrl: String,
-        rabbitTemplate: RabbitTemplate,
+        buildLogPrinter: BuildLogPrinter,
         cosService: CosService,
         redisOperation: RedisOperation,
         uploadCosCdnParam: UploadCosCdnParam,
@@ -81,7 +80,7 @@ class UploadCosCdnThread : Runnable {
         bkRepoClient: BkRepoClient
     ) : this() {
         this.gatewayUrl = gatewayUrl
-        this.rabbitTemplate = rabbitTemplate
+        this.buildLogPrinter = buildLogPrinter
         this.cosService = cosService
         this.redisOperation = redisOperation
         this.isRepoGray = isRepoGray
@@ -114,7 +113,13 @@ class UploadCosCdnThread : Runnable {
         val downloadUrlList = mutableListOf<Map<String, String>>()
         // 下载文件到临时目录，然后上传到COS
         val workspace = Files.createTempDir()
-        LogUtils.addLine(rabbitTemplate!!, buildId, "use bkrepo: $isRepoGray", elementId, containerId, executeCount)
+        buildLogPrinter?.addLine(
+            buildId = buildId,
+            message = "use bkrepo: $isRepoGray",
+            tag = elementId,
+            jobId = containerId,
+            executeCount = executeCount
+        )
 
         try {
             count = 0
@@ -154,8 +159,7 @@ class UploadCosCdnThread : Runnable {
                         val results = parser.parse(body).asJsonObject["results"].asJsonArray
 
                         logger.info("There are ${results.size()} file(s) match $regex")
-                        LogUtils.addLine(
-                            rabbitTemplate = rabbitTemplate!!,
+                        buildLogPrinter?.addLine(
                             buildId = buildId,
                             message = "There are ${results.size()} file(s) match $regex",
                             tag = elementId,
@@ -183,8 +187,7 @@ class UploadCosCdnThread : Runnable {
             if (count == 0) {
                 setProcessToRedis(2, 0, null)
                 logger.info("No file distributed")
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate!!,
+                buildLogPrinter?.addLine(
                     buildId = buildId,
                     message = "No file distributed",
                     tag = elementId,
@@ -194,8 +197,7 @@ class UploadCosCdnThread : Runnable {
             } else {
                 setProcessToRedis(0, count, downloadUrlList)
                 logger.info("$count file(s) have been distributed")
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate!!,
+                buildLogPrinter?.addLine(
                     buildId = buildId,
                     message = "$count file(s) have been distributed",
                     tag = elementId,
@@ -209,8 +211,7 @@ class UploadCosCdnThread : Runnable {
             setProcessToRedis(2, 0, null)
             val msg = String.format("Upload file failed because of IOException(%s)", ex.message)
             logger.error(msg, ex)
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate!!,
+            buildLogPrinter?.addRedLine(
                 buildId = buildId,
                 message = msg,
                 tag = elementId,
@@ -221,8 +222,7 @@ class UploadCosCdnThread : Runnable {
             setProcessToRedis(2, 0, null)
             val msg = String.format("Upload file failed because of COSException(%s)", ex.message)
             logger.error(msg, ex)
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate!!,
+            buildLogPrinter?.addRedLine(
                 buildId = buildId,
                 message = msg,
                 tag = elementId,
@@ -233,8 +233,7 @@ class UploadCosCdnThread : Runnable {
             setProcessToRedis(2, 0, null)
             val msg = String.format("Upload file failed because of Exception(%s)", ex.message)
             logger.error(msg, ex)
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate!!,
+            buildLogPrinter?.addRedLine(
                 buildId = buildId,
                 message = msg,
                 tag = elementId,

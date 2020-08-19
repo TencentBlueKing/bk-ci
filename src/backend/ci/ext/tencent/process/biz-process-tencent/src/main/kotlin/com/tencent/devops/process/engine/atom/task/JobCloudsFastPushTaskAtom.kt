@@ -39,7 +39,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -54,7 +54,6 @@ import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -70,7 +69,7 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val jobCloudsFastPushFile: JobCloudsFastPushFile,
     private val jobFastPushFile: JobFastPushFile,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val client: Client,
     private val commonConfig: CommonConfig,
     private val redisOperation: RedisOperation,
@@ -135,20 +134,20 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
             )
 
             if (BuildStatus.isFinish(buildStatus)) {
-                LogUtils.addLine(rabbitTemplate, buildId, "文件分发至云石中转服务器完成/send file to [cloudStone TransferSvr] done", taskId, containerId, executeCount)
+                buildLogPrinter.addLine(buildId, "文件分发至云石中转服务器完成/send file to [cloudStone TransferSvr] done", taskId, containerId, executeCount)
             }
         }
 
         task.taskParams[FIRST_STATUS] = buildStatus.name
         if (!BuildStatus.isFinish(buildStatus)) { // 未结束--返回后消息会有下一次轮循
-            LogUtils.addLine(rabbitTemplate, buildId, "[Loop]文件分发云石中转服务器/send file to [cloudStone TransferSvr] status: $buildStatus", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "[Loop]文件分发云石中转服务器/send file to [cloudStone TransferSvr] status: $buildStatus", taskId, containerId, executeCount)
             return AtomResponse(buildStatus)
         }
 
         clearTempFile(task) // 清除掉临时文件
 
         if (BuildStatus.isFailure(buildStatus)) { // 步骤1失败，终止
-            LogUtils.addRedLine(rabbitTemplate, buildId, "文件分至云石中转服务器失败/send file to [cloudStone TransferSvr] fail", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, "文件分至云石中转服务器失败/send file to [cloudStone TransferSvr] fail", taskId, containerId, executeCount)
             return AtomResponse(buildStatus)
         }
 
@@ -182,13 +181,13 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
         }
 
         if (!BuildStatus.isFinish(buildStatus)) { // 未结束--返回后消息会有下一次轮循
-            LogUtils.addLine(rabbitTemplate, buildId, "[Loop]从云石中转服务器分发至目标服务器/send cloudStone Transfer file to TargetSvr status: $buildStatus", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "[Loop]从云石中转服务器分发至目标服务器/send cloudStone Transfer file to TargetSvr status: $buildStatus", taskId, containerId, executeCount)
             return AtomResponse(buildStatus)
         }
 
         task.taskParams[LAST_STATUS] = buildStatus.name
         if (BuildStatus.isFailure(buildStatus)) { // 步骤2失败，终止
-            LogUtils.addRedLine(rabbitTemplate, buildId, "从云石中转服务器分发至目标服务器失败/send cloudStone Transfer file to TargetSvr fail", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, "从云石中转服务器分发至目标服务器失败/send cloudStone Transfer file to TargetSvr fail", taskId, containerId, executeCount)
             return if (buildStatus == BuildStatus.FAILED)
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
@@ -200,7 +199,7 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
                 AtomResponse(buildStatus)
             }
         }
-        LogUtils.addLine(rabbitTemplate, buildId, "从云石中转服务器分发至目标服务器成功/send cloudStone Transfer file to TargetSvr done", taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "从云石中转服务器分发至目标服务器成功/send cloudStone Transfer file to TargetSvr done", taskId, containerId, executeCount)
 
         return AtomResponse(BuildStatus.SUCCEED)
     }
@@ -219,7 +218,7 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
         val executeCount = task.executeCount ?: 1
         param.targetAppId = client.get(ServiceProjectResource::class).get(task.projectId).data?.hybridCcAppId?.toInt()
             ?: run {
-                LogUtils.addLine(rabbitTemplate, task.buildId, "找不到绑定海外蓝鲸的业务ID/can not found CC Business ID", task.taskId,
+                buildLogPrinter.addLine(task.buildId, "找不到绑定海外蓝鲸的业务ID/can not found CC Business ID", task.taskId,
                     task.containerHashId, executeCount
                 )
                 return defaultFailAtomResponse
@@ -234,10 +233,10 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
         clearTempFile(task) // 清理临时文件
 
         if (BuildStatus.isFailure(firstStatus)) { // 如果失败则结束
-            LogUtils.addRedLine(rabbitTemplate, buildId, "文件分至云石中转服务器失败/send file to [cloudStone TransferSvr] fail", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, "文件分至云石中转服务器失败/send file to [cloudStone TransferSvr] fail", taskId, containerId, executeCount)
             return AtomResponse(firstStatus)
         } else if (BuildStatus.isFinish(firstStatus)) { // 成功了，继续
-            LogUtils.addLine(rabbitTemplate, buildId, "文件分发至云石中转服务器完成/send file to [cloudStone TransferSvr] done", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "文件分发至云石中转服务器完成/send file to [cloudStone TransferSvr] done", taskId, containerId, executeCount)
         }
 
         // 分发文件
@@ -246,10 +245,10 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
             return AtomResponse(secondStatus)
         }
         if (BuildStatus.isFailure(secondStatus)) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "从云石中转服务器分发至目标服务器失败/send cloudStone Transfer file to TargetSvr fail", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, "从云石中转服务器分发至目标服务器失败/send cloudStone Transfer file to TargetSvr fail", taskId, containerId, executeCount)
             return AtomResponse(secondStatus)
         } else if (BuildStatus.isFinish(secondStatus)) { // 成功了，继续
-            LogUtils.addLine(rabbitTemplate, buildId, "从云石中转服务器分发至目标服务器成功/send cloudStone Transfer file to TargetSvr done", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "从云石中转服务器分发至目标服务器成功/send cloudStone Transfer file to TargetSvr done", taskId, containerId, executeCount)
         }
 
         return AtomResponse(secondStatus)
@@ -279,7 +278,7 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
 
         try {
             val isRepoGray = repoGray.isGray(projectId, redisOperation)
-            LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
             if (isRepoGray) {
                 regexPathsStr.split(",").forEach { regex ->
                     val files = bkRepoClient.downloadFileByPattern(
@@ -309,13 +308,12 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
                 }
             }
 
-            LogUtils.addLine(rabbitTemplate, buildId, "Param cloudStonePath=$cloudStonePath", taskId, containerId, executeCount)
-            LogUtils.addLine(rabbitTemplate, buildId, "Param isCustom=$isCustom", taskId, containerId, executeCount)
-            LogUtils.addLine(rabbitTemplate, buildId, "Param cloudStoneFileList=$cloudStoneFileList", taskId, containerId, executeCount)
-            LogUtils.addLine(rabbitTemplate, buildId, "$count 个文件将被分发/$count file(s) will be distribute...", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "Param cloudStonePath=$cloudStonePath", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "Param isCustom=$isCustom", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "Param cloudStoneFileList=$cloudStoneFileList", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "$count 个文件将被分发/$count file(s) will be distribute...", taskId, containerId, executeCount)
             if (count == 0) {
-                LogUtils.addRedLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "找不到要传输的文件/Can not find any file: $regexPathsStr",
                     tag = taskId,
@@ -345,7 +343,7 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
                 )
             )
 
-            LogUtils.addLine(rabbitTemplate, buildId, "开始传输文件至云石服务器/start send file to cloud stone", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "开始传输文件至云石服务器/start send file to cloud stone", taskId, containerId, executeCount)
 
             val starter = OPERATOR
             val taskInstanceId = jobFastPushFile.fastPushFile(
@@ -402,15 +400,15 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
         val executeCount = task.executeCount ?: 1
         val targetPathStr = parseVariable(param.targetPath, runVariables)
         val cloudStonePath = task.taskParams[STONE_FILE] as List<String>
-        LogUtils.addLine(rabbitTemplate, buildId, "Param openState=${param.openState}", taskId, containerId, executeCount)
-        LogUtils.addLine(rabbitTemplate, buildId, "Param ipList=${param.ipList}", taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "Param openState=${param.openState}", taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "Param ipList=${param.ipList}", taskId, containerId, executeCount)
         val ipList: List<String>? = if (param.ipList.isNotBlank()) {
             param.ipList.split(",")
         } else {
             null
         }
         // 分发文件
-        LogUtils.addLine(rabbitTemplate, buildId, "从云石中转服务器分发至目标服务器/send cloudStone Transfer file to TargetSvr...", taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "从云石中转服务器分发至目标服务器/send cloudStone Transfer file to TargetSvr...", taskId, containerId, executeCount)
         val secondId = jobCloudsFastPushFile.cloudsFastPushFile(
             buildId = buildId,
             operator = starter,

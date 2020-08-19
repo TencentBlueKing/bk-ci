@@ -29,12 +29,13 @@ package com.tencent.devops.common.archive.api
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.archive.api.pojo.JFrogProperties
+import com.tencent.devops.common.archive.api.pojo.ArtifactProperties
 import com.tencent.devops.common.archive.util.JFrogUtil
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
+import java.net.URLEncoder
 
 class JFrogPropertiesApi constructor(
     private val jFrogConfigProperties: JFrogConfigProperties,
@@ -44,26 +45,22 @@ class JFrogPropertiesApi constructor(
     private val credential = JFrogUtil.makeCredential(jFrogConfigProperties.username!!, jFrogConfigProperties.password!!)
 
     fun getProperties(path: String): Map<String, List<String>> {
-        val url = "$baseUrl/api/storage/$path?properties"
-        val request = Request.Builder()
-            .url(url)
-            .header("Authorization", credential)
-            .get()
-            .build()
+        logger.info("getProperties, path: $path")
+        val encodePath = URLEncoder.encode(path.removePrefix(JFrogUtil.getRepoPath()), "UTF-8")
+        val url = "$baseUrl/api/artifactproperties?path=$encodePath&repoKey=generic-local"
+        val request = Request.Builder().url(url).header("Authorization", credential).get().build()
 
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                if (response.code() == 404) {
-                    logger.warn("Get 404 code from url $url")
-                    return mutableMapOf()
-                }
-                logger.error("Fail to get jfrog properties $path. $responseContent")
-                throw RuntimeException("Fail to get jfrog properties")
+                logger.error("get file properties failed, encodePath: $encodePath, responseContent: $responseContent")
+                throw RuntimeException("get file properties failed")
             }
 
-            val jFrogProperties = objectMapper.readValue<JFrogProperties>(responseContent)
-            return jFrogProperties.properties
+            val artifactProperties = objectMapper.readValue<ArtifactProperties>(responseContent)
+            return artifactProperties.artifactProperties.associate {
+                it.name to listOf(it.value)
+            }
         }
     }
 

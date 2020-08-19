@@ -56,8 +56,8 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStatic
 import com.tencent.devops.gitci.api.TriggerBuildResource
 import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.log.api.UserLogResource
-import com.tencent.devops.log.model.pojo.LogLine
-import com.tencent.devops.log.model.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.LogLine
+import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.model.prebuild.tables.records.TPrebuildProjectRecord
 import com.tencent.devops.plugin.api.UserCodeccResource
 import com.tencent.devops.prebuild.dao.PrebuildPersonalMachineDao

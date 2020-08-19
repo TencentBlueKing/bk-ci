@@ -35,7 +35,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.image.api.ServiceTkePushImageResource
 import com.tencent.devops.image.pojo.enums.TaskStatus
 import com.tencent.devops.image.pojo.tke.TkePushImageParam
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultSuccessAtomResponse
@@ -46,7 +46,6 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.math.NumberUtils
 import org.apache.poi.util.StringUtil
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -56,7 +55,7 @@ import org.springframework.stereotype.Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class PushImageToThirdRepoTaskAtom @Autowired constructor(
     private val client: Client,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<PushImageToThirdRepoElement> {
 
     companion object {
@@ -128,8 +127,7 @@ class PushImageToThirdRepoTaskAtom @Autowired constructor(
             verifyOa = verifyByOa!!
         )
 
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "开始推送镜像",
             tag = task.taskId,
@@ -139,8 +137,7 @@ class PushImageToThirdRepoTaskAtom @Autowired constructor(
         var pushImageTaskResult = client.get(ServiceTkePushImageResource::class).pushImage(tkePushParams)
         loop@ while (true) {
             if (pushImageTaskResult.isNotOk() || pushImageTaskResult.data == null) {
-                LogUtils.addRedLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "推送镜像失败",
                     tag = task.taskId,
@@ -157,8 +154,7 @@ class PushImageToThirdRepoTaskAtom @Autowired constructor(
             val pushImageTask = pushImageTaskResult.data!!
             return when (pushImageTask.taskStatus) {
                 TaskStatus.SUCCESS.name -> {
-                    LogUtils.addLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addLine(
                         buildId = buildId,
                         message = "推送镜像成功，【<a target='_blank' href='http://csighub.oa.com/tencenthub/repo'>查看镜像</a>】",
                         tag = task.taskId,
@@ -174,8 +170,7 @@ class PushImageToThirdRepoTaskAtom @Autowired constructor(
                     continue@loop
                 }
                 else -> {
-                    LogUtils.addRedLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addRedLine(
                         buildId = buildId,
                         message = "推送镜像失败: ${pushImageTask.taskMessage}",
                         tag = task.taskId,

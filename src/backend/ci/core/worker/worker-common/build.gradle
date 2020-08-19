@@ -32,7 +32,6 @@ dependencies {
     compile project(":core:ticket:api-ticket")
     compile project(":core:environment:api-environment")
     compile project(":core:dockerhost:api-dockerhost")
-    compile project(":core:common:common-log")
     compile project(":core:common:common-archive")
     compile project(":core:common:common-pipeline")
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
