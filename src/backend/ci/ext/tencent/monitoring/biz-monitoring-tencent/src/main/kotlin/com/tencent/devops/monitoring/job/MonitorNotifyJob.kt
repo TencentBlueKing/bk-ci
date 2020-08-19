@@ -8,6 +8,7 @@ import com.tencent.devops.monitoring.dao.SlaDailyDao
 import com.tencent.devops.monitoring.util.EmailUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import org.apache.commons.lang3.time.DateFormatUtils
 import org.apache.commons.lang3.time.FastDateFormat
 import org.apache.commons.lang3.tuple.MutablePair
 import org.elasticsearch.action.search.SearchRequest
@@ -65,15 +66,12 @@ class MonitorNotifyJob @Autowired constructor(
         val endTime = 2597664799999L
 
         val moduleMap = linkedMapOf(
-            apiStatus(startTime, endTime),
+            gatewayStatus(startTime, endTime),
             atomMonitor(startTime, endTime),
             dispatchStatus(startTime, endTime),
             userStatus(startTime, endTime),
             codecc(startTime, endTime)
         )
-
-        // TODO
-        apiStatus(startTime, endTime)
 
         // 发送邮件
         val message = EmailNotifyMessage()
@@ -95,7 +93,7 @@ class MonitorNotifyJob @Autowired constructor(
         }
     }
 
-    fun apiStatus(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Double, String>>> {
+    fun gatewayStatus(startTime: Long, endTime: Long): Pair<String, List<Triple<String, Double, String>>> {
         val rowList = mutableListOf<Triple<String, Double, String>>()
         for (name in arrayOf(
             "process",
@@ -113,7 +111,7 @@ class MonitorNotifyJob @Autowired constructor(
                 Triple(
                     name,
                     100 - (errorCount * 100.0 / totalCount),
-                    getUrl(startTime, endTime, Module.USER_STATUS) // TODO
+                    getUrl(startTime, endTime, Module.GATEWAY) // TODO
                 )
             )
         }
@@ -299,6 +297,7 @@ class MonitorNotifyJob @Autowired constructor(
     }
 
     private fun getUrl(startTime: Long, endTime: Long, module: Module, name: String = ""): String {
+
         when {
             profile.isDev() -> {
                 when (module) {
@@ -306,6 +305,19 @@ class MonitorNotifyJob @Autowired constructor(
                     Module.DISPATCH -> return "http://9.56.38.242:443/d/ET3bo3VGz/gou-jian-ji-shi-bai-xiang-qing?var-buildType=$name&from=$startTime&to=$endTime"
                     Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$endTime"
                     Module.CODECC -> return "http://9.56.38.242:443/d/uJaL6mNMz/codeccgong-ju-shang-bao-xiang-qing?var-toolName=$name&from=$startTime&to=$endTime"
+                    Module.GATEWAY -> return "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
+                        DateFormatUtils.format(
+                            startTime,
+                            "YYYY-MM-DDTHH:mm:ss.SSSZ"
+                        )
+                    }',mode:absolute,to:'${
+                        DateFormatUtils.format(
+                            endTime,
+                            "YYYY-MM-DDTHH:mm:ss.SSSZ"
+                        )
+                    }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc)," +
+                        "query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase," +
+                        "value:$name),query:(match:(service:(query:$name,type:phrase))))),index:'68f5fd50-798e-11ea-8327-85de2e827c67',interval:auto,query:(language:lucene,query:'beat.hostname:%22v2-gateway-idc%22%20AND%20service:%22$name%22'),sort:!('@timestamp',desc))"
                 }
             }
             profile.isTest() -> { // TODO
@@ -314,6 +326,19 @@ class MonitorNotifyJob @Autowired constructor(
                     Module.DISPATCH -> return "http://9.56.38.242:443/d/ET3bo3VGz/gou-jian-ji-shi-bai-xiang-qing?var-buildType=$name&from=$startTime&to=$endTime"
                     Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$endTime"
                     Module.CODECC -> return "http://9.56.38.242:443/d/uJaL6mNMz/codeccgong-ju-shang-bao-xiang-qing?var-toolName=$name&from=$startTime&to=$endTime"
+                    Module.GATEWAY -> return "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
+                        DateFormatUtils.format(
+                            startTime,
+                            "YYYY-MM-DDTHH:mm:ss.SSSZ"
+                        )
+                    }',mode:absolute,to:'${
+                        DateFormatUtils.format(
+                            endTime,
+                            "YYYY-MM-DDTHH:mm:ss.SSSZ"
+                        )
+                    }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc)," +
+                        "query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase," +
+                        "value:$name),query:(match:(service:(query:$name,type:phrase))))),index:'68f5fd50-798e-11ea-8327-85de2e827c67',interval:auto,query:(language:lucene,query:'beat.hostname:%22v2-gateway-idc%22%20AND%20service:%22$name%22'),sort:!('@timestamp',desc))"
                 }
             }
             profile.isProd() -> { // TODO
@@ -322,6 +347,19 @@ class MonitorNotifyJob @Autowired constructor(
                     Module.DISPATCH -> return "http://9.56.38.242:443/d/ET3bo3VGz/gou-jian-ji-shi-bai-xiang-qing?var-buildType=$name&from=$startTime&to=$endTime"
                     Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$endTime"
                     Module.CODECC -> return "http://9.56.38.242:443/d/uJaL6mNMz/codeccgong-ju-shang-bao-xiang-qing?var-toolName=$name&from=$startTime&to=$endTime"
+                    Module.GATEWAY -> return "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
+                        DateFormatUtils.format(
+                            startTime,
+                            "YYYY-MM-DDTHH:mm:ss.SSSZ"
+                        )
+                    }',mode:absolute,to:'${
+                        DateFormatUtils.format(
+                            endTime,
+                            "YYYY-MM-DDTHH:mm:ss.SSSZ"
+                        )
+                    }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc)," +
+                        "query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase," +
+                        "value:$name),query:(match:(service:(query:$name,type:phrase))))),index:'68f5fd50-798e-11ea-8327-85de2e827c67',interval:auto,query:(language:lucene,query:'beat.hostname:%22v2-gateway-idc%22%20AND%20service:%22$name%22'),sort:!('@timestamp',desc))"
                 }
             }
         }
@@ -330,6 +368,7 @@ class MonitorNotifyJob @Autowired constructor(
     }
 
     enum class Module {
+        GATEWAY,
         ATOM,
         DISPATCH,
         USER_STATUS,
@@ -339,11 +378,4 @@ class MonitorNotifyJob @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(MonitorNotifyJob::class.java)
     }
-}
-
-fun main(args: Array<String>) {
-    val filter = QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("@timestamp").gte(111).lte(222))
-        .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"process\" AND NOT(status: \"500\")"))
-
-    println(filter)
 }

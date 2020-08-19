@@ -41,7 +41,7 @@ object EmailUtil {
         return """
                                                                             <tr>
                                                                                <td>$name</td>
-                                                                               <td>$percent%</td>
+                                                                               <td>${String.format("%.2f", percent).toDouble()}%</td>
                                                                                <td align="center">
                                                                                    <a href="$url">查看</a>
                                                                                </td>
