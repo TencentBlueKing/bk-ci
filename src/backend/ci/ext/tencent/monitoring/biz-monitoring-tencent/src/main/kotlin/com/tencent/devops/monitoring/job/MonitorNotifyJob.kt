@@ -99,7 +99,7 @@ class MonitorNotifyJob @Autowired constructor(
         val query = QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("@timestamp").gte(startTime).lte(endTime))
             .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"process\" AND NOT(status: \"500\")"))
         logger.info("apiStatus , query:$query")
-        sourceBuilder.query(query)
+        sourceBuilder.query(query).size(1)
 
         val searchRequest = SearchRequest()
         searchRequest.indices("bkdevops-gateway-v2-access-2020.08.18") // TODO
