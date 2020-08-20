@@ -22,8 +22,8 @@ class ApigwSlaResourceV2Impl @Autowired constructor(
         endTime: Long?
     ): Result<SlaCodeccResponseData> {
         logger.info("codeccQueryByBG , userId:$userId , bgId:$bgId , startTime:$startTime , endTime:$endTime")
-        
-        //TODO 查询真实数据
+
+        // TODO 查询真实数据
 
         return Result(
             SlaCodeccResponseData(

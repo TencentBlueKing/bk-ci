@@ -23,30 +23,23 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.monitoring.api.service
+
+package com.tencent.devops.image.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.monitoring.pojo.GrafanaNotification
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.image.api.ServiceDockerImageResource
+import com.tencent.devops.image.pojo.CheckDockerImageRequest
+import com.tencent.devops.image.pojo.CheckDockerImageResponse
+import com.tencent.devops.image.service.InspectImageService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["SERVICE_MONITORING"], description = "监控")
-@Path("/service/monitoring")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface GrafanaWebhookResource {
+@RestResource
+class ServiceDockerImageResourceImpl @Autowired constructor(
+    private val inspectImageService: InspectImageService
+) : ServiceDockerImageResource {
 
-    @ApiOperation("grafana的webhook回调接口")
-    @POST
-    @Path("/grafana/webhook")
-    fun webhookCallBack(
-        @ApiParam(value = "grafana监控webhook回调通知消息", required = true)
-        grafanaNotification: GrafanaNotification
-    ): Result<Boolean>
+    override fun checkDockerImage(userId: String, checkDockerImageRequestList: List<CheckDockerImageRequest>): Result<List<CheckDockerImageResponse>> {
+        return Result(inspectImageService.checkDockerImage(userId, checkDockerImageRequestList))
+    }
 }
