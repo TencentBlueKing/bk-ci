@@ -24,43 +24,50 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.dao.v2
+package com.tencent.devops.log.service.v2
 
-import com.tencent.devops.model.log.Tables.T_LOG_SUBTAGS
+import com.tencent.devops.log.dao.v2.LogStatusDaoV2
 import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@Repository
-class LogTagDao {
+@Service
+class LogStatusService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val logStatusDaoV2: LogStatusDaoV2
+) {
 
-    fun save(
-        dslContext: DSLContext,
+    fun finish(
         buildId: String,
-        tag: String,
-        subTags: String
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        finish: Boolean
     ) {
-        with(T_LOG_SUBTAGS) {
-            dslContext.insertInto(
-                this,
-                BUILD_ID,
-                TAG,
-                CREATED_TIME,
-                SUB_TAGS
-            ).values(buildId, tag, LocalDateTime.now(), subTags)
-                .onDuplicateKeyUpdate()
-                .set(CREATED_TIME, LocalDateTime.now())
-                .set(SUB_TAGS, subTags)
-                .execute()
-        }
+        logStatusDaoV2.finish(
+            dslContext = dslContext,
+            buildId = buildId,
+            tag = tag,
+            subTags = subTag,
+            jobId = jobId,
+            executeCount = executeCount,
+            finish = finish
+        )
     }
 
-    fun getSubTags(dslContext: DSLContext, buildId: String, tag: String): String? {
-        with(T_LOG_SUBTAGS) {
-            return dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .and(TAG.eq(tag))
-                .fetchOne().subTags
+    fun isFinish(
+        buildId: String,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Boolean {
+        return if (jobId.isNullOrBlank()) {
+            logStatusDaoV2.isFinish(dslContext, buildId, tag, subTag, executeCount)
+        } else {
+            val logStatusList = logStatusDaoV2.listFinish(dslContext, buildId, executeCount)
+            logStatusList?.firstOrNull { it.jobId == jobId && it.tag.startsWith("stopVM-") }?.finished == true
         }
     }
 }

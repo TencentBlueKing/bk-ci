@@ -72,6 +72,7 @@ object ESIndexUtils {
             .field("message", logMessage.message)
             .field("timestamp", logMessage.timestamp)
             .field("tag", logMessage.tag)
+            .field("subTag", logMessage.subTag)
             .field("jobId", logMessage.jobId)
             .field("logType", logMessage.logType.name)
             .field("executeCount", logMessage.executeCount)

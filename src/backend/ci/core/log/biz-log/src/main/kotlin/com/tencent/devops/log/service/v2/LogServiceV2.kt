@@ -82,6 +82,8 @@ import kotlin.math.min
 class LogServiceV2 @Autowired constructor(
     private val client: LogClient,
     private val indexServiceV2: IndexServiceV2,
+    private val logStatusService: LogStatusService,
+    private val logTagService: LogTagService,
     private val defaultKeywords: List<String>,
     private val createIndexBeanV2: CreateIndexBeanV2,
     private val logBeanV2: LogBeanV2,
@@ -135,7 +137,14 @@ class LogServiceV2 @Autowired constructor(
     fun updateLogStatus(event: LogStatusEvent) {
         with(event) {
             logger.info("[$buildId|$tag|$jobId|$executeCount|$finished] Start to update log status")
-            indexServiceV2.finish(buildId, tag, subTag, jobId, executeCount, finished)
+            logStatusService.finish(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount,
+                finish = finished
+            )
         }
     }
 
@@ -1266,6 +1275,7 @@ class LogServiceV2 @Autowired constructor(
                     message = sourceMap["message"].toString(),
                     priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
                     tag = t,
+                    subTag = sourceMap["subTag"]?.toString() ?: "",
                     jobId = sourceMap["jobId"]?.toString() ?: "",
                     executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
                 )
@@ -1356,6 +1366,7 @@ class LogServiceV2 @Autowired constructor(
                         message = sourceMap["message"].toString(),
                         priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
                         tag = t,
+                        subTag = sourceMap["subTag"]?.toString() ?: "",
                         jobId = sourceMap["jobId"]?.toString() ?: "",
                         executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
                     )
@@ -1395,7 +1406,13 @@ class LogServiceV2 @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Boolean {
-        return indexServiceV2.isFinish(buildId, tag, subTag, jobId, executeCount)
+        return logStatusService.isFinish(
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
     }
 
     private fun getLogsByKeywords(
@@ -1508,8 +1525,8 @@ class LogServiceV2 @Autowired constructor(
                 index = index,
                 type = type,
                 tag = tag!!,
-                jobId = jobId,
                 subTag = subTag,
+                jobId = jobId,
                 executeCount = executeCount,
                 size = size
             )
@@ -1961,8 +1978,12 @@ class LogServiceV2 @Autowired constructor(
             } else {
                 it.timestamp
             }
+            if (!it.subTag.isNullOrBlank()) {
+                logTagService.saveSubTag(buildId, it.tag, it.subTag)
+            }
             LogMessageWithLineNo(
                 tag = it.tag,
+                subTag = it.subTag,
                 jobId = it.jobId,
                 message = it.message,
                 timestamp = timestamp,
