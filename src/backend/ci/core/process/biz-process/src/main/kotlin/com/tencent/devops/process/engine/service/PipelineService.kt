@@ -551,7 +551,6 @@ class PipelineService @Autowired constructor(
                 )
             // 对已经存在的模型做处理
             val param = BeforeDeleteParam(userId, projectId, pipelineId, channelCode)
-            logger.info("get before delete param: $param, ${modelCheckPlugin.javaClass}")
             modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
 
             pipelineRepositoryService.deployPipeline(model, projectId, pipelineId, userId, channelCode, false)
