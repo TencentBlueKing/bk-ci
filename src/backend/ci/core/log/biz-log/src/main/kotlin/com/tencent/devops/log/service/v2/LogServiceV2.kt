@@ -182,7 +182,7 @@ class LogServiceV2 @Autowired constructor(
                         index = index,
                         type = type,
                         tag = tag,
-                        subTag = tag,
+                        subTag = subTag,
                         jobId = jobId,
                         executeCount = executeCount
                     )
