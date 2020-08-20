@@ -249,7 +249,7 @@ class DockerDispatcher @Autowired constructor(
                     retryTime = pipelineAgentShutdownEvent.retryTime,
                     routeKeySuffix = pipelineAgentShutdownEvent.routeKeySuffix ?: "dockerOnVM",
                     startTime = 0L,
-                    stopTime = 0L,
+                    stopTime = System.currentTimeMillis(),
                     errorCode = "0",
                     errorMessage = ""
                 )
