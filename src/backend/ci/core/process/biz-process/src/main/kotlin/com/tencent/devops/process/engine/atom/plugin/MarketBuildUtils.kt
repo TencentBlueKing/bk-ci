@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.Executors
 import javax.ws.rs.HttpMethod
 
-
 object MarketBuildUtils {
     private const val BK_ATOM_HOOK_URL = "bk_atom_del_hook_url"
     private const val BK_ATOM_HOOK_URL_METHOD = "bk_atom_del_hook_url_method"
