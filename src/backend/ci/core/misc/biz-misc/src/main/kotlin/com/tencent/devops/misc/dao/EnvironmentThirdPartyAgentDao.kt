@@ -36,7 +36,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class ThirdPartyAgentDao {
+class EnvironmentThirdPartyAgentDao {
 
     fun listByStatus(
         dslContext: DSLContext,

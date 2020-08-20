@@ -24,34 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.builds
+package com.tencent.devops.misc.dao
 
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.PipelineBuildMaterial
-import com.tencent.devops.process.service.PipelineBuildMaterialService
-import org.apache.commons.lang.StringUtils
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.model.environment.tables.TEnvNode
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-@RestResource
-class BuildRepositoryResourceImpl @Autowired constructor(
-    private val pipelineBuildMaterialService: PipelineBuildMaterialService
-) : BuildRepositoryResource {
-    override fun saveBuildMaterial(
-        buildId: String,
-        projectId: String,
-        pipelineId: String,
-        pipelineBuildMaterials: List<PipelineBuildMaterial>
-    ): Result<Int> {
-        checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
-        return Result(pipelineBuildMaterialService.saveBuildMaterial(buildId, projectId, pipelineId, pipelineBuildMaterials))
-    }
+@Repository
+class EnvironmentEnvNodeDao {
+    fun deleteByNodeIds(dslContext: DSLContext, nodeIds: List<Long>) {
+        if (nodeIds.isEmpty()) {
+            return
+        }
 
-    fun checkParam(buildId: String, projectId: String, pipelineId: String) {
-        if (StringUtils.isBlank(buildId))
-            throw ParamBlankException("build Id is null or blank")
-        if (StringUtils.isBlank(pipelineId))
-            throw ParamBlankException("pipeline Id is null or blank")
+        with(TEnvNode.T_ENV_NODE) {
+            dslContext.deleteFrom(this)
+                    .where(NODE_ID.`in`(nodeIds))
+                    .execute()
+        }
     }
 }
