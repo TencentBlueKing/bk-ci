@@ -27,11 +27,11 @@
 package com.tencent.devops.websocket.cron
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.websocket.keys.WebsocketKeys
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 import com.tencent.devops.common.websocket.utils.RedisUtlis.cleanPageSessionByPage
-import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.websocket.lock.WebsocketCronLock
 import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
@@ -57,7 +57,7 @@ class ClearTimeoutCron(
         longSessionLog()
         val websocketCronLock = WebsocketCronLock(redisOperation)
         try {
-            if(websocketCronLock.tryLock()) {
+            if (websocketCronLock.tryLock()) {
                 clearTimeoutSession()
             }
         } finally {
@@ -123,6 +123,6 @@ class ClearTimeoutCron(
                 }
             }
         }
-        logger.info("websocket cron cost ${System.currentTimeMillis()-nowTime} ms")
+        LogUtils.costTime("websocket cron", nowTime)
     }
 }

@@ -31,13 +31,13 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
+import com.tencent.devops.common.websocket.keys.WebsocketKeys
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 import com.tencent.devops.common.websocket.utils.RedisUtlis.cleanUserSessionBySessionId
 import com.tencent.devops.websocket.event.ChangePageTransferEvent
 import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.event.ClearUserSessionTransferEvent
 import com.tencent.devops.websocket.event.LoginOutTransferEvent
-import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.websocket.utils.PageUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

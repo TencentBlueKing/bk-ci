@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 import com.tencent.devops.websocket.servcie.WebsocketService
+import com.tencent.devops.websocket.utils.HostUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.socket.CloseStatus
@@ -20,10 +21,10 @@ class SessionHandler @Autowired constructor(
     // 链接关闭记录去除session
     override fun afterConnectionClosed(session: WebSocketSession?, closeStatus: CloseStatus?) {
         val uri = session?.uri
-        if(closeStatus != CloseStatus.NORMAL && closeStatus != CloseStatus.PROTOCOL_ERROR) {
+        if (closeStatus?.code != CloseStatus.NORMAL.code && closeStatus?.code != CloseStatus.PROTOCOL_ERROR.code) {
             logger.warn("websocket close not normal, Status[$closeStatus] uri[${session?.uri}] remoteIp[${session?.remoteAddress}]")
         }
-        val sessionId = uri?.query?.substringAfter("sessionId=")
+        val sessionId = HostUtils.getRealSession(session?.uri?.query)
         if (sessionId.isNullOrEmpty()) {
             logger.warn("connection closed can not find sessionId, $uri| ${session?.remoteAddress}")
             super.afterConnectionClosed(session, closeStatus)
@@ -31,7 +32,7 @@ class SessionHandler @Autowired constructor(
         val remoteId = session?.remoteAddress
         val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId!!)
         val userId = RedisUtlis.getUserBySession(redisOperation, sessionId)
-        logger.info("connection closed closeStatus[${closeStatus}] user[$userId] page[$page], session[$sessionId]")
+        logger.info("connection closed closeStatus[$closeStatus] user[$userId] page[$page], session[$sessionId]")
         websocketService.clearAllBySession(userId!!, sessionId)
 
         super.afterConnectionClosed(session, closeStatus)
