@@ -3,7 +3,6 @@ package com.tencent.devops.monitoring.job
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
-import com.tencent.devops.common.service.Profile
 import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.dao.SlaDailyDao
 import com.tencent.devops.monitoring.util.EmailModuleData
@@ -20,6 +19,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.Instant
@@ -28,12 +28,12 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 
 @Component
+@RefreshScope
 class MonitorNotifyJob @Autowired constructor(
     private val client: Client,
     private val influxdbClient: InfluxdbClient,
     private val slaDailyDao: SlaDailyDao,
     private val dslContext: DSLContext,
-    private val profile: Profile,
     private val restHighLevelClient: RestHighLevelClient
 ) {
 
@@ -43,21 +43,40 @@ class MonitorNotifyJob @Autowired constructor(
     @Value("\${sla.title:#{null}}")
     private var title: String? = null
 
+    @Value("\${sla.url.detail.atom:#{null}}")
+    private var atomDetailUrl: String? = null
+
+    @Value("\${sla.url.detail.dispatch:#{null}}")
+    private var dispatchDetailUrl: String? = null
+
+    @Value("\${sla.url.detail.userStatus:#{null}}")
+    private var userStatusDetailUrl: String? = null
+
+    @Value("\${sla.url.detail.codecc:#{null}}")
+    private var codeccDetailUrl: String? = null
+
+    @Value("\${sla.url.observable.atom:#{null}}")
+    private var atomObservableUrl: String? = null
+
+    @Value("\${sla.url.observable.dispatch:#{null}}")
+    private var dispatchObservableUrl: String? = null
+
+    @Value("\${sla.url.observable.userStatus:#{null}}")
+    private var userStatusObservableUrl: String? = null
+
+    @Value("\${sla.url.observable.codecc:#{null}}")
+    private var codeccObservableUrl: String? = null
+
     /**
      * 每天发送日报
      */
     @Scheduled(cron = "0 0 10 * * ?")
     fun notifyDaily() {
-        /*
-        网关访问成功率(DONE)
-        CodeCC插件非编译型工具扫描成功率(DONE)
-        工蜂回写成功率
-        核心插件故障率(DONE)
-        公共构建机准备成功率(DONE)
-        登录成功率(DONE)
-        */
-        if (null == receivers || null == title) {
-            logger.info("notifyDaily no start , receivers:$receivers , title:$title")
+        if (null == receivers || null == title || //
+            null == atomDetailUrl || null == dispatchDetailUrl || null == userStatusDetailUrl || null == codeccDetailUrl || //
+            null == atomObservableUrl || null == dispatchObservableUrl || null == userStatusObservableUrl || null == codeccObservableUrl //
+        ) {
+            logger.info("notifyDaily no start")
             return
         }
 
@@ -316,90 +335,32 @@ class MonitorNotifyJob @Autowired constructor(
     private fun getObservableUrl(startTime: Long, endTime: Long, module: Module): String {
         return when (module) {
             Module.GATEWAY -> "http://opdata.devops.oa.com/d/sL8BLj7Gk/v2-wang-guan-accessjian-kong?orgId=1&from=$startTime&to=$endTime"
-            Module.CODECC -> {
-                when {
-                    profile.isProd() -> "http://9.56.38.242:443/d/l_M8W4HMz/codecckan-ban?orgId=1&from=$startTime&to=$endTime" // TODO
-                    profile.isTest() -> "http://9.56.38.242:443/d/l_M8W4HMz/codecckan-ban?orgId=1&from=$startTime&to=$endTime" // TODO
-                    else -> "http://9.56.38.242:443/d/l_M8W4HMz/codecckan-ban?orgId=1&from=$startTime&to=$endTime"
-                }
-            }
-            else -> {
-                when {
-                    profile.isProd() -> "http://9.56.38.242:443/d/NH9FIfVGk/slakan-ban?orgId=1&from=$startTime&to=$endTime" // TODO
-                    profile.isTest() -> "http://9.56.38.242:443/d/NH9FIfVGk/slakan-ban?orgId=1&from=$startTime&to=$endTime" // TODO
-                    else -> "http://9.56.38.242:443/d/NH9FIfVGk/slakan-ban?orgId=1&from=$startTime&to=$endTime"
-                }
-            }
+            Module.CODECC -> "$codeccObservableUrl?from=$startTime&to=$endTime"
+            Module.ATOM -> "$atomObservableUrl?from=$startTime&to=$endTime"
+            Module.DISPATCH -> "$dispatchObservableUrl?from=$startTime&to=$endTime"
+            Module.USER_STATUS -> "$userStatusObservableUrl?from=$startTime&to=$endTime"
         }
     }
 
     private fun getDetailUrl(startTime: Long, endTime: Long, module: Module, name: String = ""): String {
-
-        when {
-            profile.isTest() -> { // TODO
-                when (module) {
-                    Module.ATOM -> return "http://9.56.38.242:443/d/Z_R3JrVMz/cha-jian-shi-bai-xiang-qing?var-atomCode=$name&from=$startTime&to=$endTime"
-                    Module.DISPATCH -> return "http://9.56.38.242:443/d/ET3bo3VGz/gou-jian-ji-shi-bai-xiang-qing?var-buildType=$name&from=$startTime&to=$endTime"
-                    Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$endTime"
-                    Module.CODECC -> return "http://9.56.38.242:443/d/uJaL6mNMz/codeccgong-ju-shang-bao-xiang-qing?var-toolName=$name&from=$startTime&to=$endTime"
-                    Module.GATEWAY -> return "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
-                        LocalDateTime.ofInstant(
-                            Instant.ofEpochMilli(startTime),
-                            ZoneId.ofOffset("UTC", ZoneOffset.UTC)
-                        ).toString() + "Z"
-                    }',mode:absolute,to:'${
-                        LocalDateTime.ofInstant(
-                            Instant.ofEpochMilli(endTime),
-                            ZoneId.ofOffset("UTC", ZoneOffset.UTC)
-                        ).toString() + "Z"
-                    }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc)," +
-                        "query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase," +
-                        "value:$name),query:(match:(service:(query:$name,type:phrase))))),index:'68f5fd50-798e-11ea-8327-85de2e827c67',interval:auto,query:(language:lucene,query:'beat.hostname:%22v2-gateway-idc%22%20AND%20service:%22$name%22'),sort:!('@timestamp',desc))"
-                }
-            }
-            profile.isProd() -> { // TODO
-                when (module) {
-                    Module.ATOM -> return "http://9.56.38.242:443/d/Z_R3JrVMz/cha-jian-shi-bai-xiang-qing?var-atomCode=$name&from=$startTime&to=$endTime"
-                    Module.DISPATCH -> return "http://9.56.38.242:443/d/ET3bo3VGz/gou-jian-ji-shi-bai-xiang-qing?var-buildType=$name&from=$startTime&to=$endTime"
-                    Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$endTime"
-                    Module.CODECC -> return "http://9.56.38.242:443/d/uJaL6mNMz/codeccgong-ju-shang-bao-xiang-qing?var-toolName=$name&from=$startTime&to=$endTime"
-                    Module.GATEWAY -> return "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
-                        LocalDateTime.ofInstant(
-                            Instant.ofEpochMilli(startTime),
-                            ZoneId.ofOffset("UTC", ZoneOffset.UTC)
-                        ).toString() + "Z"
-                    }',mode:absolute,to:'${
-                        LocalDateTime.ofInstant(
-                            Instant.ofEpochMilli(endTime),
-                            ZoneId.ofOffset("UTC", ZoneOffset.UTC)
-                        ).toString() + "Z"
-                    }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc)," +
-                        "query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase," +
-                        "value:$name),query:(match:(service:(query:$name,type:phrase))))),index:'68f5fd50-798e-11ea-8327-85de2e827c67',interval:auto,query:(language:lucene,query:'beat.hostname:%22v2-gateway-idc%22%20AND%20service:%22$name%22'),sort:!('@timestamp',desc))"
-                }
-            }
-
-            else -> {
-                when (module) {
-                    Module.ATOM -> return "http://9.56.38.242:443/d/Z_R3JrVMz/cha-jian-shi-bai-xiang-qing?var-atomCode=$name&from=$startTime&to=$endTime"
-                    Module.DISPATCH -> return "http://9.56.38.242:443/d/ET3bo3VGz/gou-jian-ji-shi-bai-xiang-qing?var-buildType=$name&from=$startTime&to=$endTime"
-                    Module.USER_STATUS -> return "http://9.56.38.242:443/d/MdTo03VMk/yong-hu-deng-lu-shi-bai-xiang-qing?from=$startTime&to=$endTime"
-                    Module.CODECC -> return "http://9.56.38.242:443/d/uJaL6mNMz/codeccgong-ju-shang-bao-xiang-qing?var-toolName=$name&from=$startTime&to=$endTime"
-                    Module.GATEWAY -> return "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
-                        LocalDateTime.ofInstant(
-                            Instant.ofEpochMilli(startTime),
-                            ZoneId.ofOffset("UTC", ZoneOffset.UTC)
-                        ).toString() + "Z"
-                    }',mode:absolute,to:'${
-                        LocalDateTime.ofInstant(
-                            Instant.ofEpochMilli(endTime),
-                            ZoneId.ofOffset("UTC", ZoneOffset.UTC)
-                        ).toString() + "Z"
-                    }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc)," +
-                        "query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase," +
-                        "value:$name),query:(match:(service:(query:$name,type:phrase))))),index:'68f5fd50-798e-11ea-8327-85de2e827c67',interval:auto,query:(language:lucene,query:'beat.hostname:%22v2-gateway-idc%22%20AND%20service:%22$name%22'),sort:!('@timestamp',desc))"
-                }
-            }
+        return when (module) {
+            Module.GATEWAY -> "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
+                LocalDateTime.ofInstant(
+                    Instant.ofEpochMilli(startTime),
+                    ZoneId.ofOffset("UTC", ZoneOffset.UTC)
+                ).toString() + "Z"
+            }',mode:absolute,to:'${
+                LocalDateTime.ofInstant(
+                    Instant.ofEpochMilli(endTime),
+                    ZoneId.ofOffset("UTC", ZoneOffset.UTC)
+                ).toString() + "Z"
+            }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc)," +
+                "query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase," +
+                "value:$name),query:(match:(service:(query:$name,type:phrase))))),index:'68f5fd50-798e-11ea-8327-85de2e827c67',interval:auto,query:(language:lucene,query:'beat.hostname:%22v2-gateway-idc%22%20AND%20service:%22$name%22'),sort:!('@timestamp',desc))"
+            Module.ATOM -> "$atomDetailUrl?var-atomCode=$name&from=$startTime&to=$endTime"
+            Module.DISPATCH -> "$dispatchDetailUrl?var-buildType=$name&from=$startTime&to=$endTime"
+            Module.USER_STATUS -> "$userStatusDetailUrl?from=$startTime&to=$endTime"
+            Module.CODECC -> "$codeccDetailUrl?var-toolName=$name&from=$startTime&to=$endTime"
         }
     }
 
