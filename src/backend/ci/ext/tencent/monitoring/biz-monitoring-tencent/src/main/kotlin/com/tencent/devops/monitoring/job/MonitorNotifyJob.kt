@@ -3,6 +3,9 @@ package com.tencent.devops.monitoring.job
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.dao.SlaDailyDao
 import com.tencent.devops.monitoring.util.EmailModuleData
@@ -34,7 +37,9 @@ class MonitorNotifyJob @Autowired constructor(
     private val influxdbClient: InfluxdbClient,
     private val slaDailyDao: SlaDailyDao,
     private val dslContext: DSLContext,
-    private val restHighLevelClient: RestHighLevelClient
+    private val restHighLevelClient: RestHighLevelClient,
+    private val profile: Profile,
+    private val redisOperation: RedisOperation
 ) {
 
     @Value("\${sla.receivers:#{null}}")
@@ -72,44 +77,60 @@ class MonitorNotifyJob @Autowired constructor(
      */
     @Scheduled(cron = "0 0 10 * * ?")
     fun notifyDaily() {
+        if (profile.isProd()) {
+            logger.info("profile is prod , no start")
+            return
+        }
+
         if (null == receivers || null == title || //
             null == atomDetailUrl || null == dispatchDetailUrl || null == userStatusDetailUrl || null == codeccDetailUrl || //
             null == atomObservableUrl || null == dispatchObservableUrl || null == userStatusObservableUrl || null == codeccObservableUrl //
         ) {
-            logger.info("notifyDaily no start")
+            logger.info("some params is null , notifyDaily no start")
             return
         }
 
-        val yesterday = LocalDateTime.now().minusDays(1)
+        val redisLock = RedisLock(redisOperation, "slaDailyEmail", 60L)
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                val yesterday = LocalDateTime.now().minusDays(1)
+                val startTime = yesterday.withHour(0).withMinute(0).withSecond(0).timestampmilli()
+                val endTime = yesterday.withHour(23).withMinute(59).withSecond(59).timestampmilli()
 
-        val startTime = yesterday.withHour(0).withMinute(0).withSecond(0).timestampmilli()
-        val endTime = yesterday.withHour(23).withMinute(59).withSecond(59).timestampmilli()
+                val moduleDatas = listOf(
+                    gatewayStatus(startTime, endTime),
+                    atomMonitor(startTime, endTime),
+                    dispatchStatus(startTime, endTime),
+                    userStatus(startTime, endTime),
+                    codecc(startTime, endTime)
+                )
 
-        val moduleDatas = listOf(
-            gatewayStatus(startTime, endTime),
-            atomMonitor(startTime, endTime),
-            dispatchStatus(startTime, endTime),
-            userStatus(startTime, endTime),
-            codecc(startTime, endTime)
-        )
+                // 发送邮件
+                val message = EmailNotifyMessage()
+                message.addAllReceivers(receivers!!.split(",").toHashSet())
+                message.title = title as String
+                message.body = EmailUtil.getEmailBody(startTime, endTime, moduleDatas)
+                message.format = EnumEmailFormat.HTML
+                client.get(ServiceNotifyResource::class).sendEmailNotify(message)
 
-        // 发送邮件
-        val message = EmailNotifyMessage()
-        message.addAllReceivers(receivers!!.split(",").toHashSet())
-        message.title = title as String
-        message.body = EmailUtil.getEmailBody(startTime, endTime, moduleDatas)
-        message.format = EnumEmailFormat.HTML
-        client.get(ServiceNotifyResource::class).sendEmailNotify(message)
-
-        // 落库
-        val startLocalTime = Instant.ofEpochMilli(startTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime()
-        val endLocalTime = Instant.ofEpochMilli(endTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime()
-        moduleDatas.forEach { m ->
-            m.rowList.forEach { l ->
-                l.run {
-                    slaDailyDao.insert(dslContext, m.module, l.first, l.second, startLocalTime, endLocalTime)
+                // 落库
+                val startLocalTime = Instant.ofEpochMilli(startTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime()
+                val endLocalTime = Instant.ofEpochMilli(endTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime()
+                moduleDatas.forEach { m ->
+                    m.rowList.forEach { l ->
+                        l.run {
+                            slaDailyDao.insert(dslContext, m.module, l.first, l.second, startLocalTime, endLocalTime)
+                        }
+                    }
                 }
+            } else {
+                logger.info("SLA Daily Email is running")
             }
+        } catch (e: Throwable) {
+            logger.error("SLA Daily Email error:", e)
+        } finally {
+            redisLock.unlock()
         }
     }
 
