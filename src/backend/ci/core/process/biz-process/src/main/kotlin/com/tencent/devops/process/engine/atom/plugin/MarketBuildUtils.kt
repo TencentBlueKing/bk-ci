@@ -14,9 +14,9 @@ object MarketBuildUtils {
     private const val BK_ATOM_HOOK_URL_METHOD = "bk_atom_del_hook_url_method"
     private const val BK_ATOM_HOOK_URL_BODY = "bk_atom_del_hook_url_body"
 
-    private val PROJECT_ID = "project_id"
-    private val PIPELINE_ID = "pipeline_id"
-    private val USER_ID = "user_id"
+    private const val PROJECT_ID = "projectId"
+    private const val PIPELINE_ID = "pipelineId"
+    private const val USER_ID = "userId"
 
     private val logger = LoggerFactory.getLogger(MarketBuildUtils::class.java)
 
