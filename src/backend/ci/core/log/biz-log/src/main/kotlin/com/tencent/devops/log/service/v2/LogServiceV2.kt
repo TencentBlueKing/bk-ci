@@ -136,7 +136,7 @@ class LogServiceV2 @Autowired constructor(
 
     fun updateLogStatus(event: LogStatusEvent) {
         with(event) {
-            logger.info("[$buildId|$tag|$jobId|$executeCount|$finished] Start to update log status")
+            logger.info("[$buildId|$tag|$subTag|$jobId|$executeCount|$finished] Start to update log status")
             logStatusService.finish(
                 buildId = buildId,
                 tag = tag,
@@ -1207,7 +1207,7 @@ class LogServiceV2 @Autowired constructor(
         jobId: String? = null,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("[$index|$type|$buildId|$tag|$jobId|$executeCount] doQueryInitLogs")
+        logger.info("[$index|$type|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryInitLogs")
         val logStatus = if (tag == null && jobId != null) getLogStatus(
             buildId = buildId,
             tag = jobId,
@@ -1246,7 +1246,7 @@ class LogServiceV2 @Autowired constructor(
                 executeCount = executeCount,
                 size = size
             )
-            logger.info("[$index|$type|$buildId|$tag|$jobId|$executeCount] getOriginLogs with range: $logRange")
+            logger.info("[$index|$type|$buildId|$tag|$subTag|$jobId|$executeCount] getOriginLogs with range: $logRange")
 
             val startTime = System.currentTimeMillis()
             val logs = mutableListOf<LogLine>()
@@ -1316,7 +1316,7 @@ class LogServiceV2 @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("[$index|$type|$buildId|$tag|$jobId|$executeCount] doQueryLargeInitLogs")
+        logger.info("[$index|$type|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryLargeInitLogs")
         val logStatus = if (tag == null && jobId != null) {
             getLogStatus(
                 buildId = buildId,
@@ -1429,7 +1429,7 @@ class LogServiceV2 @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): TreeSet<Long> {
-        logger.info("[$buildId|$index|$type|$tag|$jobId|$executeCount] get log by keywords for type($type): " +
+        logger.info("[$buildId|$index|$type|$tag|$subTag|$jobId|$executeCount] get log by keywords for type($type): " +
             "index: $index, keywords: $keywords, tag: $tag, jobId: $jobId, executeCount: $executeCount")
 
         val size = getLogSize(
@@ -1504,7 +1504,7 @@ class LogServiceV2 @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): List<LogLine> {
-        logger.info("[$buildId|$index|$type|$tag|$jobId|$executeCount] log params for type($type): " +
+        logger.info("[$buildId|$index|$type|$tag|$subTag|$jobId|$executeCount] log params for type($type): " +
             "index: $index, keywords: $keywords, wholeQuery: $wholeQuery, tag: $tag, jobId: $jobId, executeCount: $executeCount")
 
         val size = getLogSize(
@@ -1852,7 +1852,7 @@ class LogServiceV2 @Autowired constructor(
                     .should(QueryBuilders.matchQuery("logType", LogType.END.name).operator(Operator.OR))
             )
 
-        logger.info("[$index|$type|$tag|$jobId|$executeCount|$size] Get log range with query ($q)")
+        logger.info("[$index|$type|$tag|$subTag|$jobId|$executeCount|$size] Get log range with query ($q)")
 
         val hits = client.prepareSearch(buildId, index)
                 .setTypes(type)
@@ -1867,15 +1867,21 @@ class LogServiceV2 @Autowired constructor(
 
         if (hits.totalHits == 0L) return Pair(0, 0)
 
-        return getRangeIndex(hits, tag, jobId)
+        return getRangeIndex(hits, tag, subTag, jobId)
     }
 
-    private fun getRangeIndex(hits: SearchHits, tag: String?, jobId: String?): Pair<Long, Long> {
+    private fun getRangeIndex(
+        hits: SearchHits,
+        tag: String?,
+        subTag: String?,
+        jobId: String?
+    ): Pair<Long, Long> {
         var beginIndex: Long? = null
         var endIndex: Long? = null
         run lit@{
             hits.forEach { hit ->
                 if ((tag != null && hit.source["tag"] == tag) ||
+                    (subTag != null && hit.source["subTag"] == tag) ||
                     (jobId != null && hit.source["jobId"] == jobId)) {
                     // 尽量取最大的区间
                     if (hit.source["logType"] == LogType.START.name) {
