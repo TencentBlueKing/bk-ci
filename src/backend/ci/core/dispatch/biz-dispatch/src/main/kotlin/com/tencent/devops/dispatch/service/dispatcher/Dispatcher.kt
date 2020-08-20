@@ -59,7 +59,14 @@ interface Dispatcher {
     ) {
         if (event.retryTime > 3) {
             // 置为失败
-            onFailBuild(client, buildLogPrinter, event, ErrorType.SYSTEM, ErrorCodeEnum.START_VM_FAIL.errorCode, errorMessage ?: "Fail to start up after 3 retries")
+            onFailBuild(
+                client,
+                buildLogPrinter,
+                event,
+                ErrorType.SYSTEM,
+                ErrorCodeEnum.START_VM_FAIL.errorCode,
+                errorMessage ?: "Fail to start up after 3 retries"
+            )
             return
         }
         event.retryTime += 1
