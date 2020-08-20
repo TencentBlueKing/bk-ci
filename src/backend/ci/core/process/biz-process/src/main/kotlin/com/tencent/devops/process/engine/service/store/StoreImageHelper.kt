@@ -43,12 +43,12 @@ import org.springframework.stereotype.Service
  */
 
 @Service
-class StoreImageService @Autowired constructor(
+class StoreImageHelper @Autowired constructor(
     private val client: Client
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(StoreImageService::class.java)
+        private val logger = LoggerFactory.getLogger(StoreImageHelper::class.java)
     }
 
     // 从镜像商店获取完整的镜像名称

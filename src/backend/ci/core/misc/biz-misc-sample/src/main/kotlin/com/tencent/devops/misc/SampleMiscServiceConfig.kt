@@ -24,17 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory
+package com.tencent.devops.misc
 
-import com.tencent.devops.artifactory.service.impl.DiskArchiveFileServiceImpl
+import com.tencent.devops.misc.service.SamplePipelineHistoryDataClearServiceImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
 
 @Configuration
-class SampleServiceConfig {
+class SampleMiscServiceConfig {
 
     @Bean
-    @Primary
-    fun archiveFileService() = DiskArchiveFileServiceImpl()
+    fun pipelineHistoryDataClearService() = SamplePipelineHistoryDataClearServiceImpl()
 }
