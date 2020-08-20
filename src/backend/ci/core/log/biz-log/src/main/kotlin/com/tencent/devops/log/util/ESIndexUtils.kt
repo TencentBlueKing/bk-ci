@@ -49,6 +49,7 @@ object ESIndexUtils {
             .startObject("timestamp").field("type", "long").endObject()
             .startObject("lineNo").field("type", "long").endObject()
             .startObject("tag").field("type", "keyword").endObject()
+            .startObject("subTag").field("type", "keyword").endObject()
             .startObject("jobId").field("type", "keyword").endObject()
             .startObject("executeCount").field("type", "keyword").endObject()
             .startObject("logType").field("type", "text").endObject()

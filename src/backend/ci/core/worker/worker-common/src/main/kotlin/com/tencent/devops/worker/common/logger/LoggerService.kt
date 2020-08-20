@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.logger
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.worker.common.LOG_SUBTAG_FLAG
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.log.LogSDKApi
 import org.slf4j.LoggerFactory
@@ -150,10 +151,18 @@ object LoggerService {
     fun finishTask() = finishLog(elementId, jobId, executeCount)
 
     fun addNormalLine(message: String) {
+        var subTag = ""
+        var realMessage = message
+        if (message.startsWith(LOG_SUBTAG_FLAG)) {
+            val list = message.removePrefix(LOG_SUBTAG_FLAG).split(LOG_SUBTAG_FLAG)
+            subTag = list.first()
+            realMessage = list.last()
+        }
         val logMessage = LogMessage(
-            message = message,
+            message = realMessage,
             timestamp = System.currentTimeMillis(),
             tag = elementId,
+            subTag = subTag,
             jobId = jobId,
             logType = LogType.LOG,
             executeCount = executeCount
