@@ -11,9 +11,9 @@ import javax.ws.rs.HttpMethod
 
 
 object MarketBuildUtils {
-    private const val BK_ATOM_HOOK_URL = "bk_atom_hook_url"
-    private const val BK_ATOM_HOOK_URL_METHOD = "bk_atom_hook_url_method"
-    private const val BK_ATOM_HOOK_URL_BODY = "bk_atom_hook_url_body"
+    private const val BK_ATOM_HOOK_URL = "bk_atom_del_hook_url"
+    private const val BK_ATOM_HOOK_URL_METHOD = "bk_atom_del_hook_url_method"
+    private const val BK_ATOM_HOOK_URL_BODY = "bk_atom_del_hook_url_body"
 
     private val PROJECT_ID = "project_id"
     private val PIPELINE_ID = "pipeline_id"
@@ -21,7 +21,7 @@ object MarketBuildUtils {
 
     private val logger = LoggerFactory.getLogger(MarketBuildUtils::class.java)
 
-    val marketBuildExecutorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())!!
+    private val marketBuildExecutorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())!!
 
     fun beforeDelete(inputMap: Map<*, *>, atomCode: String, param: BeforeDeleteParam) {
         marketBuildExecutorService.execute {
