@@ -29,7 +29,7 @@ package com.tencent.devops.websocket.cron
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.websocket.keys.WebsocketKeys
+import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 import com.tencent.devops.common.websocket.utils.RedisUtlis.cleanPageSessionByPage
 import com.tencent.devops.websocket.lock.WebsocketCronLock

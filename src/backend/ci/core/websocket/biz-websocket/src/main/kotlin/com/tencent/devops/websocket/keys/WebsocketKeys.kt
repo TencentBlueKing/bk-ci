@@ -1,4 +1,4 @@
-package com.tencent.devops.common.websocket.keys
+package com.tencent.devops.websocket.keys
 
 object WebsocketKeys {
     // session超时 redis桶数量
