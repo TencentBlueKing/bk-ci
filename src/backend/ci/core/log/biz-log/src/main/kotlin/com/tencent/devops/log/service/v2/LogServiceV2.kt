@@ -1188,7 +1188,7 @@ class LogServiceV2 @Autowired constructor(
             query.must(QueryBuilders.matchQuery("tag", tag).operator(Operator.AND))
         }
         if (!subTag.isNullOrBlank()) {
-            query.must(QueryBuilders.matchQuery("subTag", jobId).operator(Operator.AND))
+            query.must(QueryBuilders.matchQuery("subTag", subTag).operator(Operator.AND))
         }
         if (!jobId.isNullOrBlank()) {
             query.must(QueryBuilders.matchQuery("jobId", jobId).operator(Operator.AND))

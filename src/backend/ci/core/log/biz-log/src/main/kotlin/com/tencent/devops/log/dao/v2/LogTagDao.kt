@@ -60,7 +60,7 @@ class LogTagDao {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(TAG.eq(tag))
-                .fetchOne().subTags
+                .fetchOne()?.subTags
         }
     }
 }
