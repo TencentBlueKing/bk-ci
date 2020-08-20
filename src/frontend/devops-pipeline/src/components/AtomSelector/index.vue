@@ -550,6 +550,7 @@
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
+                position: relative;
                 button.select-atom-btn[disabled] {
                     cursor: not-allowed !important;
                     background-color: #fff;
@@ -566,6 +567,8 @@
                     font-size: 12px;
                     opacity: 0;
                     color: $primaryColor;
+                    position: absolute;
+                    bottom: 0;
                 }
             }
         }
