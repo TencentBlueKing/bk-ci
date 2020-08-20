@@ -138,6 +138,8 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
         sourceModel: Model?,
         param: BeforeDeleteParam
     ) {
+        logger.info("before delete element source model: $sourceModel")
+
         existModel.stages.forEach { s ->
             s.containers.forEach { c ->
                 c.elements.forEach { e ->
@@ -151,6 +153,8 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
         if (sourceModel == null || !sourceModel.elementExist(e.id)) {
             logger.info("The element(${e.name}/${e.id}) is delete")
             ElementBizRegistrar.getPlugin(e)?.beforeDelete(e, param)
+        } else {
+            logger.info("The element(${e.name}/${e.id}) is not delete")
         }
     }
 

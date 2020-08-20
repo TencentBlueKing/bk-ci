@@ -26,14 +26,15 @@ object MarketBuildUtils {
     fun beforeDelete(inputMap: Map<*, *>, atomCode: String, param: BeforeDeleteParam) {
         marketBuildExecutorService.execute {
             val bkAtomHookUrl = inputMap.getOrDefault(BK_ATOM_HOOK_URL, "") as String
+            val bkAtomHookUrlMethod = inputMap.getOrDefault(BK_ATOM_HOOK_URL_METHOD, "") as String
+            logger.info("start to execute atom delete hook url: $atomCode, $bkAtomHookUrlMethod, $bkAtomHookUrl, $param")
 
             if (bkAtomHookUrl.isBlank()) return@execute
 
-            val bkAtomHookUrlMethod = inputMap.getOrDefault(BK_ATOM_HOOK_URL_METHOD, "") as String
-            logger.info("start to execute atom hook url: $atomCode, $bkAtomHookUrlMethod, $bkAtomHookUrl")
 
+            val url = resolveParam(bkAtomHookUrl, param)
             var request = Request.Builder()
-                .url(resolveParam(bkAtomHookUrl, param))
+                .url(url)
 
             when (bkAtomHookUrlMethod) {
                 HttpMethod.GET -> {
@@ -51,7 +52,11 @@ object MarketBuildUtils {
                     request = request.delete()
                 }
             }
-            OkhttpUtils.doHttp(request.build())
+
+            OkhttpUtils.doHttp(request.build()).use { response ->
+                val body = response.body()!!.string()
+                logger.info("before delete execute result: $url, $body")
+            }
         }
     }
 
