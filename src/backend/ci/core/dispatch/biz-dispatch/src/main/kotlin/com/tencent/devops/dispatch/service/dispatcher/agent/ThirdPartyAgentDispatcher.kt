@@ -176,7 +176,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 vmSeqId = pipelineAgentStartupEvent.vmSeqId,
                 actionType = pipelineAgentStartupEvent.actionType.name,
                 retryTime = pipelineAgentStartupEvent.retryTime,
-                routeKeySuffix = pipelineAgentStartupEvent.routeKeySuffix,
+                routeKeySuffix = pipelineAgentStartupEvent.routeKeySuffix ?: "third",
                 startTime = System.currentTimeMillis(),
                 stopTime = 0L,
                 errorCode = "0",

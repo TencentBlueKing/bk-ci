@@ -24,10 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package com.tencent.devops.monitoring.pojo
+
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.monitoring.pojo.annotions.InfluxTag
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+
 @ApiModel("dispatch状态上报")
 data class DispatchStatus(
     @ApiModelProperty("蓝盾项目ID", required = true)
