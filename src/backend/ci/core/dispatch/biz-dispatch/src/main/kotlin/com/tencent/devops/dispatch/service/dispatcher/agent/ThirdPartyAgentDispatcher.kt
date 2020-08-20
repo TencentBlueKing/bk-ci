@@ -99,11 +99,32 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     }
 
     override fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
-        thirdPartyAgentBuildService.finishBuild(
-            buildId = pipelineAgentShutdownEvent.buildId,
-            vmSeqId = pipelineAgentShutdownEvent.vmSeqId,
-            success = pipelineAgentShutdownEvent.buildResult
-        )
+        try {
+            thirdPartyAgentBuildService.finishBuild(
+                buildId = pipelineAgentShutdownEvent.buildId,
+                vmSeqId = pipelineAgentShutdownEvent.vmSeqId,
+                success = pipelineAgentShutdownEvent.buildResult
+            )
+        } finally {
+            try {
+                sendDispatchMonitoring(
+                    client = client,
+                    projectId = pipelineAgentShutdownEvent.projectId,
+                    pipelineId = pipelineAgentShutdownEvent.pipelineId,
+                    buildId = pipelineAgentShutdownEvent.buildId,
+                    vmSeqId = pipelineAgentShutdownEvent.vmSeqId ?: "",
+                    actionType = pipelineAgentShutdownEvent.actionType.name,
+                    retryTime = pipelineAgentShutdownEvent.retryTime,
+                    routeKeySuffix = pipelineAgentShutdownEvent.routeKeySuffix ?: "third",
+                    startTime = 0L,
+                    stopTime = System.currentTimeMillis(),
+                    errorCode = "0",
+                    errorMessage = ""
+                )
+            } catch (e: Exception) {
+                logger.error("[${pipelineAgentShutdownEvent.projectId}|${pipelineAgentShutdownEvent.pipelineId}|${pipelineAgentShutdownEvent.buildId}] shutdown sendDispatchMonitoring error.", e)
+            }
+        }
     }
 
     private fun buildByAgentId(
