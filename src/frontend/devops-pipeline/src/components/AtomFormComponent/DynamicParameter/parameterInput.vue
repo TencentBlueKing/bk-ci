@@ -1,13 +1,13 @@
 <template>
     <section class="parameter-input">
-        <span v-if="label" class="input-label" :title="label">{{ label }}：</span>
-        <bk-input class="input-main" :clearable="!disabled" :value="value" @change="(newValue) => $emit('updateValue', newValue)" v-if="type === 'input'" :disabled="disabled"></bk-input>
+        <p v-if="label" class="input-label" :title="label">{{ label }}：</p>
+        <bk-input class="input-main" :clearable="!disabled" :value="value" @change="(newValue) => $emit('update-value', newValue)" v-if="type === 'input'" :disabled="disabled"></bk-input>
         <section v-else class="parameter-select input-main" v-bk-clickoutside="toggleShowList">
             <bk-input ref="inputItem"
                 :clearable="!disabled"
                 :value="displayValue"
                 :disabled="disabled"
-                @clear="$emit('updateValue', '')"
+                @clear="$emit('update-value', '')"
                 @blur="handleBlur"
                 @change="handleInput"
                 @focus="toggleShowList(true)">
@@ -24,7 +24,11 @@
 </template>
 
 <script>
+    import mixins from '../mixins'
+
     export default {
+        mixins: [mixins],
+
         props: {
             label: {
                 type: String
@@ -64,6 +68,10 @@
             paramName: {
                 type: String,
                 default: 'name'
+            },
+            dataPath: {
+                type: String,
+                default: 'data.records'
             }
         },
 
@@ -86,7 +94,7 @@
                 handler (value, oldValue) {
                     const index = this.queryKey.findIndex((key) => value[key] !== oldValue[key])
                     if (index > -1) {
-                        this.$emit('updateValue', '')
+                        this.$emit('update-value', '')
                         this.initList()
                     }
                 },
@@ -113,7 +121,7 @@
 
                 const res = []
                 if (this.isMultiple) {
-                    const valArr = this.value.split(',')
+                    const valArr = String(this.value || '').split(',')
                     valArr.forEach((val) => {
                         const name = findItemName(val)
                         if (name !== undefined) res.push(name)
@@ -126,15 +134,15 @@
 
             chooseOption (option) {
                 if (!this.isMultiple) {
-                    this.$emit('updateValue', option.id)
+                    this.$emit('update-value', option.id)
                     this.$refs.inputItem.$refs.input.blur()
                     this.toggleShowList()
                 } else {
-                    const valArr = this.value.split(',').filter(x => x !== '')
+                    const valArr = String(this.value || '').split(',').filter(x => x !== '')
                     const index = valArr.findIndex(x => x === option.id)
                     if (index > -1) valArr.splice(index, 1)
                     else valArr.push(option.id)
-                    this.$emit('updateValue', valArr.join(','))
+                    this.$emit('update-value', valArr.join(','))
                 }
             },
 
@@ -161,18 +169,18 @@
 
                 const res = []
                 if (this.isMultiple) {
-                    (value.split(',') || []).forEach((val) => {
+                    (String(value || '').split(',') || []).forEach((val) => {
                         const tempId = findItemId(val)
                         if (tempId !== '') res.push(tempId)
                     })
                 } else {
                     res.push(findItemId(value))
                 }
-                this.$emit('updateValue', res.join(','))
+                this.$emit('update-value', res.join(','))
             },
 
             isActive (id) {
-                const valArr = this.value.split(',')
+                const valArr = String(this.value || '').split(',')
                 return valArr.includes(id)
             },
 
@@ -197,7 +205,8 @@
                     if (isErrorParam) return
                     this.loading = true
                     this.$ajax.get(url).then((res) => {
-                        const data = (res.data || []).map((item) => ({ id: item[this.paramId], name: item[this.paramName] }))
+                        const list = this.getResponseData(res, this.dataPath)
+                        const data = (list || []).map((item) => ({ id: item[this.paramId], name: item[this.paramName] }))
                         this.paramList.splice(0, this.paramList.length, ...data)
                         this.calcDisplayVal()
                     }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.loading = false))
@@ -209,10 +218,8 @@
 
 <style lang="scss" scoped>
     .parameter-input {
-        display: flex;
-        align-items: center;
         .input-label {
-            max-width: 30%;
+            max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;

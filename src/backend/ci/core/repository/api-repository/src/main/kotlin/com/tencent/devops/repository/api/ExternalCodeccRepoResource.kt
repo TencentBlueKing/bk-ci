@@ -117,4 +117,22 @@ interface ExternalCodeccRepoResource {
         @QueryParam("subModule")
         subModule: String? = null
     ): Result<String>
+
+    @ApiOperation("获取仓库单个文件内容")
+    @GET
+    @Path("/oauth/git_file_content")
+    fun getGitFileContentOAuth(
+        @ApiParam(value = "用户id")
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam(value = "代码库url")
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String,
+        @ApiParam(value = "分支或者commit id（git）")
+        @QueryParam("ref")
+        ref: String?
+    ): Result<String>
 }

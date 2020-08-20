@@ -28,7 +28,7 @@ package com.tencent.devops.process.engine.interceptor
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_QUEUE_FULL
 import com.tencent.devops.process.engine.pojo.Response
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
@@ -37,7 +37,6 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -51,7 +50,7 @@ class QueueInterceptor @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : PipelineInterceptor {
 
     override fun execute(task: InterceptData): Response<BuildStatus> {
@@ -76,8 +75,7 @@ class QueueInterceptor @Autowired constructor(
                 // 排队数量已满，将该流水线最靠前的排队记录，置为"取消构建"，取消人为本次新构建的触发人
                 val buildInfo = pipelineRuntimeExtService.popNextQueueBuildInfo(projectId, pipelineId)
                 if (buildInfo != null) {
-                    LogUtils.addRedLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addRedLine(
                         buildId = buildInfo.buildId,
                         message = "$pipelineId] queue outSize,cancel first Queue build",
                         tag = "QueueInterceptor",

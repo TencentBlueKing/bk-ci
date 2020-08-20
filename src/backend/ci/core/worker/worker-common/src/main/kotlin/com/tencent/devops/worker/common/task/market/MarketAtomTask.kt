@@ -410,7 +410,11 @@ open class MarketAtomTask : ITask() {
     ) {
         val atomResult = readOutputFile(atomTmpSpace)
         logger.info("the atomResult from Market is :\n$atomResult")
-
+        // 添加插件监控数据
+        val monitorData = atomResult?.monitorData
+        if (monitorData != null) {
+            addMonitorData(monitorData)
+        }
         deletePluginFile(atomTmpSpace)
         val success: Boolean
         if (atomResult == null) {
