@@ -73,10 +73,10 @@ interface ApigwSlaResourceV2 {
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         bgId: String,
         @ApiParam(value = "开始时间(时间戳形式)", required = true)
-        @QueryParam(value = "beginDate")
-        beginDate: Long?,
+        @QueryParam(value = "startTime")
+        startTime: Long?,
         @ApiParam(value = "结束时间(时间戳形式)", required = true)
-        @QueryParam(value = "endDate")
-        endDate: Long?
+        @QueryParam(value = "endTime")
+        endTime: Long?
     ): Result<SlaCodeccResponseData>
 }

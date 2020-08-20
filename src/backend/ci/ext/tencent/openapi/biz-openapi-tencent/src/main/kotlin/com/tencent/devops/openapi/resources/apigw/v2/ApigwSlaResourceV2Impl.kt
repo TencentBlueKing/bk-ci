@@ -18,10 +18,10 @@ class ApigwSlaResourceV2Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         bgId: String,
-        beginDate: Long?,
-        endDate: Long?
+        startTime: Long?,
+        endTime: Long?
     ): Result<SlaCodeccResponseData> {
-        logger.info("codeccQueryByBG , userId:$userId , bgId:$bgId , beginDate:$beginDate , endDate:$endDate")
+        logger.info("codeccQueryByBG , userId:$userId , bgId:$bgId , startTime:$startTime , endTime:$endTime")
         
         //TODO 查询真实数据
 
