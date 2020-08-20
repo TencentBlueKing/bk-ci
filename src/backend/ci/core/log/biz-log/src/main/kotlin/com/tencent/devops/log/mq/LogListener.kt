@@ -105,7 +105,7 @@ class LogListener constructor(
                 with(event) {
                     LogDispatcher.dispatch(
                         rabbitTemplate,
-                        LogStatusEvent(buildId, finished, tag, jobId, executeCount, retryTime - 1, DelayMills)
+                        LogStatusEvent(buildId, finished, tag, subTag, jobId, executeCount, retryTime - 1, DelayMills)
                     )
                 }
             }

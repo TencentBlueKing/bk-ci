@@ -149,15 +149,28 @@ class IndexServiceV2 @Autowired constructor(
         }
     }
 
-    fun finish(buildId: String, tag: String?, jobId: String?, executeCount: Int?, finish: Boolean) {
-        logStatusDaoV2.finish(dslContext, buildId, tag, jobId, executeCount, finish)
+    fun finish(
+        buildId: String,
+        tag: String?,
+        jobId: String?,
+        subTag: String?,
+        executeCount: Int?,
+        finish: Boolean
+    ) {
+        logStatusDaoV2.finish(dslContext, buildId, tag, subTag, jobId, executeCount, finish)
     }
 
-    fun isFinish(buildId: String, tag: String?, jobId: String?, executeCount: Int?): Boolean {
+    fun isFinish(
+        buildId: String,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Boolean {
         return if (jobId.isNullOrBlank()) {
-            logStatusDaoV2.isFinish(dslContext, buildId, tag, executeCount)
+            logStatusDaoV2.isFinish(dslContext, buildId, tag, subTag, executeCount)
         } else {
-            val logStatusList = logStatusDaoV2.listFinish(dslContext, buildId, tag, executeCount)
+            val logStatusList = logStatusDaoV2.listFinish(dslContext, buildId, executeCount)
             logStatusList?.firstOrNull { it.jobId == jobId && it.tag.startsWith("stopVM-") }?.finished == true
         }
     }

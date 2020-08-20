@@ -24,23 +24,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.model.pojo
+package com.tencent.devops.log.dao.v2
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.model.log.Tables.T_LOG_SUBTAGS
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
-/**
- * deng
- * 2019-01-23
- */
-@Event(MQ.EXCHANGE_LOG_STATUS_BUILD_EVENT, MQ.ROUTE_LOG_STATUS_BUILD_EVENT)
-data class LogStatusEvent(
-    override val buildId: String,
-    val finished: Boolean,
-    val tag: String,
-    val subTag: String,
-    val jobId: String,
-    val executeCount: Int?,
-    override val retryTime: Int = 2,
-    override val delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills, null)
+@Repository
+class LogTagDao {
+
+    fun save(
+        dslContext: DSLContext,
+        buildId: String,
+        tag: String,
+        subTags: String
+    ) {
+        with(T_LOG_SUBTAGS) {
+            dslContext.insertInto(
+                this,
+                BUILD_ID,
+                TAG,
+                CREATED_TIME,
+                SUB_TAGS
+            ).values(buildId, tag, LocalDateTime.now(), subTags)
+                .onDuplicateKeyUpdate()
+                .set(CREATED_TIME, LocalDateTime.now())
+                .set(SUB_TAGS, subTags)
+                .execute()
+        }
+    }
+
+    fun getSubTags(dslContext: DSLContext, buildId: String, tag: String): String? {
+        with(T_LOG_SUBTAGS) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(TAG.eq(tag))
+                .fetchOne().subTags
+        }
+    }
+}

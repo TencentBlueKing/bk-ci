@@ -60,6 +60,7 @@ class UserLogResourceImpl @Autowired constructor(
         isAnalysis: Boolean?,
         queryKeywords: String?,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
@@ -71,6 +72,7 @@ class UserLogResourceImpl @Autowired constructor(
             isAnalysis = isAnalysis,
             queryKeywords = queryKeywords,
             tag = tag,
+            subTag = subTag,
             jobId = jobId,
             executeCount = executeCount
         )
@@ -83,6 +85,7 @@ class UserLogResourceImpl @Autowired constructor(
         buildId: String,
         queryKeywords: String,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLineNo> {
@@ -93,6 +96,7 @@ class UserLogResourceImpl @Autowired constructor(
             buildId = buildId,
             queryKeywords = queryKeywords,
             tag = tag,
+            subTag = subTag,
             jobId = jobId,
             executeCount = executeCount
         )
@@ -108,6 +112,7 @@ class UserLogResourceImpl @Autowired constructor(
         start: Long,
         end: Long,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
@@ -121,6 +126,7 @@ class UserLogResourceImpl @Autowired constructor(
             start = start,
             end = end,
             tag = tag,
+            subTag = subTag,
             jobId = jobId,
             executeCount = executeCount
         )
@@ -135,6 +141,7 @@ class UserLogResourceImpl @Autowired constructor(
         isAnalysis: Boolean?,
         queryKeywords: String?,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
@@ -147,6 +154,7 @@ class UserLogResourceImpl @Autowired constructor(
             isAnalysis = isAnalysis,
             queryKeywords = queryKeywords,
             tag = tag,
+            subTag = subTag,
             jobId = jobId,
             executeCount = executeCount
         )
@@ -158,6 +166,7 @@ class UserLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?,
         fileName: String?
@@ -168,6 +177,7 @@ class UserLogResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             tag = tag ?: "",
+            subTag = subTag ?: "",
             jobId = jobId,
             executeCount = executeCount,
             fileName = fileName

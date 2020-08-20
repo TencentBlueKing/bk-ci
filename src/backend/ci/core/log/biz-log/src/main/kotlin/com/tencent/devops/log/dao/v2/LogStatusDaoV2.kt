@@ -39,6 +39,7 @@ class LogStatusDaoV2 {
         dslContext: DSLContext,
         buildId: String,
         tag: String?,
+        subTags: String?,
         jobId: String?,
         executeCount: Int?,
         finish: Boolean
@@ -48,12 +49,14 @@ class LogStatusDaoV2 {
                 this,
                 BUILD_ID,
                 TAG,
+                SUB_TAG,
                 JOB_ID,
                 EXECUTE_COUNT,
                 FINISHED
             ).values(
                 buildId,
                 tag ?: "",
+                subTags ?: "",
                 jobId,
                 executeCount ?: 1,
                 finish
@@ -64,7 +67,6 @@ class LogStatusDaoV2 {
     fun listFinish(
         dslContext: DSLContext,
         buildId: String,
-        tag: String?,
         executeCount: Int?
     ): Result<TLogStatusV2Record>? {
         with(TLogStatusV2.T_LOG_STATUS_V2) {
@@ -79,12 +81,14 @@ class LogStatusDaoV2 {
         dslContext: DSLContext,
         buildId: String,
         tag: String?,
+        subTags: String?,
         executeCount: Int?
     ): Boolean {
         with(TLogStatusV2.T_LOG_STATUS_V2) {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(TAG.eq(tag ?: ""))
+                .and(SUB_TAG.eq(subTags ?: ""))
                 .and(EXECUTE_COUNT.eq(executeCount ?: 1))
                 .fetchOne()?.finished ?: false
         }

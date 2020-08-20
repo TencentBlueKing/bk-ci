@@ -79,6 +79,9 @@ interface UserLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -109,6 +112,9 @@ interface UserLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -148,6 +154,9 @@ interface UserLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -184,6 +193,9 @@ interface UserLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -212,6 +224,9 @@ interface UserLogResource {
         @ApiParam("对应element ID", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
