@@ -1221,7 +1221,9 @@ class LogServiceV2 @Autowired constructor(
             jobId = jobId,
             executeCount = executeCount
         )
-        val queryLogs = QueryLogs(buildId, logStatus)
+
+        val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag!!)
+        val queryLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
 
         try {
             val size = getLogSize(
@@ -1332,7 +1334,9 @@ class LogServiceV2 @Autowired constructor(
                 executeCount = executeCount
             )
         }
-        val moreLogs = QueryLogs(buildId, logStatus)
+
+        val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag!!)
+        val moreLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
 
         try {
             val startTime = System.currentTimeMillis()

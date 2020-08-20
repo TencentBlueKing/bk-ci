@@ -49,5 +49,5 @@ data class QueryLogs(
     @ApiModelProperty("日志查询状态", required = false)
     var status: LogStatus = LogStatus.SUCCEED,
     @ApiModelProperty("日志子tag列表", required = true)
-    var subTags: List<String> = listOf()
+    var subTags: List<String>? = null
 )
