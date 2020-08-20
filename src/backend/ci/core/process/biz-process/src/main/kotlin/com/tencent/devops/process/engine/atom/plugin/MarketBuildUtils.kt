@@ -30,7 +30,6 @@ object MarketBuildUtils {
 
             if (bkAtomHookUrl.isBlank()) return@execute
 
-
             val url = resolveParam(bkAtomHookUrl, param)
             var request = Request.Builder()
                 .url(url)
