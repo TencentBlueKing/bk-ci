@@ -62,6 +62,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
@@ -440,7 +441,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             val taskParams = container.genTaskParams()
             taskParams["elements"] = emptyList<Element>() // elements可能过多导致存储问题
             val taskAtom = AtomUtils.parseAtomBeanName(DispatchVMStartupTaskAtom::class.java)
-            val dispatchTypeName = (container as VMBuildContainer).dispatchType?.routeKeySuffix ?: "DOCKER_VM"
+            val buildType = (container as VMBuildContainer).dispatchType?.buildType()?.name ?: BuildType.DOCKER.name
+            val baseOS = (container as VMBuildContainer).baseOS.name
 
             return PipelineBuildTask(
                 projectId = projectId,
@@ -462,7 +464,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 approver = null,
                 subBuildId = null,
                 additionalOptions = null,
-                atomCode = "$taskAtom-$dispatchTypeName"
+                atomCode = "$taskAtom-$buildType-$baseOS"
             )
         }
     }
