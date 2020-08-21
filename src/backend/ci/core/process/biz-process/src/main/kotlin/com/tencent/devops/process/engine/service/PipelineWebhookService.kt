@@ -350,7 +350,7 @@ class PipelineWebhookService @Autowired constructor(
                 val variable = triggerContainer.params.associate { it.id to it.defaultValue.toString() }
                 val pipelineWebhooks = mutableListOf<PipelineWebhook>()
                 triggerContainer.elements.forEach element@{ element ->
-                    val (repositoryConfig, repositoryType) = getRepositoryConfig(element, variable)
+                    val (repositoryConfig, repositoryType, originRepoName) = getRepositoryConfig(element, variable)
                         ?: return@element
                     try {
                         val repo = client.get(ServiceRepositoryResource::class)
@@ -370,7 +370,7 @@ class PipelineWebhookService @Autowired constructor(
                                 repositoryType = repositoryType,
                                 repoType = repositoryConfig.repositoryType,
                                 repoHashId = repositoryConfig.repositoryHashId,
-                                repoName = repositoryConfig.repositoryName,
+                                repoName = originRepoName,
                                 projectName = getProjectName(repo.projectName),
                                 taskId = element.id
                             )
@@ -391,47 +391,51 @@ class PipelineWebhookService @Autowired constructor(
     private fun getRepositoryConfig(
         element: Element,
         variable: Map<String, String>
-    ): Pair<RepositoryConfig, ScmType>? {
+    ): Triple<RepositoryConfig, ScmType, String?>? {
         return when (element) {
             is CodeGitWebHookTriggerElement ->
-                Pair(
+                Triple(
                     getRepositoryConfig(
                         repoHashId = element.repositoryHashId,
                         repoName = element.repositoryName,
                         repoType = element.repositoryType,
                         variable = variable
                     ),
-                    ScmType.CODE_GIT
+                    ScmType.CODE_GIT,
+                    element.repositoryName
                 )
             is CodeGithubWebHookTriggerElement ->
-                Pair(
+                Triple(
                     getRepositoryConfig(
                         repoHashId = element.repositoryHashId,
                         repoName = element.repositoryName,
                         repoType = element.repositoryType,
                         variable = variable
                     ),
-                    ScmType.GITHUB
+                    ScmType.GITHUB,
+                    element.repositoryName
                 )
             is CodeGitlabWebHookTriggerElement ->
-                Pair(
+                Triple(
                     getRepositoryConfig(
                         repoHashId = element.repositoryHashId,
                         repoName = element.repositoryName,
                         repoType = element.repositoryType,
                         variable = variable
                     ),
-                    ScmType.CODE_GITLAB
+                    ScmType.CODE_GITLAB,
+                    element.repositoryName
                 )
             is CodeSVNWebHookTriggerElement ->
-                Pair(
+                Triple(
                     getRepositoryConfig(
                         repoHashId = element.repositoryHashId,
                         repoName = element.repositoryName,
                         repoType = element.repositoryType,
                         variable = variable
                     ),
-                    ScmType.CODE_SVN
+                    ScmType.CODE_SVN,
+                    element.repositoryName
                 )
 
             else -> null

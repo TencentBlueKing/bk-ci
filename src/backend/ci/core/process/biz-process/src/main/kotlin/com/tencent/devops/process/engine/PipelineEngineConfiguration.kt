@@ -40,6 +40,7 @@ import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.interceptor.QueueInterceptor
 import com.tencent.devops.process.engine.interceptor.RunLockInterceptor
 import com.tencent.devops.process.engine.interceptor.TimerTriggerScmChangeInterceptor
+import com.tencent.devops.process.service.measure.AtomMonitorEventDispatcher
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -99,6 +100,9 @@ class PipelineEngineConfiguration {
 
     @Bean
     fun measureEventDispatcher(rabbitTemplate: RabbitTemplate) = MeasureEventDispatcher(rabbitTemplate)
+
+    @Bean
+    fun atomMonitorEventDispatcher(rabbitTemplate: RabbitTemplate) = AtomMonitorEventDispatcher(rabbitTemplate)
 
     @Bean
     fun webSocketDispatcher(rabbitTemplate: RabbitTemplate) = WebSocketDispatcher(rabbitTemplate)
