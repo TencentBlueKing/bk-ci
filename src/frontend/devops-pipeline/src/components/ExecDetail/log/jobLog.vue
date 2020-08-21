@@ -6,7 +6,7 @@
             class="bk-log"
             :log-list="pluginList"
             @open-log="openLog"
-            @close-log="closeLog"
+            @tag-change="tagChange"
         >
             <template slot-scope="log">
                 <status-icon :status="log.data.status" class="multiple-log-status"></status-icon>
@@ -19,6 +19,7 @@
 <script>
     import { mapActions } from 'vuex'
     import statusIcon from '../status'
+    import { hashID } from '@/utils/util.js'
 
     export default {
         components: {
@@ -41,15 +42,12 @@
             return {
                 executeCount: 1,
                 logPostData: {},
-                closeTags: []
+                closeIds: []
             }
         },
 
         beforeDestroy () {
-            Object.keys(this.logPostData).forEach(key => {
-                const postData = this.logPostData[key]
-                this.closeTags.push(postData.tag)
-            })
+            this.closeLog()
         },
 
         methods: {
@@ -57,6 +55,25 @@
                 'getInitLog',
                 'getAfterLog'
             ]),
+
+            tagChange (tag, id) {
+                const ref = this.$refs.multipleLog
+                const postData = this.logPostData[id]
+                clearTimeout(postData.timeId)
+                this.closeIds.push(postData.hashId)
+                ref.changeExecute(id)
+                postData.lineNo = 0
+                postData.subTag = tag
+                this.getLog(id, postData)
+            },
+
+            closeLog () {
+                Object.keys(this.logPostData).forEach(key => {
+                    const postData = this.logPostData[key]
+                    this.closeIds.push(postData.hashId)
+                    clearTimeout(postData.timeId)
+                })
+            },
 
             openLog (plugin) {
                 const id = plugin.id
@@ -78,12 +95,13 @@
             },
 
             getLog (id, postData) {
+                postData.hashId = hashID()
                 let logMethod = this.getAfterLog
                 if (postData.lineNo <= 0) logMethod = this.getInitLog
                 const ref = this.$refs.multipleLog
 
                 logMethod(postData).then((res) => {
-                    if (this.closeTags.includes(postData.tag)) return
+                    if (this.closeIds.includes(postData.hashId)) return
 
                     res = res.data || {}
                     if (res.status !== 0) {
@@ -106,6 +124,11 @@
                         return
                     }
 
+                    const subTags = res.subTags
+                    if (subTags && subTags.length > 0) {
+                        ref.setSubTag(subTags, id)
+                    }
+
                     const logs = res.logs || []
                     const lastLog = logs[logs.length - 1] || {}
                     const lastLogNo = lastLog.lineNo || postData.lineNo - 1 || -1
@@ -114,13 +137,13 @@
                     if (res.finished) {
                         if (res.hasMore) {
                             ref.addLogData(logs, id)
-                            setTimeout(() => this.getLog(id, postData), 100)
+                            postData.timeId = setTimeout(() => this.getLog(id, postData), 100)
                         } else {
                             ref.addLogData(logs, id)
                         }
                     } else {
                         ref.addLogData(logs, id)
-                        setTimeout(() => this.getLog(id, postData), 1000)
+                        postData.timeId = setTimeout(() => this.getLog(id, postData), 1000)
                     }
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })

@@ -1,7 +1,7 @@
 <template>
     <section class="plugin-log">
         <bk-log-search :down-load-link="id === undefined ? downLoadAllLink : downLoadLink" :execute-count="executeCount" @change-execute="changeExecute" class="log-tools"></bk-log-search>
-        <bk-log class="bk-log" ref="scroll"></bk-log>
+        <bk-log class="bk-log" ref="scroll" @tag-change="tagChange"></bk-log>
     </section>
 </template>
 
@@ -30,6 +30,7 @@
                     pipelineId: this.$route.params.pipelineId,
                     buildId: this.buildId,
                     tag: this.id,
+                    subTag: '',
                     currentExe: this.executeCount,
                     lineNo: 0
                 },
@@ -115,6 +116,11 @@
                     const lastLogNo = lastLog.lineNo || this.postData.lineNo - 1 || -1
                     this.postData.lineNo = +lastLogNo + 1
 
+                    const subTags = res.subTags
+                    if (subTags && subTags.length > 0) {
+                        scroll.setSubTag(subTags)
+                    }
+
                     if (res.finished) {
                         if (res.hasMore) {
                             scroll.addLogData(logs)
@@ -130,6 +136,13 @@
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                     this.$refs.scroll.handleApiErr(err.message)
                 })
+            },
+
+            tagChange (val) {
+                this.postData.subTag = val
+                this.postData.lineNo = 0
+                this.closeLog()
+                this.getLog()
             },
 
             changeExecute (execute) {
