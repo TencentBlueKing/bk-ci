@@ -3,9 +3,9 @@ package com.tencent.devops.openapi.resources.apigw.v2
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.monitoring.pojo.ErrorPie
+import com.tencent.devops.monitoring.pojo.SlaCodeccResponseData
 import com.tencent.devops.openapi.api.apigw.v2.ApigwSlaResourceV2
-import com.tencent.devops.openapi.pojo.ErrorPie
-import com.tencent.devops.openapi.pojo.SlaCodeccResponseData
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
