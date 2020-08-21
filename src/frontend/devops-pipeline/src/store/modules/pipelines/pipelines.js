@@ -51,9 +51,6 @@ const state = {
 }
 
 const getters = {
-    getPagingConfigOneCurrentPage: state => state.pagingConfigOneCurrentPage,
-    getCurrentPage: state => state.currentPage,
-    getPipelineID: state => state.pipelineID,
     getPipelineList: state => state.pipelineList,
     getCurPipeline: state => state.curPipeline,
     getAllPipelineList: state => state.allPipelineList,
@@ -70,15 +67,6 @@ const getters = {
 // }
 
 const mutations = {
-    setPagingConfigOneCurrentPage (state, val) {
-        state.pagingConfigOneCurrentPage = val
-    },
-    setCurrentPage (state, val) {
-        state.currentPage = val
-    },
-    setPipelineID (state, val) {
-        state.pipelineID = val
-    },
     [PIPELINE_AUTHORITY_MUTATION]: (state, { pipelineAuthority }) => {
         return Object.assign(state, {
             pipelineAuthority: {

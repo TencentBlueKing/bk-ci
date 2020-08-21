@@ -126,7 +126,7 @@
         <bk-pagination
             class="pagination"
             size="small"
-            :current.sync="pagingConfigOne.currentPage"
+            :current="pagingConfigOne.currentPage"
             :limit="pagingConfigOne.limit"
             :count="pagingConfigOne.count"
             :align="pagingConfigOne.align"
@@ -148,7 +148,7 @@
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import StageSteps from '@/components/StageSteps'
     import { bus } from '@/utils/bus'
-    import { mapGetters, mapMutations } from 'vuex'
+    import { mapGetters } from 'vuex'
 
     export default {
         name: 'build-history-table',
@@ -201,8 +201,7 @@
         },
         computed: {
             ...mapGetters({
-                'PagingConfigOneCurrentPage1': 'pipelines/getPagingConfigOneCurrentPage',
-                'CurrentPage1': 'pipelines/getCurrentPage'
+                'CurrentPage': 'pipelines/getCurrentPage'
             }),
             statusIconMap () {
                 return {
@@ -295,6 +294,14 @@
         watch: {
             buildList () {
                 this.resetRemark()
+            },
+            CurrentPage: {
+                handler (val) {
+                    if (val) {
+                        this.pagingConfigOne.currentPage = val
+                    }
+                },
+                immediate: true
             }
         },
         created () {
@@ -302,31 +309,29 @@
                 this.pagingConfigOne.count = val
             })
             bus.$on('set-currentPage', val => {
-                this.pagingConfigOne.currentPage = val
+                this.$store.dispatch('pipelines/setCurrentPage', val)
                 this.handleChangeCurrent(1)
             })
-            this.pagingConfigOne.limit = Math.floor((document.body.clientHeight - 60) / 47 - 6)
-            this.pagingConfigOne.limitList[0] = Math.floor((document.body.clientHeight - 60) / 47 - 6)
-            this.setCurrentPage(this.PagingConfigOneCurrentPage1 || this.pagingConfigOne.currentPage)
+            const setLimit = Math.floor((document.body.clientHeight - 60) / 47 - 6)
+            this.pagingConfigOne.limit = setLimit
+            this.pagingConfigOne.limitList[0] = setLimit
         },
         methods: {
-            ...mapMutations({
-                'setCurrentPage': 'pipelines/setCurrentPage',
-                'setPagingConfigOneCurrentPage': 'pipelines/setPagingConfigOneCurrentPage',
-                'setPipelineID': 'pipelines/setPipelineID'
-            }),
+            saveCurrentPageInfo (page) {
+                this.$store.dispatch('pipelines/setCurrentPage', page)
+                this.$store.dispatch('pipelines/setPipelineID', this.$route.params.pipelineId)
+            },
             handleChangeLimit (limit) {
                 this.pagingConfigOne.limit = limit
-                this.pagingConfigOne.currentPage = 1
+                this.$store.dispatch('pipelines/setCurrentPage', 1)
                 this.$emit('change-currentPage-limit', {
                     page: this.pagingConfigOne.currentPage,
                     pageSize: limit
                 })
             },
             handleChangeCurrent (page) {
-                if (this.CurrentPage1 === page) return
-                this.setCurrentPage(page)
-                this.pagingConfigOne.currentPage = page
+                if (this.CurrentPage === page) return
+                this.saveCurrentPageInfo(page)
                 this.$emit('change-currentPage-limit', {
                     page: page,
                     pageSize: this.pagingConfigOne.limit
@@ -404,8 +409,6 @@
             handleRowClick (row, e) {
                 this.hideArtifactoriesPopup()
                 if (this.activeIndex === row.index) {
-                    this.setPagingConfigOneCurrentPage(this.pagingConfigOne.currentPage)
-                    this.setPipelineID(this.$route.params.pipelineId)
                     const url = this.getArchiveUrl(row)
                     this.$router.push(url)
                 } else {
@@ -443,8 +446,6 @@
                 if (row) {
                     const url = this.getArchiveUrl(row, 'codeRecords', aliasName)
                     url && this.$router.push(url)
-                    this.setPagingConfigOneCurrentPage(this.pagingConfigOne.currentPage)
-                    this.setPipelineID(this.$route.params.pipelineId)
                 }
             },
 

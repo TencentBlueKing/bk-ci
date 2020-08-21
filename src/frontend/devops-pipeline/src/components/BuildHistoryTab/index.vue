@@ -19,7 +19,7 @@
     import BuildHistoryTable from '@/components/BuildHistoryTable/'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
     import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS } from '@/utils/pipelineConst'
-    import { mapGetters, mapMutations, mapActions, mapState } from 'vuex'
+    import { mapGetters, mapActions, mapState } from 'vuex'
     import { coverStrTimer } from '@/utils/util'
     import { bus } from '@/utils/bus'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
@@ -62,8 +62,7 @@
         computed: {
             ...mapGetters({
                 'historyPageStatus': 'pipelines/getHistoryPageStatus',
-                'PagingConfigOneCurrentPage1': 'pipelines/getPagingConfigOneCurrentPage',
-                'CurrentPage1': 'pipelines/getCurrentPage',
+                'CurrentPage': 'pipelines/getCurrentPage',
                 'pipelineID': 'pipelines/getPipelineID'
             }),
             ...mapState('atom', [
@@ -146,15 +145,16 @@
                 this.$router.push(`${this.$route.path}?${newStr}${hashParam}`)
             },
             '$route.params.pipelineId' () {
+                this.$store.dispatch('pipelines/setCurrentPage', 1)
                 this.fetchData()
-                this.setCurrentPage(null)
             }
         },
-
         async created () {
+            if (this.$route.params.pipelineId !== this.pipelineID) {
+                this.$store.dispatch('pipelines/setCurrentPage', 1)
+            }
             await this.handlePathQuery()
         },
-
         async mounted () {
             this.fetchData()
             await this.handleRemoteMethod()
@@ -178,11 +178,6 @@
             webSocketMessage.unInstallWsMessage()
         },
         methods: {
-            ...mapMutations({
-                'setCurrentPage': 'pipelines/setCurrentPage',
-                'setPagingConfigOneCurrentPage': 'pipelines/setPagingConfigOneCurrentPage',
-                'setPipelineID': 'pipelines/setPipelineID'
-            }),
             ...mapActions('pipelines', [
                 'requestPipelinesHistory',
                 'requestExecPipeline',
@@ -193,12 +188,7 @@
                 'togglePropertyPanel'
             ]),
             async fetchData (page = 1, pageSize = this.$refs.buildHistoryTable.pagingConfigOne.limit, loading = true) {
-                const currentPage = this.PagingConfigOneCurrentPage1
-                const savePipelineId = this.pipelineID
-                const setPage = (savePipelineId && this.$route.params.pipelineId !== savePipelineId)
-                    ? 1
-                    : currentPage || page
-                this.$refs.buildHistoryTable.pagingConfigOne.currentPage = setPage
+                const setPage = this.CurrentPage || page
                 try {
                     this.basicLoading = loading
                     const res = await this.requestHistory(setPage, pageSize)
@@ -210,8 +200,6 @@
                         theme: 'error'
                     })
                 } finally {
-                    this.setPagingConfigOneCurrentPage(null)
-                    this.setPipelineID(null)
                     this.basicLoading = false
                 }
             },
@@ -333,8 +321,8 @@
             
             async updateList (message = {}) {
                 const pageSize = this.$refs.buildHistoryTable.pagingConfigOne.limit
-                if (this.list.some(item => item.id === message.buildId) || this.CurrentPage1 === 1) {
-                    const res = await this.fetchData(this.CurrentPage1, pageSize, false)
+                if (this.list.some(item => item.id === message.buildId)) {
+                    const res = await this.fetchData(this.CurrentPage, pageSize, false)
                     this.list = res.records
                     return res
                 }
@@ -365,7 +353,7 @@
                 }
             },
 
-            async requestHistory (page = 1, pageSize) {
+            async requestHistory (page, pageSize) {
                 try {
                     const { projectId, pipelineId } = this
                     const res = await this.requestPipelinesHistory({

@@ -28,8 +28,6 @@ const pluginPrefix = `plugin/api`
 
 const state = {
     historyPageStatus: {
-        currentPage: 1,
-        scrollTop: 0,
         queryStr: false,
         hasNext: false,
         isQuerying: false,
@@ -42,7 +40,8 @@ const state = {
             },
             searchKey: []
         },
-        pageSize: 24
+        currentPage: 1,
+        pipelineID: null
     }
 }
 
@@ -70,10 +69,20 @@ function generateQueryString (query) {
 }
 
 const getters = {
-    getHistoryPageStatus: state => state.historyPageStatus
+    getHistoryPageStatus: state => state.historyPageStatus,
+    getCurrentPage: (state) => {
+        return state.historyPageStatus.currentPage
+    },
+    getPipelineID: state => state.historyPageStatus.pipelineID
 }
 
 const mutations = {
+    updateCurrentPage (state, val) {
+        state.historyPageStatus.currentPage = val
+    },
+    updatePipelineID (state, val) {
+        state.historyPageStatus.pipelineID = val
+    },
     updateHistoryPageStatus (state, status) {
         state.historyPageStatus = {
             ...state.historyPageStatus,
@@ -89,6 +98,12 @@ const mutations = {
 }
 
 const actions = {
+    setCurrentPage ({ commit, state }, newVal) {
+        commit('updateCurrentPage', newVal)
+    },
+    setPipelineID ({ commit, state }, newVal) {
+        commit('updatePipelineID', newVal)
+    },
     setHistoryPageStatus ({ commit, state }, newStatus) {
         commit('updateHistoryPageStatus', newStatus)
     },
