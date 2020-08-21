@@ -90,7 +90,7 @@ data class VMBuildContainer(
     @ApiModelProperty("容器运行次数", required = false, hidden = true)
     override var executeCount: Int? = 0,
     @ApiModelProperty("nfs挂载开关", required = false, hidden = true)
-    var nfsSwitch: Boolean? = false
+    var nfsSwitch: Boolean? = null
 ) : Container {
     companion object {
         const val classType = "vmBuild"
