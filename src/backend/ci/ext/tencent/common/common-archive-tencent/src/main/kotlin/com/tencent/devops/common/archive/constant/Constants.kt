@@ -24,12 +24,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:project:biz-project")
-    compile project(":core:project:api-project")
-    compile project(":ext:tencent:project:api-project-tencent")
-    compile project(":ext:tencent:store:api-store-service")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":ext:tencent:common:common-archive-tencent")
-}
+package com.tencent.devops.common.archive.constant
+
+const val REPO_PIPELINE = "pipeline"
+const val REPO_CUSTOM = "custom"
+const val REPO_REPORT = "report"
