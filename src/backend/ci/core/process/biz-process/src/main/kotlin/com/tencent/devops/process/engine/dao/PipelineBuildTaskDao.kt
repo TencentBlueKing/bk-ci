@@ -76,7 +76,8 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                     START_TIME,
                     END_TIME,
                     APPROVER,
-                    ADDITIONAL_OPTIONS
+                    ADDITIONAL_OPTIONS,
+                    ATOM_CODE
                 )
                     .values(
                         buildTask.pipelineId,
@@ -96,7 +97,8 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         buildTask.startTime,
                         buildTask.endTime,
                         buildTask.approver,
-                        objectMapper.writeValueAsString(buildTask.additionalOptions)
+                        objectMapper.writeValueAsString(buildTask.additionalOptions),
+                        buildTask.atomCode
                     )
                     .execute()
             }
@@ -137,6 +139,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         .set(ERROR_CODE, it.errorCode)
                         .set(ERROR_MSG, CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
                         .set(CONTAINER_HASH_ID, it.containerHashId)
+                        .set(ATOM_CODE, it.atomCode)
                 )
             }
             dslContext.batch(records).execute()
@@ -172,6 +175,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         .set(ERROR_CODE, it.errorCode)
                         .set(ERROR_MSG, it.errorMsg)
                         .set(CONTAINER_HASH_ID, it.containerHashId)
+                        .set(ATOM_CODE, it.atomCode)
                         .where(BUILD_ID.eq(it.buildId).and(TASK_ID.eq(it.taskId)))
                 )
             }
@@ -260,7 +264,8 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                 endTime = endTime,
                 errorType = if (errorType == null) null else ErrorType.values()[errorType],
                 errorCode = errorCode,
-                errorMsg = errorMsg
+                errorMsg = errorMsg,
+                atomCode = atomCode
             )
         }
     }
