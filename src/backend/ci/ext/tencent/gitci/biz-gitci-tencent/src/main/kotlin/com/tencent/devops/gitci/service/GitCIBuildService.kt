@@ -528,7 +528,7 @@ class GitCIBuildService @Autowired constructor(
 //                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = originEvent.object_attributes.updated_at
 //                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] =
 //                    DateTimeUtil.zoneDateToTimestamp(originEvent.object_attributes.updated_at).toString()
-                startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = originEvent.object_attributes.iid.toString()
+                startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = originEvent.object_attributes.id.toString()
 //                startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = originEvent.object_attributes.title
                 startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = originEvent.object_attributes.url
 //                startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = originEvent.object_attributes.id.toString()
