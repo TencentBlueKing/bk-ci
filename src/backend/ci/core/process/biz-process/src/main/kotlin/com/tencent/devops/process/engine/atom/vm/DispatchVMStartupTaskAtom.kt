@@ -145,6 +145,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
 
         // 构建环境容器序号ID
         val vmSeqId = task.containerId
+
         // 预指定VM名称列表（逗号分割）
         val vmNames = param.vmNames.joinToString(",")
 
@@ -438,6 +439,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
 
             val taskParams = container.genTaskParams()
             taskParams["elements"] = emptyList<Element>() // elements可能过多导致存储问题
+            val taskAtom = AtomUtils.parseAtomBeanName(DispatchVMStartupTaskAtom::class.java)
+            val dispatchTypeName = (container as VMBuildContainer).dispatchType?.routeKeySuffix ?: "DOCKER_VM"
+
             return PipelineBuildTask(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -450,14 +454,15 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 taskId = VMUtils.genStartVMTaskId(container.id!!),
                 taskName = "Prepare_Job#${container.id!!}",
                 taskType = EnvControlTaskType.VM.name,
-                taskAtom = AtomUtils.parseAtomBeanName(DispatchVMStartupTaskAtom::class.java),
+                taskAtom = taskAtom,
                 status = BuildStatus.QUEUE,
                 taskParams = taskParams,
                 executeCount = 1,
                 starter = userId,
                 approver = null,
                 subBuildId = null,
-                additionalOptions = null
+                additionalOptions = null,
+                atomCode = "$taskAtom-$dispatchTypeName"
             )
         }
     }
