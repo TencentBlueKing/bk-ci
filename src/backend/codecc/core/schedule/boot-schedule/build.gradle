@@ -1,0 +1,8 @@
+dependencies {
+    compile project(":core:schedule:biz-schedule")
+    compile "org.springframework.boot:spring-boot-starter-test"
+}
+
+version = null
+
+apply from: "$rootDir/task_spring_boot_package.gradle"

@@ -27,35 +27,42 @@
 package com.tencent.devops.dockerhost.cron
 
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
+import com.tencent.devops.dockerhost.dispatch.DockerHostDebugResourceApi
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.File
 import java.util.Random
 
 class UpdateAgentRunner @Autowired constructor(
-    private val dockerHostConfig: DockerHostConfig
+    private val dockerHostConfig: DockerHostConfig,
+    private val gray: Gray
 ) {
     private val logger = LoggerFactory.getLogger(UpdateAgentRunner::class.java)
-    private val dockerHostBuildApi: DockerHostBuildResourceApi = DockerHostBuildResourceApi()
+    private val dockerHostDebugResourceApi: DockerHostDebugResourceApi = DockerHostDebugResourceApi()
 
     fun update() {
         try {
             val agentFile = File(dockerHostConfig.dockerAgentPath!!)
             val localFileLength = if (agentFile.exists()) { agentFile.length() } else { 0 }
-            val serverFileLength = dockerHostBuildApi.getDockerJarLength()
+            val serverFileLength = dockerHostDebugResourceApi.getDockerJarLength()
             if (0L == localFileLength || localFileLength != serverFileLength) {
                 logger.info("need to update docker.jar")
                 val bakFile = File(dockerHostConfig.dockerAgentPath!! + "_bak")
-                logger.info("copy origin file to bak")
                 if (agentFile.exists()) {
+                    logger.info("agentFile exist, copy origin file to bak")
                     agentFile.copyTo(bakFile, true)
                 }
 
+                val headerMap = mutableMapOf<String, String>()
+                if (gray.isGray()) {
+                    headerMap["X-DEVOPS-PROJECT-ID"] = "grayproject"
+                }
+
                 Thread.sleep(getRandom().toLong() * 60 * 1000) // 随机打散请求时间，防止同一时间请求网关，网关流量太大
-                logger.info("Download new file...")
-                OkhttpUtils.downloadFile(dockerHostConfig.downloadDockerAgentUrl!!, agentFile)
+                logger.info("Download new file, headerMap: $headerMap")
+                OkhttpUtils.downloadFile(dockerHostConfig.downloadDockerAgentUrl!!, agentFile, headerMap)
                 logger.info("Download new file finished")
             } else {
                 logger.info("No need to update.")

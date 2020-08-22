@@ -34,7 +34,7 @@ import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.element.ZhiyunPushFileElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.api.ServiceZhiyunResource
 import com.tencent.devops.plugin.pojo.zhiyun.ZhiyunUploadParam
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -43,7 +43,6 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.utils.PIPELINE_MATERIAL_URL
 import org.apache.poi.util.StringUtil
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -54,7 +53,7 @@ import java.net.URLEncoder
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class ZhiYunPushFileTaskAtom @Autowired constructor(
     private val client: Client,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<ZhiyunPushFileElement> {
     override fun getParamElement(task: PipelineBuildTask): ZhiyunPushFileElement {
         return JsonUtil.mapTo(task.taskParams, ZhiyunPushFileElement::class.java)
@@ -100,8 +99,7 @@ class ZhiYunPushFileTaskAtom @Autowired constructor(
             )
         )
 
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "开始上传对应文件到织云...【<a target='_blank' href='http://ccc.oa.com/package/versions?innerurl=${URLEncoder.encode(
                 "http://yun.ccc.oa.com/index.php/package/versions?product=$product&package=$packageName",
@@ -111,8 +109,7 @@ class ZhiYunPushFileTaskAtom @Autowired constructor(
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
         )
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "匹配文件中: ${uploadParams.fileParams.regexPath}($fileSource)",
             tag = task.taskId,
@@ -130,8 +127,7 @@ class ZhiYunPushFileTaskAtom @Autowired constructor(
             errorType = ErrorType.USER,
             errorMsg = "0 file send to zhiyun"
         )
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "上传对应文件到织云成功!",
             tag = task.taskId,

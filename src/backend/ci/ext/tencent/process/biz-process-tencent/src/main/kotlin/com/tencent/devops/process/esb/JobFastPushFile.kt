@@ -33,19 +33,18 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.util.CommonUtils
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
 class JobFastPushFile @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     @Value("\${esb.url}")
@@ -111,13 +110,12 @@ class JobFastPushFile @Autowired constructor(
 
         if (System.currentTimeMillis() - startTime > maxRunningMins * 60 * 1000) {
             logger.warn("job timeout. timeout minutes:$maxRunningMins")
-            LogUtils.addRedLine(
-                rabbitTemplate,
-                buildId,
-                "Job timeout:$maxRunningMins Minutes",
-                taskId,
-                containerId,
-                executeCount
+            buildLogPrinter.addRedLine(
+                buildId = buildId,
+                message = "Job timeout:$maxRunningMins Minutes",
+                tag = taskId,
+                jobId = containerId,
+                executeCount = executeCount
             )
             return BuildStatus.EXEC_TIMEOUT
         }
@@ -127,11 +125,23 @@ class JobFastPushFile @Autowired constructor(
         return if (taskResult.isFinish) {
             if (taskResult.success) {
                 logger.info("[$buildId]|SUCCEED|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addLine(rabbitTemplate, buildId, "Job success! jobId:$taskInstanceId", taskId, containerId, executeCount)
+                buildLogPrinter.addLine(
+                    buildId = buildId,
+                    message = "Job success! jobId:$taskInstanceId",
+                    tag = taskId,
+                    jobId = containerId,
+                    executeCount = executeCount
+                )
                 BuildStatus.SUCCEED
             } else {
                 logger.info("[$buildId]|FAIL|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addLine(rabbitTemplate, buildId, "Job fail! jobId:$taskInstanceId", taskId, containerId, executeCount)
+                buildLogPrinter.addLine(
+                    buildId = buildId,
+                    message = "Job fail! jobId:$taskInstanceId",
+                    tag = taskId,
+                    jobId = containerId,
+                    executeCount = executeCount
+                )
                 BuildStatus.FAILED
             }
         } else {
@@ -251,38 +261,35 @@ class JobFastPushFile @Autowired constructor(
                     val responseData = response["data"] as Map<String, *>
                     val taskInstanceId = responseData["taskInstanceId"].toString().toLong()
                     logger.info("request success. taskInstanceId: $taskInstanceId")
-                    LogUtils.addLine(
-                        rabbitTemplate,
-                        buildId,
-                        "start execute job task success: taskInstanceId:  $taskInstanceId",
-                        elementId,
-                        containerId,
-                        executeCount
+                    buildLogPrinter.addLine(
+                        buildId = buildId,
+                        message = "start execute job task success: taskInstanceId:  $taskInstanceId",
+                        tag = elementId,
+                        jobId = containerId,
+                        executeCount = executeCount
                     )
                     taskInstanceId
                 } else {
                     val msg = response["message"] as String
                     logger.error("request failed, msg: $msg")
-                    LogUtils.addLine(
-                        rabbitTemplate,
-                        buildId,
-                        "start execute job task failed: $msg",
-                        elementId,
-                        containerId,
-                        executeCount
+                    buildLogPrinter.addLine(
+                        buildId = buildId,
+                        message = "start execute job task failed: $msg",
+                        tag = elementId,
+                        jobId = containerId,
+                        executeCount = executeCount
                     )
                     -1
                 }
             }
         } catch (e: Exception) {
             logger.error("error occur", e)
-            LogUtils.addLine(
-                rabbitTemplate,
-                buildId,
-                "error occur while execute job task: ${e.message}",
-                elementId,
-                containerId,
-                executeCount
+            buildLogPrinter.addLine(
+                buildId = buildId,
+                message = "error occur while execute job task: ${e.message}",
+                tag = elementId,
+                jobId = containerId,
+                executeCount = executeCount
             )
             throw RuntimeException("error occur while execute job task.")
         }

@@ -31,7 +31,7 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.ItestReviewCreateElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -43,7 +43,6 @@ import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import net.sf.json.JSONObject
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE
 import org.springframework.context.annotation.Scope
@@ -53,7 +52,7 @@ import org.springframework.stereotype.Component
 @Scope(SCOPE_PROTOTYPE)
 class ItestReviewCreateTaskAtom @Autowired constructor(
     private val client: Client,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<ItestReviewCreateElement> {
 
     override fun getParamElement(task: PipelineBuildTask): ItestReviewCreateElement {
@@ -141,7 +140,7 @@ class ItestReviewCreateTaskAtom @Autowired constructor(
 
         logger.info("Create process for itest success!")
         val processJson = JSONObject.fromObject(response.data).toString()
-        LogUtils.addLine(rabbitTemplate, buildId, "创建itest审核单成功, 详情：$processJson",
+        buildLogPrinter.addLine(buildId, "创建itest审核单成功, 详情：$processJson",
             taskId, task.containerHashId, task.executeCount ?: 1)
         return AtomResponse(BuildStatus.SUCCEED)
     }

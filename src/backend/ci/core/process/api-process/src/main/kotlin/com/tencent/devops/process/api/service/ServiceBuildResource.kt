@@ -29,6 +29,7 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -83,7 +84,16 @@ interface ServiceBuildResource {
         vmSeqId: String,
         @ApiParam("status", required = true)
         @QueryParam("status")
-        status: BuildStatus
+        status: BuildStatus,
+        @ApiParam("错误类型", required = false)
+        @QueryParam("errorType")
+        errorType: ErrorType? = null,
+        @ApiParam("错误码", required = false)
+        @QueryParam("errorCode")
+        errorCode: Int? = null,
+        @ApiParam("错误信息", required = false)
+        @QueryParam("errorMsg")
+        errorMsg: String? = null
     ): Result<Boolean>
 
     @ApiOperation("Notify process that the vm startup for the build")

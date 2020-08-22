@@ -3,16 +3,17 @@
         <!-- eslint-disable-next-line vue/require-component-is -->
         <component :is="layout">
             <div style="height: 100%" v-bkloading="{ isLoading: mainContentLoading, opacity: 0.3 }">
-                <router-view v-show="!mainContentLoading" class="main-content" :key="$route.fullPath" />
+                <router-view class="main-content" :key="$route.fullPath" />
             </div>
         </component>
         <app-auth ref="bkAuth"></app-auth>
     </div>
 </template>
 <script>
-    import { mapGetters } from 'vuex'
+    import { mapGetters, mapState } from 'vuex'
     import { bus } from './common/bus'
     import { toggleLang } from './i18n'
+    import { getToolMeta, getToolList, getTaskList } from './common/preload'
 
     export default {
         name: 'app',
@@ -23,22 +24,40 @@
         },
         computed: {
             ...mapGetters(['mainContentLoading']),
+            ...mapState('task', {
+                status: 'status'
+            }),
             layout () {
                 return `layout-${this.$route.meta.layout}`
             },
             projectId () {
                 return this.$route.params.projectId
+            },
+            taskId () {
+                return this.$route.params.taskId
             }
         },
         watch: {
-            '$route.fullPath' (val) { // 同步地址到蓝盾
-                devopsUtil.syncUrl(val.replace(/^\/codecc\//, '/'))
-            },
+            async '$route.fullPath' (val) { // 同步地址到蓝盾
+                devopsUtil.syncUrl(val.replace(/^\/codecc\//, '/')) // eslint-disable-line
+                // 进到具体项目页面，项目停用跳转到任务管理
+                if (this.taskId) {
+                    const res = await this.$store.dispatch('task/status')
+                    if (res.status === 1) {
+                        this.$router.push({ name: 'task-settings-manage' })
+                    }
+                    if (!res.status.gongfengProjectId) { // 工蜂开源项目少调一个接口
+                        getTaskList()
+                    }
+                }
+                getToolMeta()
+                getToolList()
+            }
         },
         created () {
             // 蓝盾切换项目
             window.addEventListener('change::$currentProjectId', data => {
-                if (this.$route.params.projectId !== data.detail.currentProjectId) {
+                if (this.$route.params.projectId && this.$route.params.projectId !== data.detail.currentProjectId) {
                     this.goHome(data.detail.currentProjectId)
                 }
             })
@@ -66,6 +85,13 @@
             })
             bus.$on('hide-app-loading', () => {
                 self.appLoading = false
+            })
+
+            bus.$on('show-content-loading', () => {
+                this.$store.commit('setMainContentLoading', true, { root: true })
+            })
+            bus.$on('hide-content-loading', () => {
+                this.$store.commit('setMainContentLoading', false, { root: true })
             })
         },
         methods: {

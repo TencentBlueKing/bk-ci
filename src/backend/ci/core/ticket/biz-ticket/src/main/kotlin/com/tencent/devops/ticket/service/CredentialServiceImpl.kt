@@ -44,6 +44,7 @@ import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Base64
@@ -214,7 +215,7 @@ class CredentialServiceImpl @Autowired constructor(
         keyword: String?
     ): SQLPage<Credential> {
         val hasPermissionList = credentialPermissionService.filterCredential(userId, projectId, authPermission)
-
+        logger.info("hasPermissionList $hasPermissionList")
         val count =
             credentialDao.countByProject(dslContext, projectId, credentialTypes?.toSet(), hasPermissionList.toSet())
         val credentialRecordList = credentialDao.listByProject(
@@ -226,6 +227,7 @@ class CredentialServiceImpl @Autowired constructor(
             limit,
             keyword
         )
+        logger.info("credentialRecordList $credentialRecordList")
         val credentialList = credentialRecordList.map {
             Credential(
                 credentialId = it.credentialId,
@@ -418,5 +420,9 @@ class CredentialServiceImpl @Autowired constructor(
             v3 = credentialHelper.decryptCredential(record.credentialV3),
             v4 = credentialHelper.decryptCredential(record.credentialV4)
         )
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

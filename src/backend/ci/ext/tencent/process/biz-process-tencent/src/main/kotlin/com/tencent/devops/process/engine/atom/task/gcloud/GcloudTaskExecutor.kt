@@ -30,13 +30,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 
-class GcloudTaskExecutor(var rabbitTemplate: RabbitTemplate, var gcloudApiUrl: String, var buildId: String) {
+class GcloudTaskExecutor(
+    var buildLogPrinter: BuildLogPrinter,
+    var gcloudApiUrl: String,
+    var buildId: String
+) {
     companion object {
         private val logger = LoggerFactory.getLogger(GcloudTaskExecutor::class.java)
 
@@ -85,7 +88,7 @@ class GcloudTaskExecutor(var rabbitTemplate: RabbitTemplate, var gcloudApiUrl: S
             }
         } catch (e: Exception) {
             logger.error("start gcloud task error", e)
-            LogUtils.addRedLine(rabbitTemplate, buildId, "start gcloud task error: ${e.message}", elementId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, "start gcloud task error: ${e.message}", elementId, containerId, executeCount)
             throw RuntimeException("start gcloud task error")
         }
     }
@@ -144,7 +147,7 @@ class GcloudTaskExecutor(var rabbitTemplate: RabbitTemplate, var gcloudApiUrl: S
             }
         } catch (e: Exception) {
             logger.error("create gcloud task error", e)
-            LogUtils.addRedLine(rabbitTemplate, buildId, "create gcloud task error: ${e.message}", elementId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, "create gcloud task error: ${e.message}", elementId, containerId, executeCount)
             throw RuntimeException("create gcloud task error: ${e.message}")
         }
     }
@@ -249,37 +252,37 @@ class GcloudTaskExecutor(var rabbitTemplate: RabbitTemplate, var gcloudApiUrl: S
         if (createTaskResult.success) {
             val taskId = createTaskResult.data
             logger.info("create gcloud task success, taskId: $taskId")
-            LogUtils.addLine(rabbitTemplate, buildId, "create gcloud task success, taskId: $taskId", elementId, containerId, executeCount)
-            LogUtils.addLine(rabbitTemplate, buildId, "gcloud task: http://open.oa.com/?app=gcloud&url=/s/gcloud/custom/get_flow_info_by_task/$taskId/$appId/?pagetype=0",
+            buildLogPrinter.addLine(buildId, "create gcloud task success, taskId: $taskId", elementId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "gcloud task: http://open.oa.com/?app=gcloud&url=/s/gcloud/custom/get_flow_info_by_task/$taskId/$appId/?pagetype=0",
                     elementId, containerId, executeCount)
             val runTaskResult = executeTask(apiAuthCode, operator, taskId, elementId, containerId, executeCount)
             if (!runTaskResult.success) {
-                LogUtils.addRedLine(rabbitTemplate, buildId, "start gcloud task failed: ${runTaskResult.message}", elementId, containerId, executeCount)
+                buildLogPrinter.addRedLine(buildId, "start gcloud task failed: ${runTaskResult.message}", elementId, containerId, executeCount)
                 return CallResult(false, null, "start gcloud task failed")
             }
 
             val bpmTaskId = runTaskResult.data
-            LogUtils.addLine(rabbitTemplate, buildId, "start gcloud task success, bpmTaskId: $bpmTaskId", elementId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "start gcloud task success, bpmTaskId: $bpmTaskId", elementId, containerId, executeCount)
             val taskResult = waitUtilTaskDone(operator, bpmTaskId, timeoutInSeconds, elementId, containerId, executeCount)
             if (!taskResult.success) {
                 logger.info("execute gcloud task failed")
-                LogUtils.addRedLine(rabbitTemplate, buildId, "execute gcloud task failed: ${taskResult.message}", elementId, containerId, executeCount)
+                buildLogPrinter.addRedLine(buildId, "execute gcloud task failed: ${taskResult.message}", elementId, containerId, executeCount)
                 return CallResult(false, null, "execute gcloud task failed")
             } else {
                 logger.info("execute gcloud task success")
-                LogUtils.addLine(rabbitTemplate, buildId, "execute gcloud task success", elementId, containerId, executeCount)
+                buildLogPrinter.addLine(buildId, "execute gcloud task success", elementId, containerId, executeCount)
             }
 
             return CallResult(true, null, "execute gcloud task success")
         } else {
             logger.info("create gcloud task failed: ${createTaskResult.message}")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "create gcloud task failed: ${createTaskResult.message}", elementId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, "create gcloud task failed: ${createTaskResult.message}", elementId, containerId, executeCount)
             return CallResult(false, null, "create gcloud task failed: ${createTaskResult.message}")
         }
     }
 
     private fun waitUtilTaskDone(operator: String, bpmTaskId: Int?, timeoutInSeconds: Int, elementId: String, containerId: String, executeCount: Int): CallResult<Any> {
-        LogUtils.addLine(rabbitTemplate, buildId, "waiting for task done, timeout setting: ${timeoutInSeconds}s", elementId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "waiting for task done, timeout setting: ${timeoutInSeconds}s", elementId, containerId, executeCount)
         val startTime = System.currentTimeMillis()
         while (true) {
             if (System.currentTimeMillis() - startTime > timeoutInSeconds * 1000) {
