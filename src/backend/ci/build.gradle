@@ -71,6 +71,7 @@ buildscript {
         commonLang3Version = "3.5"
         luceneVersion = "8.6.0"
         springKafkaVersion = "1.3.10.RELEASE"
+        luceneVersion = "8.6.0"
     }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")

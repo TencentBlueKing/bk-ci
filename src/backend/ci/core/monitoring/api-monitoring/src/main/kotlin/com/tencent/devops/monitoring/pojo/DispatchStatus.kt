@@ -23,9 +23,38 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.pojo
 
-package com.tencent.devops.monitoring.constant
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.monitoring.pojo.annotions.InfluxTag
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-object MonitoringMessageCode {
-    const val ERROR_MONITORING_SEND_NOTIFY_FAIL = "2110001" // 监控服务：通知发送失败
-}
+@ApiModel("dispatch状态上报")
+data class DispatchStatus(
+    @ApiModelProperty("蓝盾项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("流水线ID", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("vmSeqId", required = true)
+    val vmSeqId: String,
+    @ApiModelProperty("actionType", required = true)
+    val actionType: String,
+    @ApiModelProperty("retryCount", required = false)
+    val retryCount: Long? = 0,
+    @ApiModelProperty("channelCode", required = false)
+    val channelCode: ChannelCode?,
+    @ApiModelProperty("开机时间", required = true)
+    val startTime: Long,
+    @ApiModelProperty("关机时间", required = false)
+    val stopTime: Long?,
+    @ApiModelProperty("蓝盾错误码", required = true)
+    val errorCode: String,
+    @ApiModelProperty("失败原因", required = false)
+    val errorMsg: String?,
+    @InfluxTag
+    @ApiModelProperty("BuildType", required = false)
+    val buildType: String
+)

@@ -15,3 +15,5 @@ gradlew
 gradlew.bat
 version.txt
 support-files/etc
+.temp
+/build.yml

@@ -16,7 +16,7 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
+export const PLUGIN_URL_PARAM_REG = /\{(.*?)(\?){0,1}\}/g
 export const allVersionKeyList = [
     'BK_CI_MAJOR_VERSION',
     'BK_CI_MINOR_VERSION',
@@ -71,4 +71,10 @@ export function getVersionConfig () {
             placeholder: 'BK_CI_FIX_VERSION'
         }
     }
+}
+
+export function pluginUrlParse (originUrl, query) {
+    /* eslint-disable */
+    return new Function('ctx', `return '${originUrl.replace(PLUGIN_URL_PARAM_REG, '\'\+ (ctx.hasOwnProperty(\'$1\') ? ctx[\'$1\'] : "") \+\'')}'`)(query)
+    /* eslint-enable */
 }
