@@ -97,20 +97,20 @@ interface Dispatcher {
         )
 
         if (third) {
-           sendDispatchMonitoring(
-               client = client,
-               projectId = event.projectId,
-               pipelineId = event.pipelineId,
-               buildId = event.buildId,
-               vmSeqId = event.vmSeqId,
-               actionType = event.actionType.name,
-               retryTime = event.retryTime,
-               routeKeySuffix = event.routeKeySuffix ?: "third",
-               startTime = System.currentTimeMillis(),
-               stopTime = 0L,
-               errorCode = errorCode.toString(),
-               errorMessage = errorMsg
-           )
+            sendDispatchMonitoring(
+                client = client,
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                actionType = event.actionType.name,
+                retryTime = event.retryTime,
+                routeKeySuffix = event.routeKeySuffix ?: "third",
+                startTime = System.currentTimeMillis(),
+                stopTime = 0L,
+                errorCode = errorCode.toString(),
+                errorMessage = errorMsg
+            )
         }
     }
 
