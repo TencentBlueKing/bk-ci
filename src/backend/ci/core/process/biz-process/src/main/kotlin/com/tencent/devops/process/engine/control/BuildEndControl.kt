@@ -192,7 +192,7 @@ class BuildEndControl @Autowired constructor(
                     taskId = it.taskId,
                     taskName = it.taskName,
                     atomCode = it.atomCode ?: it.taskType,
-                    errorType = it.errorType ?: ErrorType.USER,
+                    errorType = it.errorType?.ordinal ?: ErrorType.USER.ordinal,
                     errorCode = it.errorCode ?: USER_DEFAULT_ERROR,
                     errorMsg = CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX) ?: ""
                 ))
