@@ -319,9 +319,6 @@ subprojects {
                 entry "poi"
                 entry "poi-ooxml"
             }
-            dependencySet(group: 'org.fusesource', version: "$sigarVersion") {
-                entry "sigar"
-            }
             dependencySet(group: 'org.apache.poi', version: "$poiVersion") {
                 entry "poi"
                 entry "poi-ooxml"
