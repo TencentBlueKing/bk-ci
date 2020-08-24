@@ -23,9 +23,39 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.pojo
 
-package com.tencent.devops.monitoring.constant
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-object MonitoringMessageCode {
-    const val ERROR_MONITORING_SEND_NOTIFY_FAIL = "2110001" // 监控服务：通知发送失败
-}
+@ApiModel("scm调用工蜂addCommitCheckStatus接口的状态上报")
+data class AddCommitCheckStatus(
+//    @ApiModelProperty("蓝盾项目ID", required = true)
+//    val projectId: String,
+//    @ApiModelProperty("流水线ID", required = true)
+//    val pipelineId: String,
+//    @ApiModelProperty("构建ID", required = true)
+//    val buildId: String,
+//    @ApiModelProperty("vmSeqId", required = true)
+//    val vmSeqId: String,
+//    @ApiModelProperty("channelCode", required = true)
+//    val channelCode: ChannelCode,
+    @ApiModelProperty("请求时间(时间戳，毫秒)", required = true)
+    val requestTime: Long,
+    @ApiModelProperty("响应时间(时间戳，毫秒)", required = true)
+    val responseTime: Long,
+    @ApiModelProperty("耗时(毫秒)", required = true)
+    val elapseTime: Long,
+    @ApiModelProperty("http状态码", required = false)
+    val statusCode: String?,
+    @ApiModelProperty("状态码对应的错误信息", required = false)
+    val statusMessage: String?,
+    @ApiModelProperty("蓝盾错误码", required = true)
+    val errorCode: String,
+    @ApiModelProperty("错误信息", required = false)
+    val errorMsg: String?,
+    @ApiModelProperty("工蜂项目名", required = false)
+    val projectName: String,
+    @ApiModelProperty("commitId", required = false)
+    val commitId: String
+)

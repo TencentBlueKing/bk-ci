@@ -23,9 +23,26 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.pojo
 
-dependencies {
-    compile project(":ext:tencent:monitoring:api-monitoring")
-    compile project(":core:common:common-pipeline")
-}
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.monitoring.pojo.enums.IncidentStatus
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("故障")
+data class Incident(
+    @ApiModelProperty("id", required = true)
+    val id: Long?,
+    @ApiModelProperty("发生时间（时间戳，毫秒）", required = true)
+    val dayTime: Long,
+    @ApiModelProperty("模块", required = true)
+    val moduleName: String,
+    @ApiModelProperty("级别", required = true)
+    val level: String,
+    @ApiModelProperty("持续时间(毫秒)", required = true)
+    val duringTime: Long,
+    @ApiModelProperty("当前状态", required = true)
+    val status: IncidentStatus,
+    @ApiModelProperty("时间", required = false)
+    val message: String?
+)

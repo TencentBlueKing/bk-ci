@@ -23,9 +23,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.pojo.enums
 
-dependencies {
-    compile project(":ext:tencent:monitoring:api-monitoring")
-    compile project(":core:common:common-pipeline")
+enum class IncidentStatus(val statusName: String) {
+    INVESTIGATING("Investigating"),
+    UPDATE("Update"),
+    RESOLVED("Resolved");
+
+    companion object {
+        fun parse(value: String): IncidentStatus {
+            values().forEach { status ->
+                if (status.statusName == value) {
+                    return status
+                }
+            }
+            return UPDATE
+        }
+    }
 }
-apply from: "$rootDir/task_deploy_to_maven.gradle"

@@ -23,9 +23,39 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.api.service
 
-dependencies {
-    compile project(":ext:tencent:monitoring:api-monitoring")
-    compile project(":core:common:common-pipeline")
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
+import com.tencent.devops.monitoring.pojo.UsersStatus
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["SERVICE_MONITORING_REPORT"], description = "监控上报")
+@Path("/service/report")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface StatusReportResource {
+
+    @ApiOperation("scm模块上报addCommitCheck接口调用情况")
+    @POST
+    @Path("/scm/commitcheck")
+    fun scmCommitCheck(
+        @ApiParam("addCommitCheck接口状态", required = true)
+        addCommitCheckStatus: AddCommitCheckStatus
+    ): Result<Boolean>
+
+    @ApiOperation("project模块上报users接口调用情况")
+    @POST
+    @Path("/project/users")
+    fun userUsers(
+        @ApiParam("users接口状态", required = true)
+        users: UsersStatus
+    ): Result<Boolean>
 }
-apply from: "$rootDir/task_deploy_to_maven.gradle"

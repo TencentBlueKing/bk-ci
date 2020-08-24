@@ -23,9 +23,36 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.pojo
 
-dependencies {
-    compile project(":ext:tencent:monitoring:api-monitoring")
-    compile project(":core:common:common-pipeline")
-}
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("project接口，users接口的状态上报")
+data class UsersStatus(
+    @ApiModelProperty("蓝盾项目ID", required = false)
+    val projectId: String?,
+    @ApiModelProperty("流水线ID", required = false)
+    val pipelineId: String?,
+    @ApiModelProperty("构建ID", required = false)
+    val buildId: String?,
+    @ApiModelProperty("vmSeqId", required = false)
+    val vmSeqId: String?,
+    @ApiModelProperty("channelCode", required = false)
+    val channelCode: ChannelCode?,
+    @ApiModelProperty("请求时间(时间戳，毫秒)", required = true)
+    val requestTime: Long,
+    @ApiModelProperty("响应时间(时间戳，毫秒)", required = true)
+    val responseTime: Long,
+    @ApiModelProperty("耗时(毫秒)", required = true)
+    val elapseTime: Long,
+    @ApiModelProperty("Http状态码", required = false)
+    val statusCode: String?,
+    @ApiModelProperty("状态码对应的错误信息", required = false)
+    val statusMessage: String?,
+    @ApiModelProperty("蓝盾错误码", required = true)
+    val errorCode: String,
+    @ApiModelProperty("错误信息", required = false)
+    val errorMsg: String?
+)
