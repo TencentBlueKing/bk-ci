@@ -47,13 +47,12 @@ import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyRedisBuild
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -61,7 +60,7 @@ import org.springframework.stereotype.Component
 class ThirdPartyAgentDispatcher @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val redisUtils: RedisUtils,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val thirdPartyAgentBuildService: ThirdPartyAgentService
@@ -144,7 +143,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         if (agentResult.agentStatus != AgentStatus.IMPORT_OK) {
             onFailBuild(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 event = pipelineAgentStartupEvent,
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCodeEnum.VM_STATUS_ERROR.errorCode,
@@ -156,7 +155,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         if (agentResult.isNotOk()) {
             onFailBuild(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 event = pipelineAgentStartupEvent,
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode,
@@ -168,7 +167,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         if (agentResult.data == null) {
             onFailBuild(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 event = pipelineAgentStartupEvent,
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCodeEnum.FOUND_AGENT_ERROR.errorCode,
@@ -180,7 +179,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         if (!buildByAgentId(pipelineAgentStartupEvent, agentResult.data!!, dispatchType.workspace)) {
             retry(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
                 errorType = ErrorType.SYSTEM,
@@ -256,8 +255,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     "Start the third party build agent($agentId) " +
                         "of build(${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId})"
                 )
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addLine(
                     buildId = pipelineAgentStartupEvent.buildId,
                     message = "Start up the agent ${agent.hostname}/${agent.ip} for the build ${pipelineAgentStartupEvent.buildId}",
                     tag = "",
@@ -311,7 +309,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             logger.warn("Fail to get the agents by env($dispatchType) because of ${agentsResult.message}")
             retry(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
                 errorType = ErrorType.SYSTEM,
@@ -325,7 +323,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             logger.warn("Get null agents by env($dispatchType)")
             retry(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
                 errorType = ErrorType.SYSTEM,
@@ -339,7 +337,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             logger.warn("The third party agents is empty of env($dispatchType)")
             retry(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
                 errorType = ErrorType.SYSTEM,
@@ -474,8 +472,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             }
 
             if (pipelineAgentStartupEvent.retryTime == 1) {
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addLine(
                     buildId = pipelineAgentStartupEvent.buildId,
                     message = "All eligible agents are disabled or offline, Waiting for an available agent...",
                     tag = "",
@@ -486,7 +483,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             logger.info("Fail to find the fix agents for the build(${pipelineAgentStartupEvent.buildId})")
             retry(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
                 errorType = ErrorType.SYSTEM,
@@ -499,7 +496,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
 
     override fun retry(
         client: Client,
-        rabbitTemplate: RabbitTemplate,
+        buildLogPrinter: BuildLogPrinter,
         pipelineEventDispatcher: PipelineEventDispatcher,
         event: PipelineAgentStartupEvent,
         errorType: ErrorType?,
@@ -510,7 +507,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             // 置为失败
             onFailBuild(
                 client = client,
-                rabbitTemplate = rabbitTemplate,
+                buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorType = errorType ?: ErrorType.SYSTEM,
                 errorCode = errorCode ?: ErrorCodeEnum.SYSTEM_ERROR.errorCode,

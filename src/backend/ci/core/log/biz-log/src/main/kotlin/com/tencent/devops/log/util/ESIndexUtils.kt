@@ -26,7 +26,7 @@
 
 package com.tencent.devops.log.util
 
-import com.tencent.devops.log.model.message.LogMessageWithLineNo
+import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.xcontent.XContentBuilder
 import org.elasticsearch.common.xcontent.XContentFactory

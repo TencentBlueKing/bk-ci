@@ -56,7 +56,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
@@ -124,6 +124,7 @@ class PipelineBuildService(
     private val paramService: ParamService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer
 ) {
     companion object {
@@ -1514,8 +1515,7 @@ class PipelineBuildService(
                 val status = task["status"] ?: ""
                 val executeCount = task["executeCount"] ?: 1
                 logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: $status")
-                LogUtils.addYellowLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "流水线被用户终止，操作人:$userId",
                     tag = taskId.toString(),
@@ -1525,7 +1525,13 @@ class PipelineBuildService(
             }
 
             if (tasks.isNotEmpty()) {
-                LogUtils.addYellowLine(rabbitTemplate, buildId, "流水线被用户终止，操作人:$userId", "", "", 1)
+                buildLogPrinter.addYellowLine(
+                    buildId = buildId,
+                    message = "流水线被用户终止，操作人:$userId",
+                    tag = "",
+                    jobId = "",
+                    executeCount = 1
+                )
             }
 
             try {

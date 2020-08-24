@@ -26,28 +26,86 @@
 
 package com.tencent.devops.common.service.gray
 
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.redis.RedisOperation
+import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 
 class RepoGray {
     companion object {
-        const val repoGrayRedisKey = "project:setting:repoGray"
+        private val logger = LoggerFactory.getLogger(RepoGray::class.java)
+
+        private const val REPO_GREY_KEY = "project:setting:repoGray"
+        private const val REPO_NOT_GRAY_KEY = "project:setting:repoNotGray"
+        private const val REPO_DEFAULT_GREY_KEY = "project:setting:repoGrayDefault"
     }
 
+    private val cache = CacheBuilder.newBuilder()
+        .maximumSize(10)
+        .expireAfterWrite(30, TimeUnit.SECONDS)
+        .build<String/*Redis Keys*/, Set<String>/*Project Names*/>()
+
     fun addGrayProject(projectId: String, redisOperation: RedisOperation) {
-        redisOperation.addSetValue(getRepoGrayRedisKey(), projectId) // 添加项目为灰度项目
+        redisOperation.addSetValue(REPO_GREY_KEY, projectId)
+        try {
+            cache.invalidate(REPO_GREY_KEY)
+        } catch (ignored: Exception) {
+        }
     }
 
     fun removeGrayProject(projectId: String, redisOperation: RedisOperation) {
-        redisOperation.removeSetMember(getRepoGrayRedisKey(), projectId) // 取消项目为灰度项目
+        redisOperation.removeSetMember(REPO_GREY_KEY, projectId)
+        try {
+            cache.invalidate(REPO_GREY_KEY)
+        } catch (ignored: Exception) {
+        }
+    }
+
+    fun addNotGrayProject(projectId: String, redisOperation: RedisOperation) {
+        redisOperation.addSetValue(REPO_NOT_GRAY_KEY, projectId)
+        try {
+            cache.invalidate(REPO_NOT_GRAY_KEY)
+        } catch (ignored: Exception) {
+        }
+    }
+
+    fun removeNotGrayProject(projectId: String, redisOperation: RedisOperation) {
+        redisOperation.removeSetMember(REPO_NOT_GRAY_KEY, projectId)
+        try {
+            cache.invalidate(REPO_NOT_GRAY_KEY)
+        } catch (ignored: Exception) {
+        }
     }
 
     fun isGray(projectId: String, redisOperation: RedisOperation): Boolean {
-        return redisOperation.isMember(getRepoGrayRedisKey(), projectId)
-//        return grayProjectSet(redisOperation).contains(projectId)
+        return when {
+            getProjects(REPO_NOT_GRAY_KEY, redisOperation).contains(projectId) -> false
+            getProjects(REPO_GREY_KEY, redisOperation).contains(projectId) -> true
+            else -> defaultGray(redisOperation)
+        }
     }
 
     fun grayProjectSet(redisOperation: RedisOperation) =
-        (redisOperation.getSetMembers(repoGrayRedisKey) ?: emptySet()).filter { !it.isBlank() }.toSet()
+        (redisOperation.getSetMembers(REPO_GREY_KEY) ?: emptySet()).filter { !it.isBlank() }.toSet()
 
-    fun getRepoGrayRedisKey() = repoGrayRedisKey
+    private fun defaultGray(redisOperation: RedisOperation): Boolean {
+        return redisOperation.get(REPO_DEFAULT_GREY_KEY) == "true"
+    }
+
+    private fun getProjects(redisKey: String, redisOperation: RedisOperation): Set<String> {
+        var value = cache.getIfPresent(redisKey)
+        if (value != null) {
+            return value
+        }
+        synchronized(this) {
+            value = cache.getIfPresent(redisKey)
+            if (value != null) {
+                return value!!
+            }
+            logger.info("refresh $redisKey from redis")
+            value = redisOperation.getSetMembers(redisKey) ?: emptySet()
+            cache.put(redisKey, value)
+        }
+        return value!!
+    }
 }
