@@ -126,12 +126,8 @@
         <bk-pagination
             class="pagination"
             size="small"
-            :current="pagingConfigOne.currentPage"
-            :limit="pagingConfigOne.limit"
-            :count="pagingConfigOne.count"
-            :align="pagingConfigOne.align"
-            :show-limit="pagingConfigOne.showLimit"
-            :limit-list="pagingConfigOne.limitList"
+            v-bind="pagingConfigOne"
+            :current="currentPage"
             @change="handleChangeCurrent"
             @limit-change="handleChangeLimit">
         </bk-pagination>
@@ -147,7 +143,6 @@
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import StageSteps from '@/components/StageSteps'
-    import { bus } from '@/utils/bus'
     import { mapGetters } from 'vuex'
 
     export default {
@@ -177,6 +172,9 @@
             },
             showLog: {
                 type: Function
+            },
+            count: {
+                type: Number
             }
         },
         data () {
@@ -191,17 +189,17 @@
                 stoping: {},
                 pagingConfigOne: {
                     currentPage: 1,
-                    limit: 0,
+                    limit: Number(localStorage.getItem('pagingConfigOne-limit')) || 0,
                     count: 0,
                     align: 'center',
                     showLimit: true,
-                    limitList: [0, 20, 30, 50]
+                    limitList: [12, 20, 30, 50]
                 }
             }
         },
         computed: {
             ...mapGetters({
-                'CurrentPage': 'pipelines/getCurrentPage'
+                'currentPage': 'pipelines/getCurrentPage'
             }),
             statusIconMap () {
                 return {
@@ -295,23 +293,20 @@
             buildList () {
                 this.resetRemark()
             },
-            CurrentPage: {
+            currentPage: {
                 handler (val) {
                     if (val) {
                         this.pagingConfigOne.currentPage = val
                     }
                 },
                 immediate: true
+            },
+            count (newVal) {
+                this.pagingConfigOne.count = newVal
             }
         },
         created () {
-            bus.$on('fetch-count', (val) => {
-                this.pagingConfigOne.count = val
-            })
-            bus.$on('set-currentPage', val => {
-                this.$store.dispatch('pipelines/setCurrentPage', val)
-                this.handleChangeCurrent(1)
-            })
+            if (localStorage.getItem('pagingConfigOne-limit')) return
             const setLimit = Math.floor((document.body.clientHeight - 60) / 47 - 6)
             this.pagingConfigOne.limit = setLimit
             this.pagingConfigOne.limitList[0] = setLimit
@@ -322,6 +317,7 @@
                 this.$store.dispatch('pipelines/setPipelineID', this.$route.params.pipelineId)
             },
             handleChangeLimit (limit) {
+                localStorage.setItem('pagingConfigOne-limit', limit)
                 this.pagingConfigOne.limit = limit
                 this.$store.dispatch('pipelines/setCurrentPage', 1)
                 this.$emit('change-currentPage-limit', {
@@ -666,6 +662,11 @@
                 }
             }
         }
+        .error-code-item {
+            @include ellipsis();
+            display: block;
+            width: 100%;
+        }
         .trigger-cell {
             display: flex;
             align-items: center;
@@ -706,12 +707,6 @@
                     color: $primaryColor;
                 }
             }
-        }
-
-        .error-code-item {
-            @include ellipsis();
-            display: block;
-            width: 100%;
         }
     }
     .artifact-list-popup {

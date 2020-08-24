@@ -1,7 +1,7 @@
 <template>
     <div class="build-history-tab-content">
         <filter-bar v-if="showFilterBar" @query="fetchData" :set-history-page-status="setHistoryPageStatus" :reset-query-condition="resetQueryCondition" v-bind="historyPageStatus.queryMap"></filter-bar>
-        <build-history-table v-bkloading="{ isLoading: basicLoading }" ref="buildHistoryTable" :current-pipeline-version="currentPipelineVersion" @change-currentPage-limit="getHistoryData" @update-table="updateBuildHistoryList" :build-list="list" :columns="shownColumns" :empty-tips-config="emptyTipsConfig" :show-log="showLog"></build-history-table>
+        <build-history-table v-bkloading="{ isLoading: basicLoading }" ref="buildHistoryTable" :count="count" :current-pipeline-version="currentPipelineVersion" @change-currentPage-limit="getHistoryData" @update-table="updateBuildHistoryList" :build-list="list" :columns="shownColumns" :empty-tips-config="emptyTipsConfig" :show-log="showLog"></build-history-table>
         <bk-dialog
             width="567"
             :title="$t('history.settingCols')"
@@ -55,14 +55,15 @@
                 triggerList: [],
                 queryStrMap: ['status', 'materialAlias', 'materialBranch', 'startTimeStartTime', 'endTimeEndTime'],
                 list: [],
-                basicLoading: false
+                basicLoading: false,
+                count: null
             }
         },
 
         computed: {
             ...mapGetters({
                 'historyPageStatus': 'pipelines/getHistoryPageStatus',
-                'CurrentPage': 'pipelines/getCurrentPage',
+                'currentPage': 'pipelines/getCurrentPage',
                 'pipelineID': 'pipelines/getPipelineID'
             }),
             ...mapState('atom', [
@@ -188,7 +189,7 @@
                 'togglePropertyPanel'
             ]),
             async fetchData (page = 1, pageSize = this.$refs.buildHistoryTable.pagingConfigOne.limit, loading = true) {
-                const setPage = this.CurrentPage || page
+                const setPage = this.currentPage || page
                 try {
                     this.basicLoading = loading
                     const res = await this.requestHistory(setPage, pageSize)
@@ -321,8 +322,8 @@
             
             async updateList (message = {}) {
                 const pageSize = this.$refs.buildHistoryTable.pagingConfigOne.limit
-                if (this.list.some(item => item.id === message.buildId)) {
-                    const res = await this.fetchData(this.CurrentPage, pageSize, false)
+                if (this.list.some(item => item.id === message.buildId) || this.currentPage === 1) {
+                    const res = await this.fetchData(this.currentPage, pageSize, false)
                     this.list = res.records
                     return res
                 }
@@ -363,7 +364,7 @@
                         pageSize
                     })
                     this.currentPipelineVersion = res.pipelineVersion || ''
-                    bus.$emit('fetch-count', res.count)
+                    this.count = res.count
                     return res
                 } catch (err) {
                     if (err.code === 403) {

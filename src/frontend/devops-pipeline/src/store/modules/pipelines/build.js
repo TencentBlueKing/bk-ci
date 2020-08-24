@@ -70,9 +70,7 @@ function generateQueryString (query) {
 
 const getters = {
     getHistoryPageStatus: state => state.historyPageStatus,
-    getCurrentPage: (state) => {
-        return state.historyPageStatus.currentPage
-    },
+    getCurrentPage: state => state.historyPageStatus.currentPage,
     getPipelineID: state => state.historyPageStatus.pipelineID
 }
 
