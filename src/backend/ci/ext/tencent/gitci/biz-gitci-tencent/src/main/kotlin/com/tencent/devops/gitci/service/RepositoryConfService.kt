@@ -28,7 +28,6 @@ package com.tencent.devops.gitci.service
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitCISettingDao
-import com.tencent.devops.gitci.pojo.GitProjectConf
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -85,7 +84,6 @@ class RepositoryConfService @Autowired constructor(
             sshUrl = projectInfo.gitSshUrl ?: ""
         )
     }
-
 
     fun enableGitCI(gitProjectId: Long): Boolean {
         if (gitCISettingDao.getSetting(dslContext, gitProjectId) == null) {

@@ -131,7 +131,6 @@ class GitCISettingDao {
         }
     }
 
-
     fun getSetting(dslContext: DSLContext, gitProjectId: Long): GitRepositoryConf? {
         with(TRepositoryConf.T_REPOSITORY_CONF) {
             val conf = dslContext.selectFrom(this)
