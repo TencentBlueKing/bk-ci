@@ -23,23 +23,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.service.impl
 
-dependencies {
-    compile project(":core:plugin:codecc-plugin:common-codecc")
-    compile project(":core:process:api-process")
-    compile project(":core:dispatch:api-dispatch")
-    compile project(":core:dispatch:model-dispatch")
-    compile project(":core:notify:api-notify")
-    compile project(":core:monitoring:api-monitoring")
-//    compile project(":core:store:api-store-image")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-redis")
-    compile project(":core:common:common-log")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile "com.vmware:vijava"
-    compile "org.json:json"
-    compile "org.apache.commons:commons-exec"
+import com.tencent.devops.monitoring.pojo.DispatchStatus
+import com.tencent.devops.monitoring.service.DispatchReportService
+import org.slf4j.LoggerFactory
+import org.springframework.cloud.context.config.annotation.RefreshScope
+import org.springframework.stereotype.Service
+
+@Service
+@RefreshScope
+class DispatchReportServiceImpl : DispatchReportService {
+    private val logger = LoggerFactory.getLogger(DispatchReportServiceImpl::class.java)
+
+    override fun reportDispatchStatus(dispatchStatus: DispatchStatus): Boolean {
+        logger.info("DispatchReportServiceImpl reportDispatchStatus: $dispatchStatus")
+        return true
+    }
 }

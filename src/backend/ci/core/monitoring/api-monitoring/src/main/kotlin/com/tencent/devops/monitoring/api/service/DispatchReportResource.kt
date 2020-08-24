@@ -23,23 +23,30 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.monitoring.api.service
 
-dependencies {
-    compile project(":core:plugin:codecc-plugin:common-codecc")
-    compile project(":core:process:api-process")
-    compile project(":core:dispatch:api-dispatch")
-    compile project(":core:dispatch:model-dispatch")
-    compile project(":core:notify:api-notify")
-    compile project(":core:monitoring:api-monitoring")
-//    compile project(":core:store:api-store-image")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-redis")
-    compile project(":core:common:common-log")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile "com.vmware:vijava"
-    compile "org.json:json"
-    compile "org.apache.commons:commons-exec"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.monitoring.pojo.DispatchStatus
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["SERVICE_MONITORING_REPORT"], description = "监控上报")
+@Path("/service/report")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface DispatchReportResource {
+
+    @ApiOperation("各个dispatch模块上报开机状态")
+    @POST
+    @Path("/dispatch/status")
+    fun dispatch(
+        @ApiParam("构建机开机关机状态", required = true)
+        dispatchStatus: DispatchStatus
+    ): Result<Boolean>
 }
