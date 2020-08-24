@@ -168,30 +168,3 @@ class InfluxdbClient {
         }
     }
 }
-
-fun main(args: Array<String>) {
-    val random = Random()
-    val bgIds = listOf(14129, 953, 2233, 954, 2234, 955, 956, 29292, 957, 78, 958, 29294)
-    val errorCode = 2199000
-    val toolNames = listOf(
-        "woodpecker_sensitive",
-        "sensitive",
-        "ip_check",
-        "horuspy",
-        "dupc",
-        "cpplint",
-        "coverity",
-        "cloc",
-        "checkstyle",
-        "ccn"
-    )
-    for (i in 0..100) {
-        val startTime = System.currentTimeMillis()
-        val elapseTime = 15000 + random.nextInt(1000)
-        val template =
-            """insert CodeccMonitor,bgId=${bgIds[random.nextInt(bgIds.size)]},errorCode=${if (random.nextBoolean()) errorCode + random.nextInt(
-                10
-            ) else 0},toolName=${toolNames[random.nextInt(toolNames.size)]} buildId="b-15118b7ccd33486a89c8527a85304ec5",centerId="0",channel="BS",deptId="0",elapseTime=${elapseTime}i,endTime=${startTime + elapseTime}i,errorMsg="test",pipelineId="p-4ce3f7479b15441e89e9908ebeaa8729",projectId="stuben-hello",startTime=${startTime}i,starter="stubenhuang",status="SUCCESS",vmSeqId="1""""
-        println(template)
-    }
-}

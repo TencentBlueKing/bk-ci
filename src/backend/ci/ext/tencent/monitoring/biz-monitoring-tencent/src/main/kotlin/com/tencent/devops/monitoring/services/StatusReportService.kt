@@ -63,21 +63,3 @@ class StatusReportService @Autowired constructor(
         }
     }
 }
-
-fun main(args: Array<String>) {
-    // insert DispatchStatus_success_rat_count,buildType='.pcg.sumeru' devcloud_failed_count=3i,devcloud_start_count=10i,devcloud_stop_count=4i,devcloud_success_count=5i,devcloud_success_rat=0.4,devcloud_total_count=2i
-    val random = Random()
-    for (type in listOf(".devcloud.public", ".pcg.sumeru", ".gitci.public", ".macos")) {
-        var startTime = System.currentTimeMillis() - 100 * 5 * 60 * 1000
-        for (i in 1..100) {
-            val template =
-                "insert DispatchStatus_success_rat_count,buildType=$type devcloud_failed_count=3i,devcloud_start_count=${3 + random.nextInt(
-                    3
-                )}i,devcloud_stop_count=" +
-                    "${3 + random.nextInt(3)}i,devcloud_success_count=2i,devcloud_success_rat=0.4,devcloud_total_count=5i ${startTime}000000"
-            println(template)
-
-            startTime += 5 * 60 * 1000
-        }
-    }
-}
