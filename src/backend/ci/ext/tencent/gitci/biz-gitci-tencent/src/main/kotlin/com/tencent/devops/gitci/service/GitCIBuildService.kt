@@ -534,6 +534,7 @@ class GitCIBuildService @Autowired constructor(
 //                startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = originEvent.object_attributes.id.toString()
 //                startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = originEvent.object_attributes.description
 //                startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = originEvent.object_attributes.assignee_id.toString()
+                startParams["BK_CI_REPO_GIT_WEBHOOK_MR_ID"] = originEvent.object_attributes.iid.toString()
             }
         }
 
