@@ -118,7 +118,9 @@
 
                     const subTags = res.subTags
                     if (subTags && subTags.length > 0) {
-                        scroll.setSubTag(subTags)
+                        const tags = subTags.map((tag) => ({ label: tag, value: tag }))
+                        tags.unshift({ label: 'ALL', value: '' })
+                        scroll.setSubTag(tags)
                     }
 
                     if (res.finished) {
@@ -134,7 +136,7 @@
                     }
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
-                    this.$refs.scroll.handleApiErr(err.message)
+                    if (scroll) scroll.handleApiErr(err.message)
                 })
             },
 

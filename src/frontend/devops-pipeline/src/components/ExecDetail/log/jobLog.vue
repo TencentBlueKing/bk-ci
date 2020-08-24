@@ -1,7 +1,7 @@
 <template>
     <section class="job-log">
         <bk-log-search :down-load-link="downLoadLink" :execute-count="executeCount" class="log-tools"></bk-log-search>
-    
+
         <bk-multiple-log ref="multipleLog"
             class="bk-log"
             :log-list="pluginList"
@@ -95,13 +95,13 @@
             },
 
             getLog (id, postData) {
-                postData.hashId = hashID()
+                const hashId = postData.hashId = hashID()
                 let logMethod = this.getAfterLog
                 if (postData.lineNo <= 0) logMethod = this.getInitLog
                 const ref = this.$refs.multipleLog
 
                 logMethod(postData).then((res) => {
-                    if (this.closeIds.includes(postData.hashId)) return
+                    if (this.closeIds.includes(hashId)) return
 
                     res = res.data || {}
                     if (res.status !== 0) {
@@ -126,7 +126,9 @@
 
                     const subTags = res.subTags
                     if (subTags && subTags.length > 0) {
-                        ref.setSubTag(subTags, id)
+                        const tags = subTags.map((tag) => ({ label: tag, value: tag }))
+                        tags.unshift({ label: 'All', value: '' })
+                        ref.setSubTag(tags, id)
                     }
 
                     const logs = res.logs || []
@@ -147,7 +149,7 @@
                     }
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
-                    ref.handleApiErr(err.message, id)
+                    if (ref) ref.handleApiErr(err.message, id)
                 })
             }
         }

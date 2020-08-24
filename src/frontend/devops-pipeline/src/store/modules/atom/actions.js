@@ -458,7 +458,7 @@ export default {
         })
     },
 
-    // 第一次拉取日志
+    // 后续拉取日志
     getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, lineNo, subTag }) {
         return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
             params: {
