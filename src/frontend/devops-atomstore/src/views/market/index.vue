@@ -1,14 +1,8 @@
 <template>
     <article class="store-home">
-        <h3 class="market-home-title ">
-            <icon class="title-icon" name="color-logo-store" size="25" />
-            <p class="title-name">
-                <router-link :to="{ name: 'atomHome', query: { pipeType: filterData.pipeType } }" class="back-home"> {{ $t('store.研发商店') }} </router-link>
-                <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des">{{filterData.pipeType|pipeTypeFilter}}</span>
-            </p>
-            <router-link :to="{ name: 'workList', params: { type: filterData.pipeType || 'atom' } }" class="title-work"> {{ $t('store.工作台') }} </router-link>
-        </h3>
+        <bread-crumbs :bread-crumbs="navList" :type="filterData.pipeType">
+            <router-link :to="{ name: `${filterData.pipeType || 'atom'}Work` }" class="g-title-work"> {{ $t('store.工作台') }} </router-link>
+        </bread-crumbs>
 
         <main class="store-main" @scroll.passive="mainScroll">
             <section class="home-main">
@@ -87,29 +81,12 @@
     import { debounce } from '@/utils/index'
     import { mapActions } from 'vuex'
     import commentRate from '@/components/common/comment-rate'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
 
     export default {
         components: {
-            commentRate
-        },
-
-        filters: {
-            pipeTypeFilter (val) {
-                const bkLocale = window.devops || {}
-                let res = ''
-                switch (val) {
-                    case 'template':
-                        res = bkLocale.$t('store.流水线模板')
-                        break
-                    case 'image':
-                        res = bkLocale.$t('store.容器镜像')
-                        break
-                    default:
-                        res = bkLocale.$t('store.流水线插件')
-                        break
-                }
-                return res
-            }
+            commentRate,
+            breadCrumbs
         },
 
         data () {
@@ -153,6 +130,24 @@
                     { name: this.$t('store.蓝鲸官方'), key: 'rdType', value: 'SELF_DEVELOPED' },
                     { name: this.$t('store.YAML可用'), key: 'yamlFlag', value: true, hidden: this.filterData.pipeType !== 'atom' },
                     { name: this.$t('store.推荐使用'), key: 'recommendFlag', value: true }
+                ]
+            },
+
+            navList () {
+                let name
+                switch (this.filterData.pipeType) {
+                    case 'template':
+                        name = this.$t('store.流水线模板')
+                        break
+                    case 'image':
+                        name = this.$t('store.容器镜像')
+                        break
+                    default:
+                        name = this.$t('store.流水线插件')
+                        break
+                }
+                return [
+                    { name }
                 ]
             }
         },
@@ -391,10 +386,10 @@
     }
 
     .home-main {
-        height: calc(100vh - 114px);
+        height: calc(100vh - 5.6vh - 70px);
         min-height: 600px;
         width: 1200px;
-        margin: 21px auto 0;
+        margin: 20px auto 0;
         display: flex;
         flex-direction: row;
         .home-nav {
