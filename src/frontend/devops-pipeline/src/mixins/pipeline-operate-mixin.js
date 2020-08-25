@@ -279,8 +279,8 @@ export default {
                 if (res && res.id) {
                     message = this.$t('newlist.sucToStartBuild')
                     theme = 'success'
-                    setExecuteStatus(false)
                     this.$store.commit('pipelines/updateCurAtomPrams', null)
+                    setExecuteStatus(false)
                     if (goDetail) {
                         this.$router.push({
                             name: 'pipelinesDetail',

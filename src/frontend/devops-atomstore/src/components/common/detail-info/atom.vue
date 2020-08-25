@@ -82,6 +82,7 @@
 <script>
     import commentRate from '../comment-rate'
     import formTips from '@/components/common/formTips/index'
+    import api from '@/api'
 
     export default {
         components: {
@@ -171,8 +172,14 @@
 
         methods: {
             initData () {
-                this.$store.dispatch('store/getMemberInfo', this.$route.params.code).then((res = {}) => {
+                const data = {
+                    storeCode: this.$route.params.code,
+                    storeType: 'ATOM'
+                }
+                api.getMemberView(data).then((res = {}) => {
                     this.userInfo = res
+                }).catch((err) => {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
                 })
             },
 
