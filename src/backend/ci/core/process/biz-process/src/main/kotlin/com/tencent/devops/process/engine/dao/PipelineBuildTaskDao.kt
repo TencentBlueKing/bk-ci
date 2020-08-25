@@ -304,7 +304,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                     update.set(STARTER, userId)
             }
             if (errorType != null) {
-                update.set(ERROR_TYPE, errorType.ordinal)
+                update.set(ERROR_TYPE, errorType.num)
                 update.set(ERROR_CODE, errorCode)
                 update.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
             }
@@ -334,7 +334,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
     ) {
         with(T_PIPELINE_BUILD_TASK) {
             dslContext.update(this)
-                .set(ERROR_TYPE, errorType.ordinal)
+                .set(ERROR_TYPE, errorType.num)
                 .set(ERROR_CODE, errorCode)
                 .set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
                 .where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId))

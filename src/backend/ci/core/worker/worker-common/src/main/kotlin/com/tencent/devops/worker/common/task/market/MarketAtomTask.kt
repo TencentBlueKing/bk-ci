@@ -504,8 +504,8 @@ open class MarketAtomTask : ITask() {
             if (!success) {
                 throw TaskExecuteException(
                     errorMsg = "MarketAtom failed with ${atomResult.status}: ${atomResult.message}",
-                    errorType = ErrorType.USER,
-                    errorCode = atomResult.errorCode ?: ErrorCode.USER_DEFAULT_ERROR
+                    errorType = ErrorType.PLUGIN,
+                    errorCode = atomResult.errorCode ?: ErrorCode.PLUGIN_DEFAULT_ERROR
                 )
             }
         }

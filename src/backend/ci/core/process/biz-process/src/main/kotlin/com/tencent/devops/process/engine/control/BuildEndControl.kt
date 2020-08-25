@@ -26,7 +26,7 @@
 
 package com.tencent.devops.process.engine.control
 
-import com.tencent.devops.common.api.pojo.ErrorCode.USER_DEFAULT_ERROR
+import com.tencent.devops.common.api.pojo.ErrorCode.PLUGIN_DEFAULT_ERROR
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -192,8 +192,8 @@ class BuildEndControl @Autowired constructor(
                     taskId = it.taskId,
                     taskName = it.taskName,
                     atomCode = it.atomCode ?: it.taskType,
-                    errorType = it.errorType?.ordinal ?: ErrorType.USER.ordinal,
-                    errorCode = it.errorCode ?: USER_DEFAULT_ERROR,
+                    errorType = it.errorType?.num ?: ErrorType.USER.num,
+                    errorCode = it.errorCode ?: PLUGIN_DEFAULT_ERROR,
                     errorMsg = CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX) ?: ""
                 ))
                 // 做入库长度保护，假设超过上限则抛弃该错误信息
