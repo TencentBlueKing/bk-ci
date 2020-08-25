@@ -64,7 +64,7 @@ class SlaMonitorService @Autowired constructor(
             totalCount,
             costTime,
             1 - (errorPie.asSequence().map { it.count }.sum().toDouble() / totalCount),
-            listOf()
+            errorPie
         )
     }
 
