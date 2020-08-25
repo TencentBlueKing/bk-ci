@@ -71,6 +71,7 @@ import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -138,6 +139,7 @@ class PipelineRepositoryService constructor(
         }
 
         return if (!create) {
+            val pipelineSetting = pipelineSettingDao.getSetting(dslContext, pipelineId)
             update(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -147,7 +149,8 @@ class PipelineRepositoryService constructor(
                 canElementSkip = canElementSkip,
                 buildNo = buildNo,
                 modelTasks = modelTasks,
-                channelCode = channelCode
+                channelCode = channelCode,
+                maxPipelineResNum = pipelineSetting?.maxPipelineResNum
             )
         } else {
             val version = 1
@@ -477,13 +480,17 @@ class PipelineRepositoryService constructor(
                         // 研发商店创建的内置流水线默认不发送通知消息
                         notifyTypes = ""
                     }
+                    // 渠道为工蜂或者开源扫描只需为流水线模型保留一个版本
+                    val filterList = listOf(ChannelCode.GIT, ChannelCode.GONGFENGSCAN)
+                    val maxPipelineResNum = if (channelCode in filterList) 1 else PIPELINE_RES_NUM_MIN
                     pipelineSettingDao.insertNewSetting(
                         dslContext = transactionContext,
                         projectId = projectId,
                         pipelineId = pipelineId,
                         pipelineName = model.name,
                         successNotifyTypes = notifyTypes,
-                        failNotifyTypes = notifyTypes
+                        failNotifyTypes = notifyTypes,
+                        maxPipelineResNum = maxPipelineResNum
                     )
                 } else {
                     pipelineSettingDao.updateSetting(
@@ -528,7 +535,8 @@ class PipelineRepositoryService constructor(
         canElementSkip: Boolean,
         buildNo: BuildNo?,
         modelTasks: Set<PipelineModelTask>,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        maxPipelineResNum: Int? = null
     ): String {
         val taskCount: Int = model.taskCount()
         dslContext.transaction { configuration ->
@@ -557,6 +565,9 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId
             )
+            if (maxPipelineResNum != null) {
+                pipelineResDao.deleteEarlyVersion(dslContext, pipelineId, maxPipelineResNum)
+            }
             pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
         }
 

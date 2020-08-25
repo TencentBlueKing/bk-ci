@@ -45,7 +45,7 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.common.pipeline.type.tstack.TStackDispatchType
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_AGENT_STATUS_EXCEPTION
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
@@ -67,7 +67,6 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -87,7 +86,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val dispatchTypeParser: DispatchTypeParser
 ) : IAtomTask<VMBuildContainer> {
     override fun getParamElement(task: PipelineBuildTask): VMBuildContainer {
@@ -105,8 +104,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         try {
             atomResponse = execute(task, param)
         } catch (e: BuildTaskException) {
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId = task.buildId,
                 message = "Fail to execute the task atom: ${e.message}",
                 tag = task.taskId,
@@ -121,9 +119,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 errorMsg = e.message
             )
         } catch (t: Throwable) {
-            LogUtils.addRedLine(
-                rabbitTemplate, task.buildId,
-                "Fail to execute the task atom: ${t.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
+            buildLogPrinter.addRedLine(
+                buildId = task.buildId,
+                message = "Fail to execute the task atom: ${t.message}",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
             )
             logger.warn("Fail to execute the task atom", t)
             atomResponse = AtomResponse(
@@ -183,7 +184,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         pipelineBuildDetailService.containerPreparing(buildId, vmSeqId.toInt())
 
         // 读取插件市场中的插件信息，写入待构建处理
-        val atoms = AtomUtils.parseContainerMarketAtom(container, task, client, rabbitTemplate)
+        val atoms = AtomUtils.parseContainerMarketAtom(
+            container = container,
+            task = task,
+            client = client,
+            buildLogPrinter = buildLogPrinter
+        )
 
         val source = "vmStartupTaskAtom"
         val dispatchType = getDispatchType(projectId, pipelineId, buildId, param, param.baseOS)
