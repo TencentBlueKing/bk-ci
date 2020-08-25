@@ -9,6 +9,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_SLA"], description = "SLA监控")
@@ -21,10 +22,13 @@ interface SlaMonitorResource {
     @Path("/codecc/query")
     fun codeccQuery(
         @ApiParam(value = "事业群ID", required = true)
+        @QueryParam("bgId")
         bgId: String,
         @ApiParam(value = "开始时间", required = true)
+        @QueryParam("startTime")
         startTime: Long,
         @ApiParam(value = "结束时间", required = true)
+        @QueryParam("endTime")
         endTime: Long
     ): Result<SlaCodeccResponseData>
 }
