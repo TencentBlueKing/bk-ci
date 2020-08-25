@@ -68,9 +68,9 @@ interface ApigwSlaResourceV2 {
         bgId: String,
         @ApiParam(value = "开始时间(时间戳形式)", required = true)
         @QueryParam(value = "startTime")
-        startTime: Long?,
+        startTime: Long,
         @ApiParam(value = "结束时间(时间戳形式)", required = true)
         @QueryParam(value = "endTime")
-        endTime: Long?
+        endTime: Long
     ): Result<SlaCodeccResponseData>
 }

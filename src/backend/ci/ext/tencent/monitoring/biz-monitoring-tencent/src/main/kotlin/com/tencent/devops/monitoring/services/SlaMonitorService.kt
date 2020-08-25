@@ -1,6 +1,7 @@
 package com.tencent.devops.monitoring.services
 
 import com.tencent.devops.monitoring.client.InfluxdbClient
+import com.tencent.devops.monitoring.constant.SlaPluginError
 import com.tencent.devops.monitoring.pojo.ErrorPie
 import com.tencent.devops.monitoring.pojo.SlaCodeccResponseData
 import org.slf4j.LoggerFactory
@@ -12,7 +13,6 @@ class SlaMonitorService @Autowired constructor(
     private val influxdbClient: InfluxdbClient
 ) {
     fun codeccQuery(bgId: String, startTime: Long, endTime: Long): SlaCodeccResponseData {
-        // TODO 具体实现
         logger.info("codeccQuery , bgId:$bgId , startTime:$startTime , endTime:$endTime")
 
         var totalCount = 0
@@ -48,7 +48,7 @@ class SlaMonitorService @Autowired constructor(
                         serie.run {
                             errorPie.add(ErrorPie(
                                 tags["errorCode"],
-                                "", // TODO
+                                SlaPluginError.getMean(tags["errorCode"]),
                                 values[0][1].let { if (it is Number) it.toInt() else 0 }
                             ))
                         }
