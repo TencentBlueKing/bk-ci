@@ -17,7 +17,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/auth/project")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceAuthResource {
+interface ServiceAuthProjectResource {
 
     @GET
     @Path("/list")

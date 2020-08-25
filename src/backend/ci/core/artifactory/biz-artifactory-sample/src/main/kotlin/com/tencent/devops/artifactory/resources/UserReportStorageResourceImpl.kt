@@ -24,23 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.dao
+package com.tencent.devops.artifactory.resources
 
-import com.tencent.devops.model.environment.tables.TEnvNode
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import com.tencent.devops.artifactory.api.user.UserReportStorageResource
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
-@Repository
-class EnvNodeDao {
-    fun deleteByNodeIds(dslContext: DSLContext, nodeIds: List<Long>) {
-        if (nodeIds.isEmpty()) {
-            return
-        }
-
-        with(TEnvNode.T_ENV_NODE) {
-            dslContext.deleteFrom(this)
-                    .where(NODE_ID.`in`(nodeIds))
-                    .execute()
-        }
+@RestResource
+class UserReportStorageResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService)
+    : UserReportStorageResource {
+    override fun get(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, path: String) {
+        val filePath = "${FileTypeEnum.BK_REPORT.fileType}/$projectId/$pipelineId/$buildId/$elementId/$path"
+        val response = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).response!!
+        archiveFileService.downloadFile(filePath, response)
     }
 }
