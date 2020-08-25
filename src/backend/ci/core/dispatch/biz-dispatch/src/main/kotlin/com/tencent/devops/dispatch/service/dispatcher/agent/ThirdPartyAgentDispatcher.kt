@@ -122,7 +122,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     errorMessage = ""
                 )
             } catch (e: Exception) {
-                logger.error("[${pipelineAgentShutdownEvent.projectId}|${pipelineAgentShutdownEvent.pipelineId}|${pipelineAgentShutdownEvent.buildId}] shutdown sendDispatchMonitoring error.", e)
+                logger.error("[${pipelineAgentShutdownEvent.projectId}|${pipelineAgentShutdownEvent.pipelineId}|${pipelineAgentShutdownEvent.buildId}] shutdown third sendDispatchMonitoring error.")
             }
         }
     }
@@ -188,20 +188,24 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             )
         } else {
             // 上报monitor数据
-            sendDispatchMonitoring(
-                client = client,
-                projectId = pipelineAgentStartupEvent.projectId,
-                pipelineId = pipelineAgentStartupEvent.pipelineId,
-                buildId = pipelineAgentStartupEvent.buildId,
-                vmSeqId = pipelineAgentStartupEvent.vmSeqId,
-                actionType = pipelineAgentStartupEvent.actionType.name,
-                retryTime = pipelineAgentStartupEvent.retryTime,
-                routeKeySuffix = pipelineAgentStartupEvent.routeKeySuffix ?: "third",
-                startTime = System.currentTimeMillis(),
-                stopTime = 0L,
-                errorCode = "0",
-                errorMessage = ""
-            )
+            try {
+                sendDispatchMonitoring(
+                    client = client,
+                    projectId = pipelineAgentStartupEvent.projectId,
+                    pipelineId = pipelineAgentStartupEvent.pipelineId,
+                    buildId = pipelineAgentStartupEvent.buildId,
+                    vmSeqId = pipelineAgentStartupEvent.vmSeqId,
+                    actionType = pipelineAgentStartupEvent.actionType.name,
+                    retryTime = pipelineAgentStartupEvent.retryTime,
+                    routeKeySuffix = pipelineAgentStartupEvent.routeKeySuffix ?: "third",
+                    startTime = System.currentTimeMillis(),
+                    stopTime = 0L,
+                    errorCode = "0",
+                    errorMessage = ""
+                )
+            } catch (e: Exception) {
+                logger.error("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] startUp third sendDispatchMonitoring error.")
+            }
         }
     }
 

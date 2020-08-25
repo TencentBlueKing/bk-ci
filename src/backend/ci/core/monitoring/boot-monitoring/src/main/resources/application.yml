@@ -1,9 +1,9 @@
 spring:
   application:
-    name: notify${service-suffix}
-    desc: DevOps Notify Service
+    name: monitoring{service-suffix}
+    desc: DevOps monitoring Service
     version: 4.0
-    packageName: com.tencent.devops.notify
+    packageName: com.tencent.devops.monitoring
 
 server:
-  port: 21911
+  port: 21929

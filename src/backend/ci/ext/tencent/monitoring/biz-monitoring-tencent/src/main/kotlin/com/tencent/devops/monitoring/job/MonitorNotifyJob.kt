@@ -92,6 +92,7 @@ class MonitorNotifyJob @Autowired constructor(
 
         val redisLock = RedisLock(redisOperation, "slaDailyEmail", 60L)
         try {
+            logger.info("MonitorNotifyJob , notifyDaily start")
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 val yesterday = LocalDateTime.now().minusDays(1)
@@ -124,6 +125,8 @@ class MonitorNotifyJob @Autowired constructor(
                         }
                     }
                 }
+
+                logger.info("MonitorNotifyJob , notifyDaily finish")
             } else {
                 logger.info("SLA Daily Email is running")
             }

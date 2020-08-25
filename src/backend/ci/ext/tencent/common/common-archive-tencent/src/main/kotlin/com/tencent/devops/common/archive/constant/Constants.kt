@@ -23,42 +23,9 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.monitoring.services
 
-import com.tencent.devops.monitoring.client.InfluxdbClient
-import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
-import com.tencent.devops.monitoring.pojo.UsersStatus
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Service
+package com.tencent.devops.common.archive.constant
 
-@Service
-@RefreshScope
-class StatusReportService @Autowired constructor(
-    private val influxdbClient: InfluxdbClient
-) {
-    private val logger = LoggerFactory.getLogger(StatusReportService::class.java)
-
-    fun reportScmCommitCheck(addCommitCheckStatus: AddCommitCheckStatus): Boolean {
-        return try {
-            influxdbClient.insert(addCommitCheckStatus)
-
-            true
-        } catch (e: Throwable) {
-            logger.error("reportScmCommitCheck exception:", e)
-            false
-        }
-    }
-
-    fun reportUserUsers(users: UsersStatus): Boolean {
-        return try {
-            influxdbClient.insert(users)
-
-            true
-        } catch (e: Throwable) {
-            logger.error("reportUserUsers exception:", e)
-            false
-        }
-    }
-}
+const val REPO_PIPELINE = "pipeline"
+const val REPO_CUSTOM = "custom"
+const val REPO_REPORT = "report"

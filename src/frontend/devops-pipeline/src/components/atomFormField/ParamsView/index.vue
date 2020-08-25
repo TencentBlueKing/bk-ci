@@ -101,11 +101,6 @@
             curItem (key) {
                 return (this.paramList.length && this.paramList.filter(item => item.id === key)[0]) || []
             },
-            urlParse (originUrl, query) {
-                /* eslint-disable */
-                return new Function('ctx', `return '${originUrl.replace(/\{(.*?)\}/g, '\'\+ ctx.$1 \+\'')}'`)(query)
-                /* eslint-enable */
-            },
             handleParamChange (name, value) {
                 const cur = this.curItem(name)
                 if (cur.type === 'BOOLEAN') {

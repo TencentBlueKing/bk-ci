@@ -226,7 +226,7 @@ class DockerDispatcher @Autowired constructor(
                     errorMessage = errorMessage
                 )
             } catch (e: Exception) {
-                logger.error("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] startup sendDispatchMonitoring error.", e)
+                logger.error("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] startup sendDispatchMonitoring error.")
             }
         }
     }
@@ -252,7 +252,7 @@ class DockerDispatcher @Autowired constructor(
                     errorMessage = ""
                 )
             } catch (e: Exception) {
-                logger.error("[${pipelineAgentShutdownEvent.projectId}|${pipelineAgentShutdownEvent.pipelineId}|${pipelineAgentShutdownEvent.buildId}] shutdown sendDispatchMonitoring error.", e)
+                logger.error("[${pipelineAgentShutdownEvent.projectId}|${pipelineAgentShutdownEvent.pipelineId}|${pipelineAgentShutdownEvent.buildId}] shutdown sendDispatchMonitoring error.")
             }
         }
     }
