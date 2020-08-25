@@ -20,7 +20,7 @@ class SlaMonitorService @Autowired constructor(
         val errorPie = mutableListOf<ErrorPie>()
 
         val baseSql =
-            "SELECT sum(total_count) , mean(avg_time) FROM CodeccMonitor_reduce WHERE time>${startTime}000000 AND time<${endTime}000000 AND bgId=$bgId"
+            "SELECT sum(total_count) , mean(avg_time) FROM CodeccMonitor_reduce WHERE time>${startTime}000000 AND time<${endTime}000000 AND bgId='$bgId'"
         val baseQueryResult = influxdbClient.select(baseSql)
         if (null != baseQueryResult && !baseQueryResult.hasError()) {
             baseQueryResult.results.forEach { result ->
@@ -39,7 +39,7 @@ class SlaMonitorService @Autowired constructor(
         }
 
         val errorSql =
-            "SELECT sum(total_count) FROM CodeccMonitor_reduce WHERE errorCode!='0' AND time>${startTime}000000 AND time<${endTime}000000 AND bgId=$bgId GROUP BY errorCode"
+            "SELECT sum(total_count) FROM CodeccMonitor_reduce WHERE errorCode!='0' AND time>${startTime}000000 AND time<${endTime}000000 AND bgId='$bgId' GROUP BY errorCode"
         val errorQueryResult = influxdbClient.select(errorSql)
         if (null != errorQueryResult && !errorQueryResult.hasError()) {
             errorQueryResult.results.forEach { result ->
