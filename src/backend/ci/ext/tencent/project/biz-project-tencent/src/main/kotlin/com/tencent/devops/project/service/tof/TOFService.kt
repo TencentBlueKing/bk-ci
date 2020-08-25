@@ -81,12 +81,12 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
 
     private val userInfoCache = CacheBuilder.newBuilder()
         .maximumSize(50000)
-        .expireAfterWrite(12, TimeUnit.HOURS)
+        .expireAfterWrite(24, TimeUnit.HOURS)
         .build<String/*userId*/, StaffInfoResponse>()
 
     private val userDeptCache = CacheBuilder.newBuilder()
         .maximumSize(50000)
-        .expireAfterWrite(12, TimeUnit.HOURS)
+        .expireAfterWrite(24, TimeUnit.HOURS)
         .build<String/*userId*/, UserDeptDetail>()
 
     fun getUserDeptDetail(operator: String?, userId: String, bk_ticket: String): UserDeptDetail {
@@ -244,7 +244,7 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
             var info = userInfoCache.getIfPresent(userId)
             if (info == null) {
                 logger.info("[$operator|$userId|$bk_ticket] Start to get the staff info")
-                val path = "get_staff_info"
+                val path = "get_staff_info_by_login_name"
                 val responseContent = request(
                         path, StaffInfoRequest(
                         tofAppCode!!,
