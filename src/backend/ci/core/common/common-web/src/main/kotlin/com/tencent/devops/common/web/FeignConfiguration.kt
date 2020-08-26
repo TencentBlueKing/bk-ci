@@ -55,7 +55,7 @@ class FeignConfiguration {
                 requestTemplate.header(languageHeaderName, languageHeaderValue) // 设置Accept-Language请求头
             }
             val bsid = request.getHeader(TraceTag.BIZID)
-            if(bsid.isNullOrEmpty()) {
+            if (bsid.isNullOrEmpty()) {
                 requestTemplate.header(TraceTag.BIZID, MDC.get(TraceTag.BIZID)) // 设置Accept-Language请求头
             }
             val cookies = request.cookies

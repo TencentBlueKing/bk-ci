@@ -1918,7 +1918,6 @@ class PipelineRuntimeService @Autowired constructor(
         }
     }
 
-
     private fun addTraceVar(projectId: String, pipelineId: String, buildId: String) {
         val traceMap = mutableMapOf<String, String>()
         traceMap[TraceTag.TRACE_HEADER_DEVOPS_BIZID] = MDC.get(TraceTag.BIZID)
