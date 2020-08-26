@@ -29,7 +29,7 @@ package com.tencent.devops.common.api.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("第三方Agent数据返回包装模型")
+@ApiModel("插件错误信息")
 data class ErrorInfo(
     @ApiModelProperty("插件ID", required = false)
     val taskId: String,

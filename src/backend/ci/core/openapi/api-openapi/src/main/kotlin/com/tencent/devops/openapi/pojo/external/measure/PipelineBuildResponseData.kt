@@ -26,6 +26,7 @@
 
 package com.tencent.devops.openapi.pojo.external.measure
 
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
 import io.swagger.annotations.ApiModel
@@ -75,10 +76,6 @@ data class PipelineBuildResponseData(
     val templateId: String? = "",
     @ApiModelProperty("model", required = false)
     val model: String? = "",
-    @ApiModelProperty("错误类型", required = false)
-    val errorType: String? = null,
-    @ApiModelProperty("错误码标识", required = false)
-    val errorCode: Int? = null,
-    @ApiModelProperty("错误信息描述", required = false)
-    val errorMsg: String? = null
+    @ApiModelProperty("插件错误信息", required = false)
+    val errorInfo: List<ErrorInfo>? = null
 )
