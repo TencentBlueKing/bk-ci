@@ -72,6 +72,7 @@ abstract class BaseListener<in T : IPipelineEvent>(val pipelineEventDispatcher: 
                 pipelineEventDispatcher.dispatch(event)
                 logger.warn("[${event.pipelineId}]|FAIL|event=$event")
             }
+            MDC.remove(TraceTag.BIZID)
         }
     }
 
