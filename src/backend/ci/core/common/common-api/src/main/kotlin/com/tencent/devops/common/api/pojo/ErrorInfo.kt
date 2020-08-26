@@ -38,7 +38,7 @@ data class ErrorInfo(
     @ApiModelProperty("插件编号", required = false)
     val atomCode: String,
     @ApiModelProperty("错误类型", required = false)
-    val errorType: ErrorType,
+    val errorType: Int,
     @ApiModelProperty("错误码", required = true)
     val errorCode: Int,
     @ApiModelProperty("错误信息", required = false)
