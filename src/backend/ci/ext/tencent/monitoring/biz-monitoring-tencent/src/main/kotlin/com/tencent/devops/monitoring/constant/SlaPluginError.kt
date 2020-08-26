@@ -6,7 +6,7 @@ enum class SlaPluginError(
 ) {
     DEFAULT_ERROR("2199001", "插件默认异常"),
     CONFIG_ERROR("2199002", "用户配置有误"),
-    DEPEND_ERROR("2199002", "用户配置有误"),
+    DEPEND_ERROR("2199003", "插件依赖异常"),
     EXEC_FAILED("2199004", "用户任务执行失败"),
     TIMEOUT("2199005", "用户任务执行超时失败（自行限制）"),
     GITCI_ERROR("2199006", "工蜂服务异常"),
