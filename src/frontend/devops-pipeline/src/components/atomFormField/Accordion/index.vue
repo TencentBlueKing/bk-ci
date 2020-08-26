@@ -1,7 +1,7 @@
 <template>
     <div :class="{ &quot;soda-accordion&quot;: true, &quot;is-danger&quot;: isError, &quot;showCheckbox&quot;: showCheckbox }">
         <header :active="isShow" @click="toggleContent" class="header">
-            <i class="devops-icon icon-angle-down" />
+            <i class="devops-icon icon-angle-right" />
             <slot name="header"></slot>
         </header>
         <transition name="slideLeft">
@@ -94,14 +94,14 @@
             align-items: center;
             cursor: pointer;
 
-            .icon-angle-down {
+            .icon-angle-right {
                 display: block;
                 margin: 2px 12px 0 0;
                 transition: all 0.3s ease;
             }
             &[active] {
-                .icon-angle-down {
-                    transform: rotate(-180deg)
+                .icon-angle-right {
+                    transform: rotate(90deg)
                 }
             }
         }

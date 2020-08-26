@@ -1413,7 +1413,8 @@ class TemplateService @Autowired constructor(
                 labels = labels,
                 waitQueueTimeMinute = waitQueueTimeMinute,
                 maxQueueSize = maxQueueSize,
-                hasPermission = hasPermission
+                hasPermission = hasPermission,
+                maxPipelineResNum = maxPipelineResNum
             )
         }
     }
