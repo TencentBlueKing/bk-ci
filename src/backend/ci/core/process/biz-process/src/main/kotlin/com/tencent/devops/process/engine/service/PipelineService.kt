@@ -1891,7 +1891,7 @@ class PipelineService @Autowired constructor(
         model.stages.forEachIndexed { index, stage ->
             stage.id = stage.id ?: VMUtils.genStageId(index + 1)
             if (index == 0) {
-                stages.add(Stage(listOf(fixedTriggerContainer), stage.id))
+                stages.add(stage.copy(containers = listOf(fixedTriggerContainer)))
             } else {
                 model.stages.forEach {
                     if (it.name.isNullOrBlank()) it.name = it.id
