@@ -26,10 +26,9 @@
 
 package com.tencent.devops.common.web
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
-import com.tencent.devops.common.security.jwt.JwtManager
+import com.tencent.devops.common.service.trace.TraceTag
 import feign.RequestInterceptor
-import org.springframework.beans.factory.annotation.Autowired
+import org.slf4j.MDC
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.context.request.RequestContextHolder
@@ -42,7 +41,7 @@ class FeignConfiguration {
      * feign调用拦截器
      */
     @Bean
-    fun requestInterceptor(@Autowired jwtManager: JwtManager): RequestInterceptor {
+    fun requestInterceptor(): RequestInterceptor {
         return RequestInterceptor { requestTemplate ->
             val attributes =
                 RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes ?: return@RequestInterceptor
@@ -52,6 +51,10 @@ class FeignConfiguration {
             if (!languageHeaderValue.isNullOrBlank()) {
                 requestTemplate.header(languageHeaderName, languageHeaderValue) // 设置Accept-Language请求头
             }
+            val bsid = request.getHeader(TraceTag.BIZID)
+            if(bsid.isNullOrEmpty()) {
+                requestTemplate.header(TraceTag.BIZID, MDC.get(TraceTag.BIZID)) // 设置Accept-Language请求头
+            }
             val cookies = request.cookies
             if (cookies != null && cookies.isNotEmpty()) {
                 val cookieBuilder = StringBuilder()
@@ -59,13 +62,6 @@ class FeignConfiguration {
                     cookieBuilder.append(it.name).append("=").append(it.value).append(";")
                 }
                 requestTemplate.header("Cookie", cookieBuilder.toString()) // 设置cookie信息
-            }
-            // 增加X-DEVOPS-JWT验证头部
-            if (!requestTemplate.headers().containsKey(AUTH_HEADER_DEVOPS_JWT_TOKEN)) {
-                // 只有jwt验证发送启动的时候才设置头部
-                if (jwtManager.isSendEnable()) {
-                    requestTemplate.header(AUTH_HEADER_DEVOPS_JWT_TOKEN, jwtManager.getToken() ?: "")
-                }
             }
         }
     }

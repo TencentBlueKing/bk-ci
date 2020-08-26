@@ -30,7 +30,9 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 
 abstract class BaseListener<in T : IPipelineEvent>(val pipelineEventDispatcher: PipelineEventDispatcher) :
     Listener<T> {
@@ -47,6 +49,11 @@ abstract class BaseListener<in T : IPipelineEvent>(val pipelineEventDispatcher: 
     override fun execute(event: T) {
         var result = false
         try {
+            val traceId = MDC.get(TraceTag.BIZID)
+            if (traceId == null || traceId.isNullOrEmpty()) {
+                MDC.put(TraceTag.BIZID, event.traceId)
+                logger.info("baseListen put bsid: ${event.traceId}")
+            }
             run(event)
             result = true
         } catch (ignored: Throwable) {

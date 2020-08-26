@@ -34,6 +34,8 @@ dependencies {
     compile "org.springframework.cloud:spring-cloud-starter-consul-discovery"
     compile "io.github.openfeign:feign-okhttp"
     compile group: 'org.apache.skywalking', name: 'apm-toolkit-log4j-2.x', version: '6.6.0'
+    compile group: 'org.apache.skywalking', name: 'apm-toolkit-trace', version: '6.6.0'
+    compile group: 'org.apache.skywalking', name: 'apm-toolkit-opentracing', version: '6.6.0'
     compile "org.jolokia:jolokia-core"
     compile "javax.servlet:javax.servlet-api"
 

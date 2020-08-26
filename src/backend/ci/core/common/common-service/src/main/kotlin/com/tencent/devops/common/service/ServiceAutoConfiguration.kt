@@ -30,11 +30,13 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.gray.MacOSGray
 import com.tencent.devops.common.service.gray.RepoGray
+import com.tencent.devops.common.service.trace.TraceFilter
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient
 import org.springframework.cloud.consul.ConsulAutoConfiguration
+import org.springframework.cloud.netflix.feign.encoding.FeignClientEncodingProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.PropertySource
@@ -68,4 +70,10 @@ class ServiceAutoConfiguration {
 
     @Bean
     fun macosGray() = MacOSGray()
+
+    @Bean
+    fun traceFilter() = TraceFilter()
+
+    @Bean
+    fun feignClientEncodingProperties() = FeignClientEncodingProperties()
 }
