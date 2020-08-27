@@ -250,7 +250,7 @@
             toRelativeStore (row) {
                 if (!this.isManagerUser) return
 
-                const href = `${WEB_URL_PIRFIX}/store/workList/template?projectCode=${this.projectId}&templateId=${row.templateId}`
+                const href = `${WEB_URL_PIRFIX}/store/templateWork`
                 window.open(href, '_blank')
             },
 
