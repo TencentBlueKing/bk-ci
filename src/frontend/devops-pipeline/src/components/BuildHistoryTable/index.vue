@@ -326,7 +326,7 @@
                 })
             },
             handleChangeCurrent (page) {
-                if (this.CurrentPage === page) return
+                if (this.currentPage === page) return
                 this.saveCurrentPageInfo(page)
                 this.$emit('change-currentPage-limit', {
                     page: page,
