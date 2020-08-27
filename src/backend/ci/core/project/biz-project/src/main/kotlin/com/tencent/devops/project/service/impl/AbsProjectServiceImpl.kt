@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
@@ -70,7 +71,7 @@ import java.util.ArrayList
 import java.util.regex.Pattern
 
 abstract class AbsProjectServiceImpl @Autowired constructor(
-    private val projectPermissionService: ProjectPermissionService,
+    val projectPermissionService: ProjectPermissionService,
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
     private val projectJmxApi: ProjectJmxApi,
@@ -198,6 +199,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         validate(ProjectValidateType.project_name, projectUpdateInfo.projectName, projectUpdateInfo.englishName)
         val startEpoch = System.currentTimeMillis()
         var success = false
+        validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
         try {
             try {
                 dslContext.transaction { configuration ->
@@ -395,6 +397,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("Update the logo of project $projectId")
         val project = projectDao.get(dslContext, projectId)
+        validatePermission(projectId, userId, AuthPermission.EDIT)
         if (project != null) {
             var logoFile: File? = null
             try {
@@ -425,6 +428,19 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_PROJECT_FAIL))
         }
         return Result(true)
+    }
+
+    private fun validatePermission(projectCode: String ,userId: String, permission: AuthPermission) : Boolean {
+        val validate = projectPermissionService.verifyUserProjectPermission(
+                projectCode = projectCode,
+                userId = userId,
+                permission = permission
+        )
+        if(!validate) {
+            logger.warn("$projectCode| $userId| ${permission.value} validatePermission fail")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+        }
+        return true
     }
 
     companion object {

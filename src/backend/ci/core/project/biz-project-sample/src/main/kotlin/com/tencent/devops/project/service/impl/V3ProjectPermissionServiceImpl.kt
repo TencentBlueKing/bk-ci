@@ -51,7 +51,6 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun modifyResource(projectCode: String, projectName: String) {
-        val validatePermission = authPermissionApi.validateUserResourcePermission(userId, projectAuthServiceCode, AuthResourceType.PROJECT, projectCode, AuthPermission.CREATE)
         return
     }
 
@@ -86,7 +85,20 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         )
     }
 
+    override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String, permission: AuthPermission): Boolean {
+        return authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = projectAuthServiceCode,
+                resourceType = projectResourceType,
+                resourceCode = projectCode,
+                projectCode = projectCode,
+                permission = permission
+        )
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
+        val projectResourceType = AuthResourceType.PROJECT
+
     }
 }
