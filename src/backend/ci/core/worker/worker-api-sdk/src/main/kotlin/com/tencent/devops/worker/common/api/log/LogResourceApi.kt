@@ -52,8 +52,8 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
         }
     }
 
-    override fun finishLog(tag: String?, jobId: String?, executeCount: Int?): Result<Boolean> {
-        val path = "/log/api/build/logs/status?finished=true&tag=$tag&jobId=$jobId&executeCount=$executeCount"
+    override fun finishLog(tag: String?, jobId: String?, executeCount: Int?, subTag: String?): Result<Boolean> {
+        val path = "/log/api/build/logs/status?finished=true&tag=$tag&subTag=$subTag&jobId=$jobId&executeCount=$executeCount"
         val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), "")
         val request = buildPut(path, requestBody)
         val responseContent = request(request, "上报结束状态失败")

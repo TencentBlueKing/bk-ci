@@ -33,5 +33,5 @@ import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 interface LogSDKApi : WorkerRestApiSDK {
     fun addLogMultiLine(logMessages: List<LogMessage>): Result<Boolean>
 
-    fun finishLog(tag: String?, jobId: String?, executeCount: Int?): Result<Boolean>
+    fun finishLog(tag: String?, jobId: String?, executeCount: Int?, subTag: String?): Result<Boolean>
 }

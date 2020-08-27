@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.logger
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.worker.common.LOG_SUBTAG_FINISH_FLAG
 import com.tencent.devops.worker.common.LOG_SUBTAG_FLAG
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.log.LogSDKApi
@@ -157,7 +158,12 @@ object LoggerService {
             val list = message.removePrefix(LOG_SUBTAG_FLAG).split(LOG_SUBTAG_FLAG)
             subTag = list.first()
             realMessage = list.last()
+            if (realMessage.startsWith(LOG_SUBTAG_FINISH_FLAG)) {
+                finishLog(elementId, jobId, executeCount, subTag)
+                realMessage = realMessage.removePrefix(LOG_SUBTAG_FINISH_FLAG)
+            }
         }
+
         val logMessage = LogMessage(
             message = realMessage,
             timestamp = System.currentTimeMillis(),
@@ -243,10 +249,10 @@ object LoggerService {
         }
     }
 
-    private fun finishLog(tag: String?, jobId: String?, executeCount: Int?) {
+    private fun finishLog(tag: String?, jobId: String?, executeCount: Int?, subTag: String? = null) {
         try {
             logger.info("Start to finish the log")
-            val result = logResourceApi.finishLog(tag, jobId, executeCount)
+            val result = logResourceApi.finishLog(tag, jobId, executeCount, subTag)
             if (result.isNotOk()) {
                 logger.error("上报日志状态日志失败：${result.message}")
             }
