@@ -77,7 +77,7 @@ class MonitorNotifyJob @Autowired constructor(
      */
     @Scheduled(cron = "0 0 10 * * ?")
     fun notifyDaily() {
-        if (profile.isProd()) {
+        if (profile.isProd() && !profile.isProdGray()) {
             logger.info("profile is prod , no start")
             return
         }
