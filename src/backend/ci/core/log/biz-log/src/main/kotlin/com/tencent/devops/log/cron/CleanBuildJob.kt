@@ -116,7 +116,7 @@ class CleanBuildJob @Autowired constructor(
             val indexDaoCnt = indexDaoV2.delete(context, buildIds)
             val statusCnt = logStatusDao.delete(context, buildIds)
             val subTagCnt = logTagDao.delete(context, buildIds)
-            logger.info("[$indexDaoCnt|$statusCnt] Delete the builds")
+            logger.info("[$indexDaoCnt|$statusCnt|$subTagCnt] Delete the builds")
         }
     }
 
