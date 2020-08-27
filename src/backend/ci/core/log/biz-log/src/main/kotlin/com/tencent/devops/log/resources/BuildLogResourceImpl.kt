@@ -59,6 +59,7 @@ class BuildLogResourceImpl @Autowired constructor(
             buildId = buildId,
             message = logMessage.message,
             tag = logMessage.tag,
+            subTag = logMessage.subTag,
             jobId = logMessage.jobId,
             executeCount = logMessage.executeCount ?: 1
         )
@@ -73,6 +74,7 @@ class BuildLogResourceImpl @Autowired constructor(
             buildId = buildId,
             message = logMessage.message,
             tag = logMessage.tag,
+            subTag = logMessage.subTag,
             jobId = logMessage.jobId,
             executeCount = logMessage.executeCount ?: 1
         )
@@ -101,7 +103,7 @@ class BuildLogResourceImpl @Autowired constructor(
             buildId = buildId,
             finished = false,
             tag = tag ?: "",
-            subTag = subTag ?: "",
+            subTag = subTag,
             jobId = jobId ?: "",
             executeCount = executeCount
         )
@@ -123,7 +125,7 @@ class BuildLogResourceImpl @Autowired constructor(
             buildId = buildId,
             finished = finished,
             tag = tag ?: "",
-            subTag = subTag ?: "",
+            subTag = subTag,
             jobId = jobId ?: "",
             executeCount = executeCount
         )

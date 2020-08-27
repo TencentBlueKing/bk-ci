@@ -179,7 +179,7 @@ class BuildLogPrinter(
             buildId = buildId,
             finished = finished,
             tag = tag,
-            subTag = subTag ?: "",
+            subTag = subTag,
             jobId = jobId ?: "",
             executeCount = executeCount
         ))
