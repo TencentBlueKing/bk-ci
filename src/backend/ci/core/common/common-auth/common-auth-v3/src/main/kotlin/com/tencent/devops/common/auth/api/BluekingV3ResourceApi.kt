@@ -52,6 +52,14 @@ class BluekingV3ResourceApi @Autowired constructor(
         resourceName: String,
         authGroupList: List<BkAuthGroup>?
     ) {
+        createResource(
+                user = user,
+                serviceCode = serviceCode,
+                resourceType = resourceType,
+                projectCode = projectCode,
+                resourceCode = resourceCode,
+                resourceName = resourceName
+        )
     }
 
     override fun batchCreateResource(
@@ -93,6 +101,14 @@ class BluekingV3ResourceApi @Autowired constructor(
         resourceCode: String,
         resourceName: String
     ) {
+        createResource(
+                user = user,
+                serviceCode = serviceCode,
+                resourceType = resourceType,
+                projectCode = projectCode,
+                resourceCode = resourceCode,
+                resourceName = resourceName
+        )
     }
 
     override fun createResource(

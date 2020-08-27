@@ -75,4 +75,5 @@ object ProjectMessageCode {
     const val ORG_TYPE_ERROR = "2119030" // 组织类型有误
     const val ORG_NOT_PROJECT = "2119031" // {0}该组织下无项目
     const val USER_NOT_PROJECT_USER = "2119032" // 目标用户非该项目成员
+    const val USER_NOT_CREATE_PERM = "2119033" // 无创建项目权限，请申请权限
 }
