@@ -1408,6 +1408,22 @@ class MarketImageDao @Autowired constructor(
         return visibleImageCodes
     }
 
+    /**
+     * 获取可见镜像Code，无部门信息
+     */
+    fun getVisibleImageCodesWithoutDept(
+        dslContext: DSLContext,
+        projectCode: String
+    ): List<String> {
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val visibleImageCodes = dslContext.select(tImageFeature.IMAGE_CODE).from(tImageFeature)
+            .fetch()?.map {
+                it.value1()
+            } ?: emptyList()
+        logger.info("Output:visibleImageCodes:$visibleImageCodes")
+        return visibleImageCodes
+    }
+
     fun getTestingImageCodes(
         dslContext: DSLContext,
         projectTestImageCodes: Collection<String>

@@ -96,6 +96,7 @@ class ImageProjectService @Autowired constructor(
     private val storeUserService: StoreUserService,
     private val imageDao: ImageDao,
     private val marketImageDao: MarketImageDao,
+    private val imageVisibleService: ImageVisibleService,
     private val imageAgentTypeDao: ImageAgentTypeDao,
     private val marketImageFeatureDao: MarketImageFeatureDao,
     private val imageLabelService: ImageLabelService,
@@ -541,7 +542,7 @@ class ImageProjectService @Autowired constructor(
         testImageCodes = marketImageDao.getTestingImageCodes(dslContext, testImageCodes)?.map {
             it.value1()
         } ?: emptyList()
-        val visibleImageCodes = marketImageDao.getVisibleImageCodes(dslContext, projectCode, userDeptList)
+        val visibleImageCodes = imageVisibleService.getVisibleImageCodes(dslContext, projectCode, userDeptList)
         val agentTypeImageCodes = imageAgentTypeDao.getImageCodesByAgentType(dslContext, agentType)?.map { it.value1() }
             ?: emptyList()
         // （1）未安装、可安装、agentType符合的镜像
