@@ -44,10 +44,7 @@ const state = {
     hasCreatePermission: false,
     pipelineSetting: {},
     projectGroupAndUsers: [],
-    pipelineAuthority: {},
-    pagingConfigOneCurrentPage: null,
-    currentPage: null,
-    pipelineID: null
+    pipelineAuthority: {}
 }
 
 const getters = {

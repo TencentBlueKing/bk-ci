@@ -244,6 +244,10 @@
             this.fetchPipelineList()
             this.$store.dispatch('requestProjectDetail', { projectId: this.projectId })
         },
+        beforeRouteLeave (to, from, next) {
+            if (to.name === 'pipelinesList') this.$store.dispatch('pipelines/setCurrentPage', 1)
+            next()
+        },
         methods: {
             ...mapActions('pipelines', [
                 'requestPipelinesList',
@@ -393,7 +397,7 @@
             toExecute (...args) {
                 const goDetail = ['pipelinesEdit', 'pipelinesDetail'].indexOf(this.$route.name) > -1
                 this.executePipeline(...args, goDetail)
-                bus.$emit('set-currentPage', 1)
+                // bus.$emit('set-currentPage', 1)
             }
         }
     }

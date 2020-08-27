@@ -188,8 +188,7 @@
                 retryingMap: {},
                 stoping: {},
                 pagingConfigOne: {
-                    currentPage: 1,
-                    limit: Number(localStorage.getItem('pagingConfigOne-limit')) || 0,
+                    limit: Number(localStorage.getItem('pagingConfigOne-limit')),
                     count: 0,
                     align: 'center',
                     showLimit: true,
@@ -293,14 +292,6 @@
             buildList () {
                 this.resetRemark()
             },
-            currentPage: {
-                handler (val) {
-                    if (val) {
-                        this.pagingConfigOne.currentPage = val
-                    }
-                },
-                immediate: true
-            },
             count (newVal) {
                 this.pagingConfigOne.count = newVal
             }
@@ -321,7 +312,7 @@
                 this.pagingConfigOne.limit = limit
                 this.$store.dispatch('pipelines/setCurrentPage', 1)
                 this.$emit('change-currentPage-limit', {
-                    page: this.pagingConfigOne.currentPage,
+                    page: this.currentPage,
                     pageSize: limit
                 })
             },

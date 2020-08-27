@@ -35,8 +35,6 @@ const createRouter = (store) => {
     })
 
     router.beforeEach((to, from, next) => {
-        if (from.name === 'pipelinesList') store.dispatch('pipelines/setCurrentPage', 1)
-
         next()
     })
 
