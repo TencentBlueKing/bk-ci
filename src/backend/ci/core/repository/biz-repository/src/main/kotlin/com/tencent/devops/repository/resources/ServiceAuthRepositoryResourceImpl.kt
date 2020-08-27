@@ -10,7 +10,7 @@ import com.tencent.devops.repository.service.RepositoryService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceAuthResourceImpl @Autowired constructor(
+class ServiceAuthRepositoryResourceImpl @Autowired constructor(
     private val repositoryService: RepositoryService
 ) : ServiceAuthRepositoryResource {
 

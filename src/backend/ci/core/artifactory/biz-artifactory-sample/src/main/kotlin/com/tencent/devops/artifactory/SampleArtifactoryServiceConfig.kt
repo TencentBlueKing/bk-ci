@@ -24,22 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources
+package com.tencent.devops.artifactory
 
-import com.tencent.devops.artifactory.api.user.UserReportResource
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
-import com.tencent.devops.artifactory.service.ArchiveFileService
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
+import com.tencent.devops.artifactory.service.impl.DiskArchiveFileServiceImpl
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 
-@RestResource
-class UserReportResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService)
-    : UserReportResource {
-    override fun get(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, path: String) {
-        val filePath = "${FileTypeEnum.BK_REPORT.fileType}/$projectId/$pipelineId/$buildId/$elementId/$path"
-        val response = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).response!!
-        archiveFileService.downloadFile(filePath, response)
-    }
+@Configuration
+class SampleArtifactoryServiceConfig {
+
+    @Bean
+    @Primary
+    fun archiveFileService() = DiskArchiveFileServiceImpl()
 }

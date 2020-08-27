@@ -47,7 +47,7 @@ import org.springframework.context.annotation.Configuration
  * 流水线构建扩展配置
  */
 @Configuration
-class PipelineExtendConfiguration {
+class ArtifactoryPipelineExtendConfiguration {
 
     @Bean
     fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {

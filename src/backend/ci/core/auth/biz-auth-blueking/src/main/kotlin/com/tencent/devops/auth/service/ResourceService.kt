@@ -18,7 +18,7 @@ import com.tencent.devops.auth.utils.ActionUtils
 import com.tencent.devops.environment.api.RemoteEnvResource
 import com.tencent.devops.environment.api.RemoteNodeResource
 import com.tencent.devops.process.api.service.ServiceAuthPipelineResource
-import com.tencent.devops.project.api.service.ServiceAuthResource
+import com.tencent.devops.project.api.service.ServiceAuthProjectResource
 import com.tencent.devops.repository.api.ServiceAuthRepositoryResource
 import com.tencent.devops.ticket.api.ServiceAuthCredentialResource
 
@@ -32,7 +32,7 @@ class ResourceService @Autowired constructor(
         logger.info("getProjectList method $method, page $page token $token")
         checkToken(token)
         val projectRecords =
-            client.get(ServiceAuthResource::class).list(page.offset!!.toInt(), page.limit!!.toInt()).data
+            client.get(ServiceAuthProjectResource::class).list(page.offset!!.toInt(), page.limit!!.toInt()).data
         logger.info("projectRecords $projectRecords")
         val count = projectRecords?.count ?: 0L
         val projectInfo = mutableListOf<InstanceInfoDTO>()
