@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.dao.v2
+package com.tencent.devops.log.dao
 
 import com.tencent.devops.model.log.Tables.T_LOG_SUBTAGS
 import org.jooq.DSLContext
@@ -61,6 +61,17 @@ class LogTagDao {
                 .where(BUILD_ID.eq(buildId))
                 .and(TAG.eq(tag))
                 .fetchOne()?.subTags
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        buildIds: Set<String>
+    ): Int {
+        with(T_LOG_SUBTAGS) {
+            return dslContext.deleteFrom(this)
+                .where(BUILD_ID.`in`(buildIds))
+                .execute()
         }
     }
 }

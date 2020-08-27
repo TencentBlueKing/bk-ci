@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS `T_LOG_STATUS`
     `FINISHED`      bit(1)      NOT NULL DEFAULT b'0' COMMENT 'build is finished or not',
     `CREATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
     `JOB_ID`        varchar(64)          DEFAULT NULL,
-    PRIMARY KEY (`ID`),
+    PRIMARY KEY (`ID`, `CREATE_TIME`),
     UNIQUE KEY `BUILD_ID_2` (`BUILD_ID`, `TAG`, `SUB_TAG`, `EXECUTE_COUNT`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 

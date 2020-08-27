@@ -26,7 +26,7 @@
 
 package com.tencent.devops.log.service.v2
 
-import com.tencent.devops.log.dao.v2.LogStatusDaoV2
+import com.tencent.devops.log.dao.LogStatusDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -34,7 +34,7 @@ import org.springframework.stereotype.Service
 @Service
 class LogStatusService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val logStatusDaoV2: LogStatusDaoV2
+    private val logStatusDao: LogStatusDao
 ) {
 
     fun finish(
@@ -45,7 +45,7 @@ class LogStatusService @Autowired constructor(
         executeCount: Int?,
         finish: Boolean
     ) {
-        logStatusDaoV2.finish(
+        logStatusDao.finish(
             dslContext = dslContext,
             buildId = buildId,
             tag = tag,
@@ -64,9 +64,9 @@ class LogStatusService @Autowired constructor(
         executeCount: Int?
     ): Boolean {
         return if (jobId.isNullOrBlank()) {
-            logStatusDaoV2.isFinish(dslContext, buildId, tag, subTag, executeCount)
+            logStatusDao.isFinish(dslContext, buildId, tag, subTag, executeCount)
         } else {
-            val logStatusList = logStatusDaoV2.listFinish(dslContext, buildId, executeCount)
+            val logStatusList = logStatusDao.listFinish(dslContext, buildId, executeCount)
             logStatusList?.firstOrNull { it.jobId == jobId && it.tag.startsWith("stopVM-") }?.finished == true
         }
     }

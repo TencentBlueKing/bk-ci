@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.dao.v2
+package com.tencent.devops.log.dao
 
 import com.tencent.devops.model.log.tables.TLogStatus
 import com.tencent.devops.model.log.tables.records.TLogStatusRecord

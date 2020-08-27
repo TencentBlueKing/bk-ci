@@ -29,7 +29,7 @@ package com.tencent.devops.log.service.v2
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.dao.v2.LogTagDao
+import com.tencent.devops.log.dao.LogTagDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
