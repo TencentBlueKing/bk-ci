@@ -26,7 +26,6 @@
 
 package com.tencent.devops.openapi.pojo.external.measure
 
-import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
 import io.swagger.annotations.ApiModel
