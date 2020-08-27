@@ -40,5 +40,4 @@ class SampleImageVisibleService @Autowired constructor() : ImageVisibleService {
     override fun getVisibleImageCodes(dslContext: DSLContext, projectCode: String, userDeptList: List<Int>): List<String> {
         return marketImageDao.getVisibleImageCodesWithoutDept(dslContext, projectCode)
     }
-
 }
