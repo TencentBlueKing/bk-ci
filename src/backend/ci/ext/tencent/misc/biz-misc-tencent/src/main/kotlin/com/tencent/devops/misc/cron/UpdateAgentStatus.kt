@@ -29,7 +29,7 @@ package com.tencent.devops.misc.cron
 import com.tencent.devops.common.environment.agent.client.EsbAgentClient
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.DEFAULT_SYTEM_USER
-import com.tencent.devops.misc.dao.NodeDao
+import com.tencent.devops.misc.dao.EnvironmentNodeDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,7 +39,7 @@ import org.springframework.stereotype.Component
 @Component
 class UpdateAgentStatus @Autowired constructor(
     private val dslContext: DSLContext,
-    private val nodeDao: NodeDao,
+    private val nodeDao: EnvironmentNodeDao,
     private val redisOperation: RedisOperation,
     private val esbAgentClient: EsbAgentClient
 ) {
