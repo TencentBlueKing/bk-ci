@@ -215,7 +215,7 @@ class BuildLogPrinter(
             message = message,
             timestamp = System.currentTimeMillis(),
             tag = tag,
-            subTag = subTag ?: "",
+            subTag = subTag,
             jobId = jobId ?: "",
             logType = logType,
             executeCount = executeCount

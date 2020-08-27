@@ -35,7 +35,7 @@ import com.tencent.devops.common.log.pojo.enums.LogType
 data class LogMessageWithLineNo(
     val tag: String,
     val jobId: String = "",
-    val subTag: String = "",
+    val subTag: String? = null,
     val message: String,
     var timestamp: Long = 0,
     val logType: LogType = LogType.LOG,

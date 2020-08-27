@@ -1989,7 +1989,7 @@ class LogServiceV2 @Autowired constructor(
                 it.timestamp
             }
             if (!it.subTag.isNullOrBlank()) {
-                logTagService.saveSubTag(buildId, it.tag, it.subTag)
+                logTagService.saveSubTag(buildId, it.tag, it.subTag!!)
             }
             LogMessageWithLineNo(
                 tag = it.tag,

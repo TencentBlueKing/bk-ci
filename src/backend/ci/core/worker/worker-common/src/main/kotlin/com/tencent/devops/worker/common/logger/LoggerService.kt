@@ -152,7 +152,7 @@ object LoggerService {
     fun finishTask() = finishLog(elementId, jobId, executeCount)
 
     fun addNormalLine(message: String) {
-        var subTag = ""
+        var subTag: String? = null
         var realMessage = message
         if (message.startsWith(LOG_SUBTAG_FLAG)) {
             val list = message.removePrefix(LOG_SUBTAG_FLAG).split(LOG_SUBTAG_FLAG)

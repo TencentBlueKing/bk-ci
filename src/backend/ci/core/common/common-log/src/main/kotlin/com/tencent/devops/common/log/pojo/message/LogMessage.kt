@@ -36,10 +36,10 @@ data class LogMessage(
     val message: String,
     val timestamp: Long,
     val tag: String = "",
-    val subTag: String = "",
     val jobId: String = "",
     val logType: LogType = LogType.LOG,
-    val executeCount: Int? = null
+    val executeCount: Int? = null,
+    val subTag: String? = null
 ) {
     override fun toString(): String {
         return "LogMessage(tag='$tag', subTag='$subTag', jobId='$jobId', message='$message', " +
