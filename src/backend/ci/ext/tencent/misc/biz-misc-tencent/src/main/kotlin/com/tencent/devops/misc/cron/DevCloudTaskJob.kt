@@ -44,8 +44,8 @@ import com.tencent.devops.image.api.ServiceImageResource
 import com.tencent.devops.common.environment.agent.client.DevCloudClient
 import com.tencent.devops.common.environment.agent.pojo.devcloud.Registry
 import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.misc.dao.EnvNodeDao
-import com.tencent.devops.misc.dao.NodeDao
+import com.tencent.devops.misc.dao.EnvironmentEnvNodeDao
+import com.tencent.devops.misc.dao.EnvironmentNodeDao
 import com.tencent.devops.misc.dao.devcloud.DevCloudTaskDao
 import com.tencent.devops.misc.utils.NodeAuthUtils
 import com.tencent.devops.model.environment.tables.records.TDevCloudTaskRecord
@@ -69,8 +69,8 @@ class DevCloudTaskJob @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val devCloudTaskDao: DevCloudTaskDao,
-    private val nodeDao: NodeDao,
-    private val envNodeDao: EnvNodeDao,
+    private val nodeDao: EnvironmentNodeDao,
+    private val envNodeDao: EnvironmentEnvNodeDao,
     private val nodeAuthUtils: NodeAuthUtils,
     private val devCloudClient: DevCloudClient,
     private val redisOperation: RedisOperation,

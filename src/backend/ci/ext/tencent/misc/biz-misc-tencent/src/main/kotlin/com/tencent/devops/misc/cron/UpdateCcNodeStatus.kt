@@ -29,7 +29,7 @@ package com.tencent.devops.misc.cron
 import com.tencent.devops.common.environment.agent.client.EsbAgentClient
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.misc.dao.NodeDao
+import com.tencent.devops.misc.dao.EnvironmentNodeDao
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -42,7 +42,7 @@ import kotlin.math.min
 @Component
 class UpdateCcNodeStatus @Autowired constructor(
     private val dslContext: DSLContext,
-    private val nodeDao: NodeDao,
+    private val nodeDao: EnvironmentNodeDao,
     private val redisOperation: RedisOperation,
     private val esbAgentClient: EsbAgentClient
 ) {
