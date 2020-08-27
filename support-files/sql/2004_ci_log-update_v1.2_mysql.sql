@@ -8,6 +8,10 @@ DELIMITER <CI_UBF>
 CREATE PROCEDURE ci_log_schema_update()
 BEGIN
 
+    DECLARE db VARCHAR(100);
+    SET AUTOCOMMIT = 0;
+    SELECT DATABASE() INTO db;
+
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
