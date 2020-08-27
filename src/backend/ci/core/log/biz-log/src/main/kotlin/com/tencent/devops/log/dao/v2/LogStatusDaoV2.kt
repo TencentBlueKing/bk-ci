@@ -26,14 +26,14 @@
 
 package com.tencent.devops.log.dao.v2
 
-import com.tencent.devops.model.log.tables.TLogStatusV2
-import com.tencent.devops.model.log.tables.records.TLogStatusV2Record
+import com.tencent.devops.model.log.tables.TLogStatus
+import com.tencent.devops.model.log.tables.records.TLogStatusRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
-class LogStatusDaoV2 {
+class LogStatusDao {
 
     fun finish(
         dslContext: DSLContext,
@@ -44,7 +44,7 @@ class LogStatusDaoV2 {
         executeCount: Int?,
         finish: Boolean
     ) {
-        with(TLogStatusV2.T_LOG_STATUS_V2) {
+        with(TLogStatus.T_LOG_STATUS) {
             dslContext.insertInto(
                 this,
                 BUILD_ID,
@@ -68,8 +68,8 @@ class LogStatusDaoV2 {
         dslContext: DSLContext,
         buildId: String,
         executeCount: Int?
-    ): Result<TLogStatusV2Record>? {
-        with(TLogStatusV2.T_LOG_STATUS_V2) {
+    ): Result<TLogStatusRecord>? {
+        with(TLogStatus.T_LOG_STATUS) {
             return dslContext.selectFrom(this)
                     .where(BUILD_ID.eq(buildId))
                     .and(EXECUTE_COUNT.eq(executeCount ?: 1))
@@ -84,7 +84,7 @@ class LogStatusDaoV2 {
         subTags: String?,
         executeCount: Int?
     ): Boolean {
-        with(TLogStatusV2.T_LOG_STATUS_V2) {
+        with(TLogStatus.T_LOG_STATUS) {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(TAG.eq(tag ?: ""))
@@ -98,7 +98,7 @@ class LogStatusDaoV2 {
         dslContext: DSLContext,
         buildIds: Set<String>
     ): Int {
-        with(TLogStatusV2.T_LOG_STATUS_V2) {
+        with(TLogStatus.T_LOG_STATUS) {
             return dslContext.deleteFrom(this)
                 .where(BUILD_ID.`in`(buildIds))
                 .execute()
