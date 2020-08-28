@@ -44,5 +44,4 @@ class UserPipelineSettingResourceImpl @Autowired constructor(
     override fun getSetting(userId: String, projectId: String, pipelineId: String): Result<PipelineSetting> {
         return Result(pipelineSettingService.userGetSetting(userId, projectId, pipelineId))
     }
-
 }
