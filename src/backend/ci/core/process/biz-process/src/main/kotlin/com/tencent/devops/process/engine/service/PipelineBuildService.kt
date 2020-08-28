@@ -1593,7 +1593,6 @@ class PipelineBuildService(
                 model = model
             )
 
-
             val interceptResult = pipelineInterceptorChain.filter(InterceptData(readyToBuildPipelineInfo, fullModel, startType))
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
