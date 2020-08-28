@@ -42,6 +42,7 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -920,6 +921,25 @@ class GitService @Autowired constructor(
             throw RuntimeException("Git Token不正确")
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
+        }
+    }
+
+    // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
+    fun getRepoMembers(repoName: String, tokenType: TokenTypeEnum, token: String): List<GitMember> {
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/members")
+        logger.info("get repo member url: $url")
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                throw RuntimeException("get repo member error for $repoName(${it.code()}): ${it.message()}")
+            }
+            val data = it.body()!!.string()
+            logger.info("get repo member response body: $data")
+            return JsonUtil.to(data)
         }
     }
 
