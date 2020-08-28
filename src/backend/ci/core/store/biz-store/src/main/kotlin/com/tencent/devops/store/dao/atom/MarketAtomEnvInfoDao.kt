@@ -216,4 +216,14 @@ class MarketAtomEnvInfoDao {
                 .execute()
         }
     }
+
+    fun deleteAtomEnvInfo(dslContext: DSLContext, atomCode: String) {
+        val ta = TAtom.T_ATOM
+        val atomIds = dslContext.select(ta.ID).from(ta).fetch()
+        with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
+            dslContext.deleteFrom(this)
+                .where(ATOM_ID.`in`(atomIds))
+                .execute()
+        }
+    }
 }

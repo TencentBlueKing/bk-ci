@@ -28,6 +28,7 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEFAULT
 import com.tencent.devops.common.api.constant.REQUIRED
@@ -42,16 +43,18 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.dao.atom.AtomApproveRelDao
 import com.tencent.devops.store.dao.atom.AtomDao
+import com.tencent.devops.store.dao.atom.AtomLabelRelDao
 import com.tencent.devops.store.dao.atom.MarketAtomClassifyDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
+import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
-import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.AtomVersionListResp
@@ -61,7 +64,6 @@ import com.tencent.devops.store.pojo.atom.MarketMainItem
 import com.tencent.devops.store.pojo.atom.MarketMainItemLabel
 import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.MyAtomRespItem
-import com.tencent.devops.store.pojo.atom.UpdateAtomInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
@@ -76,6 +78,7 @@ import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.atom.MarketAtomStatisticService
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
+import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
@@ -108,6 +111,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     @Autowired
     lateinit var marketAtomClassifyDao: MarketAtomClassifyDao
     @Autowired
+    lateinit var marketAtomFeatureDao: MarketAtomFeatureDao
+    @Autowired
+    lateinit var marketAtomVersionLogDao: MarketAtomVersionLogDao
+    @Autowired
+    lateinit var atomApproveRelDao: AtomApproveRelDao
+    @Autowired
+    lateinit var atomLabelRelDao: AtomLabelRelDao
+    @Autowired
     lateinit var marketAtomStatisticService: MarketAtomStatisticService
     @Autowired
     lateinit var atomLabelService: AtomLabelService
@@ -124,9 +135,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     @Autowired
     lateinit var storeWebsocketService: StoreWebsocketService
     @Autowired
-    lateinit var client: Client
+    lateinit var storeCommonService: StoreCommonService
     @Autowired
-    lateinit var marketAtomFeatureDao: MarketAtomFeatureDao
+    lateinit var client: Client
 
     companion object {
         private val logger = LoggerFactory.getLogger(MarketAtomServiceImpl::class.java)
@@ -693,10 +704,29 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 arrayOf(atomCode)
             )
         }
+        // 删除仓库插件包文件
+        val initProjectCode =
+            storeProjectRelDao.getInitProjectCodeByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
+        val deleteAtomFileResult =
+            client.get(ServiceArchiveAtomResource::class).deleteAtomFile(initProjectCode!!, atomCode)
+        if (deleteAtomFileResult.isNotOk()) {
+            return deleteAtomFileResult
+        }
+        // 删除代码库
+        val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
+        val deleteAtomRepositoryResult = deleteAtomRepository(userId, initProjectCode, atomRecord!!.repositoryHashId)
+        if (deleteAtomRepositoryResult.isNotOk()) {
+            return deleteAtomRepositoryResult
+        }
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            marketAtomDao.updateAtomInfoByCode(context, userId, atomCode, UpdateAtomInfo(deleteFlag = true))
-            marketAtomFeatureDao.updateAtomFeature(context, userId, AtomFeatureRequest(atomCode = atomCode, deleteFlag = true))
+            marketAtomDao.deleteByAtomCode(context, atomCode)
+            atomApproveRelDao.deleteByAtomCode(context, atomCode)
+            marketAtomEnvInfoDao.deleteAtomEnvInfo(context, atomCode)
+            marketAtomFeatureDao.deleteAtomFeature(context, atomCode)
+            atomLabelRelDao.deleteByAtomCode(context, atomCode)
+            marketAtomVersionLogDao.deleteByAtomCode(context, atomCode)
+            storeCommonService.deleteStoreInfo(atomCode, StoreTypeEnum.ATOM.type.toByte())
         }
         return Result(true)
     }
