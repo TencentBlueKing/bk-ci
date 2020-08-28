@@ -104,7 +104,7 @@ class QueueInterceptor @Autowired constructor(
                 Response(data = BuildStatus.RUNNING)
             }
         } else {
-            val maxRunningQueue = setting.maxConcurrentRunningSize
+            val maxRunningQueue = setting.maxConRunningQueueSize
             if (maxRunningQueue <= (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount)) {
                 Response(status = ERROR_PIPELINE_QUEUE_FULL.toInt(), message = "流水线并行构建数量达到上限: $maxRunningQueue")
             } else {

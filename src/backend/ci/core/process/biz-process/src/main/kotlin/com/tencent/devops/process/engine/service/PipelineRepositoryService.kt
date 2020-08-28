@@ -802,7 +802,7 @@ class PipelineRepositoryService constructor(
                 waitQueueTimeMinute = t.waitQueueTimeSecond / 60,
                 maxQueueSize = t.maxQueueSize,
                 maxPipelineResNum = t.maxPipelineResNum,
-                maxConcurrentRunningSize = t.maxConRunningQueueSize
+                maxConRunningQueueSize = t.maxConRunningQueueSize
             )
         } else null
     }

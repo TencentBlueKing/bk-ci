@@ -44,5 +44,5 @@ data class PipelineSetting(
     val maxQueueSize: Int = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
     val hasPermission: Boolean? = null,
     val maxPipelineResNum: Int = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
-    val maxConcurrentRunningSize: Int = PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX // MULTIPLE类型时，并发构建数量限制
+    val maxConRunningQueueSize: Int = PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX // MULTIPLE类型时，并发构建数量限制
 )

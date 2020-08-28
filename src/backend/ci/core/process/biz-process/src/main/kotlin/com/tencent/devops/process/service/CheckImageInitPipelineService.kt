@@ -231,8 +231,8 @@ class CheckImageInitPipelineService @Autowired constructor(
                 labels = emptyList(),
                 waitQueueTimeMinute = DateTimeUtil.secondToMinute(settingRecord.waitQueueTimeSecond),
                 maxQueueSize = settingRecord.maxQueueSize,
-                maxPipelineResNum = settingRecord.get(MAX_PIPELINE_RES_NUM),
-                maxConcurrentRunningSize = settingRecord.get(MAX_CON_RUNNING_QUEUE_SIZE)
+                maxPipelineResNum = settingRecord.maxPipelineResNum,
+                maxConRunningQueueSize = settingRecord.maxConRunningQueueSize
             )
             pipelineService.saveSetting(
                 userId = userId,

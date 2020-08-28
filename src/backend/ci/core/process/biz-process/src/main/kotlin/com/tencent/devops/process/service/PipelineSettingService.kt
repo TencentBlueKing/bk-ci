@@ -147,7 +147,7 @@ class PipelineSettingService @Autowired constructor(
                         waitQueueTimeMinute = DateTimeUtil.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
                         maxQueueSize = it.get(MAX_QUEUE_SIZE),
                         maxPipelineResNum = it.get(MAX_PIPELINE_RES_NUM),
-                        maxConcurrentRunningSize = it.get(MAX_CON_RUNNING_QUEUE_SIZE)
+                        maxConRunningQueueSize = it.get(MAX_CON_RUNNING_QUEUE_SIZE)
                     )
                 }
             }
