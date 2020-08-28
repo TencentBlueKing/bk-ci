@@ -40,6 +40,6 @@ dependencies {
     compile project(":core:project:api-project")
     compile project(":ext:tencent:project:api-project-tencent")
     compile project(":core:artifactory:api-artifactory-push")
-
+    compile project(":ext:tencent:monitoring:api-monitoring-tencent")
 }
 
