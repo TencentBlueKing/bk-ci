@@ -1,18 +1,9 @@
 <template>
     <article v-bkloading="{ isLoading }" class="image-progress-home">
-        <h3 class="market-home-title">
-            <icon class="title-icon" name="color-logo-store" size="25" />
-            <p class="title-name">
-                <span class="back-home" @click="toAtomStore"> {{ $t('store.研发商店') }} </span>
-                <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des back-home" @click="toImageList"> {{ $t('store.工作台') }} </span>
-                <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des back-home" @click="toImageDetail"> {{imageDetail.imageCode}} </span>
-                <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des">{{$t('store.上架/升级镜像')}}</span>
-            </p>
-            <a class="title-work" target="_blank" href="http://tempdocklink/pages/viewpage.action?pageId=22118721"> {{ $t('store.镜像指引') }} </a>
-        </h3>
+        <bread-crumbs :bread-crumbs="navList" type="image">
+            <a class="g-title-work" target="_blank" href="http://tempdocklink/pages/viewpage.action?pageId=22118721"> {{ $t('store.镜像指引') }} </a>
+        </bread-crumbs>
+
         <main v-if="!isLoading" class="image-progress-main">
             <section class="image-progress-section">
                 <h3>
@@ -93,11 +84,13 @@
     import { mapActions } from 'vuex'
     import BuildLog from '@/components/Log'
     import detailInfo from '../components/detailInfo'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
 
     export default {
         components: {
             detailInfo,
-            BuildLog
+            BuildLog,
+            breadCrumbs
         },
 
         data () {
@@ -135,6 +128,15 @@
             isOver () {
                 const lastProgress = this.progressStatus[this.progressStatus.length - 1] || {}
                 return lastProgress.status === 'success'
+            },
+
+            navList () {
+                return [
+                    { name: this.$t('store.工作台') },
+                    { name: this.$t('store.容器镜像'), to: { name: 'imageWork' } },
+                    { name: this.imageDetail.imageCode, to: { name: 'show', params: { code: this.imageDetail.imageCode, type: 'image' } } },
+                    { name: this.$t('store.上架/升级镜像') }
+                ]
             }
         },
 
@@ -165,15 +167,6 @@
                 'requestImagePassTest',
                 'requestRecheckImage'
             ]),
-
-            toImageDetail () {
-                this.$router.push({
-                    name: 'imageOverview',
-                    params: {
-                        imageCode: this.imageDetail.imageCode
-                    }
-                })
-            },
 
             readLog () {
                 this.sideSliderConfig.show = true
@@ -262,10 +255,7 @@
 
             toImageList () {
                 this.$router.push({
-                    name: 'workList',
-                    params: {
-                        type: 'image'
-                    }
+                    name: 'imageWork'
                 })
             },
 
@@ -288,7 +278,7 @@
     }
 
     .image-progress-main {
-        height: calc(100% - 50px);
+        height: calc(100% - 5.6vh);
         overflow-y: auto;
     }
 
