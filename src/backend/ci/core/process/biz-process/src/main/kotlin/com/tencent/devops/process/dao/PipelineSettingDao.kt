@@ -129,7 +129,8 @@ class PipelineSettingDao {
                 WAIT_QUEUE_TIME_SECOND,
                 MAX_QUEUE_SIZE,
                 IS_TEMPLATE,
-                MAX_PIPELINE_RES_NUM
+                MAX_PIPELINE_RES_NUM,
+                MAX_CON_RUNNING_QUEUE_SIZE
             )
                 .values(
                     setting.projectId,
@@ -156,7 +157,8 @@ class PipelineSettingDao {
                     DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute),
                     setting.maxQueueSize,
                     isTemplate,
-                    setting.maxPipelineResNum
+                    setting.maxPipelineResNum,
+                    setting.maxConRunningQueueSize
                 ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
@@ -181,6 +183,7 @@ class PipelineSettingDao {
                 .set(MAX_QUEUE_SIZE, setting.maxQueueSize)
                 .set(IS_TEMPLATE, isTemplate)
                 .set(MAX_PIPELINE_RES_NUM, setting.maxPipelineResNum)
+                .set(MAX_CON_RUNNING_QUEUE_SIZE, setting.maxConRunningQueueSize)
                 .execute()
         }
     }
