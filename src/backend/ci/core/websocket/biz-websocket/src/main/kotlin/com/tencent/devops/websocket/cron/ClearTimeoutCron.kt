@@ -60,10 +60,9 @@ class ClearTimeoutCron(
         longSessionLog()
         val websocketCronLock = WebsocketCronLock(redisOperation)
         try {
-            if (websocketCronLock.tryLock()) {
-                logger.info("websocket cron get redis lock")
-                clearTimeoutSession()
-            }
+            websocketCronLock.lock()
+            logger.info("websocket cron get redis lock")
+            clearTimeoutSession()
         } finally {
             websocketCronLock.unlock()
             logger.info("websocket cron unlock")
