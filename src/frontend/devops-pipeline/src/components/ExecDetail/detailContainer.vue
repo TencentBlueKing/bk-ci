@@ -78,21 +78,6 @@
         color: #3c96ff;
     }
 
-    /deep/ .log-folder {
-        background-image: url("../../images/down.png");
-        display: inline-block;
-        height: 16px;
-        width: 16px;
-        position: absolute;
-        cursor: pointer;
-        transform: rotate(0deg);
-        transition: transform 200ms;
-        top: 0;
-        right: -20px;
-        &.show-all {
-            transform: rotate(-90deg);
-        }
-    }
     .log-home {
         position: fixed;
         top: 0;
