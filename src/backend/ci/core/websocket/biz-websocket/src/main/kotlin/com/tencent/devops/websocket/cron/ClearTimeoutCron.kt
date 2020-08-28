@@ -29,9 +29,11 @@ package com.tencent.devops.websocket.cron
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 import com.tencent.devops.common.websocket.utils.RedisUtlis.cleanPageSessionByPage
+import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.lock.WebsocketCronLock
 import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
@@ -40,9 +42,10 @@ import org.springframework.stereotype.Component
 
 @Component
 class ClearTimeoutCron(
-    private val redisOperation: RedisOperation,
-    private val objectMapper: ObjectMapper,
-    private val websocketService: WebsocketService
+        private val redisOperation: RedisOperation,
+        private val objectMapper: ObjectMapper,
+        private val websocketService: WebsocketService,
+        private val transferDispatch: TransferDispatch
 ) {
 
     companion object {
@@ -58,10 +61,12 @@ class ClearTimeoutCron(
         val websocketCronLock = WebsocketCronLock(redisOperation)
         try {
             if (websocketCronLock.tryLock()) {
+                logger.info("websocket cron get redis lock")
                 clearTimeoutSession()
             }
         } finally {
             websocketCronLock.unlock()
+            logger.info("websocket cron unlock")
         }
     }
 
@@ -100,7 +105,12 @@ class ClearTimeoutCron(
                                     RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
                                     logger.info("[clearTimeOutSession] sessionId:$sessionId,loadPage:$sessionPage,userId:$userId")
                                 }
-                                websocketService.removeCacheSession(sessionId)
+                                // 如果不在本实例，下发到mq,供其他实例删除对应实例维持的session
+                                if(websocketService.isCacheSession(sessionId)) {
+                                    websocketService.removeCacheSession(sessionId)
+                                } else {
+                                    clearSessionByMq(userId, sessionId)
+                                }
                             } else {
                                 newSessionList = if (newSessionList == null) {
                                     it
@@ -125,4 +135,15 @@ class ClearTimeoutCron(
         }
         LogUtils.costTime("websocket cron", nowTime)
     }
+
+    fun clearSessionByMq(userId: String, sessionId: String) {
+            transferDispatch.dispatch(
+                    ClearSessionEvent(
+                            userId = userId,
+                            sessionId = sessionId,
+                            page = null,
+                            transferData = mutableMapOf()
+                    )
+            )
+        }
 }
