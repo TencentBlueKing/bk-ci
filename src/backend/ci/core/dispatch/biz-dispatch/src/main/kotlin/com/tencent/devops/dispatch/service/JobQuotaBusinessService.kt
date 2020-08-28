@@ -251,7 +251,7 @@ class JobQuotaBusinessService @Autowired constructor(
                 logger.warn("Running job count:$runningJobCount, quota: $jobQuota, stop it.($pipelineId|$buildId|$vmSeqId)")
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "当前项目下正在执行的JOB数量已经达到配额最大值，正在执行JOB数量：$runningJobCount, 配额: $jobQuota",
+                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值，正在执行JOB数量：$runningJobCount, 配额: $jobQuota",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
@@ -262,7 +262,7 @@ class JobQuotaBusinessService @Autowired constructor(
             if (runningJobCount * 100 / jobQuota >= jobThreshold) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "当前项目下正在执行的JOB数量已经超过告警阈值，正在执行JOB数量：$runningJobCount，配额：$jobQuota，" +
+                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经超过告警阈值，正在执行JOB数量：$runningJobCount，配额：$jobQuota，" +
                         "告警阈值：${normalizePercentage(jobThreshold.toDouble())}%，当前已经使用：${normalizePercentage(runningJobCount * 100.0 / jobQuota)}%",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
@@ -274,7 +274,7 @@ class JobQuotaBusinessService @Autowired constructor(
                 logger.warn("Running job total time:$runningJobTime(s), quota: $timeQuota(h), stop it.($pipelineId|$buildId|$vmSeqId)")
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "当前项目下本月已执行的JOB时间达到配额最大值，已执行JOB时间：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时",
+                    message = "当前项目下本月已执行的【${vmType.displayName}】JOB时间达到配额最大值，已执行JOB时间：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
@@ -285,7 +285,7 @@ class JobQuotaBusinessService @Autowired constructor(
             if ((runningJobTime * 100) / (timeQuota * 60 * 60 * 1000) >= timeThreshold) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "前项目下本月已执行的JOB时间已经超过告警阈值，已执行JOB时间：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时，" +
+                    message = "前项目下本月已执行的【${vmType.displayName}】JOB时间已经超过告警阈值，已执行JOB时间：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时，" +
                         "告警阈值：${normalizePercentage(timeThreshold.toDouble())}%，当前已经使用：${normalizePercentage((runningJobTime * 100.0) / (timeQuota * 60 * 60 * 1000))}%",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
