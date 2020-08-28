@@ -45,11 +45,11 @@ class LogTagDao {
                 this,
                 BUILD_ID,
                 TAG,
-                CREATED_TIME,
+                CREATE_TIME,
                 SUB_TAGS
             ).values(buildId, tag, LocalDateTime.now(), subTags)
                 .onDuplicateKeyUpdate()
-                .set(CREATED_TIME, LocalDateTime.now())
+                .set(CREATE_TIME, LocalDateTime.now())
                 .set(SUB_TAGS, subTags)
                 .execute()
         }

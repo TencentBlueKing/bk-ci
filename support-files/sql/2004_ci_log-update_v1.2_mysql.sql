@@ -16,7 +16,7 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_LOG_STATUS') THEN
-        CREATE TABLE IF NOT EXISTS `T_LOG_STATUS`(
+        CREATE TABLE `T_LOG_STATUS`(
           `ID`            bigint(20)  NOT NULL AUTO_INCREMENT,
           `BUILD_ID`      varchar(64) NOT NULL,
           `TAG`           varchar(64)          DEFAULT NULL,
@@ -39,7 +39,7 @@ BEGIN
         `BUILD_ID` varchar(64) NOT NULL,
         `TAG` varchar(64) NOT NULL DEFAULT '' COMMENT '插件标签',
         `SUB_TAGS` text NOT NULL COMMENT '插件子标签',
-        `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
+        `CREATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
         PRIMARY KEY (`ID`),
         UNIQUE KEY `BUILD_ID_2` (`BUILD_ID`,`TAG`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
