@@ -52,6 +52,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
@@ -190,6 +191,13 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         vmSeqId = vmSeqId,
                         buildStatus = BuildStatus.SUCCEED
                     )
+                    // 告诉dispatch agent启动了，为JOB计时服务
+                    try {
+                        client.get(ServiceJobQuotaBusinessResource::class).addRunningAgent(buildInfo.projectId, buildId, vmSeqId)
+                    } catch (e: Throwable) {
+                        logger.error("Add running agent to job quota failed.")
+                    }
+
                     return BuildVariables(
                         buildId = buildId,
                         vmSeqId = vmSeqId,

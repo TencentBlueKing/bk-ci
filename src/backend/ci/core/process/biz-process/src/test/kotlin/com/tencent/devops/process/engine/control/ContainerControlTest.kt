@@ -29,7 +29,6 @@ class ContainerControlTest {
         redisOperation = redisOperation,
         pipelineEventDispatcher = mock(),
         pipelineBuildDetailService = mock(),
-        pipelineQuotaService = mock(),
         pipelineRuntimeService = mock(),
         buildVariableService = mock(),
         mutexControl = MutexControl(buildLogPrinter = buildLogPrinter, redisOperation = redisOperation, pipelineRuntimeService = pipelineRuntimeService)
