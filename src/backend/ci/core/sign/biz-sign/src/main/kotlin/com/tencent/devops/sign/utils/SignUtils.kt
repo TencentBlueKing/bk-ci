@@ -39,7 +39,7 @@ import java.lang.StringBuilder
 object SignUtils {
 
     private val logger = LoggerFactory.getLogger(SignUtils::class.java)
-    private val resignFilenamesSet = listOf("Wrapper", "Executables", "Java Resources", "Frameworks", "Framework", "Shared Frameworks", "Shared Support", "PlugIns", "XPC Services")
+    private val resignFilenamesSet = listOf("Wrapper", "Executables", "Java Resources", "Frameworks", "Framework", "Shared Frameworks", "Shared Support", "PlugIns", "XPC Services", "Watch")
 
     const val MAIN_APP_FILENAME = "MAIN_APP"
     private const val APP_MOBILE_PROVISION_FILENAME = "embedded.mobileprovision"
@@ -224,19 +224,19 @@ object SignUtils {
     }
 
     private fun replaceInfoBundle(bundleId: String, infoPlistPath: String) {
-        val cmd = "plutil -replace CFBundleIdentifier -string $bundleId $infoPlistPath"
+        val cmd = "plutil -replace CFBundleIdentifier -string $bundleId ${fixPath(infoPlistPath)}"
         logger.info("[replaceCFBundleId] $cmd")
         CommandLineUtils.execute(cmd, null, true)
     }
 
     private fun codesignFile(cerName: String, signFilename: String) {
-        val cmd = "/usr/bin/codesign -f -s '$cerName' '$signFilename'"
+        val cmd = "/usr/bin/codesign -f -s '$cerName' '${fixPath(signFilename)}'"
         logger.info("[codesignFile] $cmd")
         CommandLineUtils.execute(cmd, null, true)
     }
 
     private fun codesignFileByEntitlement(cerName: String, signFilename: String, entitlementsPath: String) {
-        val cmd = "/usr/bin/codesign -f -s '$cerName' --entitlements '$entitlementsPath' '$signFilename'"
+        val cmd = "/usr/bin/codesign -f -s '$cerName' --entitlements '$entitlementsPath' '${fixPath(signFilename)}'"
         logger.info("[codesignFile entitlements] $cmd")
         CommandLineUtils.execute(cmd, null, true)
     }
@@ -293,5 +293,10 @@ object SignUtils {
                 CommandLineUtils.execute(insertCmd, null, true)
             }
         }
+    }
+
+    private fun fixPath(path: String): String {
+        // 如果路径中存在空格，则加上转义符
+        return path.replace(" ", "\\ ")
     }
 }
