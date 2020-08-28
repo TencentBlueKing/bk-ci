@@ -52,7 +52,7 @@ abstract class BaseListener<in T : IPipelineEvent>(val pipelineEventDispatcher: 
         try {
             val traceId = MDC.get(TraceTag.BIZID)
             if (traceId.isNullOrEmpty()) {
-                if(!event.traceId.isNullOrEmpty()) {
+                if (!event.traceId.isNullOrEmpty()) {
                     MDC.put(TraceTag.BIZID, event.traceId)
                     logger.info("baseListen put bsid: ${event.traceId}")
                 } else {

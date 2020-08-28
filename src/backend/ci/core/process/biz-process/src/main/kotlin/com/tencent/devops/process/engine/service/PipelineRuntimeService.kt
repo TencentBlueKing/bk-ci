@@ -1917,11 +1917,10 @@ class PipelineRuntimeService @Autowired constructor(
         }
     }
 
-
     private fun addTraceVar(projectId: String, pipelineId: String, buildId: String) {
         val traceMap = mutableMapOf<String, String>()
         val bizId = MDC.get(TraceTag.BIZID)
-        if(!bizId.isNullOrEmpty()) {
+        if (!bizId.isNullOrEmpty()) {
             traceMap[TraceTag.TRACE_HEADER_DEVOPS_BIZID] = MDC.get(TraceTag.BIZID)
             buildVariableService.batchSetVariable(
                     projectId = projectId,
