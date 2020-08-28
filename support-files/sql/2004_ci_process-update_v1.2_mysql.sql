@@ -20,7 +20,7 @@ BEGIN
         ALTER TABLE T_PIPELINE_WEBHOOK
 			ADD COLUMN `PROJECT_NAME` VARCHAR(128) DEFAULT NULL;
     END IF;
-	
+
 	IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
