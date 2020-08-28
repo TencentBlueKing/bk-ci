@@ -285,7 +285,7 @@ class JobQuotaBusinessService @Autowired constructor(
             if ((runningJobTime * 100) / (timeQuota * 60 * 60 * 1000) >= timeThreshold) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "前项目下本月已执行的JOB时间已经超过告警阈值，已执行JOB时间：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时" +
+                    message = "前项目下本月已执行的JOB时间已经超过告警阈值，已执行JOB时间：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时, 配额: ${timeQuota}小时，" +
                         "告警阈值：${normalizePercentage(timeThreshold.toDouble())}%，当前已经使用：${normalizePercentage((runningJobTime * 100.0) / (timeQuota * 60 * 60 * 1000))}%",
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
