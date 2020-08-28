@@ -66,6 +66,7 @@ import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.OwnerInfo
 import com.tencent.devops.scm.pojo.Project
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -840,8 +841,15 @@ class GitService @Autowired constructor(
     }
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
-    fun getMrInfo(id: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrInfo {
-        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId")
+    fun getMrInfo(
+        id: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String,
+        repoUrl: String
+    ): GitMrInfo {
+        val apiUrl = GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl)
+        val url = StringBuilder("$apiUrl/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId")
         logger.info("get mr info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -859,8 +867,15 @@ class GitService @Autowired constructor(
     }
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
-    fun getMrReviewInfo(id: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrReviewInfo {
-        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/review")
+    fun getMrReviewInfo(
+        id: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String,
+        repoUrl: String
+    ): GitMrReviewInfo {
+        val apiUrl = GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl)
+        val url = StringBuilder("$apiUrl/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/review")
         logger.info("get mr review info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -878,8 +893,15 @@ class GitService @Autowired constructor(
     }
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
-    fun getMrChangeInfo(id: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrChangeInfo {
-        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/changes")
+    fun getMrChangeInfo(
+        id: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String,
+        repoUrl: String
+    ): GitMrChangeInfo {
+        val apiUrl = GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl)
+        val url = StringBuilder("$apiUrl/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/changes")
         logger.info("get mr changes info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
