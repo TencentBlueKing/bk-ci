@@ -1569,7 +1569,7 @@ class PipelineBuildService(
     ): String {
 
         val pipelineId = readyToBuildPipelineInfo.pipelineId
-        val runLock = PipelineBuildRunLock(redisOperation, pipelineId)
+        val runLock = PipelineBuildRunLock(redisOperation = redisOperation, pipelineId = pipelineId)
         try {
             if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL && !runLock.tryLock()) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_START_BUILD_FREQUENT_LIMIT,
@@ -1587,10 +1587,10 @@ class PipelineBuildService(
                 model = model
             )
 
-            val interceptResult = pipelineInterceptorChain.filter(
-                InterceptData(readyToBuildPipelineInfo, fullModel, startType)
-            )
+            // 加锁为了保证同一流水线的同时构建数量拦截的准确性
+            runLock.lock()
 
+            val interceptResult = pipelineInterceptorChain.filter(InterceptData(readyToBuildPipelineInfo, fullModel, startType))
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
                 logger.warn("[$pipelineId]|START_PIPELINE_$startType|流水线启动失败:[${interceptResult.message}]")
@@ -1639,7 +1639,7 @@ class PipelineBuildService(
 
             return buildId
         } finally {
-            if (readyToBuildPipelineInfo.channelCode !in NO_LIMIT_CHANNEL) runLock.unlock()
+            runLock.unlock()
         }
     }
 
