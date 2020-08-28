@@ -1576,6 +1576,12 @@ class PipelineBuildService(
                     defaultMessage = "不能太频繁启动构建")
             }
 
+            // #2434 如未获得锁定，加锁，区分频率限制的tryLock
+            if (!runLock.isLocked()) {
+                // 加锁为了保证同一流水线的同时构建数量拦截的准确性
+                runLock.lock()
+            }
+
             // 如果指定了版本号，则设置指定的版本号
             readyToBuildPipelineInfo.version = signPipelineVersion ?: readyToBuildPipelineInfo.version
 
@@ -1587,8 +1593,6 @@ class PipelineBuildService(
                 model = model
             )
 
-            // 加锁为了保证同一流水线的同时构建数量拦截的准确性
-            runLock.lock()
 
             val interceptResult = pipelineInterceptorChain.filter(InterceptData(readyToBuildPipelineInfo, fullModel, startType))
             if (interceptResult.isNotOk()) {
