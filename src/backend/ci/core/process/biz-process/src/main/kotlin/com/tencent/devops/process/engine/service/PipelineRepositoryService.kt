@@ -800,7 +800,9 @@ class PipelineRepositoryService constructor(
                 successSubscription = Subscription(), failSubscription = Subscription(),
                 labels = emptyList(),
                 waitQueueTimeMinute = t.waitQueueTimeSecond / 60,
-                maxQueueSize = t.maxQueueSize
+                maxQueueSize = t.maxQueueSize,
+                maxPipelineResNum = t.maxPipelineResNum,
+                maxConRunningQueueSize = t.maxConRunningQueueSize
             )
         } else null
     }
