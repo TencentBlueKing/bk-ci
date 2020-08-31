@@ -99,7 +99,8 @@ class ExtServiceBcsService {
         userId: String,
         namespaceName: String,
         serviceCode: String,
-        version: String
+        version: String,
+        checkPermissionFlag: Boolean = true
     ): DeployApp {
         val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
         val grayFlag = namespaceName == extServiceBcsNameSpaceConfig.grayNamespaceName
@@ -110,7 +111,8 @@ class ExtServiceBcsService {
             storeType = StoreTypeEnum.SERVICE.name,
             storeCode = serviceCode,
             scopes = scopes,
-            isDecrypt = true
+            isDecrypt = true,
+            checkPermissionFlag = checkPermissionFlag
         )
         if (storeEnvVarInfoListResult.isNotOk()) {
             throw ErrorCodeException(errorCode = storeEnvVarInfoListResult.status.toString())
