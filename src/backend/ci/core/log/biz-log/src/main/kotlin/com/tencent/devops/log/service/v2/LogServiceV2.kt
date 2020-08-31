@@ -34,23 +34,23 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.jmx.v2.CreateIndexBeanV2
 import com.tencent.devops.log.jmx.v2.LogBeanV2
-import com.tencent.devops.log.model.message.LogMessage
-import com.tencent.devops.log.model.message.LogMessageWithLineNo
-import com.tencent.devops.log.model.pojo.EndPageQueryLogs
-import com.tencent.devops.log.model.pojo.LogBatchEvent
-import com.tencent.devops.log.model.pojo.LogEvent
-import com.tencent.devops.log.model.pojo.LogLine
-import com.tencent.devops.log.model.pojo.LogStatusEvent
-import com.tencent.devops.log.model.pojo.PageQueryLogs
-import com.tencent.devops.log.model.pojo.QueryLogs
-import com.tencent.devops.log.model.pojo.QueryLineNo
-import com.tencent.devops.log.model.pojo.enums.LogStatus
-import com.tencent.devops.log.model.pojo.enums.LogType
+import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
+import com.tencent.devops.common.log.pojo.EndPageQueryLogs
+import com.tencent.devops.common.log.pojo.LogBatchEvent
+import com.tencent.devops.common.log.pojo.LogEvent
+import com.tencent.devops.common.log.pojo.LogLine
+import com.tencent.devops.common.log.pojo.LogStatusEvent
+import com.tencent.devops.common.log.pojo.PageQueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLineNo
+import com.tencent.devops.common.log.pojo.enums.LogStatus
+import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.log.util.Constants
 import com.tencent.devops.log.util.ESIndexUtils.getIndexSettings
 import com.tencent.devops.log.util.ESIndexUtils.getTypeMappings
 import com.tencent.devops.log.util.ESIndexUtils.indexRequest
-import com.tencent.devops.log.utils.LogDispatcher
+import com.tencent.devops.common.log.utils.LogMQEventDispatcher
 import org.elasticsearch.action.index.IndexRequestBuilder
 import org.elasticsearch.common.unit.TimeValue
 import org.elasticsearch.index.IndexNotFoundException
@@ -62,7 +62,6 @@ import org.elasticsearch.search.SearchHits
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder
 import org.elasticsearch.search.sort.SortOrder
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.IOException
@@ -87,7 +86,7 @@ class LogServiceV2 @Autowired constructor(
     private val createIndexBeanV2: CreateIndexBeanV2,
     private val logBeanV2: LogBeanV2,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate
+    private val logMQEventDispatcher: LogMQEventDispatcher
 ) {
 
     companion object {
@@ -109,7 +108,7 @@ class LogServiceV2 @Autowired constructor(
     fun addLogEvent(event: LogEvent) {
         startLog(event.buildId)
         val logMessage = addLineNo(event.buildId, event.logs)
-        LogDispatcher.dispatch(rabbitTemplate, LogBatchEvent(event.buildId, logMessage))
+        logMQEventDispatcher.dispatch(LogBatchEvent(event.buildId, logMessage))
     }
 
     fun addBatchLogEvent(event: LogBatchEvent) {
@@ -1422,17 +1421,17 @@ class LogServiceV2 @Autowired constructor(
                 val t = sourceMap["tag"]?.toString() ?: ""
                 val jobId = sourceMap["jobId"]?.toString() ?: ""
                 val logLine = LogLine(
-                        ln,
-                        sourceMap["timestamp"].toString().toLong(),
-                        if (highlights.containsKey(ln)) {
-                            highlights[ln] ?: ""
-                        } else {
-                            sourceMap["message"].toString()
-                        },
-                        Constants.DEFAULT_PRIORITY_NOT_DELETED,
-                        t,
-                        jobId,
-                        sourceMap["executeCount"]?.toString()?.toInt() ?: 1
+                    ln,
+                    sourceMap["timestamp"].toString().toLong(),
+                    if (highlights.containsKey(ln)) {
+                        highlights[ln] ?: ""
+                    } else {
+                        sourceMap["message"].toString()
+                    },
+                    Constants.DEFAULT_PRIORITY_NOT_DELETED,
+                    t,
+                    jobId,
+                    sourceMap["executeCount"]?.toString()?.toInt() ?: 1
                 )
                 logs.add(logLine)
             }

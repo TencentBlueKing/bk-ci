@@ -87,7 +87,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         when (validateType) {
             ProjectValidateType.project_name -> {
-                if (name.length < 4 || name.length > 12) {
+                if (name.isEmpty() || name.length > 12) {
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG))
                 }
                 if (projectDao.existByProjectName(dslContext, name, projectId)) {
@@ -391,13 +391,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun updateLogo(
         userId: String,
-        projectId: String,
+        englishName: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<Boolean> {
-        logger.info("Update the logo of project $projectId")
-        val project = projectDao.get(dslContext, projectId)
-        validatePermission(projectId, userId, AuthPermission.EDIT)
+        logger.info("Update the logo of project $englishName")
+        val project = projectDao.getByEnglishName(dslContext, englishName)
         if (project != null) {
             var logoFile: File? = null
             try {
@@ -410,10 +409,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    projectDao.updateLogoAddress(context, userId, projectId, result.data!!)
+                    projectDao.updateLogoAddress(context, userId, project.projectId, result.data!!)
                     projectDispatcher.dispatch(ProjectUpdateLogoBroadCastEvent(
                         userId = userId,
-                        projectId = projectId,
+                        projectId = project.projectId,
                         logoAddr = result.data!!
                     ))
                 }

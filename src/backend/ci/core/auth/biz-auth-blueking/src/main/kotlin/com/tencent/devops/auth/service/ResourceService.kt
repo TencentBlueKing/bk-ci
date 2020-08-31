@@ -17,7 +17,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.environment.api.RemoteEnvResource
 import com.tencent.devops.environment.api.RemoteNodeResource
 import com.tencent.devops.process.api.service.ServiceAuthPipelineResource
-import com.tencent.devops.project.api.service.ServiceAuthResource
+import com.tencent.devops.project.api.service.ServiceAuthProjectResource
 import com.tencent.devops.repository.api.ServiceAuthRepositoryResource
 import com.tencent.devops.ticket.api.ServiceAuthCallbackResource
 import org.slf4j.LoggerFactory
@@ -268,7 +268,7 @@ class ResourceService @Autowired constructor(
             limit = page.limit.toInt()
         }
         val projectRecords =
-                client.get(ServiceAuthResource::class).list(offset, limit).data
+                client.get(ServiceAuthProjectResource::class).list(offset, limit).data
         logger.info("projectRecords $projectRecords")
         val count = projectRecords?.count ?: 0L
         val projectInfo = mutableListOf<InstanceInfoDTO>()
@@ -293,7 +293,7 @@ class ResourceService @Autowired constructor(
     private fun getProjectInfo(idList: List<String>, attrs: List<String>): FetchInstanceInfoResponseDTO {
         logger.info("getProjectInfo ids[$idList] attrs[$attrs]")
         val ids = idList.toSet()
-        val projectInfo = client.get(ServiceAuthResource::class).getByIds(ids).data
+        val projectInfo = client.get(ServiceAuthProjectResource::class).getByIds(ids).data
         logger.info("projectRecords $projectInfo")
         val entityList = mutableListOf<InstanceInfoDTO>()
         projectInfo?.map {
