@@ -28,18 +28,19 @@ package com.tencent.devops.sign.utils
 
 import com.dd.plist.NSDictionary
 import com.dd.plist.PropertyListParser
-import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import org.slf4j.LoggerFactory
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
 import java.lang.Exception
 import java.lang.StringBuilder
 
 object SignUtils {
 
     private val logger = LoggerFactory.getLogger(SignUtils::class.java)
-    private val resignFilenamesSet = listOf("Wrapper", "Executables", "Java Resources", "Frameworks", "Framework", "Shared Frameworks", "Shared Support", "PlugIns", "XPC Services")
+    private val resignFilenamesSet = listOf("Wrapper", "Executables", "Java Resources", "Frameworks", "Framework", "Shared Frameworks", "Shared Support", "PlugIns", "XPC Services", "Watch")
 
     const val MAIN_APP_FILENAME = "MAIN_APP"
     private const val APP_MOBILE_PROVISION_FILENAME = "embedded.mobileprovision"
@@ -226,21 +227,21 @@ object SignUtils {
     }
 
     private fun replaceInfoBundle(bundleId: String, infoPlistPath: String) {
-        val cmd = "plutil -replace CFBundleIdentifier -string $bundleId $infoPlistPath"
+        val cmd = "plutil -replace CFBundleIdentifier -string $bundleId ${fixPath(infoPlistPath)}"
         logger.info("[replaceCFBundleId] $cmd")
-        CommandLineUtils.execute(cmd, null, true)
+        runtimeExec(cmd)
     }
 
     private fun codesignFile(cerName: String, signFilename: String) {
-        val cmd = "/usr/bin/codesign -f -s '$cerName' '$signFilename'"
+        val cmd = "/usr/bin/codesign -f -s '$cerName' '${fixPath(signFilename)}'"
         logger.info("[codesignFile] $cmd")
-        CommandLineUtils.execute(cmd, null, true)
+        runtimeExec(cmd)
     }
 
     private fun codesignFileByEntitlement(cerName: String, signFilename: String, entitlementsPath: String) {
-        val cmd = "/usr/bin/codesign -f -s '$cerName' --entitlements '$entitlementsPath' '$signFilename'"
+        val cmd = "/usr/bin/codesign -f -s '$cerName' --entitlements '$entitlementsPath' '${fixPath(signFilename)}'"
         logger.info("[codesignFile entitlements] $cmd")
-        CommandLineUtils.execute(cmd, null, true)
+        runtimeExec(cmd)
     }
 
     private fun addUniversalLink(ul: List<String>, entitlementsFile: File) {
@@ -252,7 +253,7 @@ object SignUtils {
             try {
                 val removeCmd = "/usr/bin/plutil -remove \"com\\.apple\\.developer\\.associated-domains\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $removeCmd")
-                CommandLineUtils.execute(removeCmd, null, true)
+                runtimeExec(removeCmd)
             } catch (e: Exception) {
                 logger.error("entitlement <$entitlementsFile> does not have com.apple.developer.associated-domains")
             } finally {
@@ -265,7 +266,7 @@ object SignUtils {
 
                 val insertCmd = "/usr/bin/plutil -insert \"com\\.apple\\.developer\\.associated-domains\" -xml \"$sb\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $insertCmd")
-                CommandLineUtils.execute(insertCmd, null, true)
+                runtimeExec(insertCmd)
             }
         }
     }
@@ -279,7 +280,7 @@ object SignUtils {
             try {
                 val removeCmd = "/usr/bin/plutil -remove \"com\\.apple\\.security\\.application-groups\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $removeCmd")
-                CommandLineUtils.execute(removeCmd, null, true)
+                runtimeExec(removeCmd)
             } catch (e: Exception) {
                 logger.error("entitlement <$entitlementsFile> does not have com.apple.developer.associated-domains")
             } finally {
@@ -292,8 +293,29 @@ object SignUtils {
 
                 val insertCmd = "/usr/bin/plutil -insert \"com\\.apple\\.security\\.application-groups\" -xml \"$sb\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $insertCmd")
-                CommandLineUtils.execute(insertCmd, null, true)
+                runtimeExec(insertCmd)
             }
+        }
+    }
+
+    private fun fixPath(path: String): String {
+        // 如果路径中存在空格，则加上转义符
+        return path.replace(" ", "\\ ")
+    }
+
+    private fun runtimeExec(cmd: String) {
+        val runtime = Runtime.getRuntime()
+        val shellPrefix = arrayOf("sh", "-c")
+        val process = runtime.exec(shellPrefix.plus(cmd))
+        val stdInput = BufferedReader(InputStreamReader(process.inputStream))
+        val stdError = BufferedReader(InputStreamReader(process.errorStream))
+        var s: String? = null
+        while (stdInput.readLine().also { s = it } != null) {
+            logger.info(s)
+        }
+        while (stdError.readLine().also { s = it } != null) {
+            // codesign命令执行成功也以错误流返回，统一转为info日志
+            logger.info(s)
         }
     }
 }
