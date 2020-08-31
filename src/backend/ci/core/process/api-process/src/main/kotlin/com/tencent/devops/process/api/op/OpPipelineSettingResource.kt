@@ -23,54 +23,54 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.api.apigw.v2
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+package com.tencent.devops.process.api.op
+
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.monitoring.pojo.SlaCodeccResponseData
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPEN_API_V2_SLA"], description = "OPEN-API-V2-SLA统计")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v2/sla")
+@Api(tags = ["OP_PIPELINE_SETTINGS"], description = "OP-流水线-设置")
+@Path("/op/pipeline/settings")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ApigwSlaResourceV2 {
+interface OpPipelineSettingResource {
 
-    @ApiOperation("CodeCC的SLA统计详情，含执行次数,耗时,成功率以及错误码分布")
-    @GET
-    @Path("/codecc/queryByBG")
-    fun codeccQueryByBG(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+    @ApiOperation("更新流水线设置")
+    @PUT
+    @Path("/update")
+    fun updateSetting(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "事业群ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
-        bgId: String,
-        @ApiParam(value = "开始时间(时间戳形式)", required = true)
-        @QueryParam(value = "startTime")
-        startTime: Long,
-        @ApiParam(value = "结束时间(时间戳形式)", required = true)
-        @QueryParam(value = "endTime")
-        endTime: Long
-    ): Result<SlaCodeccResponseData>
+        @ApiParam(value = "流水线设置", required = true)
+        setting: PipelineSetting
+    ): Result<String>
+
+    @ApiOperation("获取流水线设置")
+    @GET
+    @Path("/get")
+    fun getSetting(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("流水线id", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String
+    ): Result<PipelineSetting>
 }
