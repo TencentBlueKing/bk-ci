@@ -129,7 +129,6 @@ class ContainerControl @Autowired constructor(
                 logger.info("[$buildId]|CONTAINER_SKIP|stage=$stageId|container=$containerId|action=$actionType")
                 return sendBackStage(source = "container_skip")
             }
-
         }
 
         // 终止或者结束事件，跳过是假货和不启动job配置，都不做互斥判断
