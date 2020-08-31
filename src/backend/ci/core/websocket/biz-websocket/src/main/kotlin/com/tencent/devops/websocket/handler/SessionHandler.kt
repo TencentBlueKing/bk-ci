@@ -29,9 +29,12 @@ class SessionHandler @Autowired constructor(
             logger.warn("connection closed can not find sessionId, $uri| ${session?.remoteAddress}")
             super.afterConnectionClosed(session, closeStatus)
         }
-        val remoteId = session?.remoteAddress
         val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId!!)
         val userId = RedisUtlis.getUserBySession(redisOperation, sessionId)
+        if (userId.isNullOrEmpty()) {
+            logger.warn("connection closed can not find userId, $uri| ${session?.remoteAddress}| $sessionId")
+            super.afterConnectionClosed(session, closeStatus)
+        }
         logger.info("connection closed closeStatus[$closeStatus] user[$userId] page[$page], session[$sessionId]")
         websocketService.clearAllBySession(userId!!, sessionId)
 
