@@ -173,7 +173,13 @@ class ExtServiceBcsService {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val namespaceName = if (!grayFlag) extServiceBcsNameSpaceConfig.namespaceName else extServiceBcsNameSpaceConfig.grayNamespaceName
-        val deployApp = generateDeployApp(userId, namespaceName, serviceCode, version)
+        val deployApp = generateDeployApp(
+            userId = userId,
+            namespaceName = namespaceName,
+            serviceCode = serviceCode,
+            version = version,
+            checkPermissionFlag = checkPermissionFlag
+        )
         val bcsDeployAppResult = client.get(ServiceBcsResource::class).bcsDeployApp(
             userId = userId,
             deployApp = deployApp
