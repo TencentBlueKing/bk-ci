@@ -945,7 +945,7 @@ class GitService @Autowired constructor(
                 }
                 val data = it.body()!!.string()
                 logger.info("get repo member response body: $data")
-                val pageResult = JsonUtil.to(data, object : TypeReference<List<GitMember>>(){})
+                val pageResult = JsonUtil.to(data, object : TypeReference<List<GitMember>>() {})
                 result.addAll(pageResult)
                 if (pageResult.size < 100) return result
             }

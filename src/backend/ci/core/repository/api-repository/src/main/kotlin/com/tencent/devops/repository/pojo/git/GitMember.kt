@@ -13,6 +13,15 @@ import com.fasterxml.jackson.annotation.JsonProperty
         "access_level": 30
 }
 *
+* 组/项目的权限access_level包括：
+
+GUEST = 10
+FOLLOWER = 15
+REPORTER = 20
+DEVELOPER = 30
+MASTER = 40
+OWNER = 50
+*
 * */
 
 data class GitMember(
