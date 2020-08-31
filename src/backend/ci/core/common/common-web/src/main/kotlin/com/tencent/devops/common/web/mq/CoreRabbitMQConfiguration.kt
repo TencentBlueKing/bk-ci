@@ -103,7 +103,7 @@ class CoreRabbitMQConfiguration {
         return RabbitAdmin(connectionFactory)
     }
 
-    @Bean(value = [CORE_FACTORY_NAME])
+    @Bean(value = [CORE_LISTENER_CONTAINER_NAME])
     @Primary
     fun coreFactory(
         @Qualifier(CORE_CONNECTION_FACTORY_NAME)

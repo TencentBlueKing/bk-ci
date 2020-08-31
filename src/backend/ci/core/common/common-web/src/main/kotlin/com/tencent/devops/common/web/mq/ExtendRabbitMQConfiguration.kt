@@ -96,7 +96,7 @@ class ExtendRabbitMQConfiguration {
         return RabbitAdmin(connectionFactory)
     }
 
-    @Bean(value = [EXTEND_FACTORY_NAME])
+    @Bean(value = [EXTEND_LISTENER_CONTAINER_NAME])
     fun extendFactory(
         @Qualifier(EXTEND_CONNECTION_FACTORY_NAME)
         connectionFactory: ConnectionFactory
