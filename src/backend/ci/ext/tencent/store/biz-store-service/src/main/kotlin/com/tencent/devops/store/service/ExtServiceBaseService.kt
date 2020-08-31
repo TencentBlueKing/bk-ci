@@ -149,6 +149,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     @Autowired
     lateinit var extServiceItemRelDao: ExtServiceItemRelDao
     @Autowired
+    lateinit var extServiceCommonService: ExtServiceCommonService
+    @Autowired
     lateinit var storeCommonService: StoreCommonService
     @Autowired
     lateinit var extServiceVersionLogDao: ExtServiceVersionLogDao
@@ -1410,8 +1412,34 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return bkServiceId.toLong()
     }
 
-    fun updateExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: EditInfoDTO): Result<Boolean> {
+    fun updateExtInfo(
+        userId: String,
+        serviceId: String,
+        serviceCode: String,
+        infoResp: EditInfoDTO,
+        checkPermissionFlag: Boolean = true
+    ): Result<Boolean> {
         logger.info("updateExtInfo: serviceId[$serviceId], serviceCode[$serviceCode] infoResp[$infoResp]")
+        // 判断当前用户是否是该扩展的成员
+        if (checkPermissionFlag && !storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = serviceCode,
+                storeType = StoreTypeEnum.SERVICE.type.toByte()
+            )
+        ) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+        }
+        // 查询扩展的最新记录
+        val newestServiceRecord = extServiceDao.getNewestServiceByCode(dslContext, serviceCode)
+            ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(serviceCode))
+        val editFlag = extServiceCommonService.checkEditCondition(serviceCode)
+        if (!editFlag) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
+                params = arrayOf(newestServiceRecord.serviceName, newestServiceRecord.version)
+            )
+        }
         val baseInfo = infoResp.baseInfo
         val settingInfo = infoResp.settingInfo
         if (baseInfo != null) {

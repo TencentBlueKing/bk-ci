@@ -309,6 +309,13 @@ class ExtServiceDao {
         }
     }
 
+    fun getNewestServiceByCode(dslContext: DSLContext, serviceCode: String): TExtensionServiceRecord? {
+        return with(TExtensionService.T_EXTENSION_SERVICE) {
+            dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_CODE.eq(serviceCode))
+                .orderBy(CREATE_TIME.desc()).limit(1).fetchOne()
+        }
+    }
+
     fun listServiceByCode(dslContext: DSLContext, serviceCode: String): Result<TExtensionServiceRecord>? {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_CODE.eq(serviceCode))
