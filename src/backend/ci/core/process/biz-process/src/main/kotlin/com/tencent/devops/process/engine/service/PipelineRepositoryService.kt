@@ -309,8 +309,8 @@ class PipelineRepositoryService constructor(
                     Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), e.eventType) }
                 is CodeTGitWebHookTriggerElement -> {
                     // CodeEventType.MERGE_REQUEST_ACCEPT 和 CodeEventType.MERGE_REQUEST等价处理
-                    val eventType = if (e.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) CodeEventType.MERGE_REQUEST else e.eventType
-                    Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), eventType)
+                    val eventType = if (e.data.input.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) CodeEventType.MERGE_REQUEST else e.data.input.eventType
+                    Pair(RepositoryConfig(e.data.input.repositoryHashId, e.data.input.repositoryName, e.data.input.repositoryType ?: RepositoryType.ID), eventType)
                 }
                 else -> return@forEach
             }

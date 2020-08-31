@@ -58,13 +58,14 @@ class TGitWebHookStartParam(
 
     override fun getStartParams(element: CodeTGitWebHookTriggerElement): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
+        val input = element.data.input
         startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = matcher.getRevision()
         startParams[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] = params.eventType ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS] = element.branchName ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS] = element.excludeBranchName ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_PATHS] = element.includePaths ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_PATHS] = element.excludePaths ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS] = element.excludeUsers?.joinToString(",") ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS] = input.branchName ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS] = input.excludeBranchName ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_PATHS] = input.includePaths ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_PATHS] = input.excludePaths ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS] = input.excludeUsers?.joinToString(",") ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] =
             matchResult.extra[GitWebHookMatcher.MATCH_BRANCH] ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[GitWebHookMatcher.MATCH_PATHS] ?: ""

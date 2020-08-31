@@ -86,9 +86,9 @@ object RepositoryConfigUtils {
                 element.repositoryType ?: RepositoryType.ID
             )
             is CodeTGitWebHookTriggerElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                element.data.input.repositoryHashId,
+                element.data.input.repositoryName,
+                element.data.input.repositoryType ?: RepositoryType.ID
             )
             else -> throw InvalidParamException("Unknown code element -> $element")
         }

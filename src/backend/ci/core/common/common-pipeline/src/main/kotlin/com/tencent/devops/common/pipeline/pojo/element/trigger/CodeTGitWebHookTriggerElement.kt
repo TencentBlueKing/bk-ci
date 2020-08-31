@@ -34,11 +34,26 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("TGit事件触发", description = CodeTGitWebHookTriggerElement.classType)
 data class CodeTGitWebHookTriggerElement(
     @ApiModelProperty("任务名称", required = true)
-    override val name: String = "Git变更触发",
+    override val name: String = "TGit变更触发",
     @ApiModelProperty("id", required = false)
     override var id: String? = null,
     @ApiModelProperty("状态", required = false)
     override var status: String? = null,
+    @ApiModelProperty("数据", required = true)
+    val data: CodeTGitWebHookTriggerData
+) : WebHookTriggerElement(name, id, status) {
+    companion object {
+        const val classType = "codeTGitWebHookTrigger"
+    }
+
+    override fun getClassType() = classType
+}
+
+data class CodeTGitWebHookTriggerData(
+    val input: CodeTGitWebHookTriggerInput
+)
+
+data class CodeTGitWebHookTriggerInput(
     @ApiModelProperty("仓库ID", required = true)
     val repositoryHashId: String?,
     @ApiModelProperty("branch", required = false)
@@ -67,10 +82,5 @@ data class CodeTGitWebHookTriggerElement(
     val excludeSourceBranchName: String? = null,
     @ApiModelProperty("includeSourceBranchName", required = false)
     val includeSourceBranchName: String? = null
-) : WebHookTriggerElement(name, id, status) {
-    companion object {
-        const val classType = "codeTGitWebHookTrigger"
-    }
+)
 
-    override fun getClassType() = classType
-}

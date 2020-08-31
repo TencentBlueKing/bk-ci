@@ -103,7 +103,7 @@ class MQPipelineCreateListener @Autowired constructor(
             is CodeTGitWebHookTriggerElement -> Triple(
                 RepositoryConfigUtils.buildConfig(e),
                 ScmType.CODE_TGIT,
-                e.eventType
+                e.data.input.eventType
             )
             else -> Triple(null, null, null)
         }
