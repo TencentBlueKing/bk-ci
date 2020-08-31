@@ -152,7 +152,7 @@ object SignUtils {
     fun unzipIpa(ipaFile: File, unzipIpaDir: File) {
         val cmd = "/usr/bin/unzip -o ${ipaFile.canonicalPath} -d ${unzipIpaDir.canonicalPath}"
         logger.info("[unzipIpa] $cmd")
-        CommandLineUtils.execute(cmd, null, true)
+        runtimeExec(cmd)
     }
 
     fun zipIpaFile(unzipDir: File, ipaPath: String): File? {
