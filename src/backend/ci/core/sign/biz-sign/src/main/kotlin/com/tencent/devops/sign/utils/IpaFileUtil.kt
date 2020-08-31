@@ -46,6 +46,10 @@ object IpaFileUtil {
     ): String? {
         var outputStream: OutputStream? = null
         try {
+            // 如果文件存在，则删除
+            if (target.exists()) {
+                target.delete()
+            }
             outputStream = target.outputStream()
             val md5 = MessageDigest.getInstance("MD5")
             var bytesCopied: Long = 0
@@ -98,6 +102,8 @@ object IpaFileUtil {
      */
     fun getMD5(file: File): String {
         if (!file.exists()) return ""
-        return DigestUtils.md5Hex(file.inputStream())
+        return file.inputStream().use {
+            DigestUtils.md5Hex(it)
+        }
     }
 }

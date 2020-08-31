@@ -29,11 +29,11 @@ package com.tencent.devops.sign.impl
 import com.dd.plist.NSDictionary
 import com.dd.plist.NSString
 import com.dd.plist.PropertyListParser
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.sign.api.constant.SignMessageCode
+import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaInfoPlist
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
@@ -44,7 +44,6 @@ import com.tencent.devops.sign.service.SignService
 import com.tencent.devops.sign.service.MobileProvisionService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.InputStream
@@ -58,16 +57,11 @@ class SignServiceImpl @Autowired constructor(
     private val fileService: FileService,
     private val signInfoService: SignInfoService,
     private val archiveService: ArchiveService,
-    private val objectMapper: ObjectMapper,
     private val mobileProvisionService: MobileProvisionService
 ) : SignService {
-
-    @Value("\${bkci.sign.tmpDir:/data/enterprise_sign_tmp}")
-    private val tmpDir = "/data/enterprise_sign_tmp"
-
-    private lateinit var ipaFile: File
-    private lateinit var ipaUnzipDir: File
-    private lateinit var mobileProvisionDir: File
+    companion object {
+        private val logger = LoggerFactory.getLogger(SignServiceImpl::class.java)
+    }
 
     override fun uploadIpaAndDecodeInfo(
         resignId: String,
@@ -78,7 +72,7 @@ class SignServiceImpl @Autowired constructor(
     ): Pair<File, Int> {
         val taskExecuteCount = signInfoService.save(resignId, ipaSignInfoHeader, ipaSignInfo)
         // 复制文件到临时目录
-        ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo, md5Check)
+        val ipaFile = fileService.copyToTargetFile(ipaInputStream, ipaSignInfo, md5Check, resignId)
         signInfoService.finishUpload(resignId, ipaFile, ipaSignInfo, taskExecuteCount)
         return Pair(ipaFile, taskExecuteCount)
     }
@@ -91,11 +85,11 @@ class SignServiceImpl @Autowired constructor(
     ) {
 
         // ipa解压后的目录
-        ipaUnzipDir = File("${ipaFile.canonicalPath}.unzipDir")
+        val ipaUnzipDir = fileService.getIpaUnzipDir(ipaSignInfo, resignId)
         FileUtil.mkdirs(ipaUnzipDir)
 
         // 描述文件的目录
-        mobileProvisionDir = File("${ipaFile.canonicalPath}.mobileProvisionDir")
+        val mobileProvisionDir = fileService.getMobileProvisionDir(ipaSignInfo, resignId)
         FileUtil.mkdirs(mobileProvisionDir)
 
         // 解压ipa包
@@ -145,8 +139,8 @@ class SignServiceImpl @Autowired constructor(
         signInfoService.successResign(resignId, ipaSignInfo, taskExecuteCount)
     }
 
-    override fun getSignResult(resignId: String): Boolean {
-        return signInfoService.getSignResult(resignId)
+    override fun getSignStatus(resignId: String): EnumResignStatus {
+        return signInfoService.getSignStatus(resignId)
     }
 
     private fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): Map<String, MobileProvisionInfo> {
@@ -370,9 +364,5 @@ class SignServiceImpl @Autowired constructor(
         properties["source"] = "pipeline"
         properties["ipa.sign.status"] = "true"
         return properties
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(SignServiceImpl::class.java)
     }
 }

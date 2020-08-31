@@ -62,7 +62,7 @@ class ServiceIpaResourceImpl @Autowired constructor(
         var taskExecuteCount = 1
         try {
             val (ipaFile, taskExecuteCount) =
-                    signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream)
+                    signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream, md5Check)
             syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
             return Result(resignId)
         } catch (e: Exception) {
@@ -71,8 +71,8 @@ class ServiceIpaResourceImpl @Autowired constructor(
         }
     }
 
-    override fun getSignResult(resignId: String): Result<Boolean> {
-        return Result(signService.getSignResult(resignId))
+    override fun getSignStatus(resignId: String): Result<String> {
+        return Result(signService.getSignStatus(resignId).getValue())
     }
 
     override fun downloadUrl(resignId: String): Result<String> {
