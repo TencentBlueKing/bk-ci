@@ -26,6 +26,7 @@
 
 package com.tencent.devops.scm.services
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -929,17 +930,25 @@ class GitService @Autowired constructor(
         val url = StringBuilder("${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/members")
         logger.info("get repo member url: $url")
         setToken(tokenType, url, token)
-        val request = Request.Builder()
-            .url(url.toString())
-            .get()
-            .build()
-        OkhttpUtils.doHttp(request).use {
-            if (!it.isSuccessful) {
-                throw RuntimeException("get repo member error for $repoName(${it.code()}): ${it.message()}")
+
+        var page = 1
+        val result = mutableListOf<GitMember>()
+        while (true) {
+            val request = Request.Builder()
+                .url("$url&page=$page&per_page=100")
+                .get()
+                .build()
+            page++
+            OkhttpUtils.doHttp(request).use {
+                if (!it.isSuccessful) {
+                    throw RuntimeException("get repo member error for $repoName(${it.code()}): ${it.message()}")
+                }
+                val data = it.body()!!.string()
+                logger.info("get repo member response body: $data")
+                val pageResult = JsonUtil.to(data, object : TypeReference<List<GitMember>>(){})
+                result.addAll(pageResult)
+                if (pageResult.size < 100) return result
             }
-            val data = it.body()!!.string()
-            logger.info("get repo member response body: $data")
-            return JsonUtil.to(data)
         }
     }
 
