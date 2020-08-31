@@ -28,6 +28,7 @@ package com.tencent.devops.lambda.storage
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.lambda.dao.BuildIndexDao
 import org.elasticsearch.client.transport.TransportClient
@@ -40,6 +41,7 @@ import java.time.LocalDateTime
 class ESServiceTest {
 
     private val client: TransportClient = mock()
+    private val esClient: ESClient = ESClient("esClient", client, false)
     private val redisTemplate: RedisTemplate<String, String> = mock()
     private val redisOperation: RedisOperation = RedisOperation(redisTemplate)
     private val objectMapper: ObjectMapper = mock()
@@ -47,11 +49,12 @@ class ESServiceTest {
     private val buildIndexDao: BuildIndexDao = mock()
     private val indexService = IndexService(dslContext, buildIndexDao, redisOperation)
     private val esService: ESService = ESService(
-        client = client,
+        esClient = esClient,
         redisOperation = redisOperation,
         indexService = indexService,
         objectMapper = objectMapper
     )
+
     @Test
     fun testDate() {
         val begin = LocalDateTime.now().minusDays(10).timestamp()

@@ -118,7 +118,7 @@
         },
         watch: {
             queryParams (newQueryParams, oldQueryParams) {
-                if (this.urlParamKeys.some(key => newQueryParams[key] !== oldQueryParams[key])) {
+                if (this.isParamsChanged(newQueryParams, oldQueryParams)) {
                     this.debounceGetOptionList()
                     this.handleChange(this.name, '')
                 }

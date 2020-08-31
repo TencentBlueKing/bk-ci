@@ -182,6 +182,12 @@ include ":core:notify:biz-notify-blueking"
 include ":core:notify:model-notify"
 include ":core:notify:boot-notify"
 
+include ":core:monitoring"
+include ":core:monitoring:api-monitoring"
+include ":core:monitoring:biz-monitoring"
+include ":core:monitoring:biz-monitoring-sample"
+include ":core:monitoring:boot-monitoring"
+
 include ":core:websocket"
 include ":core:websocket:biz-websocket"
 include ":core:websocket:biz-websocket-blueking"

@@ -29,10 +29,18 @@ package com.tencent.devops.project.service.tof
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
+import com.tencent.devops.common.api.constant.CommonMessageCode.SUCCESS
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.monitoring.api.service.StatusReportResource
+import com.tencent.devops.monitoring.pojo.UsersStatus
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_CC_NAME_FAIL
+import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_ORG_FAIL
+import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL
+import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
 import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
@@ -64,7 +72,10 @@ import java.util.concurrent.TimeUnit
  * http://open.oa.com/esb/docs/ieod/system/tof/
  */
 @Service
-class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) {
+class TOFService @Autowired constructor(
+    private val objectMapper: ObjectMapper,
+    private val client: Client
+) {
 
     @Value("\${tof.host:#{null}}")
     private val tofHost: String? = null
@@ -81,12 +92,12 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
 
     private val userInfoCache = CacheBuilder.newBuilder()
         .maximumSize(50000)
-        .expireAfterWrite(12, TimeUnit.HOURS)
+        .expireAfterWrite(24, TimeUnit.HOURS)
         .build<String/*userId*/, StaffInfoResponse>()
 
     private val userDeptCache = CacheBuilder.newBuilder()
         .maximumSize(50000)
-        .expireAfterWrite(12, TimeUnit.HOURS)
+        .expireAfterWrite(24, TimeUnit.HOURS)
         .build<String/*userId*/, UserDeptDetail>()
 
     fun getUserDeptDetail(operator: String?, userId: String, bk_ticket: String): UserDeptDetail {
@@ -124,14 +135,14 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
                 }
             }
             detail = UserDeptDetail(
-                    bgName,
-                    bgId,
-                    deptName,
-                    deptId,
-                    centerName,
-                    centerId,
-                    groupId,
-                    groupName
+                bgName,
+                bgId,
+                deptName,
+                deptId,
+                centerName,
+                centerId,
+                groupId,
+                groupName
             )
             userDeptCache.put(userId, detail!!)
         }
@@ -161,21 +172,44 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
     fun getDeptInfo(userId: String, id: Int): DeptInfo {
         try {
             val path = "get_dept_info"
+            val startTime = System.currentTimeMillis()
             val responseContent = request(
-                    path, DeptInfoRequest(
+                path, DeptInfoRequest(
                     tofAppCode!!,
                     tofAppSecret!!,
                     id.toString()
-            ), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_DEPARTMENT_FAIL)
+                ), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_DEPARTMENT_FAIL)
             )
             val response: Response<DeptInfoResponse> =
-                    objectMapper.readValue(responseContent)
+                objectMapper.readValue(responseContent)
             if (response.data == null) {
                 logger.warn("Fail to get the dept info of id $id with response $responseContent")
+                uploadTofStatus(
+                    requestTime = startTime,
+                    statusCode = response.code,
+                    statusMessage = response.message,
+                    errorCode = ProjectMessageCode.QUERY_DEPARTMENT_FAIL,
+                    errorMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_DEPARTMENT_FAIL)
+                )
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_DEPARTMENT_FAIL))
             }
+            uploadTofStatus(
+                requestTime = startTime,
+                statusCode = response.code,
+                statusMessage = "success",
+                errorCode = SUCCESS,
+                errorMessage = "call tof success"
+            )
             val deptInfoResp = response.data
-            return DeptInfo(deptInfoResp!!.TypeId, deptInfoResp.LeaderId, deptInfoResp.Name, deptInfoResp.Level, deptInfoResp.Enabled, deptInfoResp.ParentId, deptInfoResp.ID)
+            return DeptInfo(
+                deptInfoResp!!.TypeId,
+                deptInfoResp.LeaderId,
+                deptInfoResp.Name,
+                deptInfoResp.Level,
+                deptInfoResp.Enabled,
+                deptInfoResp.ParentId,
+                deptInfoResp.ID
+            )
         } catch (t: Throwable) {
             logger.warn("Fail to get the organization info of id $id", t)
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_DEPARTMENT_FAIL))
@@ -188,19 +222,34 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
     fun getCCAppName(ccAppId: Long): String {
         try {
             val path = "get_query_info"
+            val startTime = System.currentTimeMillis()
             val responseContent = request(
                 path,
                 CCAppNameRequest(
                     tofAppCode!!,
                     tofAppSecret!!,
                     CCAppNameApplicationID(ccAppId)
-                ), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_CC_NAME_FAIL), APIModule.cc
+                ), MessageCodeUtil.getCodeLanMessage(QUERY_CC_NAME_FAIL), APIModule.cc
             )
             val response: Response<List<CCAppNameResponse>> = objectMapper.readValue(responseContent)
             if (response.data == null || response.data!!.isEmpty()) {
+                uploadTofStatus(
+                    requestTime = startTime,
+                    statusCode = response.code,
+                    statusMessage = response.message,
+                    errorCode = QUERY_CC_NAME_FAIL,
+                    errorMessage = MessageCodeUtil.getCodeLanMessage(QUERY_CC_NAME_FAIL)
+                )
                 logger.warn("Fail to get cc app name of $ccAppId with response $responseContent")
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_CC_NAME_FAIL))
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(QUERY_CC_NAME_FAIL))
             }
+            uploadTofStatus(
+                requestTime = startTime,
+                statusCode = response.code,
+                statusMessage = "success",
+                errorCode = SUCCESS,
+                errorMessage = "call tof success"
+            )
             return response.data!![0].DisplayName
         } catch (t: Throwable) {
             logger.warn("Fail to get cc app name of $ccAppId", t)
@@ -210,6 +259,7 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
 
     private fun getChildDeptInfos(userId: String, type: OrganizationType, id: Int): List<ChildDeptResponse> {
         try {
+            val startTime = System.currentTimeMillis()
             val path = "get_child_dept_infos"
             val responseContent = request(
                 path, ChildDeptRequest(
@@ -217,14 +267,28 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
                     tofAppSecret!!,
                     getParentDeptIdByOrganizationType(type, id),
                     1
-                ), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL)
+                ), MessageCodeUtil.getCodeLanMessage(QUERY_SUB_DEPARTMENT_FAIL)
             )
             val response: Response<List<ChildDeptResponse>> =
                 objectMapper.readValue(responseContent)
             if (response.data == null) {
                 logger.warn("Fail o get the child dept info of type $type and id $id with response $responseContent")
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL))
+                uploadTofStatus(
+                    requestTime = startTime,
+                    statusCode = response.code,
+                    statusMessage = response.message,
+                    errorCode = QUERY_SUB_DEPARTMENT_FAIL,
+                    errorMessage = MessageCodeUtil.getCodeLanMessage(QUERY_SUB_DEPARTMENT_FAIL)
+                )
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(QUERY_SUB_DEPARTMENT_FAIL))
             }
+            uploadTofStatus(
+                requestTime = startTime,
+                statusCode = response.code,
+                statusMessage = "success",
+                errorCode = SUCCESS,
+                errorMessage = "call tof success"
+            )
             return response.data!!
         } catch (t: Throwable) {
             logger.warn("Fail to get the organization info of type $type and id $id", t)
@@ -243,26 +307,41 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
         try {
             var info = userInfoCache.getIfPresent(userId)
             if (info == null) {
+                val startTime = System.currentTimeMillis()
                 logger.info("[$operator|$userId|$bk_ticket] Start to get the staff info")
-                val path = "get_staff_info"
+                val path = "get_staff_info_by_login_name"
                 val responseContent = request(
-                        path, StaffInfoRequest(
+                    path, StaffInfoRequest(
                         tofAppCode!!,
                         tofAppSecret!!, operator, userId, bk_ticket
-                ), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL)
+                    ), MessageCodeUtil.getCodeLanMessage(QUERY_USER_INFO_FAIL)
                 )
                 val response: Response<StaffInfoResponse> = objectMapper.readValue(responseContent)
                 if (response.data == null) {
+                    uploadTofStatus(
+                        requestTime = startTime,
+                        statusCode = response.code,
+                        statusMessage = response.message,
+                        errorCode = QUERY_USER_INFO_FAIL,
+                        errorMessage = MessageCodeUtil.getCodeLanMessage(QUERY_USER_INFO_FAIL)
+                    )
                     logger.warn("Fail to get the staff info of user $userId with bk_ticket $bk_ticket and response $responseContent")
-                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(QUERY_USER_INFO_FAIL))
                 }
+                uploadTofStatus(
+                    requestTime = startTime,
+                    statusCode = response.code,
+                    statusMessage = "success",
+                    errorCode = SUCCESS,
+                    errorMessage = "call tof success"
+                )
                 info = response.data
                 userInfoCache.put(userId, info!!)
             }
             return info!!
         } catch (t: Throwable) {
             logger.warn("Fail to get the staff info of userId $userId with ticket $bk_ticket", t)
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(QUERY_USER_INFO_FAIL))
         }
     }
 
@@ -277,15 +356,32 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
     fun getParentDeptInfo(groupId: String, level: Int): List<DeptInfo> {
         try {
             val path = "get_parent_dept_infos"
+            val startTime = System.currentTimeMillis()
             val responseContent = request(
                 path,
-                ParentDeptInfoRequest(tofAppCode!!, tofAppSecret!!, groupId, level), MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_ORG_FAIL)
+                ParentDeptInfoRequest(tofAppCode!!, tofAppSecret!!, groupId, level),
+                MessageCodeUtil.getCodeLanMessage(QUERY_ORG_FAIL)
             )
             val response: Response<List<DeptInfo>> = objectMapper.readValue(responseContent)
             if (response.data == null) {
                 logger.warn("Fail to get the parent dept info of group $groupId and level $level with response $responseContent")
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_ORG_FAIL))
+                uploadTofStatus(
+                    requestTime = startTime,
+                    statusCode = response.code,
+                    statusMessage = response.message,
+                    errorCode = QUERY_ORG_FAIL,
+                    errorMessage = MessageCodeUtil.getCodeLanMessage(QUERY_ORG_FAIL)
+                )
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(QUERY_ORG_FAIL))
             }
+            uploadTofStatus(
+                requestTime = startTime,
+                statusCode = response.code,
+                statusMessage = "success",
+                errorCode = SUCCESS,
+                errorMessage = "call tof success"
+            )
+
             return response.data!!
         } catch (t: Throwable) {
             logger.warn("Fail to get the parent dept info of group $groupId and level $level", t)
@@ -305,9 +401,9 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
         val response = request(requestBody, errorMessage)
         logger.info("Get the response $response of request $url")
         CostUtils.costTime(
-                startTime = startTime,
-                url = url,
-                logger = logger
+            startTime = startTime,
+            url = url,
+            logger = logger
         )
         return response
     }
@@ -334,6 +430,35 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
         }
         if (tofAppSecret.isNullOrBlank()) {
             throw RuntimeException("TOF app secret is empty")
+        }
+    }
+
+    private fun uploadTofStatus(
+        requestTime: Long,
+        statusCode: String,
+        statusMessage: String,
+        errorCode: String,
+        errorMessage: String
+    ) {
+        val responseTime = System.currentTimeMillis()
+        val usersStatus = UsersStatus(
+            projectId = null,
+            buildId = null,
+            vmSeqId = null,
+            pipelineId = null,
+            channelCode = null,
+            requestTime = requestTime,
+            responseTime = responseTime,
+            elapseTime = responseTime - requestTime,
+            statusCode = statusCode,
+            statusMessage = statusMessage,
+            errorCode = errorCode,
+            errorMsg = errorMessage
+        )
+        try {
+            client.get(StatusReportResource::class).userUsers(usersStatus)
+        } catch (e: Exception) {
+            logger.warn("uploadTofStatus fail, error msg:$e")
         }
     }
 

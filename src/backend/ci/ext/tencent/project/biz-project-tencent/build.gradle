@@ -31,4 +31,6 @@ dependencies {
     compile project(":ext:tencent:project:api-project-tencent")
     compile project(":ext:tencent:store:api-store-service")
     compile project(":ext:tencent:common:common-auth:common-auth-tencent")
+    compile project(":ext:tencent:monitoring:api-monitoring-tencent")
+    compile project(":ext:tencent:common:common-archive-tencent")
 }
