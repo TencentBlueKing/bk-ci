@@ -58,6 +58,7 @@ class ClearTimeoutCron(
     @Scheduled(cron = "0 */30 * * * ?")
     fun newClearTimeoutCache() {
         longSessionLog()
+        logger.info("websocket cron get redis lock")
         val websocketCronLock = WebsocketCronLock(redisOperation)
         try {
             websocketCronLock.lock()
@@ -81,41 +82,40 @@ class ClearTimeoutCron(
 
     private fun clearTimeoutSession() {
         val nowTime = System.currentTimeMillis()
+        logger.info("start clear Session by Timer")
         for (bucket in 0..WebsocketKeys.REDIS_MO) {
             val redisData = redisOperation.get(WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket)
             if (redisData != null) {
                 var newSessionList: String? = null
                 val sessionList = redisData.split(",")
-                if (sessionList == null || sessionList.isEmpty()) {
+                if (sessionList.isEmpty()) {
                     logger.info("this bucket is empty,redisKey[${WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket}]")
                     continue
                 }
                 sessionList.forEach {
                     try {
-                        if (it != null) {
-                            val timeout: Long = it.substringAfter("&").toLong()
-                            val userId = it.substringAfter("#").substringBefore("&")
-                            val sessionId = it.substringBefore("#")
-                            if (nowTime > timeout) {
-                                val sessionPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
-                                RedisUtlis.cleanSessionPageBySessionId(redisOperation, sessionId)
-                                if (sessionPage != null) {
-                                    RedisUtlis.cleanPageSessionBySessionId(redisOperation, sessionPage, sessionId)
-                                    RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
-                                    logger.info("[clearTimeOutSession] sessionId:$sessionId,loadPage:$sessionPage,userId:$userId")
-                                }
-                                // 如果不在本实例，下发到mq,供其他实例删除对应实例维持的session
-                                if(websocketService.isCacheSession(sessionId)) {
-                                    websocketService.removeCacheSession(sessionId)
-                                } else {
-                                    clearSessionByMq(userId, sessionId)
-                                }
+                        val timeout: Long = it.substringAfter("&").toLong()
+                        val userId = it.substringAfter("#").substringBefore("&")
+                        val sessionId = it.substringBefore("#")
+                        if (nowTime > timeout) {
+                            val sessionPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
+                            RedisUtlis.cleanSessionPageBySessionId(redisOperation, sessionId)
+                            if (sessionPage != null) {
+                                RedisUtlis.cleanPageSessionBySessionId(redisOperation, sessionPage, sessionId)
+                                RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
+                                logger.info("[clearTimeOutSession] sessionId:$sessionId,loadPage:$sessionPage,userId:$userId")
+                            }
+                            // 如果不在本实例，下发到mq,供其他实例删除对应实例维持的session
+                            if(websocketService.isCacheSession(sessionId)) {
+                                websocketService.removeCacheSession(sessionId)
                             } else {
-                                newSessionList = if (newSessionList == null) {
-                                    it
-                                } else {
-                                    "$newSessionList,$it"
-                                }
+                                clearSessionByMq(userId, sessionId)
+                            }
+                        } else {
+                            newSessionList = if (newSessionList == null) {
+                                it
+                            } else {
+                                "$newSessionList,$it"
                             }
                         }
                     } catch (e: Exception) {
