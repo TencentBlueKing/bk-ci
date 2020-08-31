@@ -72,6 +72,7 @@ import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomLabelService
+import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.atom.MarketAtomStatisticService
 import com.tencent.devops.store.service.common.ClassifyService
@@ -127,6 +128,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     lateinit var client: Client
     @Autowired
     lateinit var marketAtomFeatureDao: MarketAtomFeatureDao
+    @Autowired
+    lateinit var marketAtomCommonService: MarketAtomCommonService
 
     companion object {
         private val logger = LoggerFactory.getLogger(MarketAtomServiceImpl::class.java)
@@ -531,7 +534,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(record["visibilityLevel"] as Int),
                     privateReason = record["privateReason"] as? String,
                     recommendFlag = feature?.recommendFlag,
-                    yamlFlag = feature?.yamlFlag
+                    yamlFlag = feature?.yamlFlag,
+                    editFlag = marketAtomCommonService.checkEditCondition(atomCode)
                 )
             )
         }
