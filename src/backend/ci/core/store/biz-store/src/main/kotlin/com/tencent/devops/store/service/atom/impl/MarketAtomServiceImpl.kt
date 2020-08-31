@@ -480,10 +480,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val feature = marketAtomFeatureDao.getAtomFeature(dslContext, atomCode)
             val classifyCode = record["classifyCode"] as? String
             val classifyName = record["classifyName"] as? String
-            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
-                defaultMessage = classifyName
-            )
+            val classifyLanName = if (classifyCode != null)
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                    defaultMessage = classifyName
+                ) else classifyName
             Result(
                 AtomVersion(
                     atomId = atomId,
