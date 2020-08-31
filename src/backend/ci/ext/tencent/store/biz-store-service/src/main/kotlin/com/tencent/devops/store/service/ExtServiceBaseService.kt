@@ -995,7 +995,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     versionContent = serviceVersion?.content ?: "",
                     releaseType = ReleaseTypeEnum.getReleaseType(
                         serviceVersion?.releaseType?.toInt() ?: ReleaseTypeEnum.NEW.releaseType
-                    )
+                    ),
+                    editFlag = extServiceCommonService.checkEditCondition(serviceCode)
                 )
             )
         }
