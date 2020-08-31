@@ -42,9 +42,16 @@ class CommandBatImpl() :
         projectId: String,
         dir: File,
         buildEnvs: List<BuildEnv>,
-        continueNoneZero: Boolean
+        continueNoneZero: Boolean,
+        errorMessage: String?
     ) {
         val realCommand = parseTemplate(buildId, script, taskParam.plus(runtimeVariables))
-        BatScriptUtil.execute(buildId = buildId, script = realCommand, runtimeVariables = runtimeVariables, dir = dir)
+        BatScriptUtil.execute(
+            buildId = buildId,
+            script = realCommand,
+            runtimeVariables = runtimeVariables,
+            dir = dir,
+            errorMessage = errorMessage
+        )
     }
 }
