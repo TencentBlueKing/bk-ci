@@ -93,6 +93,12 @@ interface IGitService {
         tokenType: TokenTypeEnum
     ): Result<Boolean>
 
+    fun deleteGitProject(
+        repoName: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
     fun updateGitProjectInfo(
         projectName: String,
         updateGitProjectInfo: UpdateGitProjectInfo,
