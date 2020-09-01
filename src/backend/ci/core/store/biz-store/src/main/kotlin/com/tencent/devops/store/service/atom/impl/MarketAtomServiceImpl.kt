@@ -41,6 +41,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomApproveRelDao
@@ -714,7 +715,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
         // 删除代码库
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
-        val deleteAtomRepositoryResult = deleteAtomRepository(userId, initProjectCode, atomRecord!!.repositoryHashId)
+        val deleteAtomRepositoryResult = deleteAtomRepository(
+            userId = userId,
+            projectCode = initProjectCode,
+            repositoryHashId = atomRecord!!.repositoryHashId,
+            tokenType = TokenTypeEnum.PRIVATE_KEY
+        )
         if (deleteAtomRepositoryResult.isNotOk()) {
             return deleteAtomRepositoryResult
         }
@@ -851,5 +857,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return sb.toString()
     }
 
-    abstract fun deleteAtomRepository(userId: String, projectCode: String?, repositoryHashId: String): Result<Boolean>
+    abstract fun deleteAtomRepository(
+        userId: String,
+        projectCode: String?,
+        repositoryHashId: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
 }
