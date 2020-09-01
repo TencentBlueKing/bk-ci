@@ -361,6 +361,7 @@ class SignServiceImpl @Autowired constructor(
         properties["pipelineId"] = ipaSignInfo.pipelineId ?: ""
         properties["buildId"] = ipaSignInfo.buildId ?: ""
         properties["userId"] = ipaSignInfo.userId
+        properties["buildNo"] = if (ipaSignInfo.buildNum == null) "" else ipaSignInfo.buildNum.toString()
         properties["source"] = "pipeline"
         properties["ipa.sign.status"] = "true"
         return properties
