@@ -99,9 +99,11 @@ class ExtendRabbitMQConfiguration {
     @Bean(value = [EXTEND_LISTENER_CONTAINER_NAME])
     fun extendFactory(
         @Qualifier(EXTEND_CONNECTION_FACTORY_NAME)
-        connectionFactory: ConnectionFactory
+        connectionFactory: ConnectionFactory,
+        objectMapper: ObjectMapper
     ): SimpleRabbitListenerContainerFactory {
         val factory = SimpleRabbitListenerContainerFactory()
+        factory.setMessageConverter(messageConverter(objectMapper))
         factory.setConnectionFactory(connectionFactory)
         if (concurrency != null) {
             factory.setConcurrentConsumers(concurrency)
