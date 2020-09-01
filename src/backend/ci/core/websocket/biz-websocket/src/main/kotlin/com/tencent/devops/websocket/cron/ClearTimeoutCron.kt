@@ -132,6 +132,9 @@ class ClearTimeoutCron(
                         null,
                         true
                     )
+                } else {
+                    logger.info("websocket timer empty bucket $bucket, delete it")
+                    redisOperation.delete(WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket)
                 }
             }
         }
