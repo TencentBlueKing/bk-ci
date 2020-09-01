@@ -46,7 +46,6 @@ import com.tencent.devops.artifactory.service.RepoService
 import com.tencent.devops.artifactory.service.pojo.JFrogAQLFileInfo
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
