@@ -520,7 +520,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     )
                 }
                 if (errorInfos != null) {
-                    model.errorInfoList = errorInfos
+                    model.errorInfo = errorInfos
                 }
                 pipelineBuildDao.updateBuildStageStatus(dslContext, buildId, allStageStatus)
                 buildDetailDao.update(

@@ -599,7 +599,7 @@ class PipelineRuntimeService @Autowired constructor(
                 startType = getStartType(trigger, webhookType),
                 recommendVersion = recommendVersion,
                 retry = isRetry ?: false,
-                errorInfoList = if (errorInfo != null) {
+                errorInfo = if (errorInfo != null) {
                     try {
                         JsonUtil.getObjectMapper().readValue(errorInfo) as List<ErrorInfo>
                     } catch (e: Exception) {

@@ -54,7 +54,7 @@ data class Model(
     @ApiModelProperty("模板ID", required = false)
     var templateId: String? = null,
     @ApiModelProperty("构建错误信息", required = false)
-    var errorInfoList: List<ErrorInfo>? = null
+    var errorInfo: List<ErrorInfo>? = null
 ) {
 
     companion object {
