@@ -495,22 +495,13 @@ class BkRepoService @Autowired constructor(
     override fun acrossProjectCopy(projectId: String, artifactoryType: ArtifactoryType, path: String, targetProjectId: String, targetPath: String): Count {
         logger.info("acrossProjectCopy, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, targetProjectId: $targetProjectId, targetPath: $targetPath")
         var userId = ""
-        val normalizeSrcPath = PathUtils.normalize(path)
-
-        val pathNamePair = if (artifactoryType == ArtifactoryType.PIPELINE) {
-            val pipelineIdAndBuildId = parsePipelineIdAndBuildId(normalizeSrcPath)
-            val pipelineId = pipelineIdAndBuildId.first
-            val buildId = pipelineIdAndBuildId.second
-            Pair("/$pipelineId/$buildId/", path.removePrefix("/"))
+        val absPath = "/${PathUtils.normalize(path).removePrefix("/")}"
+        val pathNamePair = if (absPath.endsWith("/")) {
+            Pair(absPath, "*")
         } else {
-            val absPath = "/${path.removePrefix("/")}"
-            if (absPath.endsWith("/")) {
-                Pair(absPath, "*")
-            } else {
-                val fileName = absPath.split("/").last()
-                val filePath = absPath.removeSuffix(fileName)
-                Pair(filePath, fileName)
-            }
+            val fileName = absPath.split("/").last()
+            val filePath = absPath.removeSuffix(fileName)
+            Pair(filePath, fileName)
         }
         var srcFiles = bkRepoClient.queryByPathNamePairOrMetadataEqAnd(
             userId = userId,
