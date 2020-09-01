@@ -519,9 +519,6 @@ class PipelineBuildDetailService @Autowired constructor(
                         )
                     )
                 }
-                if (errorInfos != null) {
-                    model.errorInfo = errorInfos
-                }
                 pipelineBuildDao.updateBuildStageStatus(dslContext, buildId, allStageStatus)
                 buildDetailDao.update(
                     dslContext = context,

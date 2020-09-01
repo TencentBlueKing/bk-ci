@@ -52,9 +52,7 @@ data class Model(
     @ApiModelProperty("源模版ID", required = false)
     var srcTemplateId: String? = null,
     @ApiModelProperty("模板ID", required = false)
-    var templateId: String? = null,
-    @ApiModelProperty("构建错误信息", required = false)
-    var errorInfo: List<ErrorInfo>? = null
+    var templateId: String? = null
 ) {
 
     companion object {
