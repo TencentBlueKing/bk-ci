@@ -244,13 +244,14 @@ class ExtServiceProjectService @Autowired constructor(
                 if (it?.reasonId != null) {
                     val id = UUIDUtil.generate()
                     reasonRelDao.add(
-                        context,
-                        id,
-                        userId,
-                        serviceCode,
-                        it.reasonId,
-                        it.note,
-                        ReasonTypeEnum.UNINSTALLATOM.type
+                        dslContext = context,
+                        id = id,
+                        userId = userId,
+                        storeCode = serviceCode,
+                        storeType = StoreTypeEnum.SERVICE.type.toByte(),
+                        reasonId = it.reasonId,
+                        note = it.note,
+                        type = ReasonTypeEnum.UNINSTALLATOM.type
                     )
                 }
             }
