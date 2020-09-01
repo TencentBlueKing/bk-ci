@@ -26,7 +26,6 @@
 
 package com.tencent.devops.artifactory.service.artifactory
 
-import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.pojo.CombinationPath
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
@@ -34,6 +33,7 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.PathList
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.CustomDirService
+import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.common.api.exception.OperationException
@@ -147,7 +147,7 @@ class ArtifactoryCustomDirService @Autowired constructor(
         }
     }
 
-    override fun deploy(userId: String, projectId: String, argPath: String, inputStream: InputStream, disposition: FormDataContentDisposition) {
+    override fun deploy(userId: String, projectId: String, argPath: String, inputStream: InputStream, disposition: FormDataContentDisposition, fileSizeLimitInMB: Int) {
         validatePermission(userId, projectId)
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {

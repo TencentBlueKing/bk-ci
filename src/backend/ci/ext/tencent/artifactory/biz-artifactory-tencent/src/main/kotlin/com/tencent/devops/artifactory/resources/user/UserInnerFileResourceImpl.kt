@@ -53,7 +53,7 @@ class UserInnerFileResourceImpl @Autowired constructor(
 
     override fun uploadToPath(userId: String, projectId: String, path: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<Boolean> {
         checkParam(userId, projectId, path)
-        bkRepoCustomDirService.deploy(userId, projectId, path, inputStream, disposition)
+        bkRepoCustomDirService.deploy(userId, projectId, path, inputStream, disposition, 10)
         return Result(true)
     }
 

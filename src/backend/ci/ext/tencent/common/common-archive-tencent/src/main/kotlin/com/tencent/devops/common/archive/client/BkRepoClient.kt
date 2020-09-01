@@ -50,6 +50,7 @@ import com.tencent.bkrepo.repository.pojo.repo.UserRepoCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.config.BkRepoConfig
 import com.tencent.devops.common.archive.constant.REPO_CUSTOM
@@ -60,6 +61,8 @@ import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.QueryData
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.util.PathUtil
+import com.tencent.devops.common.archive.util.STREAM_BUFFER_SIZE
+import com.tencent.devops.common.archive.util.closeQuietly
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import okhttp3.Credentials
@@ -67,7 +70,6 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import okio.BufferedSink
-import okio.Okio
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.InputStream
@@ -280,13 +282,29 @@ class BkRepoClient constructor(
         }
     }
 
-    fun uploadFile(userId: String, projectId: String, repoName: String, path: String, inputStream: InputStream) {
-        logger.info("uploadFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
+    fun uploadFile(userId: String, projectId: String, repoName: String, path: String, inputStream: InputStream, fileSizeLimitInMB: Int = 0) {
+        logger.info("uploadFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, fileSizeLimitInMB: $fileSizeLimitInMB")
         val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/$projectId/$repoName/$path"
         val requestBody = object : RequestBody() {
             override fun writeTo(sink: BufferedSink?) {
-                val source = Okio.source(inputStream)
-                sink!!.writeAll(source)
+                val limit = if (fileSizeLimitInMB > 0) {
+                    fileSizeLimitInMB * 1024 * 1024L
+                } else {
+                    Long.MAX_VALUE
+                }
+                var bytesCopied: Long = 0
+                val buffer = ByteArray(STREAM_BUFFER_SIZE)
+                var bytes = inputStream.read(buffer)
+                while (bytes >= 0) {
+                    sink!!.write(buffer, 0, bytes)
+                    bytesCopied += bytes
+                    if (bytesCopied > limit) {
+                        sink!!.closeQuietly()
+                        throw OperationException("file size exceed $fileSizeLimitInMB(MB)")
+                    }
+                    bytes = inputStream.read(buffer)
+                }
+                sink!!.flush()
             }
 
             override fun contentType(): MediaType? {
