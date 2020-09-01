@@ -26,7 +26,6 @@
 
 package com.tencent.devops.common.pipeline
 
-import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
