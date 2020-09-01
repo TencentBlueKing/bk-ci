@@ -51,6 +51,8 @@ data class IpaSignInfo(
     var pipelineId: String? = null,
     @ApiModelProperty("构建ID", required = false)
     var buildId: String? = null,
+    @ApiModelProperty("构建号", required = false)
+    var buildNum: Int? = null,
     @ApiModelProperty("任务ID", required = false)
     var taskId: String? = null,
     @ApiModelProperty("归档路径", required = false)
