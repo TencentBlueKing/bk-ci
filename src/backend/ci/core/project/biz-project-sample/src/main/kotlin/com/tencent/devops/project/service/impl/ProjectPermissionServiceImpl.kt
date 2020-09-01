@@ -26,6 +26,7 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -113,5 +114,9 @@ class ProjectPermissionServiceImpl @Autowired constructor(
             user = userId
         )
         return ""
+    }
+
+    override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String, permission: AuthPermission): Boolean {
+        return true
     }
 }

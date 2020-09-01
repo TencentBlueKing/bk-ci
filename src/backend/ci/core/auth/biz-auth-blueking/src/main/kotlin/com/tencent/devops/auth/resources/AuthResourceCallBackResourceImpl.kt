@@ -11,12 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired
 class AuthResourceCallBackResourceImpl @Autowired constructor(
     val resourceService: ResourceService
 ) : AuthResourceCallBackResource {
-    override fun projectList(
+    override fun projectInfo(
         callBackInfo: CallbackRequestDTO,
         token: String
     ): CallbackBaseResponseDTO {
-        return resourceService.getProjectList(
-                page = callBackInfo.page,
+        return resourceService.getProjectInfo(
+                callBackInfo = callBackInfo,
                 method = callBackInfo.method,
                 token = token
             )
@@ -31,7 +31,8 @@ class AuthResourceCallBackResourceImpl @Autowired constructor(
                 actionType = callBackInfo.type,
                 method = callBackInfo.method,
                 page = callBackInfo.page,
-                token = token
+                token = token,
+                ids = callBackInfo.filter.idList
             )
     }
 }

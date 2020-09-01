@@ -2,25 +2,27 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
 import com.tencent.bk.sdk.iam.dto.PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.BaseDataResponseDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.utils.ActionUtils
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-import java.lang.RuntimeException
-import com.tencent.bk.sdk.iam.dto.callback.response.BaseDataResponseDTO
-import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
-import com.tencent.devops.auth.utils.ActionUtils
 import com.tencent.devops.environment.api.RemoteEnvResource
 import com.tencent.devops.environment.api.RemoteNodeResource
 import com.tencent.devops.process.api.service.ServiceAuthPipelineResource
 import com.tencent.devops.project.api.service.ServiceAuthProjectResource
 import com.tencent.devops.repository.api.ServiceAuthRepositoryResource
-import com.tencent.devops.ticket.api.ServiceAuthCredentialResource
+import com.tencent.devops.ticket.api.ServiceAuthCallbackResource
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Service
 class ResourceService @Autowired constructor(
@@ -28,41 +30,32 @@ class ResourceService @Autowired constructor(
     val remoteAuthService: RemoteAuthService
 ) {
 
-    fun getProjectList(page: PageInfoDTO, method: CallbackMethodEnum, token: String): ListInstanceResponseDTO {
-        logger.info("getProjectList method $method, page $page token $token")
-        checkToken(token)
-        val projectRecords =
-            client.get(ServiceAuthProjectResource::class).list(page.offset!!.toInt(), page.limit!!.toInt()).data
-        logger.info("projectRecords $projectRecords")
-        val count = projectRecords?.count ?: 0L
-        val projectInfo = mutableListOf<InstanceInfoDTO>()
-        projectRecords?.records?.map {
-            val entity = InstanceInfoDTO()
-            entity.id = it.englishName
-            entity.displayName = it.englishName
-            projectInfo.add(entity)
+    fun getProjectInfo(callBackInfo: CallbackRequestDTO, method: CallbackMethodEnum, token: String): CallbackBaseResponseDTO {
+        if (method == CallbackMethodEnum.LIST_INSTANCE) {
+            return getProjectList(callBackInfo.page, method, token)
+        } else if (method == CallbackMethodEnum.FETCH_INSTANCE_INFO) {
+            val ids = callBackInfo.filter.idList.map { it.toString() }
+            return getProjectInfo(ids, callBackInfo.filter.attributeList)
         }
-        logger.info("projectInfo $projectInfo")
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        data.count = count
-        data.result = projectInfo
-        result.code = 0L
-        result.message = ""
-        result.data = data
-        logger.info("result $result")
-        return result
+        return getProjectList(callBackInfo.page, method, token)
     }
 
     fun getResourceList(
         projectId: String,
         actionType: String,
         method: CallbackMethodEnum,
-        page: PageInfoDTO,
-        token: String
+        page: PageInfoDTO?,
+        token: String,
+        ids: List<Any>?
     ): ListInstanceResponseDTO? {
-        logger.info("getResourceList project[$projectId] method[$method], page[$page],token[$token],actionType[$actionType]")
+        logger.info("getResourceList project[$projectId] method[$method], page[$page],token[$token],actionType[$actionType], ids[$ids]")
         checkToken(token)
+        var offset = 0
+        var limit = 10
+        if (page != null) {
+            offset = page.offset.toInt()
+            limit = page.limit.toInt()
+        }
         val resourceType = if (actionType.contains("env_node")) {
             AuthResourceType.ENVIRONMENT_ENV_NODE.value
         } else {
@@ -72,22 +65,30 @@ class ResourceService @Autowired constructor(
             logger.warn("getResourceList actionType is not exits,actionType $actionType, resourceType $resourceType")
             throw RuntimeException("资源类型不存在")
         }
+        val idList = mutableListOf<Any>()
+        if (method == CallbackMethodEnum.FETCH_INSTANCE_INFO) {
+            if(ids == null || ids.isEmpty()) {
+                throw RuntimeException("资源类型不存在")
+            }
+            idList.addAll(ids.toList())
+        }
         var result: ListInstanceResponseDTO? = null
         when (resourceType) {
-            AuthResourceType.PIPELINE_DEFAULT.value -> result = getPipeline(projectId, page)
-            AuthResourceType.CODE_REPERTORY.value -> result = getRepository(projectId, page)
-            AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> result = getEnv(projectId, page)
-            AuthResourceType.ENVIRONMENT_ENV_NODE.value -> result = getNode(projectId, page)
-            AuthResourceType.TICKET_CREDENTIAL.value -> result = getCredential(projectId, page)
+            AuthResourceType.PIPELINE_DEFAULT.value -> result = getPipeline(projectId, offset, limit)
+            AuthResourceType.CODE_REPERTORY.value -> result = getRepository(projectId, offset, limit)
+            AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> result = getEnv(projectId, offset, limit)
+            AuthResourceType.ENVIRONMENT_ENV_NODE.value -> result = getNode(projectId, offset, limit)
+            AuthResourceType.TICKET_CREDENTIAL.value -> result = getCredential(projectId, offset, limit)
+            AuthResourceType.TICKET_CERT.value -> result = getCert(projectId, offset, limit)
             else -> null
         }
         return result
     }
 
-    private fun getPipeline(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
+    private fun getPipeline(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
         val pipelineInfos =
             client.get(ServiceAuthPipelineResource::class)
-                .pipelineList(projectId, page.offset.toInt(), page.limit.toInt()).data
+                .pipelineList(projectId, offset, limit).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
         if (pipelineInfos?.records == null) {
@@ -113,10 +114,10 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getRepository(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
+    private fun getRepository(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
         val repositoryInfos =
             client.get(ServiceAuthRepositoryResource::class)
-                .listByProjects(setOf(projectId), page.offset.toInt(), page.limit.toInt()).data
+                .listByProjects(setOf(projectId), offset, limit).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
         if (repositoryInfos?.records == null) {
@@ -142,10 +143,10 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getCredential(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
+    private fun getCredential(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
         val credentialInfos =
-            client.get(ServiceAuthCredentialResource::class)
-                .list(projectId, page.offset.toInt(), page.limit.toInt()).data
+            client.get(ServiceAuthCallbackResource::class)
+                .listCredential(projectId, offset, limit).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
         if (credentialInfos?.records == null) {
@@ -171,10 +172,39 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getNode(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
+    private fun getCert(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
+        val certInfos =
+                client.get(ServiceAuthCallbackResource::class)
+                        .listCert(projectId, offset, limit).data
+        val result = ListInstanceResponseDTO()
+        val data = BaseDataResponseDTO<InstanceInfoDTO>()
+        if (certInfos?.records == null) {
+            logger.info("$projectId 项目下无凭证")
+            result.code = 0
+            result.message = "无数据"
+            result.data = data
+            return result
+        }
+        val entityInfo = mutableListOf<InstanceInfoDTO>()
+        certInfos?.records?.map {
+            val entity = InstanceInfoDTO()
+            entity.id = it.credentialId
+            entity.displayName = it.certRemark
+            entityInfo.add(entity)
+        }
+        logger.info("entityInfo $entityInfo, count ${certInfos?.count}")
+        data.count = certInfos?.count
+        data.result = entityInfo
+        result.code = 0L
+        result.message = ""
+        result.data = data
+        return result
+    }
+
+    private fun getNode(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
         val nodeInfos =
             client.get(RemoteNodeResource::class)
-                .listNodeByPage(projectId, page.offset.toInt(), page.limit.toInt()).data
+                .listNodeByPage(projectId, offset, limit).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
         if (nodeInfos?.records == null) {
@@ -200,10 +230,10 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getEnv(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
+    private fun getEnv(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
         val envInfos =
             client.get(RemoteEnvResource::class)
-                .listEnvByPage(projectId, page.offset.toInt(), page.limit.toInt()).data
+                .listEnvByPage(projectId, offset, limit).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
         if (envInfos?.records == null) {
@@ -234,6 +264,57 @@ class ResourceService @Autowired constructor(
             logger.warn("auth callBack checkToken is fail $token")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.TOKEN_TICKET_FAIL))
         }
+    }
+
+    private fun getProjectList(page: PageInfoDTO?, method: CallbackMethodEnum, token: String): ListInstanceResponseDTO {
+        logger.info("getProjectList method $method, page $page token $token")
+        checkToken(token)
+        var offset = 0
+        var limit = 10
+        if (page != null) {
+            offset = page.offset.toInt()
+            limit = page.limit.toInt()
+        }
+        val projectRecords =
+                client.get(ServiceAuthProjectResource::class).list(offset, limit).data
+        logger.info("projectRecords $projectRecords")
+        val count = projectRecords?.count ?: 0L
+        val projectInfo = mutableListOf<InstanceInfoDTO>()
+        projectRecords?.records?.map {
+            val entity = InstanceInfoDTO()
+            entity.id = it.englishName
+            entity.displayName = it.englishName
+            projectInfo.add(entity)
+        }
+        logger.info("projectInfo $projectInfo")
+        val result = ListInstanceResponseDTO()
+        val data = BaseDataResponseDTO<InstanceInfoDTO>()
+        data.count = count
+        data.result = projectInfo
+        result.code = 0L
+        result.message = ""
+        result.data = data
+        logger.info("result $result")
+        return result
+    }
+
+    private fun getProjectInfo(idList: List<String>, attrs: List<String>): FetchInstanceInfoResponseDTO {
+        logger.info("getProjectInfo ids[$idList] attrs[$attrs]")
+        val ids = idList.toSet()
+        val projectInfo = client.get(ServiceAuthProjectResource::class).getByIds(ids).data
+        logger.info("projectRecords $projectInfo")
+        val entityList = mutableListOf<InstanceInfoDTO>()
+        projectInfo?.map {
+            val entity = InstanceInfoDTO()
+            entity.id = it.englishName
+            entity.displayName = it.englishName
+            entityList.add(entity)
+        }
+        val result = FetchInstanceInfoResponseDTO()
+        result.code = 0
+        result.message = ""
+        result.data = entityList.toList()
+        return result
     }
 
     companion object {
