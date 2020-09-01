@@ -494,34 +494,39 @@ class BkRepoService @Autowired constructor(
 
     override fun acrossProjectCopy(projectId: String, artifactoryType: ArtifactoryType, path: String, targetProjectId: String, targetPath: String): Count {
         logger.info("acrossProjectCopy, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, targetProjectId: $targetProjectId, targetPath: $targetPath")
+        var userId = ""
         val normalizeSrcPath = PathUtils.normalize(path)
-        val srcFiles = if (artifactoryType == ArtifactoryType.PIPELINE) {
-            val pipeineIdAndBuildId = parsePipeineIdAndBuildId(normalizeSrcPath)
-            val pipelineId = pipeineIdAndBuildId.first
-            val buildId = pipeineIdAndBuildId.second
-            val pathPrefix = "/$pipelineId/$buildId/"
-            bkRepoClient.listFileByRegex(
-                "",
-                projectId,
-                RepoUtils.PIPELINE_REPO,
-                pathPrefix,
-                normalizeSrcPath.removePrefix(pathPrefix)
-            ).map { it.fullPath }
+
+        val pathNamePair = if (artifactoryType == ArtifactoryType.PIPELINE) {
+            val pipelineIdAndBuildId = parsePipeineIdAndBuildId(normalizeSrcPath)
+            val pipelineId = pipelineIdAndBuildId.first
+            val buildId = pipelineIdAndBuildId.second
+            Pair("/$pipelineId/$buildId/", path.removePrefix("/"))
         } else {
-            bkRepoClient.listFileByRegex(
-                "",
-                projectId,
-                RepoUtils.CUSTOM_REPO,
-                "/",
-                normalizeSrcPath.removePrefix("/")
-            ).map { it.fullPath }
+            val absPath = "/${path.removePrefix("/")}"
+            if (absPath.endsWith("/")) {
+                Pair(absPath, "*")
+            } else {
+                val fileName = absPath.split("/").last()
+                val filePath = absPath.removeSuffix(fileName)
+                Pair(filePath, fileName)
+            }
         }
+        var srcFiles = bkRepoClient.queryByPathNamePairOrMetadataEqAnd(
+            userId = userId,
+            projectId = projectId,
+            repoNames = listOf(RepoUtils.CUSTOM_REPO),
+            pathNamePairs = listOf(pathNamePair),
+            metadata = mapOf(),
+            page = 0,
+            pageSize = 10000
+        ).map { it.fullPath }
         logger.info("match files: $srcFiles")
 
         val destPathFolder = "/share/$projectId/${PathUtils.normalize(targetPath).removePrefix("/")}"
         srcFiles.forEach { srcFile ->
             bkRepoClient.copy(
-                "",
+                userId,
                 projectId,
                 if (artifactoryType == ArtifactoryType.PIPELINE) RepoUtils.PIPELINE_REPO else RepoUtils.CUSTOM_REPO,
                 srcFile,
