@@ -388,4 +388,8 @@ class NodeService @Autowired constructor(
             records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
         )
     }
+
+    fun getOs(userId: String, projectId: String, agentId: String): String {
+        return nodeDao.get(dslContext, projectId, HashUtil.decodeIdToLong(agentId))?.osName ?: "linux"
+    }
 }
