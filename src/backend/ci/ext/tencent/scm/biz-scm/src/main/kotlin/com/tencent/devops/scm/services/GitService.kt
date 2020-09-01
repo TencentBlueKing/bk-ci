@@ -390,7 +390,7 @@ class GitService @Autowired constructor(
                 val body = response.body()!!.string()
                 logger.info("[$userId]|[$gitProjectId]| Get gongfeng project member response body: $body")
                 val ownerInfo = JsonUtil.to(body, OwnerInfo::class.java)
-                if (ownerInfo != null && ownerInfo.accessLevel!! >= 30) {
+                if (ownerInfo.accessLevel!! >= 30) {
                     return true
                 }
             }
@@ -931,14 +931,13 @@ class GitService @Autowired constructor(
         logger.info("get repo member url: $url")
         setToken(tokenType, url, token)
 
-        var page = 1
         val result = mutableListOf<GitMember>()
-        while (true) {
+        // 限制最多50页
+        for (page in 1..50) {
             val request = Request.Builder()
                 .url("$url&page=$page&per_page=100")
                 .get()
                 .build()
-            page++
             OkhttpUtils.doHttp(request).use {
                 if (!it.isSuccessful) {
                     throw RuntimeException("get repo member error for $repoName(${it.code()}): ${it.message()}")
@@ -950,6 +949,7 @@ class GitService @Autowired constructor(
                 if (pageResult.size < 100) return result
             }
         }
+        return result
     }
 
     private fun setToken(tokenType: TokenTypeEnum, url: StringBuilder, token: String) {
