@@ -116,7 +116,7 @@ class DockerHostUtils @Autowired constructor(
         val dockerPair = if (firstPair.first.isEmpty()) {
             val secondPair = dockerLoadCheck(dockerHostLoadConfigTriple.second, grayEnv, specialIpSet, unAvailableIpList)
             if (secondPair.first.isEmpty()) {
-                dockerLoadCheck(dockerHostLoadConfigTriple.third, grayEnv, specialIpSet, unAvailableIpList)
+                dockerLoadCheck(dockerHostLoadConfigTriple.third, grayEnv, specialIpSet, unAvailableIpList, true)
             } else {
                 secondPair
             }
@@ -325,7 +325,13 @@ class DockerHostUtils @Autowired constructor(
         )
     }
 
-    private fun dockerLoadCheck(dockerHostLoadConfig: DockerHostLoadConfig, grayEnv: Boolean, specialIpSet: Set<String>, unAvailableIpList: Set<String>): Pair<String, Int> {
+    private fun dockerLoadCheck(
+        dockerHostLoadConfig: DockerHostLoadConfig,
+        grayEnv: Boolean,
+        specialIpSet: Set<String>,
+        unAvailableIpList: Set<String>,
+        finalCheck: Boolean = false
+    ): Pair<String, Int> {
         val dockerIpList =
             pipelineDockerIpInfoDao.getAvailableDockerIpList(
                 dslContext = dslContext,
@@ -337,11 +343,26 @@ class DockerHostUtils @Autowired constructor(
                 specialIpSet = specialIpSet
             )
 
-        return if (dockerIpList.isNotEmpty) {
+        return if (dockerIpList.isNotEmpty && sufficientResources(finalCheck, dockerIpList.size, grayEnv)) {
             selectAvailableDockerIp(dockerIpList, unAvailableIpList)
         } else {
             Pair("", 0)
         }
+    }
+
+    private fun sufficientResources(finalCheck: Boolean, fittingIpCount: Int, grayEnv: Boolean): Boolean {
+        val enableIpCount = pipelineDockerIpInfoDao.getEnableDockerIpCount(dslContext, grayEnv)
+        // 最后一次check无论还剩几个可用ip，都要顶上，或者集群规模小于10不做判断
+        if (enableIpCount < 10 || finalCheck) {
+            return true
+        }
+
+        // 集群规模数大于10并且可用IP数小于集群规模的10%，自动跳到下一档
+        if ((enableIpCount / 10) >= fittingIpCount) {
+            return false
+        }
+
+        return true
     }
 
     private fun selectAvailableDockerIp(

@@ -278,7 +278,9 @@ class DockerHostClient @Autowired constructor(
             }
         } catch (e: SocketTimeoutException) {
             // 超时重试
-            doRetry(event, retryTime, dockerIp, requestBody, driftIpInfo, e.message, unAvailableIpList)
+            if (e.message == "timeout") {
+                doRetry(event, retryTime, dockerIp, requestBody, driftIpInfo, e.message, unAvailableIpList)
+            }
         }
 
     }
