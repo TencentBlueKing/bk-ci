@@ -76,5 +76,5 @@ data class PipelineBuildResponseData(
     @ApiModelProperty("model", required = false)
     val model: String? = "",
     @ApiModelProperty("插件错误信息", required = false)
-    val errorInfo: String? = null
+    val errorInfoList: String? = null
 )
