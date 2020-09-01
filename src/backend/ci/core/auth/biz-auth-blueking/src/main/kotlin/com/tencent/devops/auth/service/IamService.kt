@@ -47,7 +47,7 @@ class IamService @Autowired constructor(
                 actions = actions,
                 bk_app_code = "",
                 bk_app_secret = "",
-                bk_username = ""
+                bk_username = "admin"
         )
         logger.info("get permissionUrl iamEsbReq: $iamEsbReq")
         return Result(iamEsbService.getPermissionUrl(iamEsbReq))

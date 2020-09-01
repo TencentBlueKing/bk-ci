@@ -24,4 +24,12 @@ interface UserAuthResource {
         @ApiParam(value = "待申请实例信息") 
         permissionUrlDTO: PermissionUrlDTO
     ): Result<String?>
+
+    @POST
+    @Path("/permissionUrl1")
+    @ApiOperation("权限申请重定向Url")
+    fun permissionUrl1(
+        @ApiParam(value = "待申请实例信息")
+        instanceId: List<String>
+    ): Result<String?>
 }

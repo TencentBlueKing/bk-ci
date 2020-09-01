@@ -31,7 +31,8 @@ class AuthResourceCallBackResourceImpl @Autowired constructor(
                 actionType = callBackInfo.type,
                 method = callBackInfo.method,
                 page = callBackInfo.page,
-                token = token
+                token = token,
+                ids = callBackInfo.filter.idList
             )
     }
 }

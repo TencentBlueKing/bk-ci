@@ -45,9 +45,10 @@ class ResourceService @Autowired constructor(
         actionType: String,
         method: CallbackMethodEnum,
         page: PageInfoDTO?,
-        token: String
+        token: String,
+        ids: List<Any>?
     ): ListInstanceResponseDTO? {
-        logger.info("getResourceList project[$projectId] method[$method], page[$page],token[$token],actionType[$actionType]")
+        logger.info("getResourceList project[$projectId] method[$method], page[$page],token[$token],actionType[$actionType], ids[$ids]")
         checkToken(token)
         var offset = 0
         var limit = 10
@@ -63,6 +64,13 @@ class ResourceService @Autowired constructor(
         if (AuthResourceType.get(resourceType) == null) {
             logger.warn("getResourceList actionType is not exits,actionType $actionType, resourceType $resourceType")
             throw RuntimeException("资源类型不存在")
+        }
+        val idList = mutableListOf<Any>()
+        if (method == CallbackMethodEnum.FETCH_INSTANCE_INFO) {
+            if(ids == null || ids.isEmpty()) {
+                throw RuntimeException("资源类型不存在")
+            }
+            idList.addAll(ids.toList())
         }
         var result: ListInstanceResponseDTO? = null
         when (resourceType) {
