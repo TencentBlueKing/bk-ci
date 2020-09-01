@@ -297,20 +297,20 @@ class DockerHostUtils @Autowired constructor(
                     dockerHostLoadConfig["first"] ?: DockerHostLoadConfig(
                         cpuLoadThreshold = 80,
                         memLoadThreshold = 50,
-                        diskLoadThreshold = 60,
+                        diskLoadThreshold = 80,
                         diskIOLoadThreshold = 80
                     ),
                     dockerHostLoadConfig["second"] ?: DockerHostLoadConfig(
                         cpuLoadThreshold = 90,
                         memLoadThreshold = 70,
-                        diskLoadThreshold = 80,
-                        diskIOLoadThreshold = 90
+                        diskLoadThreshold = 90,
+                        diskIOLoadThreshold = 85
                     ),
                     dockerHostLoadConfig["third"] ?: DockerHostLoadConfig(
                         cpuLoadThreshold = 100,
                         memLoadThreshold = 80,
-                        diskLoadThreshold = 100,
-                        diskIOLoadThreshold = 100
+                        diskLoadThreshold = 95,
+                        diskIOLoadThreshold = 85
                     )
                 )
             } catch (e: Exception) {
@@ -319,9 +319,9 @@ class DockerHostUtils @Autowired constructor(
         }
 
         return Triple(
-            first = DockerHostLoadConfig(80, 50, 60, 80),
-            second = DockerHostLoadConfig(90, 70, 80, 90),
-            third = DockerHostLoadConfig(100, 80, 100, 100)
+            first = DockerHostLoadConfig(80, 50, 80, 80),
+            second = DockerHostLoadConfig(90, 70, 90, 85),
+            third = DockerHostLoadConfig(100, 80, 95, 85)
         )
     }
 
