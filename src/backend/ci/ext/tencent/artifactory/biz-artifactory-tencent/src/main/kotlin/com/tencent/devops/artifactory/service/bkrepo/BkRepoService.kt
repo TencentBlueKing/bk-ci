@@ -487,7 +487,7 @@ class BkRepoService @Autowired constructor(
         }
     }
 
-    private fun parsePipeineIdAndBuildId(path: String): Pair<String, String> {
+    private fun parsePipelineIdAndBuildId(path: String): Pair<String, String> {
         val splits = path.removePrefix("/").split("/")
         return Pair(splits[0], splits[1])
     }
@@ -498,7 +498,7 @@ class BkRepoService @Autowired constructor(
         val normalizeSrcPath = PathUtils.normalize(path)
 
         val pathNamePair = if (artifactoryType == ArtifactoryType.PIPELINE) {
-            val pipelineIdAndBuildId = parsePipeineIdAndBuildId(normalizeSrcPath)
+            val pipelineIdAndBuildId = parsePipelineIdAndBuildId(normalizeSrcPath)
             val pipelineId = pipelineIdAndBuildId.first
             val buildId = pipelineIdAndBuildId.second
             Pair("/$pipelineId/$buildId/", path.removePrefix("/"))
