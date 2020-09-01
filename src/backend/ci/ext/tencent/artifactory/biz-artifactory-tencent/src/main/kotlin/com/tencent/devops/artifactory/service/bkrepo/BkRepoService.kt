@@ -515,7 +515,7 @@ class BkRepoService @Autowired constructor(
         var srcFiles = bkRepoClient.queryByPathNamePairOrMetadataEqAnd(
             userId = userId,
             projectId = projectId,
-            repoNames = listOf(RepoUtils.CUSTOM_REPO),
+            repoNames = listOf(RepoUtils.getRepoByType(artifactoryType)),
             pathNamePairs = listOf(pathNamePair),
             metadata = mapOf(),
             page = 0,
