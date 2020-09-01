@@ -44,7 +44,8 @@ class CommandPowerShellImpl() : ICommand {
         projectId: String,
         dir: File,
         buildEnvs: List<BuildEnv>,
-        continueNoneZero: Boolean
+        continueNoneZero: Boolean,
+        errorMessage: String?
     ) {
         try {
         } finally {
