@@ -32,8 +32,7 @@ class IamService @Autowired constructor(
         relatedResourceTypes.add(RelatedResourceTypes(
                         system = iamConfiguration.systemId,
                         type = permissionUrlDTO.resourceId,
-                        instance = instanceList,
-                        attributes = null ))
+                        instance = instanceList))
 
         actions.add(
                 Action(
