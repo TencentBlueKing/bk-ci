@@ -26,6 +26,9 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -44,7 +47,10 @@ class ProjectS3Service @Autowired constructor(
     private val s3Service: S3Service,
     private val projectDao: ProjectDao,
     private val tofService: TOFService,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
+    private val repoGray: RepoGray,
+    private val bkRepoClient: BkRepoClient
 ) {
 
     companion object {
@@ -65,6 +71,14 @@ class ProjectS3Service @Autowired constructor(
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "")
                 logger.info("get user dept info successfully!")
+
+                val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
+                logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
+                if (createSuccess) {
+                    repoGray.addGrayProject(projectCreateInfo.englishName, redisOperation)
+                    logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
+                }
+
                 projectDao.create(
                     dslContext, userId, logoAddress, projectCreateInfo, userDeptDetail,
                     projectCreateInfo.englishName, ProjectChannelCode.BS

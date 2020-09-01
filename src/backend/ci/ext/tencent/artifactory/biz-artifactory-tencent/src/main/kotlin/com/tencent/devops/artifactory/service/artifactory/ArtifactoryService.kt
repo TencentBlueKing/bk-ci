@@ -45,6 +45,8 @@ import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoService
 import com.tencent.devops.artifactory.service.pojo.JFrogAQLFileInfo
 import com.tencent.devops.artifactory.util.JFrogUtil
+import com.tencent.devops.artifactory.util.PathUtils
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
@@ -56,7 +58,6 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
@@ -240,12 +241,7 @@ class ArtifactoryService @Autowired constructor(
             }
             if (artifactoryType == ArtifactoryType.PIPELINE) {
                 targetPipelineId = crossPipineId ?: throw BadRequestException("invalid pipelineId")
-                pipelineService.validatePermission(
-                    userId = lastModifyUser,
-                    projectId = targetProjectId,
-                    pipelineId = targetPipelineId,
-                    message = "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限"
-                )
+                pipelineService.validatePermission(lastModifyUser, targetProjectId, targetPipelineId, "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限")
                 val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
                     targetProjectId,
                     targetPipelineId,
@@ -533,7 +529,8 @@ class ArtifactoryService @Autowired constructor(
         projectId: String,
         jFrogAQLFileInfoList: List<JFrogAQLFileInfo>,
         pipelineHasPermissionList: List<String>,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        generateShortUrl: Boolean = false
     ): List<FileInfo> {
         val startTimestamp = System.currentTimeMillis()
 
@@ -572,9 +569,8 @@ class ArtifactoryService @Autowired constructor(
                     if ((!checkPermission || pipelineHasPermissionList.contains(pipelineId)) &&
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
                     ) {
-                        val shortUrl = if (it.name.endsWith(".ipa") || it.name.endsWith(".apk")) {
-                            val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
-                            shortUrlApi.getShortUrl(url, 300)
+                        val shortUrl = if (generateShortUrl && (it.name.endsWith(".ipa") || it.name.endsWith(".apk"))) {
+                            shortUrlApi.getShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId, buildId), 300)
                         } else {
                             ""
                         }

@@ -35,6 +35,9 @@ import io.swagger.annotations.ApiModelProperty
  */
 @ApiModel("镜像详情")
 data class BaseImageInfo(
+    @ApiModelProperty("镜像类型", required = true)
+    var imageType: String?,
+
     @ApiModelProperty("镜像代码", required = true)
     val code: String,
 
@@ -45,5 +48,8 @@ data class BaseImageInfo(
     val version: String,
 
     @ApiModelProperty("是否推荐", required = true)
-    val recommendFlag: Boolean
+    val recommendFlag: Boolean,
+
+    @ApiModelProperty("镜像完整地址", required = true)
+    var value: String?
 )

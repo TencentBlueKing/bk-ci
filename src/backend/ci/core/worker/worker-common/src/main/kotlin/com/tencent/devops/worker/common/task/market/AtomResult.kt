@@ -58,5 +58,6 @@ data class AtomResult(
     val type: String,
     val data: Map<String, Map<String, Any>>?,
     val qualityData: Map<String, Map<String, Any>>?,
-    val errorCode: Int?
+    val errorCode: Int?,
+    val monitorData: Map<String, Any>? = null
 )

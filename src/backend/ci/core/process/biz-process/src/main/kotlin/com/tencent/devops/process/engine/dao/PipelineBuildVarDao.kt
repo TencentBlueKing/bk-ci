@@ -29,8 +29,6 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_VAR
-import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_VAR_BAK
-import com.tencent.devops.model.process.tables.records.TPipelineBuildVarBakRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildVarRecord
 import org.jooq.DSLContext
 import org.jooq.InsertOnDuplicateSetMoreStep
@@ -73,36 +71,6 @@ class PipelineBuildVarDao @Autowired constructor() {
         logger.info("save the buildVariable=$name $value, result=$count")
     }
 
-    fun saveBakVar(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        name: String,
-        value: Any
-    ) {
-
-        val count =
-            with(T_PIPELINE_BUILD_VAR_BAK) {
-                dslContext.insertInto(
-                    this,
-                    PROJECT_ID,
-                    PIPELINE_ID,
-                    BUILD_ID,
-                    KEY,
-                    VALUE
-                )
-                    .values(projectId, pipelineId, buildId, name, value.toString())
-                    .onDuplicateKeyUpdate()
-                    .set(PROJECT_ID, projectId)
-                    .set(PIPELINE_ID, pipelineId)
-                    .set(VALUE, value.toString())
-                    .execute()
-            }
-
-        logger.info("saveBakVar the buildVariable=$name $value, result=$count")
-    }
-
     fun update(
         dslContext: DSLContext,
         buildId: String,
@@ -111,24 +79,6 @@ class PipelineBuildVarDao @Autowired constructor() {
         valueType: String? = null
     ): Int {
         with(T_PIPELINE_BUILD_VAR) {
-            val baseStep = dslContext.update(this)
-            if (valueType != null) {
-                baseStep.set(VAR_TYPE, valueType)
-            }
-            return baseStep.set(VALUE, value.toString())
-                .where(BUILD_ID.eq(buildId).and(KEY.eq(name)))
-                .execute()
-        }
-    }
-
-    fun updateBakVar(
-        dslContext: DSLContext,
-        buildId: String,
-        name: String,
-        value: Any,
-        valueType: String? = null
-    ): Int {
-        with(T_PIPELINE_BUILD_VAR_BAK) {
             val baseStep = dslContext.update(this)
             if (valueType != null) {
                 baseStep.set(VAR_TYPE, valueType)
@@ -210,17 +160,6 @@ class PipelineBuildVarDao @Autowired constructor() {
         }
     }
 
-    @Suppress("unused")
-    fun deleteBuildBakVar(dslContext: DSLContext, buildId: String, varName: String? = null): Int {
-        return with(T_PIPELINE_BUILD_VAR_BAK) {
-            val delete = dslContext.delete(this).where(BUILD_ID.eq(buildId))
-            if (!varName.isNullOrBlank()) {
-                delete.and(KEY.eq(varName))
-            }
-            delete.execute()
-        }
-    }
-
     fun batchSave(
         dslContext: DSLContext,
         projectId: String,
@@ -276,61 +215,6 @@ class PipelineBuildVarDao @Autowired constructor() {
         }
     }
 
-    fun batchSaveBakVar(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        variables: List<BuildParameters>
-    ) {
-        val sets =
-            mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildVarBakRecord>>()
-        with(T_PIPELINE_BUILD_VAR_BAK) {
-            val maxLength = VALUE.dataType.length()
-            variables.forEach { v ->
-                val valueString = v.value.toString()
-                if (valueString.length > maxLength) {
-                    logger.warn("[$buildId]|[$pipelineId]|ABANDON_DATA|len[${v.key}]=${valueString.length}(max=$maxLength)")
-                    return@forEach
-                }
-
-                val set: InsertOnDuplicateSetMoreStep<TPipelineBuildVarBakRecord>
-                if (v.valueType != null) {
-                    set = dslContext.insertInto(this)
-                        .set(PROJECT_ID, projectId)
-                        .set(PIPELINE_ID, pipelineId)
-                        .set(BUILD_ID, buildId)
-                        .set(KEY, v.key)
-                        .set(VALUE, v.value.toString())
-                        .set(VAR_TYPE, v.valueType!!.name)
-                        .onDuplicateKeyUpdate()
-                        .set(VALUE, v.value.toString())
-                        .set(VAR_TYPE, v.valueType!!.name)
-                } else {
-                    set = dslContext.insertInto(this)
-                        .set(PROJECT_ID, projectId)
-                        .set(PIPELINE_ID, pipelineId)
-                        .set(BUILD_ID, buildId)
-                        .set(KEY, v.key)
-                        .set(VALUE, v.value.toString())
-                        .onDuplicateKeyUpdate()
-                        .set(VALUE, v.value.toString())
-                }
-                sets.add(set)
-            }
-        }
-        if (sets.isNotEmpty()) {
-            val count = dslContext.batch(sets).execute()
-            var success = 0
-            count.forEach {
-                if (it == 1) {
-                    success++
-                }
-            }
-            logger.info("[$buildId]|batchSave_bak_vars|total=${count.size}|success_count=$success")
-        }
-    }
-
     fun batchUpdate(
         dslContext: DSLContext,
         buildId: String,
@@ -352,36 +236,8 @@ class PipelineBuildVarDao @Autowired constructor() {
         }
     }
 
-    fun batchUpdateBakVar(
-        dslContext: DSLContext,
-        buildId: String,
-        variables: List<BuildParameters>
-    ) {
-        val list = mutableListOf<Query>()
-        with(T_PIPELINE_BUILD_VAR_BAK) {
-            variables.forEach { v ->
-                val baseStep = dslContext.update(this)
-                    .set(BUILD_ID, buildId)
-                val valueType = v.valueType
-                if (valueType != null) {
-                    baseStep.set(VAR_TYPE, valueType.name)
-                }
-                baseStep.set(VALUE, v.value.toString()).where(BUILD_ID.eq(buildId).and(KEY.eq(v.key)))
-                list.add(baseStep)
-            }
-            dslContext.batch(list).execute()
-        }
-    }
-
     fun deletePipelineBuildVar(dslContext: DSLContext, projectId: String, pipelineId: String) {
         return with(T_PIPELINE_BUILD_VAR) {
-            dslContext.delete(this).where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId)).execute()
-        }
-    }
-
-    fun deletePipelineBuildBakVar(dslContext: DSLContext, projectId: String, pipelineId: String) {
-        return with(T_PIPELINE_BUILD_VAR_BAK) {
             dslContext.delete(this).where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId)).execute()
         }

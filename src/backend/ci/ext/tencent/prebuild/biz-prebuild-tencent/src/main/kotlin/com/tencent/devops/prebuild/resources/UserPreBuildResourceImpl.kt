@@ -35,7 +35,7 @@ import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.gitci.pojo.GitYamlString
-import com.tencent.devops.log.model.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.prebuild.api.UserPreBuildResource
 import com.tencent.devops.prebuild.pojo.PreProject

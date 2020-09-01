@@ -26,15 +26,19 @@
 
 package com.tencent.devops.dispatch.service.dispatcher
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.dispatch.exception.ErrorCodeEnum
+import com.tencent.devops.monitoring.api.service.DispatchReportResource
+import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 interface Dispatcher {
 
@@ -46,14 +50,23 @@ interface Dispatcher {
 
     fun retry(
         client: Client,
-        rabbitTemplate: RabbitTemplate,
+        buildLogPrinter: BuildLogPrinter,
         pipelineEventDispatcher: PipelineEventDispatcher,
         event: PipelineAgentStartupEvent,
+        errorType: ErrorType? = ErrorType.SYSTEM,
+        errorCode: Int? = 0,
         errorMessage: String? = null
     ) {
         if (event.retryTime > 3) {
             // 置为失败
-            onFailBuild(client, rabbitTemplate, event, errorMessage ?: "Fail to start up after 3 retries")
+            onFailBuild(
+                client,
+                buildLogPrinter,
+                event,
+                ErrorType.SYSTEM,
+                ErrorCodeEnum.START_VM_FAIL.errorCode,
+                errorMessage ?: "Fail to start up after 3 retries"
+            )
             return
         }
         event.retryTime += 1
@@ -63,21 +76,78 @@ interface Dispatcher {
 
     fun onFailBuild(
         client: Client,
-        rabbitTemplate: RabbitTemplate,
+        buildLogPrinter: BuildLogPrinter,
         event: PipelineAgentStartupEvent,
-        errorMessage: String
+        errorType: ErrorType,
+        errorCode: Int,
+        errorMsg: String,
+        third: Boolean = true
     ) {
-        LogUtils.addRedLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addRedLine(
             buildId = event.buildId,
-            message = errorMessage,
+            message = errorMsg,
             tag = VMUtils.genStartVMTaskId(event.containerId),
             jobId = event.containerHashId,
             executeCount = event.executeCount ?: 1
         )
         client.get(ServiceBuildResource::class).setVMStatus(
-            projectId = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId,
-            vmSeqId = event.vmSeqId, status = BuildStatus.FAILED
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            status = BuildStatus.FAILED,
+            errorType = errorType,
+            errorCode = errorCode,
+            errorMsg = errorMsg
+        )
+
+        if (third) {
+            sendDispatchMonitoring(
+                client = client,
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                actionType = event.actionType.name,
+                retryTime = event.retryTime,
+                routeKeySuffix = event.routeKeySuffix ?: "third",
+                startTime = System.currentTimeMillis(),
+                stopTime = 0L,
+                errorCode = errorCode.toString(),
+                errorMessage = errorMsg
+            )
+        }
+    }
+
+    fun sendDispatchMonitoring(
+        client: Client,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        actionType: String,
+        retryTime: Int,
+        routeKeySuffix: String?,
+        startTime: Long,
+        stopTime: Long,
+        errorCode: String,
+        errorMessage: String?
+    ) {
+        client.get(DispatchReportResource::class).dispatch(
+            DispatchStatus(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                actionType = actionType,
+                retryCount = retryTime.toLong(),
+                channelCode = ChannelCode.BS,
+                buildType = routeKeySuffix ?: "",
+                startTime = startTime,
+                stopTime = stopTime,
+                errorCode = errorCode,
+                errorMsg = errorMessage
+            )
         )
     }
 }

@@ -55,7 +55,7 @@ class MeasurePipelineBuildFinishListener @Autowired constructor(
             logger.warn("[$pipelineId] build ($buildId) is not exist")
             return
         }
-        logger.info("[$pipelineId]| measure the build[$buildId] event (${event.status}) with ERRORCODE: [${event.errorType}][${event.errorCode}][${event.errorMsg}]")
+        logger.info("[$pipelineId]| measure the build[$buildId] event (${event.status}) with errorInfoList=${event.errorInfoList}")
 
         pipelineSubscriptionService.onPipelineShutdown(
             pipelineId = pipelineId,
@@ -63,9 +63,7 @@ class MeasurePipelineBuildFinishListener @Autowired constructor(
             projectId = event.projectId,
             startTime = buildInfo.startTime!!,
             buildStatus = BuildStatus.valueOf(event.status),
-            errorType = event.errorType,
-            errorCode = event.errorCode,
-            errorMsg = event.errorMsg
+            errorInfoList = event.errorInfoList
         )
     }
 }

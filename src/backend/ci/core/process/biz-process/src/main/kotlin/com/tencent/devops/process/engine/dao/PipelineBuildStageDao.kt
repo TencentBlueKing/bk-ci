@@ -34,8 +34,6 @@ import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_STAGE
-import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_STAGE_BAK
-import com.tencent.devops.model.process.tables.records.TPipelineBuildStageBakRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
@@ -122,57 +120,9 @@ class PipelineBuildStageDao {
         dslContext.batch(records).execute()
     }
 
-    fun batchSaveBakStage(dslContext: DSLContext, taskList: Collection<PipelineBuildStage>) {
-        val records =
-            mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildStageBakRecord>>()
-        with(T_PIPELINE_BUILD_STAGE_BAK) {
-            taskList.forEach {
-                records.add(
-                    dslContext.insertInto(this)
-                        .set(PROJECT_ID, it.projectId)
-                        .set(PIPELINE_ID, it.pipelineId)
-                        .set(BUILD_ID, it.buildId)
-                        .set(STAGE_ID, it.stageId)
-                        .set(SEQ, it.seq)
-                        .set(STATUS, it.status.ordinal)
-                        .set(START_TIME, it.startTime)
-                        .set(END_TIME, it.endTime)
-                        .set(COST, it.cost)
-                        .set(EXECUTE_COUNT, it.executeCount)
-                        .set(CONDITIONS, if (it.controlOption != null) JsonUtil.toJson(it.controlOption!!) else null)
-                        .onDuplicateKeyUpdate()
-                        .set(STATUS, it.status.ordinal)
-                )
-            }
-        }
-        dslContext.batch(records).execute()
-    }
-
     fun batchUpdate(dslContext: DSLContext, taskList: List<TPipelineBuildStageRecord>) {
         val records = mutableListOf<Query>()
         with(T_PIPELINE_BUILD_STAGE) {
-            taskList.forEach {
-                records.add(
-                    dslContext.update(this)
-                        .set(PROJECT_ID, it.projectId)
-                        .set(PIPELINE_ID, it.pipelineId)
-                        .set(SEQ, it.seq)
-                        .set(STATUS, it.status)
-                        .set(START_TIME, it.startTime)
-                        .set(END_TIME, it.endTime)
-                        .set(COST, it.cost)
-                        .set(EXECUTE_COUNT, it.executeCount)
-                        .set(CONDITIONS, it.conditions)
-                        .where(BUILD_ID.eq(it.buildId).and(STAGE_ID.eq(it.stageId)))
-                )
-            }
-        }
-        dslContext.batch(records).execute()
-    }
-
-    fun batchUpdateBakStage(dslContext: DSLContext, taskList: List<TPipelineBuildStageBakRecord>) {
-        val records = mutableListOf<Query>()
-        with(T_PIPELINE_BUILD_STAGE_BAK) {
             taskList.forEach {
                 records.add(
                     dslContext.update(this)
@@ -216,15 +166,6 @@ class PipelineBuildStageDao {
 
     fun deletePipelineBuildStages(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
         return with(T_PIPELINE_BUILD_STAGE) {
-            dslContext.delete(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .execute()
-        }
-    }
-
-    fun deletePipelineBuildBakStages(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
-        return with(T_PIPELINE_BUILD_STAGE_BAK) {
             dslContext.delete(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
@@ -289,33 +230,6 @@ class PipelineBuildStageDao {
         controlOption: PipelineBuildStageControlOption? = null
     ): Int {
         return with(T_PIPELINE_BUILD_STAGE) {
-            val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
-            // 根据状态来设置字段
-            if (BuildStatus.isFinish(buildStatus) || buildStatus.name == BuildStatus.STAGE_SUCCESS.name) {
-                update.set(END_TIME, LocalDateTime.now())
-                update.set(
-                    COST, COST + JooqUtils.timestampDiff(
-                        DatePart.SECOND,
-                        START_TIME.cast(java.sql.Timestamp::class.java),
-                        END_TIME.cast(java.sql.Timestamp::class.java)
-                    )
-                )
-            } else if (BuildStatus.isRunning(buildStatus)) {
-                update.set(START_TIME, LocalDateTime.now())
-            }
-            if (controlOption != null) update.set(CONDITIONS, JsonUtil.toJson(controlOption))
-            update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).execute()
-        }
-    }
-
-    fun updateBakStageStatus(
-        dslContext: DSLContext,
-        buildId: String,
-        stageId: String,
-        buildStatus: BuildStatus,
-        controlOption: PipelineBuildStageControlOption? = null
-    ): Int {
-        return with(T_PIPELINE_BUILD_STAGE_BAK) {
             val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
             // 根据状态来设置字段
             if (BuildStatus.isFinish(buildStatus) || buildStatus.name == BuildStatus.STAGE_SUCCESS.name) {

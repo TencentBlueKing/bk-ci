@@ -57,18 +57,16 @@ class TencentPipelineBuildArtifactoryService constructor(
             if (repoGray.isGray(projectId, redisOperation)) {
                 bkRepoSearchService.serviceSearchFileAndProperty(
                     projectId = projectId,
-                    searchProps = listOf(
-                        Property("pipelineId", pipelineId),
-                        Property("buildId", buildId)
-                    )
+                    searchProps = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)),
+                    customized = null,
+                    generateShortUrl = true
                 ).second
             } else {
                 artifactorySearchService.serviceSearchFileAndProperty(
                     projectId = projectId,
-                    searchProps = listOf(
-                        Property("pipelineId", pipelineId),
-                        Property("buildId", buildId)
-                    )
+                    searchProps = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)),
+                    customized = null,
+                    generateShortUrl = true
                 ).second
             }
         )

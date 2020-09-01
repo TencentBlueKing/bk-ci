@@ -1,0 +1,40 @@
+{
+  "system": "bk_codecc",
+  "operations": [
+    {
+      "operation": "register_system",
+      "data": {
+        "system_id": "bk_codecc",
+        "system_name": "蓝鲸代码检查平台",
+        "releated_scope_types": "project",
+        "managers": "admin",
+        "creator": "admin"
+      }
+    },
+    {
+      "operation": "batch_upset_resource_type",
+      "data": {
+        "scope_type": "project",
+        "resource_types": [
+          {
+            "resource_type": "codecc-task",
+            "resource_type_name": "代码检查任务",
+            "parent_resource_type": "",
+            "actions": [
+              {
+                "action_id": "task-member",
+                "action_name": "任务成员",
+                "is_related_resource": true
+              },
+              {
+                "action_id": "task-owner",
+                "action_name": "任务接口人",
+                "is_related_resource": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

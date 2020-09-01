@@ -194,9 +194,10 @@ class ArtifactorySearchService @Autowired constructor(
     override fun serviceSearchFileAndProperty(
         projectId: String,
         searchProps: List<Property>,
-        customized: Boolean?
+        customized: Boolean?,
+        generateShortUrl: Boolean
     ): Pair<Long, List<FileInfo>> {
-        logger.info("serviceSearchFileAndProperty, projectId: $projectId, searchProps: $searchProps, customized: $customized")
+        logger.info("serviceSearchFileAndProperty, projectId: $projectId, searchProps: $searchProps, customized: $customized, generateShortUrl: $generateShortUrl")
         val repoPathPrefix = JFrogUtil.getRepoPath()
         val pipelinePathPrefix = "/" + JFrogUtil.getPipelinePathPrefix(projectId).removePrefix(repoPathPrefix)
         val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(projectId).removePrefix(repoPathPrefix)
@@ -217,7 +218,7 @@ class ArtifactorySearchService @Autowired constructor(
         }
 
         val jFrogAQLFileInfoList = jFrogAQLService.searchFileAndPropertyByPropertyByAnd(repoPathPrefix, relativePathSet, fileNameSet, props)
-        val fileInfoList = artifactoryService.transferJFrogAQLFileInfo(projectId, jFrogAQLFileInfoList, emptyList(), false)
+        val fileInfoList = artifactoryService.transferJFrogAQLFileInfo(projectId, jFrogAQLFileInfoList, emptyList(), generateShortUrl)
             .sortedWith(Comparator { file1, file2 -> -file1.modifiedTime.compareTo(file2.modifiedTime) })
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }

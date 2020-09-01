@@ -27,9 +27,11 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.store.pojo.app.BuildEnv
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.util.concurrent.TimeUnit
 
 @ApiModel("流水线模型-构建参数变量")
 data class BuildVariables(
@@ -54,5 +56,5 @@ data class BuildVariables(
     @ApiModelProperty("参数类型集合", required = false)
     val variablesWithType: List<BuildParameters>,
     @ApiModelProperty("Job超时时间（毫秒）", required = true)
-    var timeoutMills: Long
+    var timeoutMills: Long = TimeUnit.MINUTES.toMillis(Timeout.DEFAULT_TIMEOUT_MIN.toLong())
 )

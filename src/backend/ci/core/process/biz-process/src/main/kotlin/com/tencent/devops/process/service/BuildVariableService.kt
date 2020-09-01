@@ -34,7 +34,6 @@ import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -47,7 +46,6 @@ class BuildVariableService @Autowired constructor(
 
     companion object {
         private const val PIPELINE_BUILD_VAR_KEY = "pipelineBuildVar"
-        private val logger = LoggerFactory.getLogger(BuildVariableService::class.java)
     }
 
     fun getVariable(buildId: String, varName: String): String? {
@@ -84,19 +82,6 @@ class BuildVariableService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
-        val moveVarDataBakSwitch = redisOperation.get("moveVarDataBakSwitch")
-        // 打开双写开关则写备份表(待数据迁移完成后则删除代码)
-        if (moveVarDataBakSwitch == "true") {
-            try {
-                pipelineBuildVarDao.deletePipelineBuildBakVar(
-                    dslContext = commonDslContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )
-            } catch (e: Exception) {
-                logger.warn("build($pipelineId) deletePipelineBuildBakVar error", e)
-            }
-        }
     }
 
     // 保存方法需要提供事务保护的实现，传入特定dslContext
@@ -112,7 +97,6 @@ class BuildVariableService @Autowired constructor(
         try {
             redisLock.lock()
             val varMap = pipelineBuildVarDao.getVars(dslContext, buildId, name)
-            val moveVarDataBakSwitch = redisOperation.get("moveVarDataBakSwitch")
             if (varMap.isEmpty()) {
                 pipelineBuildVarDao.save(
                     dslContext = dslContext,
@@ -122,20 +106,6 @@ class BuildVariableService @Autowired constructor(
                     name = name,
                     value = value
                 )
-                if (moveVarDataBakSwitch == "true") {
-                    try {
-                        pipelineBuildVarDao.saveBakVar(
-                            dslContext = dslContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            name = name,
-                            value = value
-                        )
-                    } catch (e: Exception) {
-                        logger.warn("build($buildId) saveBakVar error", e)
-                    }
-                }
             } else {
                 pipelineBuildVarDao.update(
                     dslContext = dslContext,
@@ -143,18 +113,6 @@ class BuildVariableService @Autowired constructor(
                     name = name,
                     value = value
                 )
-                if (moveVarDataBakSwitch == "true") {
-                    try {
-                        pipelineBuildVarDao.updateBakVar(
-                            dslContext = dslContext,
-                            buildId = buildId,
-                            name = name,
-                            value = value
-                        )
-                    } catch (e: Exception) {
-                        logger.warn("build($buildId) updateBakVar error", e)
-                    }
-                }
             }
         } finally {
             redisLock.unlock()
@@ -181,7 +139,6 @@ class BuildVariableService @Autowired constructor(
                     updateBuildParameters.add(it)
                 }
             }
-            val moveVarDataBakSwitch = redisOperation.get("moveVarDataBakSwitch")
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 pipelineBuildVarDao.batchSave(
@@ -191,35 +148,11 @@ class BuildVariableService @Autowired constructor(
                     buildId = buildId,
                     variables = insertBuildParameters
                 )
-                if (moveVarDataBakSwitch == "true") {
-                    try {
-                        pipelineBuildVarDao.batchSaveBakVar(
-                            dslContext = dslContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            variables = insertBuildParameters
-                        )
-                    } catch (e: Exception) {
-                        logger.warn("build($buildId) batchSaveBakVar error", e)
-                    }
-                }
                 pipelineBuildVarDao.batchUpdate(
                     dslContext = context,
                     buildId = buildId,
                     variables = updateBuildParameters
                 )
-                if (moveVarDataBakSwitch == "true") {
-                    try {
-                        pipelineBuildVarDao.batchUpdateBakVar(
-                            dslContext = context,
-                            buildId = buildId,
-                            variables = updateBuildParameters
-                        )
-                    } catch (e: Exception) {
-                        logger.warn("build($buildId) batchUpdateBakVar error", e)
-                    }
-                }
             }
         } finally {
             redisLock.unlock()

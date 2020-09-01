@@ -341,7 +341,8 @@ class BkRepoService @Autowired constructor(
         projectId: String,
         fileList: List<QueryNodeInfo>,
         pipelineHasPermissionList: List<String>,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        generateShortUrl: Boolean = false
     ): List<FileInfo> {
         val startTimestamp = System.currentTimeMillis()
         try {
@@ -368,9 +369,8 @@ class BkRepoService @Autowired constructor(
                 if (RepoUtils.isPipelineFile(it)) {
                     val pipelineId = pipelineService.getPipelineId(it.path)
                     val buildId = pipelineService.getBuildId(it.path)
-                    val shortUrl = if (it.name.endsWith(".ipa") || it.name.endsWith(".apk")) {
-                        val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
-                        shortUrlApi.getShortUrl(url, 300)
+                    val shortUrl = if (generateShortUrl && (it.name.endsWith(".ipa") || it.name.endsWith(".apk"))) {
+                        shortUrlApi.getShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId, buildId), 300)
                     } else {
                         ""
                     }
@@ -476,41 +476,37 @@ class BkRepoService @Autowired constructor(
         }
     }
 
-    private fun parsePipeineIdAndBuildId(path: String): Pair<String, String> {
+    private fun parsePipelineIdAndBuildId(path: String): Pair<String, String> {
         val splits = path.removePrefix("/").split("/")
         return Pair(splits[0], splits[1])
     }
 
     override fun acrossProjectCopy(projectId: String, artifactoryType: ArtifactoryType, path: String, targetProjectId: String, targetPath: String): Count {
         logger.info("acrossProjectCopy, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, targetProjectId: $targetProjectId, targetPath: $targetPath")
-        val normalizeSrcPath = PathUtils.normalize(path)
-        val srcFiles = if (artifactoryType == ArtifactoryType.PIPELINE) {
-            val pipeineIdAndBuildId = parsePipeineIdAndBuildId(normalizeSrcPath)
-            val pipelineId = pipeineIdAndBuildId.first
-            val buildId = pipeineIdAndBuildId.second
-            val pathPrefix = "/$pipelineId/$buildId/"
-            bkRepoClient.listFileByRegex(
-                "",
-                projectId,
-                RepoUtils.PIPELINE_REPO,
-                pathPrefix,
-                normalizeSrcPath.removePrefix(pathPrefix)
-            ).map { it.fullPath }
+        var userId = ""
+        val absPath = "/${PathUtils.normalize(path).removePrefix("/")}"
+        val pathNamePair = if (absPath.endsWith("/")) {
+            Pair(absPath, "*")
         } else {
-            bkRepoClient.listFileByRegex(
-                "",
-                projectId,
-                RepoUtils.CUSTOM_REPO,
-                "/",
-                normalizeSrcPath.removePrefix("/")
-            ).map { it.fullPath }
+            val fileName = absPath.split("/").last()
+            val filePath = absPath.removeSuffix(fileName)
+            Pair(filePath, fileName)
         }
+        var srcFiles = bkRepoClient.queryByPathNamePairOrMetadataEqAnd(
+            userId = userId,
+            projectId = projectId,
+            repoNames = listOf(RepoUtils.getRepoByType(artifactoryType)),
+            pathNamePairs = listOf(pathNamePair),
+            metadata = mapOf(),
+            page = 0,
+            pageSize = 10000
+        ).map { it.fullPath }
         logger.info("match files: $srcFiles")
 
         val destPathFolder = "/share/$projectId/${PathUtils.normalize(targetPath).removePrefix("/")}"
         srcFiles.forEach { srcFile ->
             bkRepoClient.copy(
-                "",
+                userId,
                 projectId,
                 if (artifactoryType == ArtifactoryType.PIPELINE) RepoUtils.PIPELINE_REPO else RepoUtils.CUSTOM_REPO,
                 srcFile,

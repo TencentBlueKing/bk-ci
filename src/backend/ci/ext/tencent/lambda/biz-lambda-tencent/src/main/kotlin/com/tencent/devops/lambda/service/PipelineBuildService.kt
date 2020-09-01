@@ -25,11 +25,12 @@
  */
 package com.tencent.devops.lambda.service
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -107,9 +108,7 @@ class PipelineBuildService @Autowired constructor(
             deptName = projectInfo.deptName,
             centerName = projectInfo.centerName,
             model = model,
-            errorType = event.errorType,
-            errorCode = event.errorCode,
-            errorMsg = event.errorMsg
+            errorInfoList = event.errorInfoList
         )
         esService.build(data)
     }
@@ -125,6 +124,20 @@ class PipelineBuildService @Autowired constructor(
         pushTaskDetail(event, task)
     }
 
+    private fun getAtomCodeFromTask(task: TPipelineBuildTaskRecord): String {
+        return if (!task.taskAtom.isNullOrBlank()) {
+            task.taskAtom
+        } else {
+            val taskParams = JsonUtil.toMutableMapSkipEmpty(task.taskParams ?: "{}")
+            if (taskParams.keys.contains("atomCode")) {
+                taskParams["atomCode"] as String
+            } else {
+                logger.warn("unexpected taskParams with no atomCode:${task.taskParams}")
+                ""
+            }
+        }
+    }
+
     private fun pushElementData2Es(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord) {
         val data = ElementData(
             projectId = event.projectId,
@@ -136,7 +149,7 @@ class PipelineBuildService @Autowired constructor(
             beginTime = task.startTime?.timestampmilli() ?: 0,
             endTime = task.endTime?.timestampmilli() ?: 0,
             type = task.taskType ?: "",
-            atomCode = task.taskAtom ?: "",
+            atomCode = getAtomCodeFromTask(task),
             errorType = event.errorType,
             errorCode = event.errorCode,
             errorMsg = event.errorMsg
@@ -364,9 +377,7 @@ class PipelineBuildService @Autowired constructor(
                 parentBuildId = t.parentBuildId,
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
-                errorType = if (t.errorType == null) null else ErrorType.values()[t.errorType],
-                errorCode = t.errorCode,
-                errorMsg = t.errorMsg
+                errorInfoList = if (t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo) as List<ErrorInfo> else null
             )
         }
     }

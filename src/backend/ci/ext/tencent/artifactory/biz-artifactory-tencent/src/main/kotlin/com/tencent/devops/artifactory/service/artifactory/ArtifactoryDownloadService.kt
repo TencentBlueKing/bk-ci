@@ -201,21 +201,21 @@ class ArtifactoryDownloadService @Autowired constructor(
         argPath: String,
         ttl: Int?,
         crossProjectId: String?,
-        crossPipineId: String?,
+        crossPipelineId: String?,
         crossBuildNo: String?,
         region: String?,
         userId: String?
     ): List<String> {
         logger.info("getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
             ", artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, crossProjectId: $crossProjectId" +
-            ", crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo, region：$region, userId: $userId")
+            ", crossPipelineId: $crossPipelineId, crossBuildNo: $crossBuildNo, region：$region, userId: $userId")
         var targetProjectId = projectId
         var targetPipelineId = pipelineId
         var targetBuildId = buildId
         if (!crossProjectId.isNullOrBlank()) {
             targetProjectId = crossProjectId!!
             if (artifactoryType == ArtifactoryType.PIPELINE) {
-                targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
+                targetPipelineId = crossPipelineId ?: throw BadRequestException("Invalid Parameter pipelineId")
                 val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
                     targetProjectId,
                     targetPipelineId,
@@ -264,18 +264,12 @@ class ArtifactoryDownloadService @Autowired constructor(
             val fileName = JFrogUtil.getFileName(path)
 
             val jFrogAQLFileInfoList = jFrogAQLService.searchFileByRegex(repoPathPrefix, setOf(pathPrefix), setOf(fileName))
-            logger.info("Path($path) match file list: $jFrogFileInfoList")
-
+            logger.info("match file list[$path]: $jFrogFileInfoList")
             jFrogFileInfoList.addAll(jFrogAQLFileInfoList)
         }
 
-        logger.info("Match file list: $jFrogFileInfoList")
         val fileInfoList = artifactoryService.transferJFrogAQLFileInfo(targetProjectId, jFrogFileInfoList, emptyList(), false)
-        logger.info("Transfer file list: $fileInfoList")
-
-        val filePathList = fileInfoList.map {
-            JFrogUtil.getRealPath(targetProjectId, artifactoryType, it.fullPath)
-        }
+        val filePathList = fileInfoList.map { JFrogUtil.getRealPath(targetProjectId, artifactoryType, it.fullPath) }
         return jFrogApiService.batchThirdPartyDownloadUrl(filePathList, ttl ?: 24 * 3600).map {
             RegionUtil.replaceRegionServer(it.value, region)
         }

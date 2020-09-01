@@ -54,6 +54,7 @@ const val PIPELINE_WEBHOOK_EVENT_TYPE = "BK_CI_HOOK_EVENT_TYPE" // hookEventType
 const val PIPELINE_WEBHOOK_MR_ID = "BK_CI_HOOK_MR_ID" // bk_hookMergeRequestId
 const val PIPELINE_REPO_NAME = "BK_CI_REPO_NAME" // "repoName"
 const val PIPELINE_WEBHOOK_MR_COMMITTER = "BK_CI_HOOK_MR_COMMITTER" // "bk_hookMergeRequest_committer"
+const val PIPELINE_WEBHOOK_COMMIT_MESSAGE = "BK_CI_HOOK_MESSAGE" // hook message
 
 const val GIT_MR_NUMBER = "BK_CI_GIT_MR_NUMBER" // git_mr_number
 const val GITHUB_PR_NUMBER = "BK_CI_GITHUB_PR_NUMBER" // github_pr_number
@@ -128,6 +129,14 @@ const val PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN = 0
  * 流水线设置-最大排队数量-最大值
  */
 const val PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX = 20
+/**
+ * 流水线设置-最大并发数量-默认值
+ */
+const val PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT = 50
+/**
+ * 流水线设置-最大并发数量-最大值
+ */
+const val PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX = 200
 
 /**
  * 流水线设置-最大排队时间-默认值 单位:分钟
@@ -145,9 +154,14 @@ const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN = 1
 const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX = 1440
 
 /**
- * 流水线设置-错误信息入库长度最大值 单位:分钟
+ * 流水线设置-插件错误信息入库长度最大值 单位:分钟
  */
-const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 4000
+const val PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX = 4000
+
+/**
+ * 流水线设置-流水线错误信息入库长度最大值 单位:分钟
+ */
+const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 30000
 
 /**
  * 流水线设置-启动的通知模板代码
@@ -197,6 +211,11 @@ const val PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE = "MANUAL_REVIEW_ATOM_NOTI
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 
 const val PIPELINE_TIME_END = "BK_CI_BUILD_END_TIME" // "pipeline.time.end"
+
+/**
+ * 保存流水线编排的最大个数
+ */
+const val PIPELINE_RES_NUM_MIN = 50
 
 object PipelineVarUtil {
 

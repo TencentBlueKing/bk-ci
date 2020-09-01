@@ -37,7 +37,7 @@ import com.tencent.devops.common.job.JobClient
 import com.tencent.devops.common.job.api.pojo.ExecuteTaskRequest
 import com.tencent.devops.common.job.api.pojo.GlobalVar
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.JobDevOpsExecuteTaskExtElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -46,7 +46,6 @@ import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.util.ParameterUtils
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE
 import org.springframework.context.annotation.Scope
@@ -56,7 +55,7 @@ import org.springframework.stereotype.Component
 @Scope(SCOPE_PROTOTYPE)
 class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
     private val jobClient: JobClient,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<JobDevOpsExecuteTaskExtElement> {
 
     override fun getParamElement(task: PipelineBuildTask): JobDevOpsExecuteTaskExtElement {
@@ -122,7 +121,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
 
         if (param.taskId < 0) {
             logger.warn("taskId is not init of build($buildId)")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "taskId is not init", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, "taskId is not init", taskId, containerId, executeCount)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -153,7 +152,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
 
         val executeTaskReq = ExecuteTaskRequest(operator, arrayListOf(), globalVars, jobTaskTemplateId, timeout)
         val taskInstanceId = jobClient.executeTaskDevops(executeTaskReq, projectId)
-        LogUtils.addLine(rabbitTemplate, buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkStatus(
@@ -173,7 +172,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
         task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
 
         if (!BuildStatus.isFinish(buildStatus)) {
-            LogUtils.addLine(rabbitTemplate, buildId, "Waiting for job:$taskInstanceId", task.taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "Waiting for job:$taskInstanceId", task.taskId, containerId, executeCount)
         }
 
         return if (buildStatus == BuildStatus.FAILED) AtomResponse(
@@ -198,8 +197,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
 
         if (System.currentTimeMillis() - startTime > maxRunningMills) {
             logger.warn("job getTimeout. getTimeout minutes:${maxRunningMills / 60000}")
-            LogUtils.addRedLine(
-                rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId,
                 "Job getTimeout:${maxRunningMills / 60000} Minutes",
                 taskId,
@@ -214,8 +212,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
         return if (taskResult.isFinish) {
             if (taskResult.success) {
                 logger.info("[$buildId]|SUCCEED|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addLine(
-                    rabbitTemplate,
+                buildLogPrinter.addLine(
                     buildId,
                     "Job devops execute task success! detail: ${taskResult.msg}",
                     taskId,
@@ -225,8 +222,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
                 BuildStatus.SUCCEED
             } else {
                 logger.info("[$buildId]|FAIL|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addRedLine(
-                    rabbitTemplate,
+                buildLogPrinter.addRedLine(
                     buildId,
                     "start execute task failed! detail: ${taskResult.msg}",
                     taskId,

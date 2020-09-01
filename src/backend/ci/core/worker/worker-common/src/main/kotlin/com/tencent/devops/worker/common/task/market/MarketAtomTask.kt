@@ -253,6 +253,7 @@ open class MarketAtomTask : ITask() {
                 systemEnvVariables = systemEnvVariables,
                 buildEnvs = buildEnvs
             )
+            val errorMessage = "Fail to run the plugin"
             when {
                 AgentEnv.getOS() == OSType.WINDOWS -> {
                     if (preCmds.isNotEmpty()) {
@@ -266,7 +267,8 @@ open class MarketAtomTask : ITask() {
                         script = command.toString(),
                         runtimeVariables = environment,
                         dir = atomTmpSpace,
-                        systemEnvVariables = systemEnvVariables
+                        systemEnvVariables = systemEnvVariables,
+                        errorMessage = errorMessage
                     )
                 }
                 AgentEnv.getOS() == OSType.LINUX || AgentEnv.getOS() == OSType.MAC_OS -> {
@@ -282,7 +284,8 @@ open class MarketAtomTask : ITask() {
                         dir = atomTmpSpace,
                         buildEnvs = buildEnvs,
                         runtimeVariables = environment,
-                        systemEnvVariables = systemEnvVariables
+                        systemEnvVariables = systemEnvVariables,
+                        errorMessage = errorMessage
                     )
                 }
             }
@@ -410,7 +413,11 @@ open class MarketAtomTask : ITask() {
     ) {
         val atomResult = readOutputFile(atomTmpSpace)
         logger.info("the atomResult from Market is :\n$atomResult")
-
+        // 添加插件监控数据
+        val monitorData = atomResult?.monitorData
+        if (monitorData != null) {
+            addMonitorData(monitorData)
+        }
         deletePluginFile(atomTmpSpace)
         val success: Boolean
         if (atomResult == null) {

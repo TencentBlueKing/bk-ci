@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.atom.parser
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.process.engine.service.store.StoreImageService
+import com.tencent.devops.process.engine.service.store.StoreImageHelper
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -41,7 +41,7 @@ import org.springframework.stereotype.Component
  */
 @Component(value = "commonDispatchTypeParser")
 class DispatchTypeParserImpl @Autowired constructor(
-    private val storeImageService: StoreImageService
+    private val storeImageHelper: StoreImageHelper
 ) : DispatchTypeParser {
 
     private val logger = LoggerFactory.getLogger(DispatchTypeParserImpl::class.java)
@@ -58,7 +58,7 @@ class DispatchTypeParserImpl @Autowired constructor(
             dispatchType.credentialProject = projectId
             if (dispatchType.imageType == ImageType.BKSTORE) {
                 // 从商店获取镜像真实信息
-                val imageRepoInfo = storeImageService.getImageRepoInfo(
+                val imageRepoInfo = storeImageHelper.getImageRepoInfo(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
