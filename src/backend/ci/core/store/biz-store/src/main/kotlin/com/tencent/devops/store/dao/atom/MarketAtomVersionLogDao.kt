@@ -74,7 +74,7 @@ class MarketAtomVersionLogDao {
 
     fun deleteByAtomCode(dslContext: DSLContext, atomCode: String) {
         val ta = TAtom.T_ATOM
-        val atomIds = dslContext.select(ta.ID).from(ta).fetch()
+        val atomIds = dslContext.select(ta.ID).from(ta).where(ta.ATOM_CODE.eq(atomCode)).fetch()
         with(TAtomVersionLog.T_ATOM_VERSION_LOG) {
             dslContext.deleteFrom(this)
                 .where(ATOM_ID.`in`(atomIds))

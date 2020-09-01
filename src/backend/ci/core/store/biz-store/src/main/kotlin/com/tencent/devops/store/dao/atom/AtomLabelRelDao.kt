@@ -72,7 +72,7 @@ class AtomLabelRelDao {
 
     fun deleteByAtomCode(dslContext: DSLContext, atomCode: String) {
         val ta = TAtom.T_ATOM
-        val atomIds = dslContext.select(ta.ID).from(ta).fetch()
+        val atomIds = dslContext.select(ta.ID).from(ta).where(ta.ATOM_CODE.eq(atomCode)).fetch()
         with(TAtomLabelRel.T_ATOM_LABEL_REL) {
             dslContext.deleteFrom(this)
                 .where(ATOM_ID.`in`(atomIds))
