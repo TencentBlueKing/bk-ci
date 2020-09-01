@@ -54,9 +54,9 @@ class JobQuotaSystemDao {
         }
     }
 
-    fun convert(record: TDispatchQuotaSystemRecord): JobQuotaSystem {
+    fun convert(vmType: JobQuotaVmType, record: TDispatchQuotaSystemRecord): JobQuotaSystem {
         return JobQuotaSystem(
-            vmType = JobQuotaVmType.parse(record.vmType),
+            vmType = vmType,
             runningJobMaxSystem = record.runningJobsMaxSystem,
             runningJobMaxProject = record.runningJobsMaxProject,
             runningTimeJobMax = record.runningTimeJobMax,

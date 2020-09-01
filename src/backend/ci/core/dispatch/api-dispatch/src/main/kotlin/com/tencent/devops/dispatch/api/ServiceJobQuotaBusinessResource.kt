@@ -49,7 +49,7 @@ interface ServiceJobQuotaBusinessResource {
 
     @ApiOperation("上报一个JOB启动")
     @POST
-    @Path("/{projectId}/{vmType}/{buildId}/{vmSeqId}")
+    @Path("/job/{projectId}/{vmType}/{buildId}/{vmSeqId}")
     fun addRunningJob(
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
@@ -67,7 +67,7 @@ interface ServiceJobQuotaBusinessResource {
 
     @ApiOperation("上报一个JOB结束")
     @DELETE
-    @Path("/{projectId}/{buildId}/{vmSeqId}")
+    @Path("/job/{projectId}/{buildId}/{vmSeqId}")
     fun removeRunningJob(
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")

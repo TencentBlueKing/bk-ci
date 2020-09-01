@@ -28,7 +28,6 @@ package com.tencent.devops.dispatch.pojo.enums
 
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import javax.ws.rs.NotFoundException
 
 enum class JobQuotaVmType(val displayName: String) {
     DOCKER_VM("Docker on VM"),
@@ -39,13 +38,13 @@ enum class JobQuotaVmType(val displayName: String) {
     ALL("所有类型");
 
     companion object {
-        fun parse(vmType: String): JobQuotaVmType {
+        fun parse(vmType: String): JobQuotaVmType? {
             values().forEach {
                 if (it.name == vmType) {
                     return it
                 }
             }
-            throw NotFoundException("Can't find the JobQuotaVmType type($vmType)")
+            return null
         }
 
         fun parse(dispatchType: DispatchType): JobQuotaVmType? {

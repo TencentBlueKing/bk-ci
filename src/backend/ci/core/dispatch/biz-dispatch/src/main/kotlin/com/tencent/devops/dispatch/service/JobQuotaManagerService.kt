@@ -112,7 +112,10 @@ class JobQuotaManagerService @Autowired constructor(
         }
         val result = mutableListOf<JobQuotaSystem>()
         records.filterNotNull().forEach {
-            result.add(jobQuotaSystemDao.convert(it))
+            val vmType = JobQuotaVmType.parse(it.vmType)
+            if (vmType != null) {
+                result.add(jobQuotaSystemDao.convert(vmType, it))
+            }
         }
         return result
     }
@@ -145,7 +148,7 @@ class JobQuotaManagerService @Autowired constructor(
                 operator = ""
             )
 
-        return jobQuotaSystemDao.convert(record)
+        return jobQuotaSystemDao.convert(jobQuotaVmType, record)
     }
 
     /**

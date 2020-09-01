@@ -560,7 +560,11 @@ class JobQuotaBusinessService @Autowired constructor(
         logger.info("finish to clear timeout jobs, total:${timeoutJobs.size}")
     }
 
-    private fun incProjectJobRunningTime(projectId: String, vmType: JobQuotaVmType, time: Long) {
+    private fun incProjectJobRunningTime(projectId: String, vmType: JobQuotaVmType?, time: Long) {
+        if (vmType == null) {
+            logger.warn("incProjectJobRunningTime, vmType is null. projectId: $projectId")
+            return
+        }
         redisOperation.increment(getProjectVmTypeRunningTimeKey(projectId, vmType), time)
         redisOperation.increment(getProjectRunningTimeKey(projectId), time)
     }
