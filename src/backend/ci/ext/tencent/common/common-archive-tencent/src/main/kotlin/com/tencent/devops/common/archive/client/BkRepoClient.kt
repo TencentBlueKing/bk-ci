@@ -300,7 +300,7 @@ class BkRepoClient constructor(
                     bytesCopied += bytes
                     if (bytesCopied > limit) {
                         sink!!.closeQuietly()
-                        throw OperationException("file size exceed $fileSizeLimitInMB(MB)")
+                        throw OperationException("file size exceeds $fileSizeLimitInMB(MB)")
                     }
                     bytes = inputStream.read(buffer)
                 }
@@ -316,6 +316,7 @@ class BkRepoClient constructor(
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .header.put(BK_REPO_OVERRIDE, "true")
             .put(requestBody).build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
