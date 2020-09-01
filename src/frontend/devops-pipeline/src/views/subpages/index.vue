@@ -397,6 +397,7 @@
             toExecute (...args) {
                 const goDetail = ['pipelinesEdit', 'pipelinesDetail'].indexOf(this.$route.name) > -1
                 this.executePipeline(...args, goDetail)
+                this.$store.dispatch('pipelines/setCurrentPage', 1)
             }
         }
     }

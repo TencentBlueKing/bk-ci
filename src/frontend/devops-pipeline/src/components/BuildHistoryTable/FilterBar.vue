@@ -156,6 +156,7 @@
                     }
                 })
                 this.startQuery()
+                this.$store.dispatch('pipelines/setCurrentPage', 1)
             },
             handleDateRangeChange (name, value) {
                 const newQuery = {
@@ -176,8 +177,8 @@
                         query: newQuery
                     }
                 })
-
                 this.startQuery()
+                this.$store.dispatch('pipelines/setCurrentPage', 1)
             },
             async handleRemoteMethod (...args) {
                 if (this.triggerList.length > 0) return this.triggerList
@@ -202,6 +203,7 @@
                     }
                 })
                 this.startQuery()
+                this.$store.dispatch('pipelines/setCurrentPage', 1)
             }
         }
     }

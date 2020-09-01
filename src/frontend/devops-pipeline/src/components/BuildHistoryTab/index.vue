@@ -157,7 +157,7 @@
             await this.handlePathQuery()
         },
         async mounted () {
-            this.fetchData()
+            this.fetchData(this.currentPage)
             await this.handleRemoteMethod()
             if (this.$route.hash) { // 带上buildId时，弹出日志弹窗
                 const isBuildId = /^#b-+/.test(this.$route.hash) // 检查是否是合法的buildId
@@ -189,10 +189,9 @@
                 'togglePropertyPanel'
             ]),
             async fetchData (page = 1, pageSize = this.$refs.buildHistoryTable.pagingConfigOne.limit, loading = true) {
-                const setPage = this.currentPage || page
                 try {
                     this.basicLoading = loading
-                    const res = await this.requestHistory(setPage, pageSize)
+                    const res = await this.requestHistory(page, pageSize)
                     this.list = res.records
                     return res
                 } catch (e) {
@@ -240,6 +239,7 @@
             },
 
             resetQueryCondition () {
+                this.$store.dispatch('pipelines/setCurrentPage', 1)
                 this.resetHistoryFilterCondition()
                 this.fetchData()
             },
@@ -322,7 +322,7 @@
             
             async updateList (message = {}) {
                 const pageSize = this.$refs.buildHistoryTable.pagingConfigOne.limit
-                if (this.list.some(item => item.id === message.buildId) || this.currentPage === 1) {
+                if (this.list.some(item => item.id === message.buildId) || this.currentPage) {
                     const res = await this.fetchData(this.currentPage, pageSize, false)
                     this.list = res.records
                     return res
