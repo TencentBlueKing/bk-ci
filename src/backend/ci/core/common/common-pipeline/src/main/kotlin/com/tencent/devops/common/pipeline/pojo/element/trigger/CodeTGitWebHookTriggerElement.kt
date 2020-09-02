@@ -83,4 +83,3 @@ data class CodeTGitWebHookTriggerInput(
     @ApiModelProperty("includeSourceBranchName", required = false)
     val includeSourceBranchName: String? = null
 )
-
