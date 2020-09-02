@@ -156,7 +156,7 @@ class ServiceGitResourceImpl @Autowired constructor(
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String
+        repoUrl: String?
     ): Result<GitMrInfo> {
         return Result(gitService.getMrInfo(
             id = repoName,
@@ -176,7 +176,7 @@ class ServiceGitResourceImpl @Autowired constructor(
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String
+        repoUrl: String?
     ): Result<GitMrReviewInfo> {
         return Result(
             gitService.getMrReviewInfo(
@@ -194,7 +194,7 @@ class ServiceGitResourceImpl @Autowired constructor(
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String
+        repoUrl: String?
     ): Result<GitMrChangeInfo> {
         return Result(
             gitService.getMrChangeInfo(

@@ -846,10 +846,9 @@ class GitService @Autowired constructor(
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String
+        repoUrl: String? = null
     ): GitMrInfo {
-        val apiUrl = GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl)
-        val url = StringBuilder("$apiUrl/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId")
+        val url = StringBuilder("$${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId")
         logger.info("get mr info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -872,10 +871,9 @@ class GitService @Autowired constructor(
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String
+        repoUrl: String? = null
     ): GitMrReviewInfo {
-        val apiUrl = GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl)
-        val url = StringBuilder("$apiUrl/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/review")
+        val url = StringBuilder("$${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/review")
         logger.info("get mr review info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -898,10 +896,9 @@ class GitService @Autowired constructor(
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String
+        repoUrl: String? = null
     ): GitMrChangeInfo {
-        val apiUrl = GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl)
-        val url = StringBuilder("$apiUrl/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/changes")
+        val url = StringBuilder("$${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/changes")
         logger.info("get mr changes info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -915,6 +912,14 @@ class GitService @Autowired constructor(
             val data = it.body()!!.string()
             logger.info("get mr changes info response body: $data")
             return JsonUtil.to(data, GitMrChangeInfo::class.java)
+        }
+    }
+
+    private fun getApiUrl(repoUrl: String?): String {
+        return if (repoUrl.isNullOrBlank()) {
+            gitConfig.gitApiUrl
+        } else {
+            GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl!!)
         }
     }
 

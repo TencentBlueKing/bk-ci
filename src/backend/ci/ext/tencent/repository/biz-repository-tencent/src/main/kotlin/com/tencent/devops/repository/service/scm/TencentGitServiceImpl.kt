@@ -199,7 +199,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String
+        repoUrl: String?
     ): GitMrInfo {
         return client.getScm(ServiceGitResource::class).getMergeRequestInfo(
             repoName = repoName,
@@ -231,7 +231,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String
+        repoUrl: String?
     ): GitMrReviewInfo {
         return client.getScm(ServiceGitResource::class).getMergeRequestReviewersInfo(
             repoName = repoName,
@@ -247,7 +247,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String
+        repoUrl: String?
     ): GitMrChangeInfo {
         return client.getScm(ServiceGitResource::class).getMergeRequestChangeInfo(
             repoName = repoName,
