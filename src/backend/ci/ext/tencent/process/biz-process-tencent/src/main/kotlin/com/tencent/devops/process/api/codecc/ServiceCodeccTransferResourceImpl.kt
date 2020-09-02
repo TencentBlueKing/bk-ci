@@ -45,7 +45,6 @@ class ServiceCodeccTransferResourceImpl @Autowired constructor(
 
     override fun transferToV3(pipelineIds: Set<String>): Result<Map<String, String>> {
         return Result(codeccTransferService.transferToV3(pipelineIds))
-
     }
 
     override fun addToolSetToPipeline(

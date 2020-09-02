@@ -61,7 +61,7 @@ interface ServiceCodeccTransferResource {
 
     @ApiOperation("")
     @POST
-    @Path("/projects/{projectId}/transferToV2")
+    @Path("/projects/{projectId}/transferToV3")
     fun transferToV3(
         @ApiParam("流水线Id", required = true)
         pipelineIds: Set<String>
