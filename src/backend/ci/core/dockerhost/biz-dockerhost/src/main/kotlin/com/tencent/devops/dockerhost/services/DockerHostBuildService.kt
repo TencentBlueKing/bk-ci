@@ -572,14 +572,25 @@ class DockerHostBuildService(
             }
 
             val containerName = "dockerRun-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
-            val container = httpLongDockerCli.createContainerCmd(imageName)
-                .withName(containerName)
-                .withCmd(dockerRunParam.command)
-                .withEnv(env)
-                .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
-                .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge").withPortBindings(portBindings))
-                .withWorkingDir(dockerHostConfig.volumeWorkspace)
-                .exec()
+
+            val container = if (dockerRunParam.command.isEmpty()) {
+                httpLongDockerCli.createContainerCmd(imageName)
+                    .withName(containerName)
+                    .withEnv(env)
+                    .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
+                    .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge").withPortBindings(portBindings))
+                    .withWorkingDir(dockerHostConfig.volumeWorkspace)
+                    .exec()
+            } else {
+                httpLongDockerCli.createContainerCmd(imageName)
+                    .withName(containerName)
+                    .withCmd(dockerRunParam.command)
+                    .withEnv(env)
+                    .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
+                    .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge").withPortBindings(portBindings))
+                    .withWorkingDir(dockerHostConfig.volumeWorkspace)
+                    .exec()
+            }
 
             logger.info("Created container $container")
             val timestamp = (System.currentTimeMillis() / 1000).toInt()
