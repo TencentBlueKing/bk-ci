@@ -573,7 +573,7 @@ class DockerHostBuildService(
 
             val containerName = "dockerRun-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
 
-            val container = if (dockerRunParam.command.isEmpty()) {
+            val container = if (dockerRunParam.command.isEmpty() || dockerRunParam.command.equals("[]")) {
                 httpLongDockerCli.createContainerCmd(imageName)
                     .withName(containerName)
                     .withEnv(env)
