@@ -188,7 +188,7 @@ class JobQuotaBusinessService @Autowired constructor(
             jobQuota.runningJobMax,
             runningJobCount,
             threshold.projectRunningJobThreshold,
-            jobQuota.runningTimeJobMax,
+            jobQuota.runningTimeProjectMax,
             runningJobTime,
             threshold.projectRunningTimeThreshold
         )
