@@ -1,6 +1,10 @@
 package com.tencent.devops.project.service.impl
 
-import com.tencent.devops.common.auth.api.*
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -39,7 +43,7 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         resourceRegisterInfo: ResourceRegisterInfo
     ): String {
         val validateCreatePermission = authPermissionApi.validateUserResourcePermission(userId, projectAuthServiceCode, AuthResourceType.PROJECT, "", AuthPermission.CREATE)
-        if(!validateCreatePermission) {
+        if (!validateCreatePermission) {
             throw RuntimeException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_CREATE_PERM))
         }
         authResourceApi.createResource(userId, projectAuthServiceCode, AuthResourceType.PROJECT, resourceRegisterInfo.resourceCode, resourceRegisterInfo.resourceCode, resourceRegisterInfo.resourceName)
@@ -99,6 +103,5 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
         val projectResourceType = AuthResourceType.PROJECT
-
     }
 }
