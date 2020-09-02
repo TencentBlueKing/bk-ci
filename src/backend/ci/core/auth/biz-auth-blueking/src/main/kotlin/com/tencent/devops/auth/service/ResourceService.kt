@@ -44,7 +44,7 @@ class ResourceService @Autowired constructor(
     fun getResource(
         input: CallbackRequestDTO,
         token: String
-    ): ListInstanceResponseDTO? {
+    ): CallbackBaseResponseDTO? {
         logger.info("getResourceList input[$input] ,token[$token]")
         val actionType = input.type
         val method = input.method
@@ -71,14 +71,14 @@ class ResourceService @Autowired constructor(
     fun getResourceInfos(
         input: CallbackRequestDTO,
         resourceType: String
-    ): ListInstanceResponseDTO? {
+    ): FetchInstanceInfoResponseDTO? {
         val ids = input.filter.idList
         val actionType = input.type
         if (ids == null || ids.isEmpty()) {
             logger.warn("getResourceInfos ids is empty|$input| $actionType")
             throw RuntimeException("资源类型不存在")
         }
-        var result: ListInstanceResponseDTO? = null
+        var result: FetchInstanceInfoResponseDTO? = null
         when (resourceType) {
             AuthResourceType.PIPELINE_DEFAULT.value -> result = getPipelineInfo(ids)
             AuthResourceType.CODE_REPERTORY.value -> result = getRepositoryInfo(ids)
@@ -146,17 +146,17 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getPipelineInfo(ids: List<Any>?): ListInstanceResponseDTO? {
+    private fun getPipelineInfo(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
         val pipelineInfos =
                 client.get(ServiceAuthPipelineResource::class)
                         .pipelineInfos(ids!!.toSet() as Set<String>).data
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
+        val result = FetchInstanceInfoResponseDTO()
+
         if (pipelineInfos == null || pipelineInfos.isEmpty()) {
             logger.info("$ids 未匹配到启用流水线")
             result.code = 0
             result.message = "无数据"
-            result.data = data
+            result.data = emptyList()
             return result
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -167,11 +167,9 @@ class ResourceService @Autowired constructor(
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${pipelineInfos.size.toLong()}")
-        data.count = pipelineInfos.size.toLong()
-        data.result = entityInfo
         result.code = 0L
         result.message = ""
-        result.data = data
+        result.data = entityInfo.toList()
         return result
     }
 
@@ -204,17 +202,16 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getRepositoryInfo(ids: List<Any>?): ListInstanceResponseDTO? {
+    private fun getRepositoryInfo(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
         val repositoryInfos =
                 client.get(ServiceAuthRepositoryResource::class)
                         .getInfos(ids as List<String>).data
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
+        val result = FetchInstanceInfoResponseDTO()
         if (repositoryInfos == null || repositoryInfos.isEmpty()) {
             logger.info("$ids 未匹配到代码库")
             result.code = 0
             result.message = "无数据"
-            result.data = data
+            result.data = emptyList()
             return result
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -225,11 +222,9 @@ class ResourceService @Autowired constructor(
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${repositoryInfos.size.toLong()}")
-        data.count = repositoryInfos.size.toLong()
-        data.result = entityInfo
         result.code = 0L
         result.message = ""
-        result.data = data
+        result.data = entityInfo.toList()
         return result
     }
 
@@ -262,17 +257,16 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getCredentialInfo(ids: List<Any>?): ListInstanceResponseDTO? {
+    private fun getCredentialInfo(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
         val credentialInfos =
                 client.get(ServiceAuthCallbackResource::class)
                         .getCredentialInfos(ids!!.toSet() as Set<String>).data
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
+        val result = FetchInstanceInfoResponseDTO()
         if (credentialInfos == null || credentialInfos.isEmpty()) {
             logger.info("$ids 无凭证")
             result.code = 0
             result.message = "无数据"
-            result.data = data
+            result.data = emptyList()
             return result
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -283,11 +277,9 @@ class ResourceService @Autowired constructor(
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${credentialInfos.size.toLong()}")
-        data.count = credentialInfos.size.toLong()
-        data.result = entityInfo
         result.code = 0L
         result.message = ""
-        result.data = data
+        result.data = entityInfo.toList()
         return result
     }
 
@@ -320,17 +312,16 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getCertInfo(ids: List<Any>?): ListInstanceResponseDTO? {
+    private fun getCertInfo(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
         val certInfos =
                 client.get(ServiceAuthCallbackResource::class)
                         .getCertInfos(ids!!.toSet() as Set<String>).data
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
+        val result = FetchInstanceInfoResponseDTO()
         if (certInfos == null || certInfos.isEmpty()) {
             logger.info("$ids 无凭证")
             result.code = 0
             result.message = "无数据"
-            result.data = data
+            result.data = emptyList()
             return result
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -341,11 +332,9 @@ class ResourceService @Autowired constructor(
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${certInfos.size.toLong()}")
-        data.count = certInfos.size.toLong()
-        data.result = entityInfo
         result.code = 0L
         result.message = ""
-        result.data = data
+        result.data = certInfos.toList()
         return result
     }
 
@@ -407,17 +396,16 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getNodeInfo(ids: List<Any>?): ListInstanceResponseDTO? {
+    private fun getNodeInfo(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
         val nodeInfos =
                 client.get(RemoteNodeResource::class)
                         .getNodeInfos(ids as List<String>).data
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
+        val result = FetchInstanceInfoResponseDTO()
         if (nodeInfos == null || nodeInfos.isEmpty()) {
             logger.info("$ids 无节点")
             result.code = 0
             result.message = "无数据"
-            result.data = data
+            result.data = emptyList()
             return result
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -428,25 +416,22 @@ class ResourceService @Autowired constructor(
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${nodeInfos.size.toLong()}")
-        data.count = nodeInfos.size.toLong()
-        data.result = entityInfo
         result.code = 0L
         result.message = ""
-        result.data = data
+        result.data = entityInfo.toList()
         return result
     }
 
-    private fun getEnvInfo(ids: List<Any>?): ListInstanceResponseDTO? {
+    private fun getEnvInfo(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
         val envInfos =
                 client.get(RemoteEnvResource::class)
                         .getEnvInfos(ids as List<String>).data
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
+        val result = FetchInstanceInfoResponseDTO()
         if (envInfos == null || envInfos.isEmpty()) {
             logger.info("$ids 下无环境")
             result.code = 0
             result.message = "无数据"
-            result.data = data
+            result.data = emptyList()
             return result
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -457,11 +442,9 @@ class ResourceService @Autowired constructor(
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${envInfos.size.toLong()}")
-        data.count = envInfos.size.toLong()
-        data.result = entityInfo
         result.code = 0L
         result.message = ""
-        result.data = data
+        result.data = entityInfo.toList()
         return result
     }
 
@@ -488,7 +471,7 @@ class ResourceService @Autowired constructor(
         projectRecords?.records?.map {
             val entity = InstanceInfoDTO()
             entity.id = it.englishName
-            entity.displayName = it.englishName
+            entity.displayName = it.projectName
             projectInfo.add(entity)
         }
         logger.info("projectInfo $projectInfo")
@@ -512,9 +495,10 @@ class ResourceService @Autowired constructor(
         projectInfo?.map {
             val entity = InstanceInfoDTO()
             entity.id = it.englishName
-            entity.displayName = it.englishName
+            entity.displayName = it.projectName
             entityList.add(entity)
         }
+        logger.info("entityInfo $entityList")
         val result = FetchInstanceInfoResponseDTO()
         result.code = 0
         result.message = ""
