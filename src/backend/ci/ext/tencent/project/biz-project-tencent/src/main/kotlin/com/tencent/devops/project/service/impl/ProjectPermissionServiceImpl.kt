@@ -30,11 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.AuthTokenApi
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.api.*
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
@@ -55,7 +51,8 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     private val authProjectApi: BSAuthProjectApi,
     private val authTokenApi: AuthTokenApi,
     private val bsProjectAuthServiceCode: BSProjectServiceCodec,
-    private val authResourceApi: AuthResourceApi
+    private val authResourceApi: AuthResourceApi,
+    private val authPermissionApi: AuthPermissionApi
 ) : ProjectPermissionService {
 
     private val authUrl = authProperties.url
@@ -128,6 +125,16 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         val result = objectMapper.readValue<Result<Any?>>(responseContent)
         logger.info("the verifyUserProjectPermission result is:$result")
         return result.isOk()
+    }
+
+    override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String, permission: AuthPermission): Boolean {
+        return authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = bsProjectAuthServiceCode,
+                projectCode = projectCode,
+                permission = permission,
+                resourceType = AuthResourceType.PROJECT
+        )
     }
 
     companion object {
