@@ -864,7 +864,7 @@ class DockerHostBuildService(
     private fun getAvailableHostPort(): Int {
         val startPort = dockerHostConfig.startPort ?: 20000
         for (i in startPort..(startPort + 1000)) {
-            if (CommonUtils.isPortUsing("127.0.0.1", i)) {
+            if (!CommonUtils.isPortUsing("127.0.0.1", i)) {
                 return i
             } else {
                 continue
