@@ -1221,8 +1221,8 @@ class CertServiceImpl @Autowired constructor(
                 projectId = projectId,
                 certIds = certIds,
                 certType = null,
-                limit = 0,
-                offset = 100
+                limit = 100,
+                offset = 0
         )
         records.map {
             certList.add(Cert(
