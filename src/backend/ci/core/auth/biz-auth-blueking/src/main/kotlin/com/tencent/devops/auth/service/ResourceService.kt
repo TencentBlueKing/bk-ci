@@ -251,7 +251,7 @@ class ResourceService @Autowired constructor(
         credentialInfos?.records?.map {
             val entity = InstanceInfoDTO()
             entity.id = it.credentialId
-            entity.displayName = it.credentialRemark
+            entity.displayName = it.credentialId
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${credentialInfos?.count}")
@@ -280,7 +280,7 @@ class ResourceService @Autowired constructor(
         credentialInfos?.map {
             val entity = InstanceInfoDTO()
             entity.id = it.credentialId
-            entity.displayName = it.credentialRemark
+            entity.displayName = it.credentialId
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${credentialInfos.size.toLong()}")
@@ -308,8 +308,8 @@ class ResourceService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         certInfos?.records?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.credentialId
-            entity.displayName = it.certRemark
+            entity.id = it.certId
+            entity.displayName = it.certId
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${certInfos?.count}")
@@ -337,8 +337,8 @@ class ResourceService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         certInfos?.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.credentialId
-            entity.displayName = it.certRemark
+            entity.id = it.certId
+            entity.displayName = it.certId
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${certInfos.size.toLong()}")

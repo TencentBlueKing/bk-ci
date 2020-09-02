@@ -18,6 +18,6 @@ class RemoteEnvResourceImpl @Autowired constructor(
     }
 
     override fun getEnvInfos(userId: String, projectId: String, envIds: List<String>): Result<List<EnvWithPermission>> {
-        return Result(envService.listRawEnvByHashIds(userId, projectId, envIds))
+        return Result(envService.listRawEnvByHashIdsAllType(userId, projectId, envIds))
     }
 }

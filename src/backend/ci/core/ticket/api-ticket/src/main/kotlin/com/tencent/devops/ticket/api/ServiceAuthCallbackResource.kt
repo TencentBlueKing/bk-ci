@@ -15,7 +15,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_CREDENTIAL"], description = "服务-证书资源-权限中心")
+@Api(tags = ["SERVICE_AUTH_CREDENTIAL"], description = "服务-证书资源-权限中心")
 @Path("/service/auth/ticket")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
