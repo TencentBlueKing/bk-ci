@@ -234,13 +234,13 @@ object SignUtils {
 
     private fun codesignFile(cerName: String, signFilename: String) {
         val cmd = "/usr/bin/codesign -f -s '$cerName' ${fixPath(signFilename)}"
-        logger.info("[codesignFile entitlements] ${cmd}")
+        logger.info("[codesignFile] $cmd")
         runtimeExec(cmd)
     }
 
     private fun codesignFileByEntitlement(cerName: String, signFilename: String, entitlementsPath: String) {
         val cmd = "/usr/bin/codesign -f -s '$cerName' --entitlements '$entitlementsPath' ${fixPath(signFilename)}"
-        logger.info("[codesignFile entitlements] $cmd")
+        logger.info("[codesignFile by entitlements] $cmd")
         runtimeExec(cmd)
     }
 
