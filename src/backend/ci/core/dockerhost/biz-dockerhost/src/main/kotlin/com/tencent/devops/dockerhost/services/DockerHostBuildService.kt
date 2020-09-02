@@ -34,8 +34,10 @@ import com.github.dockerjava.api.exception.UnauthorizedException
 import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.AuthConfigurations
 import com.github.dockerjava.api.model.BuildResponseItem
+import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.api.model.Frame
 import com.github.dockerjava.api.model.HostConfig
+import com.github.dockerjava.api.model.Ports
 import com.github.dockerjava.api.model.PullResponseItem
 import com.github.dockerjava.api.model.PushResponseItem
 import com.github.dockerjava.core.DefaultDockerClientConfig
@@ -65,6 +67,7 @@ import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
+import com.tencent.devops.dockerhost.pojo.DockerRunPortBinding
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
 import com.tencent.devops.dockerhost.utils.RandomUtil
@@ -485,7 +488,7 @@ class DockerHostBuildService(
         vmSeqId: String,
         buildId: String,
         dockerRunParam: DockerRunParam
-    ): Pair<String, Int> {
+    ): Triple<String, Int, List<DockerRunPortBinding>> {
         try {
             val imageName = CommonUtils.normalizeImageName(dockerRunParam.imageName)
             // docker pull
@@ -555,13 +558,25 @@ class DockerHostBuildService(
             logger.info("env is $env")
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
+            val dockerRunPortBindingList = mutableListOf<DockerRunPortBinding>()
+            val portBindings = Ports()
+            dockerRunParam.portList?.forEach {
+                val localPort = getAvailableHostPort()
+                if (localPort == 0) {
+                    throw ContainerException("No enough port to use in dockerRun. startPort: ${dockerHostConfig.startPort}")
+                }
+                val tcpContainerPort: ExposedPort = ExposedPort.tcp(it)
+                portBindings.bind(tcpContainerPort, Ports.Binding.bindPort(localPort))
+                dockerRunPortBindingList.add(DockerRunPortBinding(it, localPort))
+            }
+
             val containerName = "dockerRun-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
             val container = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
                 .withCmd(dockerRunParam.command)
                 .withEnv(env)
                 .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
-                .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge"))
+                .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge").withPortBindings(portBindings))
                 .withWorkingDir(dockerHostConfig.volumeWorkspace)
                 .exec()
 
@@ -569,7 +584,7 @@ class DockerHostBuildService(
             val timestamp = (System.currentTimeMillis() / 1000).toInt()
             httpLongDockerCli.startContainerCmd(container.id).exec()
 
-            return Pair(container.id, timestamp)
+            return Triple(container.id, timestamp, dockerRunPortBindingList)
         } catch (er: Throwable) {
             val errorLog = "[$buildId]|启动容器失败，错误信息:${er.message}"
             logger.error(errorLog, er)
@@ -843,6 +858,19 @@ class DockerHostBuildService(
         }
 
         return false
+    }
+
+    private fun getAvailableHostPort(): Int {
+        val startPort = dockerHostConfig.startPort ?: 20000
+        for (i in startPort..(startPort + 1000)) {
+            if (CommonUtils.isPortUsing("127.0.0.1", i)) {
+                return i
+            } else {
+                continue
+            }
+        }
+
+        return 0
     }
 
     inner class MyBuildImageResultCallback internal constructor(

@@ -161,6 +161,9 @@ class DockerHostConfig {
     @Value("\${dockerhost.mode:#{null}}")
     var dockerhostMode: String? = null
 
+    @Value("\${dockerhost.dockerRun.StartPort:20000}")
+    var startPort: Int? = 20000
+
     @Value("\${codecc.dockerRun.log:false}")
     var dockerRunLog: Boolean? = false
 }
