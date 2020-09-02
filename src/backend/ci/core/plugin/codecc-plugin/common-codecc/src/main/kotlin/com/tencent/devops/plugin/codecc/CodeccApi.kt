@@ -392,6 +392,7 @@ open class CodeccApi constructor(
     )
 
     data class TaskDetailVO(
+        val scanType: Int,
         val notifyCustomInfo: NotifyCustomVO?,
         val newDefectJudge: NewDefectJudgeVO?
     )

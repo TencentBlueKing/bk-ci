@@ -217,6 +217,70 @@ class CodeccTransferService @Autowired constructor(
         return "update codecc to v1 success"
     }
 
+    fun transferToV3(pipelineIds: Set<String>): Map<String, String> {
+        val result = mutableMapOf<String, String>()
+        pipelineTaskService.list(pipelineIds).map {
+            val resultMsg = try {
+                doTransferV3(it)
+            } catch (e: Exception) {
+                logger.error("transfer pipeline ${it.key} fail", e)
+                e.message ?: "unexpected error occur"
+            }
+            result[it.key] = resultMsg
+        }
+        return result
+    }
+
+    fun doTransferV3(it: Map.Entry<String, List<PipelineModelTask>>): String {
+        val pipelineId = it.key
+        val projectId = it.value.firstOrNull()?.projectId ?: ""
+
+        val codeccTask = it.value.filter { task -> task.classType == LinuxPaasCodeCCScriptElement.classType }
+        if (codeccTask.isEmpty()) {
+            return "$pipelineId do not contains old codecc element"
+        }
+
+        val newCodeccTask = it.value.filter { task -> task.taskParams["atomCode"] == "CodeccCheckAtomDebug" }
+        if (newCodeccTask.isNotEmpty()) {
+            return "$pipelineId is already contains new codecc element"
+        }
+
+        // start to transfer
+        val model = pipelineRepositoryService.getModel(pipelineId)!!
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+        logger.info("get pipeline info for pipeline: $pipelineId, $pipelineInfo")
+        model.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                val elementList = mutableListOf<Element>()
+                container.elements.forEach { element ->
+                    if (element.getClassType() == LinuxPaasCodeCCScriptElement.classType) {
+                        logger.info("get new codecc element for pipeline: $pipelineId")
+                        val newElement = getNewCodeccElementV3(element as LinuxPaasCodeCCScriptElement)
+                            ?: return "get codecc new element fail"
+                        elementList.add(newElement)
+                    } else {
+                        elementList.add(element)
+                    }
+                }
+                container.elements = elementList
+            }
+        }
+
+        // save pipeline
+        logger.info("edit pipeline: $pipelineId")
+        pipelineService.editPipeline(
+            userId = pipelineInfo?.lastModifyUser ?: "",
+            projectId = projectId,
+            pipelineId = pipelineId,
+            model = model,
+            channelCode = ChannelCode.BS,
+            checkPermission = false,
+            checkTemplate = false
+        )
+
+        return "update codecc to v1 success"
+    }
+
     private fun getNewCodeccElement(oldCodeccElement: LinuxPaasCodeCCScriptElement): Element? {
         val data = getCodeccDataMap(oldCodeccElement) ?: return null
         return MarketBuildAtomElement(
@@ -225,6 +289,21 @@ class CodeccTransferService @Autowired constructor(
             status = oldCodeccElement.status,
             atomCode = "CodeccCheckAtom",
             version = "1.*",
+            data = mapOf(
+                "input" to data,
+                "output" to mapOf<String, String>()
+            )
+        )
+    }
+
+    private fun getNewCodeccElementV3(oldCodeccElement: LinuxPaasCodeCCScriptElement): Element? {
+        val data = getCodeccDataMap(oldCodeccElement) ?: return null
+        return MarketBuildAtomElement(
+            name = oldCodeccElement.name,
+            id = oldCodeccElement.id,
+            status = oldCodeccElement.status,
+            atomCode = "CodeccCheckAtomDebug",
+            version = "4.*",
             data = mapOf(
                 "input" to data,
                 "output" to mapOf<String, String>()
@@ -275,7 +354,7 @@ class CodeccTransferService @Autowired constructor(
         // 3.扫描配置tab
         val transferAuthors = codeccApi.getTransferAuthor(oldCodeccElement.codeCCTaskId!!).data
         // params.toolScanType = oldCodeccElement.scanType
-        params.toolScanType = "0"
+        params.toolScanType = taskInfo.scanType.toString()
         params.newDefectJudgeFromDate = taskInfo.newDefectJudge?.fromDate
         params.transferAuthorList = transferAuthors?.transferAuthorList
 
