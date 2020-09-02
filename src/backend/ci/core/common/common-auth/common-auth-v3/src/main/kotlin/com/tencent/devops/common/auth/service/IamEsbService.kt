@@ -62,6 +62,8 @@ class IamEsbService() {
         val content = objectMapper.writeValueAsString(iamPermissionUrl)
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val requestBody = RequestBody.create(mediaType, content)
+        logger.info("getPermissionUrl url:$url")
+        logger.info("getPermissionUrl content:$content body:$requestBody")
         val request = Request.Builder().url(url)
                 .post(requestBody)
                 .build()

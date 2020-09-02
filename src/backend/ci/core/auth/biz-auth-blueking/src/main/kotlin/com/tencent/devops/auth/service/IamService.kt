@@ -5,7 +5,6 @@ import com.tencent.devops.auth.pojo.PermissionUrlDTO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.pojo.Action
 import com.tencent.devops.common.auth.pojo.IamPermissionUrlReq
-import com.tencent.devops.common.auth.pojo.Instance
 import com.tencent.devops.common.auth.pojo.RelatedResourceTypes
 import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.auth.utlis.ActionUtils
@@ -23,17 +22,12 @@ class IamService @Autowired constructor(
         val actions = mutableListOf<Action>()
         permissionUrlDTO.map {
             val resourceType = ActionUtils.buildAction(it.resourceId, it.actionId)
-            val instanceList = it.instanceId.map { instance ->
-                Instance(
-                        id = instance,
-                        type = it.resourceId
-                )
-            }
+            val instanceList = it.instanceId
             val relatedResourceTypes = mutableListOf<RelatedResourceTypes>()
             relatedResourceTypes.add(RelatedResourceTypes(
                     system = iamConfiguration.systemId,
-                    type = it.resourceId,
-                    instance = instanceList))
+                    type = it.resourceId.value,
+                    instances = listOf(instanceList)))
 
             actions.add(
                     Action(

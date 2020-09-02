@@ -40,7 +40,7 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
     ): String {
         val validateCreatePermission = authPermissionApi.validateUserResourcePermission(userId, projectAuthServiceCode, AuthResourceType.PROJECT, "", AuthPermission.CREATE)
         if(!validateCreatePermission) {
-            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.COLLECTION_CANCEL_SUCC))
+            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_CREATE_PERM))
         }
         authResourceApi.createResource(userId, projectAuthServiceCode, AuthResourceType.PROJECT, resourceRegisterInfo.resourceCode, resourceRegisterInfo.resourceCode, resourceRegisterInfo.resourceName)
         return ""
