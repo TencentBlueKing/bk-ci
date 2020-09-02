@@ -18,6 +18,7 @@
 
 <script>
     import { bus } from '@/utils/bus'
+    import { mapState } from 'vuex'
     export default {
         props: {
             beforeExec: {
@@ -45,6 +46,9 @@
             }
         },
         computed: {
+            ...mapState('atom', [
+                'executeStatus'
+            ]),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -53,11 +57,14 @@
             }
         },
         watch: {
-            async replay (val, oldVal) {
+            replay (val, oldVal) {
                 if (val) {
                     this.$store.state.pipelines.replay = false
-                    await this.toggleStatus()
+                    this.toggleStatus()
                 }
+            },
+            executeStatus (executing) {
+                this.disabled = executing
             }
         },
         mounted () {
@@ -67,13 +74,6 @@
             bus.$off('trigger-excute', this.toggleStatus)
         },
         methods: {
-            /**
-             * 清除select错误
-             */
-            selectedHandler (name) {
-                this.$validator.errors.remove(name)
-            },
-
             handleParamChange (name, value) {
                 this.paramValues[name] = value
             },
@@ -109,9 +109,9 @@
                                         pipelineId: this.pipelineId
                                     }
                                 })
-                            } else {
-                                await this.execPipeline()
                                 this.disabled = false
+                            } else {
+                                this.execPipeline()
                             }
                         } else {
                             throw new Error(this.$t('newlist.withoutManualAtom'))
@@ -140,32 +140,11 @@
             /**
              * 执行流水线
              */
-            async execPipeline (params = {}) {
-                await this.$emit('exec', {
+            execPipeline (params = {}) {
+                this.$emit('exec', {
                     ...params,
                     pipelineId: this.pipelineId
                 })
-                this.disabled = false
-            },
-            /**
-             *  点击确定的回调函数
-             */
-            async confirmHandler () {
-                let valid = true
-                if (this.$refs.paramsForm) {
-                    valid = await this.$refs.paramsForm.$validator.validateAll()
-                    this.$refs.paramsForm.submitForm()
-                }
-                if (valid) {
-                    const { paramValues, execPipeline } = this
-                    await execPipeline(paramValues)
-                }
-            },
-            /**
-             * 点击取消的回调函数
-             */
-            cancelHandler () {
-                this.disabled = false
             }
         }
     }

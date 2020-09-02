@@ -42,6 +42,7 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -775,8 +776,8 @@ class GitService @Autowired constructor(
     }
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
-    override fun getMrInfo(id: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrInfo {
-        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId")
+    override fun getMrInfo(repoName: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrInfo {
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/merge_request/$mrId")
         logger.info("get mr info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -785,7 +786,7 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                throw RuntimeException("get merge request info error for $id, $mrId(${it.code()}): ${it.message()}")
+                throw RuntimeException("get merge request info error for $repoName, $mrId(${it.code()}): ${it.message()}")
             }
             val data = it.body()!!.string()
             logger.info("get mr info response body: $data")
@@ -863,6 +864,26 @@ class GitService @Autowired constructor(
             url.append("?access_token=$token")
         } else {
             url.append("?private_token=$token")
+        }
+    }
+
+    override fun getRepoMembers(accessToken: String, userId: String, repoName: String): List<GitMember> {
+        val url = StringBuilder(
+            "${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/members"
+        )
+        logger.info("get mr changes info url: $url")
+        setToken(TokenTypeEnum.OAUTH, url, accessToken)
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                throw RuntimeException("get repo members for $userId, $repoName fail(${it.code()}): ${it.message()}")
+            }
+            val data = it.body()!!.string()
+            logger.info("get mr changes info response body: $data")
+            return JsonUtil.to(data)
         }
     }
 }
