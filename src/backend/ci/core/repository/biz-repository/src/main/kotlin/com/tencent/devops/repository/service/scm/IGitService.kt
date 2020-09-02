@@ -114,7 +114,7 @@ interface IGitService {
         tokenType:
         TokenTypeEnum,
         token: String,
-        repoUrl: String
+        repoUrl: String? = null
     ): GitMrInfo
 
     fun downloadGitRepoFile(
@@ -130,7 +130,7 @@ interface IGitService {
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String
+        repoUrl: String? = null
     ): GitMrReviewInfo
 
     fun getMrChangeInfo(
@@ -138,7 +138,7 @@ interface IGitService {
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String
+        repoUrl: String? = null
     ): GitMrChangeInfo
 
     fun getRepoMembers(accessToken: String, userId: String, repoName: String): List<GitMember>
