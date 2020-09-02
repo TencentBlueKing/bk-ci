@@ -187,7 +187,7 @@ interface CertService {
 
     fun queryTlsByProject(projectId: String, certId: String, publicKey: String): CertTls
 
-    fun getCertByIds(projectId: String, certIds: Set<String>): List<Cert>?
+    fun getCertByIds(certIds: Set<String>): List<Cert>?
 
     private fun encryptCert(
         cert: ByteArray,

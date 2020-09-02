@@ -347,12 +347,11 @@ class EnvService @Autowired constructor(
         val envRecords =
             envDao.listServerEnvByIds(dslContext, projectId, envHashIds.map { HashUtil.decodeIdToLong(it) })
         return format(envRecords)
-
     }
 
-    override fun listRawEnvByHashIdsAllType(userId: String, projectId: String, envHashIds: List<String>): List<EnvWithPermission> {
+    override fun listRawEnvByHashIdsAllType(envHashIds: List<String>): List<EnvWithPermission> {
         val envRecords =
-                envDao.listServerEnvByIdsAllType(dslContext, projectId, envHashIds.map { HashUtil.decodeIdToLong(it) })
+                envDao.listServerEnvByIdsAllType(dslContext, envHashIds.map { HashUtil.decodeIdToLong(it) })
         return format(envRecords)
     }
 
@@ -575,7 +574,6 @@ class EnvService @Autowired constructor(
             page = limit
         )
     }
-
 
     private fun format(records: List<TEnvRecord>): List<EnvWithPermission> {
         return records.map {

@@ -146,6 +146,16 @@ class NodeDao {
         }
     }
 
+    fun listServerNodesByIds(dslContext: DSLContext, nodeIds: Collection<Long>): List<TNodeRecord> {
+        with(TNode.T_NODE) {
+            return dslContext.selectFrom(this)
+                    .where(NODE_ID.`in`(nodeIds))
+                    .and(NODE_TYPE.`in`(NodeType.BCSVM.name, NodeType.CC.name, NodeType.CMDB.name, NodeType.OTHER.name))
+                    .orderBy(NODE_ID.desc())
+                    .fetch()
+        }
+    }
+
     fun listServerNodesByIps(dslContext: DSLContext, projectId: String, ips: List<String>): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)

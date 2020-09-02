@@ -422,7 +422,7 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getCredentialByIds(projectId: String, credentialIds: Set<String>): List<Credential>? {
+    override fun getCredentialByIds(projectId: String?, credentialIds: Set<String>): List<Credential>? {
         val records = credentialDao.listByProject(
                 dslContext = dslContext,
                 credentialIds = credentialIds,

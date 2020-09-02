@@ -24,7 +24,7 @@ class ServiceAuthPipelineResourceImpl @Autowired constructor(
         return Result(pipelineService.getPipeline(projectId, page, pageSize))
     }
 
-    override fun pipelineInfos(projectId: String, pipelineIds: Set<String>): Result<List<SimplePipeline>?> {
-        return Result(pipelineService.getPipelineByIds(projectId, pipelineIds))
+    override fun pipelineInfos(pipelineIds: Set<String>): Result<List<SimplePipeline>?> {
+        return Result(pipelineService.getPipelineByIds(pipelineIds))
     }
 }

@@ -37,12 +37,9 @@ interface ServiceAuthCallbackResource {
     ): Result<Page<Credential>?>
 
     @ApiOperation("获取凭证信息")
-    @Path("/{projectId}/credential/getInfos")
+    @Path("/credential/getInfos")
     @GET
     fun getCredentialInfos(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
         @ApiParam("凭证ID串", required = true)
         @QueryParam("credentialIds")
         credentialIds: Set<String>
@@ -64,12 +61,9 @@ interface ServiceAuthCallbackResource {
     ): Result<Page<Cert>?>
 
     @ApiOperation("获取证书信息")
-    @Path("/{projectId}/cert/getInfos")
+    @Path("/cert/getInfos")
     @GET
     fun getCertInfos(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
         @ApiParam("证书ID串", required = true)
         @QueryParam("certIds")
         certIds: Set<String>

@@ -266,6 +266,18 @@ class CertDao {
         }
     }
 
+    fun listByIds(
+        dslContext: DSLContext,
+        certIds: Set<String>
+    ): Result<TCertRecord> {
+        with(TCert.T_CERT) {
+            return dslContext.selectFrom(this)
+                            .where(CERT_ID.`in`(certIds))
+                            .orderBy(CERT_CREATE_TIME.desc())
+                            .fetch()
+            }
+        }
+
     fun delete(dslContext: DSLContext, projectId: String, certId: String) {
         with(TCert.T_CERT) {
             dslContext.deleteFrom(this)

@@ -42,14 +42,12 @@ class ResourceService @Autowired constructor(
     }
 
     fun getResource(
-        projectId: String,
-        actionType: String,
-        method: CallbackMethodEnum,
-        page: PageInfoDTO?,
-        token: String,
-        ids: List<Any>?
+        input: CallbackRequestDTO,
+        token: String
     ): ListInstanceResponseDTO? {
-        logger.info("getResourceList project[$projectId] method[$method], page[$page],token[$token],actionType[$actionType], ids[$ids]")
+        logger.info("getResourceList input[$input] ,token[$token]")
+        val actionType = input.type
+        val method = input.method
         checkToken(token)
         val resourceType = if (actionType.contains("env_node")) {
             AuthResourceType.ENVIRONMENT_ENV_NODE.value
@@ -63,42 +61,43 @@ class ResourceService @Autowired constructor(
         }
 
         if (method == CallbackMethodEnum.LIST_INSTANCE) {
-            return getResourceList(projectId, actionType, page, resourceType)
+            return getResourceList(input, resourceType)
         } else if (method == CallbackMethodEnum.FETCH_INSTANCE_INFO) {
-            return getResourceInfos(projectId, actionType, ids, resourceType)
+            return getResourceInfos(input, resourceType)
         }
-        return getResourceList(projectId, actionType, page, resourceType)
+        return getResourceList(input, resourceType)
     }
 
     fun getResourceInfos(
-        projectId: String,
-        actionType: String,
-        ids: List<Any>?,
+        input: CallbackRequestDTO,
         resourceType: String
     ): ListInstanceResponseDTO? {
+        val ids = input.filter.idList
+        val actionType = input.type
         if (ids == null || ids.isEmpty()) {
-            logger.warn("getResourceInfos ids is empty| $projectId| $actionType")
+            logger.warn("getResourceInfos ids is empty|$input| $actionType")
             throw RuntimeException("资源类型不存在")
         }
         var result: ListInstanceResponseDTO? = null
         when (resourceType) {
-            AuthResourceType.PIPELINE_DEFAULT.value -> result = getPipelineInfo(projectId, ids)
-            AuthResourceType.CODE_REPERTORY.value -> result = getRepositoryInfo(projectId, ids)
-            AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> result = getEnvInfo(projectId, ids)
-            AuthResourceType.ENVIRONMENT_ENV_NODE.value -> result = getNodeInfo(projectId, ids)
-            AuthResourceType.TICKET_CREDENTIAL.value -> result = getCredentialInfo(projectId, ids)
-            AuthResourceType.TICKET_CERT.value -> result = getCertInfo(projectId, ids)
+            AuthResourceType.PIPELINE_DEFAULT.value -> result = getPipelineInfo(ids)
+            AuthResourceType.CODE_REPERTORY.value -> result = getRepositoryInfo(ids)
+            AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> result = getEnvInfo(ids)
+            AuthResourceType.ENVIRONMENT_ENV_NODE.value -> result = getNodeInfo(ids)
+            AuthResourceType.TICKET_CREDENTIAL.value -> result = getCredentialInfo(ids)
+            AuthResourceType.TICKET_CERT.value -> result = getCertInfo(ids)
             else -> null
         }
         return result
     }
 
     fun getResourceList(
-        projectId: String,
-        actionType: String,
-        page: PageInfoDTO?,
+        input: CallbackRequestDTO,
         resourceType: String
     ): ListInstanceResponseDTO? {
+        val projectId = input.filter.parent.id
+        val page = input.page
+
         var offset = 0
         var limit = 10
         if (page != null) {
@@ -147,14 +146,14 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getPipelineInfo(projectId: String, ids: List<Any>?): ListInstanceResponseDTO? {
+    private fun getPipelineInfo(ids: List<Any>?): ListInstanceResponseDTO? {
         val pipelineInfos =
                 client.get(ServiceAuthPipelineResource::class)
-                        .pipelineInfos(projectId, ids!!.toSet() as Set<String>).data
+                        .pipelineInfos(ids!!.toSet() as Set<String>).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
         if (pipelineInfos == null || pipelineInfos.isEmpty()) {
-            logger.info("$projectId 项目下无流水线")
+            logger.info("$ids 未匹配到启用流水线")
             result.code = 0
             result.message = "无数据"
             result.data = data
@@ -205,14 +204,14 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getRepositoryInfo(projectId: String, ids: List<Any>?): ListInstanceResponseDTO? {
+    private fun getRepositoryInfo(ids: List<Any>?): ListInstanceResponseDTO? {
         val repositoryInfos =
                 client.get(ServiceAuthRepositoryResource::class)
-                        .getInfos(projectId, ids as List<String>).data
+                        .getInfos(ids as List<String>).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
         if (repositoryInfos == null || repositoryInfos.isEmpty()) {
-            logger.info("$projectId 项目下无代码库")
+            logger.info("$ids 未匹配到代码库")
             result.code = 0
             result.message = "无数据"
             result.data = data
@@ -263,14 +262,14 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getCredentialInfo(projectId: String, ids: List<Any>?): ListInstanceResponseDTO? {
+    private fun getCredentialInfo(ids: List<Any>?): ListInstanceResponseDTO? {
         val credentialInfos =
                 client.get(ServiceAuthCallbackResource::class)
-                        .getCredentialInfos(projectId, ids!!.toSet() as Set<String>).data
+                        .getCredentialInfos(ids!!.toSet() as Set<String>).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
         if (credentialInfos == null || credentialInfos.isEmpty()) {
-            logger.info("$projectId 项目下无凭证")
+            logger.info("$ids 无凭证")
             result.code = 0
             result.message = "无数据"
             result.data = data
@@ -321,14 +320,14 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getCertInfo(projectId: String, ids: List<Any>?): ListInstanceResponseDTO? {
+    private fun getCertInfo(ids: List<Any>?): ListInstanceResponseDTO? {
         val certInfos =
                 client.get(ServiceAuthCallbackResource::class)
-                        .getCertInfos(projectId, ids!!.toSet() as Set<String>).data
+                        .getCertInfos(ids!!.toSet() as Set<String>).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
         if (certInfos == null || certInfos.isEmpty()) {
-            logger.info("$projectId 项目下无凭证")
+            logger.info("$ids 无凭证")
             result.code = 0
             result.message = "无数据"
             result.data = data
@@ -408,14 +407,14 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getNodeInfo(projectId: String, ids: List<Any>?): ListInstanceResponseDTO? {
+    private fun getNodeInfo(ids: List<Any>?): ListInstanceResponseDTO? {
         val nodeInfos =
                 client.get(RemoteNodeResource::class)
-                        .getNodeInfos("", projectId, ids as List<String>).data
+                        .getNodeInfos(ids as List<String>).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
         if (nodeInfos == null || nodeInfos.isEmpty()) {
-            logger.info("$projectId 项目下无节点")
+            logger.info("$ids 无节点")
             result.code = 0
             result.message = "无数据"
             result.data = data
@@ -437,14 +436,14 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getEnvInfo(projectId: String, ids: List<Any>?): ListInstanceResponseDTO? {
+    private fun getEnvInfo(ids: List<Any>?): ListInstanceResponseDTO? {
         val envInfos =
                 client.get(RemoteEnvResource::class)
-                        .getEnvInfos("", projectId, ids as List<String>).data
+                        .getEnvInfos(ids as List<String>).data
         val result = ListInstanceResponseDTO()
         val data = BaseDataResponseDTO<InstanceInfoDTO>()
         if (envInfos == null || envInfos.isEmpty()) {
-            logger.info("$projectId 项目下无环境")
+            logger.info("$ids 下无环境")
             result.code = 0
             result.message = "无数据"
             result.data = data
