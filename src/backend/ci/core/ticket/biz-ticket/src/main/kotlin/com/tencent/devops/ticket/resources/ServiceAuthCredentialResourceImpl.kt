@@ -40,11 +40,11 @@ class ServiceAuthCredentialResourceImpl @Autowired constructor(
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
-    override fun getCredentialInfos(projectId: String, credentialIds: Set<String>): Result<List<Credential>?> {
-        return Result(credentialService.getCredentialByIds(projectId, credentialIds))
+    override fun getCredentialInfos(credentialIds: Set<String>): Result<List<Credential>?> {
+        return Result(credentialService.getCredentialByIds(null, credentialIds))
     }
 
-    override fun getCertInfos(projectId: String, certIds: Set<String>): Result<List<Cert>?> {
-        return Result(certService.getCertByIds(projectId, certIds))
+    override fun getCertInfos(certIds: Set<String>): Result<List<Cert>?> {
+        return Result(certService.getCertByIds(certIds))
     }
 }

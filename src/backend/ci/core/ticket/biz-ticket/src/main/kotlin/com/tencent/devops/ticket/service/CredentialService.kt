@@ -83,5 +83,5 @@ interface CredentialService {
      */
     fun serviceEdit(projectId: String, credentialId: String, credential: CredentialUpdate)
 
-    fun getCredentialByIds(projectId: String, credentialIds: Set<String>): List<Credential>?
+    fun getCredentialByIds(projectId: String?, credentialIds: Set<String>): List<Credential>?
 }

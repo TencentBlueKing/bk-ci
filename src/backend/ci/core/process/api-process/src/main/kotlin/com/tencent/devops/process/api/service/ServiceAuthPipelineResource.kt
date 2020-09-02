@@ -42,11 +42,8 @@ interface ServiceAuthPipelineResource {
 
     @ApiOperation("流水线信息")
     @GET
-    @Path("/{projectId}/getInfos")
+    @Path("/getInfos")
     fun pipelineInfos(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
         @ApiParam("ID集合", required = true)
         @QueryParam("pipelineIds")
         pipelineIds: Set<String>

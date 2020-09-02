@@ -166,11 +166,10 @@ class EnvDao {
         }
     }
 
-    fun listServerEnvByIdsAllType(dslContext: DSLContext, projectId: String, envIds: Collection<Long>): List<TEnvRecord> {
+    fun listServerEnvByIdsAllType(dslContext: DSLContext, envIds: Collection<Long>): List<TEnvRecord> {
         with(TEnv.T_ENV) {
             return dslContext.selectFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(IS_DELETED.eq(false))
+                    .where(IS_DELETED.eq(false))
                     .and(ENV_ID.`in`(envIds))
                     .orderBy(ENV_ID.desc())
                     .fetch()

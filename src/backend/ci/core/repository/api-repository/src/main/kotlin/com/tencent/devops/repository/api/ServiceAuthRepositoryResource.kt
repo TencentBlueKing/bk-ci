@@ -32,11 +32,8 @@ interface ServiceAuthRepositoryResource {
 
     @ApiOperation("获取项目代码库列表")
     @GET
-    @Path("/projects/{projectId}/infos")
+    @Path("/infos")
     fun getInfos(
-        @ApiParam("项目Id", required = true)
-        @QueryParam("projectId")
-        projectId: String,
         @ApiParam("代码库Id串", required = true)
         @QueryParam("repositoryIds")
         repositoryIds: List<String>
