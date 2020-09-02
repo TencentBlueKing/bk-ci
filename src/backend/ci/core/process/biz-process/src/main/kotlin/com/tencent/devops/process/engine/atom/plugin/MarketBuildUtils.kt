@@ -29,7 +29,7 @@ object MarketBuildUtils {
             val bkAtomHookUrl = inputMap.getOrDefault(BK_ATOM_HOOK_URL, getDefaultHookUrl(atomCode, codeccApi)) as String
             val bkAtomHookUrlMethod = inputMap.getOrDefault(BK_ATOM_HOOK_URL_METHOD, getDefaultHookMethod(atomCode)) as String
             val bkAtomHookBody = inputMap.getOrDefault(BK_ATOM_HOOK_URL_BODY, "") as String
-            logger.info("start to execute codecc atom delete hook url: $atomCode, $bkAtomHookUrlMethod, $bkAtomHookUrl, $param")
+            logger.info("start to execute atom delete hook url: $atomCode, $bkAtomHookUrlMethod, $bkAtomHookUrl, $param")
 
             if (bkAtomHookUrl.isBlank()) return@execute
 
@@ -67,7 +67,7 @@ object MarketBuildUtils {
 
     private fun getDefaultHookUrl(atomCode: String, codeccApi: CodeccApi): String {
         if (!CodeccUtils.isCodeccNewAtom(atomCode)) return ""
-        return codeccApi.getExecUrl("/ms/task/api/service/task/pipeline//{pipelineId}?userName={userId}")
+        return codeccApi.getExecUrl("/ms/task/api/service/task/pipeline/stop?userName={userId}&pipelineId={$PIPELINE_ID}")
     }
 
     private fun getDefaultHookMethod(atomCode: String): String {
