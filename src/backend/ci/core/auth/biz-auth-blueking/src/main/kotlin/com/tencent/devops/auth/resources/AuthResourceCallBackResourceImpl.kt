@@ -26,7 +26,7 @@ class AuthResourceCallBackResourceImpl @Autowired constructor(
         callBackInfo: CallbackRequestDTO,
         token: String
     ): CallbackBaseResponseDTO? {
-        return resourceService.getResourceList(
+        return resourceService.getResource(
                 projectId = callBackInfo.filter!!.parent!!.id!!,
                 actionType = callBackInfo.type,
                 method = callBackInfo.method,
