@@ -784,10 +784,11 @@ class PipelineBuildService(
                 errorCode = ProcessMessageCode.ERROR_NO_STAGE_EXISTS_BY_ID,
                 defaultMessage = "构建Stage${stageId}不存在",
                 params = arrayOf(stageId))
-        if (buildStage.controlOption?.stageControlOption?.triggerUsers?.contains(userId) != true)
+        if (buildStage.controlOption?.stageControlOption?.triggerUsers?.contains(userId) != true &&
+            !pipelinePermissionService.checkPipelinePermission(userId, projectId, pipelineId, AuthPermission.EXECUTE))
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION.toString(),
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
                 defaultMessage = "用户($userId)不在Stage($stageId)可执行名单",
                 params = arrayOf(buildId))
         if (buildStage.status.name != BuildStatus.PAUSE.name) throw ErrorCodeException(
