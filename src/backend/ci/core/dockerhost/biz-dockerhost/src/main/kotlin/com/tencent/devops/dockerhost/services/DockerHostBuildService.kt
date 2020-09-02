@@ -559,6 +559,7 @@ class DockerHostBuildService(
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
             val dockerRunPortBindingList = mutableListOf<DockerRunPortBinding>()
+            val hostIp = CommonUtils.getInnerIP()
             val portBindings = Ports()
             dockerRunParam.portList?.forEach {
                 val localPort = getAvailableHostPort()
@@ -567,7 +568,7 @@ class DockerHostBuildService(
                 }
                 val tcpContainerPort: ExposedPort = ExposedPort.tcp(it)
                 portBindings.bind(tcpContainerPort, Ports.Binding.bindPort(localPort))
-                dockerRunPortBindingList.add(DockerRunPortBinding(it, localPort))
+                dockerRunPortBindingList.add(DockerRunPortBinding(hostIp, it, localPort))
             }
 
             val containerName = "dockerRun-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"

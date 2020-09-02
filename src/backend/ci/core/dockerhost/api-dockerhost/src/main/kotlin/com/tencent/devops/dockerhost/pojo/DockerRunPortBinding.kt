@@ -31,6 +31,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("DockerRunPortBinding")
 data class DockerRunPortBinding(
+    @ApiModelProperty("构建机IP", required = true)
+    val hostIp: String,
     @ApiModelProperty("容器Port", required = true)
     val containerPort: Int,
     @ApiModelProperty("构建机Port", required = true)
