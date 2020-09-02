@@ -2,6 +2,8 @@ package com.tencent.devops.process.engine.atom.plugin
 
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.plugin.codecc.CodeccApi
+import com.tencent.devops.plugin.codecc.CodeccUtils
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -22,40 +24,55 @@ object MarketBuildUtils {
 
     private val marketBuildExecutorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())!!
 
-    fun beforeDelete(inputMap: Map<*, *>, atomCode: String, param: BeforeDeleteParam) {
+    fun beforeDelete(inputMap: Map<*, *>, atomCode: String, param: BeforeDeleteParam, codeccApi: CodeccApi) {
         marketBuildExecutorService.execute {
-            val bkAtomHookUrl = inputMap.getOrDefault(BK_ATOM_HOOK_URL, "") as String
-            val bkAtomHookUrlMethod = inputMap.getOrDefault(BK_ATOM_HOOK_URL_METHOD, "") as String
-            logger.info("start to execute atom delete hook url: $atomCode, $bkAtomHookUrlMethod, $bkAtomHookUrl, $param")
+            val bkAtomHookUrl = inputMap.getOrDefault(BK_ATOM_HOOK_URL, getDefaultHookUrl(atomCode, codeccApi)) as String
+            val bkAtomHookUrlMethod = inputMap.getOrDefault(BK_ATOM_HOOK_URL_METHOD, getDefaultHookMethod(atomCode)) as String
+            val bkAtomHookBody = inputMap.getOrDefault(BK_ATOM_HOOK_URL_BODY, "") as String
+            logger.info("start to execute codecc atom delete hook url: $atomCode, $bkAtomHookUrlMethod, $bkAtomHookUrl, $param")
 
             if (bkAtomHookUrl.isBlank()) return@execute
 
-            val url = resolveParam(bkAtomHookUrl, param)
-            var request = Request.Builder()
-                .url(url)
+            doHttp(bkAtomHookUrl, bkAtomHookUrlMethod, bkAtomHookBody, param)
+        }
+    }
 
-            when (bkAtomHookUrlMethod) {
-                HttpMethod.GET -> {
-                    request = request.get()
-                }
-                HttpMethod.POST -> {
-                    val requestBody = resolveParam(inputMap.getOrDefault(BK_ATOM_HOOK_URL_BODY, "") as String, param)
-                    request = request.post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
-                }
-                HttpMethod.PUT -> {
-                    val requestBody = resolveParam(inputMap.getOrDefault(BK_ATOM_HOOK_URL_BODY, "") as String, param)
-                    request = request.put(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
-                }
-                HttpMethod.DELETE -> {
-                    request = request.delete()
-                }
+    private fun doHttp(bkAtomHookUrl: String, bkAtomHookUrlMethod: String, bkAtomHookBody: String, param: BeforeDeleteParam) {
+        val url = resolveParam(bkAtomHookUrl, param)
+        var request = Request.Builder()
+            .url(url)
+
+        when (bkAtomHookUrlMethod) {
+            HttpMethod.GET -> {
+                request = request.get()
             }
-
-            OkhttpUtils.doHttp(request.build()).use { response ->
-                val body = response.body()!!.string()
-                logger.info("before delete execute result: $url, $body")
+            HttpMethod.POST -> {
+                val requestBody = resolveParam(bkAtomHookBody, param)
+                request = request.post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
+            }
+            HttpMethod.PUT -> {
+                val requestBody = resolveParam(bkAtomHookBody, param)
+                request = request.put(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
+            }
+            HttpMethod.DELETE -> {
+                request = request.delete()
             }
         }
+
+        OkhttpUtils.doHttp(request.build()).use { response ->
+            val body = response.body()!!.string()
+            logger.info("before delete execute result: $url, $body")
+        }
+    }
+
+    private fun getDefaultHookUrl(atomCode: String, codeccApi: CodeccApi): String {
+        if (!CodeccUtils.isCodeccNewAtom(atomCode)) return ""
+        return codeccApi.getExecUrl("/ms/task/api/service/task/pipeline//{pipelineId}?userName={userId}")
+    }
+
+    private fun getDefaultHookMethod(atomCode: String): String {
+        if (!CodeccUtils.isCodeccNewAtom(atomCode)) return "GET"
+        return "DELETE"
     }
 
     private fun resolveParam(str: String, param: BeforeDeleteParam): String {
