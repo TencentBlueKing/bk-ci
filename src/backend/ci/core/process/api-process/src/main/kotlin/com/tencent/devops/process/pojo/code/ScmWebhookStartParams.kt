@@ -24,11 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo.event.commit.enum
+package com.tencent.devops.process.pojo.code
 
-enum class CommitEventType {
-    SVN,
-    GIT,
-    GITLAB,
-    TGIT
+import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+
+interface ScmWebhookStartParams<in T : WebHookTriggerElement> {
+
+    fun getStartParams(element: T): Map<String, Any>
 }

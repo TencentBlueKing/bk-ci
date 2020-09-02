@@ -24,11 +24,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo.event.commit.enum
+package com.tencent.devops.process.engine.service.code
 
-enum class CommitEventType {
-    SVN,
-    GIT,
-    GITLAB,
-    TGIT
+import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.process.pojo.code.ScmWebhookElementParams
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+
+class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTriggerElement> {
+
+    override fun getWebhookElementParams(
+        element: CodeGitlabWebHookTriggerElement,
+        variables: Map<String, String>
+    ): ScmWebhookMatcher.WebHookParams? {
+        val params = ScmWebhookMatcher.WebHookParams(
+            repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
+                repositoryConfig = RepositoryConfigUtils.buildConfig(element),
+                variables = variables
+            )
+        )
+        if (element.branchName == null) {
+            return null
+        }
+        params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
+        params.codeType = CodeType.GITLAB
+        return params
+    }
 }

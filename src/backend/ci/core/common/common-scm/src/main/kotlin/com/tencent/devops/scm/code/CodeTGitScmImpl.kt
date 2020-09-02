@@ -35,6 +35,7 @@ import com.tencent.devops.scm.code.git.api.GitApi
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.slf4j.LoggerFactory
@@ -49,11 +50,12 @@ class CodeTGitScmImpl constructor(
     private val gitConfig: GitConfig,
     private val event: String? = null
 ) : IScm {
+    private val apiUrl = GitUtils.getGitApiUrl(apiUrl = gitConfig.tGitApiUrl, repoUrl = url)
 
     override fun getLatestRevision(): RevisionInfo {
         val branch = branchName ?: "master"
         val gitBranch = gitApi.getBranch(
-            host = gitConfig.tGitApiUrl,
+            host = apiUrl,
             token = token,
             projectName = projectName,
             branchName = branch
@@ -66,10 +68,10 @@ class CodeTGitScmImpl constructor(
     }
 
     override fun getBranches() =
-        gitApi.listBranches(gitConfig.tGitApiUrl, token, projectName)
+        gitApi.listBranches(apiUrl, token, projectName)
 
     override fun getTags() =
-        gitApi.listTags(gitConfig.tGitApiUrl, token, projectName)
+        gitApi.listTags(apiUrl, token, projectName)
 
     override fun checkTokenAndPrivateKey() {
         if (privateKey == null) {
@@ -151,7 +153,7 @@ class CodeTGitScmImpl constructor(
             )
         }
         try {
-            gitApi.addWebhook(gitConfig.tGitApiUrl, token, projectName, hookUrl, event)
+            gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event)
         } catch (e: ScmException) {
             throw ScmException(
                 MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
@@ -173,7 +175,7 @@ class CodeTGitScmImpl constructor(
         }
         try {
             gitApi.addCommitCheck(
-                host = gitConfig.tGitApiUrl,
+                host = apiUrl,
                 token = token,
                 projectName = projectName,
                 commitId = commitId,
