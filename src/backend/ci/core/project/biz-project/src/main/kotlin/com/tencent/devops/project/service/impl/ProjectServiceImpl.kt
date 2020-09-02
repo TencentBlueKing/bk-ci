@@ -61,7 +61,7 @@ class ProjectServiceImpl @Autowired constructor(
                 projectCode = englishName,
                 permission = AuthPermission.DELETE
         )
-        if(!verify) {
+        if (!verify) {
             logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
         }

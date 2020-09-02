@@ -6,11 +6,7 @@ import com.tencent.devops.repository.pojo.RepositoryInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
+import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_AUTH"], description = "服务-代码库-权限中心")
@@ -20,10 +16,12 @@ import javax.ws.rs.core.MediaType
 interface ServiceAuthRepositoryResource {
 
     @ApiOperation("获取项目代码库列表")
-    @POST
-    @Path("/listByProjects")
+    @GET
+    @Path("/projects/{projectIds}/listByProjects")
     fun listByProjects(
-        projectIds: Set<String>,
+        @ApiParam("项目Id", required = false)
+        @QueryParam("projectId")
+        projectId: String,
         @ApiParam("分页", required = false)
         @QueryParam("page")
         page: Int?,
@@ -31,4 +29,16 @@ interface ServiceAuthRepositoryResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RepositoryInfo>>
+
+    @ApiOperation("获取项目代码库列表")
+    @GET
+    @Path("/projects/{projectId}/infos")
+    fun getInfos(
+        @ApiParam("项目Id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("代码库Id串", required = true)
+        @QueryParam("repositoryIds")
+        repositoryIds: List<String>
+    ): Result<List<RepositoryInfo>?>
 }

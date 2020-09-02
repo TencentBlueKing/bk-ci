@@ -429,13 +429,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return Result(true)
     }
 
-    private fun validatePermission(projectCode: String ,userId: String, permission: AuthPermission) : Boolean {
+    private fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
         val validate = projectPermissionService.verifyUserProjectPermission(
                 projectCode = projectCode,
                 userId = userId,
                 permission = permission
         )
-        if(!validate) {
+        if (!validate) {
             logger.warn("$projectCode| $userId| ${permission.value} validatePermission fail")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
         }

@@ -1078,6 +1078,28 @@ class RepositoryService @Autowired constructor(
         )
     }
 
+    fun getInfoByIds(ids: List<String>): List<RepositoryInfo> {
+        val repositoryIds = ids.map { it.toLong() }
+        val repositoryInfos = repositoryDao.getRepoByIds(
+                dslContext = dslContext,
+                repositoryIds = repositoryIds,
+                checkDelete = true
+        )
+        val result = mutableListOf<RepositoryInfo>()
+        repositoryInfos?.map {
+            result.add(
+                    RepositoryInfo(
+                            repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
+                            aliasName = it.aliasName,
+                            url = it.url,
+                            type = ScmType.valueOf(it.type),
+                            updatedTime = it.updatedTime.timestampmilli()
+                    )
+            )
+        }
+        return result
+    }
+
     fun getAuthUrl(
         authParamJsonStr: String
     ): Result<String> {

@@ -18,29 +18,30 @@ class IamService @Autowired constructor(
     val iamEsbService: IamEsbService,
     val iamConfiguration: IamConfiguration
 ) {
-    fun getPermissionUrl(permissionUrlDTO: PermissionUrlDTO): Result<String?> {
+    fun getPermissionUrl(permissionUrlDTO: List<PermissionUrlDTO>): Result<String?> {
         logger.info("get permissionUrl permissionUrlDTO: $permissionUrlDTO")
         val actions = mutableListOf<Action>()
-        val resourceType = ActionUtils.buildAction(permissionUrlDTO.resourceId, permissionUrlDTO.actionId)
-        val instanceList = permissionUrlDTO.instanceId.map {
-            Instance(
-                    id = it,
-                    type = permissionUrlDTO.resourceId
+        permissionUrlDTO.map {
+            val resourceType = ActionUtils.buildAction(it.resourceId, it.actionId)
+            val instanceList = it.instanceId.map { instance ->
+                Instance(
+                        id = instance,
+                        type = it.resourceId
+                )
+            }
+            val relatedResourceTypes = mutableListOf<RelatedResourceTypes>()
+            relatedResourceTypes.add(RelatedResourceTypes(
+                    system = iamConfiguration.systemId,
+                    type = it.resourceId,
+                    instance = instanceList))
+
+            actions.add(
+                    Action(
+                            id = resourceType,
+                            related_resource_types = relatedResourceTypes
+                    )
             )
         }
-        val relatedResourceTypes = mutableListOf<RelatedResourceTypes>()
-        relatedResourceTypes.add(RelatedResourceTypes(
-                        system = iamConfiguration.systemId,
-                        type = permissionUrlDTO.resourceId,
-                        instance = instanceList))
-
-        actions.add(
-                Action(
-                        id = resourceType,
-                        related_resource_types = relatedResourceTypes
-                )
-        )
-
         val iamEsbReq = IamPermissionUrlReq(
                 system = iamConfiguration.systemId,
                 actions = actions,
@@ -52,7 +53,7 @@ class IamService @Autowired constructor(
         return Result(iamEsbService.getPermissionUrl(iamEsbReq))
     }
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

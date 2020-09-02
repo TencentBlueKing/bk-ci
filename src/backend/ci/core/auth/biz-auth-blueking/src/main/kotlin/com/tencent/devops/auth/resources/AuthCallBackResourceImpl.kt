@@ -3,7 +3,6 @@ package com.tencent.devops.auth.resources
 import com.tencent.devops.auth.api.callback.AuthCallBackResource
 import com.tencent.devops.auth.pojo.BkResult
 import com.tencent.devops.common.web.RestResource
-import org.springframework.web.bind.annotation.RestController
 
 @RestResource
 class AuthCallBackResourceImpl() : AuthCallBackResource {
