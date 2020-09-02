@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 
 object RepositoryConfigUtils {
 
@@ -80,6 +81,11 @@ object RepositoryConfigUtils {
                 element.repositoryType ?: RepositoryType.ID
             )
             is CodeGithubWebHookTriggerElement -> RepositoryConfig(
+                element.repositoryHashId,
+                element.repositoryName,
+                element.repositoryType ?: RepositoryType.ID
+            )
+            is CodeTGitWebHookTriggerElement -> RepositoryConfig(
                 element.repositoryHashId,
                 element.repositoryName,
                 element.repositoryType ?: RepositoryType.ID

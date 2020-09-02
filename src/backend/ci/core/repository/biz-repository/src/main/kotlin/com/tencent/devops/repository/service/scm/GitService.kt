@@ -776,8 +776,15 @@ class GitService @Autowired constructor(
     }
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
-    override fun getMrInfo(repoName: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrInfo {
-        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/merge_request/$mrId")
+    override fun getMrInfo(
+        repoName: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String,
+        repoUrl: String
+    ): GitMrInfo {
+        val apiUrl = GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl)
+        val url = StringBuilder("$apiUrl/projects/${URLEncoder.encode(repoName, "UTF-8")}/merge_request/$mrId")
         logger.info("get mr info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -795,9 +802,16 @@ class GitService @Autowired constructor(
     }
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
-    override fun getMrReviewInfo(id: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrReviewInfo {
+    override fun getMrReviewInfo(
+        id: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String,
+        repoUrl: String
+    ): GitMrReviewInfo {
+        val apiUrl = GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl)
         val url = StringBuilder(
-            "${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(
+            "$apiUrl/projects/${URLEncoder.encode(
                 id,
                 "UTF-8"
             )}/merge_request/$mrId/review"
@@ -819,9 +833,16 @@ class GitService @Autowired constructor(
     }
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
-    override fun getMrChangeInfo(id: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrChangeInfo {
+    override fun getMrChangeInfo(
+        id: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String,
+        repoUrl: String
+    ): GitMrChangeInfo {
+        val apiUrl = GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl)
         val url = StringBuilder(
-            "${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(
+            "$apiUrl/projects/${URLEncoder.encode(
                 id,
                 "UTF-8"
             )}/merge_request/$mrId/changes"

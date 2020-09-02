@@ -24,11 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo.event.commit.enum
+package com.tencent.devops.process.engine.pojo.event.commit
 
-enum class CommitEventType {
-    SVN,
-    GIT,
-    GITLAB,
-    TGIT
-}
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.process.engine.pojo.event.commit.enum.CommitEventType
+
+@Event(MQ.EXCHANGE_TGIT_BUILD_REQUEST_EVENT, MQ.ROUTE_TGIT_BUILD_REQUEST_EVENT)
+data class TGitWebhookEvent(
+    override val requestContent: String,
+    override var retryTime: Int = 3,
+    override var delayMills: Int = 0,
+    override val commitEventType: CommitEventType = CommitEventType.TGIT
+) : ICodeWebhookEvent(requestContent, retryTime, delayMills, commitEventType)
