@@ -42,10 +42,10 @@ import org.springframework.stereotype.Component
 
 @Component
 class ClearTimeoutCron(
-        private val redisOperation: RedisOperation,
-        private val objectMapper: ObjectMapper,
-        private val websocketService: WebsocketService,
-        private val transferDispatch: TransferDispatch
+    private val redisOperation: RedisOperation,
+    private val objectMapper: ObjectMapper,
+    private val websocketService: WebsocketService,
+    private val transferDispatch: TransferDispatch
 ) {
 
     companion object {
@@ -108,7 +108,7 @@ class ClearTimeoutCron(
                                 logger.info("[clearTimeOutSession] sessionId:$sessionId,loadPage:$sessionPage,userId:$userId")
                             }
                             // 如果不在本实例，下发到mq,供其他实例删除对应实例维持的session
-                            if(websocketService.isCacheSession(sessionId)) {
+                            if (websocketService.isCacheSession(sessionId)) {
                                 websocketService.removeCacheSession(sessionId)
                             } else {
                                 clearSessionByMq(userId, sessionId)
