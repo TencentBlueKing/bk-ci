@@ -78,7 +78,7 @@ auth:
   principalType: user
   envName: prod
   #  开发时需要配置Host解析到iam.service.consul
-  url: http://__IAM_HOST__
+  url: http://__BK_IAM_PRIVATE_ADDR__
   appCode: __APP_CODE__
   appSecret: __APP_TOKEN__
   bkloginUrl: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/login/api/v2
