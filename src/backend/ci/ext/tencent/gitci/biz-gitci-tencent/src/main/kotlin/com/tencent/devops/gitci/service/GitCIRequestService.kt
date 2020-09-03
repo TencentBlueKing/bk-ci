@@ -161,6 +161,7 @@ class GitCIRequestService @Autowired constructor(
         return if (matcher.isMatch(yaml.trigger!!, yaml.mr!!)) {
             logger.info("Matcher is true, display the event, eventId: ${gitRequestEvent.id}")
             gitRequestEventBuildDao.save(dslContext, gitRequestEvent.id!!, yamlStr, normalizedYaml, gitRequestEvent.gitProjectId, gitRequestEvent.branch, gitRequestEvent.objectKind, "")
+            repositoryConfService.updateGitCISetting(gitRequestEvent.gitProjectId)
             dispatchEvent(GitCIRequestTriggerEvent(gitRequestEvent, yaml))
             true
         } else {
