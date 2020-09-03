@@ -142,7 +142,7 @@ class MQPipelineCreateListener @Autowired constructor(
                         page = null
                 )
                 websocketDispatch(post, event)
-                logger.warn("[${event.pipelineId}]异步调用webhook返回未知异常。webSocket推送异常信息[$post]")
+                logger.error("[${event.pipelineId}]异步调用webhook返回未知异常。webSocket推送异常信息[$post]", e)
             }
         }
     }
