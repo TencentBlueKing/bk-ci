@@ -217,8 +217,72 @@ class CodeccTransferService @Autowired constructor(
         return "update codecc to v1 success"
     }
 
+    fun transferToV3(pipelineIds: Set<String>): Map<String, String> {
+        val result = mutableMapOf<String, String>()
+        pipelineTaskService.list(pipelineIds).map {
+            val resultMsg = try {
+                doTransferV3(it)
+            } catch (e: Exception) {
+                logger.error("transfer pipeline ${it.key} fail", e)
+                e.message ?: "unexpected error occur"
+            }
+            result[it.key] = resultMsg
+        }
+        return result
+    }
+
+    fun doTransferV3(it: Map.Entry<String, List<PipelineModelTask>>): String {
+        val pipelineId = it.key
+        val projectId = it.value.firstOrNull()?.projectId ?: ""
+
+        val codeccTask = it.value.filter { task -> task.classType == LinuxPaasCodeCCScriptElement.classType }
+        if (codeccTask.isEmpty()) {
+            return "$pipelineId do not contains old codecc element"
+        }
+
+        val newCodeccTask = it.value.filter { task -> task.taskParams["atomCode"] == "CodeccCheckAtomDebug" }
+        if (newCodeccTask.isNotEmpty()) {
+            return "$pipelineId is already contains new codecc element"
+        }
+
+        // start to transfer
+        val model = pipelineRepositoryService.getModel(pipelineId)!!
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+        logger.info("get pipeline info for pipeline: $pipelineId, $pipelineInfo")
+        model.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                val elementList = mutableListOf<Element>()
+                container.elements.forEach { element ->
+                    if (element.getClassType() == LinuxPaasCodeCCScriptElement.classType) {
+                        logger.info("get new codecc element for pipeline: $pipelineId")
+                        val newElement = getNewCodeccElementV3(element as LinuxPaasCodeCCScriptElement)
+                            ?: return "get codecc new element fail"
+                        elementList.add(newElement)
+                    } else {
+                        elementList.add(element)
+                    }
+                }
+                container.elements = elementList
+            }
+        }
+
+        // save pipeline
+        logger.info("edit pipeline: $pipelineId")
+        pipelineService.editPipeline(
+            userId = pipelineInfo?.lastModifyUser ?: "",
+            projectId = projectId,
+            pipelineId = pipelineId,
+            model = model,
+            channelCode = ChannelCode.BS,
+            checkPermission = false,
+            checkTemplate = false
+        )
+
+        return "update codecc to v3 success"
+    }
+
     private fun getNewCodeccElement(oldCodeccElement: LinuxPaasCodeCCScriptElement): Element? {
-        val data = getCodeccDataMap(oldCodeccElement) ?: return null
+        val data = getCodeccDataMap(oldCodeccElement, false) ?: return null
         return MarketBuildAtomElement(
             name = oldCodeccElement.name,
             id = oldCodeccElement.id,
@@ -232,7 +296,22 @@ class CodeccTransferService @Autowired constructor(
         )
     }
 
-    private fun getCodeccDataMap(oldCodeccElement: LinuxPaasCodeCCScriptElement): CodeccCheckAtomParamV3? {
+    private fun getNewCodeccElementV3(oldCodeccElement: LinuxPaasCodeCCScriptElement): Element? {
+        val data = getCodeccDataMap(oldCodeccElement, true) ?: return null
+        return MarketBuildAtomElement(
+            name = oldCodeccElement.name,
+            id = oldCodeccElement.id,
+            status = oldCodeccElement.status,
+            atomCode = "CodeccCheckAtomDebug",
+            version = "4.*",
+            data = mapOf(
+                "input" to data,
+                "output" to mapOf<String, String>()
+            )
+        )
+    }
+
+    private fun getCodeccDataMap(oldCodeccElement: LinuxPaasCodeCCScriptElement, isVersion3: Boolean): CodeccCheckAtomParamV3? {
         // 1.基础设置tab
         val params = CodeccCheckAtomParamV3()
         params.script = oldCodeccElement.script
@@ -247,7 +326,8 @@ class CodeccTransferService @Autowired constructor(
         params.needCodeContent = oldCodeccElement.needCodeContent
         params.tools = oldCodeccElement.tools
 
-        val ruleSetMap = getNewRuleSetMap(oldCodeccElement)
+        val ruleSetMap = if (isVersion3) getNewRuleSetMapV3(oldCodeccElement)
+        else getNewRuleSetMap(oldCodeccElement)
         params.languageRuleSetMap = ruleSetMap
 
         val taskInfo = codeccApi.getTaskInfo(oldCodeccElement.codeCCTaskName!!).data
@@ -275,7 +355,7 @@ class CodeccTransferService @Autowired constructor(
         // 3.扫描配置tab
         val transferAuthors = codeccApi.getTransferAuthor(oldCodeccElement.codeCCTaskId!!).data
         // params.toolScanType = oldCodeccElement.scanType
-        params.toolScanType = "0"
+        params.toolScanType = taskInfo.scanType.toString()
         params.newDefectJudgeFromDate = taskInfo.newDefectJudge?.fromDate
         params.transferAuthorList = transferAuthors?.transferAuthorList
 
@@ -324,9 +404,17 @@ class CodeccTransferService @Autowired constructor(
 
             oldCodeccElement.tools?.forEach { tool ->
                 val newRuleId = newRuleIdMap[lang.name + "_" + tool] ?: return@forEach
-                ruleSetIdList.add(newRuleId!!)
+                ruleSetIdList.add(newRuleId)
             }
             ruleName to ruleSetIdList.toList()
+        }.toMap()
+    }
+
+    private fun getNewRuleSetMapV3(oldCodeccElement: LinuxPaasCodeCCScriptElement): Map<String, List<String>> {
+        return oldCodeccElement.languages.map { lang ->
+            val ruleName = lang.name.toUpperCase() + "_RULE"
+            val ruleSetIdList = v3LangCheckerSetMap[lang] ?: listOf()
+            ruleName to ruleSetIdList
         }.toMap()
     }
 
@@ -414,6 +502,23 @@ class CodeccTransferService @Autowired constructor(
         ProjectLanguage.GOLANG.name + "_" + "DUPC" to "codecc_default_dupc_go",
         ProjectLanguage.GOLANG.name + "_" + "SENSITIVE" to "ieg_sensitive_go",
         ProjectLanguage.GOLANG.name + "_" + "WOODPECKER_SENSITIVE" to "woodpecker_go"
+    )
+
+    private val v3LangCheckerSetMap = mapOf(
+        ProjectLanguage.C_SHARP to listOf("codecc_default_coverity_csharp", "standard_csharp", "pecker_csharp", "cloc_csharp"),
+        ProjectLanguage.C_CPP to listOf("codecc_default_coverity_cpp", "standard_cpp", "pecker_cpp", "cloc_cpp"),
+        ProjectLanguage.JAVA to listOf("codecc_default_coverity_java", "standard_java", "pecker_java", "cloc_java"),
+        ProjectLanguage.OC to listOf("codecc_default_coverity_oc", "bkcheck_oc_rule", "pecker_oc", "cloc_oc"),
+        ProjectLanguage.OBJECTIVE_C to listOf("codecc_default_coverity_oc", "bkcheck_oc_rule", "pecker_oc", "cloc_oc"),
+        ProjectLanguage.GOLANG to listOf("codecc_default_coverity_go", "standard_go", "pecker_go", "cloc_golang"),
+        ProjectLanguage.SWIFT to listOf("pecker_swift", "cloc_swift"),
+        ProjectLanguage.PYTHON to listOf("codecc_default_coverity_python", "standard_python", "pecker_python", "cloc_python"),
+        ProjectLanguage.JAVASCRIPT to listOf("codecc_default_coverity_js", "standard_js", "pecker_js", "cloc_js"),
+        ProjectLanguage.JS to listOf("codecc_default_coverity_js", "standard_js", "pecker_js", "cloc_js"),
+        ProjectLanguage.TYPESCRIPT to listOf("ts_standard", "pecker_ts", "cloc_ts"),
+        ProjectLanguage.PHP to listOf("pecker_php", "cloc_php"),
+        ProjectLanguage.LUA to listOf("pecker_lua", "cloc_lua"),
+        ProjectLanguage.OTHERS to listOf("standard_cloc", "cloc_solidity", "cloc_dart", "cloc_kotlin", "cloc_ruby")
     )
 
     class CodeccCheckAtomParamV3 {
