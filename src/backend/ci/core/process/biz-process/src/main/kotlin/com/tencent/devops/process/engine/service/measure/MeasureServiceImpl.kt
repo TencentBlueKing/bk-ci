@@ -129,7 +129,7 @@ class MeasureServiceImpl constructor(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             taskId = taskId,
-                            atomCode = atomCode ?: taskType,
+                            atomCode = atomCode ?: taskParams["atomCode"] as String? ?: taskType,
                             name = taskName,
                             buildId = buildId,
                             startTime = tStartTime,
