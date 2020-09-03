@@ -3,6 +3,8 @@ package com.tencent.devops.auth.service
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.devops.auth.pojo.PermissionUrlDTO
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.pojo.Action
 import com.tencent.devops.common.auth.pojo.IamPermissionUrlReq
 import com.tencent.devops.common.auth.pojo.RelatedResourceTypes
@@ -24,9 +26,13 @@ class IamService @Autowired constructor(
             val resourceType = ActionUtils.buildAction(it.resourceId, it.actionId)
             val instanceList = it.instanceId
             val relatedResourceTypes = mutableListOf<RelatedResourceTypes>()
+            var relatedResourceType = it.resourceId.value
+            if(it.actionId == AuthPermission.CREATE) {
+                relatedResourceType = AuthResourceType.PROJECT.value
+            }
             relatedResourceTypes.add(RelatedResourceTypes(
                     system = iamConfiguration.systemId,
-                    type = it.resourceId.value,
+                    type = relatedResourceType,
                     instances = listOf(instanceList)))
 
             actions.add(
