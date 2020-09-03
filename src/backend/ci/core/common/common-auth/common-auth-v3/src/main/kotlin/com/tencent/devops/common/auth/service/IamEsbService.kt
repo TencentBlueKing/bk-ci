@@ -11,7 +11,6 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
 class IamEsbService() {
 
@@ -79,8 +78,7 @@ class IamEsbService() {
                 // 请求错误
                 throw RemoteServiceException("bkiam v3 request failed, response: (${iamApiRes["message"]}, request_id[${iamApiRes["request_id"]}])")
             }
-            val data = objectMapper.readValue<Map<String, String>>(iamApiRes["data"].toString())
-            return data["url"]
+            return iamApiRes["data"].toString().substringAfter("url=").substringBeforeLast("}")
         }
         return null
     }

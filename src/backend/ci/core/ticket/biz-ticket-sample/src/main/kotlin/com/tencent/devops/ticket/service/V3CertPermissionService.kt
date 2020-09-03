@@ -30,7 +30,7 @@ class V3CertPermissionService @Autowired constructor(
                 offset = 0,
                 limit = 500
             ).forEach {
-                fakeList.add(it.toString())
+                fakeList.add(it)
             }
             fakeList
         }
@@ -52,6 +52,7 @@ class V3CertPermissionService @Autowired constructor(
             if (value.contains("*")) {
                 logger.info("filterCert user[$userId] project[$projectId] auth[$key] list[$value]")
                 certResultMap[key] = getAllCertByProject(projectId)
+                logger.info("filterCert user[$userId] project[$projectId] auth[$key] list[$value] ${certResultMap[key]}")
             } else {
                 certResultMap[key] = value
             }
@@ -62,7 +63,10 @@ class V3CertPermissionService @Autowired constructor(
     private fun getAllCertByProject(projectId: String): List<String> {
         val idList = mutableListOf<String>()
         val count = certDao.countByProject(dslContext, projectId, null)
-        certDao.listIdByProject(dslContext, projectId, 0, count.toInt()).map { idList.add(it.toString()) }
+        val records = certDao.listByProject(dslContext, projectId, 0, count.toInt())
+        records.map {
+            idList.add(it.certId)
+        }
         return idList
     }
 

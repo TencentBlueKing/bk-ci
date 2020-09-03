@@ -150,7 +150,6 @@ class NodeDao {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
                     .where(NODE_ID.`in`(nodeIds))
-                    .and(NODE_TYPE.`in`(NodeType.BCSVM.name, NodeType.CC.name, NodeType.CMDB.name, NodeType.OTHER.name))
                     .orderBy(NODE_ID.desc())
                     .fetch()
         }

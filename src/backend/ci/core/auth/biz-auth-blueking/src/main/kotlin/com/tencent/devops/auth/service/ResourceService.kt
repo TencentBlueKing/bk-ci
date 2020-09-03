@@ -334,7 +334,7 @@ class ResourceService @Autowired constructor(
         logger.info("entityInfo $entityInfo, count ${certInfos.size.toLong()}")
         result.code = 0L
         result.message = ""
-        result.data = certInfos.toList()
+        result.data = entityInfo.toList()
         return result
     }
 
