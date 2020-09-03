@@ -78,8 +78,7 @@ class IamEsbService() {
                 // 请求错误
                 throw RemoteServiceException("bkiam v3 request failed, response: (${iamApiRes["message"]}, request_id[${iamApiRes["request_id"]}])")
             }
-            val data = objectMapper.readValue<Map<String, String>>(iamApiRes["data"].toString())
-            return data["url"]
+            return iamApiRes["data"].toString().substringAfter("url=").substringBeforeLast("}")
         }
         return null
     }
