@@ -27,7 +27,7 @@ class IamService @Autowired constructor(
             val instanceList = it.instanceId
             val relatedResourceTypes = mutableListOf<RelatedResourceTypes>()
             var relatedResourceType = it.resourceId.value
-            if(it.actionId == AuthPermission.CREATE) {
+            if (it.actionId == AuthPermission.CREATE) {
                 relatedResourceType = AuthResourceType.PROJECT.value
             }
             relatedResourceTypes.add(RelatedResourceTypes(
