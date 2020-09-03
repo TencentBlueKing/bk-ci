@@ -108,6 +108,7 @@ class PipelineBuildLessDispatchService @Autowired constructor(
             if (it.canDispatch(pipelineBuildLessAgentStartupEvent)) {
                 if (!jobQuotaBusinessService.checkJobQuota(pipelineBuildLessAgentStartupEvent, buildLogPrinter)) {
                     logger.error("[$buildId]|BUILD_LESS| AgentLess Job quota exceed quota.")
+                    return
                 }
                 it.startUp(pipelineBuildLessAgentStartupEvent)
                 // 到这里说明JOB已经启动成功，开始累加使用额度
