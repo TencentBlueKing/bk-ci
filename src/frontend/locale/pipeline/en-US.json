@@ -3,6 +3,7 @@
     "pipelineName": "Name",
     "labelManage": "Labels",
     "label": "Label",
+    "close": "Close",
     "viewManage": "Views",
     "templateManage": "Templates",
     "pluginManage": "Installed plugins",
@@ -797,5 +798,8 @@
         "noEnv": "Agentless",
         "afterPreStageSuccess": "after Pre Stage done",
         "manualRunStage": "Manual"
-    }
+    },
+    "permissionRefreshtitle": "Permission Request form has been submitted",
+    "permissionRefreshSubtitle": "Please fill in the permission request form in the permission center and refresh the page after submission",
+    "permissionRefreshOkText": "Reload Page"
 }

@@ -342,12 +342,23 @@
                 this.$toggleProjectMenu(true)
             },
             goToApplyPerm () {
-                const url = `/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_creator=env_node`
-                window.open(url, '_blank')
+                // const url = `/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_creator=env_node`
+                // window.open(url, '_blank')
+                this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.envNode, [{
+                    id: this.projectId,
+                    type: this.$permissionResourceTypeMap.PROJECT
+                }])
             },
             toNodeApplyPerm (row) {
-                const url = `/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_manager=env_node:${row.nodeHashId}`
-                window.open(url, '_blank')
+                // const url = `/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_manager=env_node:${row.nodeHashId}`
+                // window.open(url, '_blank')
+                this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.envNode, [{
+                    id: this.projectId,
+                    type: this.$permissionResourceTypeMap.PROJECT
+                }, {
+                    id: row.nodeHashId,
+                    name: row.displayName
+                }])
             },
             dropdownIsShow (isShow) {
                 if (isShow === 'show') {

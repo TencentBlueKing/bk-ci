@@ -307,19 +307,10 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    if (err.code === 403) { // 没有权限执行
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: this.$t('pipeline'),
-                                option: this.$t('exec')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PREFIX}`
-                        })
-                        return
-                    } else {
-                        message = err.message || err
-                        theme = 'error'
-                    }
+                    this.handleError(err, this.$permissionActionMap.execute, {
+                        id: this.$route.params.pipelineId,
+                        name: this.$route.params.pipelineId
+                    }, this.routerParams.projectId)
                 } finally {
                     message && this.$showTips({
                         message,

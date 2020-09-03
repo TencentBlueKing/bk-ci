@@ -3,6 +3,7 @@
         v-bkloading="{ isLoading: isLoading || fetchingAtomList }">
         <empty-tips
             v-if="hasNoPermission"
+            :show-lock="true"
             :title="noPermissionTipsConfig.title"
             :desc="noPermissionTipsConfig.desc"
             :btns="noPermissionTipsConfig.btns">
@@ -61,7 +62,7 @@
             <complete-log @close="showLog = false"></complete-log>
         </template>
         <review-dialog :is-show="showReviewDialog"></review-dialog>
-        <mini-map :stages="execDetail.model.stages" scroll-class=".exec-pipeline" v-if="!isLoading && !fetchingAtomList && curItemTab === 'executeDetail'"></mini-map>
+        <mini-map :stages="execDetail.model.stages" scroll-class=".exec-pipeline" v-if="!isLoading && !fetchingAtomList && curItemTab === 'executeDetail' && !hasNoPermission"></mini-map>
     </section>
 </template>
 
@@ -124,7 +125,10 @@
                             theme: 'success',
                             size: 'normal',
                             handler: () => {
-                                this.goToApplyPerm('role_manager')
+                                this.toApplyPermission(this.$permissionActionMap.execute, {
+                                    id: this.execDetail.pipelineId,
+                                    name: this.execDetail.pipelineName
+                                })
                             },
                             text: this.$t('applyPermission')
                         }
