@@ -27,6 +27,7 @@ export const CODE_LIB = 'CODE_LIB'
 export const CONTAINER_TYPE = 'CONTAINER_TYPE'
 export const ARTIFACTORY = 'ARTIFACTORY'
 export const SUB_PIPELINE = 'SUB_PIPELINE'
+export const CUSTOM_FILE = 'CUSTOM_FILE'
 
 function paramType (typeConst) {
     return type => type === typeConst
@@ -130,6 +131,14 @@ export const DEFAULT_PARAM = {
         type: SUB_PIPELINE,
         typeDesc: 'subPipeline',
         required: true
+    },
+    [CUSTOM_FILE]: {
+        id: 'file',
+        defaultValue: '',
+        desc: '',
+        type: CUSTOM_FILE,
+        typeDesc: 'custom_file',
+        required: true
     }
 }
 
@@ -148,7 +157,8 @@ export const ParamComponentMap = {
     [CODE_LIB]: 'Selector',
     [CONTAINER_TYPE]: 'Selector',
     [ARTIFACTORY]: 'Selector',
-    [SUB_PIPELINE]: 'Selector'
+    [SUB_PIPELINE]: 'Selector',
+    [CUSTOM_FILE]: 'VuexInput'
 }
 
 export const BOOLEAN_LIST = [
@@ -211,3 +221,4 @@ export const isCodelibParam = paramType(CODE_LIB)
 export const isBuildResourceParam = paramType(CONTAINER_TYPE)
 export const isArtifactoryParam = paramType(ARTIFACTORY)
 export const isSubPipelineParam = paramType(SUB_PIPELINE)
+export const isFileParam = paramType(CUSTOM_FILE)

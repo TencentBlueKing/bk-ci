@@ -79,7 +79,7 @@
                                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                 :value="param.defaultValue">
                                             </enum-input>
-                                            <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
+                                            <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type) || isFileParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
                                             <request-selector v-if="isCodelibParam(param.type)" :popover-min-width="250" :url="getCodeUrl(param.scmType)" v-bind="codelibOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
                                             <request-selector v-if="isBuildResourceParam(param.type)" :popover-min-width="250" :url="getBuildResourceUrl(param.containerType)" param-id="name" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
                                             <request-selector v-if="isSubPipelineParam(param.type)" :popover-min-width="250" v-bind="subPipelineOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
@@ -124,6 +124,12 @@
                                         <key-value-normal :disabled="disabled" name="properties" :data-vv-scope="`param-${param.id}`" :is-metadata-var="true" :add-btn-text="$t('editPage.addMetaData')" :value="getProperties(param)" :handle-change="(name, value) => handleProperties(name, value, index)"></key-value-normal>
                                     </bk-form-item>
 
+                                    <bk-form-item label-width="auto" v-if="isFileParam(param.type)" :label="$t('storeMap.upload')">
+                                        <file-param-input
+                                            :file-path="param.defaultValue"
+                                        ></file-param-input>
+                                    </bk-form-item>
+
                                     <bk-form-item label-width="auto" :label="$t('desc')">
                                         <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="desc" :placeholder="$t('editPage.descTips')" :value="param.desc" />
                                     </bk-form-item>
@@ -152,6 +158,7 @@
     import Selector from '@/components/atomFormField/Selector'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
+    import FileParamInput from '@/components/FileParamInput'
     import validMixins from '../validMixins'
     import draggable from 'vuedraggable'
     import { allVersionKeyList } from '@/utils/pipelineConst'
@@ -167,6 +174,7 @@
         isGitParam,
         isArtifactoryParam,
         isSubPipelineParam,
+        isFileParam,
         getRepoOption,
         DEFAULT_PARAM,
         PARAM_LIST,
@@ -198,7 +206,8 @@
             draggable,
             VuexTextarea,
             RequestSelector,
-            KeyValueNormal
+            KeyValueNormal,
+            FileParamInput
         },
         mixins: [validMixins],
         props: {
@@ -326,6 +335,7 @@
             isArtifactoryParam,
             isBuildResourceParam,
             isSubPipelineParam,
+            isFileParam,
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
             },
