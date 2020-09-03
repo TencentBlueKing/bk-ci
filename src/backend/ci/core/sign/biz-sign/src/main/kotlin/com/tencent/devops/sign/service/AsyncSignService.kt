@@ -24,17 +24,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.sign.service
 
-dependencies {
-    compile project(":core:common:common-util")
-    compile project(":core:common:common-service")
-    implementation "com.google.guava:guava"
-    compile (group: 'org.springframework.boot', name: 'spring-boot')
-    compile (group: 'org.springframework.boot', name: 'spring-boot-autoconfigure')
-    implementation 'org.springframework:spring-context'
-    compile (group: 'org.springframework.boot', name: 'spring-boot-configuration-processor')
-    compile "io.jsonwebtoken:jjwt-api:0.10.8"
-    runtime "io.jsonwebtoken:jjwt-impl:0.10.8",
-            "io.jsonwebtoken:jjwt-jackson:0.10.8"
+import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import org.slf4j.LoggerFactory
+import org.springframework.scheduling.annotation.Async
+import org.springframework.stereotype.Component
+import java.io.File
+
+@Component
+class AsyncSignService(
+    private val signService: SignService,
+    private val signInfoService: SignInfoService
+) {
+
+    @Async
+    fun asyncSign(
+        resignId: String,
+        ipaSignInfo: IpaSignInfo,
+        ipaFile: File,
+        taskExecuteCount: Int
+    ) {
+        try {
+            logger.info("[$resignId] asyncSign|ipaSignInfo=$ipaSignInfo|taskExecuteCount=$taskExecuteCount")
+            signService.signIpaAndArchive(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
+        } catch (e: Exception) {
+            // 失败结束签名逻辑
+            signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount)
+            // 异步处理，所以无需抛出异常
+            logger.error("[$resignId] asyncSign failed: $e")
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AsyncSignService::class.java)
+    }
 }

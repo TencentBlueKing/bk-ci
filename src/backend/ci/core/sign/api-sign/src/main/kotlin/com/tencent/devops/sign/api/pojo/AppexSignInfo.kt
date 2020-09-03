@@ -24,17 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.sign.api.pojo
 
-dependencies {
-    compile project(":core:common:common-util")
-    compile project(":core:common:common-service")
-    implementation "com.google.guava:guava"
-    compile (group: 'org.springframework.boot', name: 'spring-boot')
-    compile (group: 'org.springframework.boot', name: 'spring-boot-autoconfigure')
-    implementation 'org.springframework:spring-context'
-    compile (group: 'org.springframework.boot', name: 'spring-boot-configuration-processor')
-    compile "io.jsonwebtoken:jjwt-api:0.10.8"
-    runtime "io.jsonwebtoken:jjwt-impl:0.10.8",
-            "io.jsonwebtoken:jjwt-jackson:0.10.8"
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("APPEX拓展信息")
+data class AppexSignInfo(
+    @ApiModelProperty("appex拓展应用名", required = true)
+    val appexName: String,
+    @ApiModelProperty("扩展App对应描述文件ID", required = true)
+    val mobileProvisionId: String
+)

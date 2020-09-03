@@ -24,17 +24,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.sign.service
 
-dependencies {
-    compile project(":core:common:common-util")
-    compile project(":core:common:common-service")
-    implementation "com.google.guava:guava"
-    compile (group: 'org.springframework.boot', name: 'spring-boot')
-    compile (group: 'org.springframework.boot', name: 'spring-boot-autoconfigure')
-    implementation 'org.springframework:spring-context'
-    compile (group: 'org.springframework.boot', name: 'spring-boot-configuration-processor')
-    compile "io.jsonwebtoken:jjwt-api:0.10.8"
-    runtime "io.jsonwebtoken:jjwt-impl:0.10.8",
-            "io.jsonwebtoken:jjwt-jackson:0.10.8"
+import com.tencent.devops.sign.api.enums.EnumResignStatus
+import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import java.io.File
+import java.io.InputStream
+
+interface SignService {
+
+    /*
+    * 对ipa文件进行签名，并归档
+    * */
+    fun uploadIpaAndDecodeInfo(
+        resignId: String,
+        ipaSignInfo: IpaSignInfo,
+        ipaSignInfoHeader: String,
+        ipaInputStream: InputStream,
+        md5Check: Boolean = true
+    ): Pair<File, Int>
+
+    /*
+    * 对ipa文件进行签名，并归档
+    * */
+    fun signIpaAndArchive(
+        resignId: String,
+        ipaSignInfo: IpaSignInfo,
+        ipaFile: File,
+        taskExecuteCount: Int
+    )
+
+    /*
+    * 查询某次签名任务是否完成
+    * */
+    fun getSignStatus(resignId: String): EnumResignStatus
 }
