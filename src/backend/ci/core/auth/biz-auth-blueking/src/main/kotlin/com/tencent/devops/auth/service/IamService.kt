@@ -30,10 +30,20 @@ class IamService @Autowired constructor(
             if (it.actionId == AuthPermission.CREATE) {
                 relatedResourceType = AuthResourceType.PROJECT.value
             }
-            relatedResourceTypes.add(RelatedResourceTypes(
-                    system = iamConfiguration.systemId,
-                    type = relatedResourceType,
-                    instances = listOf(instanceList)))
+
+            if (instanceList == null || instanceList.isEmpty()) {
+                relatedResourceTypes.add(RelatedResourceTypes(
+                        system = iamConfiguration.systemId,
+                        type = relatedResourceType,
+                        instances = emptyList()
+                ))
+            } else {
+                relatedResourceTypes.add(RelatedResourceTypes(
+                        system = iamConfiguration.systemId,
+                        type = relatedResourceType,
+                        instances = listOf(instanceList))
+                )
+            }
 
             actions.add(
                     Action(
