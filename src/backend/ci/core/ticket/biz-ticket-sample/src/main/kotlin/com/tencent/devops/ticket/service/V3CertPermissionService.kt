@@ -30,7 +30,7 @@ class V3CertPermissionService @Autowired constructor(
                 offset = 0,
                 limit = 500
             ).forEach {
-                fakeList.add(it.toString())
+                fakeList.add(it)
             }
             fakeList
         }
