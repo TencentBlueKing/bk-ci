@@ -120,7 +120,7 @@ class BkRepoClient constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             val responseData = objectMapper.readValue<Response<Any>>(responseContent)
-            if (response.code() == 400 && responseData.code == 251002) {
+            if (response.code() == 400 && responseData.code == 25102) {
                 logger.warn("project[$projectId] already exists")
             } else if (!response.isSuccessful) {
                 logger.error("http request failed, response.code: ${response.code()}, responseContent: $responseContent")
@@ -284,6 +284,9 @@ class BkRepoClient constructor(
 
     fun uploadFile(userId: String, projectId: String, repoName: String, path: String, inputStream: InputStream, fileSizeLimitInMB: Int = 0) {
         logger.info("uploadFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, fileSizeLimitInMB: $fileSizeLimitInMB")
+        if (PathUtil.isFolder(path)) {
+            throw OperationException("invalid path")
+        }
         val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/$projectId/$repoName/$path"
         val requestBody = object : RequestBody() {
             override fun writeTo(sink: BufferedSink?) {
@@ -300,7 +303,7 @@ class BkRepoClient constructor(
                     bytesCopied += bytes
                     if (bytesCopied > limit) {
                         sink!!.closeQuietly()
-                        throw OperationException("file size exceeds $fileSizeLimitInMB(MB)")
+                        throw OperationException("file size exceeds limit(${fileSizeLimitInMB}MB)")
                     }
                     bytes = inputStream.read(buffer)
                 }
