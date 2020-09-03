@@ -514,6 +514,7 @@ class CodeccTransferService @Autowired constructor(
         ProjectLanguage.SWIFT to listOf("pecker_swift", "cloc_swift"),
         ProjectLanguage.PYTHON to listOf("codecc_default_coverity_python", "standard_python", "pecker_python", "cloc_python"),
         ProjectLanguage.JAVASCRIPT to listOf("codecc_default_coverity_js", "standard_js", "pecker_js", "cloc_js"),
+        ProjectLanguage.JS to listOf("codecc_default_coverity_js", "standard_js", "pecker_js", "cloc_js"),
         ProjectLanguage.TYPESCRIPT to listOf("ts_standard", "pecker_ts", "cloc_ts"),
         ProjectLanguage.PHP to listOf("pecker_php", "cloc_php"),
         ProjectLanguage.LUA to listOf("pecker_lua", "cloc_lua"),
