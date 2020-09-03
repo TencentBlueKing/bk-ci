@@ -301,24 +301,6 @@ class AuthUtilsTest {
         Assert.assertEquals(mockList1, AuthUtils.getResourceInstance(newExpressionList[4], "v3test", resourceType))
     }
 
-    @Test
-    fun strTest() {
-        val result = "{\"message\":\n" +
-                "\"OK\", \"code\": 0, \"data\": {\"url\": \"https://paasee-dev.oa.com:443/o/bk_iam/apply-custom-perm?system_id=bk_ci&tid=d92d00c5ff5342e1b47b7e8ad15c475a\"}, \"result\": true, \"request_id\": \"fb89548150474d76971ae1c51f5dfed0\"}"
-        val iamApiRes = IamEsbService.objectMapper.readValue<Map<String, Any>>(result)
-        if (iamApiRes["code"] != 0 || iamApiRes["result"] == false) {
-            // 请求错误
-            throw RemoteServiceException("bkiam v3 request failed, response: (${iamApiRes["message"]}, request_id[${iamApiRes["request_id"]}])")
-        }
-//        val data = IamEsbService.objectMapper.readValue<Map<String, String>>(iamApiRes["data"])
-        val data = iamApiRes["data"].toString()
-        println("data:$data")
-        val url = data.substringAfter("url=").substringBeforeLast("}")
-        println("url:$url")
-
-    }
-
-
     fun print(projectList: List<String>) {
         println(projectList)
         projectList.map {
