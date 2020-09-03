@@ -27,12 +27,15 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.pojo.ErrorInfo
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -43,7 +46,6 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.cfg.ModelStageIdGenerator
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
@@ -258,6 +260,32 @@ class BuildStartControl @Autowired constructor(
                 if (buildSummaryRecord!!.runningCount > 0) {
                     val setting = pipelineRepositoryService.getSetting(pipelineId)
                     val response = runLockInterceptor.checkRunLock(setting!!.runLockType, pipelineId)
+                    if (response.isNotOk()) {
+                        pipelineRuntimeService.finishLatestRunningBuild(
+                            latestRunningBuild = LatestRunningBuild(
+                                projectId = projectId,
+                                pipelineId = pipelineId,
+                                buildId = buildId,
+                                userId = buildInfo.startUser,
+                                status = BuildStatus.CANCELED,
+                                taskCount = buildInfo.taskCount,
+                                buildNum = buildInfo.buildNum
+                            ),
+                            currentBuildStatus = buildInfo.status,
+                            errorInfoList = listOf(
+                                ErrorInfo(
+                                    taskId = taskId,
+                                    taskName = "[平台]构建拦截",
+                                    atomCode = "BK_CI_BUILD_INTERCEPTOR",
+                                    errorType = ErrorType.USER,
+                                    errorMsg = response.message ?: "构建被拦截",
+                                    errorCode = response.status
+                                )
+                            )
+                        )
+                        logger.warn("[$buildId]|[${buildInfo.status}]|BUILD_IN_QUEUE|$source|response=$response")
+                        return null
+                    }
                     if (response.data != BuildStatus.RUNNING) {
                         if (buildInfo.status == BuildStatus.QUEUE_CACHE) { // 重新入队
                             pipelineRuntimeService.updateBuildInfoStatus2Queue(buildId, buildInfo.status)
@@ -289,13 +317,13 @@ class BuildStartControl @Autowired constructor(
                         startTime = buildInfo.startTime,
                         triggerType = buildInfo.trigger
                     ), PipelineBuildStatusBroadCastEvent(
-                        source = source,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        userId = userId,
-                        buildId = buildId,
-                        actionType = ActionType.START
-                    )
+                    source = source,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    actionType = ActionType.START
+                )
                 )
             }
         } finally {

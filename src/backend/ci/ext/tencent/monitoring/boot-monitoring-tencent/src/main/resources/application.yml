@@ -10,7 +10,7 @@ spring:
         tags: local
 
 alert:
-  users: "irwinsun,rdeng,brandonliu,carlyin,ddlin,fayewang,freyzheng,johuang,lockiechen,necrohuang,royalhuang,terlinhe,zanyzhao,jsonwan"
+  users: "irwinsun,rdeng,brandonliu,carlyin,ddlin,fayewang,freyzheng,johuang,lockiechen,necrohuang,royalhuang,terlinhe,zanyzhao,jsonwan,stubenhuang"
 
 server:
   port: 8085

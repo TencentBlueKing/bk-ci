@@ -26,6 +26,7 @@
 
 package com.tencent.devops.scm.services
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -42,6 +43,7 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -388,7 +390,7 @@ class GitService @Autowired constructor(
                 val body = response.body()!!.string()
                 logger.info("[$userId]|[$gitProjectId]| Get gongfeng project member response body: $body")
                 val ownerInfo = JsonUtil.to(body, OwnerInfo::class.java)
-                if (ownerInfo != null && ownerInfo.accessLevel!! >= 30) {
+                if (ownerInfo.accessLevel!! >= 30) {
                     return true
                 }
             }
@@ -921,6 +923,33 @@ class GitService @Autowired constructor(
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
         }
+    }
+
+    // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
+    fun getRepoMembers(repoName: String, tokenType: TokenTypeEnum, token: String): List<GitMember> {
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/members")
+        logger.info("get repo member url: $url")
+        setToken(tokenType, url, token)
+
+        val result = mutableListOf<GitMember>()
+        // 限制最多50页
+        for (page in 1..50) {
+            val request = Request.Builder()
+                .url("$url&page=$page&per_page=100")
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                if (!it.isSuccessful) {
+                    throw RuntimeException("get repo member error for $repoName(${it.code()}): ${it.message()}")
+                }
+                val data = it.body()!!.string()
+                logger.info("get repo member response body: $data")
+                val pageResult = JsonUtil.to(data, object : TypeReference<List<GitMember>>() {})
+                result.addAll(pageResult)
+                if (pageResult.size < 100) return result
+            }
+        }
+        return result
     }
 
     private fun setToken(tokenType: TokenTypeEnum, url: StringBuilder, token: String) {

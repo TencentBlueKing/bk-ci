@@ -26,7 +26,7 @@
 
 package com.tencent.devops.artifactory.resources.user
 
-import com.tencent.devops.artifactory.api.user.UserReportResource
+import com.tencent.devops.artifactory.api.user.UserReportStorageResource
 import com.tencent.devops.artifactory.service.artifactory.ArtifactoryReportService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoReportService
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -41,7 +41,7 @@ class UserReportResourceImpl @Autowired constructor(
     private val bkRepoReportService: BkRepoReportService,
     val redisOperation: RedisOperation,
     val repoGray: RepoGray
-) : UserReportResource {
+) : UserReportStorageResource {
     override fun get(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, path: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")

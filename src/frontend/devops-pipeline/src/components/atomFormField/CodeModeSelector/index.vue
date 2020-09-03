@@ -177,11 +177,6 @@
                 this.gitPullModeVal = value
                 this.handleElementChange()
             },
-            urlParse (originUrl, query) {
-                /* eslint-disable */
-                return new Function('ctx', `return '${originUrl.replace(/\{(.*?)\}/g, '\'\+ ctx.$1 \+\'')}'`)(query)
-                /* eslint-enable */
-            },
             async freshList (url) {
                 try {
                     const query = this.$route.params

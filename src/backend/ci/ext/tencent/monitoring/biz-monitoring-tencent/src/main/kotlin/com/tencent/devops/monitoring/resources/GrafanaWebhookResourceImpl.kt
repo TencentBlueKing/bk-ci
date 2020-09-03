@@ -33,7 +33,9 @@ import com.tencent.devops.monitoring.services.GrafanaWebhookService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class GrafanaWebhookResourceImpl @Autowired constructor(private val grafanaWebhookService: GrafanaWebhookService) : GrafanaWebhookResource {
+class GrafanaWebhookResourceImpl @Autowired constructor(
+    private val grafanaWebhookService: GrafanaWebhookService
+) : GrafanaWebhookResource {
 
     override fun webhookCallBack(grafanaNotification: GrafanaNotification): Result<Boolean> {
         return grafanaWebhookService.webhookCallBack(grafanaNotification)

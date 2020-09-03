@@ -31,7 +31,7 @@ import com.tencent.devops.common.environment.agent.client.BcsClient
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.misc.dao.NodeDao
+import com.tencent.devops.misc.dao.EnvironmentNodeDao
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
@@ -46,7 +46,7 @@ import org.springframework.stereotype.Component
 @Component
 class UpdateBcsVmStatus @Autowired constructor(
     private val dslContext: DSLContext,
-    private val nodeDao: NodeDao,
+    private val nodeDao: EnvironmentNodeDao,
     private val bcsClient: BcsClient,
     private val client: Client,
     private val redisOperation: RedisOperation
