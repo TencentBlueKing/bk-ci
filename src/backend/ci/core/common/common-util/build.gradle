@@ -30,7 +30,6 @@ dependencies {
     compile project(":core:common:common-api")
     implementation 'commons-codec:commons-codec'
     implementation 'com.google.guava:guava'
-    implementation 'io.jsonwebtoken:jjwt'
     implementation 'org.jolokia:jolokia-core'
     compile 'org.apache.commons:commons-lang3'
     compileOnly 'org.projectlombok:lombok'
