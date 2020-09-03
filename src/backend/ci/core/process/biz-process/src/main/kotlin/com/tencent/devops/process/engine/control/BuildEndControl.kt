@@ -191,7 +191,7 @@ class BuildEndControl @Autowired constructor(
                 infos.add(ErrorInfo(
                     taskId = it.taskId,
                     taskName = it.taskName,
-                    atomCode = it.atomCode ?: it.taskType,
+                    atomCode = it.atomCode ?: it.taskParams["atomCode"] as String? ?: it.taskType,
                     errorType = it.errorType?.num ?: ErrorType.USER.num,
                     errorCode = it.errorCode ?: PLUGIN_DEFAULT_ERROR,
                     errorMsg = CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX) ?: ""
