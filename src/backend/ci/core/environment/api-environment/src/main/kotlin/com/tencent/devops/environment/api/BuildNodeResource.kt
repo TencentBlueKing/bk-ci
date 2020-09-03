@@ -62,18 +62,5 @@ interface BuildNodeResource {
         displayName: String
     ): Result<List<NodeBaseInfo>>
 
-    @ApiOperation("根据agentId获取系统")
-    @GET
-    @Path("/project/{projectId}/agentId/{agentId}/getOs")
-    fun getOs(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("agentId", required = true)
-        @PathParam("agentId")
-        agentId: String
-    ): Result<String>
+
 }

@@ -46,6 +46,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -171,4 +172,19 @@ interface BuildAgentThirdPartyAgentResource {
         @ApiParam("管道状态信息", required = true)
         response: PipelineResponse
     ): Result<Boolean>
+
+    @ApiOperation("根据agentId获取系统")
+    @GET
+    @Path("/project/{projectId}/agentId/{agentId}/getOs")
+    fun getOs(
+        @ApiParam(value = "用户ID", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("agentId", required = true)
+        @PathParam("agentId")
+        agentId: String
+    ): Result<String>
 }

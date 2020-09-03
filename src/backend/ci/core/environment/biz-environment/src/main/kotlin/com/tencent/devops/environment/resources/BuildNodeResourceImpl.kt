@@ -45,8 +45,4 @@ class BuildNodeResourceImpl @Autowired constructor(
     ): Result<List<NodeBaseInfo>> {
         return Result(nodeService.getByDisplayName(userId, projectId, displayName))
     }
-
-    override fun getOs(userId: String, projectId: String, agentId: String): Result<String> {
-        return Result(nodeService.getOs(userId, projectId, agentId))
-    }
 }

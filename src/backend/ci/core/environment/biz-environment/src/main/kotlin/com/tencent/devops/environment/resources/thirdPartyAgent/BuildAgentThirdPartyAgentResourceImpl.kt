@@ -183,6 +183,10 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentPipelineService.updatePipelineStatus(projectId, agentId, secretKey, response))
     }
 
+    override fun getOs(userId: String, projectId: String, agentId: String): Result<String> {
+        return Result(thirdPartyAgentService.getOs(userId, projectId, agentId))
+    }
+
     private fun checkParam(
         projectId: String,
         agentId: String,
