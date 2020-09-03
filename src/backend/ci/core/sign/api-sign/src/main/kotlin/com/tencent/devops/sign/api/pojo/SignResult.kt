@@ -24,17 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.sign.api.pojo
 
-dependencies {
-    compile project(":core:common:common-util")
-    compile project(":core:common:common-service")
-    implementation "com.google.guava:guava"
-    compile (group: 'org.springframework.boot', name: 'spring-boot')
-    compile (group: 'org.springframework.boot', name: 'spring-boot-autoconfigure')
-    implementation 'org.springframework:spring-context'
-    compile (group: 'org.springframework.boot', name: 'spring-boot-configuration-processor')
-    compile "io.jsonwebtoken:jjwt-api:0.10.8"
-    runtime "io.jsonwebtoken:jjwt-impl:0.10.8",
-            "io.jsonwebtoken:jjwt-jackson:0.10.8"
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("签名状态查询结果")
+data class SignResult(
+    @ApiModelProperty("签名ID", required = true)
+    val resignId: String,
+    @ApiModelProperty("是否完成", required = true)
+    val finished: Boolean
+)

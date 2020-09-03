@@ -24,17 +24,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.sign.api.service
 
-dependencies {
-    compile project(":core:common:common-util")
-    compile project(":core:common:common-service")
-    implementation "com.google.guava:guava"
-    compile (group: 'org.springframework.boot', name: 'spring-boot')
-    compile (group: 'org.springframework.boot', name: 'spring-boot-autoconfigure')
-    implementation 'org.springframework:spring-context'
-    compile (group: 'org.springframework.boot', name: 'spring-boot-configuration-processor')
-    compile "io.jsonwebtoken:jjwt-api:0.10.8"
-    runtime "io.jsonwebtoken:jjwt-impl:0.10.8",
-            "io.jsonwebtoken:jjwt-jackson:0.10.8"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["SERVICE_IPA_SIGN_INFO"], description = "服务接口-IPA签名信息")
+@Path("/service/ipaSignInfo")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceIpaSignInfoResource {
+
+    @ApiOperation("编码BASE64的IPA签名信息")
+    @POST
+    @Path("/base64Encode")
+    fun base64Encode(
+        @ApiParam("源IPA签名信息", required = true)
+        ipaSignInfo: IpaSignInfo
+    ): Result<String?>
+
+    @ApiOperation("解码BASE64的IPA签名信息")
+    @GET
+    @Path("/base64Decode")
+    fun base64Decode(
+        @ApiParam("源IPA签名信息", required = true)
+        ipaSignInfoEncode: String
+    ): Result<IpaSignInfo?>
 }

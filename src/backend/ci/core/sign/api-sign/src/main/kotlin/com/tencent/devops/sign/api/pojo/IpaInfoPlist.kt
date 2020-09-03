@@ -24,17 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.sign.api.pojo
 
-dependencies {
-    compile project(":core:common:common-util")
-    compile project(":core:common:common-service")
-    implementation "com.google.guava:guava"
-    compile (group: 'org.springframework.boot', name: 'spring-boot')
-    compile (group: 'org.springframework.boot', name: 'spring-boot-autoconfigure')
-    implementation 'org.springframework:spring-context'
-    compile (group: 'org.springframework.boot', name: 'spring-boot-configuration-processor')
-    compile "io.jsonwebtoken:jjwt-api:0.10.8"
-    runtime "io.jsonwebtoken:jjwt-impl:0.10.8",
-            "io.jsonwebtoken:jjwt-jackson:0.10.8"
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("IPA Info Plist内容信息")
+data class IpaInfoPlist(
+    @ApiModelProperty("bundleId", required = true)
+    var bundleIdentifier: String = "",
+    @ApiModelProperty("应用名字", required = true)
+    var appTitle: String = "",
+    @ApiModelProperty("应用版本", required = true)
+    var bundleVersion: String = "",
+    @ApiModelProperty("应用构建版本", required = true)
+    var bundleVersionFull: String = ""
+)

@@ -208,6 +208,13 @@ include ":core:auth:biz-auth-blueking"
 include ":core:auth:boot-auth"
 include ":core:auth:model-auth"
 
+include ":core:sign"
+include ":core:sign:api-sign"
+include ":core:sign:biz-sign"
+include ":core:sign:biz-sign-sample"
+include ":core:sign:boot-sign"
+include ":core:sign:model-sign"
+
 //  ==================== tencent ============================================================
 include ":ext"
 include ":ext:tencent"

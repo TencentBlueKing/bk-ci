@@ -24,17 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.sign.resources
 
-dependencies {
-    compile project(":core:common:common-util")
-    compile project(":core:common:common-service")
-    implementation "com.google.guava:guava"
-    compile (group: 'org.springframework.boot', name: 'spring-boot')
-    compile (group: 'org.springframework.boot', name: 'spring-boot-autoconfigure')
-    implementation 'org.springframework:spring-context'
-    compile (group: 'org.springframework.boot', name: 'spring-boot-configuration-processor')
-    compile "io.jsonwebtoken:jjwt-api:0.10.8"
-    runtime "io.jsonwebtoken:jjwt-impl:0.10.8",
-            "io.jsonwebtoken:jjwt-jackson:0.10.8"
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.api.service.ServiceIpaSignInfoResource
+import com.tencent.devops.sign.service.SignInfoService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceIpaSignInfoResourceImpl @Autowired constructor(
+    private val signInfoService: SignInfoService,
+    private val objectMapper: ObjectMapper
+) : ServiceIpaSignInfoResource {
+
+    companion object {
+        val logger = LoggerFactory.getLogger(ServiceIpaSignInfoResourceImpl::class.java)
+    }
+
+    override fun base64Encode(ipaSignInfo: IpaSignInfo): Result<String> {
+        val ipaSignInfoEncode = signInfoService.encodeIpaSignInfo(ipaSignInfo)
+        return Result(ipaSignInfoEncode)
+    }
+
+    override fun base64Decode(ipaSignInfoEncode: String): Result<IpaSignInfo> {
+        val ipaSignInfo = signInfoService.decodeIpaSignInfo(ipaSignInfoEncode, objectMapper)
+        return Result(ipaSignInfo)
+    }
 }
