@@ -30,6 +30,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
