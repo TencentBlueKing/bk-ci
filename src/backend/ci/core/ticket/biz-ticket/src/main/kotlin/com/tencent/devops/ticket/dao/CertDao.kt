@@ -251,14 +251,14 @@ class CertDao {
         }
     }
 
-    fun listIdByProject(dslContext: DSLContext, projectId: String, offset: Int, limit: Int): List<Int> {
+    fun listIdByProject(dslContext: DSLContext, projectId: String, offset: Int, limit: Int): List<String> {
         return with(TCert.T_CERT) {
             dslContext.select(CERT_ID)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .orderBy(CERT_CREATE_TIME.desc())
                 .limit(offset, limit)
-                .fetch(CERT_ID, Int::class.java)
+                .fetch(CERT_ID, String::class.java)
         }
     }
 }
