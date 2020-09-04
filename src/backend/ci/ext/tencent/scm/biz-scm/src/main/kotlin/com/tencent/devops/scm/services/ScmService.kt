@@ -257,9 +257,6 @@ class ScmService @Autowired constructor(
             }
             ScmFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName, event)
                 .addWebHook(hookUrl)
-        } catch (e: Exception) {
-            logger.error("[$projectName|$url|$type|$token|$region|$userName|$event] add webhook error", e)
-            throw e
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add web hook")
         }

@@ -294,9 +294,7 @@ open class GitApi {
             if (!response.isSuccessful) {
                 handleApiException(operation, response.code(), response.body()?.string() ?: "")
             }
-            val body = response.body()!!.string()
-            logger.info("body:$body, request:$request")
-            return JsonUtil.getObjectMapper().readValue(body, classOfT)
+            return JsonUtil.getObjectMapper().readValue(response.body()!!.string(), classOfT)
         }
     }
 
