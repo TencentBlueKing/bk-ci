@@ -26,6 +26,7 @@
 package com.tencent.devops.lambda.dao
 
 import com.tencent.devops.model.process.Tables
+import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -49,12 +50,11 @@ class LambdaPipelineModelDao {
     fun getBuildDetailModel(
         dslContext: DSLContext,
         buildId: String
-    ): String? {
+    ): TPipelineBuildDetailRecord? {
         return with(Tables.T_PIPELINE_BUILD_DETAIL) {
-            dslContext.select(MODEL)
-                .from(this)
+            dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-                .fetchAny(0, String::class.java)
+                .fetchOne()
         }
     }
 }

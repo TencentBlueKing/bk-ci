@@ -46,16 +46,15 @@ import com.tencent.devops.lambda.dao.LambdaBuildTaskDao
 import com.tencent.devops.lambda.dao.LambdaPipelineBuildDao
 import com.tencent.devops.lambda.dao.LambdaPipelineModelDao
 import com.tencent.devops.lambda.dao.LambdaPipelineTemplateDao
-import com.tencent.devops.lambda.pojo.BuildData
 import com.tencent.devops.lambda.pojo.DataPlatJobDetail
 import com.tencent.devops.lambda.pojo.ProjectOrganize
+import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
-import org.jooq.JSONFormat
 import org.json.simple.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -77,23 +76,18 @@ class LambdaDataService @Autowired constructor(
 ) {
 
     fun onBuildFinish(event: PipelineBuildFinishBroadCastEvent) {
-        val record = lambdaPipelineBuildDao.getBuildHistory(dslContext, event.buildId)
-        if (record == null) {
+        val historyRecord = lambdaPipelineBuildDao.getBuildHistory(dslContext, event.buildId)
+        if (historyRecord == null) {
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] The build info is not exist")
             return
         }
         val detailModel = lambdaPipelineModelDao.getBuildDetailModel(dslContext, event.buildId)
         if (detailModel == null) {
-            logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Fail to get the pipeline model")
+            logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Fail to get the pipeline detail model")
             return
         }
-        pushBuildDetail(BuildData(
-            projectId = record.projectId,
-            pipelineId = record.pipelineId,
-            buildId = record.buildId,
-            buildHistory = record.formatJSON(JSONFormat.DEFAULT_FOR_RESULTS),
-            detailModel = detailModel
-        ))
+        pushBuildHistory(historyRecord)
+        pushBuildDetail(detailModel)
     }
 
     fun onBuildTaskFinish(event: PipelineBuildTaskFinishBroadCastEvent) {
@@ -203,22 +197,29 @@ class LambdaDataService @Autowired constructor(
 //
 //                logger.info("pushTaskDetail: ${JsonUtil.toJson(dataPlatTaskDetail)}")
 //                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
-                logger.info("pushTaskDetail_1: ${task.formatJSON(JSONFormat.DEFAULT_FOR_RESULTS)}")
-                logger.info("pushTaskDetail_2: ${JsonUtil.toJson(task.intoMap())}")
-                logger.info("pushTaskDetail_3: ${JsonUtil.toJson(task.toString())}")
-                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, task.formatJSON(JSONFormat.DEFAULT_FOR_RESULTS))
+                logger.info("pushTaskDetail: ${JsonUtil.toJson(task.intoMap())}")
+                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(task.intoMap()))
             }
         } catch (e: Exception) {
             logger.error("Push task detail to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
         }
     }
 
-    private fun pushBuildDetail(buildData: BuildData) {
+    private fun pushBuildHistory(historyRecord: TPipelineBuildHistoryRecord) {
         try {
-            logger.info("pushBuildDetail: ${JsonUtil.toJson(buildData)}")
-            kafkaClient.send(KafkaTopic.LANDUN_BUILD_DETAIL_TOPIC, JsonUtil.toJson(buildData))
+            logger.info("pushBuildDetail: ${JsonUtil.toJson(historyRecord.intoMap())}")
+            kafkaClient.send(KafkaTopic.LANDUN_BUILD_HISTORY_TOPIC, JsonUtil.toJson(historyRecord.intoMap()))
         } catch (e: Exception) {
-            logger.error("Push task detail to kafka error, buildId: ${buildData.buildId}", e)
+            logger.error("Push task detail to kafka error, buildId: ${historyRecord.buildId}", e)
+        }
+    }
+
+    private fun pushBuildDetail(buildDetailRecord: TPipelineBuildDetailRecord) {
+        try {
+            logger.info("pushBuildDetail: ${JsonUtil.toJson(buildDetailRecord.intoMap())}")
+            kafkaClient.send(KafkaTopic.LANDUN_BUILD_DETAIL_TOPIC, JsonUtil.toJson(buildDetailRecord.intoMap()))
+        } catch (e: Exception) {
+            logger.error("Push task detail to kafka error, buildId: ${buildDetailRecord.buildId}", e)
         }
     }
 
