@@ -80,8 +80,6 @@ class CommonRepoFileService @Autowired constructor(
     }
 
     fun getGitProjectMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
-        if (!repoUrl.contains("git.code.oa.com")) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("repoUrl"))
-
         val token = AESUtil.decrypt(
             key = aesKey,
             content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
