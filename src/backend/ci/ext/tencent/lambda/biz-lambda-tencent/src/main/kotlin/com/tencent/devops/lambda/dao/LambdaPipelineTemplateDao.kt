@@ -25,24 +25,22 @@
  */
 package com.tencent.devops.lambda.dao
 
-import com.tencent.devops.model.process.Tables
+import com.tencent.devops.model.process.tables.TTemplatePipeline
+import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
 @Repository
-class PipelineResDao {
+class LambdaPipelineTemplateDao {
 
-    fun getModel(
+    fun getTemplate(
         dslContext: DSLContext,
-        pipelineId: String,
-        version: Int
-    ): String? {
-        return with(Tables.T_PIPELINE_RESOURCE) {
-            dslContext.select(MODEL)
-                .from(this)
+        pipelineId: String
+    ): TTemplatePipelineRecord? {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
-                .and(VERSION.eq(version))
-                .fetchAny(0, String::class.java)
+                .fetchOne()
         }
     }
 }

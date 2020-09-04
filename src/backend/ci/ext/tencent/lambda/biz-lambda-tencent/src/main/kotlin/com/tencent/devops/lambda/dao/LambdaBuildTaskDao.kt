@@ -23,20 +23,26 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.pojo
+package com.tencent.devops.lambda.dao
 
-data class ElementData(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val elementId: String,
-    val elementName: String,
-    val status: String,
-    val beginTime: Long,
-    val endTime: Long,
-    val type: String,
-    val atomCode: String,
-    val errorType: String? = null,
-    val errorCode: Int? = null,
-    val errorMsg: String? = null
-)
+import com.tencent.devops.model.process.tables.TPipelineBuildTask
+import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+
+@Repository
+class LambdaBuildTaskDao {
+
+    fun getTask(
+        dslContext: DSLContext,
+        buildId: String,
+        taskId: String
+    ): TPipelineBuildTaskRecord? {
+        with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(TASK_ID.eq(taskId))
+                .fetchOne()
+        }
+    }
+}

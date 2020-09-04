@@ -29,16 +29,6 @@ data class BuildData(
     val projectId: String,
     val pipelineId: String,
     val buildId: String,
-    val userId: String,
-    val status: String,
-    val trigger: String,
-    val beginTime: Long,
-    val endTime: Long,
-    val buildNum: Int,
-    val templateId: String,
-    val bgName: String,
-    val deptName: String,
-    val centerName: String,
-    val model: String,
-    val errorInfoList: String? = null
+    val buildHistory: String,
+    val detailModel: String
 )

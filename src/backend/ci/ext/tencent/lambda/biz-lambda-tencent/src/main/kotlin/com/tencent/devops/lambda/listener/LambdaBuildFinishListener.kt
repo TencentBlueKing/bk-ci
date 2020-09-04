@@ -25,12 +25,21 @@
  */
 package com.tencent.devops.lambda.listener
 
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.lambda.service.LambdaDataService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class LambdaListener {
-    companion object {
-        private val logger = LoggerFactory.getLogger(LambdaListener::class.java)
+class LambdaBuildFinishListener @Autowired constructor(
+    private val lambdaDataService: LambdaDataService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
+
+    override fun run(event: PipelineBuildFinishBroadCastEvent) {
+        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Receive build finish event - ($event)")
+        lambdaDataService.onBuildFinish(event)
     }
 }

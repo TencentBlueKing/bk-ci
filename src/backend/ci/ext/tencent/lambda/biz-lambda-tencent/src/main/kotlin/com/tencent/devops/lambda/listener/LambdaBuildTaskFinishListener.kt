@@ -23,40 +23,23 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.resource
+package com.tencent.devops.lambda.listener
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.lambda.api.service.ServiceLambdaResource
-import com.tencent.devops.lambda.pojo.BG
-import com.tencent.devops.lambda.pojo.BuildResultWithPage
-import com.tencent.devops.lambda.storage.ESService
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
+import com.tencent.devops.lambda.service.LambdaDataService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-@RestResource
-class ServiceLambdaResourceImpl @Autowired constructor(private val esService: ESService) : ServiceLambdaResource {
-    override fun getBuildHistory(
-        projectId: String?,
-        pipelineId: String?,
-        beginTime: Long,
-        endTime: Long?,
-        bg: BG,
-        deptName: String?,
-        centerName: String?,
-        offset: Int,
-        limit: Int,
-        project: String
-    ): Result<BuildResultWithPage> {
-        return Result(esService.getBuildResult(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            startTime = beginTime,
-            endTime = endTime,
-            bgName = bg.fullName,
-            deptName = deptName,
-            centerName = centerName,
-            offset = offset,
-            limitOrigin = limit,
-            project = project))
+@Component
+class LambdaBuildTaskFinishListener @Autowired constructor(
+    private val lambdaDataService: LambdaDataService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<PipelineBuildTaskFinishBroadCastEvent>(pipelineEventDispatcher) {
+
+    override fun run(event: PipelineBuildTaskFinishBroadCastEvent) {
+        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Receive build element finish event - ($event)")
+        lambdaDataService.onBuildTaskFinish(event)
     }
 }

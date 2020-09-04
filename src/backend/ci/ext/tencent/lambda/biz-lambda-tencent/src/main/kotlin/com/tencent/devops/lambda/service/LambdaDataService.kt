@@ -41,17 +41,14 @@ import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
-import com.tencent.devops.lambda.dao.BuildContainerDao
-import com.tencent.devops.lambda.dao.BuildTaskDao
+import com.tencent.devops.lambda.dao.LambdaBuildContainerDao
+import com.tencent.devops.lambda.dao.LambdaBuildTaskDao
 import com.tencent.devops.lambda.dao.LambdaPipelineBuildDao
-import com.tencent.devops.lambda.dao.PipelineResDao
-import com.tencent.devops.lambda.dao.PipelineTemplateDao
+import com.tencent.devops.lambda.dao.LambdaPipelineModelDao
+import com.tencent.devops.lambda.dao.LambdaPipelineTemplateDao
 import com.tencent.devops.lambda.pojo.BuildData
 import com.tencent.devops.lambda.pojo.DataPlatJobDetail
-import com.tencent.devops.lambda.pojo.DataPlatTaskDetail
-import com.tencent.devops.lambda.pojo.ElementData
 import com.tencent.devops.lambda.pojo.ProjectOrganize
-import com.tencent.devops.lambda.storage.ESService
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
@@ -67,98 +64,45 @@ import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
 @Service
-class PipelineBuildService @Autowired constructor(
+class LambdaDataService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val lambdaPipelineBuildDao: LambdaPipelineBuildDao,
-    private val pipelineResDao: PipelineResDao,
-    private val pipelineTemplateDao: PipelineTemplateDao,
-    private val buildTaskDao: BuildTaskDao,
-    private val buildContainerDao: BuildContainerDao,
-    private val esService: ESService,
+    private val lambdaPipelineModelDao: LambdaPipelineModelDao,
+    private val lambdaPipelineTemplateDao: LambdaPipelineTemplateDao,
+    private val lambdaBuildTaskDao: LambdaBuildTaskDao,
+    private val lambdaBuildContainerDao: LambdaBuildContainerDao,
     private val kafkaClient: KafkaClient
 ) {
 
     fun onBuildFinish(event: PipelineBuildFinishBroadCastEvent) {
-        val info = getBuildInfo(event.buildId)
-        if (info == null) {
+        val record = lambdaPipelineBuildDao.getBuildHistory(dslContext, event.buildId)
+        if (record == null) {
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] The build info is not exist")
             return
         }
-        val model = getModel(info.pipelineId, info.version)
-        if (model == null) {
+        val detailModel = lambdaPipelineModelDao.getBuildDetailModel(dslContext, event.buildId)
+        if (detailModel == null) {
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Fail to get the pipeline model")
             return
         }
-
-        val projectInfo = projectCache.get(info.projectId)
-
-        val data = BuildData(
-            projectId = info.projectId,
-            pipelineId = info.pipelineId,
-            buildId = info.buildId,
-            userId = info.startUser,
-            status = info.status.name,
-            trigger = info.trigger,
-            beginTime = info.startTime ?: 0,
-            endTime = info.endTime ?: 0,
-            buildNum = info.buildNum,
-            templateId = templateCache.get(info.pipelineId),
-            bgName = projectInfo.bgName,
-            deptName = projectInfo.deptName,
-            centerName = projectInfo.centerName,
-            model = model,
-            errorInfoList = event.errorInfoList
-        )
-        esService.build(data)
+        pushBuildDetail(BuildData(
+            projectId = record.projectId,
+            pipelineId = record.pipelineId,
+            buildId = record.buildId,
+            buildHistory = record.formatJSON(),
+            detailModel = detailModel
+        ))
     }
 
     fun onBuildTaskFinish(event: PipelineBuildTaskFinishBroadCastEvent) {
-        val task = buildTaskDao.getTask(dslContext, event.buildId, event.taskId)
+        val task = lambdaBuildTaskDao.getTask(dslContext, event.buildId, event.taskId)
         if (task == null) {
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.taskId}] Fail to get the build task")
             return
         }
-        pushElementData2Es(event, task)
         pushGitTaskInfo(event, task)
         pushTaskDetail(event, task)
-    }
-
-    private fun getAtomCodeFromTask(task: TPipelineBuildTaskRecord): String {
-        return if (!task.taskAtom.isNullOrBlank()) {
-            task.taskAtom
-        } else {
-            val taskParams = JsonUtil.toMutableMapSkipEmpty(task.taskParams ?: "{}")
-            if (taskParams.keys.contains("atomCode")) {
-                taskParams["atomCode"] as String
-            } else {
-                logger.warn("unexpected taskParams with no atomCode:${task.taskParams}")
-                ""
-            }
-        }
-    }
-
-    private fun pushElementData2Es(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord) {
-        val data = ElementData(
-            projectId = event.projectId,
-            pipelineId = event.pipelineId,
-            buildId = event.buildId,
-            elementId = event.taskId,
-            elementName = task.taskName ?: "",
-            status = BuildStatus.values()[task.status ?: 0].name,
-            beginTime = task.startTime?.timestampmilli() ?: 0,
-            endTime = task.endTime?.timestampmilli() ?: 0,
-            type = task.taskType ?: "",
-            atomCode = getAtomCodeFromTask(task),
-            errorType = event.errorType,
-            errorCode = event.errorCode,
-            errorMsg = event.errorMsg
-        )
-        try {
-            esService.buildElement(data)
-        } catch (e: Exception) {
-            logger.error("Push elementData to es error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
-        }
     }
 
     private fun pushTaskDetail(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord) {
@@ -172,7 +116,7 @@ class PipelineBuildService @Autowired constructor(
             if (task.taskType == "VM" || task.taskType == "NORMAL") {
                 if (taskAtom == "dispatchVMShutdownTaskAtom") {
                     Thread.sleep(3000)
-                    val buildContainer = buildContainerDao.getContainer(
+                    val buildContainer = lambdaBuildContainerDao.getContainer(
                         dslContext = dslContext,
                         buildId = task.buildId,
                         stageId = task.stageId,
@@ -203,64 +147,75 @@ class PipelineBuildService @Autowired constructor(
                     }
                 }
             } else {
-                val atomCode = taskParamMap["atomCode"].toString()
-
-                val taskParams = if (taskParamMap["@type"] != "marketBuild" && taskParamMap["@type"] != "marketBuildLess") {
-                    val inputMap = mutableMapOf<String, String>()
-                    when {
-                        taskParamMap["@type"] == "linuxScript" -> {
-                            inputMap["scriptType"] = taskParamMap["scriptType"] as String
-                            inputMap["script"] = taskParamMap["script"] as String
-                            inputMap["continueNoneZero"] = (taskParamMap["continueNoneZero"] as Boolean).toString()
-                            inputMap["enableArchiveFile"] = (taskParamMap["enableArchiveFile"] as Boolean).toString()
-                            if (taskParamMap["archiveFile"] != null) {
-                                inputMap["archiveFile"] = taskParamMap["archiveFile"] as String
-                            }
-                        }
-                        taskParamMap["@type"] == "windowsScript" -> {
-                            inputMap["scriptType"] = taskParamMap["scriptType"] as String
-                            inputMap["script"] = taskParamMap["script"] as String
-                        }
-                        taskParamMap["@type"] == "manualReviewUserTask" -> {
-                            inputMap["reviewUsers"] = taskParamMap["reviewUsers"] as String
-                            if (taskParamMap["params"] != null) {
-                                inputMap["desc"] = taskParamMap["params"] as String
-                            }
-                        }
-                        else -> {
-                            inputMap["key"] = "value"
-                        }
-                    }
-
-                    val dataMap = mutableMapOf("input" to inputMap)
-                    val taskParamMap1 = mutableMapOf("data" to dataMap)
-                    JSONObject(taskParamMap1)
-                } else {
-                    JSONObject(JsonUtil.toMap(task.taskParams))
-                }
-                val dataPlatTaskDetail = DataPlatTaskDetail(
-                    pipelineId = task.pipelineId,
-                    buildId = task.buildId,
-                    projectEnglishName = task.projectId,
-                    type = "task",
-                    itemId = task.taskId,
-                    atomCode = atomCode,
-                    taskParams = taskParams,
-                    status = BuildStatus.values()[task.status].statusName,
-                    errorCode = task.errorCode,
-                    errorMsg = task.errorMsg,
-                    startTime = task.startTime?.format(dateTimeFormatter),
-                    endTime = task.endTime?.format(dateTimeFormatter),
-                    costTime = if ((endTime - startTime) < 0) 0 else (endTime - startTime),
-                    starter = task.starter,
-                    washTime = LocalDateTime.now().format(dateTimeFormatter)
-                )
-
-                logger.info("pushTaskDetail: ${JsonUtil.toJson(dataPlatTaskDetail)}")
-                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
+//                val atomCode = taskParamMap["atomCode"].toString()
+//
+//                val taskParams = if (taskParamMap["@type"] != "marketBuild" && taskParamMap["@type"] != "marketBuildLess") {
+//                    val inputMap = mutableMapOf<String, String>()
+//                    when {
+//                        taskParamMap["@type"] == "linuxScript" -> {
+//                            inputMap["scriptType"] = taskParamMap["scriptType"] as String
+//                            inputMap["script"] = taskParamMap["script"] as String
+//                            inputMap["continueNoneZero"] = (taskParamMap["continueNoneZero"] as Boolean).toString()
+//                            inputMap["enableArchiveFile"] = (taskParamMap["enableArchiveFile"] as Boolean).toString()
+//                            if (taskParamMap["archiveFile"] != null) {
+//                                inputMap["archiveFile"] = taskParamMap["archiveFile"] as String
+//                            }
+//                        }
+//                        taskParamMap["@type"] == "windowsScript" -> {
+//                            inputMap["scriptType"] = taskParamMap["scriptType"] as String
+//                            inputMap["script"] = taskParamMap["script"] as String
+//                        }
+//                        taskParamMap["@type"] == "manualReviewUserTask" -> {
+//                            inputMap["reviewUsers"] = taskParamMap["reviewUsers"] as String
+//                            if (taskParamMap["params"] != null) {
+//                                inputMap["desc"] = taskParamMap["params"] as String
+//                            }
+//                        }
+//                        else -> {
+//                            inputMap["key"] = "value"
+//                        }
+//                    }
+//
+//                    val dataMap = mutableMapOf("input" to inputMap)
+//                    val taskParamMap1 = mutableMapOf("data" to dataMap)
+//                    JSONObject(taskParamMap1)
+//                } else {
+//                    JSONObject(JsonUtil.toMap(task.taskParams))
+//                }
+//                val dataPlatTaskDetail = DataPlatTaskDetail(
+//                    pipelineId = task.pipelineId,
+//                    buildId = task.buildId,
+//                    projectEnglishName = task.projectId,
+//                    type = "task",
+//                    itemId = task.taskId,
+//                    atomCode = atomCode,
+//                    taskParams = taskParams,
+//                    status = BuildStatus.values()[task.status].statusName,
+//                    errorCode = task.errorCode,
+//                    errorMsg = task.errorMsg,
+//                    startTime = task.startTime?.format(dateTimeFormatter),
+//                    endTime = task.endTime?.format(dateTimeFormatter),
+//                    costTime = if ((endTime - startTime) < 0) 0 else (endTime - startTime),
+//                    starter = task.starter,
+//                    washTime = LocalDateTime.now().format(dateTimeFormatter)
+//                )
+//
+//                logger.info("pushTaskDetail: ${JsonUtil.toJson(dataPlatTaskDetail)}")
+//                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
+                logger.info("pushTaskDetail: ${task.formatJSON()}")
+                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, task.formatJSON())
             }
         } catch (e: Exception) {
             logger.error("Push task detail to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
+        }
+    }
+
+    private fun pushBuildDetail(buildData: BuildData) {
+        try {
+            logger.info("pushTaskDetail: ${JsonUtil.toJson(buildData)}")
+            kafkaClient.send(KafkaTopic.LANDUN_BUILD_DETAIL_TOPIC, JsonUtil.toJson(buildData))
+        } catch (e: Exception) {
+            logger.error("Push task detail to kafka error, buildId: ${buildData.buildId}", e)
         }
     }
 
@@ -275,13 +230,13 @@ class PipelineBuildService @Autowired constructor(
                     val gitRepository = client.get(ServiceRepositoryResource::class)
                         .get(event.projectId, repositoryHashId.toString(), RepositoryType.ID)
                     gitUrl = gitRepository.data!!.url
-                    sendKafka(task, gitUrl)
+                    sendGitTask2Kafka(task, gitUrl)
                 }
                 "gitCodeRepoCommon" -> {
                     val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
                     val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
                     gitUrl = inputMap["repositoryUrl"].toString()
-                    sendKafka(task, gitUrl)
+                    sendGitTask2Kafka(task, gitUrl)
                 }
                 "gitCodeRepo", "PullFromGithub", "GitLab" -> {
                     val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
@@ -294,7 +249,7 @@ class PipelineBuildService @Autowired constructor(
                     val gitRepository = client.get(ServiceRepositoryResource::class)
                         .get(event.projectId, repositoryHashId, RepositoryType.ID)
                     gitUrl = gitRepository.data!!.url
-                    sendKafka(task, gitUrl)
+                    sendGitTask2Kafka(task, gitUrl)
                 }
             }
         } catch (e: Exception) {
@@ -302,7 +257,7 @@ class PipelineBuildService @Autowired constructor(
         }
     }
 
-    private fun sendKafka(task: TPipelineBuildTaskRecord, gitUrl: String) {
+    private fun sendGitTask2Kafka(task: TPipelineBuildTaskRecord, gitUrl: String) {
         val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val taskMap = task.intoMap()
         taskMap["GIT_URL"] = gitUrl
@@ -343,18 +298,10 @@ class PipelineBuildService @Autowired constructor(
         .build<String/*pipelineId*/, String/*templateId*/>(
             object : CacheLoader<String, String>() {
                 override fun load(pipelineId: String): String {
-                    return pipelineTemplateDao.getTemplate(dslContext, pipelineId)?.templateId ?: ""
+                    return lambdaPipelineTemplateDao.getTemplate(dslContext, pipelineId)?.templateId ?: ""
                 }
             }
         )
-
-    private fun getBuildInfo(buildId: String): BuildInfo? {
-        return convert(lambdaPipelineBuildDao.getBuildInfo(dslContext, buildId))
-    }
-
-    private fun getModel(pipelineId: String, version: Int): String? {
-        return pipelineResDao.getModel(dslContext, pipelineId, version)
-    }
 
     private fun convert(t: TPipelineBuildHistoryRecord?): BuildInfo? {
         return if (t == null) {
@@ -383,6 +330,6 @@ class PipelineBuildService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
+        private val logger = LoggerFactory.getLogger(LambdaDataService::class.java)
     }
 }

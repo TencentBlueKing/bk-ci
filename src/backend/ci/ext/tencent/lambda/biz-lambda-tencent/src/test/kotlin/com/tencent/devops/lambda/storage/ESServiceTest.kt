@@ -30,7 +30,6 @@ import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.lambda.dao.BuildIndexDao
 import org.elasticsearch.client.transport.TransportClient
 import org.jooq.DSLContext
 import org.junit.Assert.assertEquals
