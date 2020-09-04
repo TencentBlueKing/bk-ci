@@ -4,7 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.auth.pojo.IamApiReq
+import com.tencent.devops.common.auth.pojo.IamCreateApiReq
+import com.tencent.devops.common.auth.pojo.IamPermissionUrlReq
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -20,12 +21,12 @@ class IamEsbService() {
     @Value("\${esb.iam.url:#{null}}")
     val iamHost: String? = null
 
-    fun createRelationResource(iamApiReq: IamApiReq): Boolean {
-        var url = "api/c/compapi/v2/iam/authorization/resource_creator_action/?bk_app_code=$appCode&bk_app_secret=$appSecret"
+    fun createRelationResource(iamCreateApiReq: IamCreateApiReq): Boolean {
+        var url = "api/c/compapi/v2/iam/authorization/resource_creator_action/"
         url = getAuthRequestUrl(url)
-        iamApiReq.bkAppCode = appCode!!
-        iamApiReq.bkAppSecret = appSecret!!
-        val content = objectMapper.writeValueAsString(iamApiReq)
+        iamCreateApiReq.bk_app_code = appCode!!
+        iamCreateApiReq.bk_app_secret = appSecret!!
+        val content = objectMapper.writeValueAsString(iamCreateApiReq)
         logger.info("v3 createRelationResource url[$url]")
         logger.info("v3 createRelationResource body[$content]")
         val mediaType = MediaType.parse("application/json; charset=utf-8")
@@ -50,6 +51,36 @@ class IamEsbService() {
         }
 
         return false
+    }
+
+    fun getPermissionUrl(iamPermissionUrl: IamPermissionUrlReq): String? {
+        var url = "/api/c/compapi/v2/iam/application/"
+        url = getAuthRequestUrl(url)
+        iamPermissionUrl.bk_app_code = appCode!!
+        iamPermissionUrl.bk_app_secret = appSecret!!
+        val content = objectMapper.writeValueAsString(iamPermissionUrl)
+        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val requestBody = RequestBody.create(mediaType, content)
+        logger.info("getPermissionUrl url:$url")
+        logger.info("getPermissionUrl content:$content body:$requestBody")
+        val request = Request.Builder().url(url)
+                .post(requestBody)
+                .build()
+        OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                // 请求错误
+                throw RemoteServiceException("bkiam v3 request failed, response: ($it)")
+            }
+            val responseStr = it.body()!!.string()
+            logger.info("v3 getPermissionUrl responseStr[$responseStr]")
+            val iamApiRes = objectMapper.readValue<Map<String, Any>>(responseStr)
+            if (iamApiRes["code"] != 0 || iamApiRes["result"] == false) {
+                // 请求错误
+                throw RemoteServiceException("bkiam v3 request failed, response: (${iamApiRes["message"]}, request_id[${iamApiRes["request_id"]}])")
+            }
+            return iamApiRes["data"].toString().substringAfter("url=").substringBeforeLast("}")
+        }
+        return null
     }
 
     /**

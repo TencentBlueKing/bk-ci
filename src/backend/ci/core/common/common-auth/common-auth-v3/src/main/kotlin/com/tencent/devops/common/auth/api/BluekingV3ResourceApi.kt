@@ -32,7 +32,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.pojo.AncestorsApiReq
-import com.tencent.devops.common.auth.pojo.IamApiReq
+import com.tencent.devops.common.auth.pojo.IamCreateApiReq
 import com.tencent.devops.common.auth.service.IamEsbService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,6 +52,14 @@ class BluekingV3ResourceApi @Autowired constructor(
         resourceName: String,
         authGroupList: List<BkAuthGroup>?
     ) {
+        createResource(
+                user = user,
+                serviceCode = serviceCode,
+                resourceType = resourceType,
+                projectCode = projectCode,
+                resourceCode = resourceCode,
+                resourceName = resourceName
+        )
     }
 
     override fun batchCreateResource(
@@ -93,6 +101,14 @@ class BluekingV3ResourceApi @Autowired constructor(
         resourceCode: String,
         resourceName: String
     ) {
+        createResource(
+                user = user,
+                serviceCode = serviceCode,
+                resourceType = resourceType,
+                projectCode = projectCode,
+                resourceCode = resourceCode,
+                resourceName = resourceName
+        )
     }
 
     override fun createResource(
@@ -112,9 +128,9 @@ class BluekingV3ResourceApi @Autowired constructor(
                     type = AuthResourceType.PROJECT.value
             ))
         }
-        val iamApiReq = IamApiReq(
+        val iamApiReq = IamCreateApiReq(
                 creator = user,
-                name = resourceName, id = resourceCode, type = resourceType.value, system = iamConfiguration.systemId, ancestors = ancestors, bkAppCode = "", bkAppSecret = "", bkUsername = user
+                name = resourceName, id = resourceCode, type = resourceType.value, system = iamConfiguration.systemId, ancestors = ancestors, bk_app_code = "", bk_app_secret = "", bk_username = user
         )
         iamEsbService.createRelationResource(iamApiReq)
     }

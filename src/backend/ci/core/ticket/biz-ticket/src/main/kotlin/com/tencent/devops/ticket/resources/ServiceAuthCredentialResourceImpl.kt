@@ -18,7 +18,7 @@ class ServiceAuthCredentialResourceImpl @Autowired constructor(
     private val certService: CertService
 ) : ServiceAuthCallbackResource {
 
-    override fun listCredential(projectId: String, page: Int?, pageSize: Int?): Result<Page<Credential>> {
+    override fun listCredential(projectId: String, page: Int?, pageSize: Int?): Result<Page<Credential>?> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }
@@ -29,7 +29,7 @@ class ServiceAuthCredentialResourceImpl @Autowired constructor(
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
-    override fun listCert(projectId: String, page: Int?, pageSize: Int?): Result<Page<Cert>> {
+    override fun listCert(projectId: String, page: Int?, pageSize: Int?): Result<Page<Cert>?> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }
@@ -38,5 +38,13 @@ class ServiceAuthCredentialResourceImpl @Autowired constructor(
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val result = certService.list(projectId, limit.offset, limit.limit)
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
+    }
+
+    override fun getCredentialInfos(credentialIds: Set<String>): Result<List<Credential>?> {
+        return Result(credentialService.getCredentialByIds(null, credentialIds))
+    }
+
+    override fun getCertInfos(certIds: Set<String>): Result<List<Cert>?> {
+        return Result(certService.getCertByIds(certIds))
     }
 }

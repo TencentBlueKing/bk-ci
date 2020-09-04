@@ -1214,6 +1214,26 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
+    override fun getCertByIds(certIds: Set<String>): List<Cert>? {
+        val certList = mutableListOf<Cert>()
+        val records = certDao.listByIds(
+                dslContext = dslContext,
+                certIds = certIds
+        )
+        records.map {
+            certList.add(Cert(
+                    certId = it.certId,
+                    certType = it.certType,
+                    creator = it.certUserId,
+                    credentialId = it.credentialId,
+                    createTime = it.certCreateTime.timestamp(),
+                    certRemark = it.certRemark,
+                    expireTime = it.certExpireDate.timestamp()
+            ))
+        }
+        return certList
+    }
+
     private fun encryptCert(
         cert: ByteArray,
         publicKeyByteArray: ByteArray,

@@ -70,12 +70,13 @@
                 this.list = newOptions
             },
             queryParams (newQueryParams, oldQueryParams) {
-                if (this.urlParamKeys.some(key => newQueryParams[key] !== oldQueryParams[key])) {
+                if (this.isParamsChanged(newQueryParams, oldQueryParams)) {
                     this.handleClear()
                 }
             }
         },
         created () {
+            console.log(this.hasUrl, 'this.hasUrl')
             if (this.hasUrl) {
                 this.freshList()
             }
@@ -142,6 +143,7 @@
 
                     this.$emit('change', this.list)
                 } catch (e) {
+                    console.log(e)
                     this.$showTips({
                         message: e.message,
                         theme: 'error'

@@ -340,20 +340,7 @@
                     sideSliderConfig.data = res
                     sideSliderConfig.isLoading = false
                 } catch (err) {
-                    if (err.code === 403) {
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: this.$t('details.artifactory'),
-                                option: this.$t('view')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=artifactory&project_code=${this.projectId}&service_code=artifactory&role_manager=artifactory`
-                        })
-                    } else {
-                        this.$showTips({
-                            theme: 'error',
-                            message: err.message || err
-                        })
-                    }
+                    this.handleError(err, this.$permissionActionMap.view, null, this.projectId, this.$permissionResourceMap.artifactory)
                 }
             },
             /**

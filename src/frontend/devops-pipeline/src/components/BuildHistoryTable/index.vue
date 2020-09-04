@@ -89,10 +89,10 @@
                 </template>
                 <template v-else-if="col.prop === 'errorCode'" v-slot="props">
                     <template v-if="Array.isArray(props.row.errorInfoList) && props.row.errorInfoList.length > 0">
-                        <div @click.stop="" class="errorCode-item" v-for="item in props.row.errorInfoList" :key="item.taskId">
+                        <div @click.stop="" class="error-code-item" v-for="item in props.row.errorInfoList" :key="item.taskId">
                             <i :title="$t('userError')" v-if="item.errorType === 'USER'" class="devops-icon icon-user "></i>
                             <i :title="$t('systemError')" v-else-if="item.errorType === 'SYSTEM'" class="devops-icon icon-cog"></i>
-                            <span v-if="item.errorCode">{{ item.errorCode + ': ' + item. errorMsg }} </span>
+                            <span :title="item.errorCode + ': ' + item. errorMsg" v-if="item.errorCode">{{ item.errorCode + ': ' + item. errorMsg }} </span>
                         </div>
                     </template>
                     <span v-else>--</span>
@@ -481,13 +481,10 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    if (err.code === 403) { // 没有权限执行
-                        // this.setPermissionConfig(`流水线：${this.curPipeline.pipelineName}`, '执行')
-                        return
-                    } else {
-                        message = err.message || err
-                        theme = 'error'
-                    }
+                    this.handleError(err, this.$permissionActionMap.execute, {
+                        id: this.$route.params.pipelineId,
+                        name: this.$route.params.pipelineId
+                    }, this.$route.params.projectId)
                 } finally {
                     delete this.retryingMap[buildId]
                     message && this.$showTips({
@@ -645,6 +642,12 @@
                     color: $primaryColor;
                 }
             }
+        }
+
+        .error-code-item {
+            @include ellipsis();
+            display: block;
+            width: 100%;
         }
     }
     .artifact-list-popup {

@@ -945,8 +945,8 @@ class PipelineService @Autowired constructor(
         projectId: String,
         authPermission: AuthPermission,
         excludePipelineId: String?,
-        offset: Int,
-        limit: Int
+        page: Int?,
+        pageSize: Int?
     ): SQLPage<Pipeline> {
 
         val watch = StopWatch()
@@ -954,26 +954,36 @@ class PipelineService @Autowired constructor(
             watch.start("perm_r_perm")
             val hasPermissionList = pipelinePermissionService.getResourceByPermission(
                 userId = userId, projectId = projectId, permission = authPermission
-            )
+            ).toMutableList()
             watch.stop()
             watch.start("s_r_summary")
+            if (excludePipelineId != null) {
+                // 移除需排除的流水线ID
+                hasPermissionList.remove(excludePipelineId)
+            }
             val pipelineBuildSummary =
-                pipelineRuntimeService.getBuildSummaryRecords(projectId, ChannelCode.BS, hasPermissionList)
+                pipelineRuntimeService.getBuildSummaryRecords(
+                    projectId = projectId,
+                    channelCode = ChannelCode.BS,
+                    pipelineIds = hasPermissionList,
+                    page = page,
+                    pageSize = pageSize
+                )
             watch.stop()
 
             watch.start("s_r_fav")
             val count = pipelineBuildSummary.size + 0L
-            val allPipelines =
+            val pagePipelines =
                 if (count > 0) {
                     val favorPipelines = pipelineGroupService.getFavorPipelines(userId, projectId)
-                    buildPipelines(pipelineBuildSummary, favorPipelines, emptyList(), excludePipelineId)
+                    buildPipelines(
+                        pipelineBuildSummary = pipelineBuildSummary,
+                        favorPipelines = favorPipelines,
+                        authPipelines = emptyList()
+                    )
                 } else {
                     mutableListOf()
                 }
-
-            val toIndex =
-                if (limit == -1 || allPipelines.size <= (offset + limit)) allPipelines.size else offset + limit
-            val pagePipelines = allPipelines.subList(offset, toIndex)
 
             watch.stop()
             return SQLPage(count, pagePipelines)
@@ -1594,13 +1604,34 @@ class PipelineService @Autowired constructor(
         logger.info("getPipelineByIds|[$projectId]|watch=$watch")
         return pipelines.map {
             SimplePipeline(
-                it.projectId,
-                it.pipelineId,
-                it.pipelineName,
-                it.pipelineDesc,
-                it.taskCount,
-                it.delete,
-                templatePipelineIds.contains(it.pipelineId)
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    pipelineName = it.pipelineName,
+                    pipelineDesc = it.pipelineDesc,
+                    taskCount = it.taskCount,
+                    isDelete = it.delete,
+                    instanceFromTemplate = templatePipelineIds.contains(it.pipelineId)
+            )
+        }
+    }
+
+    fun getPipelineByIds(pipelineIds: Set<String>): List<SimplePipeline> {
+        if (pipelineIds.isEmpty()) return listOf()
+
+        val watch = StopWatch()
+        watch.start("s_r_list_b_ps")
+        val pipelines = pipelineInfoDao.listInfoByPipelineIds(dslContext, pipelineIds)
+        watch.stop()
+        logger.info("getPipelineByIds|[$pipelineIds]|watch=$watch")
+        return pipelines.map {
+            SimplePipeline(
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    pipelineName = it.pipelineName,
+                    pipelineDesc = it.pipelineDesc,
+                    taskCount = it.taskCount,
+                    isDelete = it.delete,
+                    instanceFromTemplate = true
             )
         }
     }
@@ -1881,7 +1912,7 @@ class PipelineService @Autowired constructor(
         model.stages.forEachIndexed { index, stage ->
             stage.id = stage.id ?: VMUtils.genStageId(index + 1)
             if (index == 0) {
-                stages.add(Stage(listOf(fixedTriggerContainer), stage.id))
+                stages.add(stage.copy(containers = listOf(fixedTriggerContainer)))
             } else {
                 model.stages.forEach {
                     if (it.name.isNullOrBlank()) it.name = it.id
