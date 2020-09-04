@@ -38,6 +38,7 @@ data class LogStatusEvent(
     override val buildId: String,
     val finished: Boolean,
     val tag: String,
+    val subTag: String?,
     val jobId: String,
     val executeCount: Int?,
     override val retryTime: Int = 2,
