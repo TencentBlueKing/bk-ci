@@ -210,7 +210,7 @@ class LambdaDataService @Autowired constructor(
             logger.info("pushBuildDetail: ${JsonUtil.toJson(historyRecord.intoMap())}")
             kafkaClient.send(KafkaTopic.LANDUN_BUILD_HISTORY_TOPIC, JsonUtil.toJson(historyRecord.intoMap()))
         } catch (e: Exception) {
-            logger.error("Push task detail to kafka error, buildId: ${historyRecord.buildId}", e)
+            logger.error("Push build history to kafka error, buildId: ${historyRecord.buildId}", e)
         }
     }
 
@@ -219,7 +219,7 @@ class LambdaDataService @Autowired constructor(
             logger.info("pushBuildDetail: ${JsonUtil.toJson(buildDetailRecord.intoMap())}")
             kafkaClient.send(KafkaTopic.LANDUN_BUILD_DETAIL_TOPIC, JsonUtil.toJson(buildDetailRecord.intoMap()))
         } catch (e: Exception) {
-            logger.error("Push task detail to kafka error, buildId: ${buildDetailRecord.buildId}", e)
+            logger.error("Push build detail to kafka error, buildId: ${buildDetailRecord.buildId}", e)
         }
     }
 

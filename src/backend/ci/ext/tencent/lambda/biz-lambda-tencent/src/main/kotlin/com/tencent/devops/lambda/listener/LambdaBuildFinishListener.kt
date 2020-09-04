@@ -39,7 +39,7 @@ class LambdaBuildFinishListener @Autowired constructor(
 ) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildFinishBroadCastEvent) {
-        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Receive build finish event - ($event)")
+//        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Receive build finish event - ($event)")
         lambdaDataService.onBuildFinish(event)
     }
 }
