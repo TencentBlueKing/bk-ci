@@ -3,6 +3,8 @@ package com.tencent.devops.ticket.service
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
 import com.tencent.devops.ticket.dao.CredentialDao
 import org.jooq.DSLContext
@@ -57,6 +59,10 @@ class V3CredentialPermissionService @Autowired constructor(
             }
         }
         return credentialResultMap
+    }
+
+    override fun createResource(userId: String, projectId: String, credentialId: String, authGroupList: List<BkAuthGroup>?) {
+        authResourceApi.createResource(userId, ticketAuthServiceCode, AuthResourceType.TICKET_CREDENTIAL, projectId, credentialId, credentialId)
     }
 
     private fun getAllCredentialsByProject(projectId: String): List<String> {

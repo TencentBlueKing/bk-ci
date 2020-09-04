@@ -1084,6 +1084,28 @@ class RepositoryService @Autowired constructor(
         return client.get(ServiceGitResourceImpl::class).getAuthUrl(authParamJsonStr)
     }
 
+    fun getInfoByIds(ids: List<String>): List<RepositoryInfo> {
+        val repositoryIds = ids.map { it.toLong() }
+        val repositoryInfos = repositoryDao.getRepoByIds(
+                dslContext = dslContext,
+                repositoryIds = repositoryIds,
+                checkDelete = true
+        )
+        val result = mutableListOf<RepositoryInfo>()
+        repositoryInfos?.map {
+            result.add(
+                    RepositoryInfo(
+                            repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
+                            aliasName = it.aliasName,
+                            url = it.url,
+                            type = ScmType.valueOf(it.type),
+                            updatedTime = it.updatedTime.timestampmilli()
+                    )
+            )
+        }
+        return result
+    }
+
     private fun validatePermission(user: String, projectId: String, authPermission: AuthPermission): Boolean {
         return repositoryPermissionService.hasPermission(
             userId = user,

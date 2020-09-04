@@ -1,28 +1,33 @@
 <template>
-    <infinite-scroll class="build-history-tab-content" ref="infiniteScroll" :data-fetcher="requestHistory" scroll-box-class-name="bkdevops-pipeline-history" v-slot="slotProps">
-        <filter-bar v-if="showFilterBar" @query="slotProps.queryList" :set-history-page-status="setHistoryPageStatus" :reset-query-condition="resetQueryCondition" v-bind="historyPageStatus.queryMap"></filter-bar>
-        <build-history-table v-if="!slotProps.isLoading" :loading-more="slotProps.isLoadingMore" :current-pipeline-version="currentPipelineVersion" @update-table="updateBuildHistoryList" :build-list="slotProps.list" :columns="shownColumns" :empty-tips-config="emptyTipsConfig" :show-log="showLog"></build-history-table>
-        <bk-dialog
-            width="567"
-            :title="$t('history.settingCols')"
-            ext-cls="create-view-dialog"
-            :value="isColumnsSelectPopupVisible"
-            @confirm="updateTableColumns"
-            @cancel="resetColumns">
-            <bk-transfer :source-list="sourceColumns" display-key="label" setting-key="prop" :sortable="true" :target-list="shownColumns" :title="[$t('history.canChooseList'), $t('history.choosedList')]" @change="handleColumnsChange"></bk-transfer>
-        </bk-dialog>
-    </infinite-scroll>
+    <div>
+        <empty-tips v-if="hasNoPermission" :show-lock="true" v-bind="emptyTipsConfig"></empty-tips>
+        <infinite-scroll v-else class="build-history-tab-content" ref="infiniteScroll" :data-fetcher="requestHistory" scroll-box-class-name="bkdevops-pipeline-history" v-slot="slotProps">
+            <filter-bar v-if="showFilterBar" @query="slotProps.queryList" :set-history-page-status="setHistoryPageStatus" :reset-query-condition="resetQueryCondition" v-bind="historyPageStatus.queryMap"></filter-bar>
+            <build-history-table v-if="!slotProps.isLoading" :loading-more="slotProps.isLoadingMore" :current-pipeline-version="currentPipelineVersion" @update-table="updateBuildHistoryList" :build-list="slotProps.list" :columns="shownColumns" :empty-tips-config="isEmptyList ? emptyTipsConfig : null" :show-log="showLog"></build-history-table>
+            <bk-dialog
+                width="567"
+                :title="$t('history.settingCols')"
+                ext-cls="create-view-dialog"
+                :value="isColumnsSelectPopupVisible"
+                @confirm="updateTableColumns"
+                @cancel="resetColumns">
+                <bk-transfer :source-list="sourceColumns" display-key="label" setting-key="prop" :sortable="true" :target-list="shownColumns" :title="[$t('history.canChooseList'), $t('history.choosedList')]" @change="handleColumnsChange"></bk-transfer>
+            </bk-dialog>
+        </infinite-scroll>
+
+    </div>
 </template>
 
 <script>
     import webSocketMessage from '@/utils/webSocketMessage'
     import BuildHistoryTable from '@/components/BuildHistoryTable/'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
+    import emptyTips from '@/components/devops/emptyTips'
     import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS } from '@/utils/pipelineConst'
     import { mapGetters, mapActions, mapState } from 'vuex'
     import { coverStrTimer } from '@/utils/util'
     import { bus } from '@/utils/bus'
-    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import { PROCESS_API_URL_PREFIX, AUTH_URL_PREFIX } from '@/store/constants'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import InfiniteScroll from '@/components/InfiniteScroll'
 
@@ -32,7 +37,8 @@
         components: {
             BuildHistoryTable,
             InfiniteScroll,
-            FilterBar
+            FilterBar,
+            emptyTips
         },
 
         mixins: [pipelineConstMixin],
@@ -102,10 +108,14 @@
                 const historyTableColumns = Object.values(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).sort((c1, c2) => c1.index > c2.index)
                 return historyTableColumns.filter(x => !x.hiddenInHistory)
             },
-            emptyTipsConfig () {
+            isEmptyList () {
                 const list = this.$refs.infiniteScroll ? this.$refs.infiniteScroll.list : []
                 const isLoading = this.$refs.infiniteScroll ? this.$refs.infiniteScroll.isLoading : []
-                const { hasNoPermission, historyPageStatus: { isQuerying } } = this
+                const { historyPageStatus: { isQuerying } } = this
+                return list.length === 0 && !isLoading && !isQuerying
+            },
+            emptyTipsConfig () {
+                const { hasNoPermission } = this
                 const title = hasNoPermission ? this.$t('noPermission') : this.$t('history.noBuildRecords')
                 const desc = hasNoPermission ? this.$t('history.noPermissionTips') : this.$t('history.buildEmptyDesc')
                 const btns = hasNoPermission ? [{
@@ -116,7 +126,7 @@
                 }, {
                     theme: 'success',
                     size: 'normal',
-                    handler: this.goToApplyPerm,
+                    handler: this.toApplyPermission,
                     text: this.$t('applyPermission')
                 }] : [{
                     theme: 'primary',
@@ -128,11 +138,11 @@
                     },
                     text: this.$t('history.startBuildTips')
                 }]
-                return list.length === 0 && !isLoading && !isQuerying ? {
+                return {
                     title,
                     desc,
                     btns
-                } : null
+                }
             }
         },
 
@@ -210,19 +220,34 @@
                 this.$toggleProjectMenu(true)
             },
 
-            goToApplyPerm () {
-                const url = `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_viewer=pipeline:${this.pipelineId}`
-                window.open(url, '_blank')
-            },
-
-            setPermissionConfig (resource, option) {
-                this.$showAskPermissionDialog({
-                    noPermissionList: [{
-                        resource,
-                        option
-                    }],
-                    applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_executor=pipeline:${this.pipelineId}`
-                })
+            async toApplyPermission () {
+                try {
+                    const { projectId } = this.$route.params
+                    const redirectUrl = await this.$ajax.post(`${AUTH_URL_PREFIX}/user/auth/permissionUrl`, [{
+                        actionId: this.$permissionActionMap.view,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: projectId,
+                            type: this.$permissionResourceTypeMap.PROJECT
+                        }, {
+                            id: this.pipelineId,
+                            name: this.pipelineId
+                        }]
+                    }])
+                    console.log('redirectUrl', redirectUrl)
+                    window.open(redirectUrl, '_blank')
+                    this.$bkInfo({
+                        title: this.$t('permissionRefreshtitle'),
+                        subTitle: this.$t('permissionRefreshSubtitle'),
+                        okText: this.$t('permissionRefreshOkText'),
+                        cancelText: this.$t('close'),
+                        confirmFn: () => {
+                            location.reload()
+                        }
+                    })
+                } catch (e) {
+                    console.error(e)
+                }
             },
 
             resetQueryCondition () {

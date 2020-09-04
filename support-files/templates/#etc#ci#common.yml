@@ -95,7 +95,8 @@ esb:
     url: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/api/c/compapi/v2/sops/
   cmdb:
     searchhosturl: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/api/c/compapi/v2/
-
+  iam:
+    url: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__
 
 # codecc config
 codecc:

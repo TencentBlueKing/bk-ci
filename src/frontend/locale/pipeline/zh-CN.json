@@ -3,11 +3,13 @@
     "pipelineName": "流水线名称",
     "labelManage": "标签管理",
     "label": "标签",
+    "close": "关闭",
     "viewManage": "视图管理",
     "templateManage": "模板管理",
     "pluginManage": "插件管理",
     "err503": "服务正在部署中，请稍候...",
     "err400": "内部服务异常",
+    "err403": "无权限",
     "nullDataErr": "后端接口数据返回为空",
     "more": "更多",
     "true": "是",
@@ -798,5 +800,8 @@
         "noEnv": "无编译环境",
         "afterPreStageSuccess": "前一个Stage成功时运行",
         "manualRunStage": "手动触发运行"       
-    }
+    },
+    "permissionRefreshtitle": "权限申请单已提交",
+    "permissionRefreshSubtitle": "请在权限中心填写权限申请单，提交完成后再刷新该页面",
+    "permissionRefreshOkText": "刷新页面"
 }
