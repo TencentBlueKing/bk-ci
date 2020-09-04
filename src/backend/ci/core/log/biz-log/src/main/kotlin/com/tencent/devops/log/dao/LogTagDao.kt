@@ -24,69 +24,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.dao.v2
+package com.tencent.devops.log.dao
 
-import com.tencent.devops.model.log.tables.TLogStatusV2
-import com.tencent.devops.model.log.tables.records.TLogStatusV2Record
+import com.tencent.devops.model.log.Tables.T_LOG_SUBTAGS
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
-class LogStatusDaoV2 {
+class LogTagDao {
 
-    fun finish(
+    fun save(
         dslContext: DSLContext,
         buildId: String,
-        tag: String?,
-        jobId: String?,
-        executeCount: Int?,
-        finish: Boolean
+        tag: String,
+        subTags: String
     ) {
-        with(TLogStatusV2.T_LOG_STATUS_V2) {
+        with(T_LOG_SUBTAGS) {
             dslContext.insertInto(
                 this,
                 BUILD_ID,
                 TAG,
-                JOB_ID,
-                EXECUTE_COUNT,
-                FINISHED
-            ).values(
-                buildId,
-                tag ?: "",
-                jobId,
-                executeCount ?: 1,
-                finish
-            ).onDuplicateKeyUpdate().set(FINISHED, finish).execute()
+                CREATE_TIME,
+                SUB_TAGS
+            ).values(buildId, tag, LocalDateTime.now(), subTags)
+                .onDuplicateKeyUpdate()
+                .set(CREATE_TIME, LocalDateTime.now())
+                .set(SUB_TAGS, subTags)
+                .execute()
         }
     }
 
-    fun listFinish(
-        dslContext: DSLContext,
-        buildId: String,
-        tag: String?,
-        executeCount: Int?
-    ): Result<TLogStatusV2Record>? {
-        with(TLogStatusV2.T_LOG_STATUS_V2) {
-            return dslContext.selectFrom(this)
-                    .where(BUILD_ID.eq(buildId))
-                    .and(EXECUTE_COUNT.eq(executeCount ?: 1))
-                    .fetch()
-        }
-    }
-
-    fun isFinish(
-        dslContext: DSLContext,
-        buildId: String,
-        tag: String?,
-        executeCount: Int?
-    ): Boolean {
-        with(TLogStatusV2.T_LOG_STATUS_V2) {
+    fun getSubTags(dslContext: DSLContext, buildId: String, tag: String): String? {
+        with(T_LOG_SUBTAGS) {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-                .and(TAG.eq(tag ?: ""))
-                .and(EXECUTE_COUNT.eq(executeCount ?: 1))
-                .fetchOne()?.finished ?: false
+                .and(TAG.eq(tag))
+                .fetchOne()?.subTags
         }
     }
 
@@ -94,7 +68,7 @@ class LogStatusDaoV2 {
         dslContext: DSLContext,
         buildIds: Set<String>
     ): Int {
-        with(TLogStatusV2.T_LOG_STATUS_V2) {
+        with(T_LOG_SUBTAGS) {
             return dslContext.deleteFrom(this)
                 .where(BUILD_ID.`in`(buildIds))
                 .execute()

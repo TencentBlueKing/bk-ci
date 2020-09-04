@@ -89,10 +89,13 @@
                                     v-model="createAtomForm.name"
                                     v-validate="{
                                         required: true,
-                                        max: 20
+                                        max: 20,
+                                        regex: '^[\u4e00-\u9fa5a-zA-Z0-9-_]+$'
                                     }"
                                     :class="{ 'is-danger': errors.has('atomName') }">
-                                <p :class="errors.has('atomName') ? 'error-tips' : 'normal-tips'">{{ errors.first("atomName") }}</p>
+                                <p :class="errors.has('atomName') ? 'error-tips' : 'normal-tips'">
+                                    {{ errors.first("atomName") && errors.first("atomName").indexOf($t('store.正则')) > 0 ? $t('store.由汉字、英文字母、数字、连字符(-)和下划线组成，长度小于20个字符') : errors.first("atomName") }}
+                                </p>
                             </div>
                         </div>
                         <div class="bk-form-item is-required">

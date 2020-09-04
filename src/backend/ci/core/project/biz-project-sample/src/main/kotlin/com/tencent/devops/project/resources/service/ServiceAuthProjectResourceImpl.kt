@@ -15,4 +15,8 @@ class ServiceAuthProjectResourceImpl @Autowired constructor(
     override fun list(limit: Int, offset: Int): Result<Page<ProjectVO>> {
         return Result(projectService.list(limit, offset))
     }
+
+    override fun getByIds(ids: Set<String>): Result<List<ProjectVO>> {
+        return Result(projectService.list(ids))
+    }
 }

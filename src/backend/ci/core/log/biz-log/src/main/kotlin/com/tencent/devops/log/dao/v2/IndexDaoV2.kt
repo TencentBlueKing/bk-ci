@@ -97,13 +97,13 @@ class IndexDaoV2 {
         }
     }
 
-    fun listLatestBuilds(
+    fun listOldestBuilds(
         dslContext: DSLContext,
         limit: Int
     ): Result<TLogIndicesV2Record> {
         with(TLogIndicesV2.T_LOG_INDICES_V2) {
             return dslContext.selectFrom(this)
-                .orderBy(ID.desc())
+                .orderBy(ID.asc())
                 .limit(limit)
                 .fetch()
         }

@@ -87,7 +87,7 @@ class LogListener constructor(
                 logger.warn("Retry to add the multi lines [${event.buildId}|${event.retryTime}]")
                 with(event) {
                     logMQEventDispatcher.dispatch(
-                        LogStatusEvent(buildId, finished, tag, jobId, executeCount, retryTime - 1, DelayMills)
+                        LogStatusEvent(buildId, finished, tag, subTag, jobId, executeCount, retryTime - 1, DelayMills)
                     )
                 }
             }
