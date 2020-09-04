@@ -3,9 +3,25 @@
         <!-- <nav-top /> -->
         <header class="page-header">
             <div class="app-logo">
-                <!-- <img :src="logo" :alt="this.$t('st.代码检查中心')"> -->
+                <img @click="$router.push({ name: 'task-list' })" :src="logo" :alt="this.$t('代码检查中心')">
+                <div class="breadcrumb">{{$t('代码检查中心')}}
+                    <a class="sub-header-link" target="_blank"
+                        :href="iwikiCodeccHome">
+                        <span class="bk-icon icon-question-circle"></span>
+                    </a>
+                </div>
             </div>
-            <div class="breadcrumb">{{title}}</div>
+            <bk-tab ext-cls="cc-panels" :active.sync="currentNavTab" type="unborder-card" @tab-change="changeTab">
+                <bk-tab-panel
+                    v-for="(panel, index) in panels"
+                    v-bind="panel"
+                    :key="index">
+                </bk-tab-panel>
+            </bk-tab>
+            <div @click="handlerVersionChange" class="app-version">
+                <!-- <span v-bk-tooltips="toolTips.version" class="icon codecc-icon icon-change"></span> -->
+            </div>
+            <!-- <div class="breadcrumb">{{title}}</div> -->
         </header>
         <main class="page-main">
             <div class="page-content">
@@ -18,7 +34,7 @@
 </template>
 
 <script>
-    import logo from '@/images/logo.png'
+    import logo from '@/images/logo.svg'
     // import NavTop from './nav-top'
 
     export default {
@@ -27,35 +43,120 @@
         },
         data () {
             return {
-                logo
+                logo,
+                toolTips: {
+                    version: {
+                        content: this.$t('切到旧版CodeCC')
+                    }
+                },
+                panels: [
+                    { name: 'task', label: '任务' },
+                    { name: 'checkerset', label: '规则集' },
+                    { name: 'checker', label: '规则' }
+                ],
+                iwikiCodeccHome: window.IWIKI_CODECC_HOME
             }
         },
         computed: {
             title () {
                 const title = this.$route.meta.title
-                return this.$t(`nav.${title}`)
+                return this.$t(`${title}`)
+            },
+            currentNavTab () {
+                const routeName = this.$route.name
+                const navMap = {
+                    'task-list': 'task',
+                    'checker-list': 'checker',
+                    'checkerset-list': 'checkerset',
+                    'checkerset-manage': 'checkerset'
+                }
+                return navMap[routeName] || 'task'
+            }
+        },
+        methods: {
+            handlerVersionChange () {
+                const projectId = this.$route.params.projectId
+                window.location.href = window.OLD_CODECC_SITE_URL + '/coverity/myproject?projectId=' + projectId
+            },
+            changeTab (name) {
+                if (name === 'checker') {
+                    this.$router.push({ name: 'checker-list' })
+                } else if (name === 'task') {
+                    this.$router.push({ name: 'task-list' })
+                } else if (name === 'checkerset') {
+                    this.$router.push({ name: 'checkerset-list' })
+                }
             }
         }
     }
 </script>
 
-<style lang="postcss">
+<style lang="postcss" scoped>
+    @import '../../css/variable.css';
+
     .layou-outer {
-        --headerHeight: 50px;
+        --headerHeight: 60px;
         .page-header {
             display: flex;
             height: var(--headerHeight);
             align-items: center;
-            padding: 0 20px;
-            border-bottom: 1px solid #d1d1d1;
-            .app-logo {}
+            padding: 0 28px;
+            background: #fff;
+            border-bottom: 1px solid #DCDEE5;;
+            .app-logo {
+                display: flex;
+                flex: 2;
+                img {
+                    height: 25px;
+                    cursor: pointer;
+                    margin-top: 15px;
+                }
+            }
             .breadcrumb {
                 margin-left: 8px;
                 color: #63656e;
+                line-height: 60px;
+            }
+            >>>.cc-panels {
+                display: flex;
+                flex: 5;
+                justify-content: center;
+                .bk-tab-header,
+                .bk-tab-label-item {
+                    height: 59px !important;
+                }
+                .bk-tab-label-item {
+                    padding: 10px 18px;
+                }
+                .bk-tab-label-item,
+                .bk-tab-label-item.active {
+                    background-color: #fff;
+                }
+                .bk-tab-label {
+                    font-size: 16px;
+                }
+                .bk-tab-section {
+                    display: none;
+                }
+            }
+            .app-version {
+                display: flex;
+                flex: 2;
+                cursor: pointer;
+                font-size: 22px;
+                &:hover {
+                    color: #3a84ff;
+                }
+            }
+            .sub-header-link span {
+                padding-left: 4px;
+                color: #c4cdd6;
+                cursor: pointer;
+                font-size: 14px;
             }
         }
         .page-main {
-            height: calc(100vh - var(--navTopHeight) - var(--headerHeight));
+            height: calc(100vh - var(--navTopHeight));
             overflow: auto;
 
             .page-content,

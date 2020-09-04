@@ -29,8 +29,11 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.FileUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
@@ -68,7 +71,7 @@ import java.util.ArrayList
 import java.util.regex.Pattern
 
 abstract class AbsProjectServiceImpl @Autowired constructor(
-    private val projectPermissionService: ProjectPermissionService,
+    val projectPermissionService: ProjectPermissionService,
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
     private val projectJmxApi: ProjectJmxApi,
@@ -84,7 +87,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         when (validateType) {
             ProjectValidateType.project_name -> {
-                if (name.length < 4 || name.length > 12) {
+                if (name.isEmpty() || name.length > 12) {
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG))
                 }
                 if (projectDao.existByProjectName(dslContext, name, projectId)) {
@@ -192,22 +195,24 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return ProjectUtils.packagingBean(record, grayProjectSet())
     }
 
-    override fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Boolean {
+    override fun update(userId: String, englishName: String, projectUpdateInfo: ProjectUpdateInfo): Boolean {
         validate(ProjectValidateType.project_name, projectUpdateInfo.projectName, projectUpdateInfo.englishName)
         val startEpoch = System.currentTimeMillis()
         var success = false
+        validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
         try {
             try {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    projectDao.update(context, userId, projectId, projectUpdateInfo)
+                    val projectId = projectDao.getByEnglishName(dslContext, englishName)?.projectId ?: return@transaction
+                    projectDao.update(context, userId, projectId!!, projectUpdateInfo)
                     projectPermissionService.modifyResource(
                         projectCode = projectUpdateInfo.englishName,
                         projectName = projectUpdateInfo.projectName
                     )
                     projectDispatcher.dispatch(ProjectUpdateBroadCastEvent(
                         userId = userId,
-                        projectId = projectId,
+                        projectId = englishName,
                         projectInfo = projectUpdateInfo
                     ))
                 }
@@ -231,7 +236,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
 
             val projects = projectPermissionService.getUserProjects(userId)
-
+            logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
             projectDao.listByEnglishName(dslContext, projects).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
@@ -323,6 +328,32 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun list(limit: Int, offset: Int): Page<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        val pageNotNull = limit ?: 1
+        val pageSizeNotNull = offset ?: 20
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        var success = false
+        try {
+            val list = ArrayList<ProjectVO>()
+            projectDao.list(dslContext, sqlLimit.limit, sqlLimit.offset).map {
+                list.add(ProjectUtils.packagingBean(it, emptySet()))
+            }
+            val count = projectDao.getCount(dslContext)
+            success = true
+            logger.info("list count$count")
+            return Page(
+                count = count,
+                page = limit,
+                pageSize = offset,
+                records = list
+            )
+        } finally {
+            projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
+        }
+    }
+
     /**
      * 获取用户已的可访问项目列表
      */
@@ -360,12 +391,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun updateLogo(
         userId: String,
-        projectId: String,
+        englishName: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<Boolean> {
-        logger.info("Update the logo of project $projectId")
-        val project = projectDao.get(dslContext, projectId)
+        logger.info("Update the logo of project $englishName")
+        val project = projectDao.getByEnglishName(dslContext, englishName)
         if (project != null) {
             var logoFile: File? = null
             try {
@@ -378,10 +409,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    projectDao.updateLogoAddress(context, userId, projectId, result.data!!)
+                    projectDao.updateLogoAddress(context, userId, project.projectId, result.data!!)
                     projectDispatcher.dispatch(ProjectUpdateLogoBroadCastEvent(
                         userId = userId,
-                        projectId = projectId,
+                        projectId = project.projectId,
                         logoAddr = result.data!!
                     ))
                 }
@@ -396,6 +427,19 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_PROJECT_FAIL))
         }
         return Result(true)
+    }
+
+    private fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
+        val validate = projectPermissionService.verifyUserProjectPermission(
+                projectCode = projectCode,
+                userId = userId,
+                permission = permission
+        )
+        if (!validate) {
+            logger.warn("$projectCode| $userId| ${permission.value} validatePermission fail")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+        }
+        return true
     }
 
     companion object {

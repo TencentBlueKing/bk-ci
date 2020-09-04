@@ -444,13 +444,15 @@
                     ...this.container.dispatchType,
                     ...defaultAgentType,
                     imageVersion: defaultBuildResource.version || '',
-                    value: defaultBuildResource.code || '',
+                    value: defaultBuildResource.value || '',
                     imageCode: defaultBuildResource.code || '',
                     imageName: defaultBuildResource.name || '',
+                    imageType: defaultBuildResource.imageType || '',
                     recommendFlag: defaultBuildResource.recommendFlag,
                     [name]: val
                 }))
                 if (val === 'MACOS') this.getMacOsData()
+                if (this.container.dispatchType && this.container.dispatchType.imageCode) this.getVersionList(this.container.dispatchType.imageCode)
             },
 
             changeThirdImage (val) {
