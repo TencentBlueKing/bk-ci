@@ -55,6 +55,7 @@ import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
+import org.jooq.JSONFormat
 import org.json.simple.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -90,7 +91,7 @@ class LambdaDataService @Autowired constructor(
             projectId = record.projectId,
             pipelineId = record.pipelineId,
             buildId = record.buildId,
-            buildHistory = record.formatJSON(),
+            buildHistory = record.formatJSON(JSONFormat.DEFAULT_FOR_RESULTS),
             detailModel = detailModel
         ))
     }
@@ -202,8 +203,10 @@ class LambdaDataService @Autowired constructor(
 //
 //                logger.info("pushTaskDetail: ${JsonUtil.toJson(dataPlatTaskDetail)}")
 //                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
-                logger.info("pushTaskDetail: ${task.formatJSON()}")
-                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, task.formatJSON())
+                logger.info("pushTaskDetail_1: ${task.formatJSON(JSONFormat.DEFAULT_FOR_RESULTS)}")
+                logger.info("pushTaskDetail_2: ${JsonUtil.toJson(task.intoMap())}")
+                logger.info("pushTaskDetail_3: ${JsonUtil.toJson(task.toString())}")
+                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, task.formatJSON(JSONFormat.DEFAULT_FOR_RESULTS))
             }
         } catch (e: Exception) {
             logger.error("Push task detail to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
@@ -212,7 +215,7 @@ class LambdaDataService @Autowired constructor(
 
     private fun pushBuildDetail(buildData: BuildData) {
         try {
-            logger.info("pushTaskDetail: ${JsonUtil.toJson(buildData)}")
+            logger.info("pushBuildDetail: ${JsonUtil.toJson(buildData)}")
             kafkaClient.send(KafkaTopic.LANDUN_BUILD_DETAIL_TOPIC, JsonUtil.toJson(buildData))
         } catch (e: Exception) {
             logger.error("Push task detail to kafka error, buildId: ${buildData.buildId}", e)
