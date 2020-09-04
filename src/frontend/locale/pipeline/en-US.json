@@ -9,6 +9,7 @@
     "pluginManage": "Installed plugins",
     "err503": "Serve is being deployed, please wait",
     "err400": "An error occurred in internal service",
+    "err403": "Permission Deny",
     "nullDataErr": "Nothing returned from back-end port",
     "more": "More",
     "true": "True",

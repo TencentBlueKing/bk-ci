@@ -392,10 +392,10 @@
                             noPermissionList: [{
                                 actionId,
                                 resourceId: this.$permissionResourceMap.code,
-                                instanceId: [{
+                                instanceId: repositoryHashId ? [{
                                     id: repositoryHashId,
                                     name: codelib.aliasName
-                                }],
+                                }] : null,
                                 projectId
                             }]
                         })

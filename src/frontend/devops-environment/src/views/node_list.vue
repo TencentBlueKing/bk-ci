@@ -357,7 +357,7 @@
                     type: this.$permissionResourceTypeMap.PROJECT
                 }, {
                     id: row.nodeHashId,
-                    name: row.displayName
+                    type: this.$permissionResourceTypeMap.ENVIRONMENT_ENV_NODE
                 }])
             },
             dropdownIsShow (isShow) {

@@ -62,7 +62,7 @@
                             handler: () => {
                                 this.toApplyPermission(this.$permissionActionMap.edit, {
                                     id: this.pipelineId,
-                                    name: this.pipeline.name
+                                    name: this.pipelineId
                                 })
                             },
                             text: this.$t('applyPermission')

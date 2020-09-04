@@ -67,9 +67,9 @@ Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
 
 Vue.mixin({
     methods: {
-        handleError (e, permissionAction, pipeline, projectId, resourceMap = this.$permissionResourceMap.pipeline) {
+        handleError (e, permissionAction, instance, projectId, resourceMap = this.$permissionResourceMap.pipeline) {
             if (e.code === 403) { // 没有权限编辑
-                this.setPermissionConfig(resourceMap, permissionAction, pipeline ? [pipeline] : [], projectId)
+                this.setPermissionConfig(resourceMap, permissionAction, instance ? [instance] : [], projectId)
             } else {
                 this.$showTips({
                     message: e.message || e,

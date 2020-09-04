@@ -302,6 +302,7 @@
                     })
                     if (res.id) {
                         message = this.$t('subpage.retrySuc')
+                        theme = 'success'
                     } else {
                         message = this.$t('subpage.retryFail')
                         theme = 'error'
@@ -310,7 +311,7 @@
                     this.handleError(err, this.$permissionActionMap.execute, {
                         id: this.$route.params.pipelineId,
                         name: this.$route.params.pipelineId
-                    }, this.routerParams.projectId)
+                    }, this.$route.params.projectId)
                 } finally {
                     message && this.$showTips({
                         message,
