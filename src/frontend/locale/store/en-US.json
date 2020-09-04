@@ -1,5 +1,6 @@
 {
     "store": "Store",
+    "由汉字、英文字母、数字、连字符(-)和下划线组成，长度小于20个字符": "It is composed of Chinese characters, English letters, numbers, hyphens (-) and underscores, and the length is less than 20 characters",
     "请输入关键字": "Please enter key words",
     "协作审批": "Collaborative approval",
     "基本信息": "Basic Information",
