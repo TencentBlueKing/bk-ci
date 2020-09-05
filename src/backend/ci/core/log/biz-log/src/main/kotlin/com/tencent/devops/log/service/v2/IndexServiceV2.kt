@@ -31,7 +31,7 @@ import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.dao.v2.IndexDaoV2
+import com.tencent.devops.log.dao.IndexDao
 import com.tencent.devops.log.model.IndexAndType
 import com.tencent.devops.log.util.IndexNameUtils
 import com.tencent.devops.log.util.IndexNameUtils.getTypeByIndex
@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit
 @Service
 class IndexServiceV2 @Autowired constructor(
     private val dslContext: DSLContext,
-    private val indexDaoV2: IndexDaoV2,
+    private val indexDao: IndexDao,
     private val redisOperation: RedisOperation
 ) {
 
@@ -65,12 +65,12 @@ class IndexServiceV2 @Autowired constructor(
                 override fun load(buildId: String): String {
                     return dslContext.transactionResult { configuration ->
                         val context = DSL.using(configuration)
-                        var indexName = indexDaoV2.getIndexName(context, buildId)
+                        var indexName = indexDao.getIndexName(context, buildId)
                         if (indexName.isNullOrBlank()) {
                             val redisLock = RedisLock(redisOperation, "log:build:enable:lock:key", 10)
                             redisLock.lock()
                             try {
-                                indexName = indexDaoV2.getIndexName(context, buildId)
+                                indexName = indexDao.getIndexName(context, buildId)
                                 if (indexName.isNullOrBlank()) {
                                     logger.info("[$buildId] Add the build record")
                                     indexName = saveIndex(buildId)
@@ -89,7 +89,7 @@ class IndexServiceV2 @Autowired constructor(
         val indexName = IndexNameUtils.getIndexName()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            indexDaoV2.create(context, buildId, indexName, true)
+            indexDao.create(context, buildId, indexName, true)
             redisOperation.set(getLineNumRedisKey(buildId), 1.toString(), TimeUnit.DAYS.toSeconds(2))
         }
         logger.info("[$buildId|$indexName] Create new index/type in db and cache")
@@ -114,7 +114,7 @@ class IndexServiceV2 @Autowired constructor(
                 lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
                 if (lineNum == null) {
                     logger.warn("[$buildId|$size] Fail to get and add the line num, get from db")
-                    val build = indexDaoV2.getBuild(dslContext, buildId)
+                    val build = indexDao.getBuild(dslContext, buildId)
                     if (build == null) {
                         logger.warn("[$buildId|$size] The build is not exist in db")
                         return null
@@ -141,7 +141,7 @@ class IndexServiceV2 @Autowired constructor(
             logger.warn("[$buildId|$lineNum] Fail to convert line num to long", e)
             return
         }
-        val updateCount = indexDaoV2.updateLastLineNum(dslContext, buildId, latestLineNum)
+        val updateCount = indexDao.updateLastLineNum(dslContext, buildId, latestLineNum)
         if (updateCount != 1) {
             logger.warn("[$buildId|$latestLineNum] Fail to update the build latest line num")
         }
