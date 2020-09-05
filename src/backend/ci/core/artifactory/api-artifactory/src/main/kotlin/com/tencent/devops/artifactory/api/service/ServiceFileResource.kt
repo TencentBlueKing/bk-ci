@@ -27,10 +27,6 @@
 package com.tencent.devops.artifactory.api.service
 
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -40,15 +36,13 @@ import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 /**
  * 注意，此类用了MULTIPART_FORM_DATA，导致Feign会有问题，不要直接用Feign去调用。
@@ -91,40 +85,4 @@ interface ServiceFileResource {
         @Context
         response: HttpServletResponse
     )
-
-    @ApiOperation("下载文件到本地")
-    @GET
-    @Path("/file/download/local")
-    fun downloadFileToLocal(
-        @ApiParam("文件路径", required = true)
-        @QueryParam("filePath")
-        filePath: String
-    ): Response
-
-    @ApiOperation("归档文件")
-    @POST
-    @Path("/file/archive")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    fun archiveFile(
-        @ApiParam("projectCode", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectCode: String,
-        @ApiParam("pipelineId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
-        pipelineId: String,
-        @ApiParam("buildId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
-        @ApiParam("文件类型", required = true)
-        @QueryParam("fileType")
-        fileType: FileTypeEnum,
-        @ApiParam("自定义文件路径", required = false)
-        @QueryParam("customFilePath")
-        customFilePath: String?,
-        @ApiParam("文件", required = true)
-        @FormDataParam("file")
-        inputStream: InputStream,
-        @FormDataParam("file")
-        disposition: FormDataContentDisposition
-    ): Result<String?>
 }

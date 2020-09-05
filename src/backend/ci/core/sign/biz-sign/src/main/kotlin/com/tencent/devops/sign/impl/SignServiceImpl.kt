@@ -134,6 +134,7 @@ class SignServiceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA, defaultMessage = "归档IPA包失败")
         }
         signInfoService.finishArchive(resignId, ipaSignInfo, taskExecuteCount)
+
         // 成功结束签名逻辑
         signInfoService.successResign(resignId, ipaSignInfo, taskExecuteCount)
     }
