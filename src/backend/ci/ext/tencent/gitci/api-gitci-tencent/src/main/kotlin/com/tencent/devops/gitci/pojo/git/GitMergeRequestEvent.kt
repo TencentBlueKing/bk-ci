@@ -111,7 +111,7 @@ data class GitMRAttributes(
     val merge_status: String,
     val target_project_id: String,
     val iid: Long,
-    val description: String,
+    val description: String?,
     val source: GitProject,
     val target: GitProject,
     val last_commit: GitCommit,

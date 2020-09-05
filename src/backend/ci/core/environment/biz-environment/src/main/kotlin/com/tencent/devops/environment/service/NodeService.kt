@@ -292,6 +292,12 @@ class NodeService @Autowired constructor(
         return nodeRecords.map { NodeStringIdUtils.getNodeBaseInfo(it) }
     }
 
+    fun listRawServerNodeByIds(nodeHashIds: List<String>): List<NodeBaseInfo> {
+        val nodeRecords =
+                nodeDao.listServerNodesByIds(dslContext, nodeHashIds.map { HashUtil.decodeIdToLong(it) })
+        return nodeRecords.map { NodeStringIdUtils.getNodeBaseInfo(it) }
+    }
+
     fun listByType(userId: String, projectId: String, type: String): List<NodeBaseInfo> {
         val nodeRecords = nodeDao.listNodesByType(dslContext, projectId, type)
         return nodeRecords.map { NodeStringIdUtils.getNodeBaseInfo(it) }

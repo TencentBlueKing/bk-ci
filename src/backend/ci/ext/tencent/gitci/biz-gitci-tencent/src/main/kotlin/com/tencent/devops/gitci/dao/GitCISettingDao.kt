@@ -107,6 +107,30 @@ class GitCISettingDao {
         }
     }
 
+    fun updateSetting(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        gitProjectName: String,
+        url: String,
+        sshUrl: String,
+        httpUrl: String,
+        homePage: String
+    ) {
+        with(TRepositoryConf.T_REPOSITORY_CONF) {
+            dslContext.transaction { configuration ->
+                DSL.using(configuration).update(this)
+                    .set(NAME, gitProjectName)
+                    .set(URL, url)
+                    .set(HOME_PAGE, homePage)
+                    .set(GIT_HTTP_URL, httpUrl)
+                    .set(GIT_SSH_URL, sshUrl)
+                    .set(UPDATE_TIME, LocalDateTime.now())
+                    .where(ID.eq(gitProjectId))
+                    .execute()
+            }
+        }
+    }
+
     fun getSetting(dslContext: DSLContext, gitProjectId: Long): GitRepositoryConf? {
         with(TRepositoryConf.T_REPOSITORY_CONF) {
             val conf = dslContext.selectFrom(this)

@@ -32,6 +32,7 @@ import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -429,6 +430,21 @@ interface ServiceGitResource {
         @QueryParam("token")
         token: String
     ): Result<GitMrChangeInfo>
+
+    @ApiOperation("获取mr信息")
+    @GET
+    @Path("/getRepoMembers")
+    fun getRepoMembers(
+        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @ApiParam(value = "token", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<List<GitMember>>
 
     @ApiOperation("添加Git Commit Check")
     @POST
