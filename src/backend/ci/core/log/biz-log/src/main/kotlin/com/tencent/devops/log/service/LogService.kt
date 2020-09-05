@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.service.v2
+package com.tencent.devops.log.service
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.pojo.Page
@@ -79,9 +79,9 @@ import kotlin.math.max
 import kotlin.math.min
 
 @Service
-class LogServiceV2 @Autowired constructor(
+class LogService @Autowired constructor(
     private val client: LogClient,
-    private val indexServiceV2: IndexServiceV2,
+    private val indexService: IndexService,
     private val logStatusService: LogStatusService,
     private val logTagService: LogTagService,
     private val defaultKeywords: List<String>,
@@ -92,7 +92,7 @@ class LogServiceV2 @Autowired constructor(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(LogServiceV2::class.java)
+        private val logger = LoggerFactory.getLogger(LogService::class.java)
     }
 
     private val indexCache = CacheBuilder.newBuilder()
@@ -103,7 +103,7 @@ class LogServiceV2 @Autowired constructor(
     fun pipelineFinish(event: PipelineBuildFinishBroadCastEvent) {
         with(event) {
             logger.info("[$projectId|$pipelineId|$buildId] build finish")
-            indexServiceV2.flushLineNum2DB(buildId)
+            indexService.flushLineNum2DB(buildId)
         }
     }
 
@@ -160,7 +160,7 @@ class LogServiceV2 @Autowired constructor(
         val currentEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val indexAndType = indexServiceV2.getIndexAndType(buildId)
+            val indexAndType = indexService.getIndexAndType(buildId)
             val index = indexAndType.index
             val type = indexAndType.type
             if (keywordsStr == null || keywordsStr.isBlank()) {
@@ -230,7 +230,7 @@ class LogServiceV2 @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val indexAndType = indexServiceV2.getIndexAndType(buildId)
+            val indexAndType = indexService.getIndexAndType(buildId)
             val index = indexAndType.index
             val type = indexAndType.type
 
@@ -303,7 +303,7 @@ class LogServiceV2 @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val indexAndType = indexServiceV2.getIndexAndType(buildId)
+            val indexAndType = indexService.getIndexAndType(buildId)
             val index = indexAndType.index
             val type = indexAndType.type
             if (keywordsStr == null || keywordsStr.isBlank()) {
@@ -369,7 +369,7 @@ class LogServiceV2 @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val indexAndType = indexServiceV2.getIndexAndType(buildId)
+            val indexAndType = indexService.getIndexAndType(buildId)
             val index = indexAndType.index
             val type = indexAndType.type
             if (keywordsStr == null || keywordsStr.isBlank()) {
@@ -409,7 +409,7 @@ class LogServiceV2 @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val indexAndType = indexServiceV2.getIndexAndType(buildId)
+            val indexAndType = indexService.getIndexAndType(buildId)
             val index = indexAndType.index
             val type = indexAndType.type
             val result = doQueryLargeLogsAfterLine(
@@ -438,7 +438,7 @@ class LogServiceV2 @Autowired constructor(
         executeCount: Int?,
         fileName: String?
     ): Response {
-        val indexAndType = indexServiceV2.getIndexAndType(buildId)
+        val indexAndType = indexService.getIndexAndType(buildId)
 
         val query = getQuery(
             buildId = buildId,
@@ -541,7 +541,7 @@ class LogServiceV2 @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val indexAndType = indexServiceV2.getIndexAndType(buildId)
+            val indexAndType = indexService.getIndexAndType(buildId)
             val index = indexAndType.index
             val type = indexAndType.type
             val pageResult: QueryLogs
@@ -629,7 +629,7 @@ class LogServiceV2 @Autowired constructor(
 
     fun reopenIndex(buildId: String): Boolean {
         logger.info("Reopen Index - $buildId")
-        val indexAndType = indexServiceV2.getIndexAndType(buildId)
+        val indexAndType = indexService.getIndexAndType(buildId)
         return openIndex(buildId, indexAndType.index)
     }
 
@@ -659,7 +659,7 @@ class LogServiceV2 @Autowired constructor(
             jobId = jobId,
             executeCount = executeCount
         ))
-        val indexAndType = indexServiceV2.getIndexAndType(buildId)
+        val indexAndType = indexService.getIndexAndType(buildId)
         val index = indexAndType.index
         val type = indexAndType.type
 
@@ -754,7 +754,7 @@ class LogServiceV2 @Autowired constructor(
     ): EndPageQueryLogs {
         val beginTime = System.currentTimeMillis()
 
-        val index = indexServiceV2.getIndexAndType(buildId)
+        val index = indexService.getIndexAndType(buildId)
 
         val query = getQuery(buildId, tag, subTag, jobId, executeCount)
 
@@ -1906,7 +1906,7 @@ class LogServiceV2 @Autowired constructor(
 
     private fun doAddMultiLines(logMessages: List<LogMessageWithLineNo>, buildId: String): Int {
 
-        val indexAndType = indexServiceV2.getIndexAndType(buildId)
+        val indexAndType = indexService.getIndexAndType(buildId)
 
         var lines = 0
         val bulkRequestBuilder = client.prepareBulk(buildId)
@@ -1975,7 +1975,7 @@ class LogServiceV2 @Autowired constructor(
     }
 
     private fun addLineNo(buildId: String, logMessages: List<LogMessage>): List<LogMessageWithLineNo> {
-        val lineNum = indexServiceV2.getAndAddLineNum(buildId, logMessages.size)
+        val lineNum = indexService.getAndAddLineNum(buildId, logMessages.size)
         if (lineNum == null) {
             logger.error("Got null logIndex from indexService, buildId: $buildId")
             return emptyList()
@@ -2005,7 +2005,7 @@ class LogServiceV2 @Autowired constructor(
     }
 
     private fun startLog(buildId: String, force: Boolean = false): Boolean {
-        val indexAndType = indexServiceV2.getIndexAndType(buildId)
+        val indexAndType = indexService.getIndexAndType(buildId)
         return if (force || !checkIndexCreate(buildId, indexAndType.index)) {
             createIndexAndType(buildId, indexAndType.index, indexAndType.type)
             indexCache.put(indexAndType.index, true)

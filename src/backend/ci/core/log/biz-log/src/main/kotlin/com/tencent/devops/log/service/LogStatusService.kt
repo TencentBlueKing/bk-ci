@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.service.v2
+package com.tencent.devops.log.service
 
 import com.tencent.devops.log.dao.LogStatusDao
 import org.jooq.DSLContext
