@@ -26,8 +26,8 @@
 
 package com.tencent.devops.log.dao
 
-import com.tencent.devops.model.log.tables.TLogIndices
-import com.tencent.devops.model.log.tables.records.TLogIndicesRecord
+import com.tencent.devops.model.log.tables.TLogIndex
+import com.tencent.devops.model.log.tables.records.TLogIndexRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -42,7 +42,7 @@ class IndexDao {
         indexName: String,
         enable: Boolean
     ) {
-        with(TLogIndices.T_LOG_INDICES) {
+        with(TLogIndex.T_LOG_INDEX) {
             val now = LocalDateTime.now()
             dslContext.insertInto(this,
                 BUILD_ID,
@@ -67,8 +67,8 @@ class IndexDao {
         }
     }
 
-    fun getBuild(dslContext: DSLContext, buildId: String): TLogIndicesRecord? {
-        with(TLogIndices.T_LOG_INDICES) {
+    fun getBuild(dslContext: DSLContext, buildId: String): TLogIndexRecord? {
+        with(TLogIndex.T_LOG_INDEX) {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .fetchOne()
@@ -87,7 +87,7 @@ class IndexDao {
         buildId: String,
         latestLineNum: Long
     ): Int {
-        with(TLogIndices.T_LOG_INDICES) {
+        with(TLogIndex.T_LOG_INDEX) {
             return dslContext.update(this)
                 .set(LAST_LINE_NUM, latestLineNum)
                 .where(BUILD_ID.eq(buildId))
@@ -98,8 +98,8 @@ class IndexDao {
     fun listOldestBuilds(
         dslContext: DSLContext,
         limit: Int
-    ): Result<TLogIndicesRecord> {
-        with(TLogIndices.T_LOG_INDICES) {
+    ): Result<TLogIndexRecord> {
+        with(TLogIndex.T_LOG_INDEX) {
             return dslContext.selectFrom(this)
                 .orderBy(ID.asc())
                 .limit(limit)
@@ -111,7 +111,7 @@ class IndexDao {
         dslContext: DSLContext,
         buildIds: Set<String>
     ): Int {
-        with(TLogIndices.T_LOG_INDICES) {
+        with(TLogIndex.T_LOG_INDEX) {
             return dslContext.deleteFrom(this)
                 .where(BUILD_ID.`in`(buildIds))
                 .execute()

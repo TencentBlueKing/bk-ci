@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.service.v2
+package com.tencent.devops.log.service
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
@@ -44,14 +44,15 @@ import java.lang.Exception
 import java.util.concurrent.TimeUnit
 
 @Service
-class IndexServiceV2 @Autowired constructor(
+class IndexService @Autowired constructor(
     private val dslContext: DSLContext,
     private val indexDao: IndexDao,
     private val redisOperation: RedisOperation
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(IndexServiceV2::class.java)
+        private val logger = LoggerFactory.getLogger(IndexService::class.java)
+        private const val LOG_INDEX_LOCK = "log:build:enable:lock:key"
         private const val LOG_LINE_NUM = "log:build:line:num:"
         private const val LOG_LINE_NUM_LOCK = "log:build:line:num:distribute:lock:"
         fun getLineNumRedisKey(buildId: String) = LOG_LINE_NUM + buildId
@@ -67,7 +68,7 @@ class IndexServiceV2 @Autowired constructor(
                         val context = DSL.using(configuration)
                         var indexName = indexDao.getIndexName(context, buildId)
                         if (indexName.isNullOrBlank()) {
-                            val redisLock = RedisLock(redisOperation, "log:build:enable:lock:key", 10)
+                            val redisLock = RedisLock(redisOperation, LOG_INDEX_LOCK, 10)
                             redisLock.lock()
                             try {
                                 indexName = indexDao.getIndexName(context, buildId)

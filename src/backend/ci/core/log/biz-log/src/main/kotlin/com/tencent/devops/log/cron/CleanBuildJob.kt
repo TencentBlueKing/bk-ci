@@ -57,18 +57,18 @@ class CleanBuildJob @Autowired constructor(
 
     @Scheduled(cron = "0 0 3 * * ?")
     fun cleanBuilds() {
-        logger.info("Start to clean builds")
+        logger.info("[cleanBuilds] Start to clean builds")
         val redisLock = RedisLock(redisOperation, CLEAN_BUILD_JOB_REDIS_KEY, 20)
         try {
             val lockSuccess = redisLock.tryLock()
             if (!lockSuccess) {
-                logger.info("The other process is processing clean job")
+                logger.info("[cleanBuilds] The other process is processing clean job")
                 return
             }
             clean()
-            logger.info("Finish cleaning the builds")
+            logger.info("[cleanBuilds] Finish cleaning the builds")
         } catch (t: Throwable) {
-            logger.warn("Fail to clean builds", t)
+            logger.warn("[cleanBuilds] Fail to clean builds", t)
         } finally {
             redisLock.unlock()
         }
@@ -86,11 +86,11 @@ class CleanBuildJob @Autowired constructor(
     fun getExpire() = expireBuildInDay
 
     private fun clean() {
-        logger.info("Cleaning the builds")
+        logger.info("[cleanBuilds] Cleaning the builds")
         while (true) {
             val records = indexDao.listOldestBuilds(dslContext, 10)
             if (records.isEmpty()) {
-                logger.info("The record is empty")
+                logger.info("[cleanBuilds] The record is empty")
                 return
             }
 
@@ -99,10 +99,10 @@ class CleanBuildJob @Autowired constructor(
             }.map { it.buildId }.toSet()
 
             if (buildIds.isEmpty()) {
-                logger.info("Done cleaning the builds")
+                logger.info("[cleanBuilds] Done cleaning the builds")
                 return
             }
-            logger.info("The builds[$buildIds] need to be cleaned")
+            logger.info("[cleanBuilds] The builds[$buildIds] need to be cleaned")
             cleanInDB(buildIds)
         }
     }
@@ -116,7 +116,7 @@ class CleanBuildJob @Autowired constructor(
             val indexDaoCnt = indexDao.delete(context, buildIds)
             val statusCnt = logStatusDao.delete(context, buildIds)
             val subTagCnt = logTagDao.delete(context, buildIds)
-            logger.info("[$indexDaoCnt|$statusCnt|$subTagCnt] Delete the builds")
+            logger.info("[cleanBuilds][$indexDaoCnt|$statusCnt|$subTagCnt] Delete the builds")
         }
     }
 
