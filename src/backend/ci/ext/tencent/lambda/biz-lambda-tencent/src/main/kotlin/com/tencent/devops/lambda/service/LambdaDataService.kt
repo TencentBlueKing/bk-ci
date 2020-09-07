@@ -47,6 +47,7 @@ import com.tencent.devops.lambda.dao.LambdaPipelineBuildDao
 import com.tencent.devops.lambda.dao.LambdaPipelineModelDao
 import com.tencent.devops.lambda.dao.LambdaPipelineTemplateDao
 import com.tencent.devops.lambda.pojo.DataPlatJobDetail
+import com.tencent.devops.lambda.pojo.DataPlatTaskDetail
 import com.tencent.devops.lambda.pojo.ProjectOrganize
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -142,63 +143,63 @@ class LambdaDataService @Autowired constructor(
                     }
                 }
             } else {
-//                val atomCode = taskParamMap["atomCode"].toString()
-//
-//                val taskParams = if (taskParamMap["@type"] != "marketBuild" && taskParamMap["@type"] != "marketBuildLess") {
-//                    val inputMap = mutableMapOf<String, String>()
-//                    when {
-//                        taskParamMap["@type"] == "linuxScript" -> {
-//                            inputMap["scriptType"] = taskParamMap["scriptType"] as String
-//                            inputMap["script"] = taskParamMap["script"] as String
-//                            inputMap["continueNoneZero"] = (taskParamMap["continueNoneZero"] as Boolean).toString()
-//                            inputMap["enableArchiveFile"] = (taskParamMap["enableArchiveFile"] as Boolean).toString()
-//                            if (taskParamMap["archiveFile"] != null) {
-//                                inputMap["archiveFile"] = taskParamMap["archiveFile"] as String
-//                            }
-//                        }
-//                        taskParamMap["@type"] == "windowsScript" -> {
-//                            inputMap["scriptType"] = taskParamMap["scriptType"] as String
-//                            inputMap["script"] = taskParamMap["script"] as String
-//                        }
-//                        taskParamMap["@type"] == "manualReviewUserTask" -> {
-//                            inputMap["reviewUsers"] = taskParamMap["reviewUsers"] as String
-//                            if (taskParamMap["params"] != null) {
-//                                inputMap["desc"] = taskParamMap["params"] as String
-//                            }
-//                        }
-//                        else -> {
-//                            inputMap["key"] = "value"
-//                        }
-//                    }
-//
-//                    val dataMap = mutableMapOf("input" to inputMap)
-//                    val taskParamMap1 = mutableMapOf("data" to dataMap)
-//                    JSONObject(taskParamMap1)
-//                } else {
-//                    JSONObject(JsonUtil.toMap(task.taskParams))
-//                }
-//                val dataPlatTaskDetail = DataPlatTaskDetail(
-//                    pipelineId = task.pipelineId,
-//                    buildId = task.buildId,
-//                    projectEnglishName = task.projectId,
-//                    type = "task",
-//                    itemId = task.taskId,
-//                    atomCode = atomCode,
-//                    taskParams = taskParams,
-//                    status = BuildStatus.values()[task.status].statusName,
-//                    errorCode = task.errorCode,
-//                    errorMsg = task.errorMsg,
-//                    startTime = task.startTime?.format(dateTimeFormatter),
-//                    endTime = task.endTime?.format(dateTimeFormatter),
-//                    costTime = if ((endTime - startTime) < 0) 0 else (endTime - startTime),
-//                    starter = task.starter,
-//                    washTime = LocalDateTime.now().format(dateTimeFormatter)
-//                )
-//
-//                logger.info("pushTaskDetail: ${JsonUtil.toJson(dataPlatTaskDetail)}")
-//                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
-                logger.info("pushTaskDetail: ${JsonUtil.toJson(task.intoMap())}")
-                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(task.intoMap()))
+                val atomCode = taskParamMap["atomCode"].toString()
+
+                val taskParams = if (taskParamMap["@type"] != "marketBuild" && taskParamMap["@type"] != "marketBuildLess") {
+                    val inputMap = mutableMapOf<String, String>()
+                    when {
+                        taskParamMap["@type"] == "linuxScript" -> {
+                            inputMap["scriptType"] = taskParamMap["scriptType"] as String
+                            inputMap["script"] = taskParamMap["script"] as String
+                            inputMap["continueNoneZero"] = (taskParamMap["continueNoneZero"] as Boolean).toString()
+                            inputMap["enableArchiveFile"] = (taskParamMap["enableArchiveFile"] as Boolean).toString()
+                            if (taskParamMap["archiveFile"] != null) {
+                                inputMap["archiveFile"] = taskParamMap["archiveFile"] as String
+                            }
+                        }
+                        taskParamMap["@type"] == "windowsScript" -> {
+                            inputMap["scriptType"] = taskParamMap["scriptType"] as String
+                            inputMap["script"] = taskParamMap["script"] as String
+                        }
+                        taskParamMap["@type"] == "manualReviewUserTask" -> {
+                            inputMap["reviewUsers"] = taskParamMap["reviewUsers"] as String
+                            if (taskParamMap["params"] != null) {
+                                inputMap["desc"] = taskParamMap["params"] as String
+                            }
+                        }
+                        else -> {
+                            inputMap["key"] = "value"
+                        }
+                    }
+
+                    val dataMap = mutableMapOf("input" to inputMap)
+                    val taskParamMap1 = mutableMapOf("data" to dataMap)
+                    JSONObject(taskParamMap1)
+                } else {
+                    JSONObject(JsonUtil.toMap(task.taskParams))
+                }
+                val dataPlatTaskDetail = DataPlatTaskDetail(
+                    pipelineId = task.pipelineId,
+                    buildId = task.buildId,
+                    projectEnglishName = task.projectId,
+                    type = "task",
+                    itemId = task.taskId,
+                    atomCode = atomCode,
+                    taskParams = taskParams,
+                    status = BuildStatus.values()[task.status].statusName,
+                    errorCode = task.errorCode,
+                    errorMsg = task.errorMsg,
+                    startTime = task.startTime?.format(dateTimeFormatter),
+                    endTime = task.endTime?.format(dateTimeFormatter),
+                    costTime = if ((endTime - startTime) < 0) 0 else (endTime - startTime),
+                    starter = task.starter,
+                    washTime = LocalDateTime.now().format(dateTimeFormatter)
+                )
+
+                logger.info("pushTaskDetail: ${JsonUtil.toJson(dataPlatTaskDetail)}")
+                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
+                logger.info("pushBuildTask: ${JsonUtil.toJson(task.intoMap())}")
+                kafkaClient.send(KafkaTopic.LANDUN_BUILD_TASK_TOPIC, JsonUtil.toJson(task.intoMap()))
             }
         } catch (e: Exception) {
             logger.error("Push task detail to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
