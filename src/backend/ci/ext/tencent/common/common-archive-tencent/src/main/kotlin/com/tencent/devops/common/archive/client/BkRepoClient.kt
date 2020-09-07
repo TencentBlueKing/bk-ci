@@ -50,7 +50,7 @@ import com.tencent.bkrepo.repository.pojo.repo.UserRepoCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.config.BkRepoConfig
 import com.tencent.devops.common.archive.constant.REPO_CUSTOM
@@ -285,7 +285,7 @@ class BkRepoClient constructor(
     fun uploadFile(userId: String, projectId: String, repoName: String, path: String, inputStream: InputStream, fileSizeLimitInMB: Int = 0) {
         logger.info("uploadFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, fileSizeLimitInMB: $fileSizeLimitInMB")
         if (PathUtil.isFolder(path)) {
-            throw OperationException("invalid path")
+            throw ErrorCodeException(errorCode = INVALID_CUSTOM_ARTIFACTORY_PATH)
         }
         val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/$projectId/$repoName/$path"
         val requestBody = object : RequestBody() {
@@ -303,7 +303,7 @@ class BkRepoClient constructor(
                     bytesCopied += bytes
                     if (bytesCopied > limit) {
                         sink!!.closeQuietly()
-                        throw OperationException("file size exceeds limit(${fileSizeLimitInMB}MB)")
+                        throw ErrorCodeException(errorCode = FILE_SIZE_EXCEEDS_LIMIT, params = arrayOf("${fileSizeLimitInMB}MB"))
                     }
                     bytes = inputStream.read(buffer)
                 }
@@ -926,5 +926,8 @@ class BkRepoClient constructor(
 
         // private const val BK_REPO_UID = "X-BKREPO-UID"
         private const val BK_REPO_OVERRIDE = "X-BKREPO-OVERWRITE"
+
+        const val FILE_SIZE_EXCEEDS_LIMIT = "2102003" // 文件大小不能超过{0}
+        const val INVALID_CUSTOM_ARTIFACTORY_PATH = "2102004" // 非法自定义仓库路径
     }
 }
