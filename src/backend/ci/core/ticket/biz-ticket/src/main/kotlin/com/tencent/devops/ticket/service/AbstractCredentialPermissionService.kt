@@ -36,9 +36,9 @@ import com.tencent.devops.ticket.service.CredentialPermissionService.Companion.C
 import javax.ws.rs.core.Response
 
 abstract class AbstractCredentialPermissionService constructor(
-    private val authResourceApi: AuthResourceApi,
+    val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
-    private val ticketAuthServiceCode: TicketAuthServiceCode
+    val ticketAuthServiceCode: TicketAuthServiceCode
 ) : CredentialPermissionService {
 
     override fun validatePermission(

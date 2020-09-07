@@ -1604,13 +1604,34 @@ class PipelineService @Autowired constructor(
         logger.info("getPipelineByIds|[$projectId]|watch=$watch")
         return pipelines.map {
             SimplePipeline(
-                it.projectId,
-                it.pipelineId,
-                it.pipelineName,
-                it.pipelineDesc,
-                it.taskCount,
-                it.delete,
-                templatePipelineIds.contains(it.pipelineId)
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    pipelineName = it.pipelineName,
+                    pipelineDesc = it.pipelineDesc,
+                    taskCount = it.taskCount,
+                    isDelete = it.delete,
+                    instanceFromTemplate = templatePipelineIds.contains(it.pipelineId)
+            )
+        }
+    }
+
+    fun getPipelineByIds(pipelineIds: Set<String>): List<SimplePipeline> {
+        if (pipelineIds.isEmpty()) return listOf()
+
+        val watch = StopWatch()
+        watch.start("s_r_list_b_ps")
+        val pipelines = pipelineInfoDao.listInfoByPipelineIds(dslContext, pipelineIds)
+        watch.stop()
+        logger.info("getPipelineByIds|[$pipelineIds]|watch=$watch")
+        return pipelines.map {
+            SimplePipeline(
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    pipelineName = it.pipelineName,
+                    pipelineDesc = it.pipelineDesc,
+                    taskCount = it.taskCount,
+                    isDelete = it.delete,
+                    instanceFromTemplate = true
             )
         }
     }

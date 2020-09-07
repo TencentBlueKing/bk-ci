@@ -47,6 +47,9 @@ request.interceptors.response.use(response => {
             message: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('err503')) || 'service is in deployment'
         }
         return Promise.reject(errMsg)
+    } else if (httpStatus === 403) {
+        const errorMsg = { httpStatus, code: httpStatus, message: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('err403')) || 'Permission Deny' }
+        return Promise.reject(errorMsg)
     } else if ((typeof status !== 'undefined' && status !== 0) || (typeof result !== 'undefined' && !result)) {
         const errorMsg = { httpStatus, message, code: code || status }
         return Promise.reject(errorMsg)

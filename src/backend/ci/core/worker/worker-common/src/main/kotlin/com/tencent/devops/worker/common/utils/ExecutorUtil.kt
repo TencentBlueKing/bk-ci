@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.utils
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.DefaultExecutor
@@ -38,6 +39,8 @@ import java.io.File
 
 object ExecutorUtil {
     private val executor = DefaultExecutor()
+
+    private val threadLocal = ThreadLocal<String>()
 
     fun runCommand(command: String, maskCommand: String, workDir: File? = null): Int {
         val outputStream = object : LogOutputStream() {
@@ -73,5 +76,22 @@ object ExecutorUtil {
         }
         LoggerService.addNormalLine("Finish the command, exitValue=$exitValue")
         return exitValue
+    }
+
+    private fun setThreadLocal() {
+        val randomNum = UUIDUtil.generate()
+        threadLocal.set(randomNum)
+    }
+
+    fun getThreadLocal(): String {
+        val value = threadLocal.get()
+        if (value == null) {
+            setThreadLocal()
+        }
+        return threadLocal.get()
+    }
+
+    fun removeThreadLocal() {
+        threadLocal.remove()
     }
 }

@@ -30,4 +30,13 @@ interface ServiceAuthProjectResource {
         @QueryParam("offset")
         offset: Int
     ): Result<Page<ProjectVO>>
+
+    @GET
+    @Path("/get")
+    @ApiOperation("获取数据")
+    fun getByIds(
+        @ApiParam("")
+        @QueryParam("ids")
+        ids: Set<String>
+    ): Result<List<ProjectVO>>
 }

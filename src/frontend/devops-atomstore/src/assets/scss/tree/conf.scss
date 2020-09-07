@@ -1,0 +1,94 @@
+/*!
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+@charset "utf-8";
+
+// 字体
+$globalFontFamily: "Microsoft YaHei", Helvetica, Arial, sans-serif !default;
+
+// 字体路径
+$fontPath: 'fonts' !default;
+
+$imagePath: 'images' !default;
+
+// 基础颜色
+$defaultColor: #ffffff !default; //默认
+$primaryColor: #3c96ff !default; //主要
+$infoColor: #88c3ff !default; //信息
+$successColor: #30d878 !default; //成功
+$warningColor: #ffb400 !default; //警告
+$dangerColor: #ff5656 !default; //危险
+
+// 基础颜色-鼠标移上
+$defaultHoverColor: #fafafa !default; //默认
+$primaryHoverColor: #0082ff !default; //主要
+$infoHoverColor: #7ab9fa !default; //信息
+$successHoverColor: #00c873 !default; //成功
+$warningHoverColor: #ff9600 !default; //警告
+$dangerHoverColor: #f72239 !default; //危险
+
+// 基础颜色-激活
+$defaultActiveColor: #eee !default; //默认
+$primaryActiveColor: #0978e2 !default; //主要
+$infoActiveColor: #6eb5fe !default; //信息
+$successActiveColor: #00ae64 !default; //成功
+$warningActiveColor: #e38601 !default; //警告
+$dangerActiveColor: #cb2537 !default; //危险
+
+// 基础颜色-相应谈色
+$defaultLightColor: #fff !default; //默认
+$primaryLightColor: #e1f3ff !default; //主要
+$infoLightColor: #6eb5fe !default; //信息
+$successLightColor: #d5fde5 !default; //成功
+$warningLightColor: #fff3da !default; //警告
+$dangerLightColor: #ffe0e0 !default; //危险
+
+// 文案
+$fnFamily: 'Microsoft Yahei' !default; //字体
+$fnNormalSize: 14px !default; //正常尺寸
+$fnSmallSize: 12px !default; //小尺寸
+$fnLargeSize: 16px !default; //大尺寸
+$fnMainColor: #737987 !default; //主要颜色
+$fnMinorColor: #c3cdd7 !default; //次要颜色 用于plaeholder等
+
+//边框
+$borderColor: #c3cdd7 !default; //边框色
+$borderLightColor: #e6e6e6 !default;
+$borderInlineColor: #dde4eb !default;
+$formBorderColor: #c3cdd7 !default; //表单输入框色
+$formBorderFocusColor: #3c96ff !default; //表单输入框激活色
+
+//其它
+$defaultBackgroundColor: #fafafa !default;
+$mainBorderColor: #ccc !default;
+$subBorderColor: #ddd !default;
+$scrollbarColor: #dde4eb !default; //滚动条背景色
+
+//层级管理
+$dropdownMenuZIndex: 50 !default; //下拉菜单层
+$selectorZIndex: 100 !default; //下拉选框层
+$dateZIndex: 200 !default; //日期选框层
+$tooltipZIndex: 500 !default; //文字提示层
+$toolboxZIndex: 700 !default; //确认提示层
+$loadingZIndex: 1000 !default; //加载层
+$dialogZIndex: 1500 !default; //对话框层
+$messageZIndex: 2000 !default; //消息提示层
+$sideSliderZIndex: 1500 !default; //侧弹层
+$dialogZIndex: 2000 !default; //对话框层
+$messageZIndex: 2500 !default; //消息提示层
