@@ -28,6 +28,7 @@ package com.tencent.devops.lambda.service
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.ErrorInfo
@@ -40,6 +41,16 @@ import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
 import com.tencent.devops.lambda.dao.LambdaBuildContainerDao
 import com.tencent.devops.lambda.dao.LambdaBuildTaskDao
@@ -53,6 +64,10 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecor
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.pojo.PipelineBuildMaterial
+import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
@@ -60,6 +75,7 @@ import org.json.simple.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
@@ -87,7 +103,8 @@ class LambdaDataService @Autowired constructor(
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Fail to get the pipeline detail model")
             return
         }
-        pushBuildHistory(historyRecord)
+        val history = genBuildHistory(historyRecord, BuildStatus.values(), System.currentTimeMillis())
+        pushBuildHistory(history)
         pushBuildDetail(detailModel)
     }
 
@@ -206,12 +223,12 @@ class LambdaDataService @Autowired constructor(
         }
     }
 
-    private fun pushBuildHistory(historyRecord: TPipelineBuildHistoryRecord) {
+    private fun pushBuildHistory(history: BuildHistory) {
         try {
-            logger.info("pushBuildDetail: ${JsonUtil.toJson(historyRecord.intoMap())}")
-            kafkaClient.send(KafkaTopic.LANDUN_BUILD_HISTORY_TOPIC, JsonUtil.toJson(historyRecord.intoMap()))
+            logger.info("pushBuildHistory: ${JsonUtil.toJson(history)}")
+            kafkaClient.send(KafkaTopic.LANDUN_BUILD_HISTORY_TOPIC, JsonUtil.toJson(history))
         } catch (e: Exception) {
-            logger.error("Push build history to kafka error, buildId: ${historyRecord.buildId}", e)
+            logger.error("Push build history to kafka error, buildId: ${history.id}", e)
         }
     }
 
@@ -308,29 +325,104 @@ class LambdaDataService @Autowired constructor(
             }
         )
 
-    private fun convert(t: TPipelineBuildHistoryRecord?): BuildInfo? {
-        return if (t == null) {
-            null
-        } else {
-            BuildInfo(
-                projectId = t.projectId,
-                pipelineId = t.pipelineId,
-                buildId = t.buildId,
-                version = t.version,
-                buildNum = t.buildNum,
-                trigger = t.trigger,
-                status = BuildStatus.values()[t.status],
-                startUser = t.startUser,
-                queueTime = t.queueTime?.timestampmilli() ?: 0L,
-                startTime = t.startTime?.timestampmilli() ?: 0L,
-                endTime = t.endTime?.timestampmilli() ?: 0L,
-                taskCount = t.taskCount,
-                firstTaskId = t.firstTaskId,
-                parentBuildId = t.parentBuildId,
-                parentTaskId = t.parentTaskId,
-                channelCode = ChannelCode.valueOf(t.channel),
-                errorInfoList = if (t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo) as List<ErrorInfo> else null
+    private fun genBuildHistory(
+        tPipelineBuildHistoryRecord: TPipelineBuildHistoryRecord,
+        buildStatus: Array<BuildStatus>,
+        currentTimestamp: Long
+    ): BuildHistory {
+        return with(tPipelineBuildHistoryRecord) {
+            val totalTime = if (startTime == null || endTime == null) {
+                0
+            } else {
+                Duration.between(startTime, endTime).toMillis()
+            }
+            BuildHistory(
+                id = buildId,
+                userId = triggerUser ?: startUser,
+                trigger = StartType.toReadableString(trigger, ChannelCode.valueOf(channel)),
+                buildNum = buildNum,
+                pipelineVersion = version,
+                startTime = startTime?.timestampmilli() ?: 0L,
+                endTime = endTime?.timestampmilli(),
+                status = buildStatus[status].name,
+                stageStatus = if (stageStatus != null) {
+                    JsonUtil.getObjectMapper().readValue(stageStatus) as List<BuildStageStatus>
+                } else {
+                    null
+                },
+                deleteReason = "",
+                currentTimestamp = currentTimestamp,
+                material = if (material != null) {
+                    JsonUtil.getObjectMapper().readValue(material) as List<PipelineBuildMaterial>
+                } else {
+                    null
+                },
+                queueTime = queueTime?.timestampmilli(),
+                artifactList = if (artifactInfo != null) {
+                    JsonUtil.getObjectMapper().readValue(artifactInfo) as List<FileInfo>
+                } else {
+                    null
+                },
+                remark = remark,
+                totalTime = totalTime,
+                executeTime = if (executeTime == null || executeTime == 0L) {
+                    if (BuildStatus.isFinish(buildStatus[status])) {
+                        totalTime
+                    } else 0L
+                } else {
+                    executeTime
+                },
+                buildParameters = if (buildParameters != null) {
+                    JsonUtil.getObjectMapper().readValue(buildParameters) as List<BuildParameters>
+                } else {
+                    null
+                },
+                webHookType = webhookType,
+                webhookInfo = if (webhookInfo != null) {
+                    JsonUtil.getObjectMapper().readValue(webhookInfo) as WebhookInfo
+                } else {
+                    null
+                },
+                startType = getStartType(trigger, webhookType),
+                recommendVersion = recommendVersion,
+                retry = isRetry ?: false,
+                errorInfoList = if (errorInfo != null) {
+                    JsonUtil.getObjectMapper().readValue(errorInfo) as List<ErrorInfo>
+                } else {
+                    null
+                }
             )
+        }
+    }
+
+    private fun getStartType(trigger: String, webhookType: String?): String {
+        return when (trigger) {
+            StartType.MANUAL.name -> {
+                ManualTriggerElement.classType
+            }
+            StartType.TIME_TRIGGER.name -> {
+                TimerTriggerElement.classType
+            }
+            StartType.WEB_HOOK.name -> {
+                when (webhookType) {
+                    CodeType.SVN.name -> {
+                        CodeSVNWebHookTriggerElement.classType
+                    }
+                    CodeType.GIT.name -> {
+                        CodeGitWebHookTriggerElement.classType
+                    }
+                    CodeType.GITLAB.name -> {
+                        CodeGitlabWebHookTriggerElement.classType
+                    }
+                    CodeType.GITHUB.name -> {
+                        CodeGithubWebHookTriggerElement.classType
+                    }
+                    else -> RemoteTriggerElement.classType
+                }
+            }
+            else -> { // StartType.SERVICE.name,  StartType.PIPELINE.name, StartType.REMOTE.name
+                RemoteTriggerElement.classType
+            }
         }
     }
 
