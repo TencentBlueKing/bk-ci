@@ -32,6 +32,7 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.ErrorInfo
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -43,6 +44,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -59,11 +61,13 @@ import com.tencent.devops.lambda.dao.LambdaPipelineModelDao
 import com.tencent.devops.lambda.dao.LambdaPipelineTemplateDao
 import com.tencent.devops.lambda.pojo.DataPlatJobDetail
 import com.tencent.devops.lambda.pojo.DataPlatTaskDetail
+import com.tencent.devops.lambda.pojo.LambdaBuildDetail
 import com.tencent.devops.lambda.pojo.ProjectOrganize
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
@@ -103,9 +107,8 @@ class LambdaDataService @Autowired constructor(
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Fail to get the pipeline detail model")
             return
         }
-        val history = genBuildHistory(historyRecord, BuildStatus.values(), System.currentTimeMillis())
-        pushBuildHistory(history)
-        pushBuildDetail(detailModel)
+        pushBuildHistory(genBuildHistory(historyRecord, BuildStatus.values(), System.currentTimeMillis()))
+        pushBuildDetail(genBuildDetail(detailModel))
     }
 
     fun onBuildTaskFinish(event: PipelineBuildTaskFinishBroadCastEvent) {
@@ -215,8 +218,8 @@ class LambdaDataService @Autowired constructor(
 
                 logger.info("pushTaskDetail: ${JsonUtil.toJson(dataPlatTaskDetail)}")
                 kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
-                logger.info("pushBuildTask: ${JsonUtil.toJson(task.intoMap())}")
-                kafkaClient.send(KafkaTopic.LANDUN_BUILD_TASK_TOPIC, JsonUtil.toJson(task.intoMap()))
+                logger.info("pushBuildTask: ${JsonUtil.toJson(genBuildTaskDetail(task))}")
+                kafkaClient.send(KafkaTopic.LANDUN_BUILD_TASK_TOPIC, JsonUtil.toJson(genBuildTaskDetail(task)))
             }
         } catch (e: Exception) {
             logger.error("Push task detail to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
@@ -232,12 +235,12 @@ class LambdaDataService @Autowired constructor(
         }
     }
 
-    private fun pushBuildDetail(buildDetailRecord: TPipelineBuildDetailRecord) {
+    private fun pushBuildDetail(buildDetail: LambdaBuildDetail) {
         try {
-            logger.info("pushBuildDetail: ${JsonUtil.toJson(buildDetailRecord.intoMap())}")
-            kafkaClient.send(KafkaTopic.LANDUN_BUILD_DETAIL_TOPIC, JsonUtil.toJson(buildDetailRecord.intoMap()))
+            logger.info("pushBuildDetail: ${JsonUtil.toJson(buildDetail)}")
+            kafkaClient.send(KafkaTopic.LANDUN_BUILD_DETAIL_TOPIC, JsonUtil.toJson(buildDetail))
         } catch (e: Exception) {
-            logger.error("Push build detail to kafka error, buildId: ${buildDetailRecord.buildId}", e)
+            logger.error("Push build detail to kafka error, buildId: ${buildDetail.buildId}", e)
         }
     }
 
@@ -325,6 +328,21 @@ class LambdaDataService @Autowired constructor(
             }
         )
 
+    private fun genBuildDetail(buildDetailRecord: TPipelineBuildDetailRecord): LambdaBuildDetail {
+        return with(buildDetailRecord) {
+            LambdaBuildDetail(
+                buildId = buildId,
+                buildNum = buildNum,
+                model = model,
+                trigger = trigger,
+                startUser = startUser,
+                startTime = startTime?.timestampmilli() ?: 0L,
+                endTime = endTime?.timestampmilli(),
+                status = status
+            )
+        }
+    }
+
     private fun genBuildHistory(
         tPipelineBuildHistoryRecord: TPipelineBuildHistoryRecord,
         buildStatus: Array<BuildStatus>,
@@ -391,6 +409,37 @@ class LambdaDataService @Autowired constructor(
                 } else {
                     null
                 }
+            )
+        }
+    }
+
+    private fun genBuildTaskDetail(tPipelineBuildTaskRecord: TPipelineBuildTaskRecord): PipelineBuildTask {
+        return with(tPipelineBuildTaskRecord) {
+            PipelineBuildTask(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                stageId = stageId,
+                containerId = containerId,
+                containerHashId = containerHashId,
+                containerType = containerType,
+                taskSeq = taskSeq,
+                taskId = taskId,
+                taskName = taskName,
+                taskType = taskType,
+                taskAtom = taskAtom,
+                status = BuildStatus.values()[status],
+                taskParams = JsonUtil.toMutableMapSkipEmpty(taskParams),
+                additionalOptions = JsonUtil.toOrNull(additionalOptions, ElementAdditionalOptions::class.java),
+                executeCount = executeCount ?: 1,
+                starter = starter,
+                approver = approver,
+                subBuildId = subBuildId,
+                startTime = startTime,
+                endTime = endTime,
+                errorType = if (errorType == null) null else ErrorType.values()[errorType],
+                errorCode = errorCode,
+                errorMsg = errorMsg
             )
         }
     }
