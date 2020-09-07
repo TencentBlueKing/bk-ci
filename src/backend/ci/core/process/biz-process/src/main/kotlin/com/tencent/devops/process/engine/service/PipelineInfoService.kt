@@ -55,17 +55,30 @@ class PipelineInfoService @Autowired constructor(
             logger.warn("$userId|$projectId|$pipelineId uploadPipeline permission check fail")
             throw RuntimeException()
         }
-        val newPipelineId = pipelineId ?: pipelineIdGenerator.getNextId()
-        pipelineService.saveAll(
+        val newPipelineId = pipelineService.createPipeline(
                 userId = userId,
                 projectId = projectId,
-                pipelineId = newPipelineId,
                 model = pipelineModelAndSetting.model,
-                setting = pipelineModelAndSetting.setting,
-                checkPermission = true,
-                checkTemplate = false,
                 channelCode = ChannelCode.BS
         )
+        val oldSetting = pipelineModelAndSetting.setting
+        val newSetting = PipelineSetting(
+                projectId = projectId,
+                pipelineId = newPipelineId,
+                pipelineName = oldSetting.pipelineName,
+                desc = oldSetting.desc,
+                successSubscription = oldSetting.successSubscription,
+                failSubscription = oldSetting.failSubscription,
+                maxPipelineResNum = oldSetting.maxPipelineResNum,
+                maxQueueSize = oldSetting.maxQueueSize,
+                hasPermission = oldSetting.hasPermission,
+                labels = oldSetting.labels,
+                runLockType = oldSetting.runLockType,
+                waitQueueTimeMinute = oldSetting.waitQueueTimeMinute
+        )
+        // setting pipeline需替换成新流水线的
+        pipelineSettingService.saveSetting(userId, newSetting, false)
+
         return newPipelineId
     }
 

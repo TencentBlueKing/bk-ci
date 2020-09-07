@@ -482,7 +482,7 @@ interface UserPipelineResource {
 
     @ApiOperation("导入流水线模板")
     @POST
-    @Path("{pipelineId}/projects/{projectId}/upload")
+    @Path("/projects/{projectId}/upload")
     fun uploadPipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -493,7 +493,7 @@ interface UserPipelineResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "流水线Id", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String?
     ): Result<String?>
 }
