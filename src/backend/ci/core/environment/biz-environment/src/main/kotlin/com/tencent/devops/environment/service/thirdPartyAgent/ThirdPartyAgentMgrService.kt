@@ -537,7 +537,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     status = NodeStatus.valueOf(node.nodeStatus!!).statusName,
                     hostname = agent.hostname,
                     ip = agent.ip,
-                    displayName = node.displayName
+                    displayName = node.displayName,
+                    detailName = "${node.displayName} , ${agent.ip} , ${agent.hostname} , ${node.osName}"
                 )
             )
         }
