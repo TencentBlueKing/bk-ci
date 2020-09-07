@@ -28,9 +28,11 @@ package com.tencent.devops.artifactory.resources.user
 
 import com.tencent.devops.artifactory.api.user.UserFileResource
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoCustomDirService
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
@@ -77,7 +79,7 @@ class UserInnerFileResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid projectId")
         }
         if (path.isBlank()) {
-            throw ParamBlankException("Invalid path")
+            throw ErrorCodeException(errorCode = BkRepoClient.INVALID_CUSTOM_ARTIFACTORY_PATH)
         }
     }
 
