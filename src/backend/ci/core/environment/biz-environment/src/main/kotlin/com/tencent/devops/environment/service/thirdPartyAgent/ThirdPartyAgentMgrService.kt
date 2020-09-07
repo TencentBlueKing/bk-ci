@@ -538,7 +538,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     hostname = agent.hostname,
                     ip = agent.ip,
                     displayName = node.displayName,
-                    detailName = "${node.displayName} , ${agent.ip} , ${agent.hostname} , ${node.osName}"
+                    detailName = "${node.displayName}/${agent.ip}/${agent.hostname}/${node.osName}"
                 )
             )
         }
