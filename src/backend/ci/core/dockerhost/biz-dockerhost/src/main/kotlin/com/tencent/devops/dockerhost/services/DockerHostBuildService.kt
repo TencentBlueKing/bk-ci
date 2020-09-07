@@ -353,6 +353,23 @@ class DockerHostBuildService(
             httpLongDockerCli.removeContainerCmd(dockerBuildInfo.containerId).exec()
         } catch (e: Throwable) {
             logger.error("Stop the container failed, containerId: ${dockerBuildInfo.containerId}, error msg: $e")
+        } finally {
+            // 找出所有跟本次构建关联的dockerRun启动容器并停止容器
+            val containerInfo = httpLongDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
+            for (container in containerInfo) {
+                try {
+                    logger.info("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId} containerName: ${container.names[0]}")
+                    val inspectContainerResponse = httpLongDockerCli.inspectContainerCmd(container.id).exec()
+                    val containerName = inspectContainerResponse.name
+
+                    if (containerName.startsWith("dockerRun-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}")) {
+                        logger.info("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId} stop dockerRun container, containerId: ${container.id}")
+                        httpLongDockerCli.stopContainerCmd(container.id).withTimeout(15).exec()
+                    }
+                } catch (e: Exception) {
+                    logger.error("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId} Stop dockerRun container failed, containerId: ${container.id}", e)
+                }
+            }
         }
     }
 
