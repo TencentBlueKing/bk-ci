@@ -89,11 +89,11 @@ config = {
     pool_size = 10         -- 连接池的大小
   },
   oauth = {  -- 对接蓝鲸权限中心才需要的配置
-    ip = "__BK_IAM_IP1__",
+    ip = "__BK_SSM_IP0__",
     env = "__IAM_ENV__",
-    port = "__BK_IAM_PORT__",
-    host = "__BK_IAM_HOST__",
-    url = "__IAM_TOKEN_URL__",     -- 接口路径
+    port = "__BK_SSM_PORT__",
+    host = "__BK_SSM_HOST__",
+    url = "__BK_SSM_TOKEN_URL__",     -- 接口路径
     app_code = "__APP_CODE__",
     app_secret = "__APP_TOKEN__",
   },
