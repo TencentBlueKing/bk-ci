@@ -34,11 +34,11 @@ public class Constants {
     public static final int MAX_RETRY_UPLOAD_COUNT = 3;
     public static final String EXCHANGE_FILE = "exchange_file";
     public static final String QUEUE_FILE = "queue_file";
-    public static final String ROUTE_FILE = "file";
+    public static final String ROUTE_FILE = "file";//    /**
+
 
     public static final String DEFAULT_CONTENT_TYPE = "text/plain";
 
-//    /**
 //     * 第1次重试上传的时间延迟，秒
 //     */
 //    public static final int SECONDS_RETRY_DELAY_1ST = 10 * 60;
