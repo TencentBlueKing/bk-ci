@@ -1,6 +1,7 @@
 package com.tencent.devops.process.engine.atom.plugin
 
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.plugin.codecc.CodeccUtils
@@ -26,7 +27,7 @@ object MarketBuildUtils {
 
     fun beforeDelete(inputMap: Map<*, *>, atomCode: String, param: BeforeDeleteParam, codeccApi: CodeccApi) {
         marketBuildExecutorService.execute {
-            val bkAtomHookUrl = inputMap.getOrDefault(BK_ATOM_HOOK_URL, getDefaultHookUrl(atomCode, codeccApi)) as String
+            val bkAtomHookUrl = inputMap.getOrDefault(BK_ATOM_HOOK_URL, getDefaultHookUrl(atomCode, codeccApi, param.channelCode)) as String
             val bkAtomHookUrlMethod = inputMap.getOrDefault(BK_ATOM_HOOK_URL_METHOD, getDefaultHookMethod(atomCode)) as String
             val bkAtomHookBody = inputMap.getOrDefault(BK_ATOM_HOOK_URL_BODY, "") as String
             logger.info("start to execute atom delete hook url: $atomCode, $bkAtomHookUrlMethod, $bkAtomHookUrl, $param")
@@ -65,8 +66,9 @@ object MarketBuildUtils {
         }
     }
 
-    private fun getDefaultHookUrl(atomCode: String, codeccApi: CodeccApi): String {
+    private fun getDefaultHookUrl(atomCode: String, codeccApi: CodeccApi, channelCode: ChannelCode): String {
         if (!CodeccUtils.isCodeccNewAtom(atomCode)) return ""
+        if (channelCode != ChannelCode.BS) return ""
         return codeccApi.getExecUrl("/ms/task/api/service/task/pipeline/stop?userName={userId}&pipelineId={$PIPELINE_ID}")
     }
 
