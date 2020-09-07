@@ -464,4 +464,36 @@ interface UserPipelineResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<PipelineStageTag>>
+
+    @ApiOperation("导出流水线模板")
+    @GET
+    @Path("{pipelineId}/projects/{projectId}/export")
+    fun exportPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线Id", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<PipelineModelAndSetting?>
+
+    @ApiOperation("导入流水线模板")
+    @POST
+    @Path("/projects/{projectId}/upload")
+    fun uploadPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目Id", required = true)
+        pipelineInfo: PipelineModelAndSetting,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线Id", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String?
+    ): Result<String?>
 }
