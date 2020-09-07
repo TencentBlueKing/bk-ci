@@ -32,8 +32,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.dao.v2.IndexDaoV2
-import com.tencent.devops.log.dao.v2.LogStatusDaoV2
-import com.tencent.devops.log.model.v2.IndexAndType
+import com.tencent.devops.log.model.IndexAndType
 import com.tencent.devops.log.util.IndexNameUtils
 import com.tencent.devops.log.util.IndexNameUtils.getTypeByIndex
 import org.jooq.DSLContext
@@ -48,7 +47,6 @@ import java.util.concurrent.TimeUnit
 class IndexServiceV2 @Autowired constructor(
     private val dslContext: DSLContext,
     private val indexDaoV2: IndexDaoV2,
-    private val logStatusDaoV2: LogStatusDaoV2,
     private val redisOperation: RedisOperation
 ) {
 
@@ -146,19 +144,6 @@ class IndexServiceV2 @Autowired constructor(
         val updateCount = indexDaoV2.updateLastLineNum(dslContext, buildId, latestLineNum)
         if (updateCount != 1) {
             logger.warn("[$buildId|$latestLineNum] Fail to update the build latest line num")
-        }
-    }
-
-    fun finish(buildId: String, tag: String?, jobId: String?, executeCount: Int?, finish: Boolean) {
-        logStatusDaoV2.finish(dslContext, buildId, tag, jobId, executeCount, finish)
-    }
-
-    fun isFinish(buildId: String, tag: String?, jobId: String?, executeCount: Int?): Boolean {
-        return if (jobId.isNullOrBlank()) {
-            logStatusDaoV2.isFinish(dslContext, buildId, tag, executeCount)
-        } else {
-            val logStatusList = logStatusDaoV2.listFinish(dslContext, buildId, tag, executeCount)
-            logStatusList?.firstOrNull { it.jobId == jobId && it.tag.startsWith("stopVM-") }?.finished == true
         }
     }
 }

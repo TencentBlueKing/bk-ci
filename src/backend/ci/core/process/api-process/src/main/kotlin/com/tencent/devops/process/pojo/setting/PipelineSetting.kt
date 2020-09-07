@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.pojo.setting
 
+import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
 
@@ -41,5 +43,6 @@ data class PipelineSetting(
     val waitQueueTimeMinute: Int = PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT,
     val maxQueueSize: Int = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
     val hasPermission: Boolean? = null,
-    val maxPipelineResNum: Int = 50 // 保存流水线编排的最大个数
+    val maxPipelineResNum: Int = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
+    val maxConRunningQueueSize: Int = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT // MULTIPLE类型时，并发构建数量限制
 )

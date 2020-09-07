@@ -3,11 +3,13 @@
     "pipelineName": "Name",
     "labelManage": "Labels",
     "label": "Label",
+    "close": "Close",
     "viewManage": "Views",
     "templateManage": "Templates",
     "pluginManage": "Installed plugins",
     "err503": "Serve is being deployed, please wait",
     "err400": "An error occurred in internal service",
+    "err403": "Permission Deny",
     "nullDataErr": "Nothing returned from back-end port",
     "more": "More",
     "true": "True",
@@ -24,6 +26,8 @@
     "load": "Load",
     "edit": "Edit",
     "terminate": "Cancel",
+    "userError": "USER",
+    "systemError": "SYSTEM",
     "retry": "Retry",
     "resume": "Continue",
     "uninstall": "Uninstall",
@@ -402,6 +406,7 @@
         "canChooseList": "Selectable list",
         "choosedList": "Chosen list",
         "triggerType": "Trigger type",
+        "errorCode": "Error Code",
         "remark": "Remark",
         "noBuildRecords": " No build records",
         "noPermissionTips": " You don't have permission to view this pipeline. Please switch to another project or apply for permission",
@@ -794,5 +799,8 @@
         "noEnv": "Agentless",
         "afterPreStageSuccess": "after Pre Stage done",
         "manualRunStage": "Manual"
-    }
+    },
+    "permissionRefreshtitle": "Permission Request form has been submitted",
+    "permissionRefreshSubtitle": "Please fill in the permission request form in the permission center and refresh the page after submission",
+    "permissionRefreshOkText": "Reload Page"
 }

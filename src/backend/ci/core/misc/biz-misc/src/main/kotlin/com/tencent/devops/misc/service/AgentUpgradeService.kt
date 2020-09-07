@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.environment.agent.AgentGrayUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.misc.dao.ThirdPartyAgentDao
+import com.tencent.devops.misc.dao.EnvironmentThirdPartyAgentDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,7 +41,7 @@ class AgentUpgradeService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val agentGrayUtils: AgentGrayUtils,
     private val dslContext: DSLContext,
-    private val thirdPartyAgentDao: ThirdPartyAgentDao,
+    private val environmentThirdPartyAgentDao: EnvironmentThirdPartyAgentDao,
     private val gray: Gray
 ) {
 
@@ -62,7 +62,7 @@ class AgentUpgradeService @Autowired constructor(
 
         val grayProjects = gray.grayProjectSet(redisOperation)
         val gray = gray.isGray()
-        val importOKAgents = thirdPartyAgentDao.listByStatus(dslContext, setOf(AgentStatus.IMPORT_OK)).toSet()
+        val importOKAgents = environmentThirdPartyAgentDao.listByStatus(dslContext, setOf(AgentStatus.IMPORT_OK)).toSet()
         val needUpgradeAgents = importOKAgents.filter {
             when {
                 it.version.isNullOrBlank() || it.masterVersion.isNullOrBlank() -> false

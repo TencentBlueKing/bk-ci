@@ -89,10 +89,10 @@ config = {
     pool_size = 10         -- 连接池的大小
   },
   oauth = {  -- 对接蓝鲸权限中心才需要的配置
-    ip = "__IAM_IP0__",
+    ip = "__BK_IAM_IP1__",
     env = "__IAM_ENV__",
-    port = "__IAM_HTTP_PORT__",
-    host = "__IAM_HOST__",
+    port = "__BK_IAM_PORT__",
+    host = "__BK_IAM_HOST__",
     url = "__IAM_TOKEN_URL__",     -- 接口路径
     app_code = "__APP_CODE__",
     app_secret = "__APP_TOKEN__",
@@ -114,10 +114,9 @@ config = {
   },
   bkrepo = {
     domain = "__BKREPO_HOST__"
-  },
-  jwtPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n__BKCI_RSA_PRIVATE_KEY__\n-----END RSA PRIVATE KEY-----" 
+  }
 }
   
 require("init_common")
 require("ip_whitelist")
-  
+

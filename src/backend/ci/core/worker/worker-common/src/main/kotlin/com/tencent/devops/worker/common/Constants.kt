@@ -37,3 +37,7 @@ const val CLEAN_WORKSPACE = "DEVOPS_CLEAN_WORKSPACE"
 const val JAVA_PATH_ENV = "bk_java_path"
 
 const val NODEJS_PATH_ENV = "bk_nodejs_path"
+
+const val LOG_SUBTAG_FLAG = "##subTag##"
+
+const val LOG_SUBTAG_FINISH_FLAG = "##subTagFinish##"

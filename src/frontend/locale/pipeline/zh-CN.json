@@ -3,16 +3,20 @@
     "pipelineName": "流水线名称",
     "labelManage": "标签管理",
     "label": "标签",
+    "close": "关闭",
     "viewManage": "视图管理",
     "templateManage": "模板管理",
     "pluginManage": "插件管理",
     "err503": "服务正在部署中，请稍候...",
     "err400": "内部服务异常",
+    "err403": "无权限",
     "nullDataErr": "后端接口数据返回为空",
     "more": "更多",
     "true": "是",
     "false": "否",
     "cancel": "取消",
+    "userError": "用户问题",
+    "systemError": "系统问题",
     "create": "创建",
     "add": "新建",
     "copy": "复制",
@@ -403,6 +407,7 @@
         "canChooseList": "可选列表",
         "choosedList": "已选列表",
         "triggerType": "触发方式",
+        "errorCode": "错误码",
         "remark": "备注",
         "noBuildRecords": "构建记录为空",
         "noPermissionTips": "你没有查看该流水线的权限，请切换项目或申请相应权限",
@@ -795,5 +800,8 @@
         "noEnv": "无编译环境",
         "afterPreStageSuccess": "前一个Stage成功时运行",
         "manualRunStage": "手动触发运行"       
-    }
+    },
+    "permissionRefreshtitle": "权限申请单已提交",
+    "permissionRefreshSubtitle": "请在权限中心填写权限申请单，提交完成后再刷新该页面",
+    "permissionRefreshOkText": "刷新页面"
 }
