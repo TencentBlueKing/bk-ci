@@ -75,7 +75,7 @@ class MQPipelineDeleteListener @Autowired constructor(
             allVersionModel.forEach {
                 try {
                     val model = objectMapper.readValue(it, Model::class.java)
-                    val param = BeforeDeleteParam(userId, projectId, pipelineId)
+                    val param = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId)
                     modelCheckPlugin.beforeDeleteElementInExistsModel(model, null, param)
                 } catch (ignored: Exception) {
                     logger.warn("Fail to get the pipeline($pipelineId) definition of project($projectId)", ignored)

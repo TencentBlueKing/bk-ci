@@ -5,11 +5,12 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.plugin.codecc.CodeccUtils
-import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import java.util.concurrent.Executors
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.HttpMethod
 
 object MarketBuildUtils {
@@ -23,7 +24,13 @@ object MarketBuildUtils {
 
     private val logger = LoggerFactory.getLogger(MarketBuildUtils::class.java)
 
-    private val marketBuildExecutorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())!!
+    private val marketBuildExecutorService = ThreadPoolExecutor(
+        Runtime.getRuntime().availableProcessors(),
+        Runtime.getRuntime().availableProcessors(),
+        0L,
+        TimeUnit.MILLISECONDS,
+        ArrayBlockingQueue(16000)
+    )
 
     fun beforeDelete(inputMap: Map<*, *>, atomCode: String, param: BeforeDeleteParam, codeccApi: CodeccApi) {
         marketBuildExecutorService.execute {
@@ -49,11 +56,11 @@ object MarketBuildUtils {
             }
             HttpMethod.POST -> {
                 val requestBody = resolveParam(bkAtomHookBody, param)
-                request = request.post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
+                request = request.post(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             }
             HttpMethod.PUT -> {
                 val requestBody = resolveParam(bkAtomHookBody, param)
-                request = request.put(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
+                request = request.put(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             }
             HttpMethod.DELETE -> {
                 request = request.delete()

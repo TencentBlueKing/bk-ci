@@ -275,7 +275,7 @@ class PipelineService @Autowired constructor(
                 throw ignored
             } finally {
                 if (!success) {
-                    val param = BeforeDeleteParam(userId, projectId, pipelineId ?: "", channelCode)
+                    val param = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId ?: "", channelCode = channelCode)
                     modelCheckPlugin.beforeDeleteElementInExistsModel(model, null, param)
                 }
             }
@@ -549,7 +549,7 @@ class PipelineService @Autowired constructor(
                     defaultMessage = "指定要复制的流水线-模型不存在"
                 )
             // 对已经存在的模型做处理
-            val param = BeforeDeleteParam(userId, projectId, pipelineId, channelCode)
+            val param = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId, channelCode = channelCode)
             modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
 
             pipelineRepositoryService.deployPipeline(model, projectId, pipelineId, userId, channelCode, false)
