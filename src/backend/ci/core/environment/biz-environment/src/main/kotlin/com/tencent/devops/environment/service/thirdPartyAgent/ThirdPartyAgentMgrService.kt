@@ -971,7 +971,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             }
             if (newHeartbeatInfo.slaveVersion != agentRecord.version) {
                 var slaveVersion = newHeartbeatInfo.slaveVersion
-                if(slaveVersion.length > 128) {
+                if (slaveVersion.length > 128) {
                     slaveVersion = slaveVersion.substring(127)
                 }
                 agentRecord.version = slaveVersion
