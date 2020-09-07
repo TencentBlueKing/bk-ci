@@ -604,6 +604,7 @@
                     message = this.$t('store.删除成功')
                     theme = 'success'
                     this.requestList()
+                    this.handleDeleteCancel()
                 } catch (err) {
                     message = message = err.message ? err.message : err
                     theme = 'error'
