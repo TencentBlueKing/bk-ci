@@ -124,6 +124,8 @@ object Runner {
                                 )
                                 logger.info("Finish completing the task ($buildTask)")
                             } catch (e: Throwable) {
+                                failed = true
+
                                 var message: String
                                 var errorType: String
                                 var errorCode: Int
