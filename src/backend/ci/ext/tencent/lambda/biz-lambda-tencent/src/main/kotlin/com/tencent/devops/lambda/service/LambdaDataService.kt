@@ -66,7 +66,6 @@ import com.tencent.devops.lambda.pojo.ProjectOrganize
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
-import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildStageStatus
