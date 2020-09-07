@@ -24,88 +24,73 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.dao.v2
+package com.tencent.devops.log.dao
 
-import com.tencent.devops.model.log.tables.TLogIndicesV2
-import com.tencent.devops.model.log.tables.records.TLogIndicesV2Record
+import com.tencent.devops.model.log.tables.TLogStatus
+import com.tencent.devops.model.log.tables.records.TLogStatusRecord
 import org.jooq.DSLContext
 import org.jooq.Result
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import sun.misc.MessageUtils.where
-import java.time.LocalDateTime
 
 @Repository
-class IndexDaoV2 {
+class LogStatusDao {
 
-    fun create(
+    fun finish(
         dslContext: DSLContext,
         buildId: String,
-        indexName: String,
-        enable: Boolean
+        tag: String?,
+        subTags: String?,
+        jobId: String?,
+        executeCount: Int?,
+        finish: Boolean
     ) {
-        with(TLogIndicesV2.T_LOG_INDICES_V2) {
-            val now = LocalDateTime.now()
-            dslContext.insertInto(this,
+        with(TLogStatus.T_LOG_STATUS) {
+            dslContext.insertInto(
+                this,
                 BUILD_ID,
-                INDEX_NAME,
-                LAST_LINE_NUM,
-                CREATED_TIME,
-                UPDATED_TIME,
-                ENABLE,
-                USE_CLUSTER
-                )
-                .values(
-                    buildId,
-                    indexName,
-                    1,
-                    now,
-                    now,
-                    enable,
-                    true
-                )
-                .onDuplicateKeyIgnore()
-                .execute()
+                TAG,
+                SUB_TAG,
+                JOB_ID,
+                EXECUTE_COUNT,
+                FINISHED
+            ).values(
+                buildId,
+                tag ?: "",
+                subTags ?: "",
+                jobId,
+                executeCount ?: 1,
+                finish
+            ).onDuplicateKeyUpdate().set(FINISHED, finish).execute()
         }
     }
 
-    fun getBuild(dslContext: DSLContext, buildId: String): TLogIndicesV2Record? {
-        with(TLogIndicesV2.T_LOG_INDICES_V2) {
-            return dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .fetchOne()
-        }
-    }
-
-    fun getIndexName(
-        dslContext: DSLContext,
-        buildId: String
-    ): String? {
-        return getBuild(dslContext, buildId)?.indexName
-    }
-
-    fun updateLastLineNum(
+    fun listFinish(
         dslContext: DSLContext,
         buildId: String,
-        latestLineNum: Long
-    ): Int {
-        with(TLogIndicesV2.T_LOG_INDICES_V2) {
-            return dslContext.update(this)
-                .set(LAST_LINE_NUM, latestLineNum)
-                .where(BUILD_ID.eq(buildId))
-                .execute()
+        executeCount: Int?
+    ): Result<TLogStatusRecord>? {
+        with(TLogStatus.T_LOG_STATUS) {
+            return dslContext.selectFrom(this)
+                    .where(BUILD_ID.eq(buildId))
+                    .and(EXECUTE_COUNT.eq(executeCount ?: 1))
+                    .fetch()
         }
     }
 
-    fun listOldestBuilds(
+    fun isFinish(
         dslContext: DSLContext,
-        limit: Int
-    ): Result<TLogIndicesV2Record> {
-        with(TLogIndicesV2.T_LOG_INDICES_V2) {
+        buildId: String,
+        tag: String?,
+        subTags: String?,
+        executeCount: Int?
+    ): Boolean {
+        with(TLogStatus.T_LOG_STATUS) {
             return dslContext.selectFrom(this)
-                .orderBy(ID.asc())
-                .limit(limit)
-                .fetch()
+                .where(BUILD_ID.eq(buildId))
+                .and(TAG.eq(tag ?: ""))
+                .and(SUB_TAG.eq(subTags ?: ""))
+                .and(EXECUTE_COUNT.eq(executeCount ?: 1))
+                .fetchOne()?.finished ?: false
         }
     }
 
@@ -113,14 +98,10 @@ class IndexDaoV2 {
         dslContext: DSLContext,
         buildIds: Set<String>
     ): Int {
-        with(TLogIndicesV2.T_LOG_INDICES_V2) {
+        with(TLogStatus.T_LOG_STATUS) {
             return dslContext.deleteFrom(this)
                 .where(BUILD_ID.`in`(buildIds))
                 .execute()
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(IndexDaoV2::class.java)
     }
 }
