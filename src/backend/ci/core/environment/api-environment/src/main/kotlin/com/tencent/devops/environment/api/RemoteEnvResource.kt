@@ -34,4 +34,13 @@ interface RemoteEnvResource {
         @QueryParam("pageSize")
         pageSize: Int? = null
     ): Result<Page<EnvWithPermission>>
+
+    @ApiOperation("获取环境信息")
+    @GET
+    @Path("/infos")
+    fun getEnvInfos(
+        @ApiParam("节点Id串", required = true)
+        @QueryParam("envIds")
+        envIds: List<String>
+    ): Result<List<EnvWithPermission>>
 }

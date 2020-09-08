@@ -606,6 +606,7 @@ class BkRepoClient constructor(
         )
     }
 
+    @Deprecated(message = "do not use")
     fun listFileByRegex(
         userId: String,
         projectId: String,

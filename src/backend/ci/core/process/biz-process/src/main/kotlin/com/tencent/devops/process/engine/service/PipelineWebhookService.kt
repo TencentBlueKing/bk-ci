@@ -124,9 +124,9 @@ class PipelineWebhookService @Autowired constructor(
                     null
                 }
             }
-            pipelineWebhook.projectName = projectName
             logger.info("add $projectName webhook to [$pipelineWebhook]")
             if (!projectName.isNullOrBlank()) {
+                pipelineWebhook.projectName = getProjectName(projectName!!)
                 saveOrUpdateWebhook(pipelineWebhook)
                 webhookRedisUtils.addWebhook2Redis(
                     pipelineWebhook.pipelineId,

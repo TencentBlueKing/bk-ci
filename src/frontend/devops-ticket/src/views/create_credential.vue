@@ -228,8 +228,12 @@
                 this.iframeUtil.toggleProjectMenu(true)
             },
             goToApplyPerm () {
-                const url = `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=credential`
-                window.open(url, '_blank')
+                // const url = `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=credential`
+                // window.open(url, '_blank')
+                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.credential, [{
+                    id: this.projectId,
+                    type: this.$permissionResourceTypeMap.PROJECT
+                }])
             },
             cancel () {
                 this.$router.push({
