@@ -25,14 +25,10 @@
  */
 package com.tencent.devops.lambda.service
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
-import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.pojo.ErrorInfo
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -43,8 +39,6 @@ import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -61,16 +55,12 @@ import com.tencent.devops.lambda.dao.LambdaPipelineModelDao
 import com.tencent.devops.lambda.dao.LambdaPipelineTemplateDao
 import com.tencent.devops.lambda.pojo.DataPlatJobDetail
 import com.tencent.devops.lambda.pojo.DataPlatTaskDetail
-import com.tencent.devops.lambda.pojo.LambdaBuildDetail
+import com.tencent.devops.lambda.pojo.DataPlatBuildDetail
 import com.tencent.devops.lambda.pojo.ProjectOrganize
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
-import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.process.pojo.BuildStageStatus
-import com.tencent.devops.process.pojo.PipelineBuildMaterial
-import com.tencent.devops.process.pojo.code.WebhookInfo
+import com.tencent.devops.lambda.pojo.DataPlatBuildHistory
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
@@ -122,7 +112,6 @@ class LambdaDataService @Autowired constructor(
 
     private fun pushTaskDetail(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord) {
         try {
-            val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             val startTime = task.startTime?.timestampmilli() ?: 0
             val endTime = task.endTime?.timestampmilli() ?: 0
             val taskAtom = task.taskAtom
@@ -217,15 +206,13 @@ class LambdaDataService @Autowired constructor(
 
                 logger.info("pushTaskDetail: ${JsonUtil.toJson(dataPlatTaskDetail)}")
                 kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
-                logger.info("pushBuildTask: ${JsonUtil.toJson(genBuildTaskDetail(task))}")
-                kafkaClient.send(KafkaTopic.LANDUN_BUILD_TASK_TOPIC, JsonUtil.toJson(genBuildTaskDetail(task)))
             }
         } catch (e: Exception) {
             logger.error("Push task detail to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
         }
     }
 
-    private fun pushBuildHistory(history: BuildHistory) {
+    private fun pushBuildHistory(history: DataPlatBuildHistory) {
         try {
             logger.info("pushBuildHistory: ${JsonUtil.toJson(history)}")
             kafkaClient.send(KafkaTopic.LANDUN_BUILD_HISTORY_TOPIC, JsonUtil.toJson(history))
@@ -234,7 +221,7 @@ class LambdaDataService @Autowired constructor(
         }
     }
 
-    private fun pushBuildDetail(buildDetail: LambdaBuildDetail) {
+    private fun pushBuildDetail(buildDetail: DataPlatBuildDetail) {
         try {
             logger.info("pushBuildDetail: ${JsonUtil.toJson(buildDetail)}")
             kafkaClient.send(KafkaTopic.LANDUN_BUILD_DETAIL_TOPIC, JsonUtil.toJson(buildDetail))
@@ -282,7 +269,6 @@ class LambdaDataService @Autowired constructor(
     }
 
     private fun sendGitTask2Kafka(task: TPipelineBuildTaskRecord, gitUrl: String) {
-        val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val taskMap = task.intoMap()
         taskMap["GIT_URL"] = gitUrl
         taskMap["WASH_TIME"] = LocalDateTime.now().format(dateTimeFormatter)
@@ -327,16 +313,17 @@ class LambdaDataService @Autowired constructor(
             }
         )
 
-    private fun genBuildDetail(buildDetailRecord: TPipelineBuildDetailRecord): LambdaBuildDetail {
+    private fun genBuildDetail(buildDetailRecord: TPipelineBuildDetailRecord): DataPlatBuildDetail {
         return with(buildDetailRecord) {
-            LambdaBuildDetail(
+            DataPlatBuildDetail(
+                washTime = LocalDateTime.now().format(dateTimeFormatter),
                 buildId = buildId,
                 buildNum = buildNum,
                 model = model,
                 trigger = trigger,
                 startUser = startUser,
-                startTime = startTime?.timestampmilli() ?: 0L,
-                endTime = endTime?.timestampmilli(),
+                startTime = startTime.format(dateTimeFormatter),
+                endTime = endTime.format(dateTimeFormatter),
                 status = status
             )
         }
@@ -346,40 +333,29 @@ class LambdaDataService @Autowired constructor(
         tPipelineBuildHistoryRecord: TPipelineBuildHistoryRecord,
         buildStatus: Array<BuildStatus>,
         currentTimestamp: Long
-    ): BuildHistory {
+    ): DataPlatBuildHistory {
         return with(tPipelineBuildHistoryRecord) {
             val totalTime = if (startTime == null || endTime == null) {
                 0
             } else {
                 Duration.between(startTime, endTime).toMillis()
             }
-            BuildHistory(
+            DataPlatBuildHistory(
+                washTime = LocalDateTime.now().format(dateTimeFormatter),
                 id = buildId,
                 userId = triggerUser ?: startUser,
                 trigger = StartType.toReadableString(trigger, ChannelCode.valueOf(channel)),
                 buildNum = buildNum,
                 pipelineVersion = version,
-                startTime = startTime?.timestampmilli() ?: 0L,
-                endTime = endTime?.timestampmilli(),
+                startTime = startTime.format(dateTimeFormatter),
+                endTime = endTime.format(dateTimeFormatter),
                 status = buildStatus[status].name,
-                stageStatus = if (stageStatus != null) {
-                    JsonUtil.getObjectMapper().readValue(stageStatus) as List<BuildStageStatus>
-                } else {
-                    null
-                },
+                stageStatus = stageStatus,
                 deleteReason = "",
                 currentTimestamp = currentTimestamp,
-                material = if (material != null) {
-                    JsonUtil.getObjectMapper().readValue(material) as List<PipelineBuildMaterial>
-                } else {
-                    null
-                },
+                material = material,
                 queueTime = queueTime?.timestampmilli(),
-                artifactList = if (artifactInfo != null) {
-                    JsonUtil.getObjectMapper().readValue(artifactInfo) as List<FileInfo>
-                } else {
-                    null
-                },
+                artifactList = artifactInfo,
                 remark = remark,
                 totalTime = totalTime,
                 executeTime = if (executeTime == null || executeTime == 0L) {
@@ -389,56 +365,13 @@ class LambdaDataService @Autowired constructor(
                 } else {
                     executeTime
                 },
-                buildParameters = if (buildParameters != null) {
-                    JsonUtil.getObjectMapper().readValue(buildParameters) as List<BuildParameters>
-                } else {
-                    null
-                },
+                buildParameters = buildParameters,
                 webHookType = webhookType,
-                webhookInfo = if (webhookInfo != null) {
-                    JsonUtil.getObjectMapper().readValue(webhookInfo) as WebhookInfo
-                } else {
-                    null
-                },
+                webhookInfo = webhookInfo,
                 startType = getStartType(trigger, webhookType),
                 recommendVersion = recommendVersion,
                 retry = isRetry ?: false,
-                errorInfoList = if (errorInfo != null) {
-                    JsonUtil.getObjectMapper().readValue(errorInfo) as List<ErrorInfo>
-                } else {
-                    null
-                }
-            )
-        }
-    }
-
-    private fun genBuildTaskDetail(tPipelineBuildTaskRecord: TPipelineBuildTaskRecord): PipelineBuildTask {
-        return with(tPipelineBuildTaskRecord) {
-            PipelineBuildTask(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                stageId = stageId,
-                containerId = containerId,
-                containerHashId = containerHashId,
-                containerType = containerType,
-                taskSeq = taskSeq,
-                taskId = taskId,
-                taskName = taskName,
-                taskType = taskType,
-                taskAtom = taskAtom,
-                status = BuildStatus.values()[status],
-                taskParams = JsonUtil.toMutableMapSkipEmpty(taskParams),
-                additionalOptions = JsonUtil.toOrNull(additionalOptions, ElementAdditionalOptions::class.java),
-                executeCount = executeCount ?: 1,
-                starter = starter,
-                approver = approver,
-                subBuildId = subBuildId,
-                startTime = startTime,
-                endTime = endTime,
-                errorType = if (errorType == null) null else ErrorType.values()[errorType],
-                errorCode = errorCode,
-                errorMsg = errorMsg
+                errorInfoList = errorInfo
             )
         }
     }
@@ -476,5 +409,6 @@ class LambdaDataService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(LambdaDataService::class.java)
+        private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     }
 }
