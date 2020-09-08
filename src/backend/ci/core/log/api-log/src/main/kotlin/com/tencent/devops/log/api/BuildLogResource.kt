@@ -105,6 +105,9 @@ interface BuildLogResource {
         @ApiParam("分辨插件的tag，默认填对应插件id", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("插件内的分类的子tag，默认为空", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("job id或者container的34位id", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -126,6 +129,9 @@ interface BuildLogResource {
         @ApiParam("分辨插件的tag，默认填对应插件id", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("插件内的分类的子tag，默认为空", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("job id或者container的34位id", required = false)
         @QueryParam("jobId")
         jobId: String?,

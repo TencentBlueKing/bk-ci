@@ -1,5 +1,5 @@
 <template>
-    <div :class="{ &quot;soda-accordion&quot;: true, &quot;is-danger&quot;: isError, &quot;showCheckbox&quot;: showCheckbox }">
+    <div :class="{ 'devops-accordion': true, 'is-danger': isError, 'showCheckbox': showCheckbox }">
         <header :active="isShow" @click="toggleContent" class="header">
             <i class="devops-icon icon-angle-right" />
             <slot name="header"></slot>
@@ -72,7 +72,7 @@
 
 <style lang="scss">
     @import '../../../scss/conf.scss';
-    .soda-accordion {
+    .devops-accordion {
         border: 1px solid $borderColor;
         border-radius: 3px;
         margin: 12px 0;

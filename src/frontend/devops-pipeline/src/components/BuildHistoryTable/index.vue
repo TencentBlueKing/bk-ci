@@ -481,13 +481,10 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    if (err.code === 403) { // 没有权限执行
-                        // this.setPermissionConfig(`流水线：${this.curPipeline.pipelineName}`, '执行')
-                        return
-                    } else {
-                        message = err.message || err
-                        theme = 'error'
-                    }
+                    this.handleError(err, this.$permissionActionMap.execute, {
+                        id: this.$route.params.pipelineId,
+                        name: this.$route.params.pipelineId
+                    }, this.$route.params.projectId)
                 } finally {
                     delete this.retryingMap[buildId]
                     message && this.$showTips({

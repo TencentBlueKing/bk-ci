@@ -52,6 +52,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
@@ -190,6 +191,13 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         vmSeqId = vmSeqId,
                         buildStatus = BuildStatus.SUCCEED
                     )
+                    // 告诉dispatch agent启动了，为JOB计时服务
+                    try {
+                        client.get(ServiceJobQuotaBusinessResource::class).addRunningAgent(buildInfo.projectId, buildId, vmSeqId)
+                    } catch (e: Throwable) {
+                        logger.error("Add running agent to job quota failed.")
+                    }
+
                     return BuildVariables(
                         buildId = buildId,
                         vmSeqId = vmSeqId,
@@ -379,8 +387,13 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         ) {
                             if (!ControlUtils.checkCustomVariableSkip(buildId = buildId, additionalOptions = additionalOptions, variables = allVariable)) {
                                 queueTasks.add(task)
-                            } else {
-                                pipelineBuildDetailService.taskSkip(buildId, task.taskId)
+                                /* #2400 此处逻辑有问题不能在这直接设置Model为跳过：
+                                    举例按顺序 Job2 下的Task1 和 Task2 插件都未开始执行， Task2设置为指定条件执行，但条件依赖于Task1生成。
+                                    1. Task1正常执行并结束情况下，但执行过程中影响展示上在Task1执行时会提前将Task2设置为跳过，存在误导，但Task1结束后，只要条件满足，Task2仍然会执行
+                                    2. Task1失败了，导致条件没设置成功，构建结束。 此时进行重试，Task1重试成功了，条件也设置成功了， 但Task2仍然为SKIP（在启动时就决定了）
+                                 */
+//                            } else {
+//                                pipelineBuildDetailService.taskSkip(buildId, task.taskId)
                             }
                         }
                     }
@@ -647,7 +660,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             val task = pipelineRuntimeService.getBuildTask(buildId, taskId)!!
             val buildStatus = if (result.success) BuildStatus.SUCCEED else BuildStatus.FAILED
             val taskParams = task.taskParams
-            val atomCode = taskParams["atomCode"] as String? ?: ""
+            val atomCode = task.atomCode ?: taskParams["atomCode"] as String? ?: task.taskType
             measureService?.postTaskData(
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
