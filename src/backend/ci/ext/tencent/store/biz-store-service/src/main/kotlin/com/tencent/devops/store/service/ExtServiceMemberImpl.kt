@@ -60,7 +60,13 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
         if (null == serviceRecord) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(serviceCode))
         }
-        if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, storeType.type.toByte())) {
+        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = serviceCode,
+                storeType = storeType.type.toByte()
+            )
+        ) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val repositoryHashId = serviceRecord.repositoryHashId
