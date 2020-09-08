@@ -1108,7 +1108,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     ) {
         logger.info("the validateExtServiceReq userId is :$userId,info[$extensionInfo]")
         val serviceCode = extensionInfo.serviceCode
-        if (!Pattern.matches("^[a-z]([-a-z-0-9]*[a-z-0-9])?\$", serviceCode)) {
+        if (!Pattern.matches("^[a-z]([-a-z-0-9]*[a-z|0-9])?\$", serviceCode)) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(serviceCode))
         }
         // 判断扩展服务是否存在
