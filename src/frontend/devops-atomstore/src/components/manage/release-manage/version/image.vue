@@ -110,7 +110,7 @@
         computed: {
             disableAddVersion () {
                 const firstVersion = this.versionList[0] || {}
-                return this.upgradeStatus.indexOf(firstVersion.atomStatus) === -1
+                return this.upgradeStatus.indexOf(firstVersion.imageStatus) === -1
             }
         },
 
