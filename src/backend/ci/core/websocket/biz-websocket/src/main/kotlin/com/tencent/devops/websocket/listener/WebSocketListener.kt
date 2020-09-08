@@ -28,6 +28,7 @@ package com.tencent.devops.websocket.listener
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.websocket.dispatch.message.PipelineMessage
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
@@ -52,6 +53,11 @@ class WebSocketListener @Autowired constructor(
         try {
             val watch = StopWatch()
             val startTime = System.currentTimeMillis()
+
+            if (isPushTimeOut(event)) {
+                return
+            }
+
             val sessionList = event.sessionList
             if (sessionList != null && sessionList.isNotEmpty()) {
                 watch.start("addLongSession")
@@ -88,5 +94,16 @@ class WebSocketListener @Autowired constructor(
         }
         logger.warn("page[$page] sessionCount more ${websocketService.getMaxSession()}, sessionList[$sessionList]")
         websocketService.createLongSessionPage(page)
+    }
+
+    // 流水线消息默认2分钟推送超时，不做推送
+    private fun isPushTimeOut(event: SendMessage): Boolean {
+        if (event is PipelineMessage) {
+            if (System.currentTimeMillis() - event.startTime > 2 * 60 * 1000) {
+                logger.warn("websocket Consumers get message timeout | ${event.userId} | ${event.page} | ${event.buildId} | ${event.startTime}")
+                return true
+            }
+        }
+        return false
     }
 }

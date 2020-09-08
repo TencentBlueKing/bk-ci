@@ -27,6 +27,7 @@
 dependencies {
     compile project(":core:common:common-auth:common-auth-mock")
     compile project(":core:common:common-auth:common-auth-blueking")
+    compile project(":core:common:common-auth:common-auth-v3")
     compile project(":core:quality:biz-quality")
 }
 
