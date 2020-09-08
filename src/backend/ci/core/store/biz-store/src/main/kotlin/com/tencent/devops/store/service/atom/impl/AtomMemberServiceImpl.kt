@@ -61,7 +61,13 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         if (null == atomRecord) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
         }
-        if (!storeMemberDao.isStoreAdmin(dslContext, userId, atomCode, storeType.type.toByte())) {
+        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = storeType.type.toByte()
+            )
+        ) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val repositoryHashId = atomRecord.repositoryHashId
