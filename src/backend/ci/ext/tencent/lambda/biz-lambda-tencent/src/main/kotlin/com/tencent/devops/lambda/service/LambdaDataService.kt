@@ -151,8 +151,6 @@ class LambdaDataService @Autowired constructor(
                     }
                 }
             } else {
-                val atomCode = taskParamMap["atomCode"].toString()
-
                 val taskParams = if (taskParamMap["@type"] != "marketBuild" && taskParamMap["@type"] != "marketBuildLess") {
                     val inputMap = mutableMapOf<String, String>()
                     when {
@@ -192,7 +190,7 @@ class LambdaDataService @Autowired constructor(
                     projectEnglishName = task.projectId,
                     type = "task",
                     itemId = task.taskId,
-                    atomCode = atomCode,
+                    atomCode = task.atomCode,
                     taskParams = taskParams,
                     status = BuildStatus.values()[task.status].statusName,
                     errorCode = task.errorCode,
