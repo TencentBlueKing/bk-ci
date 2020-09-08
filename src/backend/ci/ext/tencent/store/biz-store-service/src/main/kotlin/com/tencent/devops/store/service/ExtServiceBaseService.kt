@@ -1105,37 +1105,22 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     private fun validateAddServiceReq(
         userId: String,
         extensionInfo: InitExtServiceDTO
-    ): Result<Boolean> {
+    ) {
         logger.info("the validateExtServiceReq userId is :$userId,info[$extensionInfo]")
         val serviceCode = extensionInfo.serviceCode
         if (!Pattern.matches("^[a-z]([-a-z-0-9]*[a-z-0-9])?\$", serviceCode)) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(serviceCode),
-                false
-            )
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(serviceCode))
         }
         // 判断扩展服务是否存在
         val codeInfo = extServiceDao.getServiceLatestByCode(dslContext, serviceCode)
         if (codeInfo != null) {
-            // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(serviceCode),
-                false
-            )
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_EXIST, params = arrayOf(serviceCode))
         }
         val serviceName = extensionInfo.serviceName
         val nameInfo = extServiceDao.getServiceByName(dslContext, serviceName)
         if (nameInfo != null) {
-            // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(serviceName),
-                false
-            )
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_EXIST, params = arrayOf(serviceName))
         }
-        return Result(true)
     }
 
     private fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem> {
