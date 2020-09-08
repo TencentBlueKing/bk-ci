@@ -22,16 +22,19 @@ export const regionList = ['TC', 'SH', 'BJ', 'GZ', 'CD', 'GY', 'GROUP']
 export const codelibConfig = {
     svn: {
         credentialTypes: 'SSH_PRIVATEKEY',
+        addType: 'SSH_PRIVATEKEY',
         label: 'SVN',
         typeName: 'codeSvn'
     },
     svn_http: {
         credentialTypes: 'USERNAME_PASSWORD',
+        addType: 'USERNAME_PASSWORD',
         label: 'SVN',
         typeName: 'codeSvn'
     },
     git: {
         credentialTypes: 'TOKEN_SSH_PRIVATEKEY',
+        addType: 'TOKEN_SSH_PRIVATEKEY',
         label: 'Git',
         typeName: 'codeGit'
     },
@@ -41,21 +44,25 @@ export const codelibConfig = {
     },
     git_http: {
         credentialTypes: 'TOKEN_USERNAME_PASSWORD',
+        addType: 'TOKEN_USERNAME_PASSWORD',
         label: 'Git',
         typeName: 'codeGit'
     },
     gitlab: {
         credentialTypes: 'ACCESSTOKEN',
+        addType: 'ACCESSTOKEN',
         label: 'Gitlab',
         typeName: 'codeGitLab'
     },
     tgit: {
         credentialTypes: 'TOKEN_SSH_PRIVATEKEY',
+        addType: 'TOKEN_SSH_PRIVATEKEY',
         label: 'TGit',
         typeName: 'codeTGit'
     },
     tgit_https: {
-        credentialTypes: 'USERNAME_PASSWORD',
+        credentialTypes: 'USERNAME_PASSWORD,TOKEN_USERNAME_PASSWORD',
+        addType: 'TOKEN_USERNAME_PASSWORD',
         label: 'TGit',
         typeName: 'codeTGit'
     }
