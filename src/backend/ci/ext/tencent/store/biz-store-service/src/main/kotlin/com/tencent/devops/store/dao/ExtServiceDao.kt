@@ -323,9 +323,9 @@ class ExtServiceDao {
         }
     }
 
-    fun getServiceByName(dslContext: DSLContext, serviceName: String): Result<TExtensionServiceRecord>? {
+    fun getServiceByName(dslContext: DSLContext, serviceName: String): TExtensionServiceRecord? {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
-            dslContext.selectFrom(this).where(SERVICE_NAME.eq(serviceName)).fetch()
+            dslContext.selectFrom(this).where(SERVICE_NAME.eq(serviceName)).fetchOne()
         }
     }
 
