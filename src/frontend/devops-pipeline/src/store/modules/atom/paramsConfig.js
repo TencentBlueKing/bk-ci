@@ -37,6 +37,7 @@ export const DEFAULT_PARAM = {
     [STRING]: {
         id: 'string',
         defaultValue: 'value',
+        defalutValueLabel: 'defaultValue',
         desc: '',
         type: STRING,
         typeDesc: 'string',
@@ -45,6 +46,7 @@ export const DEFAULT_PARAM = {
     [BOOLEAN]: {
         id: 'bool',
         defaultValue: true,
+        defalutValueLabel: 'defaultValue',
         desc: '',
         type: BOOLEAN,
         typeDesc: 'bool',
@@ -53,6 +55,7 @@ export const DEFAULT_PARAM = {
     [ENUM]: {
         id: 'enum',
         defaultValue: '',
+        defalutValueLabel: 'defaultValue',
         desc: '',
         type: ENUM,
         typeDesc: 'enum',
@@ -62,6 +65,7 @@ export const DEFAULT_PARAM = {
     [MULTIPLE]: {
         id: 'multiple',
         defaultValue: '',
+        defalutValueLabel: 'defaultValue',
         desc: '',
         options: [],
         type: MULTIPLE,
@@ -71,6 +75,7 @@ export const DEFAULT_PARAM = {
     [SVN_TAG]: {
         id: 'svntag',
         defaultValue: '',
+        defalutValueLabel: 'defaultValue',
         repoHashId: '',
         relativePath: '',
         desc: '',
@@ -82,6 +87,7 @@ export const DEFAULT_PARAM = {
     [GIT_REF]: {
         id: 'gitref',
         defaultValue: '',
+        defalutValueLabel: 'defaultValue',
         repoHashId: '',
         desc: '',
         options: [],
@@ -92,6 +98,7 @@ export const DEFAULT_PARAM = {
     [CODE_LIB]: {
         id: 'codelib',
         defaultValue: '',
+        defalutValueLabel: 'defaultValue',
         scmType: 'CODE_GIT',
         desc: '',
         options: [],
@@ -102,6 +109,7 @@ export const DEFAULT_PARAM = {
     [CONTAINER_TYPE]: {
         id: 'buildResource',
         defaultValue: '',
+        defalutValueLabel: 'defaultValue',
         containerType: {
             os: 'LINUX',
             buildType: 'DOCKER'
@@ -115,6 +123,7 @@ export const DEFAULT_PARAM = {
     [ARTIFACTORY]: {
         id: 'artifactory',
         defaultValue: '',
+        defalutValueLabel: 'defaultValue',
         desc: '',
         options: [],
         glob: '*',
@@ -126,6 +135,7 @@ export const DEFAULT_PARAM = {
     [SUB_PIPELINE]: {
         id: 'subPipeline',
         defaultValue: '',
+        defalutValueLabel: 'defaultValue',
         desc: '',
         options: [],
         type: SUB_PIPELINE,
@@ -135,6 +145,7 @@ export const DEFAULT_PARAM = {
     [CUSTOM_FILE]: {
         id: 'file',
         defaultValue: '',
+        defalutValueLabel: 'fileDefaultValueLabel',
         desc: '',
         type: CUSTOM_FILE,
         typeDesc: 'custom_file',
@@ -146,6 +157,10 @@ export const PARAM_LIST = Object.keys(DEFAULT_PARAM).map(key => ({
     id: key,
     name: DEFAULT_PARAM[key].typeDesc
 }))
+
+export function getParamsDefaultValuelabel (type) {
+    return DEFAULT_PARAM[type] && DEFAULT_PARAM[type].defalutValueLabel ? DEFAULT_PARAM[type].defalutValueLabel : 'defaultValue'
+}
 
 export const ParamComponentMap = {
     [STRING]: 'VuexInput',

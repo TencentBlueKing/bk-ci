@@ -1,9 +1,8 @@
 <template>
     <bk-upload
         theme="button"
-        tip="最大上传10MB的文件"
+        :tip="$t('sizeLimit', [size])"
         name="file"
-        accept="*"
         :delay-time="500"
         :handle-res-code="handleUploadRes"
         :with-credentials="true"
@@ -12,7 +11,7 @@
         :url="uploadAcrtifactUrl"
         @on-success="handleUploadDone"
         @on-error="handleUploadDone"
-        :size="100"
+        :size="10"
     >
     </bk-upload>
 </template>
@@ -20,7 +19,11 @@
 <script>
     export default {
         props: {
-            filePath: String
+            filePath: String,
+            size: {
+                type: Number,
+                default: 10
+            }
         },
         computed: {
             uploadAcrtifactUrl () {
