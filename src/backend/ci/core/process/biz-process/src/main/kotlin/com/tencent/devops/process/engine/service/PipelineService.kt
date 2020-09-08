@@ -696,6 +696,7 @@ class PipelineService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
                 defaultMessage = "指定要复制的流水线-模型不存在"
             )
+
         try {
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             val buildNo = triggerContainer.buildNo
