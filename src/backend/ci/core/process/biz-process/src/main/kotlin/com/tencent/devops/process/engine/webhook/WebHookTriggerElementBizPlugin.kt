@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.plugin.ElementBizPlugin
@@ -98,5 +99,15 @@ class CodeSVNWebHookTriggerElementBizPlugin constructor(
 ) : WebHookTriggerElementBizPlugin<CodeSVNWebHookTriggerElement>(pipelineWebhookService) {
     override fun elementClass(): Class<CodeSVNWebHookTriggerElement> {
         return CodeSVNWebHookTriggerElement::class.java
+    }
+}
+
+@ElementBiz
+class CodeTGitWebHookTriggerElementBizPlugin constructor(
+    private val pipelineWebhookService: PipelineWebhookService
+) : WebHookTriggerElementBizPlugin<CodeTGitWebHookTriggerElement>(pipelineWebhookService) {
+
+    override fun elementClass(): Class<CodeTGitWebHookTriggerElement> {
+        return CodeTGitWebHookTriggerElement::class.java
     }
 }
