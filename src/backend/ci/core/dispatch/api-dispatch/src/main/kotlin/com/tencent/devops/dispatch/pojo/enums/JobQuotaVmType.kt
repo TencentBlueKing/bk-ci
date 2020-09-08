@@ -24,23 +24,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:plugin:codecc-plugin:common-codecc")
-    compile project(":core:process:api-process")
-    compile project(":core:project:api-project")
-    compile project(":core:dispatch:api-dispatch")
-    compile project(":core:dispatch:model-dispatch")
-    compile project(":core:notify:api-notify")
-    compile project(":core:monitoring:api-monitoring")
-//    compile project(":core:store:api-store-image")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-redis")
-    compile project(":core:common:common-log")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile "com.vmware:vijava"
-    compile "org.json:json"
-    compile "org.apache.commons:commons-exec"
+package com.tencent.devops.dispatch.pojo.enums
+
+import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+
+enum class JobQuotaVmType(val displayName: String) {
+    DOCKER_VM("Docker on VM"),
+    DOCKER_DEVCLOUD("Docker on DevCloud"),
+    MACOS_DEVCLOUD("MacOS on DevCloud"),
+    OTHER("私有构建机或集群"),
+    AGENTLESS("无编译环境"),
+    ALL("所有类型");
+
+    companion object {
+        fun parse(vmType: String): JobQuotaVmType? {
+            values().forEach {
+                if (it.name == vmType) {
+                    return it
+                }
+            }
+            return null
+        }
+
+        fun parse(dispatchType: DispatchType): JobQuotaVmType? {
+            when (dispatchType) {
+                is DockerDispatchType -> {
+                    return DOCKER_VM
+                }
+                // 其他类型暂时不限制
+                else -> {
+                    return null
+                }
+            }
+        }
+    }
 }

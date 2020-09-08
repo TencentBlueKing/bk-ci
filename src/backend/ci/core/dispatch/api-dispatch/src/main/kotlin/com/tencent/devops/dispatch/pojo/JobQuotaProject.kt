@@ -24,23 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:plugin:codecc-plugin:common-codecc")
-    compile project(":core:process:api-process")
-    compile project(":core:project:api-project")
-    compile project(":core:dispatch:api-dispatch")
-    compile project(":core:dispatch:model-dispatch")
-    compile project(":core:notify:api-notify")
-    compile project(":core:monitoring:api-monitoring")
-//    compile project(":core:store:api-store-image")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-redis")
-    compile project(":core:common:common-log")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile "com.vmware:vijava"
-    compile "org.json:json"
-    compile "org.apache.commons:commons-exec"
-}
+package com.tencent.devops.dispatch.pojo
+
+import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("项目的JOB配额")
+data class JobQuotaProject(
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("构建机类型", required = true)
+    val vmType: JobQuotaVmType,
+    @ApiModelProperty("项目最大并发JOB数， 默认50", required = false)
+    val runningJobMax: Int,
+    @ApiModelProperty("项目单JOB最大执行时间，默认8小时", required = false)
+    val runningTimeJobMax: Int,
+    @ApiModelProperty("项目所有JOB最大执行时间，默认40小时/月", required = false)
+    val runningTimeProjectMax: Int,
+//    @ApiModelProperty("工蜂CI最大并发JOB数量，默认10个", required = false)
+//    val runningJobMaxGitCi: Int,
+//    @ApiModelProperty("工蜂CI单JOB最大执行时间，默认8小时", required = false)
+//    val runningTimeJobMaxGitCi: Int,
+//    @ApiModelProperty("工蜂CI所有JOB单项目最大执行时间，默认40小时/月", required = false)
+//    val runningTimeJobMaxProjectGitCi: Int,
+    @ApiModelProperty("创建时间", required = false)
+    val createdTime: Long?,
+    @ApiModelProperty("修改时间", required = false)
+    val updatedTime: Long?,
+    @ApiModelProperty("操作人", required = false)
+    val operator: String?
+)
