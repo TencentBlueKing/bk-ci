@@ -1,0 +1,98 @@
+spring:
+  application:
+    name: sign
+    desc: DevOps Sign Service
+    version: 4.0.0
+    packageName: com.tencent.devops.sign
+  datasource:
+    url: jdbc:mysql://10.125.48.80:3306/devops_sign?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: tig4php
+    password: tig4php
+  redis:
+    database: 2
+    host: 10.125.48.80
+    password: itdev@db
+    port: 6379
+
+
+server:
+  port: 21950
+
+bkci:
+  sign:
+    tmpDir: "/data/enterprise_sign_tmp/"
+    wildcardMobileProvisionId: "16722ba2-6fd1-45ef-a009-f94b20bc0d4f"
+    keyChainGroups: "com.tencent.wsj.keystoregroup;com.stove.globaldata"
+  security:
+    public-key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4uHyAmMyhLZt5WaEj4Of\nyKMd9UC2IFWGW2jhIM72b44pf3au6jygZWyLCXOvBQPu0JKcPeeyY9UvQHTYtgot\n8h8tT88lXCdaiyq0RlYwQ9WaSiT/Vh/UOy/BWWcZG7gJtRQxyDMuOr9R5T1nNyK+\nwIvCdLV/LY57h0blp7+8v0aOmNTCfyuslNckDi2BUjmZ1oU4DOk1Ge4eCyXXmdCg\nNwcWFDbRFPUPFxRhNoZ2+SJCB3k5N4F05vGNV3avQm2Xvoze3VrUdLhP+pgMe9V9\nKkNm8GtJb0ffN6HJuJ6EJYUTnSJ3menMbNLu20Vvs9BQAwJje/A99z7q/PcEBZog\nawIDAQAB"
+    private-key: "MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDi4fICYzKEtm3l\nZoSPg5/Iox31QLYgVYZbaOEgzvZvjil/dq7qPKBlbIsJc68FA+7Qkpw957Jj1S9A\ndNi2Ci3yHy1PzyVcJ1qLKrRGVjBD1ZpKJP9WH9Q7L8FZZxkbuAm1FDHIMy46v1Hl\nPWc3Ir7Ai8J0tX8tjnuHRuWnv7y/Ro6Y1MJ/K6yU1yQOLYFSOZnWhTgM6TUZ7h4L\nJdeZ0KA3BxYUNtEU9Q8XFGE2hnb5IkIHeTk3gXTm8Y1Xdq9CbZe+jN7dWtR0uE/6\nmAx71X0qQ2bwa0lvR983ocm4noQlhROdIneZ6cxs0u7bRW+z0FADAmN78D33Pur8\n9wQFmiBrAgMBAAECggEBAJMSamHX0eCrrVN+gEHTzhkue/YGi8ksB5trwjwVTTSF\nUCs7USmwQT1d/kcTQYobwYxc7YFHl6EVibrbw7tFoAEK6sGIgyxYql36QcAykLj4\nVzrm/snieh4f19NPfLw2Mby7KYYgf0A/0yOqCSV5lXOVZWloWde7PCI1+BsktIK8\nTo3lVCTKBVtYhHalm5W4TzLncsKe2UQN3k17d50YAQeG+3G1v42MlJCvVDmTQvFz\neGZHqZQvBK0gaSnkcLL/IahJPvZxlJRHI3EzJVMPSwIoGzV0hG223JktGqSrRm7Z\n1ZA0UVWVmTnmdT4wufDb4A+osiEMLbey4b7V0Pl0UukCgYEA+EnFDC6rNEeHh+gK\njj1nn2kHbZPTjJdwYi3PVC9TfI2+CY/w98PPKFHDoIY4TGdF4j3S2+DQXNb85Y+d\nIbUTDc5ES6ceiPe8rvbV4sELYILT4F4wkpBw/Oh33ufqwqn41CPph1gjOgSa4jYe\nSiILu0ARACl0QGoqVCEzOvl4fmUCgYEA6e343hpgN91KHY4W7rLQootKsWYND1ZC\ni3+QS6YHBKFozLvlqtM3l8mEIuyUcyE9U5AEdFi7IMZj9v1kho83edjJ9/MJeNJ8\nl39oPaNbX3FexwJcl8Z06ZOHoj19LBY1P7t/FU4Uv2AtHIgYlM4CpIpLZhJTBYAD\nOEh1EdO6Do8CgYEA6zXPYxQPAk7E+R38afWH5f80lz0UirqoL4ogQCs5VuRcZGil\nKcKozBRxU+/zA4ZOMN7Kk5wtJ9ZO7BYaEGWesFR4ZIbkKXMvnzydMNwaMAqgN4xj\nTWVidGSxskxYHKOy4x1GTP5VGNBl/eiw1x/bpz8xG8spoyAwC1UMWFEfMfUCgYA4\nfkrywGXqN9vVRWJOZQqzpnX0X5PZ11gcvkLHsiHRwXVAtEPjvDyZwIXTtVSodSeN\nTaN1wZP3d1He7RTg1idsmqkz4xKvhg2mvJMdB51icEuWPgDEep3zZriDutvG0Not\nOQeYypGCIiTi1g8xqIrE180bqmM4WdDtP7peAsbVCwKBgQDmpHEcEi56Ng8KscJ+\nHk8PTt+BPbLUK1tGqIsuiYh67PIfYLKA2E9Mply3f89OAA8TDj4ZemiO6919N3Lr\n3kFlOWcs9knWrF/ICcz7wPfPVvU4YI28CVMd9BYn95ArbrIY1Cj13XpPc6da6NSe\nXhT2x6QN+NfcgSLjqGo0oEMg0w==-"
+    enable: false
+
+keystore:
+  url: "https://proxy.test.keystore.oa.com"
+  certListUrl: "/api/auth/getCertList?appId=%s"
+  certUrl: "/api/auth/getCert?id=%s&category=%s"
+  authId: "devops"
+  authSecret: "a21c218df41f6d7fd032535fe20394e2"
+
+bkrepo:
+  bkrepoApiUrl: http://dev.bkrepo.oa.com/api/generic
+  bkrepoUrl: http://dev.bkrepo.oa.com
+  devnetGatewayUrl: http://dev.devgw.devops.oa.com
+  idcGatewayUrl: http://dev.gw.devops.oa.com
+  pkgRepoName: generic-local
+  dockerRepoName: docker-local
+
+
+devopsGateway:
+  build: http://dev.devnet.devops.oa.com
+  host: http://dev.devops.oa.com
+  api: http://dev.devops.oa.com
+  idcProxy: http://dev.idc.devops.oa.com
+  idc: http://dev.devops.oa.com
+  devnet: http://dev.devnet-backend.devops.oa.com
+  devnetProxy: http://dev.devnet.devops.oa.com
+  oss: http://dev.oss.devops.oa.com
+  ossProxy: http://dev.oss.devops.oa.com
+  outer: https://dev.bkdevops.qq.com
+  outerApi: https://dev.bkdevops.qq.com
+
+
+---
+spring:
+  profiles: dev
+  datasource:
+    url: jdbc:mysql://gamedb.dev.devops.db:10000/devops_sign?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: ENC(4thI6E9FBq9rHHDuRXRIyA==)
+    password: ENC(muhwM7Fz7zJZF/OsJSlOoA==)
+  redis:
+    database: 7
+    host: redis.v3paas.blueking.db
+    password: ENC(24ZS8Y4XnyMzKkKEhsl48q9EPtVVT1AbqJvO/jmDrBI=)
+    port: 30003
+
+bkci:
+  sign:
+    tmpDir: "/Users/bkdevops/enterprise_sign_tmp"
+
+auth:
+  envName: staging
+  idProvider: client
+  grantType: client_credentials
+  stagingEnvName: staging
+  testEnvName: test
+  prodEnvName: prod
+  stagingUrl: http://authapi-dev.open.oa.com
+  testUrl: http://authapi-test.open.oa.com
+  prodUrl: http://authapi.open.oa.com
+  url: http://authapi-dev.open.oa.com
+  bcsSecret: YH777kfUgQgpzisfte1S700S5q2N2FFQhtfFGwhQeO3E7TIs6v
+  codeSecret: xI7DbH5tuOPkYDeaD6zGmEMhagnExV3loRooP0wDmbcfda4m7S
+  pipelineSecret: I6ua62oGX8HocKNOpCtjrEiebQv5X5sF4jAYfvwMpYZsR6F4Qm
+  artifactorySecret: DSudQR9g9a32xKExVbGgMJA1itJGXltQVS08D6tCt7kwrDzMpp
+  ticketSecret: bBEHPz9YoEK1domD7mxPbiQIzw54j9Q1XRZFhSAztXE4I3G1MC
+  environmentSecret: t51LIa27rBa4NMGQbydEg4mg6jU26g74WUuRPG4MpkKq9LTWqW
+  experienceSecret: 9enfUAZtdgmMHAVUSnBvbXRDES4xFzvitMpV3IdrzcMDbu42UT
+  vsSecret: 47591GshxBNnjiH1Nix4HcAR6xEdgwvYfVuNjN7G9eqrN6BQay
+  qualitySecret: b3Z15sIjCmEmtRdP9HDuxv4r1mGaEzc9Ks23KHy9QQCTJGUKss
+  wetestSecret: rtZWjB8sGEW1kIHmTLgeHRjACe1FPw5SKb8V9VjQ89kNM8AAVH

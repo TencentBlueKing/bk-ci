@@ -55,9 +55,9 @@ import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentRe
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.gitci.api.TriggerBuildResource
 import com.tencent.devops.gitci.pojo.GitYamlString
-import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.common.log.pojo.LogLine
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.model.prebuild.tables.records.TPrebuildProjectRecord
 import com.tencent.devops.plugin.api.UserCodeccResource
 import com.tencent.devops.prebuild.dao.PrebuildPersonalMachineDao
@@ -281,8 +281,16 @@ class PreBuildService @Autowired constructor(
 
     fun getInitLogs(userId: String, pipelineId: String, buildId: String): QueryLogs {
         val projectId = getUserProjectId(userId)
-        val originLog = client.get(UserLogResource::class).getInitLogs(userId, projectId, pipelineId, buildId,
-            false, null, null, null, null).data!!
+        val originLog = client.get(ServiceLogResource::class).getInitLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            isAnalysis = false,
+            queryKeywords = null,
+            tag = null,
+            jobId = null,
+            executeCount = null
+        ).data!!
         val cleanLogs = mutableListOf<LogLine>()
         cleanLogs.addAll(originLog.logs.filterNot { it.message.contains("soda_fold") })
         return QueryLogs(originLog.buildId, originLog.finished, originLog.hasMore, cleanLogs, originLog.timeUsed, originLog.status)
@@ -290,7 +298,17 @@ class PreBuildService @Autowired constructor(
 
     fun getAfterLogs(userId: String, preProjectId: String, buildId: String, start: Long): QueryLogs {
         val prebuildProjRecord = getPreProjectInfo(preProjectId, userId)
-        val originLog = client.get(UserLogResource::class).getAfterLogs(userId, prebuildProjRecord.projectId, prebuildProjRecord.pipelineId, buildId, start, false, null, null, null, null).data!!
+        val originLog = client.get(ServiceLogResource::class).getAfterLogs(
+            projectId = prebuildProjRecord.projectId,
+            pipelineId = prebuildProjRecord.pipelineId,
+            buildId = buildId,
+            start = start,
+            isAnalysis = false,
+            queryKeywords = null,
+            tag = null,
+            jobId = null,
+            executeCount = null
+        ).data!!
         val cleanLogs = mutableListOf<LogLine>()
         cleanLogs.addAll(originLog.logs.filterNot { it.message.contains("soda_fold") })
         return QueryLogs(originLog.buildId, originLog.finished, originLog.hasMore, cleanLogs, originLog.timeUsed, originLog.status)

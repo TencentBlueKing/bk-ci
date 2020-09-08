@@ -163,8 +163,8 @@
         right: 0;
         top: 0;
         bottom: 0;
-        background: rgba(0,0,0,0.6);
         z-index: 2;
+        background: rgba(0,0,0,0.6);
         .add-main {
             margin: 0 auto;
             margin-top: calc(50vh - 154px);

@@ -32,7 +32,9 @@ dependencies {
     compile project(":ext:tencent:process:biz-process-tencent")
     compile project(":ext:tencent:repository:api-repository-tencent")
     compile project (":core:common:common-client")
-    compile "io.jsonwebtoken:jjwt"
+    compile "io.jsonwebtoken:jjwt-api:0.10.8"
+    runtime "io.jsonwebtoken:jjwt-impl:0.10.8",
+            "io.jsonwebtoken:jjwt-jackson:0.10.8"
     compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
     compile "org.springframework.boot:spring-boot-starter-aop"
 }

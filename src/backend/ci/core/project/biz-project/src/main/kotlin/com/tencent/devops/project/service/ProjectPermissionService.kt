@@ -26,6 +26,7 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 
 interface ProjectPermissionService {
@@ -45,4 +46,6 @@ interface ProjectPermissionService {
     fun getUserProjects(userId: String): List<String>
 
     fun getUserProjectsAvailable(userId: String): Map<String, String>
+
+    fun verifyUserProjectPermission(accessToken: String? = null, projectCode: String, userId: String, permission: AuthPermission): Boolean
 }

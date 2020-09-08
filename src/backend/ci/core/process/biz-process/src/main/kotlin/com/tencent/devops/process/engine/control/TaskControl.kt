@@ -40,7 +40,6 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineTaskService
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -51,7 +50,6 @@ import org.springframework.stereotype.Service
 @Service
 class TaskControl @Autowired constructor(
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate,
     private val taskAtomService: TaskAtomService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -104,9 +102,10 @@ class TaskControl @Autowired constructor(
         logger.info("[$buildId]|[${buildInfo.status}]|ATOM_$actionType|taskId=$taskId|status=${buildTask.status}")
         val buildStatus = when {
             BuildStatus.isReadyToRun(buildTask.status) -> { // 准备启动执行
-                if (ActionType.isEnd(actionType)) {
-                    pipelineRuntimeService.updateTaskStatus(buildId, taskId, userId, BuildStatus.SKIP)
-                    BuildStatus.SKIP // 未执行的原子设置为SKIP或UNEXEC
+                if (ActionType.isEnd(actionType)) { // #2400 因任务终止&结束的事件命令而未执行的原子设置为UNEXEC，而不是SKIP
+                    pipelineRuntimeService.updateTaskStatus(buildId, taskId, userId, BuildStatus.UNEXEC)
+
+                    BuildStatus.UNEXEC // SKIP 仅当是用户意愿明确正常运行情况要跳过执行的，不影响主流程的才能是SKIP
                 } else {
                     atomBuildStatus(taskAtomService.start(buildTask))
                 }

@@ -7,4 +7,6 @@ object WebsocketKeys {
     const val HASH_USER_TIMEOUT_REDIS_KEY = "BK:wsSessionId:timeOut:hashBucket:key:"
     // 用户项目redis key
     const val PROJECT_USER_REDIS_KEY = "BK:websocket:project:user:key:"
+    // 定时任务实例锁
+    const val WEBSOCKET_CRON_LOCK = "BK:websocket:cron:lock"
 }
