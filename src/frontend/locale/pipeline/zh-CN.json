@@ -528,6 +528,7 @@
         }
     },
     "editPage": {
+        "atomHelpDoc": "帮助文档",
         "macSystemVersion": "MacOS system version",
         "xcodeVersion": "XCode version",
         "notRecomendPlugin": "该插件已不推荐使用",
