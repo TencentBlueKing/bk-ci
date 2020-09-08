@@ -64,7 +64,7 @@
                             v-if="props.row.atomStatus === 'INIT' || props.row.atomStatus === 'UNDERCARRIAGED'"
                             @click="editHandle('shelfAtom', props.row.atomId)"> {{ $t('store.上架') }} </span>
                         <span class="obtained-btn"
-                            v-if="props.row.atomStatus === 'AUDIT_REJECT' || props.row.atomStatus === 'RELEASED' || (props.row.atomStatus === 'GROUNDING_SUSPENSION' && props.row.releaseFlag)"
+                            v-if="['GROUNDING_SUSPENSION', 'AUDIT_REJECT', 'RELEASED'].includes(props.row.atomStatus) && props.row.releaseFlag"
                             @click="offline(props.row)"> {{ $t('store.下架') }} </span>
                         <span class="schedule-btn"
                             v-if="props.row.atomStatus === 'COMMITTING' || props.row.atomStatus === 'BUILDING' || props.row.atomStatus === 'BUILD_FAIL'
