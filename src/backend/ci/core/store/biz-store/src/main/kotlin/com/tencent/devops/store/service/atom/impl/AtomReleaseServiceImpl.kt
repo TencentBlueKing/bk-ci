@@ -56,7 +56,6 @@ import com.tencent.devops.store.dao.atom.AtomLabelRelDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
-import com.tencent.devops.store.dao.atom.MarketAtomOfflineDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
@@ -113,8 +112,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var storeMemberDao: StoreMemberDao
     @Autowired
     lateinit var marketAtomVersionLogDao: MarketAtomVersionLogDao
-    @Autowired
-    lateinit var marketAtomOfflineDao: MarketAtomOfflineDao
     @Autowired
     lateinit var marketAtomFeatureDao: MarketAtomFeatureDao
     @Autowired
@@ -923,9 +920,20 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     /**
      * 处理用户提交的下架插件请求
      */
-    override fun offlineAtom(userId: String, atomCode: String, atomOfflineReq: AtomOfflineReq): Result<Boolean> {
+    override fun offlineAtom(
+        userId: String,
+        atomCode: String,
+        atomOfflineReq: AtomOfflineReq,
+        checkPermissionFlag: Boolean
+    ): Result<Boolean> {
         // 判断用户是否有权限下线
-        if (!storeMemberDao.isStoreAdmin(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())) {
+        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            )
+        ) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val version = atomOfflineReq.version
