@@ -24,23 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:plugin:codecc-plugin:common-codecc")
-    compile project(":core:process:api-process")
-    compile project(":core:project:api-project")
-    compile project(":core:dispatch:api-dispatch")
-    compile project(":core:dispatch:model-dispatch")
-    compile project(":core:notify:api-notify")
-    compile project(":core:monitoring:api-monitoring")
-//    compile project(":core:store:api-store-image")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-redis")
-    compile project(":core:common:common-log")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile "com.vmware:vijava"
-    compile "org.json:json"
-    compile "org.apache.commons:commons-exec"
+package com.tencent.devops.dispatch.controller
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.api.OpJobQuotaSystemResource
+import com.tencent.devops.dispatch.pojo.JobQuotaSystem
+import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import com.tencent.devops.dispatch.service.JobQuotaManagerService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpJobQuotaSystemResourceImpl @Autowired constructor(
+    private val jobQuotaManagerService: JobQuotaManagerService
+) : OpJobQuotaSystemResource {
+    override fun get(jobQuotaVmType: JobQuotaVmType): Result<List<JobQuotaSystem>> {
+        return if (jobQuotaVmType == JobQuotaVmType.ALL) {
+            Result(jobQuotaManagerService.getSystemQuota())
+        } else {
+            Result(listOf(jobQuotaManagerService.getSystemQuota(jobQuotaVmType)))
+        }
+    }
+
+    override fun add(jobQuota: JobQuotaSystem): Result<Boolean> {
+        return Result(jobQuotaManagerService.addSystemQuota(jobQuota))
+    }
+
+    override fun delete(jobQuotaVmType: JobQuotaVmType): Result<Boolean> {
+        return Result(jobQuotaManagerService.deleteSystemQuota(jobQuotaVmType))
+    }
+
+    override fun update(jobQuotaVmType: JobQuotaVmType, jobQuota: JobQuotaSystem): Result<Boolean> {
+        return Result(jobQuotaManagerService.updateSystemQuota(jobQuotaVmType, jobQuota))
+    }
 }

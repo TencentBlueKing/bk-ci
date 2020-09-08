@@ -187,6 +187,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 userId = task.starter,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
+                containerId = task.containerId,
                 containerHashId = task.containerHashId,
                 os = osType.name,
                 startTime = System.currentTimeMillis(),

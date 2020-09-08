@@ -24,30 +24,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.dispatch.controller
 
-import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceUserResource
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.UserCacheService
+import com.tencent.devops.dispatch.api.OpJobQuotaProjectResource
+import com.tencent.devops.dispatch.pojo.JobQuotaProject
+import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import com.tencent.devops.dispatch.service.JobQuotaBusinessService
+import com.tencent.devops.dispatch.service.JobQuotaManagerService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceUserResourceImpl @Autowired constructor(
-    private val userCacheService: UserCacheService,
-    private val projectAuthServiceCode: ProjectAuthServiceCode,
-    private val bkAuthProjectApi: AuthProjectApi
-) : ServiceUserResource {
-
-    override fun getDetailFromCache(userId: String): Result<UserDeptDetail> {
-        return Result(userCacheService.getDetailFromCache(userId))
+class OpJobQuotaProjectResourceImpl @Autowired constructor(
+    private val jobQuotaManagerService: JobQuotaManagerService,
+    private val jobQuotaBusinessService: JobQuotaBusinessService
+) : OpJobQuotaProjectResource {
+    override fun get(projectId: String, jobQuotaVmType: JobQuotaVmType): Result<JobQuotaProject> {
+        return Result(jobQuotaManagerService.getProjectQuota(projectId, jobQuotaVmType))
     }
 
-    override fun getProjectUserRoles(projectCode: String, roleId: BkAuthGroup): Result<List<String>> {
-        return Result(bkAuthProjectApi.getProjectUsers(projectAuthServiceCode, projectCode, roleId))
+    override fun add(projectId: String, jobQuota: JobQuotaProject): Result<Boolean> {
+        return Result(jobQuotaManagerService.addProjectQuota(projectId, jobQuota))
+    }
+
+    override fun delete(projectId: String, jobQuotaVmType: JobQuotaVmType): Result<Boolean> {
+        return Result(jobQuotaManagerService.deleteProjectQuota(projectId, jobQuotaVmType))
+    }
+
+    override fun update(projectId: String, jobQuotaVmType: JobQuotaVmType, jobQuota: JobQuotaProject): Result<Boolean> {
+        return Result(jobQuotaManagerService.updateProjectQuota(projectId, jobQuotaVmType, jobQuota))
+    }
+
+    override fun restore(projectId: String?, vmType: JobQuotaVmType): Result<Boolean> {
+        jobQuotaBusinessService.restoreProjectJobTime(projectId, vmType)
+        return Result(true)
     }
 }

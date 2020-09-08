@@ -24,23 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:plugin:codecc-plugin:common-codecc")
-    compile project(":core:process:api-process")
-    compile project(":core:project:api-project")
-    compile project(":core:dispatch:api-dispatch")
-    compile project(":core:dispatch:model-dispatch")
-    compile project(":core:notify:api-notify")
-    compile project(":core:monitoring:api-monitoring")
-//    compile project(":core:store:api-store-image")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-redis")
-    compile project(":core:common:common-log")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile "com.vmware:vijava"
-    compile "org.json:json"
-    compile "org.apache.commons:commons-exec"
-}
+package com.tencent.devops.dispatch.pojo
+
+import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("项目的JOB运行数量")
+data class JobRunningCountProject(
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("构建机类型", required = true)
+    val vmType: JobQuotaVmType,
+    @ApiModelProperty("项目当前并发JOB数", required = true)
+    val runningJobs: Int,
+    @ApiModelProperty("项目当前所有JOB当月已经执行时间，小时", required = true)
+    val runningTimeProject: Int,
+    @ApiModelProperty("工蜂CI当前并发JOB数量", required = true)
+    val runningJobsGitCi: Int
+)

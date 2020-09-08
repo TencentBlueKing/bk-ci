@@ -26,10 +26,10 @@
 
 package com.tencent.devops.common.auth.code
 
-const val GLOBAL_SCOPE_TYPE = "system"
+// const val GLOBAL_SCOPE_TYPE = "system"
 const val PROJECT_SCOPE_TYPE = "project"
 // 蓝鲸持续集成平台产品ID
-const val BK_DEVOPS_SCOPE = "bk_ci"
+// const val BK_DEVOPS_SCOPE = "bk_ci"
 
 enum class BkAuthServiceCode(val value: String) {
     BCS("bk_bcs"),

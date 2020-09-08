@@ -24,23 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:plugin:codecc-plugin:common-codecc")
-    compile project(":core:process:api-process")
-    compile project(":core:project:api-project")
-    compile project(":core:dispatch:api-dispatch")
-    compile project(":core:dispatch:model-dispatch")
-    compile project(":core:notify:api-notify")
-    compile project(":core:monitoring:api-monitoring")
-//    compile project(":core:store:api-store-image")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-redis")
-    compile project(":core:common:common-log")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile "com.vmware:vijava"
-    compile "org.json:json"
-    compile "org.apache.commons:commons-exec"
-}
+package com.tencent.devops.dispatch.pojo
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("项目的JOB状态")
+data class JobQuotaStatus(
+    @ApiModelProperty("项目JOB数量配额", required = true)
+    val jobQuota: Int,
+    @ApiModelProperty("已运行JOB数量", required = true)
+    val runningJobCount: Long,
+    @ApiModelProperty("JOB告警阈值，百分比0-100", required = true)
+    val jobThreshold: Int,
+    @ApiModelProperty("项目job时间配额，单位：小时", required = true)
+    val timeQuota: Int,
+    @ApiModelProperty("当月已运行JOB时间, 单位：毫秒", required = true)
+    val runningJobTime: Long,
+    @ApiModelProperty("时间告警阈值，百分比0-100", required = true)
+    val timeThreshold: Int
+)
