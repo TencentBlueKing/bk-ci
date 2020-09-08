@@ -193,20 +193,10 @@
                 } else {
                     throw Error(this.$t('exception.apiError'))
                 }
-                setTimeout(() => {
-                    this.isCreating = false
-                }, 100)
             } catch (err) {
-                if (err.code === 403) {
-                  this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.project)
-                } else {
-                  this.$bkMessage({
-                      theme: 'error',
-                      message: err.message || this.$t('exception.apiError')
-                  })
-                }
-                
-                setTimeout(() => {
+                this.handleError(err, this.$permissionActionMap.create)
+            } finally {
+              setTimeout(() => {
                     this.isCreating = false
                 }, 100)
             }
@@ -225,23 +215,16 @@
                 } else {
                     throw Error(this.$t('exception.apiError'))
                 }
+            } catch (err) {
+                this.handleError(err, this.$permissionActionMap.edit, [{
+                    id: data.projectCode,
+                    name: data.projectName
+                }])
                 setTimeout(() => {
                     this.isCreating = false
                 }, 100)
-            } catch (err) {
-                if (err.code === 403) {
-                  this.applyPermission(this.$permissionActionMap.edit, this.$permissionResourceMap.project, [{
-                    id: data.projectCode,
-                    type: this.$permissionResourceTypeMap.PROJECT
-                  }])
-                } else {
-                  const message = err.message || this.$t('exception.apiError')
-                  this.$bkMessage({
-                      theme: 'error',
-                      message
-                  })
-                }
-                setTimeout(() => {
+            } finally {
+              setTimeout(() => {
                     this.isCreating = false
                 }, 100)
             }
@@ -271,6 +254,23 @@
         cancelProject () {
             this.isCreating = false
             this.showDialog = false
+        }
+
+        handleError (e, actionId, instanceId = []) {
+          if (e.code === 403) {
+            this.$showAskPermissionDialog({
+                noPermissionList: [{
+                    actionId,
+                    instanceId,
+                    resourceId: this.$permissionResourceMap.project
+                }]
+            })
+          } else {
+            this.$bkMessage({
+                theme: 'error',
+                message: e.message || this.$t('exception.apiError')
+            })
+          }
         }
     }
 </script>
