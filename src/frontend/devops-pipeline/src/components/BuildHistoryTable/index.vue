@@ -90,9 +90,9 @@
                 <template v-else-if="col.prop === 'errorCode'" v-slot="props">
                     <template v-if="Array.isArray(props.row.errorInfoList) && props.row.errorInfoList.length > 0">
                         <div @click.stop="" class="error-code-item" v-for="item in props.row.errorInfoList" :key="item.taskId">
-                            <i :title="$t('userError')" v-if="item.errorType === 'USER'" class="devops-icon icon-user "></i>
-                            <i :title="$t('systemError')" v-else-if="item.errorType === 'SYSTEM'" class="devops-icon icon-cog"></i>
-                            <span :title="item.errorCode + ': ' + item. errorMsg" v-if="item.errorCode">{{ item.errorCode + ': ' + item. errorMsg }} </span>
+                            <i :title="$t('userError')" v-if="item.errorType === 1" class="devops-icon icon-user "></i>
+                            <i :title="$t(item.errorType === 0 ? 'systemError' : item.errorType === 2 ? 'thirdPartyError' : 'pluginError' )" v-else class="devops-icon icon-cog"></i>
+                            <span :title="item. errorMsg" v-if="item.errorCode">{{ item. errorMsg }} </span>
                         </div>
                     </template>
                     <span v-else>--</span>
