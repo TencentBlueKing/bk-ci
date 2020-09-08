@@ -49,7 +49,7 @@ object EmailUtil {
                                                                             <tr>
                                                                                <td>$name</td>
                                                                                <td>${
-            String.format("%.2f", percent).toDouble()
+            String.format("%.5f", percent).toDouble()
         }%</td>
                                                                                <td align="center">
                                                                                    <a href="$url">查看</a>
