@@ -183,8 +183,6 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentPipelineService.updatePipelineStatus(projectId, agentId, secretKey, response))
     }
 
-
-
     private fun checkParam(
         projectId: String,
         agentId: String,
