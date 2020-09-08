@@ -99,7 +99,7 @@ object CommonUtils {
 
             return ticketMap
         } catch (e: Exception) {
-            throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.GET_CRENDENTIAL_FAIL.errorCode, ErrorCodeEnum.GET_CRENDENTIAL_FAIL.formatErrorMessage)
+            throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.GET_CREDENTIAL_FAIL.errorCode, ErrorCodeEnum.GET_CREDENTIAL_FAIL.formatErrorMessage)
         }
     }
 

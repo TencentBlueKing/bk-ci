@@ -282,7 +282,6 @@ class DockerHostClient @Autowired constructor(
                 doRetry(event, retryTime, dockerIp, requestBody, driftIpInfo, e.message, unAvailableIpList)
             }
         }
-
     }
 
     private fun doRetry(
