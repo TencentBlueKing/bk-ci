@@ -30,12 +30,14 @@ import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
@@ -66,6 +68,7 @@ import org.json.simple.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
