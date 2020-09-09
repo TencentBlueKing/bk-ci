@@ -31,12 +31,16 @@ import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.common.auth.pojo.AncestorsApiReq
+import com.tencent.devops.common.auth.pojo.IamCreateApiReq
+import com.tencent.devops.common.auth.service.IamEsbService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class BluekingV3ResourceApi @Autowired constructor(
     val grantServiceImpl: GrantServiceImpl,
-    val iamConfiguration: IamConfiguration
+    val iamConfiguration: IamConfiguration,
+    val iamEsbService: IamEsbService
 ) : AuthResourceApi {
 
     override fun createGrantResource(
@@ -48,6 +52,14 @@ class BluekingV3ResourceApi @Autowired constructor(
         resourceName: String,
         authGroupList: List<BkAuthGroup>?
     ) {
+        createResource(
+                user = user,
+                serviceCode = serviceCode,
+                resourceType = resourceType,
+                projectCode = projectCode,
+                resourceCode = resourceCode,
+                resourceName = resourceName
+        )
     }
 
     override fun batchCreateResource(
@@ -89,6 +101,14 @@ class BluekingV3ResourceApi @Autowired constructor(
         resourceCode: String,
         resourceName: String
     ) {
+        createResource(
+                user = user,
+                serviceCode = serviceCode,
+                resourceType = resourceType,
+                projectCode = projectCode,
+                resourceCode = resourceCode,
+                resourceName = resourceName
+        )
     }
 
     override fun createResource(
@@ -99,16 +119,20 @@ class BluekingV3ResourceApi @Autowired constructor(
         resourceCode: String,
         resourceName: String
     ) {
-//        logger.info("V3 createResource user[$user] serviceCode[${serviceCode.id()}] resourceType[${resourceType.value}] projectCode[$projectCode] resourceCode[$resourceCode]")
-//        val actionType = ActionUtils.buildAction(resourceType, AuthPermission.VIEW)
-//        val resourceList = mutableListOf<ResourceDTO>()
-//        val projectResource = ResourceDTO.builder().system(iamConfiguration.systemId).id(projectCode).type(AuthResourceType.PROJECT.value).build()
-//        val entityResource = ResourceDTO.builder().system(iamConfiguration.systemId).id(resourceCode).type(resourceType.value).build()
-//        resourceList.add(projectResource)
-//        resourceList.add(entityResource)
-//        logger.info("V3 createResource actionType: $actionType, resourceList: $resourceList")
-//        val policyId = grantServiceImpl.executeGrant(user, actionType, resourceList)
-//        logger.info("V3 createResource policyId: $policyId")
+        logger.info("v3 createResource projectCode[$projectCode] resourceCode[$resourceCode] resourceName[$resourceName] resourceType[${resourceType.value}]")
+        val ancestors = mutableListOf<AncestorsApiReq>()
+        if (resourceType != AuthResourceType.PROJECT) {
+            ancestors.add(AncestorsApiReq(
+                    system = iamConfiguration.systemId,
+                    id = projectCode,
+                    type = AuthResourceType.PROJECT.value
+            ))
+        }
+        val iamApiReq = IamCreateApiReq(
+                creator = user,
+                name = resourceName, id = resourceCode, type = resourceType.value, system = iamConfiguration.systemId, ancestors = ancestors, bk_app_code = "", bk_app_secret = "", bk_username = user
+        )
+        iamEsbService.createRelationResource(iamApiReq)
     }
 
     override fun modifyResource(

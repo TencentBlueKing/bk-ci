@@ -27,10 +27,12 @@
 package com.tencent.devops.process.engine.webhook
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.plugin.ElementBizPlugin
@@ -50,12 +52,12 @@ abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constru
     ) {
     }
 
-    override fun beforeDelete(element: T, userId: String, pipelineId: String?) {
-        if (pipelineId != null) {
+    override fun beforeDelete(element: T, param: BeforeDeleteParam) {
+        if (param.pipelineId.isNotBlank()) {
             pipelineWebhookService.deleteWebhook(
-                pipelineId = pipelineId,
+                pipelineId = param.pipelineId,
                 taskId = element.id!!,
-                userId = userId
+                userId = param.userId
             )
         }
     }
@@ -98,5 +100,15 @@ class CodeSVNWebHookTriggerElementBizPlugin constructor(
 ) : WebHookTriggerElementBizPlugin<CodeSVNWebHookTriggerElement>(pipelineWebhookService) {
     override fun elementClass(): Class<CodeSVNWebHookTriggerElement> {
         return CodeSVNWebHookTriggerElement::class.java
+    }
+}
+
+@ElementBiz
+class CodeTGitWebHookTriggerElementBizPlugin constructor(
+    private val pipelineWebhookService: PipelineWebhookService
+) : WebHookTriggerElementBizPlugin<CodeTGitWebHookTriggerElement>(pipelineWebhookService) {
+
+    override fun elementClass(): Class<CodeTGitWebHookTriggerElement> {
+        return CodeTGitWebHookTriggerElement::class.java
     }
 }

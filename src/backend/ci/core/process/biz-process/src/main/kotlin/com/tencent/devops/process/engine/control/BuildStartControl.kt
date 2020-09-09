@@ -277,7 +277,7 @@ class BuildStartControl @Autowired constructor(
                                     taskId = taskId,
                                     taskName = "[平台]构建拦截",
                                     atomCode = "BK_CI_BUILD_INTERCEPTOR",
-                                    errorType = ErrorType.USER,
+                                    errorType = ErrorType.USER.num,
                                     errorMsg = response.message ?: "构建被拦截",
                                     errorCode = response.status
                                 )

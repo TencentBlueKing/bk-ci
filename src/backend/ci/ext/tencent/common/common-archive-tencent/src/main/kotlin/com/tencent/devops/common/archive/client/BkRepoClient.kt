@@ -66,6 +66,7 @@ import com.tencent.devops.common.archive.util.closeQuietly
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import okhttp3.Credentials
+import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -73,6 +74,7 @@ import okio.BufferedSink
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.InputStream
+import java.net.URLEncoder
 import java.nio.file.FileSystems
 import java.nio.file.Paths
 import javax.ws.rs.NotFoundException
@@ -82,6 +84,7 @@ class BkRepoClient constructor(
     private val commonConfig: CommonConfig,
     private val bkRepoConfig: BkRepoConfig
 ) {
+
     private fun getGatewaytUrl(): String {
         return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
     }
@@ -282,12 +285,22 @@ class BkRepoClient constructor(
         }
     }
 
-    fun uploadFile(userId: String, projectId: String, repoName: String, path: String, inputStream: InputStream, fileSizeLimitInMB: Int = 0) {
+    fun uploadFile(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        inputStream: InputStream,
+        properties: Map<String, String>? = null,
+        gatewayUrl: String? = null,
+        fileSizeLimitInMB: Int = 0
+    ) {
         logger.info("uploadFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, fileSizeLimitInMB: $fileSizeLimitInMB")
         if (PathUtil.isFolder(path)) {
             throw ErrorCodeException(errorCode = INVALID_CUSTOM_ARTIFACTORY_PATH)
         }
-        val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/$projectId/$repoName/$path"
+        val gateway = gatewayUrl ?: getGatewaytUrl()
+        val url = "$gateway/bkrepo/api/service/generic/$projectId/$repoName/$path"
         val requestBody = object : RequestBody() {
             override fun writeTo(sink: BufferedSink?) {
                 val limit = if (fileSizeLimitInMB > 0) {
@@ -314,12 +327,18 @@ class BkRepoClient constructor(
                 return MediaType.parse("application/octet-stream")
             }
         }
+
+        // 生成归档头部
+        val header = mutableMapOf<String, String>()
+        header.put(AUTH_HEADER_UID, userId)
+        header.put(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+        header.put(BK_REPO_OVERRIDE, "true")
+        properties?.forEach {
+            header.put("$METADATA_PREFIX${it.key}", it.value)
+        }
         val request = Request.Builder()
             .url(url)
-            // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .header.put(BK_REPO_OVERRIDE, "true")
+            .headers(Headers.of(header))
             .put(requestBody).build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
@@ -336,7 +355,8 @@ class BkRepoClient constructor(
             projectId = projectId,
             repoName = repoName,
             path = path,
-            file = file
+            file = file,
+            gatewayFlag = true
         )
     }
 
@@ -349,20 +369,29 @@ class BkRepoClient constructor(
         gatewayFlag: Boolean = true,
         bkrepoApiUrl: String? = null,
         userName: String? = null,
-        password: String? = null
+        password: String? = null,
+        properties: Map<String, String>? = null,
+        gatewayUrl: String? = null
     ) {
         logger.info("uploadLocalFile, projectId: $projectId, repoName: $repoName, path: $path, localFile: ${file.canonicalPath}")
         logger.info("uploadLocalFile, userName: $userName, password: $password")
-        val repoUrlPrefix = if (gatewayFlag) "${getGatewaytUrl()}/bkrepo/api/service/generic" else bkrepoApiUrl
+        val gateway = gatewayUrl ?: getGatewaytUrl()
+        val repoUrlPrefix = if (gatewayFlag) "$gateway/bkrepo/api/service/generic" else bkrepoApiUrl
         val url = "$repoUrlPrefix/$projectId/$repoName/${path.removePrefix("/")}"
         val requestBuilder = Request.Builder()
             .url(url)
+        // 生成归档头部
+        val header = mutableMapOf<String, String>()
         if (userName != null && password != null) {
-            requestBuilder.header("Authorization", Credentials.basic(userName, password))
+            header.put("Authorization", Credentials.basic(userName, password))
         }
-        requestBuilder.header(AUTH_HEADER_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .header(BK_REPO_OVERRIDE, "true")
+        header.put(AUTH_HEADER_UID, userId)
+        header.put(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+        header.put(BK_REPO_OVERRIDE, "true")
+        properties?.forEach {
+            header.put("$METADATA_PREFIX${it.key}", tryEncode(it.value))
+        }
+        requestBuilder.headers(Headers.of(header))
             .put(RequestBody.create(MediaType.parse("application/octet-stream"), file))
         val request = requestBuilder.build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -370,6 +399,14 @@ class BkRepoClient constructor(
                 logger.error("upload file failed, responseContent: ${response.body()!!.string()}")
                 throw RuntimeException("upload file failed")
             }
+        }
+    }
+
+    private fun tryEncode(str: String?): String {
+        return if (str.isNullOrBlank()) {
+            ""
+        } else {
+            URLEncoder.encode(str, "UTF-8")
         }
     }
 
@@ -628,6 +665,7 @@ class BkRepoClient constructor(
         )
     }
 
+    @Deprecated(message = "do not use")
     fun listFileByRegex(
         userId: String,
         projectId: String,

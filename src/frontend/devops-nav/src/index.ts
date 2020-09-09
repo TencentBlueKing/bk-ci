@@ -16,6 +16,7 @@ import AsideNav from '@/components/AsideNav/index.vue'
 import ContentHeader from '@/components/ContentHeader/index.vue'
 import BigSelect from '@/components/Select/index.vue'
 import App from '@/views/App.vue'
+import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
 
 import createLocale from '../../locale'
 
@@ -28,6 +29,7 @@ import showAskPermissionDialog from './components/AskPermissionDialog'
 import bsWebSocket from '@/utils/bsWebSocket.js'
 import '@/assets/scss/index.scss'
 import { judgementLsVersion } from './utils/util'
+
 // 全量引入 bk-magic-vue
 import bkMagic from 'bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
@@ -82,9 +84,39 @@ Vue.prototype.iframeUtil = iframeUtil(router)
 Vue.prototype.$showAskPermissionDialog = showAskPermissionDialog
 Vue.prototype.$setLocale = setLocale
 Vue.prototype.$localeList = localeList
+Vue.prototype.$permissionActionMap = actionMap
+Vue.prototype.$permissionResourceMap = resourceMap
+Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
 
 // 判断localStorage版本, 旧版本需要清空
 judgementLsVersion()
+
+Vue.mixin({
+    methods: {
+        async applyPermission (actionId, resourceId, instanceId = []) {
+            try {
+                const redirectUrl = await this.$store.dispatch('getPermRedirectUrl', [{
+                    actionId,
+                    resourceId,
+                    instanceId
+                }])
+                console.log('redirectUrl', redirectUrl)
+                window.open(redirectUrl, '_blank')
+                this.$bkInfo({
+                    title: this.$t('permissionRefreshtitle'),
+                    subTitle: this.$t('permissionRefreshSubtitle'),
+                    okText: this.$t('permissionRefreshOkText'),
+                    cancelText: this.$t('close'),
+                    confirmFn: () => {
+                        location.reload()
+                    }
+                })
+            } catch (e) {
+                console.error(e)
+            }
+        }
+    }
+})
 
 window.devops = new Vue({
     el: '#devops-root',
