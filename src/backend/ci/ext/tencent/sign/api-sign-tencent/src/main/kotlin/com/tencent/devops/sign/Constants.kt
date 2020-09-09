@@ -23,26 +23,11 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.dao
 
-import com.tencent.devops.model.process.Tables
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+package com.tencent.devops.sign
 
-@Repository
-class PipelineResDao {
-
-    fun getModel(
-        dslContext: DSLContext,
-        pipelineId: String,
-        version: Int
-    ): String? {
-        return with(Tables.T_PIPELINE_RESOURCE) {
-            dslContext.select(MODEL)
-                .from(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(VERSION.eq(version))
-                .fetchAny(0, String::class.java)
-        }
-    }
+object Constants {
+    const val KEYSTORE_HTTP_HEADER_AUTH = "Authorization"
+    const val KEYSTORE_HTTP_HEADER_IP = "X-Client-LocalIp"
+    const val KEYSTORE_CATEGORY_PROVISION = "SignProvision"
 }

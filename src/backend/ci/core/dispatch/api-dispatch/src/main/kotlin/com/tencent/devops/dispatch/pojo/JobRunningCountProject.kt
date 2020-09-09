@@ -23,23 +23,23 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.listener
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.lambda.service.PipelineBuildService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+package com.tencent.devops.dispatch.pojo
 
-@Component
-class BuildFinishListener @Autowired constructor(
-    private val pipelineBuildService: PipelineBuildService,
-    pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
+import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    override fun run(event: PipelineBuildFinishBroadCastEvent) {
-        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Receive build finish event - ($event)")
-        pipelineBuildService.onBuildFinish(event)
-    }
-}
+@ApiModel("项目的JOB运行数量")
+data class JobRunningCountProject(
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("构建机类型", required = true)
+    val vmType: JobQuotaVmType,
+    @ApiModelProperty("项目当前并发JOB数", required = true)
+    val runningJobs: Int,
+    @ApiModelProperty("项目当前所有JOB当月已经执行时间，小时", required = true)
+    val runningTimeProject: Int,
+    @ApiModelProperty("工蜂CI当前并发JOB数量", required = true)
+    val runningJobsGitCi: Int
+)

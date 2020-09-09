@@ -28,7 +28,7 @@ package com.tencent.devops.lambda.storage
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.lambda.dao.BuildIndexDao
+import com.tencent.devops.lambda.dao.LambdaBuildIndexDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit
 @Service
 class IndexService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val buildIndexDao: BuildIndexDao,
+    private val lambdaBuildIndexDao: LambdaBuildIndexDao,
     private val redisOperation: RedisOperation
 ) {
     private val indexCache = CacheBuilder.newBuilder()
@@ -67,7 +67,7 @@ class IndexService @Autowired constructor(
             }
 
             index = getIndexName()
-            buildIndexDao.create(dslContext, buildId, index)
+            lambdaBuildIndexDao.create(dslContext, buildId, index)
             indexCache.put(buildId, index)
             return index
         } finally {
@@ -76,7 +76,7 @@ class IndexService @Autowired constructor(
     }
 
     fun updateTime(buildId: String, beginTime: Long, endTime: Long) {
-        buildIndexDao.update(dslContext, buildId, beginTime, endTime)
+        lambdaBuildIndexDao.update(dslContext, buildId, beginTime, endTime)
     }
 
     fun getIndexName(date: LocalDateTime): String {
@@ -85,7 +85,7 @@ class IndexService @Autowired constructor(
     }
 
     private fun getBuildIndexDB(buildId: String): String? {
-        return buildIndexDao.get(dslContext, buildId)?.indexName
+        return lambdaBuildIndexDao.get(dslContext, buildId)?.indexName
     }
 
     private fun getIndexName(): String {

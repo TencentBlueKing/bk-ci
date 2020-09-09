@@ -33,7 +33,7 @@ import org.springframework.stereotype.Repository
 @Repository
 class LambdaPipelineBuildDao {
 
-    fun getBuildInfo(
+    fun getBuildHistory(
         dslContext: DSLContext,
         buildId: String
     ): TPipelineBuildHistoryRecord? {

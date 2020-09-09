@@ -25,25 +25,23 @@
  */
 package com.tencent.devops.lambda.dao
 
-import com.tencent.devops.model.process.tables.TPipelineBuildContainer
-import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
+import com.tencent.devops.model.process.tables.TPipelineBuildTask
+import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
 @Repository
-class BuildContainerDao {
+class LambdaBuildTaskDao {
 
-    fun getContainer(
+    fun getTask(
         dslContext: DSLContext,
         buildId: String,
-        stageId: String,
-        containerId: String
-    ): TPipelineBuildContainerRecord? {
-        with(TPipelineBuildContainer.T_PIPELINE_BUILD_CONTAINER) {
+        taskId: String
+    ): TPipelineBuildTaskRecord? {
+        with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-                .and(STAGE_ID.eq(stageId))
-                .and(CONTAINER_ID.eq(containerId))
+                .and(TASK_ID.eq(taskId))
                 .fetchOne()
         }
     }

@@ -25,12 +25,10 @@
  */
 package com.tencent.devops.lambda.service
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -40,18 +38,30 @@ import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
-import com.tencent.devops.lambda.dao.BuildContainerDao
-import com.tencent.devops.lambda.dao.BuildTaskDao
+import com.tencent.devops.lambda.dao.LambdaBuildContainerDao
+import com.tencent.devops.lambda.dao.LambdaBuildTaskDao
 import com.tencent.devops.lambda.dao.LambdaPipelineBuildDao
-import com.tencent.devops.lambda.dao.PipelineResDao
-import com.tencent.devops.lambda.dao.PipelineTemplateDao
+import com.tencent.devops.lambda.dao.LambdaPipelineModelDao
+import com.tencent.devops.lambda.dao.LambdaPipelineTemplateDao
 import com.tencent.devops.lambda.pojo.BuildData
+import com.tencent.devops.lambda.pojo.DataPlatBuildDetail
+import com.tencent.devops.lambda.pojo.DataPlatBuildHistory
 import com.tencent.devops.lambda.pojo.DataPlatJobDetail
 import com.tencent.devops.lambda.pojo.DataPlatTaskDetail
 import com.tencent.devops.lambda.pojo.ElementData
 import com.tencent.devops.lambda.pojo.ProjectOrganize
 import com.tencent.devops.lambda.storage.ESService
+import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
@@ -62,36 +72,44 @@ import org.json.simple.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
 @Service
-class PipelineBuildService @Autowired constructor(
+class LambdaDataService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val lambdaPipelineBuildDao: LambdaPipelineBuildDao,
-    private val pipelineResDao: PipelineResDao,
-    private val pipelineTemplateDao: PipelineTemplateDao,
-    private val buildTaskDao: BuildTaskDao,
-    private val buildContainerDao: BuildContainerDao,
+    private val lambdaPipelineModelDao: LambdaPipelineModelDao,
+    private val lambdaPipelineTemplateDao: LambdaPipelineTemplateDao,
+    private val lambdaBuildTaskDao: LambdaBuildTaskDao,
+    private val lambdaBuildContainerDao: LambdaBuildContainerDao,
     private val esService: ESService,
     private val kafkaClient: KafkaClient
 ) {
 
     fun onBuildFinish(event: PipelineBuildFinishBroadCastEvent) {
+        val history = lambdaPipelineBuildDao.getBuildHistory(dslContext, event.buildId)
+        if (history == null) {
+            logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] The build history is not exist")
+            return
+        }
+        val model = lambdaPipelineModelDao.getBuildDetailModel(dslContext, event.buildId)
+        if (model == null) {
+            logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Fail to get the pipeline detail model")
+            return
+        }
+        val projectInfo = projectCache.get(history.projectId)
+        pushBuildHistory(genBuildHistory(projectInfo, history, BuildStatus.values(), System.currentTimeMillis()))
+        pushBuildDetail(genBuildDetail(projectInfo, event.pipelineId, model))
+
         val info = getBuildInfo(event.buildId)
         if (info == null) {
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] The build info is not exist")
             return
         }
-        val model = getModel(info.pipelineId, info.version)
-        if (model == null) {
-            logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Fail to get the pipeline model")
-            return
-        }
-
-        val projectInfo = projectCache.get(info.projectId)
 
         val data = BuildData(
             projectId = info.projectId,
@@ -107,14 +125,14 @@ class PipelineBuildService @Autowired constructor(
             bgName = projectInfo.bgName,
             deptName = projectInfo.deptName,
             centerName = projectInfo.centerName,
-            model = model,
+            model = model.model,
             errorInfoList = event.errorInfoList
         )
         esService.build(data)
     }
 
     fun onBuildTaskFinish(event: PipelineBuildTaskFinishBroadCastEvent) {
-        val task = buildTaskDao.getTask(dslContext, event.buildId, event.taskId)
+        val task = lambdaBuildTaskDao.getTask(dslContext, event.buildId, event.taskId)
         if (task == null) {
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.taskId}] Fail to get the build task")
             return
@@ -163,7 +181,6 @@ class PipelineBuildService @Autowired constructor(
 
     private fun pushTaskDetail(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord) {
         try {
-            val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             val startTime = task.startTime?.timestampmilli() ?: 0
             val endTime = task.endTime?.timestampmilli() ?: 0
             val taskAtom = task.taskAtom
@@ -172,7 +189,7 @@ class PipelineBuildService @Autowired constructor(
             if (task.taskType == "VM" || task.taskType == "NORMAL") {
                 if (taskAtom == "dispatchVMShutdownTaskAtom") {
                     Thread.sleep(3000)
-                    val buildContainer = buildContainerDao.getContainer(
+                    val buildContainer = lambdaBuildContainerDao.getContainer(
                         dslContext = dslContext,
                         buildId = task.buildId,
                         stageId = task.stageId,
@@ -203,8 +220,6 @@ class PipelineBuildService @Autowired constructor(
                     }
                 }
             } else {
-                val atomCode = taskParamMap["atomCode"].toString()
-
                 val taskParams = if (taskParamMap["@type"] != "marketBuild" && taskParamMap["@type"] != "marketBuildLess") {
                     val inputMap = mutableMapOf<String, String>()
                     when {
@@ -244,7 +259,7 @@ class PipelineBuildService @Autowired constructor(
                     projectEnglishName = task.projectId,
                     type = "task",
                     itemId = task.taskId,
-                    atomCode = atomCode,
+                    atomCode = task.atomCode,
                     taskParams = taskParams,
                     status = BuildStatus.values()[task.status].statusName,
                     errorCode = task.errorCode,
@@ -264,6 +279,24 @@ class PipelineBuildService @Autowired constructor(
         }
     }
 
+    private fun pushBuildHistory(history: DataPlatBuildHistory) {
+        try {
+            logger.info("pushBuildHistory: ${JsonUtil.toJson(history)}")
+            kafkaClient.send(KafkaTopic.LANDUN_BUILD_HISTORY_TOPIC, JsonUtil.toJson(history))
+        } catch (e: Exception) {
+            logger.error("Push build history to kafka error, buildId: ${history.buildId}", e)
+        }
+    }
+
+    private fun pushBuildDetail(buildDetail: DataPlatBuildDetail) {
+        try {
+            logger.info("pushBuildDetail: ${JsonUtil.toJson(buildDetail)}")
+            kafkaClient.send(KafkaTopic.LANDUN_BUILD_DETAIL_TOPIC, JsonUtil.toJson(buildDetail))
+        } catch (e: Exception) {
+            logger.error("Push build detail to kafka error, buildId: ${buildDetail.buildId}", e)
+        }
+    }
+
     private fun pushGitTaskInfo(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord) {
         try {
             val gitUrl: String
@@ -275,13 +308,13 @@ class PipelineBuildService @Autowired constructor(
                     val gitRepository = client.get(ServiceRepositoryResource::class)
                         .get(event.projectId, repositoryHashId.toString(), RepositoryType.ID)
                     gitUrl = gitRepository.data!!.url
-                    sendKafka(task, gitUrl)
+                    sendGitTask2Kafka(task, gitUrl)
                 }
                 "gitCodeRepoCommon" -> {
                     val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
                     val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
                     gitUrl = inputMap["repositoryUrl"].toString()
-                    sendKafka(task, gitUrl)
+                    sendGitTask2Kafka(task, gitUrl)
                 }
                 "gitCodeRepo", "PullFromGithub", "GitLab" -> {
                     val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
@@ -294,7 +327,7 @@ class PipelineBuildService @Autowired constructor(
                     val gitRepository = client.get(ServiceRepositoryResource::class)
                         .get(event.projectId, repositoryHashId, RepositoryType.ID)
                     gitUrl = gitRepository.data!!.url
-                    sendKafka(task, gitUrl)
+                    sendGitTask2Kafka(task, gitUrl)
                 }
             }
         } catch (e: Exception) {
@@ -302,8 +335,7 @@ class PipelineBuildService @Autowired constructor(
         }
     }
 
-    private fun sendKafka(task: TPipelineBuildTaskRecord, gitUrl: String) {
-        val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    private fun sendGitTask2Kafka(task: TPipelineBuildTaskRecord, gitUrl: String) {
         val taskMap = task.intoMap()
         taskMap["GIT_URL"] = gitUrl
         taskMap["WASH_TIME"] = LocalDateTime.now().format(dateTimeFormatter)
@@ -343,17 +375,39 @@ class PipelineBuildService @Autowired constructor(
         .build<String/*pipelineId*/, String/*templateId*/>(
             object : CacheLoader<String, String>() {
                 override fun load(pipelineId: String): String {
-                    return pipelineTemplateDao.getTemplate(dslContext, pipelineId)?.templateId ?: ""
+                    return lambdaPipelineTemplateDao.getTemplate(dslContext, pipelineId)?.templateId ?: ""
                 }
             }
         )
 
     private fun getBuildInfo(buildId: String): BuildInfo? {
-        return convert(lambdaPipelineBuildDao.getBuildInfo(dslContext, buildId))
+        return convert(lambdaPipelineBuildDao.getBuildHistory(dslContext, buildId))
     }
 
-    private fun getModel(pipelineId: String, version: Int): String? {
-        return pipelineResDao.getModel(dslContext, pipelineId, version)
+    private fun genBuildDetail(
+        projectInfo: ProjectOrganize,
+        pipelineId: String,
+        buildDetailRecord: TPipelineBuildDetailRecord
+    ): DataPlatBuildDetail {
+        return with(buildDetailRecord) {
+            DataPlatBuildDetail(
+                washTime = LocalDateTime.now().format(dateTimeFormatter),
+                buildId = buildId,
+                templateId = templateCache.get(pipelineId),
+                bgName = projectInfo.bgName,
+                deptName = projectInfo.deptName,
+                centerName = projectInfo.centerName,
+                projectId = projectInfo.projectId,
+                pipelineId = pipelineId,
+                buildNum = buildNum,
+                model = model,
+                trigger = trigger,
+                startUser = startUser,
+                startTime = startTime.format(dateTimeFormatter),
+                endTime = endTime.format(dateTimeFormatter),
+                status = status
+            )
+        }
     }
 
     private fun convert(t: TPipelineBuildHistoryRecord?): BuildInfo? {
@@ -377,12 +431,98 @@ class PipelineBuildService @Autowired constructor(
                 parentBuildId = t.parentBuildId,
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
-                errorInfoList = if (t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo) as List<ErrorInfo> else null
+                errorInfoList = null
             )
         }
     }
 
+    private fun genBuildHistory(
+        projectInfo: ProjectOrganize,
+        tPipelineBuildHistoryRecord: TPipelineBuildHistoryRecord,
+        buildStatus: Array<BuildStatus>,
+        currentTimestamp: Long
+    ): DataPlatBuildHistory {
+        return with(tPipelineBuildHistoryRecord) {
+            val totalTime = if (startTime == null || endTime == null) {
+                0
+            } else {
+                Duration.between(startTime, endTime).toMillis()
+            }
+            DataPlatBuildHistory(
+                washTime = LocalDateTime.now().format(dateTimeFormatter),
+                templateId = templateCache.get(pipelineId),
+                bgName = projectInfo.bgName,
+                deptName = projectInfo.deptName,
+                centerName = projectInfo.centerName,
+                projectId = projectInfo.projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                userId = triggerUser ?: startUser,
+                trigger = StartType.toReadableString(trigger, ChannelCode.valueOf(channel)),
+                buildNum = buildNum,
+                pipelineVersion = version,
+                startTime = startTime.format(dateTimeFormatter),
+                endTime = endTime.format(dateTimeFormatter),
+                status = buildStatus[status].name,
+                stageStatus = stageStatus,
+                deleteReason = "",
+                currentTimestamp = currentTimestamp,
+                material = material,
+                queueTime = queueTime?.timestampmilli(),
+                artifactList = artifactInfo,
+                remark = remark,
+                totalTime = totalTime,
+                executeTime = if (executeTime == null || executeTime == 0L) {
+                    if (BuildStatus.isFinish(buildStatus[status])) {
+                        totalTime
+                    } else 0L
+                } else {
+                    executeTime
+                },
+                buildParameters = buildParameters,
+                webHookType = webhookType,
+                webhookInfo = webhookInfo,
+                startType = getStartType(trigger, webhookType),
+                recommendVersion = recommendVersion,
+                retry = isRetry ?: false,
+                errorInfoList = errorInfo
+            )
+        }
+    }
+
+    private fun getStartType(trigger: String, webhookType: String?): String {
+        return when (trigger) {
+            StartType.MANUAL.name -> {
+                ManualTriggerElement.classType
+            }
+            StartType.TIME_TRIGGER.name -> {
+                TimerTriggerElement.classType
+            }
+            StartType.WEB_HOOK.name -> {
+                when (webhookType) {
+                    CodeType.SVN.name -> {
+                        CodeSVNWebHookTriggerElement.classType
+                    }
+                    CodeType.GIT.name -> {
+                        CodeGitWebHookTriggerElement.classType
+                    }
+                    CodeType.GITLAB.name -> {
+                        CodeGitlabWebHookTriggerElement.classType
+                    }
+                    CodeType.GITHUB.name -> {
+                        CodeGithubWebHookTriggerElement.classType
+                    }
+                    else -> RemoteTriggerElement.classType
+                }
+            }
+            else -> { // StartType.SERVICE.name,  StartType.PIPELINE.name, StartType.REMOTE.name
+                RemoteTriggerElement.classType
+            }
+        }
+    }
+
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
+        private val logger = LoggerFactory.getLogger(LambdaDataService::class.java)
+        private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     }
 }

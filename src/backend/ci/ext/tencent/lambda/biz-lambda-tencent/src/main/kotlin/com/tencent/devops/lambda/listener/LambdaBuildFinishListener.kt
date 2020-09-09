@@ -23,24 +23,23 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.dao
+package com.tencent.devops.lambda.listener
 
-import com.tencent.devops.model.process.tables.TTemplatePipeline
-import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.lambda.service.LambdaDataService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-@Repository
-class PipelineTemplateDao {
+@Component
+class LambdaBuildFinishListener @Autowired constructor(
+    private val lambdaDataService: LambdaDataService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 
-    fun getTemplate(
-        dslContext: DSLContext,
-        pipelineId: String
-    ): TTemplatePipelineRecord? {
-        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .fetchOne()
-        }
+    override fun run(event: PipelineBuildFinishBroadCastEvent) {
+//        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Receive build finish event - ($event)")
+        lambdaDataService.onBuildFinish(event)
     }
 }

@@ -23,14 +23,15 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.listener
 
-import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
+package com.tencent.devops.sign
 
-@Component
-class LambdaListener {
-    companion object {
-        private val logger = LoggerFactory.getLogger(LambdaListener::class.java)
-    }
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+
+@MicroService
+class Application
+
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(Application::class, args)
 }
