@@ -600,7 +600,11 @@ class PipelineRuntimeService @Autowired constructor(
                 recommendVersion = recommendVersion,
                 retry = isRetry ?: false,
                 errorInfoList = if (errorInfo != null) {
-                    JsonUtil.getObjectMapper().readValue(errorInfo) as List<ErrorInfo>
+                    try {
+                        JsonUtil.getObjectMapper().readValue(errorInfo) as List<ErrorInfo>
+                    } catch (e: Exception) {
+                        null
+                    }
                 } else {
                     null
                 }
@@ -850,7 +854,8 @@ class PipelineRuntimeService @Autowired constructor(
                                 executeCount = 1,
                                 starter = userId,
                                 approver = null,
-                                subBuildId = null
+                                subBuildId = null,
+                                atomCode = atomElement.getAtomCode()
                             )
                         )
                     } else {

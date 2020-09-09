@@ -24,56 +24,64 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.op
+package com.tencent.devops.dispatch.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.pojo.JobQuotaSystem
+import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PIPELINE_QUOTA"], description = "OP-流水线-配额")
-@Path("/op/pipeline/quota")
+@Api(tags = ["OP_JOBS_SYSTEM_QUOTA"], description = "Job默认配额管理")
+@Path("/op/jobs/system/quota")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OpPipelineQuotaResource {
+interface OpJobQuotaSystemResource {
 
-    @ApiOperation("更新")
+    @ApiOperation("获取系统默认JOB配额信息")
+    @GET
+    @Path("/{jobQuotaVmType}")
+    fun get(
+        @ApiParam(value = "构建机类型", required = false)
+        @PathParam("jobQuotaVmType")
+        jobQuotaVmType: JobQuotaVmType
+    ): Result<List<JobQuotaSystem>>
+
+    @ApiOperation("添加系统默认JOB配额信息")
     @PUT
-    @Path("/projects/{projectId}/update")
-    fun updateQuota(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("projectId")
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("配额")
-        @QueryParam("quota")
-        quota: Long
+    @Path("/")
+    fun add(
+        @ApiParam(value = "Job配额信息", required = true)
+        jobQuota: JobQuotaSystem
     ): Result<Boolean>
 
-    @ApiOperation("获取项目的配额")
-    @GET
-    @Path("/projects/{projectId}/get")
-    fun getQuota(
-        @ApiParam("projectId")
-        @PathParam("projectId")
-        projectId: String
-    ): Result<Map<String, Long>>
+    @ApiOperation("删除系统默认JOB配额信息")
+    @DELETE
+    @Path("/{jobQuotaVmType}")
+    fun delete(
+        @ApiParam(value = "构建机类型", required = true)
+        @PathParam("jobQuotaVmType")
+        jobQuotaVmType: JobQuotaVmType
+    ): Result<Boolean>
 
-    @ApiOperation("手动启动清理任务")
-    @GET
-    @Path("/doClearJob")
-    fun doClearJob(): Result<Boolean>
+    @ApiOperation("更新系统的JOB配额信息")
+    @POST
+    @Path("/{jobQuotaVmType}")
+    fun update(
+        @ApiParam(value = "构建机类型", required = true)
+        @PathParam("jobQuotaVmType")
+        jobQuotaVmType: JobQuotaVmType,
+        @ApiParam(value = "Job配额信息", required = true)
+        jobQuota: JobQuotaSystem
+    ): Result<Boolean>
 }

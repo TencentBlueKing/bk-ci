@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.common.VMUtils
@@ -274,7 +275,8 @@ class PipelineService @Autowired constructor(
                 throw ignored
             } finally {
                 if (!success) {
-                    modelCheckPlugin.beforeDeleteElementInExistsModel(userId, model, null, pipelineId)
+                    val param = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId ?: "", channelCode = channelCode)
+                    modelCheckPlugin.beforeDeleteElementInExistsModel(model, null, param)
                 }
             }
         } finally {
@@ -547,7 +549,8 @@ class PipelineService @Autowired constructor(
                     defaultMessage = "指定要复制的流水线-模型不存在"
                 )
             // 对已经存在的模型做处理
-            modelCheckPlugin.beforeDeleteElementInExistsModel(userId, existModel, model, pipelineId)
+            val param = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId, channelCode = channelCode)
+            modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
 
             pipelineRepositoryService.deployPipeline(model, projectId, pipelineId, userId, channelCode, false)
             if (checkPermission) {
@@ -693,6 +696,7 @@ class PipelineService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
                 defaultMessage = "指定要复制的流水线-模型不存在"
             )
+
         try {
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             val buildNo = triggerContainer.buildNo

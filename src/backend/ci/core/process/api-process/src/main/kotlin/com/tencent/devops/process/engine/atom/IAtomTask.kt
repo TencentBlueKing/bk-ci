@@ -186,6 +186,6 @@ val defaultSuccessAtomResponse = AtomResponse(BuildStatus.SUCCEED)
 val defaultFailAtomResponse = AtomResponse(
     buildStatus = BuildStatus.FAILED,
     errorType = ErrorType.USER,
-    errorCode = ErrorCode.USER_DEFAULT_ERROR,
+    errorCode = ErrorCode.PLUGIN_DEFAULT_ERROR,
     errorMsg = "not definded error"
 )
