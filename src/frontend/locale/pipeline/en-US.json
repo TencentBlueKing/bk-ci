@@ -28,6 +28,8 @@
     "terminate": "Cancel",
     "userError": "USER",
     "systemError": "SYSTEM",
+    "thirdPartyError": "THIRD_PARTY",
+    "pluginError": "PLUGIN",
     "retry": "Retry",
     "resume": "Continue",
     "uninstall": "Uninstall",
