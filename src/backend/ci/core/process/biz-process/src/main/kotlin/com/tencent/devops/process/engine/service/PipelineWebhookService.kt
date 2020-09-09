@@ -111,6 +111,9 @@ class PipelineWebhookService @Autowired constructor(
                 ScmType.CODE_TGIT -> {
                     scmProxyService.addTGitWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
                 }
+                else -> {
+                    null
+                }
             }
             logger.info("add $projectName webhook to [$pipelineWebhook]")
             if (!projectName.isNullOrBlank()) {
