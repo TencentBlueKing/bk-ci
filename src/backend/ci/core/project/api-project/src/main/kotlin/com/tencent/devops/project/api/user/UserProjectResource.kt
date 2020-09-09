@@ -168,7 +168,7 @@ interface UserProjectResource {
     ): Result<Boolean>
 
     @ApiOperation("是否拥有创建项目")
-    @Path("/{projectId}/hasCreatePermission")
+    @Path("/hasCreatePermission")
     @GET
     fun hasCreatePermission(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
