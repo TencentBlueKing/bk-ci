@@ -145,6 +145,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         projectCreateInfo.projectName
                     )
                 )
+            } catch (e: PermissionForbiddenException) {
+                throw e
             } catch (e: Exception) {
                 logger.warn("权限中心创建项目信息： $projectCreateInfo", e)
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
