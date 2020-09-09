@@ -24,42 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.process.engine.pojo.event.commit
 
-import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.process.engine.pojo.event.commit.enum.CommitEventType
 
-@ApiModel("代码库模型-Code平台TGit")
-data class CodeTGitRepository(
-    @ApiModelProperty("代码库别名", required = true)
-    override val aliasName: String,
-    @ApiModelProperty("URL", required = true)
-    override val url: String,
-    @ApiModelProperty("凭据id", required = true)
-    override val credentialId: String,
-    @ApiModelProperty("tGit项目名称", example = "xx/yy_ci_example_proj", required = true)
-    override val projectName: String,
-    @ApiModelProperty("用户名", required = true)
-    override var userName: String,
-    @ApiModelProperty("仓库认证类型", required = false)
-    val authType: RepoAuthType? = RepoAuthType.SSH,
-    @ApiModelProperty("项目id", required = true)
-    override val projectId: String?,
-    override val repoHashId: String?
-) : Repository {
-    companion object {
-        const val classType = "codeTGit"
-    }
-
-    //    override fun getStartPrefix() = "git@git.tencent.com"
-    override fun getStartPrefix(): String {
-        return when (authType) {
-            RepoAuthType.SSH -> "git@"
-            RepoAuthType.OAUTH -> "http://"
-            RepoAuthType.HTTP -> "http://"
-            RepoAuthType.HTTPS -> "https://"
-            else -> "git@"
-        }
-    }
-}
+@Event(MQ.EXCHANGE_TGIT_BUILD_REQUEST_EVENT, MQ.ROUTE_TGIT_BUILD_REQUEST_EVENT)
+data class TGitWebhookEvent(
+    override val requestContent: String,
+    override var retryTime: Int = 3,
+    override var delayMills: Int = 0,
+    override val commitEventType: CommitEventType = CommitEventType.TGIT
+) : ICodeWebhookEvent(requestContent, retryTime, delayMills, commitEventType)
