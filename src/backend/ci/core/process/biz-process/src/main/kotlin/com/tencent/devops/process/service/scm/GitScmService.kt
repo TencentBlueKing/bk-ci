@@ -29,14 +29,15 @@ package com.tencent.devops.process.service.scm
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
-import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -58,10 +59,17 @@ class GitScmService @Autowired constructor(
         repo: Repository
     ): GitMrReviewInfo? {
         if (mrId == null) return null
-        if (repo !is CodeGitRepository) return null
+        val authType = when (repo) {
+            is CodeGitRepository ->
+                repo.authType
+            is CodeTGitRepository ->
+                repo.authType
+            else ->
+                return null
+        }
 
         return try {
-            val tokenType = if (repo.authType == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val tokenType = if (authType == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
             val token = getToken(
                 projectId = projectId,
                 credentialId = repo.credentialId,
@@ -72,7 +80,8 @@ class GitScmService @Autowired constructor(
                 repoName = repo.projectName,
                 mrId = mrId,
                 tokenType = tokenType,
-                token = token
+                token = token,
+                repoUrl = repo.url
             ).data!!
         } catch (e: Exception) {
             logger.error("fail to get mr reviews info", e)
@@ -86,10 +95,17 @@ class GitScmService @Autowired constructor(
         repo: Repository
     ): GitMrInfo? {
         if (mrId == null) return null
-        if (repo !is CodeGitRepository) return null
+        val authType = when (repo) {
+            is CodeGitRepository ->
+                repo.authType
+            is CodeTGitRepository ->
+                repo.authType
+            else ->
+                return null
+        }
 
         return try {
-            val tokenType = if (repo.authType == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val tokenType = if (authType == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
             val token = getToken(
                 projectId = projectId,
                 credentialId = repo.credentialId,
@@ -100,7 +116,8 @@ class GitScmService @Autowired constructor(
                 repoName = repo.projectName,
                 mrId = mrId,
                 tokenType = tokenType,
-                token = token
+                token = token,
+                repoUrl = repo.url
             ).data!!
         } catch (e: Exception) {
             logger.error("fail to get mr info", e)
@@ -114,10 +131,17 @@ class GitScmService @Autowired constructor(
         repo: Repository
     ): GitMrChangeInfo? {
         if (mrId == null) return null
-        if (repo !is CodeGitRepository) return null
+        val authType = when (repo) {
+            is CodeGitRepository ->
+                repo.authType
+            is CodeTGitRepository ->
+                repo.authType
+            else ->
+                return null
+        }
 
         return try {
-            val tokenType = if (repo.authType == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val tokenType = if (authType == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
             val token = getToken(
                 projectId = projectId,
                 credentialId = repo.credentialId,
@@ -128,7 +152,8 @@ class GitScmService @Autowired constructor(
                 repoName = repo.projectName,
                 mrId = mrId,
                 tokenType = tokenType,
-                token = token
+                token = token,
+                repoUrl = repo.url
             ).data!!
         } catch (e: Exception) {
             logger.error("fail to get mr info", e)

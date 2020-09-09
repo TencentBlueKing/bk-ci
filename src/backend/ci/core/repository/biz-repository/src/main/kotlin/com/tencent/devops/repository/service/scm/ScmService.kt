@@ -266,6 +266,9 @@ class ScmService @Autowired constructor(
                 ScmType.CODE_SVN -> {
                     svnConfig.svnHookUrl
                 }
+                ScmType.CODE_TGIT -> {
+                    gitConfig.tGitHookUrl
+                }
                 else -> {
                     logger.warn("Unknown repository type ($type) when add webhook")
                     throw RuntimeException("Unknown repository type ($type) when add webhook")

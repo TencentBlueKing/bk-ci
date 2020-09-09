@@ -28,132 +28,42 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.service.code.GitWebHookMatcher
 import com.tencent.devops.process.engine.service.code.GithubWebHookMatcher
 import com.tencent.devops.process.engine.service.code.GitlabWebHookMatcher
+import com.tencent.devops.process.engine.service.code.ScmWebhookParamsFactory
 import com.tencent.devops.process.engine.service.code.SvnWebHookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.WebHookParams
 import com.tencent.devops.process.pojo.code.WebhookCommit
-import com.tencent.devops.process.pojo.code.git.GitCommit
 import com.tencent.devops.process.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.pojo.code.git.GitPushEvent
-import com.tencent.devops.process.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.process.pojo.code.github.GithubCreateEvent
 import com.tencent.devops.process.pojo.code.github.GithubEvent
 import com.tencent.devops.process.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.process.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
-import com.tencent.devops.process.service.scm.GitScmService
-import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.process.utils.PIPELINE_REPO_NAME
-import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
-import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BLOCK
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BRANCH
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_COMMIT_MESSAGE
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_MR_COMMITTER
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_MR_ID
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REPO
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REPO_TYPE
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REVISION
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_BRANCH
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_URL
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
-import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME
-import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
-import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_PATHS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_INCLUDE_PATHS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ID
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LABELS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_NUMBER
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_URL
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TITLE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ACTION_KIND
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_COUNT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_PREFIX
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_AUTHOR_PREFIX
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_MSG_PREFIX
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_PREFIX
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_TIMESTAMP_PREFIX
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_COUNT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_PREFIX
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_COUNT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_PREFIX
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_USERNAME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_NAME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_OPERATION
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_USERNAME
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_COMMIT_TIME
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_EXCLUDE_PATHS
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_EXCLUDE_USERS
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_INCLUDE_USERS
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_RELATIVE_PATH
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_REVERSION
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_USERNAME
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_HASH_ID
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_ALIAS_NAME
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_NAME
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_TYPE
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -172,10 +82,6 @@ class PipelineBuildWebhookService @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
 
-    companion object {
-        private const val MAX_VARITABLE_COUNT = 32
-    }
-
     fun externalCodeSvnBuild(e: String): Boolean {
         logger.info("Trigger code svn build - $e")
 
@@ -191,7 +97,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         return startProcessByWebhook(CodeSVNWebHookTriggerElement.classType, svnWebHookMatcher)
     }
 
-    fun externalCodeGitBuild(e: String): Boolean {
+    fun externalCodeGitBuild(codeRepositoryType: String, e: String): Boolean {
         logger.info("Trigger code git build($e)")
 
         val event = try {
@@ -220,7 +126,7 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         val gitWebHookMatcher = GitWebHookMatcher(event)
 
-        return startProcessByWebhook(CodeGitWebHookTriggerElement.classType, gitWebHookMatcher)
+        return startProcessByWebhook(codeRepositoryType, gitWebHookMatcher)
     }
 
     fun externalGitlabBuild(e: String): Boolean {
@@ -320,6 +226,12 @@ class PipelineBuildWebhookService @Autowired constructor(
                                     return@lit
                                 }
                             }
+                            CodeTGitWebHookTriggerElement.classType -> {
+                                if (it is CodeTGitWebHookTriggerElement && it.isElementEnable()) {
+                                    canWebhookStartup = true
+                                    return@lit
+                                }
+                            }
                         }
                     }
                 }
@@ -364,7 +276,7 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         // 寻找代码触发原子
         container.elements.forEach elements@{ element ->
-            val webHookParams = getWebhookElementParams(element, variables) ?: return@elements
+            val webHookParams = ScmWebhookParamsFactory.getWebhookElementParams(element, variables) ?: return@elements
             val repositoryConfig = webHookParams.repositoryConfig
             if (repositoryConfig.getRepositoryId().isBlank()) {
                 logger.info("repositoryHashId is blank for code trigger pipeline $pipelineId ")
@@ -391,7 +303,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                     val webhookCommit = WebhookCommit(
                         userId = userId,
                         pipelineId = pipelineId,
-                        params = getStartParams(
+                        params = ScmWebhookParamsFactory.getStartParams(
                             projectId = projectId,
                             element = element,
                             repo = repo,
@@ -423,329 +335,6 @@ class PipelineBuildWebhookService @Autowired constructor(
             }
         }
         return false
-    }
-
-    private fun getWebhookElementParams(element: Element, variables: Map<String, String>): WebHookParams? {
-        var params: WebHookParams? = null
-        when (element) {
-            is CodeSVNWebHookTriggerElement -> {
-
-                params = WebHookParams(
-                    repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
-                        repositoryConfig = RepositoryConfigUtils.buildConfig(element),
-                        variables = variables
-                    )
-                )
-                params.relativePath = EnvUtils.parseEnv(element.relativePath ?: "", variables)
-                params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
-                    ""
-                } else {
-                    EnvUtils.parseEnv(element.excludeUsers!!.joinToString(","), variables)
-                }
-                params.includeUsers = if (element.includeUsers == null || element.includeUsers!!.isEmpty()) {
-                    ""
-                } else {
-                    EnvUtils.parseEnv(element.includeUsers!!.joinToString(","), variables)
-                }
-                params.excludePaths = EnvUtils.parseEnv(element.excludePaths ?: "", variables)
-                params.codeType = CodeType.SVN
-            }
-            is CodeGitWebHookTriggerElement -> {
-                params = WebHookParams(
-                    repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
-                        repositoryConfig = RepositoryConfigUtils.buildConfig(element),
-                        variables = variables
-                    )
-                )
-                params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
-                    ""
-                } else {
-                    EnvUtils.parseEnv(element.excludeUsers!!.joinToString(","), variables)
-                }
-                if (element.branchName == null) {
-                    return null
-                }
-                params.block = element.block ?: false
-                params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
-                params.eventType = element.eventType
-                params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
-                params.includePaths = EnvUtils.parseEnv(element.includePaths ?: "", variables)
-                params.excludePaths = EnvUtils.parseEnv(element.excludePaths ?: "", variables)
-                params.codeType = CodeType.GIT
-                params.tagName = EnvUtils.parseEnv(element.tagName ?: "", variables)
-                params.excludeTagName = EnvUtils.parseEnv(element.excludeTagName ?: "", variables)
-                params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)
-                params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
-            }
-            is CodeGithubWebHookTriggerElement -> {
-                params = WebHookParams(
-                    repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
-                        repositoryConfig = RepositoryConfigUtils.buildConfig(element),
-                        variables = variables
-                    )
-                )
-                params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
-                    ""
-                } else {
-                    EnvUtils.parseEnv(element.excludeUsers!!, variables)
-                }
-                if (element.branchName == null) {
-                    return null
-                }
-                params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
-                params.eventType = element.eventType
-                params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
-                params.codeType = CodeType.GITHUB
-            }
-            is CodeGitlabWebHookTriggerElement -> {
-                params = WebHookParams(
-                    repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
-                        repositoryConfig = RepositoryConfigUtils.buildConfig(element),
-                        variables = variables
-                    )
-                )
-                if (element.branchName == null) {
-                    return null
-                }
-                params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
-                params.codeType = CodeType.GITLAB
-            }
-            else -> {
-            }
-        }
-        return params
-    }
-
-    private fun getStartParams(
-        projectId: String,
-        element: Element,
-        repo: Repository,
-        matcher: ScmWebhookMatcher,
-        variables: Map<String, String>,
-        params: WebHookParams,
-        matchResult: ScmWebhookMatcher.MatchResult
-    ): Map<String, Any> {
-        val mrRequestId = matcher.getMergeRequestId()
-        val startParams = mutableMapOf<String, Any>()
-        startParams[PIPELINE_WEBHOOK_REVISION] = matcher.getRevision()
-        startParams[PIPELINE_REPO_NAME] = matcher.getRepoName()
-        startParams[PIPELINE_START_WEBHOOK_USER_ID] = matcher.getUsername()
-        startParams[PIPELINE_START_TASK_ID] = element.id!! // 当前触发节点为启动节点
-        startParams[PIPELINE_WEBHOOK_TYPE] = matcher.getCodeType().name
-        startParams[PIPELINE_WEBHOOK_EVENT_TYPE] = matcher.getEventType().name
-
-        startParams[PIPELINE_WEBHOOK_REPO] = params.repositoryConfig.getRepositoryId()
-        startParams[PIPELINE_WEBHOOK_REPO_TYPE] = params.repositoryConfig.repositoryType.name
-        startParams[PIPELINE_WEBHOOK_BLOCK] = params.block
-        startParams.putAll(matcher.getEnv())
-        startParams.putAll(variables)
-
-        if (!matcher.getBranchName().isNullOrBlank()) {
-            startParams[PIPELINE_WEBHOOK_BRANCH] = matcher.getBranchName()!!
-        }
-        if (!matcher.getHookSourceUrl().isNullOrBlank()) {
-            startParams[PIPELINE_WEBHOOK_SOURCE_URL] = matcher.getHookSourceUrl()!!
-        }
-        if (!matcher.getHookTargetUrl().isNullOrBlank()) {
-            startParams[PIPELINE_WEBHOOK_TARGET_URL] = matcher.getHookTargetUrl()!!
-        }
-        if (!matcher.getMessage().isNullOrBlank()) {
-            val message = matcher.getMessage()!!
-            startParams[PIPELINE_WEBHOOK_COMMIT_MESSAGE] = if (message.length >= 128) {
-                message.substring(0, 128)
-            } else {
-                message
-            }
-        }
-
-        // set new params
-        startParams[BK_REPO_WEBHOOK_REPO_TYPE] = params.codeType.name
-        startParams[BK_REPO_WEBHOOK_REPO_URL] = repo.url
-        startParams[BK_REPO_WEBHOOK_REPO_NAME] = repo.projectName
-        startParams[BK_REPO_WEBHOOK_REPO_ALIAS_NAME] = repo.aliasName
-        startParams[BK_REPO_WEBHOOK_HASH_ID] = repo.repoHashId ?: ""
-
-        if (params.codeType == CodeType.SVN) {
-            val triggerElement = element as CodeSVNWebHookTriggerElement
-            val svnMatcher = matcher as SvnWebHookMatcher
-            val svnEvent = svnMatcher.event
-            startParams[BK_REPO_SVN_WEBHOOK_REVERSION] = matcher.getRevision()
-            startParams[BK_REPO_SVN_WEBHOOK_USERNAME] = matcher.getUsername()
-            startParams[BK_REPO_SVN_WEBHOOK_COMMIT_TIME] = svnEvent.commitTime ?: 0L
-            startParams[BK_REPO_SVN_WEBHOOK_RELATIVE_PATH] = triggerElement.relativePath ?: ""
-            startParams[BK_REPO_SVN_WEBHOOK_EXCLUDE_PATHS] = triggerElement.excludePaths ?: ""
-            startParams[BK_REPO_SVN_WEBHOOK_INCLUDE_USERS] = triggerElement.includeUsers?.joinToString(",") ?: ""
-            startParams[BK_REPO_SVN_WEBHOOK_EXCLUDE_USERS] = triggerElement.excludeUsers?.joinToString(",") ?: ""
-        }
-
-        if (params.codeType == CodeType.GIT) {
-            val triggerElement = element as CodeGitWebHookTriggerElement
-            val gitMatcher = matcher as GitWebHookMatcher
-            startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = matcher.getRevision()
-            startParams[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] = params.eventType ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS] = triggerElement.branchName ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS] = triggerElement.excludeBranchName ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_PATHS] = triggerElement.includePaths ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_PATHS] = triggerElement.excludePaths ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS] = triggerElement.excludeUsers?.joinToString(",") ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] =
-                matchResult.extra[GitWebHookMatcher.MATCH_BRANCH] ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[GitWebHookMatcher.MATCH_PATHS] ?: ""
-
-            if (params.eventType == CodeEventType.MERGE_REQUEST || params.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
-                // MR提交人
-                val gitScmService = SpringContextUtil.getBean(GitScmService::class.java)
-                val mrInfo = gitScmService.getMergeRequestInfo(projectId, mrRequestId, repo)
-                val gitMrEvent = gitMatcher.event as GitMergeRequestEvent
-                val reviewers = gitScmService.getMergeRequestReviewersInfo(projectId, mrRequestId, repo)?.reviewers
-
-                startParams[PIPELINE_WEBHOOK_MR_ID] = mrRequestId!!
-                startParams[PIPELINE_WEBHOOK_MR_COMMITTER] = mrInfo?.author?.username ?: ""
-                startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = mrInfo?.sourceBranch ?: ""
-                startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = mrInfo?.targetBranch ?: ""
-
-                startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = mrInfo?.author?.username ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_URL] = matcher.getHookTargetUrl() ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL] = matcher.getHookSourceUrl() ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = mrInfo?.targetBranch ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = mrInfo?.sourceBranch ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = mrInfo?.createTime ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = mrInfo?.updateTime ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] =
-                    DateTimeUtil.zoneDateToTimestamp(mrInfo?.createTime)
-                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] =
-                    DateTimeUtil.zoneDateToTimestamp(mrInfo?.updateTime)
-                startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = mrInfo?.mrId ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = mrInfo?.mrNumber ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = mrInfo?.description ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = mrInfo?.title ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = mrInfo?.assignee?.username ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = gitMrEvent.object_attributes.url
-                startParams[BK_REPO_GIT_WEBHOOK_MR_REVIEWERS] = reviewers?.joinToString(",") { it.username } ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = mrInfo?.milestone?.title ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] = mrInfo?.milestone?.dueDate ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = mrInfo?.labels?.joinToString(",") ?: ""
-
-                val lastCommit = gitMatcher.event.object_attributes.last_commit
-                startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT] = lastCommit.id
-                startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG] = lastCommit.message
-            }
-
-            if (params.eventType == CodeEventType.TAG_PUSH) {
-                val gitTagPushEvent = gitMatcher.event as GitTagPushEvent
-                startParams[BK_REPO_GIT_WEBHOOK_TAG_NAME] = matcher.getBranchName()
-                startParams[BK_REPO_GIT_WEBHOOK_TAG_OPERATION] = gitTagPushEvent.operation_kind ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = gitTagPushEvent.total_commits_count
-                startParams[BK_REPO_GIT_WEBHOOK_TAG_USERNAME] = matcher.getUsername()
-                genCommitsParam(startParams, gitTagPushEvent.commits)
-            }
-
-            if (params.eventType == CodeEventType.PUSH) {
-                val gitPushEvent = gitMatcher.event as GitPushEvent
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_USERNAME] = matcher.getUsername()
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT] = gitPushEvent.before
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT] = gitPushEvent.after
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = gitPushEvent.total_commits_count
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_ACTION_KIND] = gitPushEvent.action_kind ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND] = gitPushEvent.operation_kind ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = matcher.getBranchName()
-                genCommitsParam(startParams, gitPushEvent.commits)
-            }
-        }
-
-        if (params.codeType == CodeType.GITHUB) {
-            val triggerElement = element as CodeGithubWebHookTriggerElement
-            startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = matcher.getRevision()
-            startParams[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] = params.eventType ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS] = triggerElement.branchName ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS] = triggerElement.excludeBranchName ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS] = triggerElement.excludeUsers ?: ""
-
-            val githubMatcher = matcher as GithubWebHookMatcher
-            if (params.eventType == CodeEventType.PULL_REQUEST) {
-                val githubEvent = githubMatcher.event as GithubPullRequestEvent
-                startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = githubEvent.sender.login
-                startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_URL] = githubEvent.pull_request.base.repo.clone_url
-                startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL] = githubEvent.pull_request.head.repo.clone_url
-                startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = githubEvent.pull_request.base.ref
-                startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = githubEvent.pull_request.head.ref
-                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = githubEvent.pull_request.created_at ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = githubEvent.pull_request.update_at ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = githubEvent.pull_request.id
-                startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = githubEvent.number
-                startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = githubEvent.pull_request.comments_url ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = githubEvent.pull_request.title ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] =
-                    githubEvent.pull_request.assignees.joinToString(",") { it.login ?: "" }
-                startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = githubEvent.pull_request.url
-                startParams[BK_REPO_GIT_WEBHOOK_MR_REVIEWERS] =
-                    githubEvent.pull_request.requested_reviewers.joinToString(",") { it.login ?: "" }
-                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = githubEvent.pull_request.milestone?.title ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] =
-                    githubEvent.pull_request.milestone?.due_on ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] =
-                    githubEvent.pull_request.labels.joinToString(",") { it.name }
-            }
-
-            if (params.eventType == CodeEventType.CREATE) {
-                val githubEvent = githubMatcher.event as GithubCreateEvent
-                startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME] = githubEvent.ref
-                startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE] = githubEvent.ref_type
-                startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME] = githubEvent.sender.login
-            }
-
-            if (params.eventType == CodeEventType.PUSH) {
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_USERNAME] = matcher.getUsername()
-                startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = matcher.getBranchName()
-            }
-        }
-
-        if (params.codeType == CodeType.GITLAB) {
-            val triggerElement = element as CodeGitlabWebHookTriggerElement
-            startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS] = triggerElement.branchName ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = matcher.getBranchName() ?: ""
-        }
-
-        return startParams
-    }
-
-    private fun genCommitsParam(startParams: MutableMap<String, Any>, commits: List<GitCommit>) {
-        commits.forEachIndexed { index, gitCommit ->
-            val curIndex = index + 1
-            startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_PREFIX + curIndex] = gitCommit.id
-            startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_MSG_PREFIX + curIndex] = gitCommit.message
-            startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_TIMESTAMP_PREFIX + curIndex] =
-                DateTimeUtil.zoneDateToTimestamp(gitCommit.timestamp)
-            startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_AUTHOR_PREFIX + curIndex] = gitCommit.author
-            startParams[BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_COUNT] = gitCommit.added?.size ?: 0
-            startParams[BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_COUNT] = gitCommit.modified?.size ?: 0
-            startParams[BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_COUNT] = gitCommit.removed?.size ?: 0
-
-            var count = 0
-            run {
-                gitCommit.added?.forEachIndexed { innerIndex, file ->
-                    startParams[BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
-                    count++
-                    if (count > MAX_VARITABLE_COUNT) return@run
-                }
-            }
-
-            run {
-                gitCommit.modified?.forEachIndexed { innerIndex, file ->
-                    startParams[BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
-                    count++
-                    if (count > MAX_VARITABLE_COUNT) return@run
-                }
-            }
-
-            run {
-                gitCommit.removed?.forEachIndexed { innerIndex, file ->
-                    startParams[BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
-                    count++
-                    if (count > MAX_VARITABLE_COUNT) return@run
-                }
-            }
-        }
     }
 
     /**
