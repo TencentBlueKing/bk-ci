@@ -1,9 +1,9 @@
 <template>
     <bk-upload
         theme="button"
-        :tip="$t('sizeLimit', [size])"
+        :tip="tip"
         name="file"
-        :delay-time="500"
+        :delay-time="delayTime"
         :handle-res-code="handleUploadRes"
         :with-credentials="true"
         :multiple="false"
@@ -25,6 +25,12 @@
                 default: 10
             }
         },
+        data () {
+            return {
+                tip: this.$t('sizeLimit', [this.size]),
+                delayTime: 0
+            }
+        },
         computed: {
             uploadAcrtifactUrl () {
                 return `${AJAX_URL_PIRFIX}/artifactory/api/user/artifactories/file/uploadToPath`
@@ -32,7 +38,6 @@
         },
         methods: {
             handleUploadRes (response) {
-                console.log(response.data)
                 return response.data
             },
             handleUploadDone ({ name, errorMsg }) {
@@ -40,6 +45,10 @@
                     theme: errorMsg ? 'error' : 'success',
                     message: errorMsg || `${name}文件上传成功`
                 })
+                this.tip = this.$t('fileUploadSuccess')
+                if (!errorMsg) {
+                    this.delayTime = 500
+                }
             }
         }
     }

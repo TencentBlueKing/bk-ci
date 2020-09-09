@@ -99,6 +99,7 @@
     "pipelinesPreview": "预览",
     "pipelinesDetail": "执行详情",
     "sizeLimit": "最大上传{0}MB的文件",
+    "fileUploadSuccess": "上传成功",
     "execDetail": {
         "log": "日志",
         "setting": "配置",

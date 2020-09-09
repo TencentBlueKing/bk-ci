@@ -99,6 +99,7 @@
     "pipelinesPreview": "Preview",
     "pipelinesDetail": "Details",
     "sizeLimit": "Maximum file size: {0}MB",
+    "fileUploadSuccess": "Upload Sucessful",
     "execDetail": {
         "log": "Log",
         "setting": "Configuration",
