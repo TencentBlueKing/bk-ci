@@ -44,5 +44,5 @@ data class Cert(
     @ApiModelProperty("过期时间", required = true)
     val expireTime: Long,
     @ApiModelProperty("凭据ID", required = true)
-    val credentialId: String
+    val credentialId: String?
 )
