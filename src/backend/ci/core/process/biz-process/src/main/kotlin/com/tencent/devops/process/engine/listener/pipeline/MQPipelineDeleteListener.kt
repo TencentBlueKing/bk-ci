@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.dao.PipelineResDao
@@ -74,7 +75,8 @@ class MQPipelineDeleteListener @Autowired constructor(
             allVersionModel.forEach {
                 try {
                     val model = objectMapper.readValue(it, Model::class.java)
-                    modelCheckPlugin.beforeDeleteElementInExistsModel(userId, model, null, pipelineId)
+                    val param = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId)
+                    modelCheckPlugin.beforeDeleteElementInExistsModel(model, null, param)
                 } catch (ignored: Exception) {
                     logger.warn("Fail to get the pipeline($pipelineId) definition of project($projectId)", ignored)
                 }

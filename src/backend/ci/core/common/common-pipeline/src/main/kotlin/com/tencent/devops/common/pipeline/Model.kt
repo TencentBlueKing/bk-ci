@@ -51,13 +51,7 @@ data class Model(
     @ApiModelProperty("源模版ID", required = false)
     var srcTemplateId: String? = null,
     @ApiModelProperty("模板ID", required = false)
-    var templateId: String? = null,
-    @ApiModelProperty("构建错误类型", required = false)
-    var errorType: String? = null,
-    @ApiModelProperty("构建错误类型", required = false)
-    var errorCode: Int? = null,
-    @ApiModelProperty("构建错误信息", required = false)
-    var errorMsg: String? = null
+    var templateId: String? = null
 ) {
 
     companion object {

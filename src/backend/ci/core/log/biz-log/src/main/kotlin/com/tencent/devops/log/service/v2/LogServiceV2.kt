@@ -34,23 +34,23 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.jmx.v2.CreateIndexBeanV2
 import com.tencent.devops.log.jmx.v2.LogBeanV2
-import com.tencent.devops.log.model.message.LogMessage
-import com.tencent.devops.log.model.message.LogMessageWithLineNo
-import com.tencent.devops.log.model.pojo.EndPageQueryLogs
-import com.tencent.devops.log.model.pojo.LogBatchEvent
-import com.tencent.devops.log.model.pojo.LogEvent
-import com.tencent.devops.log.model.pojo.LogLine
-import com.tencent.devops.log.model.pojo.LogStatusEvent
-import com.tencent.devops.log.model.pojo.PageQueryLogs
-import com.tencent.devops.log.model.pojo.QueryLogs
-import com.tencent.devops.log.model.pojo.QueryLineNo
-import com.tencent.devops.log.model.pojo.enums.LogStatus
-import com.tencent.devops.log.model.pojo.enums.LogType
+import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
+import com.tencent.devops.common.log.pojo.EndPageQueryLogs
+import com.tencent.devops.common.log.pojo.LogBatchEvent
+import com.tencent.devops.common.log.pojo.LogEvent
+import com.tencent.devops.common.log.pojo.LogLine
+import com.tencent.devops.common.log.pojo.LogStatusEvent
+import com.tencent.devops.common.log.pojo.PageQueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLineNo
+import com.tencent.devops.common.log.pojo.enums.LogStatus
+import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.log.util.Constants
 import com.tencent.devops.log.util.ESIndexUtils.getIndexSettings
 import com.tencent.devops.log.util.ESIndexUtils.getTypeMappings
 import com.tencent.devops.log.util.ESIndexUtils.indexRequest
-import com.tencent.devops.log.utils.LogDispatcher
+import com.tencent.devops.common.log.utils.LogMQEventDispatcher
 import org.elasticsearch.action.index.IndexRequestBuilder
 import org.elasticsearch.common.unit.TimeValue
 import org.elasticsearch.index.IndexNotFoundException
@@ -62,7 +62,6 @@ import org.elasticsearch.search.SearchHits
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder
 import org.elasticsearch.search.sort.SortOrder
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.IOException
@@ -83,11 +82,13 @@ import kotlin.math.min
 class LogServiceV2 @Autowired constructor(
     private val client: LogClient,
     private val indexServiceV2: IndexServiceV2,
+    private val logStatusService: LogStatusService,
+    private val logTagService: LogTagService,
     private val defaultKeywords: List<String>,
     private val createIndexBeanV2: CreateIndexBeanV2,
     private val logBeanV2: LogBeanV2,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate
+    private val logMQEventDispatcher: LogMQEventDispatcher
 ) {
 
     companion object {
@@ -109,7 +110,7 @@ class LogServiceV2 @Autowired constructor(
     fun addLogEvent(event: LogEvent) {
         startLog(event.buildId)
         val logMessage = addLineNo(event.buildId, event.logs)
-        LogDispatcher.dispatch(rabbitTemplate, LogBatchEvent(event.buildId, logMessage))
+        logMQEventDispatcher.dispatch(LogBatchEvent(event.buildId, logMessage))
     }
 
     fun addBatchLogEvent(event: LogBatchEvent) {
@@ -135,8 +136,15 @@ class LogServiceV2 @Autowired constructor(
 
     fun updateLogStatus(event: LogStatusEvent) {
         with(event) {
-            logger.info("[$buildId|$tag|$jobId|$executeCount|$finished] Start to update log status")
-            indexServiceV2.finish(buildId, tag, jobId, executeCount, finished)
+            logger.info("[$buildId|$tag|$subTag|$jobId|$executeCount|$finished] Start to update log status")
+            logStatusService.finish(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount,
+                finish = finished
+            )
         }
     }
 
@@ -145,6 +153,7 @@ class LogServiceV2 @Autowired constructor(
         isAnalysis: Boolean,
         keywordsStr: String?,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
@@ -163,6 +172,7 @@ class LogServiceV2 @Autowired constructor(
                         start = 1,
                         keywords = defaultKeywords,
                         tag = tag,
+                        subTag = subTag,
                         jobId = jobId,
                         executeCount = executeCount
                     )
@@ -172,6 +182,7 @@ class LogServiceV2 @Autowired constructor(
                         index = index,
                         type = type,
                         tag = tag,
+                        subTag = subTag,
                         jobId = jobId,
                         executeCount = executeCount
                     )
@@ -193,6 +204,7 @@ class LogServiceV2 @Autowired constructor(
                 start = 1,
                 keywords = keywords,
                 tag = tag,
+                subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount
             )
@@ -211,6 +223,7 @@ class LogServiceV2 @Autowired constructor(
         start: Long,
         end: Long,
         tag: String? = null,
+        subTag: String? = null,
         jobId: String? = null,
         executeCount: Int?
     ): QueryLogs {
@@ -222,10 +235,16 @@ class LogServiceV2 @Autowired constructor(
             val type = indexAndType.type
 
             val logs = mutableListOf<LogLine>()
-            val queryLogs = QueryLogs(buildId, getLogStatus(buildId, tag, jobId, executeCount))
+            val queryLogs = QueryLogs(buildId, getLogStatus(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            ))
 
             try {
-                val query = getQuery(buildId, tag, jobId, executeCount)
+                val query = getQuery(buildId, tag, subTag, jobId, executeCount)
                     .must(QueryBuilders.rangeQuery("lineNo").gte(start).lte(end))
                 val searchResponse = client.prepareSearch(buildId, index)
                     .setTypes(type)
@@ -247,7 +266,9 @@ class LogServiceV2 @Autowired constructor(
                         timestamp = sourceMap["timestamp"].toString().toLong(),
                         message = sourceMap["message"].toString(),
                         priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
-                        tag = sourceMap["tag"].toString()
+                        tag = sourceMap["tag"].toString(),
+                        subTag = sourceMap["subTag"].toString(),
+                        jobId = sourceMap["jobId"].toString()
                     )
                     logs.add(logLine)
                 }
@@ -275,6 +296,7 @@ class LogServiceV2 @Autowired constructor(
         isAnalysis: Boolean,
         keywordsStr: String?,
         tag: String? = null,
+        subTag: String? = null,
         jobId: String? = null,
         executeCount: Int?
     ): QueryLogs {
@@ -293,6 +315,7 @@ class LogServiceV2 @Autowired constructor(
                         start = start,
                         keywords = defaultKeywords,
                         tag = tag,
+                        subTag = subTag,
                         jobId = jobId,
                         executeCount = executeCount
                     )
@@ -305,6 +328,7 @@ class LogServiceV2 @Autowired constructor(
                         wholeQuery = !isAnalysis,
                         keywords = defaultKeywords,
                         tag = tag,
+                        subTag = subTag,
                         jobId = jobId,
                         executeCount = executeCount
                     )
@@ -338,6 +362,7 @@ class LogServiceV2 @Autowired constructor(
         buildId: String,
         keywordsStr: String?,
         tag: String? = null,
+        subTag: String? = null,
         jobId: String? = null,
         executeCount: Int?
     ): QueryLineNo {
@@ -362,6 +387,7 @@ class LogServiceV2 @Autowired constructor(
                 type = type,
                 keywords = keywords,
                 tag = tag,
+                subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount
             )
@@ -376,6 +402,7 @@ class LogServiceV2 @Autowired constructor(
         buildId: String,
         start: Long,
         tag: String? = null,
+        subTag: String? = null,
         jobId: String? = null,
         executeCount: Int?
     ): QueryLogs {
@@ -391,6 +418,7 @@ class LogServiceV2 @Autowired constructor(
                 type = type,
                 start = start,
                 tag = tag,
+                subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount
             )
@@ -405,13 +433,20 @@ class LogServiceV2 @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?,
         fileName: String?
     ): Response {
         val indexAndType = indexServiceV2.getIndexAndType(buildId)
 
-        val query = getQuery(buildId, tag, jobId, executeCount)
+        val query = getQuery(
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
             .must(QueryBuilders.matchQuery("logType", LogType.LOG.name).operator(Operator.AND))
 
         var scrollResp = client.prepareSearch(buildId, indexAndType.index)
@@ -460,10 +495,25 @@ class LogServiceV2 @Autowired constructor(
             .build()
     }
 
-    fun getEndLogs(pipelineId: String, buildId: String, tag: String?, jobId: String?, executeCount: Int?, size: Int): EndPageQueryLogs {
+    fun getEndLogs(
+        pipelineId: String,
+        buildId: String,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        size: Int
+    ): EndPageQueryLogs {
         val queryLogs = EndPageQueryLogs(buildId)
         try {
-            return doGetEndLogs(buildId, tag, jobId, executeCount, size)
+            return doGetEndLogs(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount,
+                size = size
+            )
         } catch (ex: IndexNotFoundException) {
             logger.error("Query end logs failed because of IndexNotFoundException. buildId: $buildId", ex)
             queryLogs.status = LogStatus.CLEAN
@@ -482,6 +532,7 @@ class LogServiceV2 @Autowired constructor(
         isAnalysis: Boolean,
         keywordsStr: String?,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?,
         page: Int,
@@ -496,14 +547,46 @@ class LogServiceV2 @Autowired constructor(
             val pageResult: QueryLogs
             val pageLog = if (keywordsStr == null || keywordsStr.isBlank()) {
                 if (isAnalysis) {
-                    pageResult = doQueryByKeywords(buildId, index, type, 1, defaultKeywords, tag, jobId, executeCount)
+                    pageResult = doQueryByKeywords(
+                        buildId = buildId,
+                        index = index,
+                        type = type,
+                        start = 1,
+                        keywords = defaultKeywords,
+                        tag = tag,
+                        subTag = subTag,
+                        jobId = jobId,
+                        executeCount = executeCount
+                    )
                     val logSize = pageResult.logs.size
                     Page(logSize.toLong(), 1, logSize, 1, pageResult.logs.filter { it.lineNo != -1L })
                 } else {
-                    pageResult = queryInitLogsPage(buildId, tag, jobId, executeCount, page, pageSize)
-                    val logSize = getLogSize(index, type, buildId, tag, jobId, executeCount)
+                    pageResult = queryInitLogsPage(
+                        buildId = buildId,
+                        tag = tag,
+                        subTag = subTag,
+                        jobId = jobId,
+                        executeCount = executeCount,
+                        page = page,
+                        pageSize = pageSize
+                    )
+                    val logSize = getLogSize(
+                        index = index,
+                        type = type,
+                        buildId = buildId,
+                        tag = tag,
+                        subTag = subTag,
+                        jobId = jobId,
+                        executeCount = executeCount
+                    )
                     val totalPage = Math.ceil((logSize + 0.0) / pageSize).toInt()
-                    Page(logSize, page, pageSize, totalPage, pageResult.logs)
+                    Page(
+                        count = logSize,
+                        page = page,
+                        pageSize = pageSize,
+                        totalPages = totalPage,
+                        records = pageResult.logs
+                    )
                 }
             } else {
                 val keywords =
@@ -511,9 +594,25 @@ class LogServiceV2 @Autowired constructor(
                         .stream()
                         .filter { k -> k.isNotBlank() }
                         .collect(Collectors.toList())
-                pageResult = doQueryByKeywords(buildId, index, type, 1, keywords, tag, jobId, executeCount)
+                pageResult = doQueryByKeywords(
+                    buildId = buildId,
+                    index = index,
+                    type = type,
+                    start = 1,
+                    keywords = keywords,
+                    tag = tag,
+                    subTag = subTag,
+                    jobId = jobId,
+                    executeCount = executeCount
+                )
                 val logSize = pageResult.logs.size
-                Page(logSize.toLong(), 1, logSize, 1, pageResult.logs.filter { it.lineNo != -1L })
+                Page(
+                    count = logSize.toLong(),
+                    page = 1,
+                    pageSize = logSize,
+                    totalPages = 1,
+                    records = pageResult.logs.filter { it.lineNo != -1L }
+                )
             }
             success = logStatusSuccess(pageResult.status)
             return PageQueryLogs(
@@ -547,18 +646,35 @@ class LogServiceV2 @Autowired constructor(
     private fun queryInitLogsPage(
         buildId: String,
         tag: String? = null,
+        subTag: String? = null,
         jobId: String? = null,
         executeCount: Int?,
         page: Int,
         pageSize: Int
     ): QueryLogs {
-        val queryLogs = QueryLogs(buildId, getLogStatus(buildId, tag, jobId, executeCount))
+        val queryLogs = QueryLogs(buildId, getLogStatus(
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        ))
         val indexAndType = indexServiceV2.getIndexAndType(buildId)
         val index = indexAndType.index
         val type = indexAndType.type
 
         try {
-            val logs = getLogsByPage(buildId, index, type, tag, jobId, executeCount, page, pageSize)
+            val logs = getLogsByPage(
+                buildId = buildId,
+                index = index,
+                type = type,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount,
+                page = page,
+                pageSize = pageSize
+            )
             queryLogs.logs.addAll(logs)
             if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
         } catch (ex: IndexNotFoundException) {
@@ -582,6 +698,7 @@ class LogServiceV2 @Autowired constructor(
         index: String,
         type: String,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?,
         page: Int,
@@ -595,7 +712,7 @@ class LogServiceV2 @Autowired constructor(
             boolQuery.must(QueryBuilders.rangeQuery("lineNo").gte(beginLineNo).lte(endLineNo))
         }
 
-        val query = getQuery(buildId, tag, jobId, executeCount)
+        val query = getQuery(buildId, tag, subTag, jobId, executeCount)
             .must(boolQuery)
 
         val result = mutableListOf<LogLine>()
@@ -627,12 +744,19 @@ class LogServiceV2 @Autowired constructor(
         return result
     }
 
-    private fun doGetEndLogs(buildId: String, tag: String?, jobId: String?, executeCount: Int?, size: Int): EndPageQueryLogs {
+    private fun doGetEndLogs(
+        buildId: String,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        size: Int
+    ): EndPageQueryLogs {
         val beginTime = System.currentTimeMillis()
 
         val index = indexServiceV2.getIndexAndType(buildId)
 
-        val query = getQuery(buildId, tag, jobId, executeCount)
+        val query = getQuery(buildId, tag, subTag, jobId, executeCount)
 
         val scrollResp = client.prepareSearch(buildId, index.index)
             .setTypes(index.type)
@@ -653,6 +777,7 @@ class LogServiceV2 @Autowired constructor(
                 message = sourceMap["message"].toString(),
                 priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
                 tag = sourceMap["tag"].toString() ?: "",
+                subTag = sourceMap["subTag"].toString() ?: "",
                 jobId = sourceMap["jobId"].toString() ?: "",
                 executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
             )
@@ -685,18 +810,25 @@ class LogServiceV2 @Autowired constructor(
         wholeQuery: Boolean,
         keywords: List<String>,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
         val logs = ArrayList<LogLine>()
-        val moreLogs = QueryLogs(buildId, getLogStatus(buildId, tag, jobId, executeCount))
+        val moreLogs = QueryLogs(buildId, getLogStatus(
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        ))
         logger.info("more logs status: $moreLogs")
 
         try {
             val multiSearchRequestBuilder = client.prepareMultiSearch(buildId)
 
             if (wholeQuery) {
-                val startQuery = getQuery(buildId, tag, jobId, executeCount)
+                val startQuery = getQuery(buildId, tag, subTag, jobId, executeCount)
                     .must(QueryBuilders.matchQuery("logType", LogType.START.name))
                     .must(QueryBuilders.rangeQuery("lineNo").from(start))
                 val srbFoldStart = client.prepareSearch(buildId, index)
@@ -705,7 +837,7 @@ class LogServiceV2 @Autowired constructor(
                     .addDocValueField("lineNo")
                     .setSize(100)
 
-                val stopQuery = getQuery(buildId, tag, jobId, executeCount)
+                val stopQuery = getQuery(buildId, tag, subTag, jobId, executeCount)
                     .must(QueryBuilders.matchQuery("logType", LogType.END.name))
                     .must(QueryBuilders.rangeQuery("lineNo").from(start))
                 val srbFoldStop = client.prepareSearch(buildId, index)
@@ -724,7 +856,7 @@ class LogServiceV2 @Autowired constructor(
             }
 
             for (keyword in tempKeywords) {
-                val query = getQuery(buildId, tag, jobId, executeCount)
+                val query = getQuery(buildId, tag, subTag, jobId, executeCount)
                     .must(QueryBuilders.matchQuery("message", keyword).operator(Operator.AND))
                     .must(QueryBuilders.rangeQuery("lineNo").from(start))
                 val srbKeyword = client.prepareSearch(buildId, index)
@@ -771,7 +903,7 @@ class LogServiceV2 @Autowired constructor(
             val lines = parseToLineNos(lineRanges)
 
             logger.info("$type more logs lineRanges: $lineRanges")
-            val query = getQuery(buildId, tag, jobId, executeCount)
+            val query = getQuery(buildId, tag, subTag, jobId, executeCount)
                     .must(QueryBuilders.rangeQuery("lineNo").gte(start))
             val searchResponse = client.prepareSearch(buildId, index)
                     .setTypes(type)
@@ -810,7 +942,9 @@ class LogServiceV2 @Autowired constructor(
                     } else {
                         0
                     },
-                    tag = sourceMap["tag"].toString()
+                    tag = sourceMap["tag"].toString(),
+                    subTag = sourceMap["subTag"].toString(),
+                    jobId = sourceMap["jobId"].toString()
                 )
                 logs.add(logLine)
             }
@@ -839,16 +973,23 @@ class LogServiceV2 @Autowired constructor(
         type: String,
         start: Long,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
         val logs = ArrayList<LogLine>()
-        val moreLogs = QueryLogs(buildId, getLogStatus(buildId, tag, jobId, executeCount))
+        val moreLogs = QueryLogs(buildId, getLogStatus(
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        ))
         val querySize = Constants.MAX_LINES
         logger.info("more logs status: $moreLogs")
 
         try {
-            val query = getQuery(buildId, tag, jobId, executeCount)
+            val query = getQuery(buildId, tag, subTag, jobId, executeCount)
                 .must(QueryBuilders.rangeQuery("lineNo").gte(start))
             val searchResponse = client.prepareSearch(buildId, index)
                 .setTypes(type)
@@ -873,6 +1014,7 @@ class LogServiceV2 @Autowired constructor(
                     sourceMap["message"].toString(),
                     Constants.DEFAULT_PRIORITY_NOT_DELETED,
                     sourceMap["tag"].toString() ?: "",
+                    sourceMap["subTag"].toString() ?: "",
                     sourceMap["jobId"].toString() ?: "",
                     sourceMap["executeCount"]?.toString()?.toInt() ?: 1
                 )
@@ -965,13 +1107,28 @@ class LogServiceV2 @Autowired constructor(
         start: Long,
         keywords: List<String>,
         tag: String? = null,
+        subTag: String? = null,
         jobId: String? = null,
         executeCount: Int?
     ): QueryLogs {
-        val logStatus = getLogStatus(buildId, tag, jobId, executeCount)
+        val logStatus = getLogStatus(
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
         val initLogs = QueryLogs(buildId, logStatus)
         try {
-            val size = getLogSize(index, type, buildId, tag, jobId, executeCount)
+            val size = getLogSize(
+                index = index,
+                type = type,
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
             if (size == 0L) {
                 return initLogs
             }
@@ -983,6 +1140,7 @@ class LogServiceV2 @Autowired constructor(
                 keywords = keywords,
                 wholeQuery = false,
                 tag = tag,
+                subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount
             )
@@ -1000,8 +1158,16 @@ class LogServiceV2 @Autowired constructor(
         return initLogs
     }
 
-    private fun getLogSize(index: String, type: String, buildId: String, tag: String?, jobId: String?, executeCount: Int?): Long {
-        val query = getQuery(buildId, tag, jobId, executeCount)
+    private fun getLogSize(
+        index: String,
+        type: String,
+        buildId: String,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Long {
+        val query = getQuery(buildId, tag, subTag, jobId, executeCount)
         val searchResponse = client.prepareSearch(buildId, index)
             .setTypes(type)
             .setQuery(query)
@@ -1010,10 +1176,19 @@ class LogServiceV2 @Autowired constructor(
         return searchResponse.hits.getTotalHits()
     }
 
-    private fun getQuery(buildId: String, tag: String?, jobId: String?, executeCount: Int?): BoolQueryBuilder {
+    private fun getQuery(
+        buildId: String,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): BoolQueryBuilder {
         val query = QueryBuilders.boolQuery()
         if (!tag.isNullOrBlank()) {
             query.must(QueryBuilders.matchQuery("tag", tag).operator(Operator.AND))
+        }
+        if (!subTag.isNullOrBlank()) {
+            query.must(QueryBuilders.matchQuery("subTag", subTag).operator(Operator.AND))
         }
         if (!jobId.isNullOrBlank()) {
             query.must(QueryBuilders.matchQuery("jobId", jobId).operator(Operator.AND))
@@ -1028,13 +1203,27 @@ class LogServiceV2 @Autowired constructor(
         index: String,
         type: String,
         tag: String? = null,
+        subTag: String? = null,
         jobId: String? = null,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("[$index|$type|$buildId|$tag|$jobId|$executeCount] doQueryInitLogs")
-        val logStatus = if (tag == null && jobId != null) getLogStatus(buildId, jobId, null, executeCount)
-            else getLogStatus(buildId, tag, jobId, executeCount)
-        val queryLogs = QueryLogs(buildId, logStatus)
+        logger.info("[$index|$type|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryInitLogs")
+        val logStatus = if (tag == null && jobId != null) getLogStatus(
+            buildId = buildId,
+            tag = jobId,
+            subTag = null,
+            jobId = null,
+            executeCount = executeCount
+        ) else getLogStatus(
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
+
+        val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag!!)
+        val queryLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
 
         try {
             val size = getLogSize(
@@ -1042,6 +1231,7 @@ class LogServiceV2 @Autowired constructor(
                 type = type,
                 buildId = buildId,
                 tag = tag,
+                subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount
             )
@@ -1051,15 +1241,22 @@ class LogServiceV2 @Autowired constructor(
                 index = index,
                 type = type,
                 tag = tag,
+                subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount,
                 size = size
             )
-            logger.info("[$index|$type|$buildId|$tag|$jobId|$executeCount] getOriginLogs with range: $logRange")
+            logger.info("[$index|$type|$buildId|$tag|$subTag|$jobId|$executeCount] getOriginLogs with range: $logRange")
 
             val startTime = System.currentTimeMillis()
             val logs = mutableListOf<LogLine>()
-            val boolQueryBuilder = getQuery(buildId, tag, jobId, executeCount)
+            val boolQueryBuilder = getQuery(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
             logger.info("Get the query builder: $boolQueryBuilder")
 
             val response = client.prepareSearch(buildId, index)
@@ -1080,6 +1277,7 @@ class LogServiceV2 @Autowired constructor(
                     message = sourceMap["message"].toString(),
                     priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
                     tag = t,
+                    subTag = sourceMap["subTag"]?.toString() ?: "",
                     jobId = sourceMap["jobId"]?.toString() ?: "",
                     executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
                 )
@@ -1114,22 +1312,42 @@ class LogServiceV2 @Autowired constructor(
         type: String,
         start: Long,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("[$index|$type|$buildId|$tag|$jobId|$executeCount] doQueryLargeInitLogs")
+        logger.info("[$index|$type|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryLargeInitLogs")
         val logStatus = if (tag == null && jobId != null) {
-            getLogStatus(buildId, jobId, null, executeCount)
+            getLogStatus(
+                buildId = buildId,
+                tag = jobId,
+                subTag = null,
+                jobId = null,
+                executeCount = executeCount
+            )
         } else {
-            getLogStatus(buildId, tag, jobId, executeCount)
+            getLogStatus(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
         }
-        val moreLogs = QueryLogs(buildId, logStatus)
+
+        val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag!!)
+        val moreLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
 
         try {
             val startTime = System.currentTimeMillis()
             val logs = mutableListOf<LogLine>()
-            val boolQueryBuilder = getQuery(buildId, tag, jobId, executeCount)
-                .must(QueryBuilders.rangeQuery("lineNo").gte(start))
+            val boolQueryBuilder = getQuery(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
 
             var scrollResp = client.prepareSearch(buildId, index)
                 .setTypes(type)
@@ -1152,6 +1370,7 @@ class LogServiceV2 @Autowired constructor(
                         message = sourceMap["message"].toString(),
                         priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
                         tag = t,
+                        subTag = sourceMap["subTag"]?.toString() ?: "",
                         jobId = sourceMap["jobId"]?.toString() ?: "",
                         executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
                     )
@@ -1184,8 +1403,20 @@ class LogServiceV2 @Autowired constructor(
         return moreLogs
     }
 
-    private fun getLogStatus(buildId: String, tag: String?, jobId: String?, executeCount: Int?): Boolean {
-        return indexServiceV2.isFinish(buildId, tag, jobId, executeCount)
+    private fun getLogStatus(
+        buildId: String,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Boolean {
+        return logStatusService.isFinish(
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
     }
 
     private fun getLogsByKeywords(
@@ -1194,10 +1425,11 @@ class LogServiceV2 @Autowired constructor(
         type: String,
         keywords: List<String>,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): TreeSet<Long> {
-        logger.info("[$buildId|$index|$type|$tag|$jobId|$executeCount] get log by keywords for type($type): " +
+        logger.info("[$buildId|$index|$type|$tag|$subTag|$jobId|$executeCount] get log by keywords for type($type): " +
             "index: $index, keywords: $keywords, tag: $tag, jobId: $jobId, executeCount: $executeCount")
 
         val size = getLogSize(
@@ -1205,6 +1437,7 @@ class LogServiceV2 @Autowired constructor(
             type = type,
             buildId = buildId,
             tag = tag,
+            subTag = subTag,
             jobId = jobId,
             executeCount = executeCount
         )
@@ -1212,7 +1445,7 @@ class LogServiceV2 @Autowired constructor(
             return TreeSet()
         }
 
-        val query = getQuery(buildId, tag, jobId, executeCount)
+        val query = getQuery(buildId, tag, subTag, jobId, executeCount)
         val multiSearchRequestBuilder = client.prepareMultiSearch(buildId)
 
         val logRange =
@@ -1222,6 +1455,7 @@ class LogServiceV2 @Autowired constructor(
                 index = index,
                 type = type,
                 tag = tag!!,
+                subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount,
                 size = size
@@ -1266,10 +1500,11 @@ class LogServiceV2 @Autowired constructor(
         keywords: List<String>,
         wholeQuery: Boolean,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): List<LogLine> {
-        logger.info("[$buildId|$index|$type|$tag|$jobId|$executeCount] log params for type($type): " +
+        logger.info("[$buildId|$index|$type|$tag|$subTag|$jobId|$executeCount] log params for type($type): " +
             "index: $index, keywords: $keywords, wholeQuery: $wholeQuery, tag: $tag, jobId: $jobId, executeCount: $executeCount")
 
         val size = getLogSize(
@@ -1277,6 +1512,7 @@ class LogServiceV2 @Autowired constructor(
             type = type,
             buildId = buildId,
             tag = tag,
+            subTag = subTag,
             jobId = jobId,
             executeCount = executeCount
         )
@@ -1293,6 +1529,7 @@ class LogServiceV2 @Autowired constructor(
                 index = index,
                 type = type,
                 tag = tag!!,
+                subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount,
                 size = size
@@ -1320,7 +1557,7 @@ class LogServiceV2 @Autowired constructor(
             multiSearchRequestBuilder.add(srbFoldStart).add(srbFoldStop)
         }
 
-        val query = getQuery(buildId, tag, jobId, executeCount)
+        val query = getQuery(buildId, tag, subTag, jobId, executeCount)
 
         keywords.forEach {
             val srbKeyword = client.prepareSearch(buildId, index)
@@ -1395,7 +1632,7 @@ class LogServiceV2 @Autowired constructor(
         val logs = mutableListOf<LogLine>()
         logger.info("$type logs lineRanges: $lineRanges")
         if (!lineRanges.isEmpty()) {
-            val boolQueryBuilder = getQuery(buildId, tag, jobId, executeCount)
+            val boolQueryBuilder = getQuery(buildId, tag, subTag, jobId, executeCount)
 
             val rangeQuery = QueryBuilders.boolQuery()
             for (lineRange in lineRanges) {
@@ -1409,30 +1646,29 @@ class LogServiceV2 @Autowired constructor(
             boolQueryBuilder.must(rangeQuery)
 
             val response = client.prepareSearch(buildId, index)
-                    .setTypes(type)
-                    .setQuery(boolQueryBuilder)
-                    .setSize(Constants.MAX_LINES)
-                    .addDocValueField("lineNo")
-                    .addDocValueField("timestamp")
-                    .addSort("lineNo", SortOrder.ASC)
-                    .get(TimeValue.timeValueSeconds(60))
+                .setTypes(type)
+                .setQuery(boolQueryBuilder)
+                .setSize(Constants.MAX_LINES)
+                .addDocValueField("lineNo")
+                .addDocValueField("timestamp")
+                .addSort("lineNo", SortOrder.ASC)
+                .get(TimeValue.timeValueSeconds(60))
             response.hits.forEach { searchHitFields ->
                 val sourceMap = searchHitFields.source
                 val ln = sourceMap["lineNo"].toString().toLong()
-                val t = sourceMap["tag"]?.toString() ?: ""
-                val jobId = sourceMap["jobId"]?.toString() ?: ""
                 val logLine = LogLine(
-                        ln,
-                        sourceMap["timestamp"].toString().toLong(),
-                        if (highlights.containsKey(ln)) {
-                            highlights[ln] ?: ""
-                        } else {
-                            sourceMap["message"].toString()
-                        },
-                        Constants.DEFAULT_PRIORITY_NOT_DELETED,
-                        t,
-                        jobId,
-                        sourceMap["executeCount"]?.toString()?.toInt() ?: 1
+                    lineNo = ln,
+                    timestamp = sourceMap["timestamp"].toString().toLong(),
+                    message = if (highlights.containsKey(ln)) {
+                        highlights[ln] ?: ""
+                    } else {
+                        sourceMap["message"].toString()
+                    },
+                    priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
+                    tag = sourceMap["tag"]?.toString() ?: "",
+                    subTag = sourceMap["subTag"]?.toString() ?: "",
+                    jobId = sourceMap["jobId"]?.toString() ?: "",
+                    executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
                 )
                 logs.add(logLine)
             }
@@ -1603,19 +1839,20 @@ class LogServiceV2 @Autowired constructor(
         index: String,
         type: String,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?,
         size: Long
     ): Pair<Long, Long> {
 
-        val q = getQuery(buildId, tag, jobId, executeCount)
+        val q = getQuery(buildId, tag, subTag, jobId, executeCount)
             .must(
                 QueryBuilders.boolQuery()
                     .should(QueryBuilders.matchQuery("logType", LogType.START.name).operator(Operator.OR))
                     .should(QueryBuilders.matchQuery("logType", LogType.END.name).operator(Operator.OR))
             )
 
-        logger.info("[$index|$type|$tag|$jobId|$executeCount|$size] Get log range with query ($q)")
+        logger.info("[$index|$type|$tag|$subTag|$jobId|$executeCount|$size] Get log range with query ($q)")
 
         val hits = client.prepareSearch(buildId, index)
                 .setTypes(type)
@@ -1630,15 +1867,21 @@ class LogServiceV2 @Autowired constructor(
 
         if (hits.totalHits == 0L) return Pair(0, 0)
 
-        return getRangeIndex(hits, tag, jobId)
+        return getRangeIndex(hits, tag, subTag, jobId)
     }
 
-    private fun getRangeIndex(hits: SearchHits, tag: String?, jobId: String?): Pair<Long, Long> {
+    private fun getRangeIndex(
+        hits: SearchHits,
+        tag: String?,
+        subTag: String?,
+        jobId: String?
+    ): Pair<Long, Long> {
         var beginIndex: Long? = null
         var endIndex: Long? = null
         run lit@{
             hits.forEach { hit ->
                 if ((tag != null && hit.source["tag"] == tag) ||
+                    (subTag != null && hit.source["subTag"] == tag) ||
                     (jobId != null && hit.source["jobId"] == jobId)) {
                     // 尽量取最大的区间
                     if (hit.source["logType"] == LogType.START.name) {
@@ -1671,7 +1914,10 @@ class LogServiceV2 @Autowired constructor(
             val logMessage = logMessages[i]
 
             val indexRequestBuilder = indexRequestBuilder(
-                buildId, logMessage, indexAndType.index, indexAndType.type
+                buildId = buildId,
+                logMessage = logMessage,
+                index = indexAndType.index,
+                type = indexAndType.type
             )
             if (indexRequestBuilder != null) {
                 bulkRequestBuilder.add(indexRequestBuilder)
@@ -1742,8 +1988,12 @@ class LogServiceV2 @Autowired constructor(
             } else {
                 it.timestamp
             }
+            if (!it.subTag.isNullOrBlank()) {
+                logTagService.saveSubTag(buildId, it.tag, it.subTag!!)
+            }
             LogMessageWithLineNo(
                 tag = it.tag,
+                subTag = it.subTag,
                 jobId = it.jobId,
                 message = it.message,
                 timestamp = timestamp,

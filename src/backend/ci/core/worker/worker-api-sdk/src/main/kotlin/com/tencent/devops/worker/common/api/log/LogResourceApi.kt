@@ -28,12 +28,13 @@ package com.tencent.devops.worker.common.api.log
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.log.model.message.LogMessage
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.LogMode
 import okhttp3.MediaType
 import okhttp3.RequestBody
+import java.lang.StringBuilder
 
 class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
 
@@ -52,10 +53,14 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
         }
     }
 
-    override fun finishLog(tag: String?, jobId: String?, executeCount: Int?): Result<Boolean> {
-        val path = "/log/api/build/logs/status?finished=true&tag=$tag&jobId=$jobId&executeCount=$executeCount"
+    override fun finishLog(tag: String?, jobId: String?, executeCount: Int?, subTag: String?): Result<Boolean> {
+        val path = StringBuilder("/log/api/build/logs/status?finished=true")
+        if (!tag.isNullOrBlank()) path.append("&tag=$tag")
+        if (!subTag.isNullOrBlank()) path.append("&subTag=$subTag")
+        if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
+        if (executeCount != null) path.append("&executeCount=$executeCount")
         val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), "")
-        val request = buildPut(path, requestBody)
+        val request = buildPut(path.toString(), requestBody)
         val responseContent = request(request, "上报结束状态失败")
         return objectMapper.readValue(responseContent)
     }

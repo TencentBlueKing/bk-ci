@@ -72,7 +72,14 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         templateType: TemplateType?,
         storeFlag: Boolean?
     ): Result<TemplateListModel> {
-        return Result(templateService.listTemplate(projectId, userId, templateType, storeFlag, 1, 9999))
+        return Result(templateService.listTemplate(
+            projectId = projectId,
+            userId = userId,
+            templateType = templateType,
+            storeFlag = storeFlag,
+            page = 1,
+            pageSize = 1000
+        ))
     }
 
     override fun getTemplate(
@@ -81,7 +88,12 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         templateId: String,
         version: Long?
     ): Result<TemplateModelDetail> {
-        return Result(templateService.getTemplate(projectId, userId, templateId, version))
+        return Result(templateService.getTemplate(
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            version = version
+        ))
     }
 
     override fun listAllTemplate(
@@ -89,14 +101,24 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         projectId: String,
         templateType: TemplateType?
     ): Result<OptionalTemplateList> {
-        return Result(templateService.listAllTemplate(projectId, templateType, null, 1, 9999))
+        return Result(templateService.listAllTemplate(
+            projectId = projectId,
+            templateType = templateType,
+            templateIds = null,
+            page = 1,
+            pageSize = 1000
+        ))
     }
 
     override fun updateStoreFlag(userId: String, templateId: String, storeFlag: Boolean): Result<Boolean> {
-        return templateService.updateTemplateStoreFlag(userId, templateId, storeFlag)
+        return templateService.updateTemplateStoreFlag(userId = userId, templateId = templateId, storeFlag = storeFlag)
     }
 
     override fun listTemplateById(templateIds: Collection<String>, templateType: TemplateType?): Result<OptionalTemplateList> {
-        return Result(templateService.listAllTemplate(null, templateType, templateIds, null, null))
+        return Result(templateService.listAllTemplate(
+            projectId = null,
+            templateType = templateType,
+            templateIds = templateIds
+        ))
     }
 }

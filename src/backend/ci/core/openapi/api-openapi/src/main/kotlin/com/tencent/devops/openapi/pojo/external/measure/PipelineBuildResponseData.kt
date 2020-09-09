@@ -75,10 +75,6 @@ data class PipelineBuildResponseData(
     val templateId: String? = "",
     @ApiModelProperty("model", required = false)
     val model: String? = "",
-    @ApiModelProperty("错误类型", required = false)
-    val errorType: String? = null,
-    @ApiModelProperty("错误码标识", required = false)
-    val errorCode: Int? = null,
-    @ApiModelProperty("错误信息描述", required = false)
-    val errorMsg: String? = null
+    @ApiModelProperty("插件错误信息", required = false)
+    val errorInfoList: String? = null
 )
