@@ -64,7 +64,7 @@
                             v-if="props.row.atomStatus === 'INIT' || props.row.atomStatus === 'UNDERCARRIAGED'"
                             @click="editHandle('shelfAtom', props.row.atomId)"> {{ $t('store.上架') }} </span>
                         <span class="obtained-btn"
-                            v-if="props.row.atomStatus === 'AUDIT_REJECT' || props.row.atomStatus === 'RELEASED' || (props.row.atomStatus === 'GROUNDING_SUSPENSION' && props.row.releaseFlag)"
+                            v-if="['AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION'].includes(props.row.atomStatus) && props.row.releaseFlag"
                             @click="offline(props.row)"> {{ $t('store.下架') }} </span>
                         <span class="schedule-btn"
                             v-if="props.row.atomStatus === 'COMMITTING' || props.row.atomStatus === 'BUILDING' || props.row.atomStatus === 'BUILD_FAIL'
@@ -203,20 +203,30 @@
                                 <p class="content-value">{{ curHandlerAtom.atomCode }}</p>
                             </div>
                         </div>
-                        <div class="bk-form-item is-required">
-                            <label class="bk-label"> {{ $t('store.缓冲期') }} </label>
+                        <div class="bk-form-item">
+                            <label class="bk-label"> {{ $t('store.版本') }} </label>
                             <div class="bk-form-content">
-                                <bk-select v-model="buffer" searchable>
-                                    <bk-option v-for="(option, index) in bufferLength"
+                                <bk-select v-model="curHandlerAtom.version" searchable>
+                                    <bk-option v-for="(version, index) in curHandlerAtom.versionList"
                                         :key="index"
-                                        :id="option.value"
-                                        :name="option.label"
-                                        @click.native="selectedBuffer"
-                                        :placeholder="$t('store.请选择缓冲期')"
+                                        :id="version.version"
+                                        :name="version.version"
                                     >
                                     </bk-option>
                                 </bk-select>
-                                <div v-if="atomErrors.bufferError" class="error-tips"> {{ $t('store.缓冲期不能为空') }} </div>
+                            </div>
+                        </div>
+                        <div class="bk-form-item is-required">
+                            <label class="bk-label"> {{ $t('store.下架原因') }} </label>
+                            <div class="bk-form-content">
+                                <bk-input :placeholder="$t('store.请输入下架原因')"
+                                    name="reason"
+                                    @change="curHandlerAtom.error = curHandlerAtom.reason === ''"
+                                    type="textarea"
+                                    :rows="3"
+                                    v-model="curHandlerAtom.reason">
+                                </bk-input>
+                                <div v-if="curHandlerAtom.error" class="error-tips"> {{ $t('store.下架原因不能为空') }} </div>
                             </div>
                         </div>
                         <form-tips :tips-content="offlineTips" :prompt-list="promptList"></form-tips>
@@ -244,8 +254,6 @@
             return {
                 atomStatusList: atomStatusMap,
                 hasOauth: true,
-                bufferError: false,
-                buffer: '',
                 searchName: '',
                 gitOAuthUrl: '',
                 itemUrl: '/console/pm',
@@ -256,15 +264,16 @@
                 languageList: [],
                 promptList: [
                     this.$t('store.1、插件市场不再展示插件'),
-                    this.$t('store.2、已安装插件的项目不能再添加插件到流水线'),
-                    this.$t('store.3、已使用插件的流水线可以继续使用，但有插件已下架标识')
+                    this.$t('store.2、已使用插件的流水线可以继续使用，但有插件已下架标识')
                 ],
-                curHandlerAtom: {},
-                bufferLength: [
-                    { label: this.$t('store.0天'), value: '0' },
-                    { label: this.$t('store.7天'), value: '7' },
-                    { label: this.$t('store.15天'), value: '15' }
-                ],
+                curHandlerAtom: {
+                    name: '',
+                    atomCode: '',
+                    version: '',
+                    reason: '',
+                    error: false,
+                    versionList: []
+                },
                 createAtomForm: {
                     projectCode: '',
                     atomCode: '',
@@ -275,7 +284,6 @@
                 atomErrors: {
                     projectError: false,
                     languageError: false,
-                    bufferError: false,
                     openSourceError: false,
                     privateReasonError: false
                 },
@@ -315,12 +323,6 @@
                     }
                 }
             },
-            'offlinesideConfig.show' (val) {
-                if (!val) {
-                    this.atomErrors.bufferError = false
-                    this.buffer = ''
-                }
-            },
             searchName () {
                 debounce(this.search)
             }
@@ -332,6 +334,37 @@
         },
 
         methods: {
+            addImage (pos, file) {
+                this.uploadimg(pos, file)
+            },
+            async uploadimg (pos, file) {
+                const formData = new FormData()
+                const config = {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }
+                let message, theme
+                formData.append('file', file)
+
+                try {
+                    const res = await this.$store.dispatch('store/uploadFile', {
+                        formData,
+                        config
+                    })
+
+                    this.$refs.mdHook.$img2Url(pos, res)
+                } catch (err) {
+                    message = err.message ? err.message : err
+                    theme = 'error'
+
+                    this.$bkMessage({
+                        message,
+                        theme
+                    })
+                    this.$refs.mdHook.$refs.toolbar_left.$imgDel(pos)
+                }
+            },
             getLanguage () {
                 this.$store.dispatch('store/getDevelopLanguage').then((res) => {
                     this.languageList = (res || []).map(({ language }) => ({ name: language, language }))
@@ -444,36 +477,38 @@
             },
 
             async submitofflineAtom () {
-                if (this.buffer === '') {
-                    this.atomErrors.bufferError = true
-                } else {
-                    let message, theme
-                    const params = {
-                        bufferDay: this.buffer
-                    }
+                if (this.curHandlerAtom.reason === '') {
+                    this.curHandlerAtom.error = true
+                    return
+                }
 
-                    this.offlinesideConfig.isLoading = true
-                    try {
-                        await this.$store.dispatch('store/offlineAtom', {
-                            atomCode: this.curHandlerAtom.atomCode,
-                            params: params
-                        })
+                let message, theme
+                const params = {
+                    version: this.curHandlerAtom.version,
+                    reason: this.curHandlerAtom.reason
+                }
 
-                        message = this.$t('store.提交成功')
-                        theme = 'success'
-                        this.offlinesideConfig.show = false
-                        this.requestList()
-                    } catch (err) {
-                        message = err.message ? err.message : err
-                        theme = 'error'
-                    } finally {
-                        this.$bkMessage({
-                            message,
-                            theme
-                        })
+                this.offlinesideConfig.isLoading = true
+                try {
+                    await this.$store.dispatch('store/offlineAtom', {
+                        atomCode: this.curHandlerAtom.atomCode,
+                        params: params
+                    })
 
-                        this.offlinesideConfig.isLoading = false
-                    }
+                    message = this.$t('store.提交成功')
+                    theme = 'success'
+                    this.offlinesideConfig.show = false
+                    this.requestList()
+                } catch (err) {
+                    message = err.message ? err.message : err
+                    theme = 'error'
+                } finally {
+                    this.$bkMessage({
+                        message,
+                        theme
+                    })
+
+                    this.offlinesideConfig.isLoading = false
                 }
             },
 
@@ -490,10 +525,6 @@
 
             selectedLanguage () {
                 this.atomErrors.languageError = false
-            },
-
-            selectedBuffer () {
-                this.atomErrors.bufferError = false
             },
 
             cancelCreateAtom () {
@@ -533,7 +564,24 @@
 
             offline (form) {
                 this.offlinesideConfig.show = true
-                this.curHandlerAtom = form
+                this.curHandlerAtom.name = form.name
+                this.curHandlerAtom.atomCode = form.atomCode
+                this.curHandlerAtom.version = ''
+                this.curHandlerAtom.versionList = []
+                this.curHandlerAtom.reason = ''
+                this.curHandlerAtom.error = false
+                this.offlinesideConfig.isLoading = true
+
+                this.$store.dispatch('store/requestVersionList', {
+                    atomCode: form.atomCode
+                }).then((res) => {
+                    const records = res.records || []
+                    this.curHandlerAtom.versionList = records.filter((record) => (record.atomStatus === 'RELEASED'))
+                }).catch((err) => {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
+                }).finally(() => {
+                    this.offlinesideConfig.isLoading = false
+                })
             },
 
             installAHandle (code) {
