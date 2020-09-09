@@ -65,6 +65,7 @@ import com.tencent.devops.environment.service.node.EnvCreatorFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
+import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -345,23 +346,13 @@ class EnvService @Autowired constructor(
     ): List<EnvWithPermission> {
         val envRecords =
             envDao.listServerEnvByIds(dslContext, projectId, envHashIds.map { HashUtil.decodeIdToLong(it) })
-        return envRecords.map {
-            EnvWithPermission(
-                envHashId = HashUtil.encodeLongId(it.envId),
-                name = it.envName,
-                desc = it.envDesc,
-                envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
-                nodeCount = null,
-                envVars = jacksonObjectMapper().readValue(it.envVars),
-                createdUser = it.createdUser,
-                createdTime = it.createdTime.timestamp(),
-                updatedUser = it.updatedUser,
-                updatedTime = it.updatedTime.timestamp(),
-                canEdit = null,
-                canDelete = null,
-                canUse = null
-            )
-        }
+        return format(envRecords)
+    }
+
+    override fun listRawEnvByHashIdsAllType(envHashIds: List<String>): List<EnvWithPermission> {
+        val envRecords =
+                envDao.listServerEnvByIdsAllType(dslContext, envHashIds.map { HashUtil.decodeIdToLong(it) })
+        return format(envRecords)
     }
 
     override fun listRawEnvByEnvNames(
@@ -582,5 +573,25 @@ class EnvService @Autowired constructor(
             pageSize = offset,
             page = limit
         )
+    }
+
+    private fun format(records: List<TEnvRecord>): List<EnvWithPermission> {
+        return records.map {
+            EnvWithPermission(
+                    envHashId = HashUtil.encodeLongId(it.envId),
+                    name = it.envName,
+                    desc = it.envDesc,
+                    envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                    nodeCount = null,
+                    envVars = jacksonObjectMapper().readValue(it.envVars),
+                    createdUser = it.createdUser,
+                    createdTime = it.createdTime.timestamp(),
+                    updatedUser = it.updatedUser,
+                    updatedTime = it.updatedTime.timestamp(),
+                    canEdit = null,
+                    canDelete = null,
+                    canUse = null
+            )
+        }
     }
 }

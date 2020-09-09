@@ -1,5 +1,8 @@
 <template>
     <section class="devops-empty-tips">
+        <p v-if="showLock">
+            <icon name="locked" size="52" />
+        </p>
         <h2 class="title">
             {{ title }}
         </h2>
@@ -18,6 +21,8 @@
 
     @Component
     export default class EmptyTips extends Vue {
+        @Prop({ default: false })
+        showLock
         @Prop()
         title
         @Prop()
@@ -33,15 +38,16 @@
         margin: 139px auto 0;
         text-align: center;
         .title {
-            margin: 0 0 24px;
-            color: #333;
-            font-size: 22px;
+            margin: 27px 0 30px 24px;
+            color: #313238;
+            font-size: 20px;
             font-weight: normal;
         }
         .desc {
-            margin-bottom: 28px;
-            color: $fontColor;
+            margin-bottom: 30px;
+            color: #979BA5;
             font-size: 14px;
+            font-weight: 400;
         }
         .btns-row {
             font-size: 0;
