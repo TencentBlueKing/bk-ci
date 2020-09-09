@@ -31,11 +31,13 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_BUILD_2_DEPLOY_DENY
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_BUILD_CAN_NOT_ADD_SVR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_DEPLOY_2_BUILD_DENY
@@ -90,7 +92,8 @@ class EnvService @Autowired constructor(
 
     override fun createEnvironment(userId: String, projectId: String, envCreateInfo: EnvCreateInfo): EnvironmentId {
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, AuthPermission.CREATE)) {
-            throw ErrorCodeException(errorCode = ERROR_ENV_NO_CREATE_PERMISSSION)
+            throw PermissionForbiddenException(
+                    message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_CREATE_PERMISSSION))
         }
 
         checkName(projectId, null, envCreateInfo.name)
@@ -104,7 +107,8 @@ class EnvService @Autowired constructor(
     override fun updateEnvironment(userId: String, projectId: String, envHashId: String, envUpdateInfo: EnvUpdateInfo) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
-            throw ErrorCodeException(errorCode = ERROR_ENV_NO_EDIT_PERMISSSION)
+            throw PermissionForbiddenException(
+                    message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION))
         }
         checkName(projectId, envId, envUpdateInfo.name)
 
@@ -313,7 +317,8 @@ class EnvService @Autowired constructor(
     override fun getEnvironment(userId: String, projectId: String, envHashId: String): EnvWithPermission {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.VIEW)) {
-            throw ErrorCodeException(errorCode = ERROR_ENV_NO_VIEW_PERMISSSION)
+            throw PermissionForbiddenException(
+                    message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_VIEW_PERMISSSION))
         }
         val env = envDao.get(dslContext, projectId, envId)
         val nodeCount = envNodeDao.count(dslContext, projectId, envId)
@@ -386,7 +391,8 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         envDao.getOrNull(dslContext, projectId, envId) ?: return
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.DELETE)) {
-            throw ErrorCodeException(errorCode = ERROR_ENV_NO_DEL_PERMISSSION)
+            throw PermissionForbiddenException(
+                    message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION))
         }
 
         dslContext.transaction { configuration ->
@@ -468,7 +474,8 @@ class EnvService @Autowired constructor(
     override fun addEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
-            throw ErrorCodeException(errorCode = ERROR_ENV_NO_EDIT_PERMISSSION)
+            throw PermissionForbiddenException(
+                    message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION))
         }
 
         val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
@@ -525,7 +532,8 @@ class EnvService @Autowired constructor(
     override fun deleteEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>) {
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
-            throw ErrorCodeException(errorCode = ERROR_ENV_NO_EDIT_PERMISSSION)
+            throw PermissionForbiddenException(
+                    message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION))
         }
 
         envNodeDao.batchDeleteEnvNode(
