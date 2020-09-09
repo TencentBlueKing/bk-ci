@@ -24,42 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.process.pojo.code
 
-import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 
-@ApiModel("代码库模型-Code平台TGit")
-data class CodeTGitRepository(
-    @ApiModelProperty("代码库别名", required = true)
-    override val aliasName: String,
-    @ApiModelProperty("URL", required = true)
-    override val url: String,
-    @ApiModelProperty("凭据id", required = true)
-    override val credentialId: String,
-    @ApiModelProperty("tGit项目名称", example = "xx/yy_ci_example_proj", required = true)
-    override val projectName: String,
-    @ApiModelProperty("用户名", required = true)
-    override var userName: String,
-    @ApiModelProperty("仓库认证类型", required = false)
-    val authType: RepoAuthType? = RepoAuthType.SSH,
-    @ApiModelProperty("项目id", required = true)
-    override val projectId: String?,
-    override val repoHashId: String?
-) : Repository {
-    companion object {
-        const val classType = "codeTGit"
-    }
+interface ScmWebhookStartParams<in T : WebHookTriggerElement> {
 
-    //    override fun getStartPrefix() = "git@git.tencent.com"
-    override fun getStartPrefix(): String {
-        return when (authType) {
-            RepoAuthType.SSH -> "git@"
-            RepoAuthType.OAUTH -> "http://"
-            RepoAuthType.HTTP -> "http://"
-            RepoAuthType.HTTPS -> "https://"
-            else -> "git@"
-        }
-    }
+    fun getStartParams(element: T): Map<String, Any>
 }
