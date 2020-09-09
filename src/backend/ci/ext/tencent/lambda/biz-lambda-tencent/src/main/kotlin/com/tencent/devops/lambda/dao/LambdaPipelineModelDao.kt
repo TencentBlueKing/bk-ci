@@ -23,23 +23,38 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.listener
+package com.tencent.devops.lambda.dao
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
-import com.tencent.devops.lambda.service.PipelineBuildService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.tencent.devops.model.process.Tables
+import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-@Component
-class BuildTaskFinishListener @Autowired constructor(
-    private val pipelineBuildService: PipelineBuildService,
-    pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildTaskFinishBroadCastEvent>(pipelineEventDispatcher) {
+@Repository
+class LambdaPipelineModelDao {
 
-    override fun run(event: PipelineBuildTaskFinishBroadCastEvent) {
-        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Receive build element finish event - ($event)")
-        pipelineBuildService.onBuildTaskFinish(event)
+    fun getResModel(
+        dslContext: DSLContext,
+        pipelineId: String,
+        version: Int
+    ): String? {
+        return with(Tables.T_PIPELINE_RESOURCE) {
+            dslContext.select(MODEL)
+                .from(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.eq(version))
+                .fetchAny(0, String::class.java)
+        }
+    }
+
+    fun getBuildDetailModel(
+        dslContext: DSLContext,
+        buildId: String
+    ): TPipelineBuildDetailRecord? {
+        return with(Tables.T_PIPELINE_BUILD_DETAIL) {
+            dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .fetchOne()
+        }
     }
 }

@@ -25,25 +25,21 @@
  */
 package com.tencent.devops.lambda.dao
 
-import com.tencent.devops.model.process.tables.TPipelineBuildContainer
-import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
+import com.tencent.devops.model.process.tables.TTemplatePipeline
+import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
 @Repository
-class BuildContainerDao {
+class LambdaPipelineTemplateDao {
 
-    fun getContainer(
+    fun getTemplate(
         dslContext: DSLContext,
-        buildId: String,
-        stageId: String,
-        containerId: String
-    ): TPipelineBuildContainerRecord? {
-        with(TPipelineBuildContainer.T_PIPELINE_BUILD_CONTAINER) {
+        pipelineId: String
+    ): TTemplatePipelineRecord? {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             return dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .and(STAGE_ID.eq(stageId))
-                .and(CONTAINER_ID.eq(containerId))
+                .where(PIPELINE_ID.eq(pipelineId))
                 .fetchOne()
         }
     }

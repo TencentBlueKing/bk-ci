@@ -23,24 +23,42 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.lambda.dao
 
-import com.tencent.devops.model.process.tables.TTemplatePipeline
-import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+package com.tencent.devops.lambda.pojo
 
-@Repository
-class PipelineTemplateDao {
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    fun getTemplate(
-        dslContext: DSLContext,
-        pipelineId: String
-    ): TTemplatePipelineRecord? {
-        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .fetchOne()
-        }
-    }
-}
+@ApiModel("构建详情")
+data class DataPlatBuildDetail(
+    @ApiModelProperty("清洗时间", required = false)
+    val washTime: String,
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("模板ID", required = true)
+    val templateId: String,
+    @ApiModelProperty("事业群名称", required = true)
+    val bgName: String,
+    @ApiModelProperty("部门名称", required = true)
+    val deptName: String,
+    @ApiModelProperty("中心名称", required = true)
+    val centerName: String,
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("流水线ID", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("构建号", required = false)
+    val buildNum: Int?,
+    @ApiModelProperty("构建详情", required = true)
+    val model: String,
+    @ApiModelProperty("构建触发人", required = false)
+    val startUser: String?,
+    @ApiModelProperty("出发方式", required = false)
+    val trigger: String?,
+    @ApiModelProperty("启动时间", required = false)
+    val startTime: String,
+    @ApiModelProperty("结束时间", required = false)
+    val endTime: String?,
+    @ApiModelProperty("构建状态", required = false)
+    val status: String?
+)
