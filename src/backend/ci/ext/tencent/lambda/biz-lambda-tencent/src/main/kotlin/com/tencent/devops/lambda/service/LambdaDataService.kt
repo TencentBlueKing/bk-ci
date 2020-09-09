@@ -103,7 +103,7 @@ class LambdaDataService @Autowired constructor(
         }
         val projectInfo = projectCache.get(history.projectId)
         pushBuildHistory(genBuildHistory(projectInfo, history, BuildStatus.values(), System.currentTimeMillis()))
-        pushBuildDetail(genBuildDetail(projectInfo,event.pipelineId, model))
+        pushBuildDetail(genBuildDetail(projectInfo, event.pipelineId, model))
 
         val info = getBuildInfo(event.buildId)
         if (info == null) {
