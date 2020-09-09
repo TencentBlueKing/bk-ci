@@ -34,7 +34,19 @@ data class DataPlatBuildHistory(
     @ApiModelProperty("清洗时间", required = false)
     val washTime: String,
     @ApiModelProperty("构建ID", required = true)
-    val id: String,
+    val buildId: String,
+    @ApiModelProperty("模板ID", required = true)
+    val templateId: String,
+    @ApiModelProperty("事业群名称", required = true)
+    val bgName: String,
+    @ApiModelProperty("部门名称", required = true)
+    val deptName: String,
+    @ApiModelProperty("中心名称", required = true)
+    val centerName: String,
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("流水线ID", required = true)
+    val pipelineId: String,
     @ApiModelProperty("启动用户", required = true)
     val userId: String,
     @ApiModelProperty("触发条件", required = true)

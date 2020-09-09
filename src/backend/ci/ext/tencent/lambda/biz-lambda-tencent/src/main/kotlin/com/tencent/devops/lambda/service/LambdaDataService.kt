@@ -101,15 +101,15 @@ class LambdaDataService @Autowired constructor(
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Fail to get the pipeline detail model")
             return
         }
-        pushBuildHistory(genBuildHistory(history, BuildStatus.values(), System.currentTimeMillis()))
-        pushBuildDetail(genBuildDetail(model))
+        val projectInfo = projectCache.get(history.projectId)
+        pushBuildHistory(genBuildHistory(projectInfo, history, BuildStatus.values(), System.currentTimeMillis()))
+        pushBuildDetail(genBuildDetail(projectInfo,event.pipelineId, model))
 
         val info = getBuildInfo(event.buildId)
         if (info == null) {
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] The build info is not exist")
             return
         }
-        val projectInfo = projectCache.get(history.projectId)
 
         val data = BuildData(
             projectId = info.projectId,
@@ -284,7 +284,7 @@ class LambdaDataService @Autowired constructor(
             logger.info("pushBuildHistory: ${JsonUtil.toJson(history)}")
             kafkaClient.send(KafkaTopic.LANDUN_BUILD_HISTORY_TOPIC, JsonUtil.toJson(history))
         } catch (e: Exception) {
-            logger.error("Push build history to kafka error, buildId: ${history.id}", e)
+            logger.error("Push build history to kafka error, buildId: ${history.buildId}", e)
         }
     }
 
@@ -384,11 +384,21 @@ class LambdaDataService @Autowired constructor(
         return convert(lambdaPipelineBuildDao.getBuildHistory(dslContext, buildId))
     }
 
-    private fun genBuildDetail(buildDetailRecord: TPipelineBuildDetailRecord): DataPlatBuildDetail {
+    private fun genBuildDetail(
+        projectInfo: ProjectOrganize,
+        pipelineId: String,
+        buildDetailRecord: TPipelineBuildDetailRecord
+    ): DataPlatBuildDetail {
         return with(buildDetailRecord) {
             DataPlatBuildDetail(
                 washTime = LocalDateTime.now().format(dateTimeFormatter),
                 buildId = buildId,
+                templateId = templateCache.get(pipelineId),
+                bgName = projectInfo.bgName,
+                deptName = projectInfo.deptName,
+                centerName = projectInfo.centerName,
+                projectId = projectInfo.projectId,
+                pipelineId = pipelineId,
                 buildNum = buildNum,
                 model = model,
                 trigger = trigger,
@@ -427,6 +437,7 @@ class LambdaDataService @Autowired constructor(
     }
 
     private fun genBuildHistory(
+        projectInfo: ProjectOrganize,
         tPipelineBuildHistoryRecord: TPipelineBuildHistoryRecord,
         buildStatus: Array<BuildStatus>,
         currentTimestamp: Long
@@ -439,7 +450,13 @@ class LambdaDataService @Autowired constructor(
             }
             DataPlatBuildHistory(
                 washTime = LocalDateTime.now().format(dateTimeFormatter),
-                id = buildId,
+                templateId = templateCache.get(pipelineId),
+                bgName = projectInfo.bgName,
+                deptName = projectInfo.deptName,
+                centerName = projectInfo.centerName,
+                projectId = projectInfo.projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
                 userId = triggerUser ?: startUser,
                 trigger = StartType.toReadableString(trigger, ChannelCode.valueOf(channel)),
                 buildNum = buildNum,
