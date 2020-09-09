@@ -30,6 +30,7 @@ import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.lambda.dao.LambdaBuildIndexDao
 import org.elasticsearch.client.transport.TransportClient
 import org.jooq.DSLContext
 import org.junit.Assert.assertEquals
@@ -45,8 +46,8 @@ class ESServiceTest {
     private val redisOperation: RedisOperation = RedisOperation(redisTemplate)
     private val objectMapper: ObjectMapper = mock()
     private val dslContext: DSLContext = mock()
-    private val buildIndexDao: BuildIndexDao = mock()
-    private val indexService = IndexService(dslContext, buildIndexDao, redisOperation)
+    private val lambdaBuildIndexDao: LambdaBuildIndexDao = mock()
+    private val indexService = IndexService(dslContext, lambdaBuildIndexDao, redisOperation)
     private val esService: ESService = ESService(
         esClient = esClient,
         redisOperation = redisOperation,
