@@ -190,7 +190,7 @@ class PreBuildService @Autowired constructor(
             val containerList = mutableListOf<Container>()
             stage.stage.forEachIndexed { jobIndex, job ->
                 if (job.job.type == null || job.job.type == VM_JOB) {
-                    val vmContainer = createVMBuildContainer(job, startUpReq, agentInfo, jobIndex)
+                    val vmContainer = createVMBuildContainer(job, startUpReq, agentInfo, jobIndex, userId)
                     containerList.add(vmContainer)
                 } else if (job.job.type == NORMAL_JOB) {
                     val normalContainer = createNormalContainer(job, userId)
@@ -251,7 +251,8 @@ class PreBuildService @Autowired constructor(
         job: Job,
         startUpReq: StartUpReq,
         agentInfo: ThirdPartyAgentStaticInfo,
-        jobIndex: Int
+        jobIndex: Int,
+        userId: String
     ): VMBuildContainer {
         val elementList = mutableListOf<Element>()
         job.job.steps.forEach {
@@ -277,12 +278,14 @@ class PreBuildService @Autowired constructor(
                     "workspace" to startUpReq.workspace
                 )
                 it.inputs.data = mutableData
+                installMarketAtom(userId, "syncCodeToRemote")
             }
 
             val element = it.covertToElement(getCiBuildConf(preBuildConfig))
             elementList.add(element)
             if (element is MarketBuildAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
+                installMarketAtom(userId, element.getAtomCode())
             }
         }
 
