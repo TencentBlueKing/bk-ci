@@ -26,26 +26,36 @@
 
 package com.tencent.devops.store.service
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreMemberReq
-import com.tencent.devops.store.service.common.TxStoreGitResitoryService
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.store.dao.ExtServiceDao
+import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service("serviceMemberService")
-class TxExtServiceMemberImpl @Autowired constructor(
-    private val txStoreGitResitoryService: TxStoreGitResitoryService
-) : ExtServiceMemberImpl() {
+@Service
+class ExtServiceCommonService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val extServiceDao: ExtServiceDao
+) {
+    private val logger = LoggerFactory.getLogger(ExtServiceCommonService::class.java)
 
-    override fun addRepoMember(
-        storeMemberReq: StoreMemberReq,
-        userId: String,
-        repositoryHashId: String
-    ): Result<Boolean> {
-        return txStoreGitResitoryService.addRepoMember(storeMemberReq, userId, repositoryHashId)
-    }
-
-    override fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean> {
-        return txStoreGitResitoryService.deleteRepoMember(userId, username, repositoryHashId)
+    fun checkEditCondition(serviceCode: String): Boolean {
+        // 查询微扩展的最新记录
+        val newestServiceRecord = extServiceDao.getNewestServiceByCode(dslContext, serviceCode)
+        logger.info("checkEditCondition newestServiceRecord is :$newestServiceRecord")
+        if (null == newestServiceRecord) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(serviceCode))
+        }
+        val serviceFinalStatusList = listOf(
+            ExtServiceStatusEnum.AUDIT_REJECT.status.toByte(),
+            ExtServiceStatusEnum.RELEASED.status.toByte(),
+            ExtServiceStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
+            ExtServiceStatusEnum.UNDERCARRIAGED.status.toByte()
+        )
+        // 判断最近一个微扩展版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息
+        return serviceFinalStatusList.contains(newestServiceRecord.serviceStatus)
     }
 }
