@@ -69,5 +69,5 @@ data class MarketBuildInput(
     @ApiModelProperty("原子版本", required = false)
     var version: String = "1.*",
     @ApiModelProperty("原子参数数据", required = true)
-    val data: Map<String, Any> = mapOf()
+    var data: Map<String, Any> = mapOf()
 ) : AbstractInput()
