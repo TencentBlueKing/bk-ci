@@ -268,12 +268,14 @@ class PreBuildService @Autowired constructor(
 
             //同步插件
             if (it is MarketBuildTask && it.inputs.atomCode == "syncAgentCode") {
-                if(!startUpReq.useRemote){
+                if (!startUpReq.useRemote) {
                     return@forEach
                 }
                 val mutableData = it.inputs.data.toMutableMap()
-                mutableData["agentId"] = agentInfo.agentId
-                mutableData["workspace"] = startUpReq.workspace
+                mutableData["input"] = mapOf(
+                    "agentId" to agentInfo.agentId,
+                    "workspace" to startUpReq.workspace
+                )
                 it.inputs.data = mutableData
             }
 
@@ -283,7 +285,7 @@ class PreBuildService @Autowired constructor(
                 logger.info("install market atom: ${element.getAtomCode()}")
             }
         }
-        
+
         //TODO 需要远程传过来
         val dispatchType = if (startUpReq.useRemote)
             DockerDispatchType(DockerVersion.TLINUX2_2.value)
