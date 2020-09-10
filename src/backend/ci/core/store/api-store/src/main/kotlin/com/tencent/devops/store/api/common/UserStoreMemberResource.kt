@@ -23,16 +23,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.api.image.user
+
+package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreMemberItem
 import com.tencent.devops.store.pojo.common.StoreMemberReq
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -44,37 +47,28 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_MARKET_IMAGE_MEMBER"], description = "镜像市场-镜像-用户")
-@Path("/user/market/desk/image/member/")
+@Api(tags = ["USER_STORE_MEMBER"], description = "STORE-组件-用户")
+@Path("/user/market/desk/store/member/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserMarketImageMemberResource {
+interface UserStoreMemberResource {
 
-    @ApiOperation("查看镜像成员信息")
-    @GET
-    @Path("/view")
-    fun view(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("镜像代码", required = true)
-        @QueryParam("imageCode")
-        imageCode: String
-    ): Result<StoreMemberItem?>
-
-    @ApiOperation("获取镜像成员列表")
+    @ApiOperation("获取store组件成员列表")
     @GET
     @Path("/list")
     fun list(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("imageCode", required = true)
-        @QueryParam("imageCode")
-        imageCode: String
+        @ApiParam("store组件标识", required = true)
+        @QueryParam("storeCode")
+        storeCode: String,
+        @ApiParam("store组件类型", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum
     ): Result<List<StoreMemberItem?>>
 
-    @ApiOperation("添加镜像成员")
+    @ApiOperation("添加store组件成员")
     @POST
     @Path("/add")
     fun add(
@@ -82,10 +76,11 @@ interface UserMarketImageMemberResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("添加成员请求报文")
+        @Valid
         storeMemberReq: StoreMemberReq
     ): Result<Boolean>
 
-    @ApiOperation("删除镜像成员")
+    @ApiOperation("删除store组件成员")
     @DELETE
     @Path("/delete")
     fun delete(
@@ -95,12 +90,30 @@ interface UserMarketImageMemberResource {
         @ApiParam("成员ID", required = true)
         @QueryParam("id")
         id: String,
-        @ApiParam("imageCode", required = true)
-        @QueryParam("imageCode")
-        imageCode: String
+        @ApiParam("store组件标识", required = true)
+        @QueryParam("storeCode")
+        storeCode: String,
+        @ApiParam("store组件类型", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum
     ): Result<Boolean>
 
-    @ApiOperation("修改镜像成员的调试项目")
+    @ApiOperation("查看store组件成员信息")
+    @GET
+    @Path("/view")
+    fun view(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("store组件标识", required = true)
+        @QueryParam("storeCode")
+        storeCode: String,
+        @ApiParam("store组件类型", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum
+    ): Result<StoreMemberItem?>
+
+    @ApiOperation("修改store组件成员的调试项目")
     @PUT
     @Path("/test/project/change")
     fun changeMemberTestProjectCode(
@@ -110,11 +123,17 @@ interface UserMarketImageMemberResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("store组件成员", required = true)
+        @QueryParam("storeMember")
+        storeMember: String,
         @ApiParam("项目代码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @ApiParam("镜像代码", required = true)
-        @QueryParam("imageCode")
-        imageCode: String
+        @ApiParam("store组件标识", required = true)
+        @QueryParam("storeCode")
+        storeCode: String,
+        @ApiParam("store组件类型", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum
     ): Result<Boolean>
 }
