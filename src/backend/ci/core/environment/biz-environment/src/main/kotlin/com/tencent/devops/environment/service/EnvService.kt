@@ -152,7 +152,7 @@ class EnvService @Autowired constructor(
         val permissionMap = environmentPermissionService.listEnvByPermissions(
             userId,
             projectId,
-            setOf(AuthPermission.LIST, AuthPermission.EDIT, AuthPermission.DELETE)
+            setOf(AuthPermission.LIST, AuthPermission.EDIT, AuthPermission.DELETE, AuthPermission.USE)
         )
         val canListEnvIds = if (permissionMap.containsKey(AuthPermission.LIST)) {
             permissionMap[AuthPermission.LIST]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
@@ -168,6 +168,12 @@ class EnvService @Autowired constructor(
 
         val canDeleteEnvIds = if (permissionMap.containsKey(AuthPermission.DELETE)) {
             permissionMap[AuthPermission.DELETE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        } else {
+            emptyList()
+        }
+
+        val canUseEnvIds = if (permissionMap.containsKey(AuthPermission.USE)) {
+            permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
             emptyList()
         }
@@ -193,7 +199,7 @@ class EnvService @Autowired constructor(
                 updatedTime = it.updatedTime.timestamp(),
                 canEdit = canEditEnvIds.contains(it.envId),
                 canDelete = canDeleteEnvIds.contains(it.envId),
-                canUse = null
+                canUse = canUseEnvIds.contains(it.envId)
             )
         }
     }
