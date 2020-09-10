@@ -20,7 +20,7 @@
     "operation": "Operation",
     "edit": "edit",
     "delete": "delete",
-    "deleteCodelib": "delete repository",
+    "deleteCodelib": "delete repository ( {0} ) ?",
     "confirm": "confirm",
     "successfullyDeleted": "successfully deleted",
     "codelibMode": "Mode",
