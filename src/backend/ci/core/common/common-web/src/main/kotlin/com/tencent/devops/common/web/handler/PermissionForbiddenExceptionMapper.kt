@@ -46,11 +46,11 @@ class PermissionForbiddenExceptionMapper : ExceptionMapper<PermissionForbiddenEx
         logger.warn("Encounter permission exception(${exception.message})")
         val status = Response.Status.FORBIDDEN
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
-            exception.message
+            exception.defaultMessage
         } else {
             "你没有权限进行该操作"
         }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(status.statusCode, message)).build()
+            .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()
     }
 }
