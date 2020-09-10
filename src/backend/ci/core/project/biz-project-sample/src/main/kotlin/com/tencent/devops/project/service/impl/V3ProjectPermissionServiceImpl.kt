@@ -16,7 +16,6 @@ import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.lang.RuntimeException
 
 class V3ProjectPermissionServiceImpl @Autowired constructor(
     val client: Client,
