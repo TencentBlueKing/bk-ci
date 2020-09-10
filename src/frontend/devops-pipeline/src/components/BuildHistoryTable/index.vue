@@ -481,10 +481,15 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    this.handleError(err, this.$permissionActionMap.execute, {
-                        id: this.$route.params.pipelineId,
-                        name: this.$route.params.pipelineId
-                    }, this.$route.params.projectId)
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.execute,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.$route.params.pipelineId,
+                            name: this.$route.params.pipelineId
+                        }],
+                        projectId: this.$route.params.projectId
+                    }])
                 } finally {
                     delete this.retryingMap[buildId]
                     message && this.$showTips({
