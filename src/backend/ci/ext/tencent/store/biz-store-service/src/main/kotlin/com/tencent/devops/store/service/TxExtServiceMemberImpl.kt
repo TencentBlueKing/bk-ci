@@ -32,7 +32,7 @@ import com.tencent.devops.store.service.common.TxStoreGitResitoryService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service("serviceMemberService")
 class TxExtServiceMemberImpl @Autowired constructor(
     private val txStoreGitResitoryService: TxStoreGitResitoryService
 ) : ExtServiceMemberImpl() {

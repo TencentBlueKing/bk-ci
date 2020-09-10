@@ -24,12 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.user
+package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.user.UserScmResource
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.scm.pojo.RevisionInfo
 import org.springframework.beans.factory.annotation.Autowired

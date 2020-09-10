@@ -24,67 +24,56 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources
+package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.UserExtServiceMembersResource
+import com.tencent.devops.store.api.common.UserStoreMemberResource
 import com.tencent.devops.store.pojo.common.StoreMemberItem
 import com.tencent.devops.store.pojo.common.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.TxExtServiceMemberImpl
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.store.service.common.StoreMemberService
 
 @RestResource
-class UserExtServiceMemberResourceImpl @Autowired constructor(
-    private val txExtServiceMemberImpl: TxExtServiceMemberImpl
-) : UserExtServiceMembersResource {
-    override fun list(userId: String, serviceCode: String): Result<List<StoreMemberItem?>> {
-        return txExtServiceMemberImpl.list(
-            userId = userId,
-            storeCode = serviceCode,
-            storeType = StoreTypeEnum.SERVICE
-        )
+class UserStoreMemberResourceImpl : UserStoreMemberResource {
+
+    override fun list(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<List<StoreMemberItem?>> {
+        return getStoreMemberService(storeType).list(userId, storeCode, storeType)
     }
 
     override fun add(userId: String, storeMemberReq: StoreMemberReq): Result<Boolean> {
-        return txExtServiceMemberImpl.add(
-            userId = userId,
-            storeMemberReq = storeMemberReq,
-            sendNotify = true,
-            storeType = StoreTypeEnum.SERVICE
-        )
+        val storeType = storeMemberReq.storeType
+        return getStoreMemberService(storeType).add(userId, storeMemberReq, storeType)
     }
 
-    override fun delete(userId: String, id: String, serviceCode: String): Result<Boolean> {
-        return txExtServiceMemberImpl.delete(
-            userId = userId,
-            storeCode = serviceCode,
-            storeType = StoreTypeEnum.SERVICE,
-            id = id
-            )
+    override fun delete(userId: String, id: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
+        return getStoreMemberService(storeType).delete(userId, id, storeCode, storeType)
     }
 
-    override fun view(userId: String, serviceCode: String): Result<StoreMemberItem?> {
-        return txExtServiceMemberImpl.viewMemberInfo(
-            userId = userId,
-            storeCode = serviceCode,
-            storeType = StoreTypeEnum.SERVICE
-            )
+    override fun view(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<StoreMemberItem?> {
+        return getStoreMemberService(storeType).viewMemberInfo(userId, storeCode, storeType)
     }
 
     override fun changeMemberTestProjectCode(
         accessToken: String,
         userId: String,
+        storeMember: String,
         projectCode: String,
-        serviceCode: String
+        storeCode: String,
+        storeType: StoreTypeEnum
     ): Result<Boolean> {
-        return txExtServiceMemberImpl.changeMemberTestProjectCode(
+        return getStoreMemberService(storeType).changeMemberTestProjectCode(
             accessToken = accessToken,
             userId = userId,
+            storeMember = storeMember,
             projectCode = projectCode,
-            storeCode = serviceCode,
-            storeType = StoreTypeEnum.SERVICE
+            storeCode = storeCode,
+            storeType = storeType
         )
+    }
+
+    private fun getStoreMemberService(storeType: StoreTypeEnum): StoreMemberService {
+        return SpringContextUtil.getBean(StoreMemberService::class.java, "${storeType.name.toLowerCase()}MemberService")
     }
 }

@@ -24,32 +24,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service.artifactory
+package com.tencent.devops.store.service
 
-import com.tencent.devops.artifactory.client.JFrogApiService
-import com.tencent.devops.artifactory.service.CustomDirGsService
-import com.tencent.devops.artifactory.service.JFrogService
-import com.tencent.devops.artifactory.util.JFrogUtil
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.store.dao.ExtServiceDao
+import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.NotFoundException
 
 @Service
-class ArtifactoryCustomDirGsService @Autowired constructor(
-    private val jFrogApiService: JFrogApiService,
-    private val jFrogService: JFrogService
-) : CustomDirGsService {
-    override fun getDownloadUrl(projectId: String, fileName: String, userId: String): String {
-        logger.info("getDownloadUrl, projectId: $projectId, fileName: $fileName, userId: $userId")
-        val path = JFrogUtil.getCustomDirPath(projectId, fileName)
-        if (!jFrogService.exist(path)) {
-            throw NotFoundException("文件不存在")
-        }
-        return jFrogApiService.internalDownloadUrl(path, 3 * 24 * 3600, userId)
-    }
+class ExtServiceCommonService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val extServiceDao: ExtServiceDao
+) {
+    private val logger = LoggerFactory.getLogger(ExtServiceCommonService::class.java)
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ArtifactoryCustomDirGsService::class.java)
+    fun checkEditCondition(serviceCode: String): Boolean {
+        // 查询微扩展的最新记录
+        val newestServiceRecord = extServiceDao.getNewestServiceByCode(dslContext, serviceCode)
+        logger.info("checkEditCondition newestServiceRecord is :$newestServiceRecord")
+        if (null == newestServiceRecord) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(serviceCode))
+        }
+        val serviceFinalStatusList = listOf(
+            ExtServiceStatusEnum.AUDIT_REJECT.status.toByte(),
+            ExtServiceStatusEnum.RELEASED.status.toByte(),
+            ExtServiceStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
+            ExtServiceStatusEnum.UNDERCARRIAGED.status.toByte()
+        )
+        // 判断最近一个微扩展版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息
+        return serviceFinalStatusList.contains(newestServiceRecord.serviceStatus)
     }
 }

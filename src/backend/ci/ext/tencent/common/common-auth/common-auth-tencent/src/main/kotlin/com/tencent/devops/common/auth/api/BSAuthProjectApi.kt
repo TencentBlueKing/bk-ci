@@ -51,14 +51,49 @@ class BSAuthProjectApi @Autowired constructor(
     private val bsAuthTokenApi: BSAuthTokenApi,
     private val bsCCProjectApi: BSCCProjectApi
 ) : AuthProjectApi {
-
     override fun isProjectUser(
         user: String,
         serviceCode: AuthServiceCode,
         projectCode: String,
         group: BkAuthGroup?
     ): Boolean {
-        return getProjectUsers(serviceCode, projectCode, group).contains(user)
+        return if (group != null) {
+            getProjectUsers(serviceCode, projectCode, group).contains(user)
+        } else {
+            isProjectMember(user, projectCode, serviceCode)
+        }
+    }
+
+    private fun isProjectMember(
+        user: String,
+        projectCode: String,
+        serviceCode: AuthServiceCode
+    ): Boolean {
+        logger.info("isProjectMember, user: $user, projectCode: $projectCode, serviceCode: $serviceCode")
+        val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
+        val url = "${bkAuthProperties.url}/projects/$projectCode/users/$user/verfiy?access_token=$accessToken"
+        val body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), "")
+        val request = Request.Builder().url(url).post(body).build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("verify project user failed, url:$url, responseContent: $responseContent")
+                throw RemoteServiceException("verify project user failed")
+            }
+            val responseObject = objectMapper.readValue<BkAuthResponse<Any>>(responseContent)
+            if (responseObject.code != 0) {
+                if (responseObject.code == HTTP_403) {
+                    bsAuthTokenApi.refreshAccessToken(serviceCode)
+                }
+                if (responseObject.code == HTTP_400) {
+                    logger.info("user[$user] not member of project $projectCode")
+                    return false
+                }
+                logger.error("verify project user failed. $responseContent")
+                throw RemoteServiceException("verify project user failed")
+            }
+            return true
+        }
     }
 
     override fun getProjectUsers(serviceCode: AuthServiceCode, projectCode: String, group: BkAuthGroup?): List<String> {
@@ -270,12 +305,13 @@ class BSAuthProjectApi @Autowired constructor(
             if (responseObject.code != 0) {
                 logger.warn("get project info fail: $responseContent")
             }
-            return responseObject.data ?: null
+            return responseObject.data
         }
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(BSAuthProjectApi::class.java)
         private const val HTTP_403 = 403
+        private const val HTTP_400 = 400
     }
 }

@@ -34,7 +34,6 @@ import com.tencent.devops.artifactory.service.artifactory.ArtifactoryPipelineDir
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoPipelineDirService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
@@ -51,17 +50,10 @@ class UserPipelineResourceImpl @Autowired constructor(
 
     override fun hasPermissionList(userId: String, projectId: String, path: String, permission: Permission): Result<List<FileInfo>> {
         checkParam(userId, projectId, path)
-        val bkAuthPermission = when (permission) {
-            Permission.VIEW -> AuthPermission.VIEW
-            Permission.EDIT -> AuthPermission.EDIT
-            Permission.SHARE -> AuthPermission.SHARE
-            Permission.LIST -> AuthPermission.LIST
-            Permission.EXECUTE -> AuthPermission.EXECUTE
-        }
         return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoPipelineDirService.list(userId, projectId, path, bkAuthPermission))
+            Result(bkRepoPipelineDirService.list(userId, projectId, path))
         } else {
-            Result(artifactoryPipelineDirService.list(userId, projectId, path, bkAuthPermission))
+            Result(artifactoryPipelineDirService.list(userId, projectId, path))
         }
     }
 
