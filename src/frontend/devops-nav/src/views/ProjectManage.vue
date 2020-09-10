@@ -19,7 +19,7 @@
                         <bk-button
                             theme="primary"
                             icon="icon-plus"
-                            @click="hasCreatePermission ? togglePMDialog(true) : askCreatePermission()"
+                            @click="!hasCreatePermission ? togglePMDialog(true) : applyCreatePermission()"
                         >
                             {{ $t('addProject') }}
                         </bk-button>
@@ -261,7 +261,7 @@
             limitList: [10, 15, 20, 25, 30],
             count: 0
         }
-        : boolean = true
+        hasCreatePermission: boolean = true
         matchColorList: string[] = [
             'green',
             'yellow',
@@ -390,7 +390,7 @@
             this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.project)
         }
 
-        askCreatePermission () {
+        applyCreatePermission () {
             // this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.project)
             this.$showAskPermissionDialog({
                 noPermissionList: [{
