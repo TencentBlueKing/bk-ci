@@ -23,49 +23,57 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.resources.image.user
+
+package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.image.user.UserMarketImageMemberResource
+import com.tencent.devops.store.api.common.UserStoreMemberResource
 import com.tencent.devops.store.pojo.common.StoreMemberItem
 import com.tencent.devops.store.pojo.common.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.image.ImageMemberService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.store.service.common.StoreMemberService
 
 @RestResource
-class UserMarketImageMemberResourceImpl @Autowired constructor(
-    private val imageMemberService: ImageMemberService
-) : UserMarketImageMemberResource {
-    override fun view(userId: String, imageCode: String): Result<StoreMemberItem?> {
-        return imageMemberService.viewMemberInfo(userId, imageCode, StoreTypeEnum.IMAGE)
-    }
+class UserStoreMemberResourceImpl : UserStoreMemberResource {
 
-    override fun list(userId: String, imageCode: String): Result<List<StoreMemberItem?>> {
-        return imageMemberService.list(userId, imageCode, StoreTypeEnum.IMAGE)
+    override fun list(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<List<StoreMemberItem?>> {
+        return getStoreMemberService(storeType).list(userId, storeCode, storeType)
     }
 
     override fun add(userId: String, storeMemberReq: StoreMemberReq): Result<Boolean> {
-        return imageMemberService.add(userId, storeMemberReq, StoreTypeEnum.IMAGE)
+        val storeType = storeMemberReq.storeType
+        return getStoreMemberService(storeType).add(userId, storeMemberReq, storeType)
     }
 
-    override fun delete(userId: String, id: String, imageCode: String): Result<Boolean> {
-        return imageMemberService.delete(userId, id, imageCode, StoreTypeEnum.IMAGE)
+    override fun delete(userId: String, id: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
+        return getStoreMemberService(storeType).delete(userId, id, storeCode, storeType)
+    }
+
+    override fun view(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<StoreMemberItem?> {
+        return getStoreMemberService(storeType).viewMemberInfo(userId, storeCode, storeType)
     }
 
     override fun changeMemberTestProjectCode(
         accessToken: String,
         userId: String,
+        storeMember: String,
         projectCode: String,
-        imageCode: String
+        storeCode: String,
+        storeType: StoreTypeEnum
     ): Result<Boolean> {
-        return imageMemberService.changeMemberTestProjectCode(
+        return getStoreMemberService(storeType).changeMemberTestProjectCode(
             accessToken = accessToken,
             userId = userId,
+            storeMember = storeMember,
             projectCode = projectCode,
-            storeCode = imageCode,
-            storeType = StoreTypeEnum.IMAGE
+            storeCode = storeCode,
+            storeType = storeType
         )
+    }
+
+    private fun getStoreMemberService(storeType: StoreTypeEnum): StoreMemberService {
+        return SpringContextUtil.getBean(StoreMemberService::class.java, "${storeType.name.toLowerCase()}MemberService")
     }
 }
