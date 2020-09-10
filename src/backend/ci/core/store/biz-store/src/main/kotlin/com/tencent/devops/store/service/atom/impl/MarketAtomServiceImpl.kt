@@ -726,13 +726,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            marketAtomDao.deleteByAtomCode(context, atomCode)
+            storeCommonService.deleteStoreInfo(atomCode, StoreTypeEnum.ATOM.type.toByte())
             atomApproveRelDao.deleteByAtomCode(context, atomCode)
             marketAtomEnvInfoDao.deleteAtomEnvInfo(context, atomCode)
             marketAtomFeatureDao.deleteAtomFeature(context, atomCode)
             atomLabelRelDao.deleteByAtomCode(context, atomCode)
             marketAtomVersionLogDao.deleteByAtomCode(context, atomCode)
-            storeCommonService.deleteStoreInfo(atomCode, StoreTypeEnum.ATOM.type.toByte())
+            marketAtomDao.deleteByAtomCode(context, atomCode)
         }
         return Result(true)
     }
