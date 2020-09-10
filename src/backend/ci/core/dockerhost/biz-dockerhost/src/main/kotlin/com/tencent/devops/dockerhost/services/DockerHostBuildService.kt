@@ -38,8 +38,10 @@ import com.github.dockerjava.api.model.Frame
 import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.PullResponseItem
 import com.github.dockerjava.api.model.PushResponseItem
+import com.github.dockerjava.api.model.Statistics
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.InvocationBuilder
 import com.github.dockerjava.core.command.LogContainerResultCallback
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
@@ -639,6 +641,29 @@ class DockerHostBuildService(
         } catch (e: Exception) {
             logger.error("[$containerId]| getDockerRunExitCode error.", e)
             Constants.DOCKER_EXIST_CODE
+        }
+    }
+
+    fun checkContainerStats() {
+        val containerInfo = httpLongDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
+        for (container in containerInfo) {
+            val statistics = getContainerStats(container.id)
+            if (statistics != null) {
+                val cpuUsage = statistics.cpuStats.systemCpuUsage
+            }
+        }
+    }
+
+    fun getContainerStats(containerId: String): Statistics? {
+        val asyncResultCallback = InvocationBuilder.AsyncResultCallback<Statistics>()
+        httpDockerCli.statsCmd(containerId).exec(asyncResultCallback)
+        return try {
+            val stats = asyncResultCallback.awaitResult()
+            asyncResultCallback.close()
+            stats
+        } catch (e: Exception) {
+            logger.error("containerId: $containerId get containerStats error.", e)
+            null
         }
     }
 
