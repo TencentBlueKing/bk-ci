@@ -144,7 +144,6 @@
                 this.$bkInfo({
                     theme: 'warning',
                     type: 'warning',
-                    title: this.$t('codelib.confirm'),
                     subTitle: this.$t('codelib.deleteCodelib', [aliasName]),
                     confirmFn: () => {
                         const { projectId, currentPage, pageSize, count, totalPages } = this
