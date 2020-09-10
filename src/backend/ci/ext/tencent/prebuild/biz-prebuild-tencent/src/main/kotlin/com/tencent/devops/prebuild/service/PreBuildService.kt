@@ -34,6 +34,7 @@ import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.NORMAL_JOB
 import com.tencent.devops.common.ci.VM_JOB
 import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
+import com.tencent.devops.common.ci.task.MarketBuildTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.ci.yaml.Job
 import com.tencent.devops.common.client.Client
@@ -264,14 +265,16 @@ class PreBuildService @Autowired constructor(
                 }
                 it.inputs.path = whitePath
             }
+            if (it is MarketBuildTask && it.inputs.atomCode == "syncAgentCode") {
+                val mutableData = it.inputs.data.toMutableMap()
+                mutableData["agentId"] = agentInfo.agentId
+                mutableData["workspace"] = startUpReq.workspace
+            }
+
             val element = it.covertToElement(getCiBuildConf(preBuildConfig))
             elementList.add(element)
             if (element is MarketBuildAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
-                if (element.getAtomCode() == "syncAgentCode") {
-                    element.data["agentId"] = agentInfo.agentId
-                    element.data["workspace"] = startUpReq.workspace
-                }
             }
         }
         //TODO 需要远程传过来
