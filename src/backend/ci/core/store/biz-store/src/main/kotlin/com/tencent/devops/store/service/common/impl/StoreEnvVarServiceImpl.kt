@@ -141,12 +141,19 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         storeCode: String,
         scopes: String?,
         varName: String?,
-        isDecrypt: Boolean
+        isDecrypt: Boolean,
+        checkPermissionFlag: Boolean
     ): Result<List<StoreEnvVarInfo>?> {
         logger.info("storeEnvVar getLatestEnvVarList userId:$userId,storeType:$storeType,storeCode:$storeCode")
-        logger.info("storeEnvVar getLatestEnvVarList scopes:$scopes,varName:$varName,isDecrypt:$isDecrypt")
+        logger.info("storeEnvVar getLatestEnvVarList scopes:$scopes,varName:$varName,isDecrypt:$isDecrypt,checkPermissionFlag:$checkPermissionFlag")
         val storeTypeObj = StoreTypeEnum.valueOf(storeType)
-        if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeTypeObj.type.toByte())) {
+        if (checkPermissionFlag && !storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeTypeObj.type.toByte()
+            )
+        ) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val latestEnvVarRecords = storeEnvVarDao.getLatestEnvVarList(
