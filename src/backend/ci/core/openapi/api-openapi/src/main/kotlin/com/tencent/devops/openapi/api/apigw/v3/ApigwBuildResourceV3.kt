@@ -131,7 +131,7 @@ interface ApigwBuildResourceV3 {
 
     @ApiOperation("获取流水线构建历史")
     @GET
-    @Path("")
+    @Path("/history")
     fun getHistoryBuild(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

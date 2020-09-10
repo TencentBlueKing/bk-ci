@@ -50,7 +50,6 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.PipelineQuotaService
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
@@ -70,7 +69,6 @@ class ContainerControl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val buildVariableService: BuildVariableService,
-    private val pipelineQuotaService: PipelineQuotaService,
     private val mutexControl: MutexControl
 ) {
 
@@ -131,38 +129,6 @@ class ContainerControl @Autowired constructor(
                 logger.info("[$buildId]|CONTAINER_SKIP|stage=$stageId|container=$containerId|action=$actionType")
                 return sendBackStage(source = "container_skip")
             }
-
-            // 检查配额
-            // job配额为0
-            val quotaPair = pipelineQuotaService.getProjectRemainQuota(projectId)
-            val remainQuota = quotaPair.first
-            if (remainQuota <= 0) {
-                buildLogPrinter.addRedLine(
-                    buildId = buildId,
-                    message = "[$executeCount]| Job#($containerId) Quota Exceed: ${quotaPair.second}",
-                    tag = VMUtils.genStartVMTaskId(containerId),
-                    jobId = containerId,
-                    executeCount = executeCount
-                )
-                skipContainer(
-                    event = this,
-                    containerTaskList = containerTaskList,
-                    container = container,
-                    mutexGroup = mutexGroup,
-                    status = BuildStatus.QUOTA_FAILED
-                )
-                return sendBackStage(source = "not enough quota to run...")
-            }
-
-            // 开始构建，构建次数+1
-            buildLogPrinter.addLine(
-                buildId = buildId,
-                message = "[$executeCount]| Job#($containerId) Add Quota",
-                tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerId,
-                executeCount = executeCount
-            )
-            pipelineQuotaService.incQuotaByProject(projectId, buildId, containerId)
         }
 
         // 终止或者结束事件，跳过是假货和不启动job配置，都不做互斥判断
@@ -267,8 +233,6 @@ class ContainerControl @Autowired constructor(
         // job互斥失败的时候，设置详情页面为失败。
         pipelineBuildDetailService.updateContainerStatus(buildId = buildId, containerId = containerId, buildStatus = BuildStatus.FAILED)
 
-        // 配额使用-1
-        pipelineQuotaService.decQuotaByProject(projectId = projectId, buildId = buildId, jobId = containerId)
         buildLogPrinter.addLine(
             buildId = buildId,
             message = "[$executeCount]| Mutex Fail for Job#${this.containerId} & minus Quota for project: $projectId",
@@ -288,8 +252,6 @@ class ContainerControl @Autowired constructor(
             mutexGroup = mutexGroup
         )
 
-        // 配额使用-1
-        pipelineQuotaService.decQuotaByProject(projectId = projectId, buildId = buildId, jobId = containerId)
         buildLogPrinter.addLine(
             buildId = buildId,
             message = "[$executeCount]| Finish Job#${this.containerId} & minus Quota for project: $projectId",

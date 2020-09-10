@@ -146,7 +146,7 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
             val containerId = container.id!!
             val containerType = container.getClassType()
             val endTaskSeq = VMUtils.genVMSeq(containerSeq, taskSeq - 1)
-
+            val taskAtom = AtomUtils.parseAtomBeanName(DispatchBuildLessDockerShutdownTaskAtom::class.java)
             // end-1xxx 无后续任务的结束节点
             list.add(
                 PipelineBuildTask(
@@ -168,7 +168,8 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
                     starter = userId,
                     approver = null,
                     subBuildId = null,
-                    additionalOptions = null
+                    additionalOptions = null,
+                    atomCode = "$taskAtom-FINISH"
                 )
             )
 
@@ -196,7 +197,8 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
                     starter = userId,
                     approver = null,
                     subBuildId = null,
-                    additionalOptions = null
+                    additionalOptions = null,
+                    atomCode = "$taskAtom-CLEAN"
                 )
             )
 

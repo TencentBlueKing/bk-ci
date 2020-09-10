@@ -27,8 +27,8 @@ package com.tencent.devops.lambda.config
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
-import com.tencent.devops.lambda.listener.BuildTaskFinishListener
-import com.tencent.devops.lambda.listener.BuildFinishListener
+import com.tencent.devops.lambda.listener.LambdaBuildTaskFinishListener
+import com.tencent.devops.lambda.listener.LambdaBuildFinishListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.FanoutExchange
@@ -80,7 +80,7 @@ class LambdaMQConfiguration {
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired buildFinishLambdaQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildFinishListener: BuildFinishListener,
+        @Autowired lambdaBuildFinishListener: LambdaBuildFinishListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
@@ -89,7 +89,7 @@ class LambdaMQConfiguration {
         container.setMaxConcurrentConsumers(10)
         container.setRabbitAdmin(rabbitAdmin)
 
-        val adapter = MessageListenerAdapter(buildFinishListener, buildFinishListener::execute.name)
+        val adapter = MessageListenerAdapter(lambdaBuildFinishListener, lambdaBuildFinishListener::execute.name)
         adapter.setMessageConverter(messageConverter)
         container.messageListener = adapter
         return container
@@ -121,7 +121,7 @@ class LambdaMQConfiguration {
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired buildElementFinishLambdaQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired buildTaskFinishListener: BuildTaskFinishListener,
+        @Autowired lambdaBuildTaskFinishListener: LambdaBuildTaskFinishListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
@@ -130,7 +130,7 @@ class LambdaMQConfiguration {
         container.setMaxConcurrentConsumers(10)
         container.setRabbitAdmin(rabbitAdmin)
 
-        val adapter = MessageListenerAdapter(buildTaskFinishListener, buildTaskFinishListener::execute.name)
+        val adapter = MessageListenerAdapter(lambdaBuildTaskFinishListener, lambdaBuildTaskFinishListener::execute.name)
         adapter.setMessageConverter(messageConverter)
         container.messageListener = adapter
         return container
