@@ -27,47 +27,53 @@
 package com.tencent.devops.common.ci.task
 
 import com.tencent.devops.common.ci.CiBuildConfig
+import com.tencent.devops.common.ci.yaml.Condition
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 /**
- * marketBuild
+ * SyncLocalCodeTask
  */
-@ApiModel("插件市场")
-data class MarketBuildTask(
+@ApiModel("同步本地代码")
+data class SyncLocalCodeTask(
     @ApiModelProperty("displayName", required = false)
     override var displayName: String?,
     @ApiModelProperty("入参", required = true)
-    override val inputs: MarketBuildInput,
+    override val inputs: SyncLocalCodeInput,
     @ApiModelProperty("执行条件", required = true)
-    override val condition: String?
+    override val condition: Condition?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
-        const val taskType = "marketBuild"
+        const val taskType = "syncLocalCode"
         const val taskVersion = "@latest"
     }
 
     override fun covertToElement(config: CiBuildConfig): MarketBuildAtomElement {
+        val data = mapOf(
+            "input" to mapOf(
+                "agentId" to inputs.agentId,
+                "workspace" to inputs.workspace
+            )
+        )
+
         return MarketBuildAtomElement(
-                displayName ?: "插件市场插件,atomCode: ${inputs.atomCode}",
-                null,
-                null,
-                inputs.atomCode,
-                inputs.version,
-                inputs.data
+            displayName ?: "同步本地代码",
+            null,
+            null,
+            "syncAgentCode",
+            inputs.version,
+            data
         )
     }
 }
 
-@ApiModel("插件市场入参")
-data class MarketBuildInput(
-    @ApiModelProperty("atomCode", required = true)
-    val atomCode: String,
-    @ApiModelProperty("name", required = true)
-    val name: String,
-    @ApiModelProperty("原子版本", required = false)
+@ApiModel("同步本地代码入参")
+data class SyncLocalCodeInput(
+    @ApiModelProperty("版本", required = false)
     var version: String = "1.*",
-    @ApiModelProperty("原子参数数据", required = true)
-    val data: Map<String, Any> = mapOf()
+    @ApiModelProperty("agentId", required = true)
+    var agentId: String,
+    @ApiModelProperty("工作目录", required = true)
+    var workspace: String
 ) : AbstractInput()

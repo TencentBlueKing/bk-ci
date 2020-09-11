@@ -34,7 +34,7 @@ import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.NORMAL_JOB
 import com.tencent.devops.common.ci.VM_JOB
 import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
-import com.tencent.devops.common.ci.task.MarketBuildTask
+import com.tencent.devops.common.ci.task.SyncLocalCodeTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.ci.yaml.Job
 import com.tencent.devops.common.client.Client
@@ -52,9 +52,11 @@ import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
@@ -267,18 +269,16 @@ class PreBuildService @Autowired constructor(
                 it.inputs.path = whitePath
             }
 
-            //同步插件
-            if (it is MarketBuildTask && it.inputs.atomCode == "syncAgentCode") {
+            //启动子流水线将代码拉到远程构建机
+            if (it is SyncLocalCodeTask) {
                 if (!startUpReq.useRemote) {
                     return@forEach
                 }
-                val mutableData = it.inputs.data.toMutableMap()
-                mutableData["input"] = mapOf(
-                    "agentId" to agentInfo.agentId,
-                    "workspace" to startUpReq.workspace
-                )
-                it.inputs.data = mutableData
-                installMarketAtom(userId, "syncCodeToRemote")
+
+                it.inputs.agentId = agentInfo.agentId
+                it.inputs.workspace = startUpReq.workspace
+
+                installMarketAtom(userId, "syncCodeToRemote")//确保同步代码插件安装
             }
 
             val element = it.covertToElement(getCiBuildConf(preBuildConfig))
@@ -289,15 +289,7 @@ class PreBuildService @Autowired constructor(
             }
         }
 
-        //TODO 需要远程传过来
-        val dispatchType = if (startUpReq.useRemote)
-            DockerDispatchType(DockerVersion.TLINUX2_2.value)
-        else ThirdPartyAgentIDDispatchType(
-            displayName = agentInfo.agentId,
-            workspace = startUpReq.workspace,
-            agentType = AgentType.ID
-        )
-
+        val dispatchType = getDispatchType(job, startUpReq, agentInfo)
         val vmBaseOS = if (startUpReq.useRemote) VMBaseOS.LINUX else VMBaseOS.valueOf(agentInfo.os)
 
         return VMBuildContainer(
@@ -321,6 +313,32 @@ class PreBuildService @Autowired constructor(
             tstackAgentId = null,
             dispatchType = dispatchType
         )
+    }
+
+    fun getDispatchType(job: Job, startUpReq: StartUpReq, agentInfo: ThirdPartyAgentStaticInfo): DispatchType {
+        return with(job.job.pool) {
+            if (!startUpReq.useRemote) { //使用本地构建
+                ThirdPartyAgentIDDispatchType(
+                    displayName = agentInfo.agentId,
+                    workspace = startUpReq.workspace,
+                    agentType = AgentType.ID
+                )
+            } else if (null == this) { // 使用默认的远程构建
+                DockerDispatchType(DockerVersion.TLINUX2_2.value)
+            } else {
+                when {
+                    this.container != null -> DockerDispatchType(
+                        this.container
+                    )
+                    this.macOS != null -> MacOSDispatchType(
+                        macOSEvn = this.macOS!!.systemVersion!! + ":" + this.macOS!!.xcodeVersion!!,
+                        systemVersion = this.macOS!!.systemVersion!!,
+                        xcodeVersion = this.macOS!!.xcodeVersion!!
+                    )
+                    else -> DockerDispatchType(DockerVersion.TLINUX2_2.value)
+                }
+            }
+        }
     }
 
     fun getBuildDetail(userId: String, preProjectId: String, buildId: String): Result<ModelDetail> {
