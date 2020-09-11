@@ -142,9 +142,11 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         storeType: StoreTypeEnum,
         collaborationFlag: Boolean?,
         sendNotify: Boolean,
-        checkPermissionFlag: Boolean
+        checkPermissionFlag: Boolean,
+        testProjectCode: String?
     ): Result<Boolean> {
-        logger.info("addMember userId is:$userId,storeMemberReq is:$storeMemberReq,storeType is:$storeType")
+        logger.info("addMember userId:$userId,storeMemberReq:$storeMemberReq,storeType:$storeType,collaborationFlag:$collaborationFlag")
+        logger.info("addMember sendNotify:$sendNotify,checkPermissionFlag:$checkPermissionFlag,testProjectCode:$testProjectCode")
         val storeCode = storeMemberReq.storeCode
         val type = storeMemberReq.type.type.toByte()
         if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
@@ -163,14 +165,22 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 storeMemberDao.addStoreMember(context, userId, storeCode, item, type, storeType.type.toByte())
-                if (null != collaborationFlag && !collaborationFlag) {
+                if (null != testProjectCode) {
+                    storeProjectRelDao.updateUserStoreTestProject(
+                        dslContext = context,
+                        userId = item,
+                        storeCode = storeCode,
+                        storeType = storeType,
+                        projectCode = testProjectCode,
+                        storeProjectType = StoreProjectTypeEnum.TEST
+                    )
+                } else if (null != collaborationFlag && !collaborationFlag) {
                     // 协作申请方式，添加成员时无需再添加调试项目
-                    val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(context, userId, storeCode, storeType)
                     storeProjectRelDao.addStoreProjectRel(
                         dslContext = context,
                         userId = item,
                         storeCode = storeCode,
-                        projectCode = testProjectCode!!,
+                        projectCode = storeProjectRelDao.getUserStoreTestProjectCode(context, userId, storeCode, storeType)!!,
                         type = StoreProjectTypeEnum.TEST.type.toByte(),
                         storeType = storeType.type.toByte()
                     )
