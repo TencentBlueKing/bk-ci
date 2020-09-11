@@ -53,7 +53,9 @@ object ErrorCode {
     // 第三方接入平台错误
 
     // 插件执行错误
-    const val USER_DEFAULT_ERROR = 2199001 // 插件异常默认
+    const val PLUGIN_DEFAULT_ERROR = 2199001 // 插件异常默认
+
+    // 用户使用错误
     const val USER_INPUT_INVAILD = 2199002 // 用户输入数据有误
     const val USER_RESOURCE_NOT_FOUND = 2199003 // 找不到对应系统资源
     const val USER_TASK_OPERATE_FAIL = 2199004 // 插件执行过程出错

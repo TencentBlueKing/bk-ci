@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.webhook
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -50,12 +51,12 @@ abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constru
     ) {
     }
 
-    override fun beforeDelete(element: T, userId: String, pipelineId: String?) {
-        if (pipelineId != null) {
+    override fun beforeDelete(element: T, param: BeforeDeleteParam) {
+        if (param.pipelineId.isNotBlank()) {
             pipelineWebhookService.deleteWebhook(
-                pipelineId = pipelineId,
+                pipelineId = param.pipelineId,
                 taskId = element.id!!,
-                userId = userId
+                userId = param.userId
             )
         }
     }

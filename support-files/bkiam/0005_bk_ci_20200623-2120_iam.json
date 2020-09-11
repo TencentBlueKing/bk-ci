@@ -800,6 +800,134 @@
         ],
         "version": 1
       }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cert_view",
+        "name": "查看证书",
+        "name_en": "Cert View",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "cert",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "cert_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cert_edit",
+        "name": "编辑证书",
+        "name_en": "Cert Edit",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "cert",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "cert_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cert_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cert_create",
+        "name": "添加证书",
+        "name_en": "Cert Create",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cert_delete",
+        "name": "删除证书",
+        "name_en": "Cert Delete",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "cert",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "cert_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cert_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cert_use",
+        "name": "使用证书",
+        "name_en": "Cert Use",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "cert",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "cert_instance"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cert_view"
+        ],
+        "version": 1
+      }
     }
   ]
 }

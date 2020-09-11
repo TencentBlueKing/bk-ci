@@ -316,45 +316,28 @@
                 if (this.isNewAtomTemplate(this.atom.htmlTemplateVersion)) {
                     return NormalAtomV2
                 }
-                switch (this.atomCode) {
-                    case 'timerTrigger':
-                        return TimerTrigger
-                    case 'linuxScript':
-                    case 'windowsScript':
-                        return BuildScript
-                    case 'unity3dBuild':
-                        return Unity3dBuild
-                    case 'buildArchiveGet':
-                        return BuildArchiveGet
-                    case 'CODE_GIT':
-                    case 'CODE_GITLAB':
-                        return CodePullGitX
-                    case 'CODE_SVN':
-                        return CodePullSvn
-                    case 'iosCertInstall':
-                        return IosCertInstall
-                    case 'acrossProjectDistribution':
-                        return CrossDistribute
-                    case 'sendRTXNotify':
-                        return SendWechatNotify
-                    case 'reportArchive':
-                    case 'reportArchiveService':
-                        return ReportArchive
-                    case 'codeGitWebHookTrigger':
-                        return CodeGitWebHookTrigger
-                    case 'codeSVNWebHookTrigger':
-                        return CodeSvnWebHookTrigger
-                    case 'GITHUB':
-                        return PullGithub
-                    case 'codeGithubWebHookTrigger':
-                        return CodeGithubWebHookTrigger
-                    case 'pushImageToThirdRepo':
-                        return PushImageToThirdRepo
-                    case 'subPipelineCall':
-                        return SubPipelineCall
-                    default:
-                        return NormalAtom
+                const atomMap = {
+                    timerTrigger: TimerTrigger,
+                    linuxScript: BuildScript,
+                    windowsScript: BuildScript,
+                    unity3dBuild: Unity3dBuild,
+                    buildArchiveGet: BuildArchiveGet,
+                    CODE_GIT: CodePullGitX,
+                    CODE_GITLAB: CodePullGitX,
+                    CODE_SVN: CodePullSvn,
+                    iosCertInstall: IosCertInstall,
+                    acrossProjectDistribution: CrossDistribute,
+                    sendRTXNotify: SendWechatNotify,
+                    reportArchive: ReportArchive,
+                    reportArchiveService: ReportArchive,
+                    codeGitWebHookTrigger: CodeGitWebHookTrigger,
+                    codeSVNWebHookTrigger: CodeSvnWebHookTrigger,
+                    GITHUB: PullGithub,
+                    codeGithubWebHookTrigger: CodeGithubWebHookTrigger,
+                    pushImageToThirdRepo: PushImageToThirdRepo,
+                    subPipelineCall: SubPipelineCall
                 }
+                return atomMap[this.atomCode] || NormalAtom
             }
         },
         watch: {
@@ -506,7 +489,7 @@
                 const hasVaildRule = ruleList.some(item =>
                     item.taskId === this.element.atomCode
                     && (item.ruleList.every(rule => !rule.gatewayId)
-                    || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
+                        || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
                 )
                 return hasVaildRule
             },
