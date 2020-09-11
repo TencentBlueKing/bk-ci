@@ -32,5 +32,5 @@ data class Pool(
     val macOS: MacOS?,
     val third: Boolean?,
     val performanceConfigId: String? = "0",
-    val env: Map<String, String>?
+    val env: Map<String, String>? = mapOf()
 )
