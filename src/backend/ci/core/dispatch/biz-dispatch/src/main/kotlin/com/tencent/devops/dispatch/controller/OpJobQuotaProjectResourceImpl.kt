@@ -40,6 +40,10 @@ class OpJobQuotaProjectResourceImpl @Autowired constructor(
     private val jobQuotaManagerService: JobQuotaManagerService,
     private val jobQuotaBusinessService: JobQuotaBusinessService
 ) : OpJobQuotaProjectResource {
+    override fun list(): Result<List<JobQuotaProject>> {
+        return Result(jobQuotaManagerService.listProjectQuota())
+    }
+
     override fun get(projectId: String, jobQuotaVmType: JobQuotaVmType): Result<JobQuotaProject> {
         return Result(jobQuotaManagerService.getProjectQuota(projectId, jobQuotaVmType))
     }

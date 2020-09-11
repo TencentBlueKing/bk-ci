@@ -38,6 +38,10 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpJobQuotaSystemResourceImpl @Autowired constructor(
     private val jobQuotaManagerService: JobQuotaManagerService
 ) : OpJobQuotaSystemResource {
+    override fun list(): Result<List<JobQuotaSystem>> {
+        return Result(jobQuotaManagerService.listSystemQuota())
+    }
+
     override fun get(jobQuotaVmType: JobQuotaVmType): Result<List<JobQuotaSystem>> {
         return if (jobQuotaVmType == JobQuotaVmType.ALL) {
             Result(jobQuotaManagerService.getSystemQuota())

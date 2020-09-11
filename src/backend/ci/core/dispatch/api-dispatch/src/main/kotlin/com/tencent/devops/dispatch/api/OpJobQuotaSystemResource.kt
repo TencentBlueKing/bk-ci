@@ -48,6 +48,11 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpJobQuotaSystemResource {
 
+    @ApiOperation("获取全部的JOB配额信息")
+    @GET
+    @Path("/all/list")
+    fun list(): Result<List<JobQuotaSystem>>
+
     @ApiOperation("获取系统默认JOB配额信息")
     @GET
     @Path("/{jobQuotaVmType}")
