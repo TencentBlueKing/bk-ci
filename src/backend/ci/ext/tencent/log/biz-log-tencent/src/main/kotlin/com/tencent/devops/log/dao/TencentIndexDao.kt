@@ -26,7 +26,7 @@
 
 package com.tencent.devops.log.dao
 
-import com.tencent.devops.model.log.tables.TLogIndicesV2
+import com.tencent.devops.model.log.tables.TLogIndex
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -34,7 +34,7 @@ import org.springframework.stereotype.Repository
 class TencentIndexDao {
 
     fun getClusterName(dslContext: DSLContext, buildId: String): String? {
-        with(TLogIndicesV2.T_LOG_INDICES_V2) {
+        with(TLogIndex.T_LOG_INDEX) {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .fetchOne()?.logClusterName
@@ -42,7 +42,7 @@ class TencentIndexDao {
     }
 
     fun updateClusterName(dslContext: DSLContext, buildId: String, clusterName: String): Int {
-        with(TLogIndicesV2.T_LOG_INDICES_V2) {
+        with(TLogIndex.T_LOG_INDEX) {
             return dslContext.update(this)
                 .set(LOG_CLUSTER_NAME, clusterName)
                 .where(BUILD_ID.eq(buildId))
