@@ -309,7 +309,7 @@ class MonitorNotifyJob @Autowired constructor(
         }
 
         val rowList =
-            reduceMap.asSequence().sortedBy { it.value.left * 100.0 / it.value.right }.take(10).map {
+            reduceMap.asSequence().sortedBy { it.value.left * 100.0 / it.value.right }.map {
                 Triple(
                     it.key,
                     it.value.left * 100.0 / (it.value.left + it.value.right),

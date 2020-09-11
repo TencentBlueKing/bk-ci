@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -52,6 +53,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
 
     @Autowired
     lateinit var dslContext: DSLContext
+
+    @Autowired
+    lateinit var atomDao: AtomDao
 
     @Autowired
     lateinit var storeCommonService: StoreCommonService
@@ -157,5 +161,22 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             preCmd = JsonUtil.toJson(executionInfoMap["demands"] ?: "")
         )
         return GetAtomConfigResult("0", arrayOf(""), taskDataMap, atomEnvRequest)
+    }
+
+    override fun checkEditCondition(atomCode: String): Boolean {
+        // 查询插件的最新记录
+        val newestAtomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)
+        logger.info("checkEditCondition newestAtomRecord is :$newestAtomRecord")
+        if (null == newestAtomRecord) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(atomCode))
+        }
+        val atomFinalStatusList = listOf(
+            AtomStatusEnum.AUDIT_REJECT.status.toByte(),
+            AtomStatusEnum.RELEASED.status.toByte(),
+            AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
+            AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+        )
+        // 判断最近一个插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息
+        return atomFinalStatusList.contains(newestAtomRecord.atomStatus)
     }
 }

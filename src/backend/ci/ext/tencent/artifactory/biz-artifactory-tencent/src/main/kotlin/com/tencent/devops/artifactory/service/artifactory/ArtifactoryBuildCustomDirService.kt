@@ -82,11 +82,11 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
         return JFrogUtil.sort(fileInfoList)
     }
 
-    override fun show(projectId: String, argPath: String): FileDetail {
-        logger.info("[$projectId|[$argPath]] the method of being done is: show")
-        val path = JFrogUtil.normalize(argPath)
-        if (!JFrogUtil.isValid(path)) {
-            logger.error("Path $path is not valid")
+    override fun show(projectId: String, path: String): FileDetail {
+        logger.info("show, projectId: $projectId, path: $path")
+        val normalizePath = JFrogUtil.normalize(path)
+        if (!JFrogUtil.isValid(normalizePath)) {
+            logger.error("Path $normalizePath is not valid")
             throw BadRequestException("非法路径")
         }
 
@@ -110,10 +110,10 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
         val checksums = jFrogFileInfo.checksums
         return if (checksums == null) {
             FileDetail(
-                JFrogUtil.getFileName(path),
-                path,
-                path,
-                path,
+                JFrogUtil.getFileName(normalizePath),
+                normalizePath,
+                normalizePath,
+                normalizePath,
                 jFrogFileInfo.size,
                 LocalDateTime.parse(jFrogFileInfo.created, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 LocalDateTime.parse(jFrogFileInfo.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
@@ -122,10 +122,10 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
             )
         } else {
             FileDetail(
-                JFrogUtil.getFileName(path),
-                path,
-                path,
-                path,
+                JFrogUtil.getFileName(normalizePath),
+                normalizePath,
+                normalizePath,
+                normalizePath,
                 jFrogFileInfo.size,
                 LocalDateTime.parse(jFrogFileInfo.created, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 LocalDateTime.parse(jFrogFileInfo.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
@@ -139,23 +139,23 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
         }
     }
 
-    override fun mkdir(projectId: String, argPath: String) {
-        logger.info("[$projectId|[$argPath]] the method of being done is: mkdir")
-        val path = JFrogUtil.normalize(argPath)
-        if (!JFrogUtil.isValid(path)) {
-            logger.error("Path $path is not valid")
+    override fun mkdir(projectId: String, path: String) {
+        logger.info("mkdir, projectId: $projectId, path: $path")
+        val normalizedPath = JFrogUtil.normalize(path)
+        if (!JFrogUtil.isValid(normalizedPath)) {
+            logger.error("Path $normalizedPath is not valid")
             throw BadRequestException("非法路径")
         }
 
-        val name = JFrogUtil.getFileName(path)
-        val folderPath = JFrogUtil.getCustomDirPath(projectId, path)
+        val name = JFrogUtil.getFileName(normalizedPath)
+        val folderPath = JFrogUtil.getCustomDirPath(projectId, normalizedPath)
         if (jFrogService.exist(folderPath)) {
             val detail = jFrogService.file(folderPath)
             if (detail.checksums != null) {
-                logger.error("Destination path $path has same name file")
+                logger.error("Destination path $normalizedPath has same name file")
                 throw BadRequestException("文件($name)已存在同名文件")
             } else {
-                logger.error("Destination path $path has same name folder")
+                logger.error("Destination path $normalizedPath has same name folder")
                 throw BadRequestException("文件($name)已存在同名文件夹")
             }
         }
@@ -164,11 +164,11 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
     }
 
     override fun rename(projectId: String, fromPath: String, toPath: String) {
-        logger.info("[$projectId] the method of being done is: rename")
+        logger.info("rename, projectId: $projectId, fromPath: $fromPath, toPath: $toPath")
         val srcPath = JFrogUtil.normalize(fromPath)
         val destPath = JFrogUtil.normalize(toPath)
         if (!JFrogUtil.isValid(srcPath) || !JFrogUtil.isValid(destPath)) {
-            logger.error("Path $srcPath or $destPath is not valid")
+            logger.error("srcPath[$srcPath] or destPath[$destPath] invalid")
             throw BadRequestException("非法路径")
         }
 
@@ -184,7 +184,7 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
     }
 
     override fun copy(projectId: String, combinationPath: CombinationPath) {
-        logger.info("[$projectId] the method of being done is: copy")
+        logger.info("copy, projectId: $projectId, combinationPath: $combinationPath")
         val destPath = JFrogUtil.normalize(combinationPath.destPath)
         if (!JFrogUtil.isValid(destPath)) {
             logger.error("Path $destPath is not valid")
@@ -221,7 +221,7 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
     }
 
     override fun move(projectId: String, combinationPath: CombinationPath) {
-        logger.info("[$projectId] the method of being done is: delete")
+        logger.info("move, projectId: $projectId, combinationPath: $combinationPath")
         val destPath = JFrogUtil.normalize(combinationPath.destPath)
         if (!JFrogUtil.isValid(destPath)) {
             logger.error("Path $destPath is not valid")
@@ -252,7 +252,7 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
     }
 
     override fun delete(projectId: String, pathList: PathList) {
-        logger.info("[$projectId|$pathList] the method of being done is: delete")
+        logger.info("delete, projectId: $projectId, pathList: $pathList")
         pathList.paths.map {
             val path = JFrogUtil.normalize(it)
             if (!JFrogUtil.isValid(path)) {

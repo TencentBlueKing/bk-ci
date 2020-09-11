@@ -8,11 +8,14 @@
                 :label="param.id">
                 <section class="component-row">
                     <component :is="param.component" v-validate="{ required: param.required }" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;"></component>
-                    <span class="meta-data" v-show="showMetadata(param.type, param.value)">{{ $t('metaData') }}
+                    <span class="meta-data" v-if="showMetadata(param.type, param.value)">{{ $t('metaData') }}
                         <aside class="metadata-box">
                             <metadata-list :is-left-render="(index % 2) === 1" :path="param.type === 'ARTIFACTORY' ? param.value : ''"></metadata-list>
                         </aside>
                     </span>
+                    <div class="file-upload" v-if="showFileUploader(param.type)">
+                        <file-param-input :file-path="param.value"></file-param-input>
+                    </div>
                 </section>
                 <span v-if="!errors.has('devops' + param.name)" class="preview-params-desc" :title="param.desc">{{ param.desc }}</span>
             </form-field>
@@ -27,7 +30,28 @@
     import Selector from '@/components/atomFormField/Selector'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
-    import { BOOLEAN_LIST, isMultipleParam, isEnumParam, isSvnParam, isGitParam, isCodelibParam, ParamComponentMap, STRING, BOOLEAN, MULTIPLE, ENUM, SVN_TAG, GIT_REF, CODE_LIB, CONTAINER_TYPE, ARTIFACTORY, SUB_PIPELINE } from '@/store/modules/atom/paramsConfig'
+    import FileParamInput from '@/components/FileParamInput'
+    import {
+        BOOLEAN_LIST,
+        isMultipleParam,
+        isEnumParam,
+        isSvnParam,
+        isGitParam,
+        isCodelibParam,
+        isFileParam,
+        isArtifactoryParam,
+        ParamComponentMap,
+        STRING,
+        BOOLEAN,
+        MULTIPLE,
+        ENUM,
+        SVN_TAG,
+        GIT_REF,
+        CODE_LIB,
+        CONTAINER_TYPE,
+        ARTIFACTORY,
+        SUB_PIPELINE
+    } from '@/store/modules/atom/paramsConfig'
 
     export default {
 
@@ -36,7 +60,8 @@
             EnumInput,
             VuexInput,
             FormField,
-            metadataList
+            metadataList,
+            FileParamInput
         },
         props: {
             disabled: {
@@ -142,7 +167,10 @@
                 this.handleParamChange(param.name, value)
             },
             showMetadata (type, value) {
-                return type === 'ARTIFACTORY' && value && this.$route.path.indexOf('preview')
+                return isArtifactoryParam(type) && value && this.$route.path.indexOf('preview') > -1
+            },
+            showFileUploader (type) {
+                return isFileParam(type) && this.$route.path.indexOf('preview') > -1
             }
         }
     }
@@ -168,6 +196,35 @@
         .meta-data:hover {
             .metadata-box {
                 display: block;
+            }
+        }
+        .file-upload {
+            display: flex;
+            margin-left: 10px;
+            /deep/ .bk-upload.button {
+                position: static;
+                display: flex;
+                .file-wrapper {
+                    margin-bottom: 0;
+                    height: 32px;
+                }
+                p.tip {
+                    white-space: nowrap;
+                    position: static;
+                    margin-left: 8px;
+                }
+                .all-file {
+                    width: 100%;
+                    position: absolute;
+                    right: 0;
+                    top: 0;
+                    .file-item {
+                        margin-bottom: 0;
+                    }
+                    .error-msg {
+                        margin: 0
+                    }
+                }
             }
         }
     }

@@ -80,6 +80,7 @@ interface StoreMemberService {
     fun changeMemberTestProjectCode(
         accessToken: String,
         userId: String,
+        storeMember: String,
         projectCode: String,
         storeCode: String,
         storeType: StoreTypeEnum

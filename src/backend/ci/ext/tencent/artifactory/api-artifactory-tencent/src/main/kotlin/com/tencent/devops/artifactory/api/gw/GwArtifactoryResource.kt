@@ -26,7 +26,6 @@
 
 package com.tencent.devops.artifactory.api.gw
 
-import com.tencent.devops.artifactory.pojo.DownloadUrl
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -68,13 +67,4 @@ interface GwArtifactoryResource {
         @QueryParam("path")
         path: String
     ): Result<Boolean>
-
-    @ApiOperation("获取体验列表")
-    @Path("/downloadUrl")
-    @GET
-    fun getDownloadUrl(
-        @ApiParam("token令牌", required = true)
-        @QueryParam("token")
-        token: String
-    ): Result<DownloadUrl>
 }
