@@ -144,8 +144,8 @@ class ArtifactoryCustomDirService @Autowired constructor(
         }
     }
 
-    override fun deploy(userId: String, projectId: String, argPath: String, inputStream: InputStream, disposition: FormDataContentDisposition) {
-        logger.info("deploy, userId: $userId, projectId: $projectId, argPath: $argPath")
+    override fun deploy(userId: String, projectId: String, argPath: String, inputStream: InputStream, disposition: FormDataContentDisposition, fileSizeLimitInMB: Int) {
+        logger.info("deploy, userId: $userId, projectId: $projectId, argPath: $argPath, fileSizeLimitInMB: $fileSizeLimitInMB")
         pipelineService.validatePermission(userId, projectId)
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {

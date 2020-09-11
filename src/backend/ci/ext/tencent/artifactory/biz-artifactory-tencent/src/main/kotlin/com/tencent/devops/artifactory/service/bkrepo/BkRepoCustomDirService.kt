@@ -80,10 +80,10 @@ class BkRepoCustomDirService @Autowired constructor(
         return RepoUtils.toFileDetail(fileDetail)
     }
 
-    override fun deploy(userId: String, projectId: String, argPath: String, inputStream: InputStream, disposition: FormDataContentDisposition) {
-        logger.info("deploy file, userId: $userId, projectId: $projectId, path: $argPath")
+    override fun deploy(userId: String, projectId: String, argPath: String, inputStream: InputStream, disposition: FormDataContentDisposition, fileSizeLimitInMB: Int) {
+        logger.info("deploy file, userId: $userId, projectId: $projectId, path: $argPath, originFileName: ${disposition.fileName}, fileSizeLimitInMB: $fileSizeLimitInMB")
         pipelineService.validatePermission(userId, projectId)
-        bkRepoClient.uploadFile(userId, projectId, RepoUtils.CUSTOM_REPO, argPath, inputStream)
+        bkRepoClient.uploadFile(userId, projectId, RepoUtils.CUSTOM_REPO, argPath, inputStream, fileSizeLimitInMB = fileSizeLimitInMB)
     }
 
     override fun mkdir(userId: String, projectId: String, argPath: String) {

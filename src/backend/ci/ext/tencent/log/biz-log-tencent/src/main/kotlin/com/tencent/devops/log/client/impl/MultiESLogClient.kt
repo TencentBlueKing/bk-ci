@@ -36,7 +36,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.dao.TencentIndexDao
-import com.tencent.devops.log.dao.v2.IndexDaoV2
+import com.tencent.devops.log.dao.IndexDao
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import org.jooq.DSLContext
@@ -54,7 +54,7 @@ class MultiESLogClient constructor(
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
     private val tencentIndexDao: TencentIndexDao,
-    private val indexDaoV2: IndexDaoV2
+    private val indexDao: IndexDao
 ) : LogClient {
 
     init {
@@ -154,7 +154,7 @@ class MultiESLogClient constructor(
                 esName = cache.getIfPresent(buildId)
                 if (esName.isNullOrBlank()) {
                     // 兼容老的日志， 如果这个日志之前已经被写入了， 那么默认返回mainCluster对应的集群的数据， 要不然就会导致前端查询不到数据
-                    val buildIndex = indexDaoV2.getBuild(dslContext, buildId)
+                    val buildIndex = indexDao.getBuild(dslContext, buildId)
                     if (buildIndex == null || (!buildIndex.useCluster)) {
                         val c = mainCluster()
                         cache.put(buildId, c.name)
