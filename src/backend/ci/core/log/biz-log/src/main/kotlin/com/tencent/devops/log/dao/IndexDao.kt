@@ -49,6 +49,7 @@ class IndexDao {
             return try {
                 val record = dslContext.selectFrom(TLogIndices.T_LOG_INDICES)
                     .where(TLogIndices.T_LOG_INDICES.ID.eq(buildId))
+                    .forUpdate()
                     .fetchOne()
                 if (record == null)
                     Optional.empty()
@@ -91,6 +92,7 @@ class IndexDao {
                 val record = DSL.using(configuration)
                     .selectFrom(this)
                     .where(ID.eq(buildId))
+                    .forUpdate()
                     .fetchOne()
 
                 if (record != null) {
