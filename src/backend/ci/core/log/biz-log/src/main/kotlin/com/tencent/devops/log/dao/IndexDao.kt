@@ -26,92 +26,95 @@
 
 package com.tencent.devops.log.dao
 
-import com.tencent.devops.model.log.tables.TLogIndices
-import com.tencent.devops.model.log.tables.records.TLogIndicesRecord
+import com.tencent.devops.model.log.tables.TLogIndicesV2
+import com.tencent.devops.model.log.tables.records.TLogIndicesV2Record
 import org.jooq.DSLContext
-import org.jooq.exception.DataAccessException
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
+import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.util.Optional
+import java.time.LocalDateTime
 
-/**
- *
- * Powered By Tencent
- */
 @Repository
 class IndexDao {
 
-    private val logger = LoggerFactory.getLogger(IndexDao::class.java)
-
-    fun getIndexName(dslContext: DSLContext, buildId: String): Optional<String> {
-        with(TLogIndices.T_LOG_INDICES) {
-            return try {
-                val record = dslContext.selectFrom(TLogIndices.T_LOG_INDICES)
-                    .where(TLogIndices.T_LOG_INDICES.ID.eq(buildId))
-                    .forUpdate()
-                    .fetchOne()
-                if (record == null)
-                    Optional.empty()
-                else
-                    Optional.of(record.indexName)
-            } catch (e: DataAccessException) {
-                logger.error("Query db failure", e)
-                Optional.empty()
-            }
+    fun create(
+        dslContext: DSLContext,
+        buildId: String,
+        indexName: String,
+        enable: Boolean
+    ) {
+        with(TLogIndicesV2.T_LOG_INDICES_V2) {
+            val now = LocalDateTime.now()
+            dslContext.insertInto(this,
+                BUILD_ID,
+                INDEX_NAME,
+                LAST_LINE_NUM,
+                CREATED_TIME,
+                UPDATED_TIME,
+                ENABLE,
+                USE_CLUSTER
+                )
+                .values(
+                    buildId,
+                    indexName,
+                    1,
+                    now,
+                    now,
+                    enable,
+                    true
+                )
+                .onDuplicateKeyIgnore()
+                .execute()
         }
     }
 
-    fun saveIndexName(dslContext: DSLContext, buildId: String, indexName: String): Boolean {
-        with(TLogIndices.T_LOG_INDICES) {
-            return try {
-                dslContext.insertInto(this, ID, INDEX_NAME, CREATE_TYPE_MAPPING)
-                    .values(buildId, indexName, true)
-                    .onDuplicateKeyIgnore()
-                    .execute()
-                true
-            } catch (e: DataAccessException) {
-                logger.error("Save db failure", e)
-                false
-            }
-        }
-    }
-
-    fun getIndex(dslContext: DSLContext, buildId: String): TLogIndicesRecord? {
-        with(TLogIndices.T_LOG_INDICES) {
+    fun getBuild(dslContext: DSLContext, buildId: String): TLogIndicesV2Record? {
+        with(TLogIndicesV2.T_LOG_INDICES_V2) {
             return dslContext.selectFrom(this)
-                .where(ID.eq(buildId))
+                .where(BUILD_ID.eq(buildId))
                 .fetchOne()
         }
     }
 
-    fun getAndAddLineNumOrNull(dslContext: DSLContext, buildId: String, addLineNum: Long): TLogIndicesRecord? {
+    fun getIndexName(
+        dslContext: DSLContext,
+        buildId: String
+    ): String? {
+        return getBuild(dslContext, buildId)?.indexName
+    }
 
-        with(TLogIndices.T_LOG_INDICES) {
-            return dslContext.transactionResult { configuration ->
-                val record = DSL.using(configuration)
-                    .selectFrom(this)
-                    .where(ID.eq(buildId))
-                    .forUpdate()
-                    .fetchOne()
+    fun updateLastLineNum(
+        dslContext: DSLContext,
+        buildId: String,
+        latestLineNum: Long
+    ): Int {
+        with(TLogIndicesV2.T_LOG_INDICES_V2) {
+            return dslContext.update(this)
+                .set(LAST_LINE_NUM, latestLineNum)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
 
-                if (record != null) {
-                    if (record.lastLineNum == null || record.lastLineNum <= 0) {
-                        record.lastLineNum = 1L
-                    }
-                    val updated = DSL.using(configuration)
-                        .update(this)
-                        .set(LAST_LINE_NUM, record.lastLineNum!! + addLineNum)
-                        .where(ID.eq(buildId))
-                        .execute()
+    fun listOldestBuilds(
+        dslContext: DSLContext,
+        limit: Int
+    ): Result<TLogIndicesV2Record> {
+        with(TLogIndicesV2.T_LOG_INDICES_V2) {
+            return dslContext.selectFrom(this)
+                .orderBy(ID.asc())
+                .limit(limit)
+                .fetch()
+        }
+    }
 
-                    if (updated == 0) {
-                        logger.error("Update table LogIndices lastLineNum failed, buildId: $buildId")
-                    }
-                }
-
-                record
-            }
+    fun delete(
+        dslContext: DSLContext,
+        buildIds: Set<String>
+    ): Int {
+        with(TLogIndicesV2.T_LOG_INDICES_V2) {
+            return dslContext.deleteFrom(this)
+                .where(BUILD_ID.`in`(buildIds))
+                .execute()
         }
     }
 }
