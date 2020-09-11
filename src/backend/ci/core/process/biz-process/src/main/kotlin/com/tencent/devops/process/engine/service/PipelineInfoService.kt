@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
@@ -23,6 +24,7 @@ class PipelineInfoService @Autowired constructor(
     val pipelineIdGenerator: PipelineIdGenerator,
     val pipelineRepositoryService: PipelineRepositoryService,
     val pipelineSettingService: PipelineSettingService,
+    private val modelCheckPlugin: ModelCheckPlugin,
     val pipelinePermissionService: PipelinePermissionService
 ) {
 
@@ -55,10 +57,13 @@ class PipelineInfoService @Autowired constructor(
             logger.warn("$userId|$projectId|$pipelineId uploadPipeline permission check fail")
             throw RuntimeException()
         }
+        val model = pipelineModelAndSetting.model
+        modelCheckPlugin.clearUpModel(model)
+
         val newPipelineId = pipelineService.createPipeline(
                 userId = userId,
                 projectId = projectId,
-                model = pipelineModelAndSetting.model,
+                model = model,
                 channelCode = ChannelCode.BS
         )
         val oldSetting = pipelineModelAndSetting.setting
