@@ -1,5 +1,5 @@
 <template>
-    <section :class="[{ 'max-height': limitHeight }, 'store-code']"></section>
+    <section :class="[{ 'max-height': limitHeight }, 'store-code']" v-bkloading="{ isLoading }"></section>
 </template>
 
 <script>
@@ -40,18 +40,20 @@
                     cursorBlinkRate: this.cursorBlinkRate,
                     readOnly: this.readOnly,
                     autoRefresh: true,
-                    autofocus: false
+                    autofocus: true
                 },
                 codeEditor: undefined
             }
         },
 
-        mounted () {
-            this.initCodeMirror()
+        watch: {
+            code () {
+                this.initCodeMirror()
+            }
         },
 
-        beforeDestroy () {
-            this.codeEditor = undefined
+        mounted () {
+            this.initCodeMirror()
         },
 
         methods: {
@@ -60,12 +62,6 @@
                 if (this.codeEditor) ele.innerHTML = ''
                 this.codeEditor = CodeMirror(ele, this.codeMirrorCon)
                 this.codeEditor.setValue(this.code || '')
-                this.codeEditor.on('change', this.changeValue)
-            },
-
-            changeValue (instance) {
-                const value = instance.getValue()
-                this.$emit('update:code', value)
             },
 
             getValue () {
@@ -86,10 +82,6 @@
         height: 400px;
         /deep/ .CodeMirror-scroll {
             height: 400px;
-        }
-        /deep/ .CodeMirror {
-            max-height: 400px;
-            padding: 0 10px;
         }
     }
 

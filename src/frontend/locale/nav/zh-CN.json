@@ -2,6 +2,7 @@
     "okLabel": "确定",
     "cancelLabel": "取消",
     "logout": "退出",
+    "close": "关闭",
     "accessCenter": "权限中心",
     "recentVisiteService": "最近访问服务",
     "allService": "所有服务",
@@ -141,5 +142,11 @@
     "pcGame": "端游",
     "webGame": "页游",
     "platformProduct": "平台产品",
-    "supportProduct": "支撑产品"
+    "supportProduct": "支撑产品",
+    "requiredPermissions": "该操作需要以下权限",
+    "permissionActionLabel": "需要申请的权限",
+    "permissionResourceLabel": "关联的资源实例",
+    "permissionRefreshtitle": "权限申请单已提交",
+    "permissionRefreshSubtitle": "请在权限中心填写权限申请单，提交完成后再刷新该页面",
+    "permissionRefreshOkText": "刷新页面"
 }

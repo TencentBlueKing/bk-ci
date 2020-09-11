@@ -33,6 +33,7 @@ import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -187,6 +188,10 @@ class ServiceGitResourceImpl @Autowired constructor(
         token: String
     ): Result<GitMrChangeInfo> {
         return Result(gitService.getMrChangeInfo(repoName, mrId, tokenType, token))
+    }
+
+    override fun getRepoMembers(repoName: String, tokenType: TokenTypeEnum, token: String): Result<List<GitMember>> {
+        return Result(gitService.getRepoMembers(repoName, tokenType, token))
     }
 
     override fun addCommitCheck(request: CommitCheckRequest): Result<Boolean> {

@@ -28,6 +28,7 @@ package com.tencent.devops.process.plugin.trigger.element
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.plugin.ElementBizPlugin
@@ -109,9 +110,9 @@ class TimerTriggerElementBizPlugin constructor(
         }
     }
 
-    override fun beforeDelete(element: TimerTriggerElement, userId: String, pipelineId: String?) {
-        if (pipelineId != null) {
-            pipelineTimerService.deleteTimer(pipelineId, userId)
+    override fun beforeDelete(element: TimerTriggerElement, param: BeforeDeleteParam) {
+        if (param.pipelineId.isNotBlank()) {
+            pipelineTimerService.deleteTimer(param.pipelineId, param.userId)
         }
     }
 

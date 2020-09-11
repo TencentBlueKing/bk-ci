@@ -31,7 +31,8 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.dao.v2.IndexDaoV2
-import com.tencent.devops.log.dao.v2.LogStatusDaoV2
+import com.tencent.devops.log.dao.LogStatusDao
+import com.tencent.devops.log.dao.LogTagDao
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -48,7 +49,8 @@ class CleanBuildJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
     private val indexDaoV2: IndexDaoV2,
-    private val logStatusDaoV2: LogStatusDaoV2
+    private val logStatusDao: LogStatusDao,
+    private val logTagDao: LogTagDao
 ) {
 
     private var expireBuildInDay = 30 * 6 // 半年
@@ -86,7 +88,7 @@ class CleanBuildJob @Autowired constructor(
     private fun clean() {
         logger.info("Cleaning the builds")
         while (true) {
-            val records = indexDaoV2.listLatestBuilds(dslContext, 10)
+            val records = indexDaoV2.listOldestBuilds(dslContext, 10)
             if (records.isEmpty()) {
                 logger.info("The record is empty")
                 return
@@ -112,8 +114,9 @@ class CleanBuildJob @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val indexDaoCnt = indexDaoV2.delete(context, buildIds)
-            val statusCnt = logStatusDaoV2.delete(context, buildIds)
-            logger.info("[$indexDaoCnt|$statusCnt] Delete the builds")
+            val statusCnt = logStatusDao.delete(context, buildIds)
+            val subTagCnt = logTagDao.delete(context, buildIds)
+            logger.info("[$indexDaoCnt|$statusCnt|$subTagCnt] Delete the builds")
         }
     }
 

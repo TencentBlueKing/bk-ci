@@ -29,6 +29,7 @@ package com.tencent.devops.plugin.codecc.element
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import org.junit.Assert
 import org.junit.Test
@@ -69,7 +70,8 @@ class LinuxCodeCCScriptElementBizPluginTest {
 
     @Test
     fun beforeDelete() {
-        plugin.beforeDelete(element, userId, pipelineId)
+        val param = BeforeDeleteParam(userId, projectId, pipelineId)
+        plugin.beforeDelete(element, param)
     }
 
     @Test

@@ -84,7 +84,6 @@
                                                 href="javascript:void(0)"
                                                 :class="['bk-text-button', { 'is-disabled': !props.row.enabled }]"
                                                 :title="props.row.projectName"
-                                                @click.stop.prevent="goProject(props.row)"
                                             >{{ props.row.projectName }}</a>
                                         </template>
                                     </p>
@@ -163,7 +162,6 @@
                                     v-if="props.row.enabled"
                                     href="javascript:void(0)"
                                     :class="['bk-text-button', { 'is-disabled': !props.row.enabled }]"
-                                    @click="goProject(props.row)"
                                 >{{ $t('userManage') }}</a>
                             </template>
                         </template>
@@ -191,6 +189,7 @@
             </template>
             <empty-tips
                 v-else
+                :show-lock="true"
                 :title="$t('notFindProject')"
                 :desc="$t('notFindProjectTips')"
             >
@@ -203,7 +202,8 @@
                 </bk-button>
                 <a
                     class="empty-btns-item"
-                    href="/console/perm/apply-join-project"
+                    href="javascript:;"
+                    @click="toApplyPermission"
                 >
                     <bk-button theme="success">{{ $t('applyProject') }}</bk-button>
                 </a>
@@ -240,6 +240,7 @@
         @Action getProjects
         @Action toggleProjectEnable
         @Action changeProjectLogo
+        @Action getPermRedirectUrl
 
         isFilterByOffline: boolean = false
         showlogoDialog: boolean = false
@@ -368,10 +369,14 @@
             })
         }
 
-        goProject ({ projectCode, enabled }): void {
-            if (enabled) {
-                window.open(`/console/perm/my-project?project_code=${projectCode}`, '_blank')
-            }
+        // goProject ({ projectCode, enabled }): void {
+        //     if (enabled) {
+        //         window.open(`${PERM_URL_PREFIX}perm/my-project?project_code=${projectCode}`, '_blank')
+        //     }
+        // }
+
+        toApplyPermission () {
+            this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.project)
         }
 
         toggleProject (project: any): void {
