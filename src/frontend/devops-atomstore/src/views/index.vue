@@ -15,6 +15,29 @@
             title () {
                 return this.$route.meta.title
             }
+        },
+
+        created () {
+            window.addEventListener('resize', this.flexible, false)
+            this.flexible()
+        },
+
+        beforeDestroy () {
+            window.removeEventListener('resize', this.flexible, false)
+            const doc = window.document
+            const docEl = doc.documentElement
+            docEl.style.fontSize = '14px'
+        },
+
+        methods: {
+            flexible () {
+                const doc = window.document
+                const docEl = doc.documentElement
+                const designWidth = 1580 // 默认设计图宽度
+                const clientWidth = docEl.getBoundingClientRect().width || window.innerWidth
+                const flexibleRem = Math.max(Math.min(clientWidth / designWidth, 1.2151), 0.8101) * 100
+                docEl.style.fontSize = flexibleRem + 'px'
+            }
         }
     }
 </script>
@@ -51,6 +74,17 @@
         > main {
             flex: 1;
             overflow: auto;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #c4c6cc !important;
+            border-radius: 3px !important;
+            &:hover {
+                background-color: #979ba5 !important;
+            }
+        }
+        ::-webkit-scrollbar {
+            width: 6px !important;
+            height: 6px !important;
         }
     }
 </style>
