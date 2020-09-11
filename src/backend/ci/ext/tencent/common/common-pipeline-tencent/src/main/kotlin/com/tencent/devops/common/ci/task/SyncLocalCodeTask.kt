@@ -40,7 +40,7 @@ data class SyncLocalCodeTask(
     @ApiModelProperty("displayName", required = false)
     override var displayName: String?,
     @ApiModelProperty("入参", required = true)
-    override val inputs: SyncLocalCodeInput,
+    override val inputs: SyncLocalCodeInput?,
     @ApiModelProperty("执行条件", required = true)
     override val condition: Condition?
 ) : AbstractTask(displayName, inputs, condition) {
@@ -52,7 +52,7 @@ data class SyncLocalCodeTask(
     override fun covertToElement(config: CiBuildConfig): MarketBuildAtomElement {
         val data = mapOf(
             "input" to mapOf(
-                "agentId" to inputs.agentId,
+                "agentId" to inputs!!.agentId,
                 "workspace" to inputs.workspace
             )
         )
