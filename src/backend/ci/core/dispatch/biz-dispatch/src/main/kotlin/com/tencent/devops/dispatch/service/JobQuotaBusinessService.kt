@@ -72,6 +72,7 @@ class JobQuotaBusinessService @Autowired constructor(
      */
     fun insertRunningJob(projectId: String, vmType: JobQuotaVmType, buildId: String, vmSeqId: String) {
         runningJobsDao.insert(dslContext, projectId, vmType, buildId, vmSeqId)
+        redisOperation.sadd(QUOTA_PROJECT_ALL_KEY, projectId) // 所有项目集合
         checkWarning(projectId, vmType)
     }
 
@@ -92,6 +93,7 @@ class JobQuotaBusinessService @Autowired constructor(
                 runningJobs.filter { it?.agentStartTime != null && it.vmType != null }.forEach {
                     val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
                     incProjectJobRunningTime(projectId, JobQuotaVmType.parse(it.vmType), duration.toMillis())
+                    logger.info("<<<Finish time: $projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(it.vmType)} increase ${duration.toHours()} hours. >>>")
                 }
             } else {
                 logger.info("<<< DeleteRunningJob get lock failed, not run>>>")
@@ -155,6 +157,7 @@ class JobQuotaBusinessService @Autowired constructor(
                 runningJobs.filter { it?.agentStartTime != null }.forEach {
                     val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
                     runningTotalTime += duration.toMillis()
+                    logger.info("<<<Running time: $projectId|${it.buildId}|${it.vmSeqId}|${JobQuotaVmType.parse(it.vmType)} increase ${duration.toHours()} hours. >>>")
                 }
             }
 
@@ -170,6 +173,7 @@ class JobQuotaBusinessService @Autowired constructor(
             runningJobs.filter { it?.agentStartTime != null }.forEach {
                 val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
                 runningTotalTime += duration.toMillis()
+                logger.info("<<<Running time: $projectId|${it.buildId}|${it.vmSeqId}|${vmType.name} increase ${duration.toHours()} hours. >>>")
             }
 
             // 所有已经结束的耗时
@@ -545,10 +549,10 @@ class JobQuotaBusinessService @Autowired constructor(
     }
 
     private fun doRestore() {
-        val projectList = runningJobsDao.getProject(dslContext)?.map { it.value1() }
-        if (null != projectList && projectList.isNotEmpty()) {
+        val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
+        if (null != projectSet && projectSet.isNotEmpty()) {
             JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
-                projectList.forEach { project ->
+                projectSet.forEach { project ->
                     redisOperation.set(getProjectVmTypeRunningTimeKey(project, type), "0")
                     redisOperation.set(getProjectRunningTimeKey(project), "0")
                 }
@@ -589,14 +593,15 @@ class JobQuotaBusinessService @Autowired constructor(
         private const val TIMER_RESTORE_LOCK_KEY = "job_quota_business_time_restore_lock"
         private const val JOB_END_LOCK_KEY = "job_quota_business_redis_job_end_lock_"
         private const val PROJECT_RUNNING_TIME_KEY_PREFIX = "project_running_time_key_" // 项目当月已运行时间前缀
-        private const val WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY = "job_quota_warning_system_max_lock_key" // 系统当月已运行JOB数量告警前缀
-        private const val WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY = "job_quota_warning_system_threshold_lock_key" // 系统当月已运行JOB数量阈值告警前缀
+        private const val WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY = "job_quota_warning_system_max_lock_key" // 系统当月已运行JOB数量KEY, 告警使用
+        private const val WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY = "job_quota_warning_system_threshold_lock_key" // 系统当月已运行JOB数量阈值KEY，告警使用
         private const val WARN_TIME_PROJECT_JOB_MAX_LOCK_KEY_PREFIX = "job_quota_warning_project_max_lock_key_" // 项目当月已运行JOB数量告警前缀
         private const val WARN_TIME_PROJECT_JOB_THRESHOLD_LOCK_KEY_PREFIX = "job_quota_warning_project_threshold_lock_key_" // 项目当月已运行JOB数量阈值告警前缀
         private const val WARN_TIME_PROJECT_TIME_MAX_LOCK_KEY_PREFIX = "time_quota_warning_project_max_lock_key_" // 项目当月已运行时间告警前缀
         private const val WARN_TIME_PROJECT_TIME_THRESHOLD_LOCK_KEY_PREFIX = "time_quota_warning_project_threshold_lock_key_" // 项目当月已运行时间阈值告警前缀
-        private const val WARN_TIME_LOCK_VALUE = "job_quota_warning_lock_value" // 项目当月已运行时间前缀
+        private const val WARN_TIME_LOCK_VALUE = "job_quota_warning_lock_value" // VALUE值，标志位
         private const val TIMEOUT_DAYS = 7L
+        private const val QUOTA_PROJECT_ALL_KEY = "project_time_quota_all_key"
         private val logger = LoggerFactory.getLogger(JobQuotaBusinessService::class.java)
     }
 }

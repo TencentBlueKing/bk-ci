@@ -24,39 +24,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.atom
+package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.atom.UserMarketAtomMemberResource
-import com.tencent.devops.store.pojo.common.StoreMemberItem
-import com.tencent.devops.store.pojo.common.StoreMemberReq
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.atom.impl.AtomMemberServiceImpl
+import com.tencent.devops.process.api.user.UserScmResource
+import com.tencent.devops.process.service.scm.ScmProxyService
+import com.tencent.devops.scm.pojo.RevisionInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserMarketAtomMemberResourceImpl @Autowired constructor(
-    private val atomMemberService: AtomMemberServiceImpl
-) : UserMarketAtomMemberResource {
+class UserScmResourceImpl @Autowired constructor(
+    private val scmProxyService: ScmProxyService
+) : UserScmResource {
 
-    override fun list(userId: String, atomCode: String): Result<List<StoreMemberItem?>> {
-        return atomMemberService.list(userId, atomCode, StoreTypeEnum.ATOM)
+    override fun getLatestRevision(
+        projectId: String,
+        repositoryId: String,
+        branchName: String?,
+        additionalPath: String?,
+        repositoryType: RepositoryType?
+    ): Result<RevisionInfo> {
+        return scmProxyService.getLatestRevision(projectId, getRepositoryConfig(repositoryId, repositoryType), branchName, additionalPath, null)
     }
 
-    override fun add(userId: String, storeMemberReq: StoreMemberReq): Result<Boolean> {
-        return atomMemberService.add(userId, storeMemberReq, StoreTypeEnum.ATOM)
-    }
+    override fun listBranches(projectId: String, repositoryId: String, repositoryType: RepositoryType?) =
+        scmProxyService.listBranches(projectId, getRepositoryConfig(repositoryId, repositoryType))
 
-    override fun delete(userId: String, id: String, atomCode: String): Result<Boolean> {
-        return atomMemberService.delete(userId, id, atomCode, StoreTypeEnum.ATOM)
-    }
+    override fun listTags(projectId: String, repositoryId: String, repositoryType: RepositoryType?) =
+        scmProxyService.listTags(projectId, getRepositoryConfig(repositoryId, repositoryType))
 
-    override fun view(userId: String, atomCode: String): Result<StoreMemberItem?> {
-        return atomMemberService.viewMemberInfo(userId, atomCode, StoreTypeEnum.ATOM)
-    }
-
-    override fun changeMemberTestProjectCode(accessToken: String, userId: String, projectCode: String, atomCode: String): Result<Boolean> {
-        return atomMemberService.changeMemberTestProjectCode(accessToken, userId, projectCode, atomCode, StoreTypeEnum.ATOM)
+    private fun getRepositoryConfig(repositoryId: String, repositoryType: RepositoryType?): RepositoryConfig {
+        return if (repositoryType == null || repositoryType == RepositoryType.ID) {
+            RepositoryConfig(repositoryId, null, RepositoryType.ID)
+        } else {
+            RepositoryConfig(null, repositoryId, repositoryType)
+        }
     }
 }

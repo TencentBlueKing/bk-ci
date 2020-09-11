@@ -802,8 +802,14 @@ class GitService @Autowired constructor(
     }
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
-    override fun getMrInfo(repoName: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrInfo {
-        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/merge_request/$mrId")
+    override fun getMrInfo(
+        repoName: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String,
+        repoUrl: String?
+    ): GitMrInfo {
+        val url = StringBuilder("${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(repoName, "UTF-8")}/merge_request/$mrId")
         logger.info("get mr info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -821,9 +827,15 @@ class GitService @Autowired constructor(
     }
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
-    override fun getMrReviewInfo(id: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrReviewInfo {
+    override fun getMrReviewInfo(
+        id: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String,
+        repoUrl: String?
+    ): GitMrReviewInfo {
         val url = StringBuilder(
-            "${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(
+            "${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(
                 id,
                 "UTF-8"
             )}/merge_request/$mrId/review"
@@ -845,9 +857,15 @@ class GitService @Autowired constructor(
     }
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
-    override fun getMrChangeInfo(id: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrChangeInfo {
+    override fun getMrChangeInfo(
+        id: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String,
+        repoUrl: String?
+    ): GitMrChangeInfo {
         val url = StringBuilder(
-            "${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(
+            "${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(
                 id,
                 "UTF-8"
             )}/merge_request/$mrId/changes"
@@ -865,6 +883,14 @@ class GitService @Autowired constructor(
             val data = it.body()!!.string()
             logger.info("get mr changes info response body: $data")
             return JsonUtil.to(data, GitMrChangeInfo::class.java)
+        }
+    }
+
+    private fun getApiUrl(repoUrl: String?): String {
+        return if (repoUrl.isNullOrBlank()) {
+            gitConfig.gitApiUrl
+        } else {
+            GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl!!)
         }
     }
 
