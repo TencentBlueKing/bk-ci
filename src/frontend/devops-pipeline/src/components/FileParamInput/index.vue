@@ -45,7 +45,7 @@
                     theme: errorMsg ? 'error' : 'success',
                     message: errorMsg || `${name}文件上传成功`
                 })
-                this.tip = this.$t('fileUploadSuccess')
+                this.tip = errorMsg || this.$t('fileUploadSuccess')
             }
         }
     }
