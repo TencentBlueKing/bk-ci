@@ -44,6 +44,7 @@
                                 {{ output.description }}
                             </div>
                         </bk-popover>
+                        <copy-icon :value="`\${${namespace ? `${namespace}_${key}` : key}}`"></copy-icon>
                     </p>
                 </div>
             </div>
@@ -64,6 +65,7 @@
     import Parameter from '@/components/AtomFormComponent/Parameter'
     import Tips from '@/components/AtomFormComponent/Tips'
     import DynamicParameter from '@/components/AtomFormComponent/DynamicParameter'
+    import copyIcon from '@/components/copyIcon'
 
     export default {
         name: 'preview-atom',
@@ -75,7 +77,8 @@
             TimePicker,
             Parameter,
             Tips,
-            DynamicParameter
+            DynamicParameter,
+            copyIcon
         },
         mixins: [atomMixin],
         props: {

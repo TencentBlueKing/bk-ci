@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.constant.WebsocketCode
@@ -99,6 +100,11 @@ class MQPipelineCreateListener @Autowired constructor(
             )
             is CodeSVNWebHookTriggerElement -> Triple(RepositoryConfigUtils.buildConfig(e), ScmType.CODE_SVN, null)
             is CodeGithubWebHookTriggerElement -> Triple(RepositoryConfigUtils.buildConfig(e), ScmType.GITHUB, null)
+            is CodeTGitWebHookTriggerElement -> Triple(
+                RepositoryConfigUtils.buildConfig(e),
+                ScmType.CODE_TGIT,
+                e.data.input.eventType
+            )
             else -> Triple(null, null, null)
         }
 
@@ -136,7 +142,7 @@ class MQPipelineCreateListener @Autowired constructor(
                         page = null
                 )
                 websocketDispatch(post, event)
-                logger.warn("[${event.pipelineId}]异步调用webhook返回未知异常。webSocket推送异常信息[$post]")
+                logger.error("[${event.pipelineId}]异步调用webhook返回未知异常。webSocket推送异常信息[$post]", e)
             }
         }
     }

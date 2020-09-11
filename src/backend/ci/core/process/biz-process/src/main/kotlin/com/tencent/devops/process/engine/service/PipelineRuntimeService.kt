@@ -55,6 +55,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
@@ -600,7 +601,11 @@ class PipelineRuntimeService @Autowired constructor(
                 recommendVersion = recommendVersion,
                 retry = isRetry ?: false,
                 errorInfoList = if (errorInfo != null) {
-                    JsonUtil.getObjectMapper().readValue(errorInfo) as List<ErrorInfo>
+                    try {
+                        JsonUtil.getObjectMapper().readValue(errorInfo) as List<ErrorInfo>
+                    } catch (e: Exception) {
+                        null
+                    }
                 } else {
                     null
                 }
@@ -629,6 +634,9 @@ class PipelineRuntimeService @Autowired constructor(
                     }
                     CodeType.GITHUB.name -> {
                         CodeGithubWebHookTriggerElement.classType
+                    }
+                    CodeType.TGIT.name -> {
+                        CodeTGitWebHookTriggerElement.classType
                     }
                     else -> RemoteTriggerElement.classType
                 }
@@ -859,7 +867,8 @@ class PipelineRuntimeService @Autowired constructor(
                                 executeCount = 1,
                                 starter = userId,
                                 approver = null,
-                                subBuildId = null
+                                subBuildId = null,
+                                atomCode = atomElement.getAtomCode()
                             )
                         )
                     } else {
