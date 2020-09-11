@@ -618,6 +618,7 @@
         "showOnStarting": "执行时显示",
         "defaultValue": "默认值",
         "fileDefaultValueLabel": "自定义仓库路径",
+        "customFileLabelTips": "自定义仓库路径+文件名",
         "defaultValueDesc": "若value为版本号,则不能包含“”\"\"等符号；\n如果参数类型为复选框，选择多个值时将以a,b的方式传递给流水线",
         "defaultValueTips": "请输入默认值",
         "selectOptions": "下拉选项",

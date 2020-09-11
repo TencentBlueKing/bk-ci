@@ -38,6 +38,7 @@ export const DEFAULT_PARAM = {
         id: 'string',
         defaultValue: 'value',
         defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         desc: '',
         type: STRING,
         typeDesc: 'string',
@@ -47,6 +48,7 @@ export const DEFAULT_PARAM = {
         id: 'bool',
         defaultValue: true,
         defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         desc: '',
         type: BOOLEAN,
         typeDesc: 'bool',
@@ -56,6 +58,7 @@ export const DEFAULT_PARAM = {
         id: 'enum',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         desc: '',
         type: ENUM,
         typeDesc: 'enum',
@@ -66,6 +69,7 @@ export const DEFAULT_PARAM = {
         id: 'multiple',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         desc: '',
         options: [],
         type: MULTIPLE,
@@ -76,6 +80,7 @@ export const DEFAULT_PARAM = {
         id: 'svntag',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         repoHashId: '',
         relativePath: '',
         desc: '',
@@ -88,6 +93,7 @@ export const DEFAULT_PARAM = {
         id: 'gitref',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         repoHashId: '',
         desc: '',
         options: [],
@@ -99,6 +105,7 @@ export const DEFAULT_PARAM = {
         id: 'codelib',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         scmType: 'CODE_GIT',
         desc: '',
         options: [],
@@ -110,6 +117,7 @@ export const DEFAULT_PARAM = {
         id: 'buildResource',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         containerType: {
             os: 'LINUX',
             buildType: 'DOCKER'
@@ -124,6 +132,7 @@ export const DEFAULT_PARAM = {
         id: 'artifactory',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         desc: '',
         options: [],
         glob: '*',
@@ -136,6 +145,7 @@ export const DEFAULT_PARAM = {
         id: 'subPipeline',
         defaultValue: '',
         defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         desc: '',
         options: [],
         type: SUB_PIPELINE,
@@ -146,6 +156,7 @@ export const DEFAULT_PARAM = {
         id: 'file',
         defaultValue: '',
         defalutValueLabel: 'fileDefaultValueLabel',
+        defaultValueLabelTips: 'customFileLabelTips',
         desc: '',
         type: CUSTOM_FILE,
         typeDesc: 'custom_file',
@@ -158,8 +169,12 @@ export const PARAM_LIST = Object.keys(DEFAULT_PARAM).map(key => ({
     name: DEFAULT_PARAM[key].typeDesc
 }))
 
-export function getParamsDefaultValuelabel (type) {
+export function getParamsDefaultValueLabel (type) {
     return DEFAULT_PARAM[type] && DEFAULT_PARAM[type].defalutValueLabel ? DEFAULT_PARAM[type].defalutValueLabel : 'defaultValue'
+}
+
+export function getParamsDefaultValueLabelTips (type) {
+    return DEFAULT_PARAM[type] && DEFAULT_PARAM[type].defaultValueLabelTips ? DEFAULT_PARAM[type].defaultValueLabelTips : 'defaultValueDesc'
 }
 
 export const ParamComponentMap = {
