@@ -463,8 +463,8 @@ class JobQuotaBusinessService @Autowired constructor(
         }
 
         val notifyCli = client.get(ServiceNotifyResource::class)
-        notifyCli.sendRtxNotify(rtxMessage)
-        notifyCli.sendEmailNotify(emailMessage)
+//        notifyCli.sendRtxNotify(rtxMessage)
+//        notifyCli.sendEmailNotify(emailMessage)
         logger.info("alert send: ${rtxMessage.body}")
     }
 
