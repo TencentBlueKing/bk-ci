@@ -290,7 +290,12 @@ class PreBuildService @Autowired constructor(
         }
 
         val dispatchType = getDispatchType(job, startUpReq, agentInfo)
-        val vmBaseOS = if (startUpReq.useRemote) VMBaseOS.LINUX else VMBaseOS.valueOf(agentInfo.os)
+        val vmBaseOS = if (startUpReq.useRemote) {
+            when (dispatchType) {
+                is MacOSDispatchType -> VMBaseOS.MACOS
+                else -> VMBaseOS.LINUX
+            }
+        } else VMBaseOS.valueOf(agentInfo.os)
 
         return VMBuildContainer(
             id = null,
@@ -304,7 +309,7 @@ class PreBuildService @Autowired constructor(
             vmNames = setOf(),
             maxQueueMinutes = 60,
             maxRunningMinutes = 900,
-            buildEnv = null,
+            buildEnv = job.job.pool?.env,
             customBuildEnv = null,
             thirdPartyAgentId = null,
             thirdPartyAgentEnvId = null,
