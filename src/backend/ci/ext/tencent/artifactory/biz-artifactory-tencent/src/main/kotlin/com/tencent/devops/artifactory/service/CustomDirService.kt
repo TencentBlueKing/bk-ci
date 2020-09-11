@@ -36,7 +36,7 @@ import java.io.InputStream
 interface CustomDirService {
     fun list(userId: String, projectId: String, argPath: String): List<FileInfo>
     fun show(userId: String, projectId: String, argPath: String): FileDetail
-    fun deploy(userId: String, projectId: String, argPath: String, inputStream: InputStream, disposition: FormDataContentDisposition)
+    fun deploy(userId: String, projectId: String, argPath: String, inputStream: InputStream, disposition: FormDataContentDisposition, fileSizeLimitInMB: Int = 0)
     fun mkdir(userId: String, projectId: String, argPath: String)
     fun rename(userId: String, projectId: String, argSrcPath: String, argDestPath: String)
     fun copy(userId: String, projectId: String, combinationPath: CombinationPath)
