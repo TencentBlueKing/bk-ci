@@ -124,7 +124,7 @@ class ScmMonitorService @Autowired constructor(
     private fun execute(action: () -> Unit) {
         try {
             executorService.execute {
-                action
+                action()
             }
         } catch (e: Throwable) {
             logger.error("report scm monitor error", e)
