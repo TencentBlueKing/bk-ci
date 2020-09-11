@@ -243,7 +243,7 @@ class JFrogArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl()
     }
 
     override fun deleteFile(filePath: String): Result<Boolean> {
-        jFrogService.delete("${getBasePath()}$filePath")
+        jFrogService.tryDelete("${getBasePath()}$filePath")
         return Result(true)
     }
 
