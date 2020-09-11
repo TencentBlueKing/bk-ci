@@ -972,7 +972,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (newHeartbeatInfo.slaveVersion != agentRecord.version) {
                 var slaveVersion = newHeartbeatInfo.slaveVersion
                 if (slaveVersion.length > 128) {
-                    slaveVersion = slaveVersion.substring(127)
+                    logger.warn("slaveVersion size too long, substring 127| $slaveVersion| $projectId| ${agentRecord.id}")
+                    slaveVersion = slaveVersion.substring(0, 127)
                 }
                 agentRecord.version = slaveVersion
                 agentChanged = true
