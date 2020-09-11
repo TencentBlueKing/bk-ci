@@ -39,6 +39,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -75,6 +76,7 @@ import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomLabelService
+import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.atom.MarketAtomStatisticService
 import com.tencent.devops.store.service.common.ClassifyService
@@ -137,6 +139,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     lateinit var storeWebsocketService: StoreWebsocketService
     @Autowired
     lateinit var storeCommonService: StoreCommonService
+    @Autowired
+    lateinit var marketAtomCommonService: MarketAtomCommonService
     @Autowired
     lateinit var client: Client
 
@@ -492,10 +496,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val feature = marketAtomFeatureDao.getAtomFeature(dslContext, atomCode)
             val classifyCode = record["classifyCode"] as? String
             val classifyName = record["classifyName"] as? String
-            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
-                defaultMessage = classifyName
-            )
+            val classifyLanName = if (classifyCode != null)
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                    defaultMessage = classifyName
+                ) else classifyName
             Result(
                 AtomVersion(
                     atomId = atomId,
@@ -542,7 +547,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(record["visibilityLevel"] as Int),
                     privateReason = record["privateReason"] as? String,
                     recommendFlag = feature?.recommendFlag,
-                    yamlFlag = feature?.yamlFlag
+                    yamlFlag = feature?.yamlFlag,
+                    editFlag = marketAtomCommonService.checkEditCondition(atomCode)
                 )
             )
         }
@@ -697,9 +703,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 arrayOf(atomCode)
             )
         }
-        // 如果已经被安装到其他项目下使用，不能删除
-        val installedCount = storeProjectRelDao.countInstalledProject(dslContext, atomCode, type)
-        if (installedCount > 0) {
+        // 如果已经有流水线在使用该插件，则不能删除
+        val pipelineStat =
+            client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(atomCode, null).data
+        val pipelines = pipelineStat?.get(atomCode) ?: 0
+        if (pipelines > 0) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_ATOM_USED_IS_NOT_ALLOW_DELETE,
                 arrayOf(atomCode)

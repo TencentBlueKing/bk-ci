@@ -121,20 +121,10 @@
                     }
                 } catch (err) {
                     this.disabled = false
-                    if (err.code === 403) { // 没有权限执行
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: this.$t('pipeline'),
-                                option: this.$t('exec')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_executor=pipeline:${this.pipelineId}`
-                        })
-                    } else {
-                        this.$showTips({
-                            message: err.message || err,
-                            theme: 'error'
-                        })
-                    }
+                    this.handleError(err, this.$permissionActionMap.execute, {
+                        id: this.pipelineId,
+                        name: this.pipelineId
+                    }, this.projectId)
                 }
             },
             /**

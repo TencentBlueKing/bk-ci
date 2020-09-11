@@ -26,6 +26,9 @@
 
 package com.tencent.devops.project.resources
 
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.pojo.Result
@@ -35,10 +38,16 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceUserResourceImpl @Autowired constructor(
-    private val userCacheService: UserCacheService
+    private val userCacheService: UserCacheService,
+    private val projectAuthServiceCode: ProjectAuthServiceCode,
+    private val bkAuthProjectApi: AuthProjectApi
 ) : ServiceUserResource {
 
     override fun getDetailFromCache(userId: String): Result<UserDeptDetail> {
         return Result(userCacheService.getDetailFromCache(userId))
+    }
+
+    override fun getProjectUserRoles(projectCode: String, roleId: BkAuthGroup): Result<List<String>> {
+        return Result(bkAuthProjectApi.getProjectUsers(projectAuthServiceCode, projectCode, roleId))
     }
 }

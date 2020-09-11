@@ -1,6 +1,18 @@
 <template>
     <div class="install-atom-wrapper" v-bkloading="{ isLoading }">
-        <bread-crumbs :bread-crumbs="navList" :type="type"></bread-crumbs>
+
+        <h3 class="market-home-title">
+            <icon class="title-icon" name="color-logo-store" size="25" />
+            <p class="title-name">
+                <router-link :to="{ name: 'atomHome' }" class="back-home"> {{ $t('store.研发商店') }} </router-link>
+                <i class="right-arrow banner-arrow"></i>
+                <span class="back-home" @click="backToStore">{{ type|typeFilter }}</span>
+                <i class="right-arrow banner-arrow"></i>
+                <span class="banner-des back-home" @click="toBack">{{ fromFilter(from) }}</span>
+                <i class="right-arrow banner-arrow"></i>
+                <span> {{ $t('store.安装') }} {{ type|typeFilter }}</span>
+            </p>
+        </h3>
 
         <div class="install-atom-content" v-if="!isLoading">
             <div class="sub-view-port" v-if="!isINstallSuccess">
@@ -45,11 +57,25 @@
 
 <script>
     import { mapGetters } from 'vuex'
-    import breadCrumbs from '@/components/bread-crumbs.vue'
 
     export default {
-        components: {
-            breadCrumbs
+        filters: {
+            typeFilter (val) {
+                const bkLocale = window.devops || {}
+                let res = ''
+                switch (val) {
+                    case 'atom':
+                        res = bkLocale.$t('store.流水线插件')
+                        break
+                    case 'template':
+                        res = bkLocale.$t('store.流水线模板')
+                        break
+                    default:
+                        res = bkLocale.$t('store.容器镜像')
+                        break
+                }
+                return res
+            }
         },
 
         data () {
@@ -70,29 +96,7 @@
         },
 
         computed: {
-            ...mapGetters('store', { 'markerQuey': 'getMarketQuery' }),
-
-            navList () {
-                let name
-                switch (this.type) {
-                    case 'atom':
-                        name = this.$t('store.流水线插件')
-                        break
-                    case 'template':
-                        name = this.$t('store.流水线模板')
-                        break
-                    default:
-                        name = this.$t('store.容器镜像')
-                        break
-                }
-
-                Object.assign(this.markerQuey, { pipeType: this.type })
-                return [
-                    { name, to: { name: 'atomHome', query: this.markerQuey } },
-                    { name: this.fromFilter(this.from), to: { name: this.from, params: { type: this.type, code: this.code } } },
-                    { name: this.$t('store.安装') + name }
-                ]
-            }
+            ...mapGetters('store', { 'markerQuey': 'getMarketQuery' })
         },
 
         created () {
@@ -131,14 +135,14 @@
             },
 
             getAtomDetail () {
-                return this.$store.dispatch('store/requestAtom', this.code).then((res) => {
+                return this.$store.dispatch('store/requestAtom', { atomCode: this.code }).then((res) => {
                     this.name = res.name
                     this.id = res.atomId
                 })
             },
 
             getTemplateDetail () {
-                return this.$store.dispatch('store/requestTemplate', this.code).then((res) => {
+                return this.$store.dispatch('store/requestTemplate', { templateCode: this.code }).then((res) => {
                     this.name = res.templateName
                     this.id = res.templateId
                 })
@@ -186,9 +190,11 @@
             },
 
             backConsole () {
-                const name = `${this.type}Work`
                 this.$router.push({
-                    name
+                    name: 'workList',
+                    params: {
+                        type: this.type
+                    }
                 })
             },
 
@@ -282,16 +288,67 @@
     @import '@/assets/scss/conf.scss';
     .install-atom-wrapper {
         height: 100%;
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            height: 60px;
+            border-bottom: 1px solid #DDE4EB;
+            background-color: #fff;
+            box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
+            .sub_header_left {
+                display: flex;
+                padding: 18px 24px;
+                .title {
+                    display: flex;
+                    align-items: center;
+                }
+                .first-level,
+                .secondary {
+                    color: $primaryColor;
+                    cursor: pointer;
+                }
+                .third-leve {
+                    color: $fontWeightColor;
+                }
+                .nav-icon {
+                    width: 24px;
+                    height: 24px;
+                    margin-right: 10px;
+                }
+                .right-arrow {
+                    display :inline-block;
+                    position: relative;
+                    width: 19px;
+                    height: 36px;
+                    margin-right: 4px;
+                }
+                .right-arrow::after {
+                    display: inline-block;
+                    content: " ";
+                    height: 4px;
+                    width: 4px;
+                    border-width: 1px 1px 0 0;
+                    border-color: $lineColor;
+                    border-style: solid;
+                    transform: matrix(0.71, 0.71, -0.71, 0.71, 0, 0);
+                    position: absolute;
+                    top: 50%;
+                    right: 6px;
+                    margin-top: -9px;
+                }
+            }
+        }
         .install-atom-content {
             padding: 20px 0 40px;
-            height: calc(100vh - 5.6vh);
+            height: calc(100% - 50px);
             overflow: auto;
             .template-tip {
                 margin-top: 10px;
             }
             .sub-view-port,
             .install-success-tips {
-                margin: 0 auto 20px;
+                margin: 20px auto;
                 padding: 20px;
                 width: 60%;
                 min-width: 960px;

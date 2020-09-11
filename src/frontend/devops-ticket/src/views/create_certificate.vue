@@ -199,8 +199,12 @@
             },
 
             goToApplyPerm () {
-                const url = `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=cert`
-                window.open(url, '_blank')
+                // const url = `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=cert`
+                // window.open(url, '_blank')
+                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.cert, [{
+                    id: this.projectId,
+                    type: this.$permissionResourceTypeMap.PROJECT
+                }])
             },
 
             async requestCertDetail (callBack) {
