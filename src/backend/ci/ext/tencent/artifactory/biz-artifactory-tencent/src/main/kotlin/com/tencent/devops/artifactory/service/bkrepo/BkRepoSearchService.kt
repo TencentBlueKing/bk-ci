@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_FILE_NAME
-import com.tencent.devops.common.auth.api.AuthPermission
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -55,7 +54,7 @@ class BkRepoSearchService @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Pair<Long, List<FileInfo>> {
-        logger.info("search, projectId: $projectId, searchProps: $searchProps, page: $page, pageSize: $pageSize")
+        logger.info("search, userId: $userId, projectId: $projectId, searchProps: $searchProps, page: $page, pageSize: $pageSize")
         val fileNameSet = mutableSetOf<String>()
         searchProps.fileNames?.forEach {
             fileNameSet.add(it)
@@ -81,7 +80,7 @@ class BkRepoSearchService @Autowired constructor(
             pageSize
         )
 
-        val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId, AuthPermission.LIST)
+        val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId)
         val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, pipelineHasPermissionList)
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
@@ -144,11 +143,9 @@ class BkRepoSearchService @Autowired constructor(
             10000
         )
 
-        val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId, AuthPermission.LIST)
+        val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId)
         val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, pipelineHasPermissionList)
-            .sortedWith(
-                Comparator { file1, file2 -> -file1.modifiedTime.compareTo(file2.modifiedTime) }
-            )
+            .sortedWith(Comparator { file1, file2 -> -file1.modifiedTime.compareTo(file2.modifiedTime) })
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 

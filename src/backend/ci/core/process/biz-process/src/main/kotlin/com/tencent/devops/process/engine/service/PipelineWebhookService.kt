@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.process.tables.records.TPipelineWebhookRecord
@@ -120,11 +121,12 @@ class PipelineWebhookService @Autowired constructor(
                     repo.projectName
                 }
                 ScmType.CODE_TGIT -> {
-                    // do nothing
+                    scmProxyService.addTGitWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
+                }
+                else -> {
                     null
                 }
             }
-            logger.info("add $projectName webhook to [$pipelineWebhook]")
             if (!projectName.isNullOrBlank()) {
                 pipelineWebhook.projectName = getProjectName(projectName!!)
                 saveOrUpdateWebhook(pipelineWebhook)
@@ -542,6 +544,9 @@ class PipelineWebhookService @Autowired constructor(
             }
             CodeGithubWebHookTriggerElement.classType -> {
                 ScmType.GITHUB
+            }
+            CodeTGitWebHookTriggerElement.classType -> {
+                ScmType.CODE_TGIT
             }
             else -> {
                 throw RuntimeException("Unknown web hook type($type)")

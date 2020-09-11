@@ -24,39 +24,50 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.atom
+package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.atom.UserMarketAtomMemberResource
+import com.tencent.devops.store.api.common.OpStoreMemberResource
 import com.tencent.devops.store.pojo.common.StoreMemberItem
 import com.tencent.devops.store.pojo.common.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.atom.impl.AtomMemberServiceImpl
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.store.service.common.StoreMemberService
 
 @RestResource
-class UserMarketAtomMemberResourceImpl @Autowired constructor(
-    private val atomMemberService: AtomMemberServiceImpl
-) : UserMarketAtomMemberResource {
+class OpStoreMemberResourceImpl : OpStoreMemberResource {
 
-    override fun list(userId: String, atomCode: String): Result<List<StoreMemberItem?>> {
-        return atomMemberService.list(userId, atomCode, StoreTypeEnum.ATOM)
+    override fun list(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<List<StoreMemberItem?>> {
+        return getStoreMemberService(storeType).list(userId, storeCode, storeType)
     }
 
     override fun add(userId: String, storeMemberReq: StoreMemberReq): Result<Boolean> {
-        return atomMemberService.add(userId, storeMemberReq, StoreTypeEnum.ATOM)
+        val storeType = storeMemberReq.storeType
+        return getStoreMemberService(storeType).add(
+            userId = userId,
+            storeMemberReq = storeMemberReq,
+            storeType = storeType,
+            sendNotify = false,
+            checkPermissionFlag = false
+        )
     }
 
-    override fun delete(userId: String, id: String, atomCode: String): Result<Boolean> {
-        return atomMemberService.delete(userId, id, atomCode, StoreTypeEnum.ATOM)
+    override fun delete(userId: String, id: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
+        return getStoreMemberService(storeType).delete(
+            userId = userId,
+            id = id,
+            storeCode = storeCode,
+            storeType = storeType,
+            checkPermissionFlag = false
+        )
     }
 
-    override fun view(userId: String, atomCode: String): Result<StoreMemberItem?> {
-        return atomMemberService.viewMemberInfo(userId, atomCode, StoreTypeEnum.ATOM)
+    override fun view(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<StoreMemberItem?> {
+        return getStoreMemberService(storeType).viewMemberInfo(userId, storeCode, storeType)
     }
 
-    override fun changeMemberTestProjectCode(accessToken: String, userId: String, projectCode: String, atomCode: String): Result<Boolean> {
-        return atomMemberService.changeMemberTestProjectCode(accessToken, userId, projectCode, atomCode, StoreTypeEnum.ATOM)
+    private fun getStoreMemberService(storeType: StoreTypeEnum): StoreMemberService {
+        return SpringContextUtil.getBean(StoreMemberService::class.java, "${storeType.name.toLowerCase()}MemberService")
     }
 }

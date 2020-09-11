@@ -56,6 +56,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
+import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -387,6 +388,31 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             region = repo.region,
             userName = credential.username,
             event = null
+        )
+        return repo.projectName
+    }
+
+    fun addTGitWebhook(projectId: String, repositoryConfig: RepositoryConfig, codeEventType: CodeEventType?): String {
+        checkRepoID(repositoryConfig)
+        val repo = getRepo(projectId, repositoryConfig) as? CodeTGitRepository
+            ?: throw ErrorCodeException(defaultMessage = "TGit", errorCode = RepositoryMessageCode.TGIT_INVALID)
+        val token = getCredential(projectId, repo).privateKey
+        val event = when (codeEventType) {
+            null, CodeEventType.PUSH -> CodeGitWebhookEvent.PUSH_EVENTS.value
+            CodeEventType.TAG_PUSH -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
+            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
+            else -> null
+        }
+        client.get(ServiceScmResource::class).addWebHook(
+            projectName = repo.projectName,
+            url = repo.url,
+            type = ScmType.CODE_TGIT,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = repo.userName,
+            event = event
         )
         return repo.projectName
     }

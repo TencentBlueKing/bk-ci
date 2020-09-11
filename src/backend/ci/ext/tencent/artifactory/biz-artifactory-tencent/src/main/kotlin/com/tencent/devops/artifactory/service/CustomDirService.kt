@@ -42,6 +42,4 @@ interface CustomDirService {
     fun copy(userId: String, projectId: String, combinationPath: CombinationPath)
     fun move(userId: String, projectId: String, combinationPath: CombinationPath)
     fun delete(userId: String, projectId: String, pathList: PathList)
-    fun validatePermission(userId: String, projectId: String)
-    fun isProjectUser(user: String, projectId: String): Boolean
 }
