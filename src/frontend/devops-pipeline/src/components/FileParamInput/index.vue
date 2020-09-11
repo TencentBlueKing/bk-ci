@@ -28,7 +28,7 @@
         data () {
             return {
                 tip: this.$t('sizeLimit', [this.size]),
-                delayTime: 0
+                delayTime: 500
             }
         },
         computed: {
@@ -46,9 +46,6 @@
                     message: errorMsg || `${name}文件上传成功`
                 })
                 this.tip = this.$t('fileUploadSuccess')
-                if (!errorMsg) {
-                    this.delayTime = 500
-                }
             }
         }
     }
