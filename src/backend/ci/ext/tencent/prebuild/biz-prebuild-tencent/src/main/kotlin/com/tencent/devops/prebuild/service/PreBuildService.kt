@@ -34,6 +34,7 @@ import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.NORMAL_JOB
 import com.tencent.devops.common.ci.VM_JOB
 import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
+import com.tencent.devops.common.ci.task.SyncLocalCodeInput
 import com.tencent.devops.common.ci.task.SyncLocalCodeTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.ci.yaml.Job
@@ -274,9 +275,10 @@ class PreBuildService @Autowired constructor(
                 if (!startUpReq.useRemote) {
                     return@forEach
                 }
-
-                it.inputs.agentId = agentInfo.agentId
-                it.inputs.workspace = startUpReq.workspace
+                it.inputs = SyncLocalCodeInput(
+                    agentInfo.agentId,
+                    startUpReq.workspace
+                )
 
                 installMarketAtom(userId, "syncCodeToRemote")//确保同步代码插件安装
             }
