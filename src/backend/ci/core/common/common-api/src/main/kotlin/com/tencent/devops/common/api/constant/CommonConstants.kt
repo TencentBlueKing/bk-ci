@@ -44,6 +44,7 @@ const val COMMIT = "commit" // 提交
 const val BUILD = "build" // 构建
 const val CHECK = "check" // 验证
 const val TEST = "test" // 测试
+const val CODECC = "codecc" // 代码检查
 const val APPROVE = "approve" // 审核
 const val END = "end" // 结束
 const val SUCCESS = "success" // 成功
