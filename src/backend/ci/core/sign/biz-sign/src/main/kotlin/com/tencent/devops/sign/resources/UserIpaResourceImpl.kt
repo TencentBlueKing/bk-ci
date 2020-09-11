@@ -27,7 +27,7 @@
 package com.tencent.devops.sign.resources
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -35,7 +35,6 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.user.UserIpaResource
 import com.tencent.devops.sign.service.AsyncSignService
@@ -66,7 +65,8 @@ class UserIpaResourceImpl @Autowired constructor(
         val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
         if (!checkParams(ipaSignInfo, userId)) {
             logger.warn("用户($userId)无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名.")
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_NOT_AUTH_UPLOAD, defaultMessage = "用户($userId)无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名。")
+            throw PermissionForbiddenException(
+                    message = "用户($userId)无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名。")
         }
         var taskExecuteCount = 1
         try {
