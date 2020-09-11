@@ -52,7 +52,7 @@
                             </p>
                         </span>
                         <bk-popover placement="left" v-if="!hasPermission">
-                            <i class="devops-icon icon-new-download disabled-btn"></i>
+                            <i @click="requestDownloadPermission" class="devops-icon icon-new-download disabled-btn"></i>
                             <template slot="content">
                                 <p>{{ $t('details.noDownloadPermTips') }}</p>
                             </template>
@@ -241,7 +241,6 @@
             },
             async requestUrl (row, key, index, type) {
                 this.curIndexItemUrl = ''
-
                 this.partList.forEach((vv, kk) => {
                     if (kk === index) {
                         vv.display = !vv.display
@@ -270,14 +269,30 @@
                         window.location.href = type ? `${GW_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url
                     }
                 } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$showTips({
-                        message,
-                        theme
-                    })
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.download,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.pipelineId,
+                            name: this.pipelineId
+                        }],
+                        projectId: this.projectId
+                    }])
                 }
+            },
+
+            requestDownloadPermission () {
+                this.$showAskPermissionDialog({
+                    noPermissionList: [{
+                        actionId: this.$permissionActionMap.download,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.pipelineId,
+                            name: this.pipelineId
+                        }],
+                        projectId: this.projectId
+                    }]
+                })
             },
             clickHandler (event) {
                 if (event.target.id !== 'partviewqrcode') {
@@ -340,7 +355,12 @@
                     sideSliderConfig.data = res
                     sideSliderConfig.isLoading = false
                 } catch (err) {
-                    this.handleError(err, this.$permissionActionMap.view, null, this.projectId, this.$permissionResourceMap.artifactory)
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.view,
+                        resourceId: this.$permissionResourceMap.artifactory,
+                        instanceId: [],
+                        projectId: this.projectId
+                    }])
                 }
             },
             /**
@@ -541,6 +561,7 @@
         }
         .disabled-btn {
             color: $fontLigtherColor;
+            cursor: url(../../images/cursor-lock.png),auto;
             &:hover {
                 color: $fontLigtherColor;
             }
