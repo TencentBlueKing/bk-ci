@@ -62,7 +62,7 @@ data class SyncLocalCodeTask(
             null,
             null,
             "syncAgentCode",
-            inputs.version,
+            "3.*",
             data
         )
     }
@@ -70,8 +70,6 @@ data class SyncLocalCodeTask(
 
 @ApiModel("同步本地代码入参")
 data class SyncLocalCodeInput(
-    @ApiModelProperty("版本", required = false)
-    var version: String = "3.*",
     @ApiModelProperty("agentId", required = true)
     var agentId: String?,
     @ApiModelProperty("工作目录", required = true)
