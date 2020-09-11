@@ -26,8 +26,8 @@
 
 package com.tencent.devops.log.dao
 
-import com.tencent.devops.model.log.tables.TLogIndex
-import com.tencent.devops.model.log.tables.records.TLogIndexRecord
+import com.tencent.devops.model.log.tables.TLogIndicesV2
+import com.tencent.devops.model.log.tables.records.TLogIndicesV2Record
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -42,13 +42,13 @@ class IndexDao {
         indexName: String,
         enable: Boolean
     ) {
-        with(TLogIndex.T_LOG_INDEX) {
+        with(TLogIndicesV2.T_LOG_INDICES_V2) {
             val now = LocalDateTime.now()
             dslContext.insertInto(this,
                 BUILD_ID,
                 INDEX_NAME,
                 LAST_LINE_NUM,
-                CREATE_TIME,
+                CREATED_TIME,
                 UPDATED_TIME,
                 ENABLE,
                 USE_CLUSTER
@@ -67,8 +67,8 @@ class IndexDao {
         }
     }
 
-    fun getBuild(dslContext: DSLContext, buildId: String): TLogIndexRecord? {
-        with(TLogIndex.T_LOG_INDEX) {
+    fun getBuild(dslContext: DSLContext, buildId: String): TLogIndicesV2Record? {
+        with(TLogIndicesV2.T_LOG_INDICES_V2) {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .fetchOne()
@@ -87,7 +87,7 @@ class IndexDao {
         buildId: String,
         latestLineNum: Long
     ): Int {
-        with(TLogIndex.T_LOG_INDEX) {
+        with(TLogIndicesV2.T_LOG_INDICES_V2) {
             return dslContext.update(this)
                 .set(LAST_LINE_NUM, latestLineNum)
                 .where(BUILD_ID.eq(buildId))
@@ -98,8 +98,8 @@ class IndexDao {
     fun listOldestBuilds(
         dslContext: DSLContext,
         limit: Int
-    ): Result<TLogIndexRecord> {
-        with(TLogIndex.T_LOG_INDEX) {
+    ): Result<TLogIndicesV2Record> {
+        with(TLogIndicesV2.T_LOG_INDICES_V2) {
             return dslContext.selectFrom(this)
                 .orderBy(ID.asc())
                 .limit(limit)
@@ -111,7 +111,7 @@ class IndexDao {
         dslContext: DSLContext,
         buildIds: Set<String>
     ): Int {
-        with(TLogIndex.T_LOG_INDEX) {
+        with(TLogIndicesV2.T_LOG_INDICES_V2) {
             return dslContext.deleteFrom(this)
                 .where(BUILD_ID.`in`(buildIds))
                 .execute()

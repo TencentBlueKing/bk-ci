@@ -95,7 +95,7 @@ class CleanBuildJob @Autowired constructor(
             }
 
             val buildIds = records.filter {
-                expire(it.createTime.timestamp())
+                expire(it.updatedTime.timestamp())
             }.map { it.buildId }.toSet()
 
             if (buildIds.isEmpty()) {
