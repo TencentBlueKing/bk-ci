@@ -60,7 +60,8 @@ interface StoreMemberService {
         storeType: StoreTypeEnum,
         collaborationFlag: Boolean? = false,
         sendNotify: Boolean = true,
-        checkPermissionFlag: Boolean = true
+        checkPermissionFlag: Boolean = true,
+        testProjectCode: String? = null
     ): Result<Boolean>
 
     /**
