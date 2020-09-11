@@ -36,7 +36,6 @@ import com.tencent.devops.common.service.Profile
 import com.tencent.devops.dispatch.dao.RunningJobsDao
 import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.process.engine.common.VMUtils
