@@ -73,7 +73,7 @@ data class SyncLocalCodeInput(
     @ApiModelProperty("版本", required = false)
     var version: String = "1.*",
     @ApiModelProperty("agentId", required = true)
-    var agentId: String,
+    var agentId: String?,
     @ApiModelProperty("工作目录", required = true)
-    var workspace: String
+    var workspace: String?
 ) : AbstractInput()
