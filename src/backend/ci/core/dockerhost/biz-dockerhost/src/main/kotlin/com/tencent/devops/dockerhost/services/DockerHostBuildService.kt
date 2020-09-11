@@ -651,7 +651,7 @@ class DockerHostBuildService(
             if (statistics != null) {
                 val cpuUsage = statistics.cpuStats.systemCpuUsage
                 if (cpuUsage != null && cpuUsage > 80) {
-
+                    resetContainer(container.id)
                 }
             }
         }
@@ -671,8 +671,8 @@ class DockerHostBuildService(
     }
 
     fun resetContainer(containerId: String) {
-        httpDockerCli.pauseContainerCmd(containerId)
-
+        // httpDockerCli.pauseContainerCmd(containerId)
+        httpDockerCli.updateContainerCmd(containerId).withMemory(32768).withCpuShares(16)
     }
 
     fun clearContainers() {
