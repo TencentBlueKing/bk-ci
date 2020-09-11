@@ -42,14 +42,15 @@ class OpStoreMemberResourceImpl : OpStoreMemberResource {
         return getStoreMemberService(storeType).list(userId, storeCode, storeType)
     }
 
-    override fun add(userId: String, storeMemberReq: StoreMemberReq): Result<Boolean> {
+    override fun add(userId: String, testProjectCode: String?, storeMemberReq: StoreMemberReq): Result<Boolean> {
         val storeType = storeMemberReq.storeType
         return getStoreMemberService(storeType).add(
             userId = userId,
             storeMemberReq = storeMemberReq,
             storeType = storeType,
             sendNotify = false,
-            checkPermissionFlag = false
+            checkPermissionFlag = false,
+            testProjectCode = testProjectCode
         )
     }
 

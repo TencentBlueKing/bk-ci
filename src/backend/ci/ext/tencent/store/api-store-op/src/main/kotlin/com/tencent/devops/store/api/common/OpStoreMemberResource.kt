@@ -73,6 +73,9 @@ interface OpStoreMemberResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("调试项目", required = true)
+        @QueryParam("testProjectCode")
+        testProjectCode: String?,
         @ApiParam("添加成员请求报文")
         @Valid
         storeMemberReq: StoreMemberReq
