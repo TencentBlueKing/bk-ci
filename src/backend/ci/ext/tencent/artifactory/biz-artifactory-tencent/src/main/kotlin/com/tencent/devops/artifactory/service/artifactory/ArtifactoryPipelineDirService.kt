@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
+import com.tencent.devops.common.auth.api.AuthPermission
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -50,7 +51,7 @@ class ArtifactoryPipelineDirService @Autowired constructor(
     private val jFrogPropertiesApi: JFrogPropertiesApi,
     private val jFrogService: JFrogService
 ) : PipelineDirService {
-    override fun list(userId: String, projectId: String, path: String): List<FileInfo> {
+    override fun list(userId: String, projectId: String, path: String, authPermission: AuthPermission): List<FileInfo> {
         logger.info("list, userId: $userId, projectId: $projectId, path: $path")
         val normalizedPath = JFrogUtil.normalize(path)
         if (!JFrogUtil.isValid(normalizedPath)) {
@@ -66,12 +67,12 @@ class ArtifactoryPipelineDirService @Autowired constructor(
             }
             pipelineService.isPipelineDir(normalizedPath) -> {
                 val pipelineId = pipelineService.getPipelineId(normalizedPath)
-                pipelineService.validatePermission(userId, projectId, pipelineId)
+                pipelineService.validatePermission(userId, projectId, pipelineId, authPermission, "用户($userId)在工程($projectId)下没有流水线${authPermission.alias}权限")
                 pipelineService.getPipelinePathList(projectId, path, jFrogFileInfoList)
             }
             else -> {
                 val pipelineId = pipelineService.getPipelineId(normalizedPath)
-                pipelineService.validatePermission(userId, projectId, pipelineId)
+                pipelineService.validatePermission(userId, projectId, pipelineId, authPermission, "用户($userId)在工程($projectId)下没有流水线${authPermission.alias}权限")
                 pipelineService.getBuildPathList(projectId, normalizedPath, jFrogFileInfoList)
             }
         }

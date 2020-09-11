@@ -36,6 +36,7 @@ import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.auth.api.AuthPermission
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -48,7 +49,7 @@ class BkRepoPipelineDirService @Autowired constructor(
     private val pipelineService: PipelineService,
     private val bkRepoClient: BkRepoClient
 ) : PipelineDirService {
-    override fun list(userId: String, projectId: String, path: String): List<FileInfo> {
+    override fun list(userId: String, projectId: String, path: String, authPermission: AuthPermission): List<FileInfo> {
         logger.info("list, userId: $userId, projectId: $projectId, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val fileList = bkRepoClient.listFile(
@@ -66,12 +67,12 @@ class BkRepoPipelineDirService @Autowired constructor(
             }
             pipelineService.isPipelineDir(normalizedPath) -> {
                 val pipelineId = pipelineService.getPipelineId(normalizedPath)
-                pipelineService.validatePermission(userId, projectId, pipelineId)
+                pipelineService.validatePermission(userId, projectId, pipelineId, authPermission, "用户($userId)在工程($projectId)下没有流水线${authPermission.alias}权限")
                 getPipelinePathList(projectId, normalizedPath, fileList)
             }
             else -> {
                 val pipelineId = pipelineService.getPipelineId(normalizedPath)
-                pipelineService.validatePermission(userId, projectId, pipelineId)
+                pipelineService.validatePermission(userId, projectId, pipelineId, authPermission, "用户($userId)在工程($projectId)下没有流水线${authPermission.alias}权限")
                 getBuildPathList(projectId, normalizedPath, fileList)
             }
         }
