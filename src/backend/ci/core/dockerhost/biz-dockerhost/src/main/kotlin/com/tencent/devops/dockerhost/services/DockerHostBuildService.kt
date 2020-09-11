@@ -650,6 +650,9 @@ class DockerHostBuildService(
             val statistics = getContainerStats(container.id)
             if (statistics != null) {
                 val cpuUsage = statistics.cpuStats.systemCpuUsage
+                if (cpuUsage != null && cpuUsage > 80) {
+
+                }
             }
         }
     }
@@ -665,6 +668,11 @@ class DockerHostBuildService(
             logger.error("containerId: $containerId get containerStats error.", e)
             null
         }
+    }
+
+    fun resetContainer(containerId: String) {
+        httpDockerCli.pauseContainerCmd(containerId)
+
     }
 
     fun clearContainers() {
