@@ -752,7 +752,7 @@
             "templateDownload": "Download",
             "otherChoice": "Other Choice"
         },
-        "stageOption": "Advance"
+        "stageOption": "Control option"
     },
     "storeMap": {
         "string": "String",
