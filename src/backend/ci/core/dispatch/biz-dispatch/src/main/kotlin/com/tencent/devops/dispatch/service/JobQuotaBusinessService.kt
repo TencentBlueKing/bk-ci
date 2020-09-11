@@ -194,7 +194,7 @@ class JobQuotaBusinessService @Autowired constructor(
             jobQuota.runningJobMax,
             runningJobCount,
             threshold.projectRunningJobThreshold,
-            jobQuota.runningTimeProjectMax,
+            jobQuota.runningTimeProjectMax.toLong(),
             runningJobTime,
             threshold.projectRunningTimeThreshold
         )
@@ -328,7 +328,7 @@ class JobQuotaBusinessService @Autowired constructor(
             }
         } else {
             if ((runningJobTime * 100) / (timeQuota * 60 * 60 * 1000) >= timeThreshold) {
-                redisOperation.set(WARN_TIME_PROJECT_TIME_THRESHOLD_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 3600)
+                redisOperation.set(WARN_TIME_PROJECT_TIME_THRESHOLD_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 86400)
                 logger.warn("Running job total time:$runningJobTime(s), quota: $timeQuota(h), timeThreshold: $timeThreshold, warning to project master.")
                 val msg = "当前项目【$projectId】【${vmType.displayName}】类型的Job当月总执行时长：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时，" +
                     "已达到阈值(${timeQuota}小时)的${normalizePercentage((runningJobTime * 100.0) / (timeQuota * 60 * 60 * 1000))}%，请调整流水线，合理控制Job执行时间!"
@@ -344,9 +344,10 @@ class JobQuotaBusinessService @Autowired constructor(
             if (runningJobCount < jobQuota) {
                 redisOperation.delete(WARN_TIME_PROJECT_TIME_MAX_LOCK_KEY_PREFIX + projectId)
             }
+            return false
         } else {
             if (runningJobTime >= timeQuota * 60 * 60 * 1000) {
-                redisOperation.set(WARN_TIME_PROJECT_TIME_MAX_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 3600)
+                redisOperation.set(WARN_TIME_PROJECT_TIME_MAX_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 86400)
                 logger.warn("Running job total time:$runningJobTime(s), quota: $timeQuota(h), warning to project master.")
                 val msg = "当前项目【$projectId】【${vmType.displayName}】类型的Job当月总执行时长：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时，已达到阈值(${timeQuota}小时)的100%，请调整流水线，合理控制Job执行时间!"
                 sendAlert(msg, userList.toSet())
@@ -365,7 +366,7 @@ class JobQuotaBusinessService @Autowired constructor(
             }
         } else {
             if (runningJobCount * 100 / jobQuota >= jobThreshold) {
-                redisOperation.set(WARN_TIME_PROJECT_JOB_THRESHOLD_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 3600)
+                redisOperation.set(WARN_TIME_PROJECT_JOB_THRESHOLD_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 86400)
                 logger.warn("Running job count:$runningJobCount, quota: $jobQuota, threshold: $jobThreshold, warning to project master.")
                 val msg = "当前项目【$projectId】【${vmType.displayName}】类型的Job最大并发数$runningJobCount，已达到阈值($jobQuota)的${normalizePercentage(runningJobCount * 100.0 / jobQuota)}%，请调整流水线，合理控制Job并发数!"
                 sendAlert(msg, userList.toSet())
@@ -383,7 +384,7 @@ class JobQuotaBusinessService @Autowired constructor(
             return false
         } else {
             if (runningJobCount >= jobQuota) {
-                redisOperation.set(WARN_TIME_PROJECT_JOB_MAX_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 3600)
+                redisOperation.set(WARN_TIME_PROJECT_JOB_MAX_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 86400)
                 logger.warn("Running job count:$runningJobCount, quota: $jobQuota, warning to project master.")
                 val msg = "当前项目【$projectId】【${vmType.displayName}】类型的Job最大并发数$runningJobCount，已达到阈值($jobQuota)的100%，请调整流水线，合理控制Job并发数!"
                 sendAlert(msg, userList.toSet())
@@ -412,7 +413,7 @@ class JobQuotaBusinessService @Autowired constructor(
             return true
         } else {
             if (runningJobCount >= runningJobMaxSystem) {
-                redisOperation.set(WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY, WARN_TIME_LOCK_VALUE, 3600)
+                redisOperation.set(WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY, WARN_TIME_LOCK_VALUE, 86400)
                 logger.warn("System running job count reach max, running jobs: $runningJobCount, " +
                     "quota: $runningJobMaxSystem")
                 val msg = "蓝盾当前【${vmType.displayName}】Job并发数为$runningJobCount，已达到100%，请关注。"
@@ -430,7 +431,7 @@ class JobQuotaBusinessService @Autowired constructor(
             return true
         } else {
             if (runningJobCount * 100 / runningJobMaxSystem >= systemRunningJobThreshold) {
-                redisOperation.set(WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY, WARN_TIME_LOCK_VALUE, 3600)
+                redisOperation.set(WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY, WARN_TIME_LOCK_VALUE, 86400)
                 logger.warn("System running job count reach threshold: $runningJobCount, " +
                     "quota: $runningJobMaxSystem, threshold: $systemRunningJobThreshold send alert.")
                 val msg = "蓝盾当前【${vmType.displayName}】Job并发数为$runningJobCount，已达到$systemRunningJobThreshold%，请关注！详情：正在执行JOB数量：$runningJobCount, 阈值：$runningJobMaxSystem, " +
@@ -462,9 +463,9 @@ class JobQuotaBusinessService @Autowired constructor(
             body = "[$envStr]$msg"
         }
 
-        val notifyCli = client.get(ServiceNotifyResource::class)
-        notifyCli.sendRtxNotify(rtxMessage)
-        notifyCli.sendEmailNotify(emailMessage)
+//        val notifyCli = client.get(ServiceNotifyResource::class)
+//        notifyCli.sendRtxNotify(rtxMessage)
+//        notifyCli.sendEmailNotify(emailMessage)
         logger.info("alert send: ${rtxMessage.body}")
     }
 

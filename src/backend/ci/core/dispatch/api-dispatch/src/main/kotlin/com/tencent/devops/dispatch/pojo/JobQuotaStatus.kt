@@ -38,7 +38,7 @@ data class JobQuotaStatus(
     @ApiModelProperty("JOB告警阈值，百分比0-100", required = true)
     val jobThreshold: Int,
     @ApiModelProperty("项目job时间配额，单位：小时", required = true)
-    val timeQuota: Int,
+    val timeQuota: Long,
     @ApiModelProperty("当月已运行JOB时间, 单位：毫秒", required = true)
     val runningJobTime: Long,
     @ApiModelProperty("时间告警阈值，百分比0-100", required = true)
