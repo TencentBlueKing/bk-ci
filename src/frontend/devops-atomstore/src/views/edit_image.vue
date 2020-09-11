@@ -1,16 +1,8 @@
 <template>
     <article class="edit-image-home">
-        <div class="info-header">
-            <div class="title first-level" @click="toAtomStore">
-                <logo :name="&quot;store&quot;" size="30" class="nav-icon" />
-                <div class="title first-level"> {{ $t('store.研发商店') }} </div>
-            </div>
-            <i class="right-arrow"></i>
-            <div class="title secondary" @click="toImageList"> {{ $t('store.工作台') }} </div>
-            <i class="right-arrow"></i>
-            <div class="title third-level">{{$t('store.上架/升级镜像')}}（{{form.imageCode}}）</div>
-            <a class="develop-guide-link" target="_blank" href="http://tempdocklink/pages/viewpage.action?pageId=22118721"> {{ $t('store.镜像指引') }} </a>
-        </div>
+        <bread-crumbs :bread-crumbs="navList" type="image">
+            <a class="g-title-work" target="_blank" href="http://tempdocklink/pages/viewpage.action?pageId=22118721"> {{ $t('store.镜像指引') }} </a>
+        </bread-crumbs>
         <main v-bkloading="{ isLoading }" class="edit-content">
             <bk-form ref="imageForm" class="edit-image" label-width="150" :model="form" v-show="!isLoading">
                 <bk-form-item class="wt660"
@@ -223,11 +215,13 @@
     import { toolbars } from '@/utils/editor-options'
     import selectLogo from '@/components/common/selectLogo'
     import codeSection from '@/components/common/detailTab/codeSection'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
 
     export default {
         components: {
             selectLogo,
-            codeSection
+            codeSection,
+            breadCrumbs
         },
 
         data () {
@@ -235,6 +229,7 @@
                 form: {
                     imageId: '',
                     imageName: '',
+                    imageCode: '',
                     classifyCode: '',
                     labelIdList: [],
                     labelList: [],
@@ -278,6 +273,15 @@
                 },
                 logoErr: false,
                 toolbars
+            }
+        },
+
+        computed: {
+            navList () {
+                return [
+                    { name: this.$t('store.工作台'), to: { name: 'imageWork' } },
+                    { name: `${this.$t('store.上架/升级镜像')}（${this.form.imageCode}）` }
+                ]
             }
         },
 
@@ -456,21 +460,6 @@
                     })
                     this.$refs.mdHook.$refs.toolbar_left.$imgDel(pos)
                 }
-            },
-
-            toImageList () {
-                this.$router.push({
-                    name: 'workList',
-                    params: {
-                        type: 'image'
-                    }
-                })
-            },
-
-            toAtomStore () {
-                this.$router.push({
-                    name: 'atomHome'
-                })
             }
         }
     }
@@ -516,7 +505,7 @@
     }
 
     .edit-content {
-        height: calc(100% - 50px);
+        height: calc(100% - 5.6vh);
         overflow: auto;
     }
 
@@ -551,60 +540,5 @@
 
     .wt660 {
         width: 660px;
-    }
-
-    .info-header {
-        display: flex;
-        padding: 14px 24px;
-        width: 100%;
-        height: 50px;
-        border-bottom: 1px solid #DDE4EB;
-        background-color: #fff;
-        box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
-        .title {
-            display: flex;
-            align-items: center;
-        }
-        .first-level,
-        .secondary {
-            color: $primaryColor;
-            cursor: pointer;
-        }
-        .third-leve {
-            color: $fontWeightColor;
-        }
-        .nav-icon {
-            width: 24px;
-            height: 24px;
-            margin-right: 10px;
-        }
-        .right-arrow {
-            display :inline-block;
-            position: relative;
-            width: 19px;
-            height: 36px;
-            margin-right: 4px;
-        }
-        .right-arrow::after {
-            display: inline-block;
-            content: " ";
-            height: 4px;
-            width: 4px;
-            border-width: 1px 1px 0 0;
-            border-color: $lineColor;
-            border-style: solid;
-            transform: matrix(0.71, 0.71, -0.71, 0.71, 0, 0);
-            position: absolute;
-            top: 50%;
-            right: 6px;
-            margin-top: -9px;
-        }
-        .develop-guide-link {
-            position: absolute;
-            right: 36px;
-            margin-top: 2px;
-            color: $primaryColor;
-            cursor: pointer;
-        }
     }
 </style>
