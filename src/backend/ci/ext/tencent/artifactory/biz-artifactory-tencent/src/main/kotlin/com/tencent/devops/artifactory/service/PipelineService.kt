@@ -308,7 +308,7 @@ class PipelineService @Autowired constructor(
                 pipelineAuthServiceCode,
                 resourceType,
                 projectId,
-                AuthPermission.EXECUTE,
+                AuthPermission.LIST,
                 null
             )
         } finally {
