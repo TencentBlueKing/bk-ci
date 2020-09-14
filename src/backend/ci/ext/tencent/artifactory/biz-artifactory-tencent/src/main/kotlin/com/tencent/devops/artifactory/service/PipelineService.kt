@@ -279,13 +279,13 @@ class PipelineService @Autowired constructor(
         }
     }
 
-    fun validatePermission(userId: String, projectId: String, pipelineId: String? = null, message: String? = null) {
-        if (!hasPermission(userId, projectId, pipelineId)) {
+    fun validatePermission(userId: String, projectId: String, pipelineId: String? = null, permission: AuthPermission? = null, message: String? = null) {
+        if (!hasPermission(userId, projectId, pipelineId, permission)) {
             throw PermissionForbiddenException(message ?: "permission denied")
         }
     }
 
-    fun hasPermission(userId: String, projectId: String, pipelineId: String? = null): Boolean {
+    fun hasPermission(userId: String, projectId: String, pipelineId: String? = null, permission: AuthPermission? = null): Boolean {
         return if (pipelineId == null) {
             authProjectApi.isProjectUser(userId, artifactoryAuthServiceCode, projectId, null)
         } else {
@@ -295,7 +295,7 @@ class PipelineService @Autowired constructor(
                 AuthResourceType.PIPELINE_DEFAULT,
                 projectId,
                 pipelineId,
-                AuthPermission.EXECUTE
+                permission ?: AuthPermission.DOWNLOAD
             )
         }
     }

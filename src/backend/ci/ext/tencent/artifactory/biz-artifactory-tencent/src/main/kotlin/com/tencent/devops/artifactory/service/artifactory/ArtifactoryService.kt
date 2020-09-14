@@ -53,6 +53,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -89,12 +90,12 @@ class ArtifactoryService @Autowired constructor(
         resourceType: AuthResourceType,
         path: String
     ): Boolean {
-        val pipelineId = if (serviceCode == BkAuthServiceCode.PIPELINE && resourceType == AuthResourceType.PIPELINE_DEFAULT) {
-            pipelineService.getPipelineId(path)
+        return if (serviceCode == BkAuthServiceCode.PIPELINE && resourceType == AuthResourceType.PIPELINE_DEFAULT) {
+            val pipelineId = pipelineService.getPipelineId(path)
+            pipelineService.hasPermission(userId, projectId, pipelineId, AuthPermission.EXECUTE)
         } else {
-            null
+            false
         }
-        return pipelineService.hasPermission(userId, projectId, pipelineId)
     }
 
     override fun list(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): List<FileInfo> {
@@ -240,7 +241,7 @@ class ArtifactoryService @Autowired constructor(
             }
             if (artifactoryType == ArtifactoryType.PIPELINE) {
                 targetPipelineId = crossPipineId ?: throw BadRequestException("invalid pipelineId")
-                pipelineService.validatePermission(lastModifyUser, targetProjectId, targetPipelineId, "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限")
+                pipelineService.validatePermission(lastModifyUser, targetProjectId, targetPipelineId, AuthPermission.DOWNLOAD, "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限")
                 val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
                     targetProjectId,
                     targetPipelineId,
