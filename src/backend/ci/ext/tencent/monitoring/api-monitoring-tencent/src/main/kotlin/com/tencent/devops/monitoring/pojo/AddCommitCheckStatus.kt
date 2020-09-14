@@ -25,6 +25,7 @@
  */
 package com.tencent.devops.monitoring.pojo
 
+import com.tencent.devops.monitoring.pojo.annotions.InfluxTag
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -43,6 +44,7 @@ data class AddCommitCheckStatus(
     @ApiModelProperty("错误类型", required = true)
     val errorType: String? = null,
     @ApiModelProperty("蓝盾错误码", required = true)
+    @InfluxTag
     val errorCode: String,
     @ApiModelProperty("错误信息", required = false)
     val errorMsg: String?,
