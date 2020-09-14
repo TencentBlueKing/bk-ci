@@ -113,7 +113,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             atomResponse.errorMsg = CommonUtils.interceptStringInLength(atomResponse.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX)
             // 存储变量
             if (atomResponse.outputVars != null && atomResponse.outputVars!!.isNotEmpty()) {
-                buildVariableService.batchSetVariable(
+                buildVariableService.batchUpdateVariable(
                     projectId = task.projectId,
                     pipelineId = task.pipelineId,
                     buildId = task.buildId,
@@ -241,7 +241,7 @@ class TaskAtomService @Autowired(required = false) constructor(
         } finally {
             // 存储变量
             if (atomResponse.outputVars != null && atomResponse.outputVars!!.isNotEmpty()) {
-                buildVariableService.batchSetVariable(
+                buildVariableService.batchUpdateVariable(
                     projectId = task.projectId,
                     pipelineId = task.pipelineId,
                     buildId = task.buildId,

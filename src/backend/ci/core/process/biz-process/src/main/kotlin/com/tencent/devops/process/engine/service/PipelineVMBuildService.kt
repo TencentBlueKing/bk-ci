@@ -52,6 +52,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
@@ -456,7 +457,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             PIPELINE_TURBO_TASK_ID to turboTaskId
         )
 
-        PipelineVarUtil.fillOldVar(buildVariable)
+        PipelineVarUtil.fillOldVar(buildVariable.map { it.key to Pair(it.value, BuildFormPropertyType.STRING) }.toMap())
 
         buildVariable.putAll(allVariable)
 
@@ -515,7 +516,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         if (result.buildResult.isNotEmpty()) {
             logger.info("[$buildId]| Add the build result(${result.buildResult}) to var")
             try {
-                buildVariableService.batchSetVariable(
+                buildVariableService.batchUpdateVariable(
                     projectId = buildInfo.projectId,
                     pipelineId = buildInfo.pipelineId,
                     buildId = buildId,
