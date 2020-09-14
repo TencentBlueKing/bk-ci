@@ -9,6 +9,7 @@ spring:
       port: __BKCI_CONSUL_PORT__
       discovery:
         tags: __BKCI_CONSUL_TAG__
+        instanceId: ${spring.application.name}-${server.port}-${spring.cloud.client.hostname}
 # redis config
   redis:
 #   # Redis sentinel 集群方式配置
