@@ -40,6 +40,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OP_JOBS_PROJECT_QUOTA"], description = "Job配额管理")
@@ -50,10 +51,10 @@ interface OpJobQuotaProjectResource {
 
     @ApiOperation("获取全部的JOB配额信息")
     @GET
-    @Path("/list/project/quota/{projectId}")
+    @Path("/list/project/quota")
     fun list(
         @ApiParam(value = "项目ID", required = false)
-        @PathParam("projectId")
+        @QueryParam(value = "projectId")
         projectId: String?
     ): Result<List<JobQuotaProject>>
 
