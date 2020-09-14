@@ -53,6 +53,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
@@ -173,6 +174,7 @@ class BkRepoService @Autowired constructor(
                     userId = lastModifyUser,
                     projectId = targetProjectId,
                     pipelineId = targetPipelineId,
+                    permission = AuthPermission.DOWNLOAD,
                     message = "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限"
                 )
 

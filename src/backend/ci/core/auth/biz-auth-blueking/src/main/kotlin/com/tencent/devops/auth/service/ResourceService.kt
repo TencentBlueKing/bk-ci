@@ -202,13 +202,13 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getRepositoryInfo(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
+    private fun getRepositoryInfo(hashId: List<Any>?): FetchInstanceInfoResponseDTO? {
         val repositoryInfos =
                 client.get(ServiceAuthRepositoryResource::class)
-                        .getInfos(ids as List<String>).data
+                        .getInfos(hashId as List<String>).data
         val result = FetchInstanceInfoResponseDTO()
         if (repositoryInfos == null || repositoryInfos.isEmpty()) {
-            logger.info("$ids 未匹配到代码库")
+            logger.info("$hashId 未匹配到代码库")
             result.code = 0
             result.message = "无数据"
             result.data = emptyList()
@@ -396,13 +396,13 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getNodeInfo(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
+    private fun getNodeInfo(hashIds: List<Any>?): FetchInstanceInfoResponseDTO? {
         val nodeInfos =
                 client.get(RemoteNodeResource::class)
-                        .getNodeInfos(ids as List<String>).data
+                        .getNodeInfos(hashIds as List<String>).data
         val result = FetchInstanceInfoResponseDTO()
         if (nodeInfos == null || nodeInfos.isEmpty()) {
-            logger.info("$ids 无节点")
+            logger.info("$hashIds 无节点")
             result.code = 0
             result.message = "无数据"
             result.data = emptyList()
@@ -422,13 +422,13 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getEnvInfo(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
+    private fun getEnvInfo(hashId: List<Any>?): FetchInstanceInfoResponseDTO? {
         val envInfos =
                 client.get(RemoteEnvResource::class)
-                        .getEnvInfos(ids as List<String>).data
+                        .getEnvInfos(hashId as List<String>).data
         val result = FetchInstanceInfoResponseDTO()
         if (envInfos == null || envInfos.isEmpty()) {
-            logger.info("$ids 下无环境")
+            logger.info("$hashId 下无环境")
             result.code = 0
             result.message = "无数据"
             result.data = emptyList()

@@ -87,7 +87,7 @@
         data () {
             return {
                 progressStatus: ['COMMITTING', 'CHECKING', 'CHECK_FAIL', 'TESTING', 'AUDITING'],
-                upgradeStatus: ['AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION'],
+                upgradeStatus: ['INIT', 'UNDERCARRIAGED', 'AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION'],
                 isOverDes: false,
                 hasShowAll: false,
                 offlineImageData: {
@@ -110,7 +110,7 @@
         computed: {
             disableAddVersion () {
                 const firstVersion = this.versionList[0] || {}
-                return this.upgradeStatus.indexOf(firstVersion.atomStatus) === -1
+                return this.upgradeStatus.indexOf(firstVersion.imageStatus) === -1
             }
         },
 

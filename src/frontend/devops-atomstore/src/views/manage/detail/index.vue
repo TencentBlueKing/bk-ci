@@ -1,5 +1,5 @@
 <template>
-    <transition name="fade">
+    <transition name="atom-fade">
         <router-view></router-view>
     </transition>
 </template>

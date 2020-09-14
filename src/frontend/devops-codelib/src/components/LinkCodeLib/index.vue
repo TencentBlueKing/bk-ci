@@ -6,7 +6,7 @@
         </bk-button>
         <ul class="devops-button-dropdown-menu" slot="dropdown-content">
             <li v-for="typeLabel in codelibTypes" :key="typeLabel" @click="createCodelib(typeLabel)">
-                {{ `${typeLabel}${$t('codelib.codelib')}` }}
+                {{ $t(`codelib.${typeLabel}`) + $t('codelib.codelib') }}
             </li>
         </ul>
     </bk-dropdown-menu>

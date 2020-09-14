@@ -36,6 +36,10 @@ dockerCli:
   volumeNpmRc: /root/.npmrc
   volumeCcache: /root/.ccache
   volumeGradleCache: /root/.gradle/caches
+  volumeGolangCache: /root/go/pkg/mod
+  volumeSbtCache: /root/.ivy2
+  volumeSbt2Cache: /root/.cache
+  volumeYarnCache: /usr/local/share/.cache/
   hostPathLinkDir: /tmp/bkci
   hostPathHosts: /etc/hosts
 
@@ -53,6 +57,10 @@ dockerCli:
   hostPathNpmRc: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/.npmrc
   hostPathCcache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/ccache/
   hostPathGradleCache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/gradle_caches
+  hostPathGolangCache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/go_cache/
+  hostPathSbtCache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/.ivy2/
+  hostPathSbt2Cache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/sbt_cache/
+  hostPathYarnCache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/yarn_cache/
   # 需要共享的项目
   shareProjectCodeWhiteList:
   # docker.jar 存储路径
