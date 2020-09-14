@@ -111,9 +111,9 @@ interface OpJobQuotaProjectResource {
     @POST
     @Path("/project/{projectId}/vm/{vmType}")
     fun restore(
-        @ApiParam(value = "项目ID", required = false)
+        @ApiParam(value = "项目ID", required = true)
         @PathParam("projectId")
-        projectId: String?,
+        projectId: String,
         @ApiParam(value = "构建机类型", required = true)
         @PathParam("vmType")
         vmType: JobQuotaVmType

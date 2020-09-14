@@ -510,20 +510,30 @@ class JobQuotaBusinessService @Autowired constructor(
             return
         }
         if (projectId == null && vmType != JobQuotaVmType.ALL) { // restore all project with vmType
-            val projectList = runningJobsDao.getProject(dslContext)?.map { it.value1() }
-            if (null != projectList && projectList.isNotEmpty()) {
-                projectList.forEach { project ->
-                    redisOperation.set(getProjectVmTypeRunningTimeKey(project, vmType), "0")
-                    redisOperation.set(getProjectRunningTimeKey(project), "0")
+            val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
+            if (null != projectSet && projectSet.isNotEmpty()) {
+                projectSet.forEach { project ->
+                    restoreWithVmType(project, vmType)
                 }
             }
             return
         }
         if (projectId != null && vmType != JobQuotaVmType.ALL) { // restore project with vmType
-            redisOperation.set(getProjectVmTypeRunningTimeKey(projectId, vmType), "0")
-            redisOperation.set(getProjectRunningTimeKey(projectId), "0")
+            restoreWithVmType(projectId, vmType)
             return
         }
+    }
+
+    private fun restoreWithVmType(project: String, vmType: JobQuotaVmType) {
+        val time = redisOperation.get(getProjectVmTypeRunningTimeKey(project, vmType)) ?: "0"
+        val totalTime = redisOperation.get(getProjectRunningTimeKey(project)) ?: "0"
+        val reduiceTime = (totalTime.toLong() - time.toLong())
+        redisOperation.set(getProjectRunningTimeKey(project), if (reduiceTime < 0) {
+            "0"
+        } else {
+            reduiceTime.toString()
+        })
+        redisOperation.set(getProjectVmTypeRunningTimeKey(project, vmType), "0")
     }
 
     /**

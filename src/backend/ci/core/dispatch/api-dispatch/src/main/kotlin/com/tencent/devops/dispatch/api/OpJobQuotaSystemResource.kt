@@ -89,4 +89,13 @@ interface OpJobQuotaSystemResource {
         @ApiParam(value = "Job配额信息", required = true)
         jobQuota: JobQuotaSystem
     ): Result<Boolean>
+
+    @ApiOperation("清零当月已运行时间")
+    @POST
+    @Path("/clear/vm/{vmType}")
+    fun restore(
+        @ApiParam(value = "构建机类型", required = true)
+        @PathParam("vmType")
+        vmType: JobQuotaVmType
+    ): Result<Boolean>
 }

@@ -60,7 +60,7 @@ class OpJobQuotaProjectResourceImpl @Autowired constructor(
         return Result(jobQuotaManagerService.updateProjectQuota(projectId, vmType, jobQuota))
     }
 
-    override fun restore(projectId: String?, vmType: JobQuotaVmType): Result<Boolean> {
+    override fun restore(projectId: String, vmType: JobQuotaVmType): Result<Boolean> {
         jobQuotaBusinessService.restoreProjectJobTime(projectId, vmType)
         return Result(true)
     }
