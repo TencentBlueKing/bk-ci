@@ -14,11 +14,15 @@ class ServiceAuthRepositoryResourceImpl @Autowired constructor(
     private val repositoryService: RepositoryService
 ) : ServiceAuthRepositoryResource {
 
-    override fun listByProjects(projectIds: Set<String>, page: Int?, pageSize: Int?): Result<Page<RepositoryInfo>> {
+    override fun listByProjects(projectId: String, page: Int?, pageSize: Int?): Result<Page<RepositoryInfo>> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20
         val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        val result = repositoryService.listByProject(projectIds, null, limit.offset, limit.limit)
+        val result = repositoryService.listByProject(setOf(projectId), null, limit.offset, limit.limit)
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
+    }
+
+    override fun getInfos(repositoryIds: List<String>): Result<List<RepositoryInfo>?> {
+        return Result(repositoryService.getInfoByHashIds(repositoryIds))
     }
 }

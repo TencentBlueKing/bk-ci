@@ -116,11 +116,6 @@ class ImportImageService @Autowired constructor(
     }
 
     fun checkDeployPermission(projectId: String, user: String): Boolean {
-        return bkAuthProjectApi.getProjectUsers(artifactoryAuthServiceCode, projectId).contains(user)
+        return bkAuthProjectApi.isProjectUser(user, artifactoryAuthServiceCode, projectId, null)
     }
 }
-
-// fun main(args: Array<String>) {
-//    println(SecurityUtil.decrypt("7Rq3q4+3wRSkYX78nrcWNw=="))
-//    println(SecurityUtil.encrypt("!@#098Bcs"))
-// }
