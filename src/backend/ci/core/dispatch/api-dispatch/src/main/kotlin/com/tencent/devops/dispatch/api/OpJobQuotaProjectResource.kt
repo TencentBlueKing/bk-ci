@@ -50,8 +50,12 @@ interface OpJobQuotaProjectResource {
 
     @ApiOperation("获取全部的JOB配额信息")
     @GET
-    @Path("/list")
-    fun list(): Result<List<JobQuotaProject>>
+    @Path("/list/project/quota/{projectId}")
+    fun list(
+        @ApiParam(value = "项目ID", required = false)
+        @PathParam("projectId")
+        projectId: String?
+    ): Result<List<JobQuotaProject>>
 
     @ApiOperation("获取项目的JOB配额信息")
     @GET

@@ -42,8 +42,8 @@ class JobQuotaManagerService @Autowired constructor(
     private val jobQuotaSystemDao: JobQuotaSystemDao,
     private val dslContext: DSLContext
 ) {
-    fun listProjectQuota(): List<JobQuotaProject> {
-        val record = jobQuotaProjectDao.list(dslContext)
+    fun listProjectQuota(projectId: String?): List<JobQuotaProject> {
+        val record = jobQuotaProjectDao.list(dslContext, projectId)
         val result = mutableListOf<JobQuotaProject>()
         record.filter { it != null && JobQuotaVmType.parse(it.vmType) != null }.forEach {
             result.add(JobQuotaProject(
