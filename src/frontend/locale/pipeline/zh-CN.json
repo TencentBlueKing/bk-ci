@@ -753,7 +753,7 @@
             "templateDownload": "模板下载",
             "otherChoice": "其他选项"
         },
-        "stageOption": "高级流程控制"
+        "stageOption": "流程控制选项"
     },
     "storeMap": {
         "string": "字符串",

@@ -121,10 +121,15 @@
                     }
                 } catch (err) {
                     this.disabled = false
-                    this.handleError(err, this.$permissionActionMap.execute, {
-                        id: this.pipelineId,
-                        name: this.pipelineId
-                    }, this.projectId)
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.execute,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.pipelineId,
+                            name: this.pipelineId
+                        }],
+                        projectId: this.projectId
+                    }])
                 }
             },
             /**
