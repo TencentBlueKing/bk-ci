@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
 @RestResource
-class UserProjectResourceImpl @Autowired constructor(
+class UserProjectTxResourceImpl @Autowired constructor(
     private val projectLocalService: ProjectLocalService
 ) : UserProjectResource {
     override fun list(userId: String, accessToken: String?): Result<List<ProjectVO>> {
@@ -111,6 +111,10 @@ class UserProjectResourceImpl @Autowired constructor(
         projectId: String?
     ): Result<Boolean> {
         projectLocalService.validate(validateType, name, projectId)
+        return Result(true)
+    }
+
+    override fun hasCreatePermission(userId: String): Result<Boolean> {
         return Result(true)
     }
 }
