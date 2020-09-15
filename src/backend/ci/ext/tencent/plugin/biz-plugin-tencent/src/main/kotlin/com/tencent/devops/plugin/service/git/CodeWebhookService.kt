@@ -302,7 +302,7 @@ class CodeWebhookService @Autowired constructor(
                             context = context
                         )
                     } else {
-                        logger.info("Update pipeline git check record, pipelineId:$pipelineId, buildId:$buildId, commitId:$commitId")
+                        logger.info("Update pipeline git check record, pipelineId:$pipelineId, buildId:$buildId, commitId:$commitId, record.context:${record.context}")
                         scmService.addGitCommitCheck(
                             event = event,
                             targetUrl = targetUrl,
