@@ -69,9 +69,9 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         val authUrl = "$authUrl/projects?access_token=$accessToken"
         val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.resourceCode)
         if(userDeptDetail != null) {
-            param["bgId"] = userDeptDetail.bgId
-            param["deptId"] = userDeptDetail.deptId
-            param["centerId"] = userDeptDetail.centerId
+            param["bg_id"] = userDeptDetail.bgId
+            param["dept_id"] = userDeptDetail.deptId
+            param["center_id"] = userDeptDetail.centerId
             logger.info("createProjectResources $param")
         }
         val mediaType = MediaType.parse("application/json; charset=utf-8")
