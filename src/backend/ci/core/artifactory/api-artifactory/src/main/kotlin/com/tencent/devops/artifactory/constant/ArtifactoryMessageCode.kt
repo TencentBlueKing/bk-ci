@@ -47,4 +47,5 @@ object ArtifactoryMessageCode {
     const val UPLOAD_FILE_IS_TOO_LARGE = "2102002" // 上传的文件不能超过{0}
     const val FILE_SIZE_EXCEEDS_LIMIT = "2102003" // 文件大小不能超过{0}
     const val INVALID_CUSTOM_ARTIFACTORY_PATH = "2102004" // 非法自定义仓库路径
+    const val SHORT_URL_EXPIRED = "2102005" // 短链接已过期
 }
