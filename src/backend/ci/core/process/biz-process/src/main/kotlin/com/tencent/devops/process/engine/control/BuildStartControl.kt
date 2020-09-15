@@ -194,7 +194,7 @@ class BuildStartControl @Autowired constructor(
             )
 
             watcher.start("batchSetVariable")
-            buildVariableService.batchSetVariable(projectId, pipelineId, buildId, map)
+            buildVariableService.batchUpdateVariable(projectId, pipelineId, buildId, map)
             watcher.stop()
         }
         // 空节点

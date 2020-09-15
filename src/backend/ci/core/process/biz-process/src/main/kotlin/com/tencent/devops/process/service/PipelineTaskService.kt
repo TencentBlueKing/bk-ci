@@ -209,7 +209,7 @@ class PipelineTaskService @Autowired constructor(
             val valueMap = mutableMapOf<String, Any>()
             valueMap[BK_CI_BUILD_FAIL_TASKS] = errorElements
             valueMap[BK_CI_BUILD_FAIL_TASKNAMES] = errorElementsName
-            pipelineVariableService.batchSetVariable(
+            pipelineVariableService.batchUpdateVariable(
                 buildId = buildId,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -236,7 +236,7 @@ class PipelineTaskService @Autowired constructor(
             val valueMap = mutableMapOf<String, Any>()
             valueMap[BK_CI_BUILD_FAIL_TASKS] = failTask
             valueMap[BK_CI_BUILD_FAIL_TASKNAMES] = failTaskNames
-            pipelineVariableService.batchSetVariable(
+            pipelineVariableService.batchUpdateVariable(
                 buildId = buildId,
                 projectId = projectId,
                 pipelineId = pipelineId,
