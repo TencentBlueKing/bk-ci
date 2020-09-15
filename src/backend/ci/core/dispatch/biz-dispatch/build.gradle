@@ -26,11 +26,12 @@
 
 dependencies {
     compile project(":core:plugin:codecc-plugin:common-codecc")
-    compile project(":core:log:api-log")
     compile project(":core:process:api-process")
+    compile project(":core:project:api-project")
     compile project(":core:dispatch:api-dispatch")
     compile project(":core:dispatch:model-dispatch")
     compile project(":core:notify:api-notify")
+    compile project(":core:monitoring:api-monitoring")
 //    compile project(":core:store:api-store-image")
     compile project(":core:common:common-service")
     compile project(":core:common:common-web")

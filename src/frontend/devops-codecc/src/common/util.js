@@ -402,8 +402,11 @@ export function toggleClass (elem, cls) {
 }
 
 // 工具状态值对应
-export function getToolStatus (num) {
-    const toolStatus = ['', '排队', '下载代码', '扫描分析', '提单', '分析完毕']
+// TODO 国际化
+export function getToolStatus (num, tool) {
+    const arr1 = ['等待分析', '构建', '进入等候队列', '分析中，analyze', '分析中，commit', '生成问题', '成功']
+    const arr2 = ['', '启动扫描', '拉取代码', '扫描分析', '生成问题', '成功']
+    const toolStatus = (tool === 'COVERITY' || tool === 'KLOCWORK') ? arr1 : arr2
     return toolStatus[num]
 }
 
@@ -415,13 +418,34 @@ export function getLogFlag (num) {
 
 // 将秒换成时分秒
 export function formatSeconds (s) {
+    if (!s || s < 0) {
+        return '--'
+    }
     let t = ''
-    s = Math.round(s / 1000)
-    const hour = Math.round(s / 3600)
-    const min = Math.round(s / 60) % 60
-    const sec = Math.round(s) % 60
+    s = Math.floor(s / 1000)
+    const hour = Math.floor(s / 3600)
+    const min = Math.floor(s / 60) % 60
+    const sec = Math.floor(s) % 60
     t = hour < 10 ? `0${hour}:` : `${hour}:`
     t += min < 10 ? `0${min}:` : `${min}:`
     t += sec < 10 ? `0${sec}` : `${sec}`
     return t
+}
+
+// 计算时长换成 1min 1h 1天等
+export function formatDiff (time) {
+    let duration
+    const leave = Date.parse(new Date()) - time * 1000
+    const diff = Math.floor(leave / (60 * 60 * 1000))
+    if (diff < 1) {
+        const used = Math.floor(leave / (60 * 1000))
+        duration = (used === 0 ? 1 : used) + 'min前'
+    } else if (diff < 24) {
+        const used = Math.floor(leave / (60 * 60 * 1000))
+        duration = (used === 0 ? 1 : used) + 'h前'
+    } else if (diff > 24) {
+        const used = Math.floor(leave / (24 * 60 * 60 * 1000))
+        duration = (used === 0 ? 1 : used) + '天前'
+    }
+    return time ? duration : '--'
 }

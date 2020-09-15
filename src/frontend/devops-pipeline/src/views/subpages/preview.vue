@@ -67,7 +67,7 @@
             }
         },
         computed: {
-            ...mapGetters('soda', {
+            ...mapGetters({
                 curParamList: 'pipelines/getCurAtomPrams'
             }),
             ...mapGetters('atom', [
@@ -141,6 +141,7 @@
             this.togglePropertyPanel({
                 isShow: false
             })
+            this.$store.commit('pipelines/updateCurAtomPrams', null)
             this.setPipeline()
             this.setPipelineEditing(false)
 
@@ -156,6 +157,7 @@
             async init () {
                 this.isLoading = true
                 try {
+                    this.requestPipeline(this.$route.params)
                     if (!this.curParamList) {
                         const res = await this.$store.dispatch('pipelines/requestStartupInfo', {
                             projectId: this.projectId,
@@ -176,25 +178,19 @@
                         this.versionParamList = this.curPipelineInfo.properties.filter(p => allVersionKeyList.includes(p.id))
                         this.paramValues = getParamsValuesMap(this.paramList)
                         this.versionParamValues = getParamsValuesMap(this.versionParamList)
-                        this.requestPipeline(this.$route.params)
                     } else {
                         throw new Error(this.$t('newlist.withoutManualAtom'))
                     }
                 } catch (err) {
-                    if (err.code === 403) { // 没有权限执行
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: this.$t('pipeline'),
-                                option: this.$t('exec')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_executor=pipeline:${this.pipelineId}`
-                        })
-                    } else {
-                        this.$showTips({
-                            message: err.message || err,
-                            theme: 'error'
-                        })
-                    }
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.execute,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.pipelineId,
+                            name: this.pipelineId
+                        }],
+                        projectId: this.projectId
+                    }])
                 } finally {
                     this.isLoading = false
                 }

@@ -107,6 +107,8 @@ import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.template.dao.PipelineTemplateDao
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -131,6 +133,7 @@ class TemplateService @Autowired constructor(
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineRemoteAuthService: PipelineRemoteAuthService,
     private val pipelineService: PipelineService,
     private val pipelineStageService: PipelineStageService,
     private val client: Client,
@@ -460,7 +463,8 @@ class TemplateService @Autowired constructor(
                     labels = labels,
                     waitQueueTimeMinute = DateTimeUtil.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
                     maxQueueSize = it.get(MAX_QUEUE_SIZE),
-                    hasPermission = hasPermission
+                    hasPermission = hasPermission,
+                    maxConRunningQueueSize = it.get(MAX_CON_RUNNING_QUEUE_SIZE)
                 )
             }
         }
@@ -471,8 +475,8 @@ class TemplateService @Autowired constructor(
         userId: String,
         templateType: TemplateType?,
         storeFlag: Boolean?,
-        page: Int?,
-        pageSize: Int?,
+        page: Int? = null,
+        pageSize: Int? = null,
         keywords: String? = null
     ): TemplateListModel {
         logger.info("[$projectId|$userId|$templateType|$storeFlag|$page|$pageSize|$keywords] List template")
@@ -486,32 +490,29 @@ class TemplateService @Autowired constructor(
             templateName = null,
             storeFlag = storeFlag
         )
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            val templates = templateDao.listTemplate(
-                dslContext = context,
-                projectId = projectId,
-                includePublicFlag = null,
-                templateType = templateType,
-                templateIdList = null,
-                storeFlag = storeFlag,
-                page = page,
-                pageSize = pageSize
-            )
-            logger.info("after get templates")
-            fillResult(
-                context = context,
-                templates = templates,
-                hasManagerPermission = hasManagerPermission,
-                userId = userId,
-                templateType = templateType,
-                storeFlag = storeFlag,
-                page = page,
-                pageSize = pageSize,
-                keywords = keywords,
-                result = result
-            )
-        }
+        val templates = templateDao.listTemplate(
+            dslContext = dslContext,
+            projectId = projectId,
+            includePublicFlag = null,
+            templateType = templateType,
+            templateIdList = null,
+            storeFlag = storeFlag,
+            page = page,
+            pageSize = pageSize
+        )
+        logger.info("after get templates")
+        fillResult(
+            context = dslContext,
+            templates = templates,
+            hasManagerPermission = hasManagerPermission,
+            userId = userId,
+            templateType = templateType,
+            storeFlag = storeFlag,
+            page = page,
+            pageSize = pageSize,
+            keywords = keywords,
+            result = result
+        )
         return TemplateListModel(projectId, hasManagerPermission, result, count)
     }
 
@@ -535,28 +536,15 @@ class TemplateService @Autowired constructor(
         keywords: String? = null,
         result: ArrayList<TemplateModel>
     ) {
-        val constrainedTemplateList = mutableListOf<String>()
-        val templateIdList = mutableSetOf<String>()
-        templates?.forEach { template ->
-            if ((template["templateType"] as String) == TemplateType.CONSTRAINT.name) {
-                constrainedTemplateList.add(template["srcTemplateId"] as String)
-            }
-            templateIdList.add(template["templateId"] as String)
+        if (templates == null || templates.isEmpty()) {
+            // 如果查询模板列表为空，则不再执行后续逻辑
+            return
         }
-        val srcTemplateRecords = templateDao.listTemplate(
-            dslContext = context,
-            projectId = null,
-            includePublicFlag = null,
-            templateType = null,
-            templateIdList = constrainedTemplateList,
-            storeFlag = null,
-            page = null,
-            pageSize = null
-        )
-        val srcTemplates = srcTemplateRecords?.associateBy { it["templateId"] as String }
+        val templateIdList = mutableSetOf<String>()
+        val srcTemplates = getConstrainedSrcTemplates(templates, templateIdList, context)
 
         val settings = pipelineSettingDao.getSettings(context, templateIdList).map { it.pipelineId to it }.toMap()
-        templates?.forEach { record ->
+        templates.forEach { record ->
             val templateId = record["templateId"] as String
             val type = record["templateType"] as String
 
@@ -618,6 +606,31 @@ class TemplateService @Autowired constructor(
                 )
             }
         }
+    }
+
+    private fun getConstrainedSrcTemplates(
+        templates: Result<out Record>?,
+        templateIdList: MutableSet<String>,
+        context: DSLContext
+    ): Map<String, Record>? {
+        val constrainedTemplateList = mutableListOf<String>()
+        templates?.forEach { template ->
+            if ((template["templateType"] as String) == TemplateType.CONSTRAINT.name) {
+                constrainedTemplateList.add(template["srcTemplateId"] as String)
+            }
+            templateIdList.add(template["templateId"] as String)
+        }
+        val srcTemplateRecords = if (constrainedTemplateList.isNotEmpty()) templateDao.listTemplate(
+            dslContext = context,
+            projectId = null,
+            includePublicFlag = null,
+            templateType = null,
+            templateIdList = constrainedTemplateList,
+            storeFlag = null,
+            page = null,
+            pageSize = null
+        ) else null
+        return srcTemplateRecords?.associateBy { it["templateId"] as String }
     }
 
     fun listTemplateByProjectIds(
@@ -759,79 +772,68 @@ class TemplateService @Autowired constructor(
         projectId: String?,
         templateType: TemplateType?,
         templateIds: Collection<String>?,
-        page: Int?,
-        pageSize: Int?
+        page: Int? = null,
+        pageSize: Int? = null
     ): OptionalTemplateList {
         logger.info("[$projectId|$templateType|$page|$pageSize] List template")
         val result = mutableMapOf<String, OptionalTemplate>()
         val templateCount = templateDao.countTemplate(dslContext, projectId, true, templateType, null, null)
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            val templates = templateDao.listTemplate(
-                dslContext = context,
-                projectId = projectId,
-                includePublicFlag = true,
-                templateType = templateType,
-                templateIdList = templateIds,
-                storeFlag = null,
+        val templates = templateDao.listTemplate(
+            dslContext = dslContext,
+            projectId = projectId,
+            includePublicFlag = true,
+            templateType = templateType,
+            templateIdList = templateIds,
+            storeFlag = null,
+            page = page,
+            pageSize = pageSize
+        )
+        if (templates == null || templates.isEmpty()) {
+            // 如果查询模板列表为空，则不再执行后续逻辑
+            return OptionalTemplateList(
+                count = templateCount,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                templates = result
             )
+        }
+        val templateIdList = mutableSetOf<String>()
+        val srcTemplates = getConstrainedSrcTemplates(templates, templateIdList, dslContext)
 
-            val constrainedTemplateList = mutableListOf<String>()
-            val templateIdList = mutableSetOf<String>()
-            templates?.forEach { tempTemplate ->
-                if ((tempTemplate["templateType"] as String) == TemplateType.CONSTRAINT.name) {
-                    constrainedTemplateList.add(tempTemplate["srcTemplateId"] as String)
-                }
-                templateIdList.add(tempTemplate["templateId"] as String)
+        val settings = pipelineSettingDao.getSettings(dslContext, templateIdList).map { it.pipelineId to it }.toMap()
+        templates.forEach { record ->
+            val templateId = record["templateId"] as String
+            val type = record["templateType"] as String
+
+            val templateRecord = if (type == TemplateType.CONSTRAINT.name) {
+                val srcTemplateId = record["srcTemplateId"] as String
+                srcTemplates?.get(srcTemplateId)
+            } else {
+                record
             }
-            val srcTemplateRecords = templateDao.listTemplate(
-                dslContext = context,
-                projectId = null,
-                includePublicFlag = null,
-                templateType = null,
-                templateIdList = constrainedTemplateList,
-                storeFlag = null,
-                page = null,
-                pageSize = null
-            )
-            val srcTemplates = srcTemplateRecords?.associateBy { it["templateId"] as String }
 
-            val settings = pipelineSettingDao.getSettings(context, templateIdList).map { it.pipelineId to it }.toMap()
-            templates?.forEach { record ->
-                val templateId = record["templateId"] as String
-                val type = record["templateType"] as String
+            if (templateRecord != null) {
+                val modelStr = templateRecord["template"] as String
+                val version = templateRecord["version"] as Long
 
-                val templateRecord = if (type == TemplateType.CONSTRAINT.name) {
-                    val srcTemplateId = record["srcTemplateId"] as String
-                    srcTemplates?.get(srcTemplateId)
-                } else {
-                    record
-                }
-
-                if (templateRecord != null) {
-                    val modelStr = templateRecord["template"] as String
-                    val version = templateRecord["version"] as Long
-
-                    val model: Model = objectMapper.readValue(modelStr)
-                    val setting = settings[templateId]
-                    val logoUrl = record["logoUrl"] as? String
-                    val categoryStr = record["category"] as? String
-                    val key = if (type == TemplateType.CONSTRAINT.name) record["srcTemplateId"] as String else templateId
-                    result[key] = OptionalTemplate(
-                        name = setting?.name ?: model.name,
-                        templateId = templateId,
-                        projectId = templateRecord["projectId"] as String,
-                        version = version,
-                        versionName = templateRecord["versionName"] as String,
-                        templateType = type,
-                        templateTypeDesc = TemplateType.getTemplateTypeDesc(type),
-                        logoUrl = logoUrl ?: "",
-                        category = if (!categoryStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(categoryStr, List::class.java) as List<String> else listOf(),
-                        stages = model.stages
-                    )
-                }
+                val model: Model = objectMapper.readValue(modelStr)
+                val setting = settings[templateId]
+                val logoUrl = record["logoUrl"] as? String
+                val categoryStr = record["category"] as? String
+                val key = if (type == TemplateType.CONSTRAINT.name) record["srcTemplateId"] as String else templateId
+                result[key] = OptionalTemplate(
+                    name = setting?.name ?: model.name,
+                    templateId = templateId,
+                    projectId = templateRecord["projectId"] as String,
+                    version = version,
+                    versionName = templateRecord["versionName"] as String,
+                    templateType = type,
+                    templateTypeDesc = TemplateType.getTemplateTypeDesc(type),
+                    logoUrl = logoUrl ?: "",
+                    category = if (!categoryStr.isNullOrBlank()) JsonUtil.getObjectMapper()
+                        .readValue(categoryStr, List::class.java) as List<String> else listOf(),
+                    stages = model.stages
+                )
             }
         }
 
@@ -1229,6 +1231,7 @@ class TemplateService @Autowired constructor(
                             pipelineName = pipelineName
                         )
                     }
+                    addRemoteAuth(instanceModel, projectId, pipelineId, userId)
                     successPipelines.add(instance.pipelineName)
                     successPipelinesId.add(pipelineId)
                 }
@@ -1411,7 +1414,9 @@ class TemplateService @Autowired constructor(
                 labels = labels,
                 waitQueueTimeMinute = waitQueueTimeMinute,
                 maxQueueSize = maxQueueSize,
-                hasPermission = hasPermission
+                hasPermission = hasPermission,
+                maxPipelineResNum = maxPipelineResNum,
+                maxConRunningQueueSize = maxConRunningQueueSize
             )
         }
     }
@@ -1910,6 +1915,20 @@ class TemplateService @Autowired constructor(
 
     fun listPipelineTemplate(pipelineIds: Collection<String>): Result<TTemplatePipelineRecord>? {
         return templatePipelineDao.listPipelineTemplate(dslContext, pipelineIds)
+    }
+
+    fun addRemoteAuth(model: Model, projectId: String, pipelineId: String, userId: String) {
+        val elementList = model.stages[0].containers[0].elements
+        var isAddRemoteAuth = false
+        elementList.map {
+            if (it is RemoteTriggerElement) {
+                isAddRemoteAuth = true
+            }
+        }
+        if (isAddRemoteAuth) {
+            logger.info("template Model has RemoteTriggerElement project[$projectId] pipeline[$pipelineId]")
+            pipelineRemoteAuthService.generateAuth(pipelineId, projectId, userId)
+        }
     }
 
     companion object {

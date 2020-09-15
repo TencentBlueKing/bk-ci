@@ -7,6 +7,7 @@ import com.tencent.devops.artifactory.pojo.FileResourceInfo
 import com.tencent.devops.artifactory.pojo.vo.PushResultVO
 import com.tencent.devops.artifactory.pojo.PushStatus
 import com.tencent.devops.artifactory.pojo.RemoteResourceInfo
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -51,7 +52,7 @@ class PushFileServiceExt @Autowired constructor(
         )
 
         if (!validatePermission) {
-            throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.FUSH_FILE_VALIDATE_FAIL, null))
+            throw PermissionForbiddenException(MessageCodeUtil.getCodeMessage(PushMessageCode.FUSH_FILE_VALIDATE_FAIL, null))
         }
         var downloadFiles = mutableListOf<File>()
         // 解析目标机器，需校验用户是否有权限操作目标机

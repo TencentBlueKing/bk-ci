@@ -190,6 +190,15 @@ class PipelineInfoDao {
         }
     }
 
+    fun listPipelineInfoByProject(dslContext: DSLContext, projectId: String, limit: Int, offset: Int): Result<TPipelineInfoRecord>? {
+        return with(T_PIPELINE_INFO) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(DELETE.eq(false)).limit(limit!!).offset(offset!!)
+                .fetch()
+        }
+    }
+
     fun listPipelineInfoByProject(dslContext: DSLContext, projectId: String): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
             dslContext.selectFrom(this)
@@ -344,6 +353,19 @@ class PipelineInfoDao {
             val query = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.`in`(pipelineIds))
+            if (filterDelete) query.and(DELETE.eq(false))
+            query.fetch()
+        }
+    }
+
+    fun listInfoByPipelineIds(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>,
+        filterDelete: Boolean = true
+    ): Result<TPipelineInfoRecord> {
+        return with(T_PIPELINE_INFO) {
+            val query = dslContext.selectFrom(this)
+                    .where(PIPELINE_ID.`in`(pipelineIds))
             if (filterDelete) query.and(DELETE.eq(false))
             query.fetch()
         }

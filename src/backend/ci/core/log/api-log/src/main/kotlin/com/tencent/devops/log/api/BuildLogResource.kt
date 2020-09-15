@@ -28,7 +28,7 @@ package com.tencent.devops.log.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.log.model.message.LogMessage
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -105,6 +105,9 @@ interface BuildLogResource {
         @ApiParam("分辨插件的tag，默认填对应插件id", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("插件内的分类的子tag，默认为空", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("job id或者container的34位id", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -126,6 +129,9 @@ interface BuildLogResource {
         @ApiParam("分辨插件的tag，默认填对应插件id", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("插件内的分类的子tag，默认为空", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("job id或者container的34位id", required = false)
         @QueryParam("jobId")
         jobId: String?,

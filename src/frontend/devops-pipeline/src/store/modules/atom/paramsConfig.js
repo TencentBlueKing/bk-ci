@@ -28,6 +28,7 @@ export const CODE_LIB = 'CODE_LIB'
 export const CONTAINER_TYPE = 'CONTAINER_TYPE'
 export const ARTIFACTORY = 'ARTIFACTORY'
 export const SUB_PIPELINE = 'SUB_PIPELINE'
+export const CUSTOM_FILE = 'CUSTOM_FILE'
 
 function paramType (typeConst) {
     return type => type === typeConst
@@ -37,6 +38,8 @@ export const DEFAULT_PARAM = {
     [STRING]: {
         id: 'string',
         defaultValue: 'value',
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         desc: '',
         type: STRING,
         typeDesc: 'string',
@@ -53,6 +56,8 @@ export const DEFAULT_PARAM = {
     [BOOLEAN]: {
         id: 'bool',
         defaultValue: true,
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         desc: '',
         type: BOOLEAN,
         typeDesc: 'bool',
@@ -61,6 +66,8 @@ export const DEFAULT_PARAM = {
     [ENUM]: {
         id: 'enum',
         defaultValue: '',
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         desc: '',
         type: ENUM,
         typeDesc: 'enum',
@@ -70,6 +77,8 @@ export const DEFAULT_PARAM = {
     [MULTIPLE]: {
         id: 'multiple',
         defaultValue: '',
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         desc: '',
         options: [],
         type: MULTIPLE,
@@ -79,6 +88,8 @@ export const DEFAULT_PARAM = {
     [SVN_TAG]: {
         id: 'svntag',
         defaultValue: '',
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         repoHashId: '',
         relativePath: '',
         desc: '',
@@ -90,6 +101,8 @@ export const DEFAULT_PARAM = {
     [GIT_REF]: {
         id: 'gitref',
         defaultValue: '',
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         repoHashId: '',
         desc: '',
         options: [],
@@ -100,6 +113,8 @@ export const DEFAULT_PARAM = {
     [CODE_LIB]: {
         id: 'codelib',
         defaultValue: '',
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         scmType: 'CODE_GIT',
         desc: '',
         options: [],
@@ -110,6 +125,8 @@ export const DEFAULT_PARAM = {
     [CONTAINER_TYPE]: {
         id: 'buildResource',
         defaultValue: '',
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         containerType: {
             os: 'LINUX',
             buildType: 'DOCKER'
@@ -123,6 +140,8 @@ export const DEFAULT_PARAM = {
     [ARTIFACTORY]: {
         id: 'artifactory',
         defaultValue: '',
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         desc: '',
         options: [],
         glob: '*',
@@ -134,10 +153,22 @@ export const DEFAULT_PARAM = {
     [SUB_PIPELINE]: {
         id: 'subPipeline',
         defaultValue: '',
+        defalutValueLabel: 'defaultValue',
+        defaultValueLabelTips: 'defaultValueDesc',
         desc: '',
         options: [],
         type: SUB_PIPELINE,
         typeDesc: 'subPipeline',
+        required: true
+    },
+    [CUSTOM_FILE]: {
+        id: 'file',
+        defaultValue: '',
+        defalutValueLabel: 'fileDefaultValueLabel',
+        defaultValueLabelTips: 'customFileLabelTips',
+        desc: '',
+        type: CUSTOM_FILE,
+        typeDesc: 'custom_file',
         required: true
     }
 }
@@ -146,6 +177,14 @@ export const PARAM_LIST = Object.keys(DEFAULT_PARAM).map(key => ({
     id: key,
     name: DEFAULT_PARAM[key].typeDesc
 }))
+
+export function getParamsDefaultValueLabel (type) {
+    return DEFAULT_PARAM[type] && DEFAULT_PARAM[type].defalutValueLabel ? DEFAULT_PARAM[type].defalutValueLabel : 'defaultValue'
+}
+
+export function getParamsDefaultValueLabelTips (type) {
+    return DEFAULT_PARAM[type] && DEFAULT_PARAM[type].defaultValueLabelTips ? DEFAULT_PARAM[type].defaultValueLabelTips : 'defaultValueDesc'
+}
 
 export const ParamComponentMap = {
     [STRING]: 'VuexInput',
@@ -158,7 +197,8 @@ export const ParamComponentMap = {
     [CODE_LIB]: 'Selector',
     [CONTAINER_TYPE]: 'Selector',
     [ARTIFACTORY]: 'Selector',
-    [SUB_PIPELINE]: 'Selector'
+    [SUB_PIPELINE]: 'Selector',
+    [CUSTOM_FILE]: 'VuexInput'
 }
 
 export const BOOLEAN_LIST = [
@@ -174,7 +214,7 @@ export const BOOLEAN_LIST = [
 
 export function getRepoOption (type = 'CODE_SVN') {
     return {
-        url: `/repository/api/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=500`,
+        url: `/repository/api/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`,
         paramId: 'repositoryHashId',
         paramName: 'aliasName',
         searchable: true,
@@ -222,3 +262,4 @@ export const isCodelibParam = paramType(CODE_LIB)
 export const isBuildResourceParam = paramType(CONTAINER_TYPE)
 export const isArtifactoryParam = paramType(ARTIFACTORY)
 export const isSubPipelineParam = paramType(SUB_PIPELINE)
+export const isFileParam = paramType(CUSTOM_FILE)

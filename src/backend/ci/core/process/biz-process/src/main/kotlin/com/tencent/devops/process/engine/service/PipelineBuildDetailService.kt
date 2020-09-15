@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -452,9 +453,7 @@ class PipelineBuildDetailService @Autowired constructor(
         buildId: String,
         buildStatus: BuildStatus,
         cancelUser: String? = null,
-        errorType: ErrorType? = null,
-        errorCode: Int? = null,
-        errorMsg: String? = null
+        errorInfos: List<ErrorInfo>? = null
     ) {
         logger.info("Build end $buildId")
 
@@ -483,7 +482,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
             }
 
-            logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|finalStatus=$finalStatus|cancelUser=$cancelUser|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
+            logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|finalStatus=$finalStatus|cancelUser=$cancelUser|errorInfo=$errorInfos")
             try {
                 val model: Model = JsonUtil.to(record.model, Model::class.java)
                 val allStageStatus = mutableListOf<BuildStageStatus>()
@@ -519,11 +518,6 @@ class PipelineBuildDetailService @Autowired constructor(
                             elapsed = stage.elapsed
                         )
                     )
-                }
-                if (errorType != null) {
-                    model.errorType = errorType.name
-                    model.errorCode = errorCode
-                    model.errorMsg = errorMsg
                 }
                 pipelineBuildDao.updateBuildStageStatus(dslContext, buildId, allStageStatus)
                 buildDetailDao.update(
@@ -813,6 +807,10 @@ class PipelineBuildDetailService @Autowired constructor(
                     if (container.id == containerId || container.containerId == containerId) {
                         update = true
                         container.startVMStatus = buildStatus.name
+                        // #2074 如果是失败的，则将Job整体状态设置为失败
+                        if (BuildStatus.isFailure(buildStatus)) {
+                            container.status = buildStatus.name
+                        }
                         return Traverse.BREAK
                     }
                 }

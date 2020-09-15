@@ -387,20 +387,17 @@
                     }
                 } catch (e) {
                     if (e.code === 403) {
-                        this.iframeUtil.showAskPermissionDialog({
-                            noPermissionList: [
-                                {
-                                    resource: this.$t('codelib.codelib'),
-                                    option: repositoryHashId ? this.$t('codelib.edit') : this.$t('codelib.create')
-                                }
-                            ],
-                            applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
+                        const actionId = this.$permissionActionMap[repositoryHashId ? 'edit' : 'create']
+                        this.$showAskPermissionDialog({
+                            noPermissionList: [{
+                                actionId,
+                                resourceId: this.$permissionResourceMap.code,
+                                instanceId: repositoryHashId ? [{
+                                    id: repositoryHashId,
+                                    name: codelib.aliasName
+                                }] : null,
                                 projectId
-                            }&service_code=code&${
-                                repositoryHashId
-                                    ? `role_manager=repertory`
-                                    : 'role_creator=repertory'
-                            }`
+                            }]
                         })
                     } else {
                         this.$bkMessage({
@@ -464,9 +461,9 @@
                 isShow && this.getTickets()
             },
             addCredential () {
-                const { projectId, credentialTypes } = this
+                const { projectId, codelibConfig } = this
                 window.open(
-                    `/console/ticket/${projectId}/createCredential/${credentialTypes}/true`,
+                    `/console/ticket/${projectId}/createCredential/${codelibConfig.addType}/true`,
                     '_blank'
                 )
             },

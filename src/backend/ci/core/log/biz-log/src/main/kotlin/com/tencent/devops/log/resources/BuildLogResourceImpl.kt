@@ -30,12 +30,8 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.BuildLogResource
-import com.tencent.devops.log.model.message.LogMessage
-import com.tencent.devops.log.utils.LogUtils
-import com.tencent.devops.log.utils.LogUtils.addLines
-import com.tencent.devops.log.utils.LogUtils.addRedLine
-import com.tencent.devops.log.utils.LogUtils.addYellowLine
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
@@ -44,14 +40,14 @@ import org.springframework.beans.factory.annotation.Autowired
  */
 @RestResource
 class BuildLogResourceImpl @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : BuildLogResource {
 
     override fun addLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        addLines(rabbitTemplate, buildId, listOf(logMessage))
+        buildLogPrinter.addLines(buildId, listOf(logMessage))
         return Result(true)
     }
 
@@ -59,11 +55,11 @@ class BuildLogResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        addRedLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addRedLine(
             buildId = buildId,
             message = logMessage.message,
             tag = logMessage.tag,
+            subTag = logMessage.subTag,
             jobId = logMessage.jobId,
             executeCount = logMessage.executeCount ?: 1
         )
@@ -74,11 +70,11 @@ class BuildLogResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        addYellowLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addYellowLine(
             buildId = buildId,
             message = logMessage.message,
             tag = logMessage.tag,
+            subTag = logMessage.subTag,
             jobId = logMessage.jobId,
             executeCount = logMessage.executeCount ?: 1
         )
@@ -89,34 +85,47 @@ class BuildLogResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        addLines(rabbitTemplate, buildId, logMessages)
+        buildLogPrinter.addLines(buildId, logMessages)
         return Result(true)
     }
 
-    override fun addLogStatus(buildId: String, tag: String?, jobId: String?, executeCount: Int?): Result<Boolean> {
+    override fun addLogStatus(
+        buildId: String,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        LogUtils.updateLogStatus(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.updateLogStatus(
             buildId = buildId,
             finished = false,
             tag = tag ?: "",
+            subTag = subTag,
             jobId = jobId ?: "",
             executeCount = executeCount
         )
         return Result(true)
     }
 
-    override fun updateLogStatus(buildId: String, finished: Boolean, tag: String?, jobId: String?, executeCount: Int?): Result<Boolean> {
+    override fun updateLogStatus(
+        buildId: String,
+        finished: Boolean,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        LogUtils.updateLogStatus(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.updateLogStatus(
             buildId = buildId,
             finished = finished,
             tag = tag ?: "",
+            subTag = subTag,
             jobId = jobId ?: "",
             executeCount = executeCount
         )

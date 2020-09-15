@@ -30,5 +30,6 @@ enum class CodeType {
     SVN,
     GIT,
     GITLAB,
-    GITHUB
+    GITHUB,
+    TGIT,
 }
