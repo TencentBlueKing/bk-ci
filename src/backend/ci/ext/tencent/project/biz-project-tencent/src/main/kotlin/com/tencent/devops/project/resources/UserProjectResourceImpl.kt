@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
 @RestResource
-class UserProjectTxResourceImpl @Autowired constructor(
+class UserProjectResourceImpl @Autowired constructor(
     private val projectLocalService: ProjectLocalService
 ) : UserProjectResource {
     override fun list(userId: String, accessToken: String?): Result<List<ProjectVO>> {
