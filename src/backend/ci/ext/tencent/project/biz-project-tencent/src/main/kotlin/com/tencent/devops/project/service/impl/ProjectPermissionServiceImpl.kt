@@ -68,7 +68,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         // 创建AUTH项目
         val authUrl = "$authUrl/projects?access_token=$accessToken"
         val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.resourceCode)
-        if(userDeptDetail != null) {
+        if (userDeptDetail != null) {
             param["bg_id"] = userDeptDetail.bgId
             param["dept_id"] = userDeptDetail.deptId
             param["center_id"] = userDeptDetail.centerId
