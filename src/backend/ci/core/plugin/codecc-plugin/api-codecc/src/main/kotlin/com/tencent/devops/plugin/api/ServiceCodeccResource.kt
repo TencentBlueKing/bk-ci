@@ -31,12 +31,16 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.plugin.codecc.pojo.BlueShieldResponse
 import com.tencent.devops.plugin.codecc.pojo.CodeccBuildInfo
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
+import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
+import com.tencent.devops.plugin.codecc.pojo.CodeccTaskStatusInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -115,5 +119,41 @@ interface ServiceCodeccResource {
         type: String,
         @QueryParam("规则集ID")
         checkerSetId: String
+    ): Result<Boolean>
+
+    @ApiOperation("获取codecc度量信息")
+    @GET
+    @Path("/task/pipeline/{pipelineId}/measurement")
+    fun getCodeccMeasureInfo(
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("任务ID", required = true)
+        @QueryParam("taskId")
+        taskId: String
+    ): Result<CodeccMeasureInfo?>
+
+    @ApiOperation("获取codecc任务状态信息")
+    @GET
+    @Path("/task/pipeline/{pipelineId}/runtime")
+    fun getCodeccTaskStatusInfo(
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String
+    ): Result<CodeccTaskStatusInfo?>
+
+    @ApiOperation("触发codecc扫描任务")
+    @POST
+    @Path("/task/api/service/trigger/pipeline/{pipelineId}")
+    fun startCodeccTask(
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("userId", required = true)
+        @QueryParam("userId")
+        userId: String
     ): Result<Boolean>
 }

@@ -106,6 +106,10 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return AtomStatusEnum.RELEASED.status.toByte()
     }
 
+    override fun validateAtomPassTestCondition(atomCode: String) {
+        // 开源版无需校验插件通过测试条件
+    }
+
     /**
      * 初始化插件版本进度
      */
