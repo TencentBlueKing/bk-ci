@@ -26,15 +26,14 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -43,7 +42,7 @@ import java.time.LocalDateTime
 class DependOnControl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -70,8 +69,7 @@ class DependOnControl @Autowired constructor(
                 BuildStatus.isFailure(dependOnJobStatus)) {
                 logger.warn("[${event.buildId}]|stage=${event.stageId}|container=${event.containerId}| failure due to the status of  depend on jobId:(${it.value}) is ($dependOnJobStatus)")
                 logBuilder.append("${it.value} $dependOnJobStatus\nTerminated")
-                LogUtils.addRedLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addRedLine(
                     buildId = container.buildId, message = logBuilder.toString(),
                     tag = VMUtils.genStartVMTaskId(container.seq.toString()), jobId = container.containerId,
                     executeCount = container.executeCount
@@ -91,8 +89,7 @@ class DependOnControl @Autowired constructor(
         } else {
             logBuilder.append("Waiting...\n")
         }
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = container.buildId, message = logBuilder.toString(),
             tag = VMUtils.genStartVMTaskId(container.seq.toString()), jobId = container.containerId,
             executeCount = container.executeCount
