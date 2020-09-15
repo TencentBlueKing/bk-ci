@@ -5,7 +5,7 @@
                 <div :class="{ 'form-field': true, 'bk-form-inline-item': true, 'is-danger': errors.has('@type') }">
                     <label :title="$t('atom')" class="bk-label">
                         {{ $t('atom') }}：
-                        <a v-if="atom.docsLink" :href="atom.docsLink" class="atom-link" target="_blank">
+                        <a v-if="atom && atom.docsLink" :href="atom.docsLink" class="atom-link" target="_blank">
                             {{ $t('editPage.atomHelpDoc') }}
                             <logo name="tiaozhuan" size="14" style="fill:#3c96ff;position:relative;top:2px;" />
                         </a>
