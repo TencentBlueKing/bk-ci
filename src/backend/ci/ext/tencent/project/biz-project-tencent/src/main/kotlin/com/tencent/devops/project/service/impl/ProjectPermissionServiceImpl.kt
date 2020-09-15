@@ -72,7 +72,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
             param["bg_id"] = userDeptDetail.bgId
             param["dept_id"] = userDeptDetail.deptId
             param["center_id"] = userDeptDetail.centerId
-            logger.info("createProjectResources $param")
+            logger.info("createProjectResources add org info $param")
         }
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val json = objectMapper.writeValueAsString(param)
