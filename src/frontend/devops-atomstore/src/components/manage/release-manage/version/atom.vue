@@ -72,7 +72,7 @@
                 upgradeStatus: ['INIT', 'UNDERCARRIAGED', 'AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION'],
                 offlineObj: {
                     show: false,
-                    title: '',
+                    title: this.$t('store.下架插件'),
                     quickClose: true,
                     width: 565,
                     loading: false,
