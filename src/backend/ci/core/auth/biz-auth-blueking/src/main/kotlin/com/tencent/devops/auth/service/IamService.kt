@@ -46,7 +46,7 @@ class IamService @Autowired constructor(
             }
 
             // 创建项目需特殊处理，无需关联任务资源
-            if (it.resourceId == AuthResourceType.PROJECT && it.actionId == AuthPermission.CREATE) {
+            if(it.resourceId == AuthResourceType.PROJECT && it.actionId == AuthPermission.CREATE) {
                 logger.info("projectCreate ${it.actionId} |${it.instanceId}| ${it.resourceId}")
                 actions.add(
                         Action(
@@ -62,6 +62,7 @@ class IamService @Autowired constructor(
                         )
                 )
             }
+
         }
         val iamEsbReq = IamPermissionUrlReq(
                 system = iamConfiguration.systemId,
