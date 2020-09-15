@@ -131,7 +131,7 @@ class JwtManager(
     }
 
     fun refreshToken() {
-        logger.info("Refresh token")
+        logger.info("Refresh service jwt token")
         generateToken()
     }
 

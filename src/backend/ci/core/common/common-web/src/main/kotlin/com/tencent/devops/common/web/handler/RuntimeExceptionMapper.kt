@@ -45,13 +45,13 @@ class RuntimeExceptionMapper : ExceptionMapper<RuntimeException> {
     override fun toResponse(exception: RuntimeException): Response {
         logger.error("Failed with runtime exception", exception)
         val status = Response.Status.INTERNAL_SERVER_ERROR
-        val message = if (SpringContextUtil.getBean(Profile::class.java).isDev()) {
+        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
         } else {
             "访问后台数据失败，已通知产品、开发，请稍后重试"
         }
         JmxExceptions.encounter(exception)
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(status.statusCode, message)).build()
+            .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()
     }
 }

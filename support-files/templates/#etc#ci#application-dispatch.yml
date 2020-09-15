@@ -16,6 +16,9 @@ dispatch:
   defaultImageUrl: __DOCKER_IMAGE_PREFIX__:__DOCKER_PORT__/paas/bkdevops/centos7.2:v1
   defaultImageName: centos7.2
   dockerhostPort: __BKCI_DOCKERHOST_API_PORT__
+  jobQuota:
+    systemAlertReceiver: 
+    enable: false
 
 codecc:
   path: __INSTALL_PATH__/public/codecc/tools
