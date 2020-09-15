@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.artifactory.api.service.ShortUrlResource
+import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -50,11 +52,9 @@ import org.springframework.stereotype.Component
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class SmsTaskAtom @Autowired constructor(
-    private val client: Client,
-    private val shortUrlApi: ShortUrlApi,
-    private val buildLogPrinter: BuildLogPrinter
-)
-    : IAtomTask<SendSmsNotifyElement> {
+    private val buildLogPrinter: BuildLogPrinter,
+    private val client: Client
+) : IAtomTask<SendSmsNotifyElement> {
 
     override fun getParamElement(task: PipelineBuildTask): SendSmsNotifyElement {
         return JsonUtil.mapTo(task.taskParams, SendSmsNotifyElement::class.java)
@@ -78,11 +78,8 @@ class SmsTaskAtom @Autowired constructor(
         var bodyStr = parseVariable(param.body, runVariables)
         // 启动短信的查看详情,短信必须是短连接
         if (sendDetailFlag) {
-            val shortUrl = shortUrlApi.getShortUrl("${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&" +
-                    "projectId=${runVariables[PROJECT_NAME]}&" +
-                    "pipelineId=${runVariables[PIPELINE_ID]}&" +
-                    "buildId=$buildId",
-                    24 * 3600 * 180)
+            val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=${runVariables[PROJECT_NAME]}&pipelineId=${runVariables[PIPELINE_ID]}&buildId=$buildId"
+            val shortUrl = client.get(ShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 180)).data!!
             bodyStr = "$bodyStr\n\n 查看详情：$shortUrl"
         }
         val message = SmsNotifyMessage().apply {

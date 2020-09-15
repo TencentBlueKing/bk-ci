@@ -33,6 +33,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoDownloadService
+import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.artifactory.service.pojo.FileShareInfo
 import com.tencent.devops.artifactory.service.pojo.JFrogAQLFileInfo
 import com.tencent.devops.artifactory.util.EmailUtil
@@ -69,7 +70,8 @@ class ArtifactoryDownloadService @Autowired constructor(
     private val jFrogService: JFrogService,
     private val jFrogApiService: JFrogApiService,
     private val jFrogAQLService: JFrogAQLService,
-    private val jFrogPropertiesApi: JFrogPropertiesApi
+    private val jFrogPropertiesApi: JFrogPropertiesApi,
+    private val shortUrlService: ShortUrlService
 ) : RepoDownloadService {
     override fun serviceGetExternalDownloadUrl(
         userId: String,
@@ -153,8 +155,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         }
 
         val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
-        val shortUrl = shortUrlApi.getShortUrl(url, 300)
-        return Url(shortUrl)
+        return Url(shortUrlService.createShortUrl(url, 300))
     }
 
     override fun shareUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, downloadUsers: String) {

@@ -31,6 +31,7 @@ import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoDownloadService
+import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.artifactory.service.pojo.FileShareInfo
 import com.tencent.devops.artifactory.util.EmailUtil
 import com.tencent.devops.artifactory.util.JFrogUtil
@@ -42,7 +43,6 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -65,8 +65,8 @@ class BkRepoDownloadService @Autowired constructor(
     private val bkRepoService: BkRepoService,
     private val client: Client,
     private val bkRepoClient: BkRepoClient,
-    private val shortUrlApi: ShortUrlApi,
-    private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig,
+    private val shortUrlService: ShortUrlService
 ) : RepoDownloadService {
     override fun serviceGetExternalDownloadUrl(
         userId: String,
@@ -130,7 +130,7 @@ class BkRepoDownloadService @Autowired constructor(
         val properties = fileInfo.metadata
         val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID] ?: throw RuntimeException("元数据(pipelineId)不存在")
         val buildId = properties[ARCHIVE_PROPS_BUILD_ID] ?: throw RuntimeException("元数据(buildId)不存在")
-        val shortUrl = shortUrlApi.getShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId, buildId), 300)
+        val shortUrl = shortUrlService.createShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId, buildId), 300)
         return Url(shortUrl)
     }
 
