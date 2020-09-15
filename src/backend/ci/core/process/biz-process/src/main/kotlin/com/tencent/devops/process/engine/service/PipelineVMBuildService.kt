@@ -470,7 +470,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             PIPELINE_TURBO_TASK_ID to turboTaskId
         )
 
-        PipelineVarUtil.fillOldVar(buildVariable.map { it.key to Pair(it.value, BuildFormPropertyType.STRING) }.toMap())
+        PipelineVarUtil.fillOldVar(buildVariable)
 
         buildVariable.putAll(allVariable)
 
