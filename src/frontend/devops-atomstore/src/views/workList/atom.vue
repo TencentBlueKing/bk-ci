@@ -203,19 +203,6 @@
                                 <p class="content-value">{{ curHandlerAtom.atomCode }}</p>
                             </div>
                         </div>
-                        <div class="bk-form-item">
-                            <label class="bk-label"> {{ $t('store.版本') }} </label>
-                            <div class="bk-form-content">
-                                <bk-select v-model="curHandlerAtom.version" searchable>
-                                    <bk-option v-for="(version, index) in curHandlerAtom.versionList"
-                                        :key="index"
-                                        :id="version.version"
-                                        :name="version.version"
-                                    >
-                                    </bk-option>
-                                </bk-select>
-                            </div>
-                        </div>
                         <div class="bk-form-item is-required">
                             <label class="bk-label"> {{ $t('store.下架原因') }} </label>
                             <div class="bk-form-content">
@@ -269,10 +256,8 @@
                 curHandlerAtom: {
                     name: '',
                     atomCode: '',
-                    version: '',
                     reason: '',
-                    error: false,
-                    versionList: []
+                    error: false
                 },
                 createAtomForm: {
                     projectCode: '',
@@ -484,7 +469,6 @@
 
                 let message, theme
                 const params = {
-                    version: this.curHandlerAtom.version,
                     reason: this.curHandlerAtom.reason
                 }
 
@@ -566,22 +550,8 @@
                 this.offlinesideConfig.show = true
                 this.curHandlerAtom.name = form.name
                 this.curHandlerAtom.atomCode = form.atomCode
-                this.curHandlerAtom.version = ''
-                this.curHandlerAtom.versionList = []
                 this.curHandlerAtom.reason = ''
                 this.curHandlerAtom.error = false
-                this.offlinesideConfig.isLoading = true
-
-                this.$store.dispatch('store/requestVersionList', {
-                    atomCode: form.atomCode
-                }).then((res) => {
-                    const records = res.records || []
-                    this.curHandlerAtom.versionList = records.filter((record) => (record.atomStatus === 'RELEASED'))
-                }).catch((err) => {
-                    this.$bkMessage({ message: err.message || err, theme: 'error' })
-                }).finally(() => {
-                    this.offlinesideConfig.isLoading = false
-                })
             },
 
             installAHandle (code) {

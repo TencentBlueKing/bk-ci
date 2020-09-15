@@ -64,7 +64,7 @@
     "适用Job类型：": "Environment:",
     "适用Job类型": "Environment",
     "请选择成员": "Please select members",
-    "若列表中找不到用户，请先将其添加为插件所属调试项目的成员": "If a user is not found in the list, please add it as a member of the debugging project to which the plugin belongs.",
+    "若列表中找不到用户，请先将其添加为调试项目的成员": "If you cannot find the user in the list, please add it as a member of the debugging project",
     "工蜂OAUTH": "工蜂OAUTH",
     "未设置可见对象时，仅插件成员可以安装到名下项目中使用。设置可见对象后，对应用户可以在Store中查看并安装使用。": "When the visiblity is not set, only plugin members can install plugins into their projects to use. Once such access is set, permitted members can view plugins in the Store and install them for use. ",
     "确定删除选中的可见对象？": "Delete the selected member?",
