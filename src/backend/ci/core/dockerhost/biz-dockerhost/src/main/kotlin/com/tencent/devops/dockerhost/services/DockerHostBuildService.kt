@@ -650,7 +650,7 @@ class DockerHostBuildService(
             val statistics = getContainerStats(container.id)
             if (statistics != null) {
                 val cpuUsage = statistics.cpuStats.systemCpuUsage
-                if (cpuUsage != null && cpuUsage > 80) {
+                if (cpuUsage != null && cpuUsage > 20) {
                     resetContainer(container.id)
                 }
             }
@@ -659,7 +659,7 @@ class DockerHostBuildService(
 
     fun getContainerStats(containerId: String): Statistics? {
         val asyncResultCallback = InvocationBuilder.AsyncResultCallback<Statistics>()
-        httpDockerCli.statsCmd(containerId).exec(asyncResultCallback)
+        httpDockerCli.statsCmd(containerId).withNoStream(true).exec(asyncResultCallback)
         return try {
             val stats = asyncResultCallback.awaitResult()
             asyncResultCallback.close()
