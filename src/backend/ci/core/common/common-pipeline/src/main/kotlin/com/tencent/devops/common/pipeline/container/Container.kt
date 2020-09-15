@@ -51,7 +51,7 @@ interface Container {
     var containerId: String? // container 唯一ID
     var startVMStatus: String?
     var executeCount: Int?
-    val jobId: String?  // 用户自定义id
+    val jobId: String? // 用户自定义id
 
     /**
      * 只存储Container相关的配置，elements不会存储。

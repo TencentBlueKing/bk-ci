@@ -29,7 +29,6 @@ package com.tencent.devops.common.pipeline.option
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
-import com.tencent.devops.common.pipeline.pojo.DependOnConfig
 
 /**
  * Job流程控制
