@@ -138,6 +138,9 @@ class ProjectLocalService @Autowired constructor(
                 watch.start("saveLogo")
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
                 watch.stop()
+                watch.start("tof get")
+                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
+                watch.stop()
                 watch.start("create auth")
                 val projectId = projectPermissionService.createResources(
                     userId = userId,
@@ -145,13 +148,10 @@ class ProjectLocalService @Autowired constructor(
                     resourceRegisterInfo = ResourceRegisterInfo(
                         projectCreateInfo.englishName,
                         projectCreateInfo.projectName
-                    )
+                    ),
+                    userDeptDetail = userDeptDetail
                 )
                 watch.stop()
-                watch.start("tof get")
-                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
-                watch.stop()
-
                 watch.start("create bkrepo")
                 val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
                 logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
@@ -1083,6 +1083,7 @@ class ProjectLocalService @Autowired constructor(
         englishName: String,
         projectUpdateInfo: ProjectUpdateInfo
     ): Boolean {
+        logger.info("synAuthProject by update, $projectUpdateInfo")
         val projectInfo = bkAuthProjectApi.getProjectInfo(bsPipelineAuthServiceCode, englishName)
         if (projectInfo == null) {
             projectPermissionService.createResources(
@@ -1091,8 +1092,8 @@ class ProjectLocalService @Autowired constructor(
                 resourceRegisterInfo = ResourceRegisterInfo(
                     projectUpdateInfo.englishName,
                     projectUpdateInfo.projectName
-                )
-
+                ),
+                userDeptDetail = null
             )
         }
         return true
