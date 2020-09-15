@@ -60,6 +60,9 @@ const atomFieldMixin = {
         hidden: {
             type: Boolean,
             default: false
+        },
+        clickUnfold: {
+            type: Boolean
         }
     },
     data () {

@@ -744,6 +744,7 @@
         "stageOption": "Advance"
     },
     "storeMap": {
+        "textarea": "Textarea",
         "string": "String",
         "bool": "Boolean",
         "enum": "Radio",

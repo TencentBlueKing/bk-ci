@@ -7,14 +7,14 @@
                 :error-msg="errors.first('devops' + param.name)"
                 :label="param.id">
                 <section class="component-row">
-                    <component :is="param.component" v-validate="{ required: param.required }" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;"></component>
+                    <component :is="param.component" v-validate="{ required: param.required }" :click-unfold="true" :handle-change="handleParamUpdate" v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })" :disabled="disabled" style="width: 100%;"></component>
                     <span class="meta-data" v-show="showMetadata(param.type, param.value)">{{ $t('metaData') }}
                         <aside class="metadata-box">
                             <metadata-list :is-left-render="(index % 2) === 1" :path="param.type === 'ARTIFACTORY' ? param.value : ''"></metadata-list>
                         </aside>
                     </span>
                 </section>
-                <span v-if="!errors.has('devops' + param.name)" class="preview-params-desc" :title="param.desc">{{ param.desc }}</span>
+                <span v-if="!errors.has('devops' + param.name)" :class="['preview-params-desc', param.type === 'TEXTEAREA' ? 'params-desc-styles' : '']" :title="param.desc">{{ param.desc }}</span>
             </form-field>
         </form>
         <iframe v-show="false" name="previewHiddenIframe"></iframe>
@@ -23,11 +23,12 @@
 
 <script>
     import VuexInput from '@/components/atomFormField/VuexInput'
+    import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import Selector from '@/components/atomFormField/Selector'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import metadataList from '@/components/common/metadata-list'
-    import { BOOLEAN_LIST, isMultipleParam, isEnumParam, isSvnParam, isGitParam, isCodelibParam, ParamComponentMap, STRING, BOOLEAN, MULTIPLE, ENUM, SVN_TAG, GIT_REF, CODE_LIB, CONTAINER_TYPE, ARTIFACTORY, SUB_PIPELINE } from '@/store/modules/atom/paramsConfig'
+    import { BOOLEAN_LIST, isMultipleParam, isEnumParam, isSvnParam, isGitParam, isCodelibParam, ParamComponentMap, STRING, BOOLEAN, MULTIPLE, ENUM, SVN_TAG, GIT_REF, CODE_LIB, CONTAINER_TYPE, ARTIFACTORY, SUB_PIPELINE, TEXTAREA } from '@/store/modules/atom/paramsConfig'
 
     export default {
 
@@ -35,6 +36,7 @@
             Selector,
             EnumInput,
             VuexInput,
+            VuexTextarea,
             FormField,
             metadataList
         },
@@ -60,7 +62,7 @@
             paramList () {
                 return this.params.map(param => {
                     let restParam = {}
-                    if (param.type !== STRING) {
+                    if (param.type !== STRING || param.type !== TEXTAREA) {
                         restParam = {
                             ...restParam,
                             displayKey: 'value',
@@ -100,7 +102,6 @@
                 })
             }
         },
-
         methods: {
             getParamOpt (param) {
                 switch (true) {
@@ -171,10 +172,13 @@
             }
         }
     }
-     .preview-params-desc {
+    .preview-params-desc {
         color: #999;
         width: 100%;
         font-size: 12px;
         @include ellipsis();
+    }
+    .params-desc-styles {
+        margin-top: 32px;
     }
 </style>
