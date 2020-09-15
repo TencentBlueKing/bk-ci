@@ -126,6 +126,9 @@ const actions: ActionTree<RootState, any> = {
     },
     getPermRedirectUrl (_, payload) {
         return Request.post(`${AUTH_API_URL_PREFIX}/user/auth/permissionUrl`, payload)
+    },
+    hasCreateProjectPermission () {
+        return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/hasCreatePermission`)
     }
 }
 
