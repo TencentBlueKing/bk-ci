@@ -63,8 +63,7 @@ class PluginGitCheckDao {
         buildNumber: Int,
         repositoryConfig: RepositoryConfig,
         commitId: String,
-        context: String,
-        block: Boolean
+        context: String
     ) {
         val now = LocalDateTime.now()
         with(TPluginGitCheck.T_PLUGIN_GIT_CHECK) {
@@ -77,8 +76,7 @@ class PluginGitCheckDao {
                 COMMIT_ID,
                 CREATE_TIME,
                 UPDATE_TIME,
-                CONTEXT,
-                BLOCK
+                CONTEXT
             ).values(
                 pipelineId,
                 buildNumber,
@@ -87,16 +85,14 @@ class PluginGitCheckDao {
                 commitId,
                 now,
                 now,
-                context,
-                block
+                context
             ).execute()
         }
     }
 
-    fun update(dslContext: DSLContext, id: Long, block: Boolean) {
+    fun update(dslContext: DSLContext, id: Long) {
         with(TPluginGitCheck.T_PLUGIN_GIT_CHECK) {
             dslContext.update(this)
-                .set(BLOCK, block)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(id))
                 .execute()

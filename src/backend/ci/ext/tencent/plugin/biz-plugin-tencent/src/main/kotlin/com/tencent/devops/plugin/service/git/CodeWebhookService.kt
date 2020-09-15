@@ -249,7 +249,7 @@ class CodeWebhookService @Autowired constructor(
             val pipelineName = buildInfo.pipelineName
             val buildNum = variables[PIPELINE_BUILD_NUM]
             val webhookEventType = variables[PIPELINE_WEBHOOK_EVENT_TYPE]
-            val context = "$pipelineName#$webhookEventType"
+            val context = "$pipelineName@$webhookEventType"
 
             if (buildNum == null) {
                 logger.warn("Build($buildId) number is null")
@@ -286,7 +286,7 @@ class CodeWebhookService @Autowired constructor(
                     )
 
                     if (record == null) {
-                        logger.info("Create pipeline git check record, pipelineId:$pipelineId, build:$buildId, commitId:$commitId")
+                        logger.info("Create pipeline git check record, pipelineId:$pipelineId, buildId:$buildId, commitId:$commitId")
                         scmService.addGitCommitCheck(
                             event = event,
                             targetUrl = targetUrl,
@@ -299,11 +299,10 @@ class CodeWebhookService @Autowired constructor(
                             buildNumber = buildNum.toInt(),
                             repositoryConfig = repositoryConfig,
                             commitId = commitId,
-                            context = context,
-                            block = event.block
+                            context = context
                         )
                     } else {
-                        logger.info("Update pipeline git check record, pipelineId:$pipelineId, , build:$buildId, commitId:$commitId")
+                        logger.info("Update pipeline git check record, pipelineId:$pipelineId, buildId:$buildId, commitId:$commitId")
                         scmService.addGitCommitCheck(
                             event = event,
                             targetUrl = targetUrl,
@@ -312,8 +311,7 @@ class CodeWebhookService @Autowired constructor(
                         )
                         pluginGitCheckDao.update(
                             dslContext = dslContext,
-                            id = record.id,
-                            block = event.block
+                            id = record.id
                         )
                     }
                     return
