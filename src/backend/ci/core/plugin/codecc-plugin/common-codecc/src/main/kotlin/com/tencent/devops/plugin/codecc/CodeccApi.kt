@@ -38,6 +38,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
+import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
+import com.tencent.devops.plugin.codecc.pojo.CodeccTaskStatusInfo
 import com.tencent.devops.plugin.codecc.pojo.coverity.CodeccReport
 import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityResult
 import okhttp3.MediaType
@@ -45,6 +47,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
+import javax.ws.rs.HttpMethod
 
 open class CodeccApi constructor(
     private val codeccApiUrl: String,
@@ -62,6 +65,7 @@ open class CodeccApi constructor(
         private val logger = LoggerFactory.getLogger(CodeccApi::class.java)
         private const val USER_NAME_HEADER = "X-DEVOPS-UID"
         private const val DEVOPS_PROJECT_ID = "X-DEVOPS-PROJECT-ID"
+        private const val DEVOPS_TASK_ID = "X-DEVOPS-TASK-ID"
         private const val CONTENT_TYPE = "Content-Type"
         private const val CONTENT_TYPE_JSON = "application/json"
     }
@@ -351,6 +355,36 @@ open class CodeccApi constructor(
             path = "/ms/defect/api/service/checkerSet/$checkerSetId/relationships",
             headers = headers,
             method = "POST"
+        )
+        return objectMapper.readValue(result)
+    }
+
+    fun getCodeccMeasureInfo(pipelineId: String, taskId: String): Result<CodeccMeasureInfo?> {
+        val result = taskExecution(
+            body = mapOf(),
+            headers = mapOf(DEVOPS_TASK_ID to taskId),
+            path = "/ms/task/api/service/task/pipeline/$pipelineId/measurement",
+            method = HttpMethod.GET
+        )
+        return objectMapper.readValue(result)
+    }
+
+    fun getCodeccTaskStatusInfo(pipelineId: String, projectId: String): Result<CodeccTaskStatusInfo?> {
+        val result = taskExecution(
+            body = mapOf(),
+            headers = mapOf(DEVOPS_PROJECT_ID to projectId),
+            path = "/ms/task/api/service/task/pipeline/$pipelineId/runtime",
+            method = HttpMethod.GET
+        )
+        return objectMapper.readValue(result)
+    }
+
+    fun startCodeccTask(userId: String, pipelineId: String): Result<Boolean> {
+        val result = taskExecution(
+            body = mapOf(),
+            path = "/ms/task/api/service/trigger/pipeline/$pipelineId",
+            headers = mapOf(USER_NAME_HEADER to userId),
+            method = HttpMethod.POST
         )
         return objectMapper.readValue(result)
     }
