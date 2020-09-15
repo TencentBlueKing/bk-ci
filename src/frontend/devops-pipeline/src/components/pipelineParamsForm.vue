@@ -14,7 +14,7 @@
                         </aside>
                     </span>
                 </section>
-                <span v-if="!errors.has('devops' + param.name)" :class="['preview-params-desc', param.type === 'TEXTEAREA' ? 'params-desc-styles' : '']" :title="param.desc">{{ param.desc }}</span>
+                <span v-if="!errors.has('devops' + param.name)" :class="['preview-params-desc', param.type === 'TEXTAREA' ? 'params-desc-styles' : '']" :title="param.desc">{{ param.desc }}</span>
             </form-field>
         </form>
         <iframe v-show="false" name="previewHiddenIframe"></iframe>
