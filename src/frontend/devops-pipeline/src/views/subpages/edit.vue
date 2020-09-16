@@ -16,7 +16,7 @@
             :desc="noPermissionTipsConfig.desc"
             :btns="noPermissionTipsConfig.btns">
         </empty-tips>
-        <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section" v-if="!isLoading && currentTab === 'pipeline'"></mini-map>
+        <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section" v-if="!isLoading && pipeline && currentTab === 'pipeline'"></mini-map>
     </section>
 </template>
 
@@ -38,7 +38,7 @@
         mixins: [pipelineOperateMixin],
         data () {
             return {
-                isLoading: true,
+                isLoading: false,
                 hasNoPermission: false,
                 leaving: false,
                 confirmMsg: this.$t('editPage.confirmMsg'),
@@ -125,7 +125,8 @@
             this.addLeaveListenr()
         },
         beforeDestroy () {
-            this.setPipeline()
+            this.setPipeline(null)
+            this.resetPipelineSetting()
             this.removeLeaveListenr()
             this.setPipelineEditing(false)
             this.setSaveStatus(false)
@@ -152,7 +153,8 @@
             ]),
             ...mapActions('pipelines', [
                 'requestPipelineSetting',
-                'updatePipelineSetting'
+                'updatePipelineSetting',
+                'resetPipelineSetting'
             ]),
             ...mapActions('soda', [
                 'requestQualityAtom',
@@ -163,10 +165,6 @@
                     this.isLoading = true
                     this.requestPipeline(this.$route.params)
                     this.requestPipelineSetting(this.$route.params)
-                } else {
-                    console.log(this.pipelineSetting)
-                    console.log(this.pipeline)
-                    this.isLoading = false
                 }
             },
             switchTab (tab) {

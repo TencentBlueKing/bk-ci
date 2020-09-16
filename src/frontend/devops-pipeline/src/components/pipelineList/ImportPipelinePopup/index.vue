@@ -19,6 +19,7 @@
 
 <script>
     import { mapActions } from 'vuex'
+    import { hashID } from '@/utils/util'
     export default {
         name: 'import-pipeline-popup',
         props: {
@@ -67,7 +68,7 @@
             },
 
             handleSuccess (result) {
-                const newPipelineName = `imported_${result.model.name}`
+                const newPipelineName = `${result.model.name}_${hashID().slice(0, 8)}`
                 this.setImportedPipelineJson(result)
                 this.setPipelineSetting({
                     ...result.setting,

@@ -7,28 +7,10 @@
                     </bread-crumb-item>
                 </bread-crumb>
             </div>
-            <template v-if="$route.name === 'pipelinesPreview'" slot="right">
-                <router-link :to="{ name: 'pipelinesEdit' }"><bk-button>{{ $t('edit') }}</bk-button></router-link>
-                <bk-button :disabled="btnDisabled" :icon="executeStatus ? 'loading' : ''" theme="primary" @click="startExcuete">
-                    {{ $t('exec') }}
-                </bk-button>
-            </template>
-            <template v-else slot="right">
+            <template slot="right">
                 <bk-button @click="savePipeline" :disabled="saveBtnDisabled" :icon="saveStatus ? 'loading' : ''" theme="primary">
                     {{ $t('save') }}
                 </bk-button>
-                <triggers
-                    class="bkdevops-header-trigger-btn"
-                    :status="pipelineStatus"
-                    :can-manual-startup="canManualStartup"
-                    :before-exec="!saveBtnDisabled ? save : undefined"
-                    @exec="toExecute">
-                    <section slot="exec-bar" slot-scope="triggerProps">
-                        <bk-button v-if="pipelineStatus !== 'running'" theme="primary" :disabled="btnDisabled || !canManualStartup || triggerProps.isDisable" :icon="executeStatus || triggerProps.isDisable ? 'loading' : ''" :title="canManualStartup ? '' : '不支持手动启动流水线'">
-                            {{ !saveBtnDisabled ? $t('subpage.saveAndExec') : $t('exec') }}
-                        </bk-button>
-                    </section>
-                </triggers>
             </template>
         </inner-header>
         <router-view class="biz-content"></router-view>
@@ -38,16 +20,14 @@
 <script>
     import BreadCrumb from '@/components/BreadCrumb'
     import BreadCrumbItem from '@/components/BreadCrumb/BreadCrumbItem'
-    import triggers from '@/components/pipeline/triggers'
     import innerHeader from '@/components/devops/inner_header'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
-    import { mapState } from 'vuex'
+    import { mapState, mapActions } from 'vuex'
     export default {
         name: 'import-pipeline-edit',
         components: {
             BreadCrumb,
             BreadCrumbItem,
-            triggers,
             innerHeader
         },
         mixins: [pipelineOperateMixin],
@@ -57,14 +37,8 @@
                 'importedPipelineJson',
                 'saveStatus'
             ]),
-            btnDisabled () {
-                return this.saveStatus || this.executeStatus
-            },
             saveBtnDisabled () {
                 return this.saveStatus || this.executeStatus || Object.keys(this.pipelineSetting).length === 0
-            },
-            canManualStartup () {
-                return this.curPipeline ? this.curPipeline.canManualStartup : false
             },
             breadCrumbs () {
                 return [{
@@ -87,12 +61,24 @@
                 })
             }
         },
+        beforeDestroy () {
+            this.setImportedPipelineJson(null)
+            this.resetPipelineSetting()
+            this.setPipeline(null)
+            this.setPipelineEditing(false)
+        },
         methods: {
+            ...mapActions({
+                setPipelineEditing: 'atom/setPipelineEditing',
+                setPipeline: 'atom/setPipeline',
+                setImportedPipelineJson: 'atom/setImportedPipelineJson',
+                resetPipelineSetting: 'pipelines/resetPipelineSetting'
+            }),
             async savePipeline () {
                 const { data } = await this.save()
                 const pipelineId = data.data
                 this.$router.push({
-                    name: 'pipelinesHistory',
+                    name: 'pipelinesEdit',
                     params: {
                         pipelineId
                     }
