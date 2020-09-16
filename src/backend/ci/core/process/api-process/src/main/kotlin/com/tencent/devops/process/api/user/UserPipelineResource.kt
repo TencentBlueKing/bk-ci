@@ -488,7 +488,6 @@ interface UserPipelineResource {
     @ApiOperation("导入流水线模板")
     @POST
     @Path("/projects/{projectId}/upload")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadPipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -497,9 +496,6 @@ interface UserPipelineResource {
         pipelineInfo: PipelineModelAndSetting,
         @ApiParam(value = "项目ID", required = true)
         @PathParam("projectId")
-        projectId: String,
-        @ApiParam(value = "流水线Id", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String?
+        projectId: String
     ): Result<String?>
 }

@@ -68,14 +68,14 @@ class PipelineInfoService @Autowired constructor(
 //                .header("Cache-Control", "no-cache").build()
     }
 
-    fun uploadPipeline(userId: String, projectId: String, pipelineId: String?, pipelineModelAndSetting: PipelineModelAndSetting): String? {
+    fun uploadPipeline(userId: String, projectId: String, pipelineModelAndSetting: PipelineModelAndSetting): String? {
         val permissionCheck = pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 permission = AuthPermission.CREATE
         )
         if (!permissionCheck) {
-            logger.warn("$userId|$projectId|$pipelineId uploadPipeline permission check fail")
+            logger.warn("$userId|$projectId uploadPipeline permission check fail")
             throw PermissionForbiddenException(MessageCodeUtil.getCodeMessage(USER_NEED_PIPELINE_X_PERMISSION, arrayOf(AuthPermission.CREATE.value)))
         }
         val model = pipelineModelAndSetting.model
