@@ -102,8 +102,7 @@ class ESAutoConfiguration : DisposableBean {
             }
 
             val truststore = KeyStore.getInstance("jks")
-            val inputStream = FileInputStream(File(keystoreFilePath!!))
-            truststore.load(inputStream, keystorePassword!!.toCharArray())
+            truststore.load(FileInputStream(File(keystoreFilePath!!)), keystorePassword!!.toCharArray())
             val sslBuilder = SSLContexts.custom().loadTrustMaterial(truststore, null)
             val sslContext = sslBuilder.build()
 
