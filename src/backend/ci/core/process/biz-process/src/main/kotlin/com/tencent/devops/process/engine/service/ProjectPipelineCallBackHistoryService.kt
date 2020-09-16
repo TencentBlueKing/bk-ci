@@ -78,22 +78,22 @@ class ProjectPipelineCallBackHistoryService @Autowired constructor(
         userId: String,
         projectId: String,
         id: Long
-    ): ProjectPipelineCallBackHistory? {
-        val record = projectPipelineCallbackHistoryDao.get(dslContext, id)
-        return record?.let {
-            ProjectPipelineCallBackHistory(
-                it.id,
-                it.projectId,
-                it.callbackUrl,
-                it.events,
-                it.status,
-                it.createdTime.timestamp(),
-                JsonUtil.to(it.requestHeader, object : TypeReference<List<RequestHeader>>() {}),
-                it.requestBody,
-                it.response,
-                it.errorMsg
-            )
-        }
+        ): ProjectPipelineCallBackHistory? {
+            val record = projectPipelineCallbackHistoryDao.get(dslContext, id) ?: return null
+            return with(record) {
+                ProjectPipelineCallBackHistory(
+                    id,
+                    projectId,
+                    callbackUrl,
+                    events,
+                    status,
+                    createdTime.timestamp(),
+                    JsonUtil.to(requestHeader, object : TypeReference<List<RequestHeader>>() {}),
+                    requestBody,
+                    response,
+                    errorMsg
+                )
+            }
     }
 
     fun list(
