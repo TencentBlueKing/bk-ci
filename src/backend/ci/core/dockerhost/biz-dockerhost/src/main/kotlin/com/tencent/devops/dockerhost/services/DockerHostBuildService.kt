@@ -650,9 +650,13 @@ class DockerHostBuildService(
         for (container in containerInfo) {
             val statistics = getContainerStats(container.id)
             if (statistics != null) {
-                logger.info("containerId: ${container.id} | checkContainerStats statistics: ${JsonUtil.toJson(statistics)}")
-                val cpuUsage = statistics.cpuStats.systemCpuUsage
-                if (cpuUsage != null && cpuUsage > 20) {
+                val systemCpuUsage = statistics.cpuStats.systemCpuUsage ?: 0
+                val cpuUsage = statistics.cpuStats.cpuUsage!!.totalUsage ?: 0
+                val preSystemCpuUsage = statistics.preCpuStats.systemCpuUsage ?: 0
+                val preCpuUsage = statistics.preCpuStats.cpuUsage!!.totalUsage ?: 0
+                val cpuUsagePer = (cpuUsage - preCpuUsage) / (systemCpuUsage - preSystemCpuUsage) * 100
+                logger.info("containerId: ${container.id} | checkContainerStats cpuUsagePer: $cpuUsagePer")
+                if (cpuUsagePer > 20) {
                     resetContainer(container.id)
                 }
             }
