@@ -400,10 +400,9 @@ class UserPipelineResourceImpl @Autowired constructor(
         return pipelineInfoService.exportPipeline(userId, projectId, pipelineId, response)
     }
 
-    override fun uploadPipeline(userId: String, pipelineInfo: PipelineModelAndSetting, projectId: String, pipelineId: String?): Result<String?> {
+    override fun uploadPipeline(userId: String, pipelineInfo: PipelineModelAndSetting, projectId: String): Result<String?> {
         return Result(pipelineInfoService.uploadPipeline(
                 userId = userId,
-                pipelineId = pipelineId,
                 projectId = projectId,
                 pipelineModelAndSetting = pipelineInfo
         ))
