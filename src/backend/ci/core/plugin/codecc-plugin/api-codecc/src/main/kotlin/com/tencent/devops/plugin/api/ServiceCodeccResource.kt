@@ -32,7 +32,6 @@ import com.tencent.devops.plugin.codecc.pojo.BlueShieldResponse
 import com.tencent.devops.plugin.codecc.pojo.CodeccBuildInfo
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
-import com.tencent.devops.plugin.codecc.pojo.CodeccTaskStatusInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -123,37 +122,37 @@ interface ServiceCodeccResource {
 
     @ApiOperation("获取codecc度量信息")
     @GET
-    @Path("/task/pipeline/{pipelineId}/measurement")
+    @Path("/task/repo/{repoProjectName}/measurement")
     fun getCodeccMeasureInfo(
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("任务ID", required = true)
-        @QueryParam("taskId")
-        taskId: String
+        @ApiParam("代码库名称", required = true)
+        @PathParam("repoProjectName")
+        repoProjectName: String,
+        @ApiParam("代码库提交ID", required = true)
+        @QueryParam("commitId")
+        commitId: String
     ): Result<CodeccMeasureInfo?>
 
     @ApiOperation("获取codecc任务状态信息")
     @GET
-    @Path("/task/pipeline/{pipelineId}/runtime")
+    @Path("/task/repo/{repoProjectName}/status")
     fun getCodeccTaskStatusInfo(
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String
-    ): Result<CodeccTaskStatusInfo?>
+        @ApiParam("代码库名称", required = true)
+        @PathParam("repoProjectName")
+        repoProjectName: String,
+        @ApiParam("代码库提交ID", required = true)
+        @QueryParam("commitId")
+        commitId: String
+    ): Result<Int>
 
     @ApiOperation("触发codecc扫描任务")
     @POST
-    @Path("/task/api/service/trigger/pipeline/{pipelineId}")
+    @Path("/openScan/trigger/repo/{repoProjectName}")
     fun startCodeccTask(
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("userId", required = true)
-        @QueryParam("userId")
-        userId: String
+        @ApiParam("代码库名称", required = true)
+        @PathParam("repoProjectName")
+        repoProjectName: String,
+        @ApiParam("代码库提交ID", required = true)
+        @QueryParam("commitId")
+        commitId: String
     ): Result<Boolean>
 }
