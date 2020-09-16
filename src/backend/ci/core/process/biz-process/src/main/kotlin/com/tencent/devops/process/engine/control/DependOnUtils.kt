@@ -52,11 +52,12 @@ object DependOnUtils {
                 return@container
             }
             if (jobIdSet.contains(jobId)) {
+                val jobName = getContainerName(stage = stage, container = c, jobId = jobId!!)
                 throw ErrorCodeException(
                     statusCode = Response.Status.CONFLICT.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_JOBID_EXIST,
-                    params = arrayOf(c.jobId!!),
-                    defaultMessage = "流水线jobId (${c.jobId})已存在"
+                    params = arrayOf(jobName, c.jobId!!),
+                    defaultMessage = "$jobName 的jobId(${c.jobId})已存在"
                 )
             }
             jobIdSet.add(jobId!!)
@@ -92,6 +93,7 @@ object DependOnUtils {
 
     /**
      * depnedOn jobId与containerId映射
+     * 前端通过jobId声明依赖关系,流水线真正运行是通过containerId
      */
     fun initDependOn(
         stage: Stage,
@@ -130,9 +132,10 @@ object DependOnUtils {
                 cycleCheckJobMap[c.jobId!!] = dependOnJobIds
             }
             val containerId2JobIds = mutableMapOf<String, String>()
-            dependOnJobIds.forEach {
-                val dependOnJob = allJobId2JobMap[it] ?: return@forEach
-                containerId2JobIds[dependOnJob.id!!] = it
+            // containerId与jobId做映射
+            dependOnJobIds.forEach { dependOnJobId ->
+                val dependOnJob = allJobId2JobMap[dependOnJobId] ?: return@forEach
+                containerId2JobIds[dependOnJob.id!!] = dependOnJobId
             }
             if (containerId2JobIds.isNotEmpty()) {
                 jobControlOption.dependOnContainerId2JobIds = containerId2JobIds
@@ -141,8 +144,14 @@ object DependOnUtils {
 
         // 校验是否循环依赖
         val visited = mutableMapOf<String, Int>()
-        cycleCheckJobMap.keys.forEach {
-            DSF(it, cycleCheckJobMap, visited)
+        cycleCheckJobMap.keys.forEach { jobId ->
+            DSF(
+                jobId = jobId,
+                dependOnMap = cycleCheckJobMap,
+                visited = visited,
+                stage = stage,
+                allJobId2JobMap = allJobId2JobMap
+            )
         }
     }
 
@@ -172,7 +181,13 @@ object DependOnUtils {
     /**
      * visited: key为jobId,value: 0-未访问,1-正在访问,2-已经访问
      */
-    private fun DSF(jobId: String, dependOnMap: Map<String, List<String>>, visited: MutableMap<String, Int>): Boolean {
+    private fun DSF(
+        jobId: String,
+        dependOnMap: Map<String, List<String>>,
+        visited: MutableMap<String, Int>,
+        stage: Stage,
+        allJobId2JobMap: Map<String, Container>
+    ): Boolean {
         if (visited[jobId] == 1) {
             return true
         }
@@ -181,15 +196,32 @@ object DependOnUtils {
         }
 
         visited[jobId] = 1
-        dependOnMap[jobId]?.forEach {
-            if (DSF(it, dependOnMap, visited)) {
+        dependOnMap[jobId]?.forEach { dependOnJobId ->
+            if (DSF(
+                    jobId = dependOnJobId,
+                    dependOnMap = dependOnMap,
+                    visited = visited,
+                    stage = stage,
+                    allJobId2JobMap = allJobId2JobMap
+                )
+            ) {
+                val jobName = getContainerName(stage = stage, container = allJobId2JobMap[jobId], jobId = jobId)
+                val dependJobName = getContainerName(stage = stage, container = allJobId2JobMap[dependOnJobId], jobId = dependOnJobId)
                 throw ErrorCodeException(
-                    defaultMessage = "($jobId)与($it)循环依赖",
+                    defaultMessage = "($jobName)与($dependJobName)的jobId循环依赖",
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_DEPENDON_CYCLE
                 )
             }
         }
         visited[jobId] = 2
         return false
+    }
+
+    private fun getContainerName(stage: Stage, container: Container?, jobId: String): String {
+        if (container == null) {
+            return jobId
+        }
+        val namePrefix = stage.name?.removePrefix("stage-")
+        return "$namePrefix-${container.id}"
     }
 }
