@@ -235,6 +235,11 @@ const actions = {
     resetPipelineSetting: ({ commit }, payload) => {
         commit(RESET_PIPELINE_SETTING_MUNTATION, payload)
     },
+    setPipelineSetting: ({ commit }, pipelineSetting) => {
+        commit(PIPELINE_SETTING_MUTATION, {
+            pipelineSetting
+        })
+    },
     requestPipelineSetting: async ({ commit }, { projectId, pipelineId }) => {
         try {
             const response = await ajax.get(`/${PROCESS_API_URL_PREFIX}/user/setting/get?pipelineId=${pipelineId}&projectId=${projectId}`)
@@ -254,7 +259,7 @@ const actions = {
     updatePipelineAuthority: ({ commit }, payload) => {
         commit(PIPELINE_AUTHORITY_MUTATION, payload)
     },
-    
+
     requestHasCreatePermission (state, { projectId }) {
         return ajax.get(`${prefix}${projectId}/hasCreatePermission`).then(response => {
             return response.data
@@ -451,7 +456,7 @@ const actions = {
     async fetchRoleList ({ commit, state, dispatch }, { projectId, pipelineId }) {
         try {
             const { data } = await ajax.get(`${backpre}/perm/service/pipeline/mgr_resource/permission/?project_id=${projectId}&resource_type_code=pipeline&resource_code=${pipelineId}`)
-            
+
             commit(PIPELINE_AUTHORITY_MUTATION, {
                 pipelineAuthority: {
                     role: data.role.map(item => {

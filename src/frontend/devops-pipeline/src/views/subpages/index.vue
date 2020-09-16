@@ -57,6 +57,7 @@
                             <li @click="toggleCollect">{{curPipeline.hasCollect ? $t('uncollect') : $t('collect')}}</li>
                         </ul>
                         <ul>
+                            <li @click="handleExportPipelineJson">{{ $t('newlist.exportPipelineJson') }}</li>
                             <li @click="copyPipeline">{{ $t('newlist.copyAs') }}</li>
                             <li @click="showTemplateDialog">{{ $t('newlist.saveAsTemp') }}</li>
                             <li @click="deletePipeline">{{ $t('delete') }}</li>
@@ -251,7 +252,8 @@
             ]),
             ...mapActions('atom', [
                 'requestPipelineExecDetailByBuildNum',
-                'togglePropertyPanel'
+                'togglePropertyPanel',
+                'exportPipelineJson'
             ]),
             handleSelected (pipelineId, cur) {
                 const { projectId, $route } = this
@@ -346,6 +348,30 @@
                         }
                     },
                     handleDialogCancel: this.resetDialog
+                }
+            },
+            async handleExportPipelineJson () {
+                const { projectId, pipelineId } = this
+                let message, theme
+                try {
+                    const res = await this.exportPipelineJson({
+                        projectId,
+                        pipelineId
+                    })
+                    console.log(res)
+                    message = this.$t('exportPipelineSuccess')
+                    theme = 'success'
+                } catch (e) {
+                    console.error(e)
+                    message = e.message
+                    theme = 'error'
+                } finally {
+                    if (message) {
+                        this.$showTips({
+                            message,
+                            theme
+                        })
+                    }
                 }
             },
             resetDialog () {

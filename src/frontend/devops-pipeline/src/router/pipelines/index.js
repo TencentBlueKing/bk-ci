@@ -46,6 +46,7 @@ const pipelinesEdit = () => import(/* webpackChunkName: "pipelinesEdit" */'../..
 const pipelinesPreview = () => import(/* webpackChunkName: "pipelinesPreview" */'../../views/subpages/preview.vue')
 // 插件前端task.json在线调试
 const atomDebug = () => import(/* webpackChunkName: "atomDebug" */'../../views/atomDebug.vue')
+const ImportPipelineEdit = () => import(/* webpackChunkName: "atomDebug" */'../../views/list/ImportPipelineEdit.vue')
 
 const routes = [
     {
@@ -135,6 +136,31 @@ const routes = [
                 path: 'atomDebug',
                 name: 'atomDebug',
                 component: atomDebug
+            },
+
+            {
+                path: 'import',
+                component: ImportPipelineEdit,
+                children: [
+                    {
+                        path: '',
+                        redirect: {
+                            name: 'pipelineImportEdit'
+                        }
+                    },
+                    {
+                        // 流水线编辑
+                        path: 'edit/:tab?',
+                        name: 'pipelineImportEdit',
+                        meta: {
+                            icon: 'pipeline',
+                            title: 'pipeline',
+                            header: 'pipeline',
+                            to: 'pipelinesList'
+                        },
+                        component: pipelinesEdit
+                    }
+                ]
             },
             {
                 path: ':pipelineId',

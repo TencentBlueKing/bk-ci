@@ -85,7 +85,8 @@
                 this.disabled = true
                 // debugger
                 if (this.beforeExec && typeof this.beforeExec === 'function') {
-                    if (!await this.beforeExec(true)) {
+                    const result = await this.beforeExec(true)
+                    if (result.code !== 0) {
                         this.disabled = false
                         return
                     }

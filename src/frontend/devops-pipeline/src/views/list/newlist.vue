@@ -18,7 +18,9 @@
                         @showSlide="showSlide"
                         @changeLayout="changeLayoutType"
                         @changeOrder="changeOrderType"
-                        @showCreate="toggleTemplatePopup">
+                        @showCreate="toggleTemplatePopup"
+                        @showImport="toggleImportPipelinePopup"
+                    >
                     </list-create-header>
 
                     <section class="pipeline-list-content">
@@ -46,6 +48,7 @@
         </infinite-scroll>
 
         <pipeline-template-popup :toggle-popup="toggleTemplatePopup" :is-show="templatePopupShow"></pipeline-template-popup>
+        <import-pipeline-popup :is-show="importPipelinePopupShow"></import-pipeline-popup>
 
         <pipeline-filter v-if="slideShow" :is-show="slideShow" @showSlide="showSlide" :is-disabled="isDisabled" :selected-filter="currentFilter" @filter="filterCommit" class="pipeline-filter"></pipeline-filter>
 
@@ -144,6 +147,7 @@
     import webSocketMessage from '@/utils/webSocketMessage'
     import { mapGetters, mapState } from 'vuex'
     import PipelineTemplatePopup from '@/components/pipelineList/PipelineTemplatePopup'
+    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import { bus } from '@/utils/bus'
     import taskCard from '@/components/pipelineList/taskCard'
     import taskTable from '@/components/pipelineList/taskTable'
@@ -165,7 +169,8 @@
             'list-empty': listEmpty,
             PipelineTemplatePopup,
             pipelineFilter,
-            InfiniteScroll
+            InfiniteScroll,
+            ImportPipelinePopup
         },
 
         data () {
@@ -174,6 +179,7 @@
             return {
                 hasTemplatePermission: true,
                 templatePopupShow: false,
+                importPipelinePopupShow: false,
                 responsiveConfig: {
                     wrapper: null,
                     width: 0,
@@ -341,6 +347,11 @@
                     this.templatePopupShow = templatePopupShow
                 }
             },
+
+            toggleImportPipelinePopup (importPipelinePopupShow) {
+                this.importPipelinePopupShow = importPipelinePopupShow
+            },
+
             toggleCreatePermission () {
                 this.setPermissionConfig(this.$t('pipeline'), this.$t('create'), '')
             },

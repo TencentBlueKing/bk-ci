@@ -159,9 +159,15 @@
                 'requestInterceptAtom'
             ]),
             init () {
-                this.isLoading = true
-                this.requestPipeline(this.$route.params)
-                this.requestPipelineSetting(this.$route.params)
+                if (this.pipelineId) {
+                    this.isLoading = true
+                    this.requestPipeline(this.$route.params)
+                    this.requestPipelineSetting(this.$route.params)
+                } else {
+                    console.log(this.pipelineSetting)
+                    console.log(this.pipeline)
+                    this.isLoading = false
+                }
             },
             switchTab (tab) {
                 this.$router.push({
@@ -204,10 +210,12 @@
                 })
             },
             requestInterceptAtom () {
-                this.$store.dispatch('soda/requestInterceptAtom', {
-                    projectId: this.projectId,
-                    pipelineId: this.pipelineId
-                })
+                if (this.pipelineId) {
+                    this.$store.dispatch('soda/requestInterceptAtom', {
+                        projectId: this.projectId,
+                        pipelineId: this.pipelineId
+                    })
+                }
             },
             requestMatchTemplateRules (templateId) {
                 this.$store.dispatch('soda/requestMatchTemplateRuleList', {

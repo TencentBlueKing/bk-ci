@@ -56,7 +56,8 @@ export default {
         defaultStageTags: [],
         showReviewDialog: false,
         reviewInfo: null,
-        showStageReviewPanel: false
+        showStageReviewPanel: false,
+        importedPipelineJson: null
     },
     mutations,
     actions,

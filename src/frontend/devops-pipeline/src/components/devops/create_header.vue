@@ -11,6 +11,7 @@
 
             <bk-dropdown-menu
                 v-if="buttonType === 'menu'"
+                :trigger="triggerType"
                 :align="localDropdownMenuConfig.align || 'center'"
                 @show="localDropdownMenuConfig.showHandler"
                 @hide="!localDropdownMenuConfig.hideHandler">
@@ -56,6 +57,10 @@
             buttonType: {
                 type: String,
                 default: 'button'
+            },
+            triggerType: {
+                type: String,
+                default: 'mouseover'
             },
             dropdownMenuConfig: {
                 type: Object,
