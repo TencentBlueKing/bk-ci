@@ -68,6 +68,7 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import org.springframework.beans.factory.annotation.Autowired
+import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.core.Response
 
 @RestResource
@@ -395,8 +396,8 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pipelineGroupService.favorPipeline(userId, projectId, pipelineId, favor))
     }
 
-    override fun exportPipeline(userId: String, projectId: String, pipelineId: String): Result<PipelineModelAndSetting?> {
-        return Result(pipelineInfoService.exportPipeline(userId, projectId, pipelineId))
+    override fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
+        return pipelineInfoService.exportPipeline(userId, projectId, pipelineId)
     }
 
     override fun uploadPipeline(userId: String, pipelineInfo: PipelineModelAndSetting, projectId: String, pipelineId: String?): Result<String?> {

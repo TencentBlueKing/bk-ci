@@ -49,6 +49,7 @@ import com.tencent.devops.process.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -59,7 +60,9 @@ import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
+import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @Api(tags = ["USER_PIPELINE"], description = "用户-流水线资源")
 @Path("/user/pipelines")
@@ -478,11 +481,12 @@ interface UserPipelineResource {
         @ApiParam(value = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String
-    ): Result<PipelineModelAndSetting?>
+    ): Response
 
     @ApiOperation("导入流水线模板")
     @POST
     @Path("/projects/{projectId}/upload")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadPipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
