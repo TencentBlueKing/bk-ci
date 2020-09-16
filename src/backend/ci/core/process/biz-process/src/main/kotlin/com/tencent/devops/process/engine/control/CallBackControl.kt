@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ProjectPipelineCallbackStatus
 import com.tencent.devops.common.pipeline.event.BuildEvent
 import com.tencent.devops.common.pipeline.event.CallBackData
 import com.tencent.devops.common.pipeline.event.CallBackEvent
@@ -44,11 +45,15 @@ import com.tencent.devops.common.pipeline.event.SimpleStage
 import com.tencent.devops.common.pipeline.event.SimpleTask
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.ProjectPipelineCallBackHistoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
+import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
+import com.tencent.devops.process.pojo.RequestHeader
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -62,7 +67,8 @@ import java.util.concurrent.Executors
 class CallBackControl @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val projectPipelineCallBackService: ProjectPipelineCallBackService
+    private val projectPipelineCallBackService: ProjectPipelineCallBackService,
+    private val projectPipelineCallBackHistoryService: ProjectPipelineCallBackHistoryService
 ) {
 
     fun pipelineCreateEvent(projectId: String, pipelineId: String) {
@@ -172,11 +178,51 @@ class CallBackControl @Autowired constructor(
         OkhttpUtils.doHttp(request).use { response ->
             if (response.code() != 200) {
                 logger.warn("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}| code=${response.code()}")
+                saveHistory(
+                    callBack,
+                    listOf(RequestHeader("X-DEVOPS-WEBHOOK-TOKEN", callBack.secretToken ?: "NONE")),
+                    requestBody,
+                    response,
+                    ProjectPipelineCallbackStatus.FAIL.name,
+                    response.message()
+                )
                 Thread.sleep(executeCount * executeCount * 1000L)
                 send(callBack, requestBody, executeCount + 1)
             } else {
                 logger.info("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}| code=${response.code()}")
+                saveHistory(
+                    callBack,
+                    listOf(RequestHeader("X-DEVOPS-WEBHOOK-TOKEN", callBack.secretToken ?: "NONE")),
+                    requestBody,
+                    response,
+                    ProjectPipelineCallbackStatus.SUCCESS.name,
+                    null
+                )
             }
+        }
+    }
+
+    private fun saveHistory(
+        callBack: ProjectPipelineCallBack,
+        requestHeader: List<RequestHeader>,
+        requestBody: String,
+        response: Response,
+        status: String,
+        errorMsg: String?
+    ) {
+        try {
+            projectPipelineCallBackHistoryService.create(ProjectPipelineCallBackHistory(
+                projectId = callBack.projectId,
+                callBackUrl = callBack.callBackUrl,
+                events = callBack.events,
+                status = status,
+                requestHeader = requestHeader,
+                requestBody = requestBody,
+                response = response.message(),
+                errorMsg = errorMsg
+            ))
+        } catch (e: Throwable) {
+            logger.error("save callback history fail", e)
         }
     }
 

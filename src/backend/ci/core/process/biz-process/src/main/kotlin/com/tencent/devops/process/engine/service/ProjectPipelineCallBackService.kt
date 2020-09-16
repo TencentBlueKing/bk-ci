@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import org.jooq.DSLContext
@@ -55,6 +56,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         records.forEach {
             list.add(
                 ProjectPipelineCallBack(
+                    id = it.id,
                     projectId = it.projectId,
                     callBackUrl = it.callbackUrl,
                     events = it.events,
@@ -63,5 +65,30 @@ class ProjectPipelineCallBackService @Autowired constructor(
             )
         }
         return list
+    }
+
+    fun listByPage(
+        projectId: String,
+        offset: Int,
+        limit: Int
+    ): SQLPage<ProjectPipelineCallBack> {
+        val count = projectPipelineCallbackDao.countByPage(dslContext, projectId)
+        val records = projectPipelineCallbackDao.listByPage(dslContext, projectId, offset, limit)
+        return SQLPage(
+            count,
+            records.map {
+                ProjectPipelineCallBack(
+                    id = it.id,
+                    projectId = it.projectId,
+                    callBackUrl = it.callbackUrl,
+                    events = it.events,
+                    secretToken = null
+                )
+            }
+        )
+    }
+
+    fun delete(id: Long) {
+        projectPipelineCallbackDao.deleteById(dslContext, id)
     }
 }

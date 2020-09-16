@@ -28,11 +28,21 @@ package com.tencent.devops.process.pojo
 
 import io.swagger.annotations.ApiModel
 
-@ApiModel("项目的流水线回调配置")
-data class ProjectPipelineCallBack(
+@ApiModel("项目的流水线回调历史")
+data class ProjectPipelineCallBackHistory(
     val id: Long? = null,
     val projectId: String,
     val callBackUrl: String,
     val events: String,
-    val secretToken: String?
+    val status: String,
+    val createdTime: Long? = null,
+    val requestHeader: List<RequestHeader>,
+    val requestBody: String,
+    val response: String,
+    val errorMsg: String? = null
+)
+
+data class RequestHeader(
+    val name: String,
+    val value: String
 )

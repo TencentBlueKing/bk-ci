@@ -26,110 +26,106 @@
 
 package com.tencent.devops.process.dao
 
-import com.tencent.devops.model.process.tables.TProjectPipelineCallback
-import com.tencent.devops.model.process.tables.records.TProjectPipelineCallbackRecord
+import com.tencent.devops.model.process.tables.TProjectPipelineCallbackHistory
+import com.tencent.devops.model.process.tables.records.TProjectPipelineCallbackHistoryRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.sql.Timestamp
 import java.time.LocalDateTime
 
 @Repository
-class ProjectPipelineCallbackDao {
+class ProjectPipelineCallbackHistoryDao {
 
-    /**
-     * 可直接更新或插入
-     */
-    fun save(
+    fun create(
         dslContext: DSLContext,
         projectId: String,
+        callBackUrl: String,
         events: String,
-        userId: String,
-        callbackUrl: String,
-        secretToken: String?
+        status: String,
+        requestHeader: String,
+        requestBody: String,
+        response: String,
+        errorMsg: String?
     ) {
-        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+        with(TProjectPipelineCallbackHistory.T_PROJECT_PIPELINE_CALLBACK_HISTORY) {
             val now = LocalDateTime.now()
             dslContext.insertInto(
                 this,
                 PROJECT_ID,
                 EVENTS,
-                CREATED_TIME,
-                UPDATED_TIME,
-                CREATOR,
-                UPDATOR,
                 CALLBACK_URL,
-                SECRET_TOKEN
+                STATUS,
+                ERROR_MSG,
+                REQUEST_HEADER,
+                REQUEST_BODY,
+                RESPONSE,
+                CREATED_TIME
             ).values(
                 projectId,
                 events,
-                now,
-                now,
-                userId,
-                userId,
-                callbackUrl,
-                secretToken
-            ).onDuplicateKeyUpdate()
-                .set(EVENTS, events)
-                .set(UPDATED_TIME, now)
-                .set(UPDATOR, userId)
-                .set(CALLBACK_URL, callbackUrl)
-                .set(SECRET_TOKEN, secretToken).execute()
+                callBackUrl,
+                status,
+                errorMsg,
+                requestHeader,
+                requestBody,
+                response,
+                now
+            ).execute()
         }
     }
 
-    fun listProjectCallback(
+    fun get(
         dslContext: DSLContext,
-        projectId: String
-    ): Result<TProjectPipelineCallbackRecord> {
-        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+        id: Long
+    ): TProjectPipelineCallbackHistoryRecord? {
+        with(TProjectPipelineCallbackHistory.T_PROJECT_PIPELINE_CALLBACK_HISTORY) {
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .fetch()
+                .where(ID.eq(id))
+                .fetchOne()
         }
     }
 
-    fun listByPage(
+    fun list(
         dslContext: DSLContext,
         projectId: String,
+        startTime: Long?,
+        endTime: Long?,
         offset: Int,
         limit: Int
-    ): Result<TProjectPipelineCallbackRecord> {
-        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
-            return dslContext.selectFrom(this)
+    ): Result<TProjectPipelineCallbackHistoryRecord> {
+        with(TProjectPipelineCallbackHistory.T_PROJECT_PIPELINE_CALLBACK_HISTORY) {
+            val where = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .orderBy(CREATED_TIME.desc())
+            if (startTime != null) {
+                where.and(CREATED_TIME.ge(Timestamp(startTime).toLocalDateTime()))
+            }
+            if (endTime != null) {
+                where.and(CREATED_TIME.le(Timestamp(endTime).toLocalDateTime()))
+            }
+            return where.orderBy(CREATED_TIME.desc())
                 .limit(offset, limit)
                 .fetch()
         }
     }
 
-    fun countByPage(
+    fun count(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        startTime: Long?,
+        endTime: Long?
     ): Long {
-        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
-            return dslContext.selectCount()
+        with(TProjectPipelineCallbackHistory.T_PROJECT_PIPELINE_CALLBACK_HISTORY) {
+            val where = dslContext.selectCount()
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .fetchOne(0, Long::class.java)
-        }
-    }
-
-    fun deleteById(
-        dslContext: DSLContext,
-        id: Long
-    ) {
-        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
-            dslContext.deleteFrom(this).where(ID.eq(id)).execute()
-        }
-    }
-
-    fun deleteByProjectId(
-        dslContext: DSLContext,
-        projectId: String
-    ) {
-        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
-            dslContext.deleteFrom(this).where(PROJECT_ID.eq(projectId)).execute()
+            if (startTime != null) {
+                where.and(CREATED_TIME.ge(Timestamp(startTime).toLocalDateTime()))
+            }
+            if (endTime != null) {
+                where.and(CREATED_TIME.le(Timestamp(endTime).toLocalDateTime()))
+            }
+            return where.fetchOne(0, Long::class.java)
         }
     }
 }
