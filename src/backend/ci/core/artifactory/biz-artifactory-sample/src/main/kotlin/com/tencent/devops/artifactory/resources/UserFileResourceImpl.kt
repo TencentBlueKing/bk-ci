@@ -29,7 +29,6 @@ package com.tencent.devops.artifactory.resources
 import com.tencent.devops.artifactory.api.user.UserFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
@@ -40,8 +39,9 @@ import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.core.Response
 
 @RestResource
-class UserFileResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService) :
-    UserFileResource {
+class UserFileResourceImpl @Autowired constructor(
+    private val archiveFileService: ArchiveFileService
+) : UserFileResource {
 
     override fun uploadFile(
         userId: String,
@@ -56,10 +56,6 @@ class UserFileResourceImpl @Autowired constructor(private val archiveFileService
             projectId = projectId,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW
         )
-    }
-
-    override fun uploadToPath(userId: String, projectId: String, path: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<Boolean> {
-        throw OperationException("not supported")
     }
 
     override fun downloadFileToLocal(userId: String, filePath: String): Response {
