@@ -60,7 +60,7 @@ object ESIndexUtils {
             .endObject()
     }
 
-    fun indexRequest(
+    fun getDocumentObject(
         buildId: String,
         logMessage: LogMessageWithLineNo,
         index: String,

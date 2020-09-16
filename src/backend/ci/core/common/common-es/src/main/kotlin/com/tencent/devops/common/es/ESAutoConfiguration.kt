@@ -26,12 +26,12 @@
 
 package com.tencent.devops.common.es
 
-import com.floragunn.searchguard.ssl.SearchGuardSSLPlugin
-import com.floragunn.searchguard.ssl.util.SSLConfigConstants
 import com.tencent.devops.common.web.WebAutoConfiguration
-import org.elasticsearch.common.settings.Settings
-import org.elasticsearch.common.transport.InetSocketTransportAddress
-import org.elasticsearch.transport.client.PreBuiltTransportClient
+import org.apache.http.HttpHost
+import org.apache.http.ssl.SSLContexts
+import org.elasticsearch.client.RestClient
+import org.elasticsearch.client.RestHighLevelClient
+import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -40,17 +40,19 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
-import java.net.InetAddress
+import java.io.File
+import java.io.FileInputStream
+import java.security.KeyStore
 
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(WebAutoConfiguration::class)
 @EnableConfigurationProperties(ESProperties::class)
-class ESAutoConfiguration {
+class ESAutoConfiguration : DisposableBean {
     @Value("\${elasticsearch.ip}")
     private val ip: String? = null
     @Value("\${elasticsearch.port}")
-    private val port: Int? = 0
+    private val port: Int? = 9200
     @Value("\${elasticsearch.cluster}")
     private val cluster: String? = null
     @Value("\${elasticsearch.name}")
@@ -63,6 +65,8 @@ class ESAutoConfiguration {
     private val truststoreFilePath: String? = null
     @Value("\${elasticsearch.truststore.password:#{null}}")
     private val truststorePassword: String? = null
+
+    private var client: RestHighLevelClient? = null
 
     @Bean
     @Primary
@@ -79,15 +83,11 @@ class ESAutoConfiguration {
         if (name.isNullOrBlank()) {
             throw IllegalArgumentException("ES唯一名称尚未配置: elasticsearch.name")
         }
-
-        val builder = Settings.builder()
-            .put("cluster.name", cluster)
-            .put("client.transport.sniff", true)
+        val esPort = port ?: 9200
         val searchGuard =
             !keystoreFilePath.isNullOrBlank() || !truststoreFilePath.isNullOrBlank() ||
                 !keystorePassword.isNullOrBlank() || !truststorePassword.isNullOrBlank()
-
-        val client = if (searchGuard) {
+        client = if (searchGuard) {
             if (keystoreFilePath.isNullOrBlank()) {
                 throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.keystore.filePath")
             }
@@ -101,23 +101,27 @@ class ESAutoConfiguration {
                 throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.truststore.password")
             }
 
-            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION, false)
-                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENABLED, true)
-                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION_RESOLVE_HOST_NAME, true)
-                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_FILEPATH, keystoreFilePath)
-                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_FILEPATH, truststoreFilePath)
-                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_PASSWORD, keystorePassword)
-                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_PASSWORD, truststorePassword)
+            val truststore = KeyStore.getInstance("jks")
+            val inputStream = FileInputStream(File(keystoreFilePath!!))
+            truststore.load(inputStream, keystorePassword!!.toCharArray())
+            val sslBuilder = SSLContexts.custom().loadTrustMaterial(truststore, null)
+            val sslContext = sslBuilder.build()
 
-            PreBuiltTransportClient(builder.build(), SearchGuardSSLPlugin::class.java)
+            val builder = RestClient.builder(HttpHost(ip, esPort, "http"))
+                .setHttpClientConfigCallback { httpClientBuilder ->
+                    httpClientBuilder.setSSLContext(sslContext)
+                    httpClientBuilder
+                }
+            RestHighLevelClient(builder)
         } else {
-            PreBuiltTransportClient(builder.build())
+            RestHighLevelClient(
+                RestClient.builder(HttpHost(ip, esPort, "http"))
+            )
         }
+        return ESClient(name!!, client!!)
+    }
 
-        val ips = ip!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-        for (ipAddress in ips) {
-            client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), port!!))
-        }
-        return ESClient(name!!, client)
+    override fun destroy() {
+        client?.close()
     }
 }
