@@ -102,12 +102,21 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return processInfo
     }
 
-    override fun getPassTestStatus(isNormalUpgrade: Boolean): Byte {
+    override fun getPreValidatePassTestStatus(): Byte {
         return AtomStatusEnum.RELEASED.status.toByte()
     }
 
-    override fun validateAtomPassTestCondition(atomCode: String) {
+    override fun doPassTestPreOperation(atomStatus: Byte) {
+        // 开源版无需做插件通过测试前置处理
+    }
+
+    override fun getAfterValidatePassTestStatus(validateFlag: Boolean, isNormalUpgrade: Boolean): Byte {
+        return AtomStatusEnum.RELEASED.status.toByte()
+    }
+
+    override fun validateAtomPassTestCondition(atomCode: String): Boolean {
         // 开源版无需校验插件通过测试条件
+        return true
     }
 
     /**
