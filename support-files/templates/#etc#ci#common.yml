@@ -44,6 +44,10 @@ service-suffix: "-__BKCI_CONSUL_TAG__"
 server:
   undertow:
     worker-threads: 100
+    accesslog:
+      enabled: true
+      pattern: '%h %I "%{i,X-DEVOPS-UID}" [%{time,yyyyMMddHHmmss.S}] "%r" %s %D %b "%{i,Referer}" "%{i,User-Agent}"'
+      dir: ${service.log.dir}
 
 # gateway for system
 devopsGateway:
