@@ -66,4 +66,12 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
             logger.error("refresh docker status error.", t)
         }
     }
+
+    fun checkDockerStats() {
+        try {
+            dockerHostBuildService.checkContainerStats()
+        } catch (t: Throwable) {
+            logger.error("check docker stats error.", t)
+        }
+    }
 }
