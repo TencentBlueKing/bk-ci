@@ -26,7 +26,7 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.artifactory.api.service.ShortUrlResource
+import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.EnvUtils
@@ -249,7 +249,7 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
             val projectGroup = bsAuthProjectApi.getProjectGroupAndUserList(bsPipelineAuthServiceCode, projectId)
             val detailUrl = detailUrl(projectId, pipelineId, buildId)
             val detailOuterUrl = detailOuterUrl(projectId, pipelineId, buildId)
-            val detailShortOuterUrl = client.get(ShortUrlResource::class).createShortUrl(CreateShortUrlRequest(detailOuterUrl, 24 * 3600 * 180)).data!!
+            val detailShortOuterUrl = client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(detailOuterUrl, 24 * 3600 * 180)).data!!
             val projectName = projectOauthTokenService.getProjectName(projectId) ?: ""
 
             val mapData = mapOf(

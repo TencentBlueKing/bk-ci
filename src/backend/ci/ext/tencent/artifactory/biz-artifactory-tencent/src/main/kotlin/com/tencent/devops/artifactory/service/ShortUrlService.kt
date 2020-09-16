@@ -26,9 +26,7 @@
 
 package com.tencent.devops.artifactory.service
 
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.dao.ShortUrlDao
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.hashids.Hashids
 import org.jooq.DSLContext
@@ -42,24 +40,24 @@ class ShortUrlService @Autowired constructor(
     private val dslContext: DSLContext,
     private val shortUrlDao: ShortUrlDao
 ) {
-
-    private val hashids = Hashids(HASH_SALT, 8, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
+    private val hashids = Hashids(HASH_SALT, 8, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
 
     fun createShortUrl(url: String, ttl: Int): String {
-        logger.info("createShortUrlurl: $url, ttl: $ttl")
+        logger.info("createShortUrl, url: $url, ttl: $ttl")
         val expireTime = LocalDateTime.now().plusSeconds(ttl.toLong())
         val urlId = shortUrlDao.create(dslContext, url, "devops", expireTime)
-        val shortUrl = "${HomeHostUtil.outerApiServerHost()}/s/${encodeLongId(urlId)}"
+        val shortUrl = "${HomeHostUtil.shortUrlServerHost()}/${encodeLongId(urlId)}"
         logger.info("shortUrl: $shortUrl")
         return shortUrl
     }
 
-    fun getShortUrl(urlId: String): String {
-        logger.info("visitShortUrl, urlId: $urlId")
+    fun getRedirectUrl(urlId: String): String {
         val longId = decodeIdToLong(urlId)
+        logger.info("visitShortUrl, urlId: $urlId($longId)")
         val shortUrl = shortUrlDao.getOrNull(dslContext, longId)
-        if (shortUrl == null || shortUrl.expiredTime.isAfter(LocalDateTime.now())) {
-            throw ErrorCodeException(defaultMessage = "short url expired", errorCode = ArtifactoryMessageCode.SHORT_URL_EXPIRED)
+        if (shortUrl == null || shortUrl.expiredTime.isBefore(LocalDateTime.now())) {
+            logger.info("short url expired, urlId: $urlId($longId)")
+            return "${HomeHostUtil.shortUrlServerHost()}/sorry"
         }
         return shortUrl.url
     }

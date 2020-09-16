@@ -1,38 +1,28 @@
-package com.tencent.devops.artifactory.api.service
+package com.tencent.devops.artifactory.api.external
 
-import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
-import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
-import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_URL"], description = "链接服务")
-@Path("/service/url")
+@Api(tags = ["EXTERNAL_URL"], description = "链接服务")
+@Path("/external/url")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ShortUrlResource {
-
-    @ApiOperation("创建短链接")
-    @Path("/createShortUrl")
-    @POST
-    fun createShortUrl(
-        @ApiParam("请求", required = true)
-        request: CreateShortUrlRequest
-    ): Result<String>
+interface ExternalShortUrlResource {
 
     @ApiOperation("访问下载链接")
     @Path("/visit/{urlId}")
     @GET
-    fun visitShotUrl(
+    fun visitShortUrl(
+        @ApiParam("urlId", required = true)
         @PathParam("urlId")
         urlId: String,
         @Context

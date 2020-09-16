@@ -24,26 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.resources.service
+package com.tencent.devops.artifactory.resources.external
 
-import com.tencent.devops.artifactory.api.service.ShortUrlResource
-import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
+import com.tencent.devops.artifactory.api.external.ExternalShortUrlResource
 import com.tencent.devops.artifactory.service.ShortUrlService
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletResponse
 
 @RestResource
-class ShortUrlResourceImpl @Autowired constructor(
+class ExternalShortUrlResourceImpl @Autowired constructor(
     private val shortUrlService: ShortUrlService
-) : ShortUrlResource {
-    override fun createShortUrl(request: CreateShortUrlRequest): Result<String> {
-        return Result(shortUrlService.createShortUrl(request.url, request.ttl))
-    }
-
-    override fun visitShotUrl(urlId: String, response: HttpServletResponse) {
-        response.status = 302
-        response.setHeader("Location", shortUrlService.getShortUrl(urlId))
+) : ExternalShortUrlResource {
+    override fun visitShortUrl(urlId: String, response: HttpServletResponse) {
+        response.sendRedirect(shortUrlService.getRedirectUrl(urlId))
     }
 }

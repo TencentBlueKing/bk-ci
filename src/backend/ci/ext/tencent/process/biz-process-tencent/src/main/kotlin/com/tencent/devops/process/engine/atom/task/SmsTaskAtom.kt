@@ -26,12 +26,11 @@
 
 package com.tencent.devops.process.engine.atom.task
 
-import com.tencent.devops.artifactory.api.service.ShortUrlResource
+import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.element.SendSmsNotifyElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -79,7 +78,7 @@ class SmsTaskAtom @Autowired constructor(
         // 启动短信的查看详情,短信必须是短连接
         if (sendDetailFlag) {
             val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=${runVariables[PROJECT_NAME]}&pipelineId=${runVariables[PIPELINE_ID]}&buildId=$buildId"
-            val shortUrl = client.get(ShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 180)).data!!
+            val shortUrl = client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 180)).data!!
             bodyStr = "$bodyStr\n\n 查看详情：$shortUrl"
         }
         val message = SmsNotifyMessage().apply {

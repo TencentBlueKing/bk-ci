@@ -30,7 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServicePipelineArtifactoryResource
-import com.tencent.devops.artifactory.api.service.ShortUrlResource
+import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -364,7 +364,7 @@ class ExperienceService @Autowired constructor(
             )
         }
         val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
-        return client.get(ShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 3)).data!!
+        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 3)).data!!
     }
 
     fun downloadUrl(userId: String, projectId: String, experienceHashId: String): String {
@@ -598,7 +598,7 @@ class ExperienceService @Autowired constructor(
     private fun getShortExternalUrl(experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
-        return client.get(ShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
+        return client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
     }
 
     fun userCanExperience(userId: String, experienceId: Long): Boolean {

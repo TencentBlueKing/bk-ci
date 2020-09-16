@@ -26,7 +26,7 @@
 
 package com.tencent.devops.process.engine.atom.task
 
-import com.tencent.devops.artifactory.api.service.ShortUrlResource
+import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
@@ -141,10 +141,10 @@ class TencentManualReviewTaskAtom(
         val pipelineName = runVariables[PIPELINE_NAME].toString()
 
         val reviewUrl = "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
-        val reviewShortUrl = client.get(ShortUrlResource::class).createShortUrl(CreateShortUrlRequest(reviewUrl, 24 * 3600 * 3)).data!!
+        val reviewShortUrl = client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(reviewUrl, 24 * 3600 * 3)).data!!
 
         val reviewAppUrl = "${HomeHostUtil.getHost(commonConfig.devopsOuteApiHostGateWay!!)}/app/download/devops_app_forward.html?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId"
-        val reviewAppShortUrl = client.get(ShortUrlResource::class).createShortUrl(CreateShortUrlRequest(reviewAppUrl, 24 * 3600 * 3)).data!!
+        val reviewAppShortUrl = client.get(ServiceShortUrlResource::class).createShortUrl(CreateShortUrlRequest(reviewAppUrl, 24 * 3600 * 3)).data!!
 
         val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         val date = simpleDateFormat.format(Date())
