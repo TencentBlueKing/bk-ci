@@ -78,7 +78,7 @@ class ProjectPipelineCallBackHistoryService @Autowired constructor(
         userId: String,
         projectId: String,
         id: Long
-        ): ProjectPipelineCallBackHistory? {
+    ): ProjectPipelineCallBackHistory? {
             val record = projectPipelineCallbackHistoryDao.get(dslContext, id) ?: return null
             return with(record) {
                 ProjectPipelineCallBackHistory(
