@@ -1,10 +1,16 @@
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
+import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
@@ -16,7 +22,13 @@ import com.tencent.devops.process.service.PipelineSettingService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.util.FileCopyUtils
+import java.io.File
+import java.io.FileInputStream
 import java.lang.RuntimeException
+import java.net.URLDecoder
+import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.core.Response
 
 @Service
 class PipelineInfoService @Autowired constructor(
@@ -28,7 +40,7 @@ class PipelineInfoService @Autowired constructor(
     val pipelinePermissionService: PipelinePermissionService
 ) {
 
-    fun exportPipeline(userId: String, projectId: String, pipelineId: String): PipelineModelAndSetting? {
+    fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
         pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
@@ -39,12 +51,17 @@ class PipelineInfoService @Autowired constructor(
         val settingInfo = getSettingInfo(projectId, pipelineId, userId)
         val model = pipelineRepositoryService.getModel(pipelineId)
         if (settingInfo == null || model == null) {
-            return null
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON))
         }
-        return PipelineModelAndSetting(
+        val modelAndSetting = PipelineModelAndSetting(
                 model = model,
                 setting = settingInfo!!
         )
+
+        return Response.ok(modelAndSetting)
+                .header("Content-Type", MimeUtil.STREAM_MIME_TYPE)
+                .header("Content-disposition", "attachment;filename=$projectId/$pipelineId")
+                .header("Cache-Control", "no-cache").build()
     }
 
     fun uploadPipeline(userId: String, projectId: String, pipelineId: String?, pipelineModelAndSetting: PipelineModelAndSetting): String? {
@@ -55,7 +72,7 @@ class PipelineInfoService @Autowired constructor(
         )
         if (!permissionCheck) {
             logger.warn("$userId|$projectId|$pipelineId uploadPipeline permission check fail")
-            throw RuntimeException()
+            throw PermissionForbiddenException(MessageCodeUtil.getCodeMessage(USER_NEED_PIPELINE_X_PERMISSION, arrayOf(AuthPermission.CREATE.value)))
         }
         val model = pipelineModelAndSetting.model
         modelCheckPlugin.clearUpModel(model)
