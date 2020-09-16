@@ -396,8 +396,8 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pipelineGroupService.favorPipeline(userId, projectId, pipelineId, favor))
     }
 
-    override fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
-        return pipelineInfoService.exportPipeline(userId, projectId, pipelineId)
+    override fun exportPipeline(userId: String, projectId: String, pipelineId: String, response: HttpServletResponse) {
+        return pipelineInfoService.exportPipeline(userId, projectId, pipelineId, response)
     }
 
     override fun uploadPipeline(userId: String, pipelineInfo: PipelineModelAndSetting, projectId: String, pipelineId: String?): Result<String?> {

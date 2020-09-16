@@ -3,7 +3,7 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.archive.util.MimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -22,13 +22,12 @@ import com.tencent.devops.process.service.PipelineSettingService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.util.FileCopyUtils
-import java.io.File
-import java.io.FileInputStream
-import java.lang.RuntimeException
-import java.net.URLDecoder
+import java.io.FileOutputStream
+import java.io.OutputStream
 import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
+
 
 @Service
 class PipelineInfoService @Autowired constructor(
@@ -40,7 +39,7 @@ class PipelineInfoService @Autowired constructor(
     val pipelinePermissionService: PipelinePermissionService
 ) {
 
-    fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
+    fun exportPipeline(userId: String, projectId: String, pipelineId: String, response: HttpServletResponse) {
         pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
@@ -57,11 +56,16 @@ class PipelineInfoService @Autowired constructor(
                 model = model,
                 setting = settingInfo!!
         )
-
-        return Response.ok(modelAndSetting)
-                .header("Content-Type", MimeUtil.STREAM_MIME_TYPE)
-                .header("Content-disposition", "attachment;filename=$projectId/$pipelineId")
-                .header("Cache-Control", "no-cache").build()
+        logger.info("exportPipeline |$pipelineId | $projectId| $modelAndSetting")
+        // 写入文件
+        response.writer.println(JsonUtil.toJson(modelAndSetting))
+//
+//
+//        // 返回文件
+//
+//        return Response.ok(file.inputStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
+//                .header("Content-disposition", "attachment;filename=$projectId/$pipelineId")
+//                .header("Cache-Control", "no-cache").build()
     }
 
     fun uploadPipeline(userId: String, projectId: String, pipelineId: String?, pipelineModelAndSetting: PipelineModelAndSetting): String? {
