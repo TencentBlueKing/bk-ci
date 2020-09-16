@@ -109,7 +109,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val environmentPermissionService: EnvironmentPermissionService,
     private val upgradeService: UpgradeService,
     private val gray: Gray,
-    praiate val webSocketDispatcher: WebSocketDispatcher,
+    private val webSocketDispatcher: WebSocketDispatcher,
     private val websocketService: NodeWebsocketService
 ) {
     fun getAgentDetail(userId: String, projectId: String, nodeHashId: String): ThirdPartyAgentDetail? {
