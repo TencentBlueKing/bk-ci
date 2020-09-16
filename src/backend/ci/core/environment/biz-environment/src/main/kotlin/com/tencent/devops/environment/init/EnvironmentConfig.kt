@@ -26,9 +26,11 @@
 
 package com.tencent.devops.environment.init
 
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.BluekingAgentUrlServiceImpl
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -39,4 +41,7 @@ class EnvironmentConfig {
     @Bean
     @ConditionalOnMissingBean(AgentUrlService::class)
     fun agentUrlService(slaveGatewayService: SlaveGatewayService) = BluekingAgentUrlServiceImpl(slaveGatewayService)
+
+    @Bean
+    fun webSocketDispatcher(rabbitTemplate: RabbitTemplate) = WebSocketDispatcher(rabbitTemplate)
 }
