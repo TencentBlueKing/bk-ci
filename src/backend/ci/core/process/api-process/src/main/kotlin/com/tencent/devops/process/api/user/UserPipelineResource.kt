@@ -480,8 +480,10 @@ interface UserPipelineResource {
         projectId: String,
         @ApiParam(value = "流水线Id", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
-    ): Response
+        pipelineId: String,
+        @Context
+        response: HttpServletResponse
+    )
 
     @ApiOperation("导入流水线模板")
     @POST
