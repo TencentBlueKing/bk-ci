@@ -853,7 +853,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
     abstract fun getPreValidatePassTestStatus(): Byte
 
-    abstract fun doPassTestPreOperation(atomId: String, atomStatus: Byte)
+    abstract fun doPassTestPreOperation(atomId: String, atomStatus: Byte, userId: String)
 
     abstract fun getAfterValidatePassTestStatus(validateFlag: Boolean, isNormalUpgrade: Boolean): Byte
 
@@ -876,7 +876,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code)
         }
-        doPassTestPreOperation(atomId, atomStatus)
+        doPassTestPreOperation(atomId, atomStatus, userId)
         threadPoolExecutor.submit {
             val validateFlag = validateAtomPassTestCondition(atomId)
             // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核

@@ -106,7 +106,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return AtomStatusEnum.RELEASED.status.toByte()
     }
 
-    override fun doPassTestPreOperation(atomId: String, atomStatus: Byte) {
+    override fun doPassTestPreOperation(atomId: String, atomStatus: Byte, userId: String) {
         // 开源版无需做插件通过测试前置处理
     }
 
