@@ -50,6 +50,7 @@ import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
@@ -649,6 +650,7 @@ class DockerHostBuildService(
         for (container in containerInfo) {
             val statistics = getContainerStats(container.id)
             if (statistics != null) {
+                logger.info("containerId: ${container.id} | checkContainerStats statistics: ${JsonUtil.toJson(statistics)}")
                 val cpuUsage = statistics.cpuStats.systemCpuUsage
                 if (cpuUsage != null && cpuUsage > 20) {
                     resetContainer(container.id)
@@ -672,6 +674,7 @@ class DockerHostBuildService(
 
     fun resetContainer(containerId: String) {
         // httpDockerCli.pauseContainerCmd(containerId)
+        logger.info("<--------------------- resetContainer $containerId --------------------->")
         httpDockerCli.updateContainerCmd(containerId).withMemory(32768).withCpuShares(16)
     }
 
