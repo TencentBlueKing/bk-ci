@@ -34,5 +34,6 @@ data class JobDetail(
     val type: String?,
     val pool: Pool?,
     val steps: List<AbstractTask>,
-    val condition: String?
+    val condition: String?,
+    val vmType: VmType? = VmType.LOCAL
 )

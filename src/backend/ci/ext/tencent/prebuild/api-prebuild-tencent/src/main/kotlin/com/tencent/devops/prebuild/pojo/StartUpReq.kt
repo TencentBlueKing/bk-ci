@@ -43,7 +43,5 @@ data class StartUpReq(
     @ApiModelProperty("hostname", required = true)
     val hostname: String,
     @ApiModelProperty("extraParam", required = false)
-    val extraParam: ExtraParam?,
-    @ApiModelProperty("useRemote", required = false)
-    val useRemote: Boolean = true //TODO
+    val extraParam: ExtraParam?
 )

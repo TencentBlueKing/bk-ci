@@ -38,6 +38,7 @@ import com.tencent.devops.common.ci.task.SyncLocalCodeInput
 import com.tencent.devops.common.ci.task.SyncLocalCodeTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.ci.yaml.Job
+import com.tencent.devops.common.ci.yaml.VmType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.LogLine
 import com.tencent.devops.common.log.pojo.QueryLogs
@@ -258,6 +259,7 @@ class PreBuildService @Autowired constructor(
         userId: String
     ): VMBuildContainer {
         val elementList = mutableListOf<Element>()
+        val vmType = job.job.vmType
         job.job.steps.forEach {
             if (it is CodeCCScanInContainerTask && startUpReq.extraParam != null) {
                 val whitePath = mutableListOf<String>()
@@ -272,7 +274,7 @@ class PreBuildService @Autowired constructor(
 
             //启动子流水线将代码拉到远程构建机
             if (it is SyncLocalCodeTask) {
-                if (!startUpReq.useRemote) {
+                if (vmType != VmType.REMOTE) {
                     return@forEach
                 }
                 it.inputs = SyncLocalCodeInput(
@@ -292,7 +294,7 @@ class PreBuildService @Autowired constructor(
         }
 
         val dispatchType = getDispatchType(job, startUpReq, agentInfo)
-        val vmBaseOS = if (startUpReq.useRemote) {
+        val vmBaseOS = if (vmType == VmType.REMOTE) {
             when (dispatchType) {
                 is MacOSDispatchType -> VMBaseOS.MACOS
                 else -> VMBaseOS.LINUX
@@ -324,25 +326,29 @@ class PreBuildService @Autowired constructor(
 
     fun getDispatchType(job: Job, startUpReq: StartUpReq, agentInfo: ThirdPartyAgentStaticInfo): DispatchType {
         return with(job.job.pool) {
-            if (!startUpReq.useRemote) { //使用本地构建
-                ThirdPartyAgentIDDispatchType(
-                    displayName = agentInfo.agentId,
-                    workspace = startUpReq.workspace,
-                    agentType = AgentType.ID
-                )
-            } else if (null == this) { // 使用默认的远程构建
-                DockerDispatchType(DockerVersion.TLINUX2_2.value)
-            } else {
-                when {
-                    this.container != null -> DockerDispatchType(
-                        this.container
+            when {
+                job.job.vmType == VmType.LOCAL -> { //使用本地构建
+                    ThirdPartyAgentIDDispatchType(
+                        displayName = agentInfo.agentId,
+                        workspace = startUpReq.workspace,
+                        agentType = AgentType.ID
                     )
-                    this.macOS != null -> MacOSDispatchType(
-                        macOSEvn = this.macOS!!.systemVersion!! + ":" + this.macOS!!.xcodeVersion!!,
-                        systemVersion = this.macOS!!.systemVersion!!,
-                        xcodeVersion = this.macOS!!.xcodeVersion!!
-                    )
-                    else -> DockerDispatchType(DockerVersion.TLINUX2_2.value)
+                }
+                null == this -> { // 使用默认的远程构建
+                    DockerDispatchType(DockerVersion.TLINUX2_2.value)
+                }
+                else -> {
+                    when {
+                        this.container != null -> DockerDispatchType(
+                            this.container
+                        )
+                        this.macOS != null -> MacOSDispatchType(
+                            macOSEvn = this.macOS!!.systemVersion!! + ":" + this.macOS!!.xcodeVersion!!,
+                            systemVersion = this.macOS!!.systemVersion!!,
+                            xcodeVersion = this.macOS!!.xcodeVersion!!
+                        )
+                        else -> DockerDispatchType(DockerVersion.TLINUX2_2.value)
+                    }
                 }
             }
         }
