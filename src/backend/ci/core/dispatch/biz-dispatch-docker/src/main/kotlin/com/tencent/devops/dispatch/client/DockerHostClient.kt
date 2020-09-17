@@ -280,6 +280,9 @@ class DockerHostClient @Autowired constructor(
             // 超时重试
             if (e.message == "timeout") {
                 doRetry(event, retryTime, dockerIp, requestBody, driftIpInfo, e.message, unAvailableIpList)
+            } else {
+                logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, msg: ${e.message}")
+                throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.START_VM_FAIL.errorCode, "Start build Docker VM failed, msg: ${e.message}")
             }
         }
     }
