@@ -60,7 +60,7 @@ class PipelineInfoService @Autowired constructor(
         )
         logger.info("exportPipeline |$pipelineId | $projectId| ${JsonUtil.toJson(modelAndSetting)}")
         response.setHeader("content-disposition", "attachment; filename = $projectId/$pipelineId")
-        response.setHeader("Content-Type",  MimeUtil.STREAM_MIME_TYPE)
+        response.contentType = MimeUtil.STREAM_MIME_TYPE
         FileCopyUtils.copy(JsonUtil.toJson(modelAndSetting).byteInputStream(), response.outputStream)
     }
 
