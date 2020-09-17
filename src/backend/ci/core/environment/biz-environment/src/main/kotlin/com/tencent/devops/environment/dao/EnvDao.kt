@@ -237,10 +237,10 @@ class EnvDao {
         }
     }
 
-    fun listPage(dslContext: DSLContext, page: Int, pageSize: Int, projectId: String?): List<TEnvRecord> {
+    fun listPage(dslContext: DSLContext, offset: Int, limit: Int, projectId: String?): List<TEnvRecord> {
         with(TEnv.T_ENV) {
             return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
-                .limit(pageSize).offset((page - 1) * pageSize)
+                .limit(limit).offset(offset)
                 .fetch()
         }
     }

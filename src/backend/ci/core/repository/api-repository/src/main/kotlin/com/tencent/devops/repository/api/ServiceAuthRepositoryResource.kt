@@ -26,12 +26,12 @@ interface ServiceAuthRepositoryResource {
         @ApiParam("项目Id", required = false)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam("分页", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("分页大小", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
+        @ApiParam("起始位置", required = false)
+        @QueryParam("offset")
+        offset: Int?,
+        @ApiParam("步长", required = false)
+        @QueryParam("limit")
+        limit: Int?
     ): Result<Page<RepositoryInfo>>
 
     @ApiOperation("获取项目代码库列表")

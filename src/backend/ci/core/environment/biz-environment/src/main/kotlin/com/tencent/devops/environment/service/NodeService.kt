@@ -379,21 +379,13 @@ class NodeService @Autowired constructor(
         return validRecordList.map { NodeStringIdUtils.getNodeBaseInfo(it) }
     }
 
-    fun listByPage(projectId: String, page: Int?, pageSize: Int?): Page<NodeBaseInfo> {
-        var limit = page ?: 1
-        if (limit <= 0) {
-            limit = 1
-        }
-        var offset = pageSize ?: 10
-        if (offset > 50) {
-            offset = 50
-        }
-        val nodeInfos = nodeDao.listPageForAuth(dslContext, limit, offset, projectId)
+    fun listByPage(projectId: String, offset: Int?, limit: Int?): Page<NodeBaseInfo> {
+        val nodeInfos = nodeDao.listPageForAuth(dslContext, offset!!, limit!!, projectId)
         val count = nodeDao.countForAuth(dslContext, projectId)
         return Page(
             count = count.toLong(),
-            page = limit,
-            pageSize = offset,
+            page = offset!!,
+            pageSize = limit!!,
             records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
         )
     }
