@@ -158,7 +158,7 @@ class PipelineInfoService @Autowired constructor(
         }
         return Response
                 .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-                .header("content-disposition", "attachment; filename = $pipelineId")
+                .header("content-disposition", "attachment; filename = $pipelineId.json")
                 .header("Cache-Control", "no-cache")
                 .build()
     }
