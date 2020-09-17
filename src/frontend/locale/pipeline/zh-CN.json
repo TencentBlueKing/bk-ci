@@ -757,6 +757,7 @@
         "stageOption": "流程控制选项"
     },
     "storeMap": {
+        "textarea": "文本框",
         "string": "字符串",
         "bool": "布尔值",
         "enum": "单选框",
