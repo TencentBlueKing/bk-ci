@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.log.pojo.LogLine
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -26,9 +27,11 @@ import org.springframework.stereotype.Service
 import org.springframework.util.FileCopyUtils
 import java.io.FileOutputStream
 import java.io.OutputStream
+import java.sql.Date
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
 
 
 @Service
@@ -41,7 +44,7 @@ class PipelineInfoService @Autowired constructor(
     val pipelinePermissionService: PipelinePermissionService
 ) {
 
-    fun exportPipeline(userId: String, projectId: String, pipelineId: String, response: HttpServletResponse) {
+    fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
         pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
@@ -59,9 +62,7 @@ class PipelineInfoService @Autowired constructor(
                 setting = settingInfo!!
         )
         logger.info("exportPipeline |$pipelineId | $projectId| ${JsonUtil.toJson(modelAndSetting)}")
-        response.setHeader("content-disposition", "attachment; filename = $projectId/$pipelineId")
-        response.contentType = MimeUtil.STREAM_MIME_TYPE
-        FileCopyUtils.copy(JsonUtil.toJson(modelAndSetting).byteInputStream(), response.outputStream)
+        return exportModelToFile(modelAndSetting, pipelineId)
     }
 
     fun uploadPipeline(userId: String, projectId: String, pipelineModelAndSetting: PipelineModelAndSetting): String? {
@@ -145,6 +146,21 @@ class PipelineInfoService @Autowired constructor(
                 maxQueueSize = settingInfo.maxQueueSize,
                 hasPermission = hasPermission
         )
+    }
+
+    private fun exportModelToFile(modelAndSetting: PipelineModelAndSetting, pipelineId: String): Response {
+        // 流式下载
+        val fileStream = StreamingOutput { output ->
+                val sb = StringBuilder()
+                sb.append(JsonUtil.toJson(modelAndSetting))
+                output.write(sb.toString().toByteArray())
+                output.flush()
+        }
+        return Response
+                .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+                .header("content-disposition", "attachment; filename = $pipelineId")
+                .header("Cache-Control", "no-cache")
+                .build()
     }
 
     companion object {
