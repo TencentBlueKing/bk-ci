@@ -270,7 +270,7 @@ class LogService @Autowired constructor(
                         .sort("lineNo", if (fromStart) SortOrder.ASC else SortOrder.DESC)
                         .timeout(TimeValue.timeValueSeconds(60)))
 
-                val searchResponse = client.originClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
+                val searchResponse = client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
                 searchResponse.hits.forEach { searchHitFields ->
                     val sourceMap = searchHitFields.sourceAsMap
                     val logLine = LogLine(
@@ -461,7 +461,7 @@ class LogService @Autowired constructor(
         )
             .must(QueryBuilders.matchQuery("logType", LogType.LOG.name).operator(Operator.AND))
 
-        val scrollClient = client.originClient(buildId)
+        val scrollClient = client.restClient(buildId)
         val searchRequest = SearchRequest(indexAndType.index)
             .searchType(indexAndType.type)
             .source(SearchSourceBuilder()
@@ -651,7 +651,7 @@ class LogService @Autowired constructor(
 
     private fun openIndex(buildId: String, index: String): Boolean {
         logger.info("[$buildId|$index] Start to open the index")
-        return client.indexClient(buildId)
+        return client.restClient(buildId).indices()
             .open(OpenIndexRequest(index), RequestOptions.DEFAULT)
             .isAcknowledged
     }
@@ -729,7 +729,7 @@ class LogService @Autowired constructor(
             .must(boolQuery)
 
         val result = mutableListOf<LogLine>()
-        val scrollClient = client.originClient(buildId)
+        val scrollClient = client.restClient(buildId)
         val searchRequest = SearchRequest(index)
             .searchType(type)
             .source(SearchSourceBuilder()
@@ -741,7 +741,7 @@ class LogService @Autowired constructor(
                 .timeout(TimeValue.timeValueSeconds(60)))
             .scroll(TimeValue(1000 * 64))
 
-        var scrollResp = client.originClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
+        var scrollResp = client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
         do {
             scrollResp.hits.hits.forEach { searchHit ->
                 val sourceMap = searchHit.sourceAsMap
@@ -785,7 +785,7 @@ class LogService @Autowired constructor(
                 .timeout(TimeValue.timeValueSeconds(60)))
             .scroll(TimeValue(1000 * 32))
 
-        val scrollResp = client.originClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
+        val scrollResp = client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
         val logs = mutableListOf<LogLine>()
         scrollResp.hits.hits.forEach { searchHit ->
             val sourceMap = searchHit.sourceAsMap
@@ -896,7 +896,7 @@ class LogService @Autowired constructor(
 
             val timeStart = System.currentTimeMillis()
 
-            val multiSearchResponse = client.originClient(buildId).msearch(multiSearchRequest, RequestOptions.DEFAULT)
+            val multiSearchResponse = client.restClient(buildId).msearch(multiSearchRequest, RequestOptions.DEFAULT)
             moreLogs.timeUsed = System.currentTimeMillis() - timeStart
             val lineNoSet = TreeSet<Long>()
             val highlights = HashMap<Long, String>()
@@ -939,7 +939,7 @@ class LogService @Autowired constructor(
                     .sort("lineNo", SortOrder.ASC)
                     .timeout(TimeValue.timeValueSeconds(60)))
 
-            val searchResponse = client.originClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
+            val searchResponse = client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
 
             // 简单处理，如果得到的数据量与请求的数据量一样，认为还未 finished
 //            if (searchResponse.hits.getTotalHits() == Constants.MAX_LINES.toLong()) {
@@ -1028,7 +1028,7 @@ class LogService @Autowired constructor(
                     .sort("lineNo", SortOrder.ASC)
                     .timeout(TimeValue.timeValueSeconds(60)))
 
-            val searchResponse = client.originClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
+            val searchResponse = client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
             var lastLineNo = -1L
             for (searchHitFields in searchResponse.hits) {
                 val sourceMap = searchHitFields.sourceAsMap
@@ -1205,7 +1205,7 @@ class LogService @Autowired constructor(
                 .size(0)
                 .timeout(TimeValue.timeValueSeconds(60)))
 
-        val searchResponse = client.originClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
+        val searchResponse = client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
         return searchResponse.hits.hits.size.toLong()
     }
 
@@ -1302,7 +1302,7 @@ class LogService @Autowired constructor(
                     .sort("lineNo", SortOrder.ASC)
                     .timeout(TimeValue.timeValueSeconds(60)))
 
-            val response = client.originClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
+            val response = client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
             response.hits.forEach { searchHitFields ->
                 val sourceMap = searchHitFields.sourceAsMap
                 val ln = sourceMap["lineNo"].toString().toLong()
@@ -1394,7 +1394,7 @@ class LogService @Autowired constructor(
                     .size(Constants.MAX_LINES)
                     .sort("lineNo", SortOrder.ASC))
                 .scroll(TimeValue(1000 * 64))
-            val scrollClient = client.originClient(buildId)
+            val scrollClient = client.restClient(buildId)
 
             // 初始化请求
             val searchResponse = scrollClient.search(searchRequest, RequestOptions.DEFAULT)
@@ -1522,7 +1522,7 @@ class LogService @Autowired constructor(
 
         val lineNoSet = TreeSet<Long>()
 
-        val multiSearchResponse = client.originClient(buildId).msearch(multiSearchRequest, RequestOptions.DEFAULT)
+        val multiSearchResponse = client.restClient(buildId).msearch(multiSearchRequest, RequestOptions.DEFAULT)
         multiSearchResponse.responses
             .map { it.response }
             .filter { it != null && it.hits != null }
@@ -1628,7 +1628,7 @@ class LogService @Autowired constructor(
 
         val highlights = HashMap<Long, String>()
 
-        val multiSearchResponse = client.originClient(buildId).msearch(multiSearchRequest, RequestOptions.DEFAULT)
+        val multiSearchResponse = client.restClient(buildId).msearch(multiSearchRequest, RequestOptions.DEFAULT)
 
         multiSearchResponse.responses
             .map { it.response }
@@ -1705,7 +1705,7 @@ class LogService @Autowired constructor(
                     .sort("lineNo", SortOrder.ASC)
                     .timeout(TimeValue.timeValueSeconds(60)))
 
-            val response = client.originClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
+            val response = client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
             response.hits.forEach { searchHitFields ->
                 val sourceMap = searchHitFields.sourceAsMap
                 val ln = sourceMap["lineNo"].toString().toLong()
@@ -1916,7 +1916,7 @@ class LogService @Autowired constructor(
                 .sort("lineNo", SortOrder.ASC)
                 .timeout(TimeValue.timeValueSeconds(60)))
 
-        val hits = client.originClient(buildId)
+        val hits = client.restClient(buildId)
             .search(searchRequest, RequestOptions.DEFAULT)
             .hits
 
@@ -1970,20 +1970,20 @@ class LogService @Autowired constructor(
         for (i in logMessages.indices) {
             val logMessage = logMessages[i]
 
-            val indexRequestBuilder = genIndexRequest(
+            val indexRequest = genIndexRequest(
                 buildId = buildId,
                 logMessage = logMessage,
                 index = indexAndType.index,
                 type = indexAndType.type
             )
-            if (indexRequestBuilder != null) {
-                bulkRequest.add(indexRequestBuilder)
+            if (indexRequest != null) {
+                bulkRequest.add(indexRequest)
                 lines++
             }
         }
         try {
             // 注意，在 bulk 下，TypeMissingException 不会抛出，需要判断 bulkResponse.hasFailures() 抛出
-            val bulkResponse = client.originClient(buildId).bulk(bulkRequest, RequestOptions.DEFAULT)
+            val bulkResponse = client.restClient(buildId).bulk(bulkRequest, RequestOptions.DEFAULT)
             return if (bulkResponse.hasFailures()) {
                 throw Exception(bulkResponse.buildFailureMessage())
             } else {
@@ -1999,7 +1999,7 @@ class LogService @Autowired constructor(
 
                 startLog(buildId, true)
 
-                val bulkResponse = client.originClient(buildId)
+                val bulkResponse = client.restClient(buildId)
                     .bulk(bulkRequest.timeout(TimeValue.timeValueSeconds(60)), RequestOptions.DEFAULT)
                 return if (bulkResponse.hasFailures()) {
                     logger.error(bulkResponse.buildFailureMessage())
@@ -2102,7 +2102,7 @@ class LogService @Autowired constructor(
                 .settings(getIndexSettings())
                 .mapping(type, getTypeMappings().contentType())
             request.setTimeout(TimeValue.timeValueSeconds(30))
-            val response = client.indexClient(buildId)
+            val response = client.restClient(buildId).indices()
                 .create(request, RequestOptions.DEFAULT)
             success = true
             response.isShardsAcknowledged
@@ -2117,7 +2117,7 @@ class LogService @Autowired constructor(
     private fun isExistIndex(buildId: String, index: String): Boolean {
         val request = GetIndexRequest(index)
         request.setTimeout(TimeValue.timeValueSeconds(30))
-        return client.indexClient(buildId)
+        return client.restClient(buildId).indices()
             .exists(request, RequestOptions.DEFAULT)
     }
 }

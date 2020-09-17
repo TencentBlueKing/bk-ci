@@ -31,9 +31,7 @@ import org.elasticsearch.client.RestHighLevelClient
 
 interface LogClient {
 
-    fun originClient(buildId: String) = getClient(buildId)
-
-    fun indexClient(buildId: String) = getClient(buildId).indices()
+    fun restClient(buildId: String) = getClient(buildId)
 
     private fun getClient(buildId: String): RestHighLevelClient {
         return hashClient(buildId).client

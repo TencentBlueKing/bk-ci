@@ -124,7 +124,7 @@ class ESAutoConfiguration : DisposableBean {
             }
             val truststoreFile = File(truststoreFilePath!!)
             if (!truststoreFile.exists()) {
-                throw IllegalArgumentException("未找到 truststore 文件，请检查路径是否正确: $truststoreFile")
+                throw IllegalArgumentException("未找到 truststore 文件，请检查路径是否正确: $truststoreFilePath")
             }
             SSLContexts.custom()
                 .loadTrustMaterial(truststoreFile, truststorePassword!!.toCharArray(), null)
