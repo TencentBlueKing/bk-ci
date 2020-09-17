@@ -44,6 +44,8 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 import java.io.File
+import java.io.FileInputStream
+import java.security.KeyStore
 
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
@@ -58,9 +60,9 @@ class ESAutoConfiguration : DisposableBean {
     private val cluster: String? = null
     @Value("\${elasticsearch.name}")
     private val name: String? = null
-    @Value("\${elasticsearch.username}")
+    @Value("\${elasticsearch.username:#{null}}")
     private val username: String? = null
-    @Value("\${elasticsearch.password}")
+    @Value("\${elasticsearch.password:#{null}}")
     private val password: String? = null
     @Value("\${elasticsearch.keystore.filePath:#{null}}")
     private val keystoreFilePath: String? = null
@@ -126,9 +128,13 @@ class ESAutoConfiguration : DisposableBean {
             if (!truststoreFile.exists()) {
                 throw IllegalArgumentException("未找到 truststore 文件，请检查路径是否正确: $truststoreFilePath")
             }
+            val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
+            keyStore.load(FileInputStream(keystoreFile), keystorePassword!!.toCharArray())
+            val truststore = KeyStore.getInstance(KeyStore.getDefaultType())
+            truststore.load(FileInputStream(truststoreFile), truststorePassword!!.toCharArray())
             SSLContexts.custom()
-                .loadTrustMaterial(truststoreFile, truststorePassword!!.toCharArray(), null)
-                .loadKeyMaterial(keystoreFile, keystorePassword!!.toCharArray(), null)
+                .loadTrustMaterial(truststore, null)
+                .loadKeyMaterial(keyStore, keystorePassword.toCharArray())
                 .build()
         } else null
 
