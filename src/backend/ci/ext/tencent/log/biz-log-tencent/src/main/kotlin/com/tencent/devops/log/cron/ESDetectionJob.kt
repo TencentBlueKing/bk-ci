@@ -45,6 +45,7 @@ import org.elasticsearch.action.index.IndexRequest
 import org.elasticsearch.client.RequestOptions
 import org.elasticsearch.client.indices.CreateIndexRequest
 import org.elasticsearch.common.unit.TimeValue
+import org.elasticsearch.common.xcontent.XContentType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -118,7 +119,7 @@ class ESDetectionJob @Autowired constructor(
         try {
             val request = CreateIndexRequest(index)
                 .settings(getIndexSettings())
-                .mapping(getTypeByIndex(index), getTypeMappings().contentType())
+                .mapping(getTypeMappings())
             request.setTimeout(TimeValue.timeValueSeconds(20))
             val response = esClient.client
                 .indices()
@@ -181,11 +182,14 @@ class ESDetectionJob @Autowired constructor(
         index: String,
         type: String
     ): IndexRequest? {
+        val builder = getDocumentObject(buildId, logMessage, index, type)
         return try {
-            IndexRequest(index).source(getDocumentObject(buildId, logMessage, index, type))
+            IndexRequest(index).source(builder, XContentType.JSON)
         } catch (e: IOException) {
             logger.error("[$buildId] Convert logMessage to es document failure", e)
             null
+        } finally {
+            builder.close()
         }
     }
 
