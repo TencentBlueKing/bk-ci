@@ -9,6 +9,7 @@
     >
         {{$t('importPipelineLabel')}}
         <bk-upload
+            v-if="isShow"
             accept="application/json"
             :with-credentials="true"
             :custom-request="handleSelect"
@@ -25,12 +26,16 @@
         props: {
             isShow: {
                 type: Boolean
+            },
+            toggleImportPipelinePopup: {
+                type: Function,
+                default: () => () => {}
             }
         },
         watch: {
             isShow (show) {
-                console.log('show', show)
                 this.isShow = show
+                this.toggleImportPipelinePopup(show)
             }
         },
         methods: {
@@ -97,12 +102,6 @@
                     return false
                 }
             }
-            // handleDone (file) {
-            //     console.log(file, 123)
-            //     this.$showTips({
-            //         message: 'done'
-            //     })
-            // }
         }
     }
 </script>

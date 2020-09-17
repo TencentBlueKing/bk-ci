@@ -78,6 +78,9 @@
             currentTab () {
                 return this.$route.params.tab || 'pipeline'
             },
+            isDraftEdit () {
+                return this.$router.name === 'pipelineImportEdit'
+            },
             panels () {
                 return [{
                             name: 'pipeline',
@@ -161,7 +164,7 @@
                 'requestInterceptAtom'
             ]),
             init () {
-                if (this.pipelineId) {
+                if (!this.isDraftEdit) {
                     this.isLoading = true
                     this.requestPipeline(this.$route.params)
                     this.requestPipelineSetting(this.$route.params)
@@ -208,7 +211,7 @@
                 })
             },
             requestInterceptAtom () {
-                if (this.pipelineId) {
+                if (this.projectId && this.pipelineId) {
                     this.$store.dispatch('soda/requestInterceptAtom', {
                         projectId: this.projectId,
                         pipelineId: this.pipelineId
