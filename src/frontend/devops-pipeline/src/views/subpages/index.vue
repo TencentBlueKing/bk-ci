@@ -57,7 +57,7 @@
                             <li @click="toggleCollect">{{curPipeline.hasCollect ? $t('uncollect') : $t('collect')}}</li>
                         </ul>
                         <ul>
-                            <li><a download :href="exportUrl">{{ $t('newlist.exportPipelineJson') }}</a></li>
+                            <li><a target="_blank" download :href="exportUrl">{{ $t('newlist.exportPipelineJson') }}</a></li>
                             <li @click="copyPipeline">{{ $t('newlist.copyAs') }}</li>
                             <li @click="showTemplateDialog">{{ $t('newlist.saveAsTemp') }}</li>
                             <li @click="deletePipeline">{{ $t('delete') }}</li>
