@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -58,8 +59,8 @@ class PipelineInfoService @Autowired constructor(
                 setting = settingInfo!!
         )
         logger.info("exportPipeline |$pipelineId | $projectId| ${JsonUtil.toJson(modelAndSetting)}")
-//        // 写入文件
-//        response.writer.println(JsonUtil.toJson(modelAndSetting))
+        response.setHeader("content-disposition", "attachment; filename = $projectId/$pipelineId")
+        response.setHeader("Content-Type",  MimeUtil.STREAM_MIME_TYPE)
         FileCopyUtils.copy(JsonUtil.toJson(modelAndSetting).byteInputStream(), response.outputStream)
     }
 
