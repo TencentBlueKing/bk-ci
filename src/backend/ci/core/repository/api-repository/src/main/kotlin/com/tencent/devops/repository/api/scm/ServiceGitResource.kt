@@ -402,7 +402,7 @@ interface ServiceGitResource {
         repoUrl: String? = null
     ): Result<GitMrChangeInfo>
 
-    @ApiOperation("获取mr信息")
+    @ApiOperation("获取仓库最近一次提交信息")
     @GET
     @Path("/getRepoRecentCommitInfo")
     fun getRepoRecentCommitInfo(
