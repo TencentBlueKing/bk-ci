@@ -28,6 +28,9 @@ package com.tencent.devops.common.es
 
 import com.tencent.devops.common.web.WebAutoConfiguration
 import org.apache.http.HttpHost
+import org.apache.http.auth.AuthScope
+import org.apache.http.auth.UsernamePasswordCredentials
+import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.ssl.SSLContexts
 import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestHighLevelClient
@@ -41,8 +44,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 import java.io.File
-import java.io.FileInputStream
-import java.security.KeyStore
 
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
@@ -57,6 +58,10 @@ class ESAutoConfiguration : DisposableBean {
     private val cluster: String? = null
     @Value("\${elasticsearch.name}")
     private val name: String? = null
+    @Value("\${elasticsearch.username}")
+    private val username: String? = null
+    @Value("\${elasticsearch.password}")
+    private val password: String? = null
     @Value("\${elasticsearch.keystore.filePath:#{null}}")
     private val keystoreFilePath: String? = null
     @Value("\${elasticsearch.keystore.password:#{null}}")
@@ -83,11 +88,23 @@ class ESAutoConfiguration : DisposableBean {
         if (name.isNullOrBlank()) {
             throw IllegalArgumentException("ES唯一名称尚未配置: elasticsearch.name")
         }
-        val esPort = port ?: 9200
-        val searchGuard =
-            !keystoreFilePath.isNullOrBlank() || !truststoreFilePath.isNullOrBlank() ||
-                !keystorePassword.isNullOrBlank() || !truststorePassword.isNullOrBlank()
-        client = if (searchGuard) {
+
+        // 基础鉴权 - 账号密码
+        val credentialsProvider = if (!username.isNullOrBlank() || !password.isNullOrBlank()) {
+            if (username.isNullOrBlank()) {
+                throw IllegalArgumentException("缺少配置: elasticsearch.username")
+            }
+            if (password.isNullOrBlank()) {
+                throw IllegalArgumentException("缺少配置: elasticsearch.password")
+            }
+            val provider = BasicCredentialsProvider()
+            provider.setCredentials(AuthScope.ANY, UsernamePasswordCredentials(username, password))
+            provider
+        } else null
+
+        // SearchGuard鉴权 - SSL证书
+        val sslContext = if (!keystoreFilePath.isNullOrBlank() || !truststoreFilePath.isNullOrBlank() ||
+            !keystorePassword.isNullOrBlank() || !truststorePassword.isNullOrBlank()) {
             if (keystoreFilePath.isNullOrBlank()) {
                 throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.keystore.filePath")
             }
@@ -101,22 +118,29 @@ class ESAutoConfiguration : DisposableBean {
                 throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.truststore.password")
             }
 
-            val truststore = KeyStore.getInstance("jks")
-            truststore.load(FileInputStream(File(keystoreFilePath!!)), keystorePassword!!.toCharArray())
-            val sslBuilder = SSLContexts.custom().loadTrustMaterial(truststore, null)
-            val sslContext = sslBuilder.build()
+            val keystoreFile = File(keystoreFilePath!!)
+            if (!keystoreFile.exists()) {
+                throw IllegalArgumentException("未找到 keystore 文件，请检查路径是否正确: $keystoreFilePath")
+            }
+            val truststoreFile = File(truststoreFilePath!!)
+            if (!truststoreFile.exists()) {
+                throw IllegalArgumentException("未找到 truststore 文件，请检查路径是否正确: $truststoreFile")
+            }
+            SSLContexts.custom()
+                .loadTrustMaterial(truststoreFile, truststorePassword!!.toCharArray(), null)
+                .loadKeyMaterial(keystoreFile, keystorePassword!!.toCharArray(), null)
+                .build()
+        } else null
 
-            val builder = RestClient.builder(HttpHost(ip, esPort, "http"))
-                .setHttpClientConfigCallback { httpClientBuilder ->
-                    httpClientBuilder.setSSLContext(sslContext)
-                    httpClientBuilder
-                }
-            RestHighLevelClient(builder)
-        } else {
-            RestHighLevelClient(
-                RestClient.builder(HttpHost(ip, esPort, "http"))
-            )
+        // 初始化 RestClient 配置
+        val builder = RestClient.builder(HttpHost(ip, port ?: 9200, "http"))
+        builder.setHttpClientConfigCallback { httpClientBuilder ->
+            if (sslContext != null) httpClientBuilder.setSSLContext(sslContext)
+            if (credentialsProvider != null) httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)
+            httpClientBuilder
         }
+
+        client = RestHighLevelClient(builder)
         return ESClient(name!!, client!!)
     }
 
