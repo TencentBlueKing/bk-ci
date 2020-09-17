@@ -248,6 +248,8 @@ class CodeWebhookService @Autowired constructor(
 
             val pipelineName = buildInfo.pipelineName
             val buildNum = variables[PIPELINE_BUILD_NUM]
+            val webhookEventType = variables[PIPELINE_WEBHOOK_EVENT_TYPE]
+            val context = "$pipelineName@$webhookEventType"
 
             if (buildNum == null) {
                 logger.warn("Build($buildId) number is null")
@@ -275,29 +277,42 @@ class CodeWebhookService @Autowired constructor(
                         return@use
                     }
 
-                    val record = pluginGitCheckDao.getOrNull(dslContext, pipelineId, repositoryConfig, commitId)
+                    val record = pluginGitCheckDao.getOrNull(
+                        dslContext = dslContext,
+                        pipelineId = pipelineId,
+                        repositoryConfig = repositoryConfig,
+                        commitId = commitId,
+                        buildNumber = buildNum.toInt()
+                    )
+
                     if (record == null) {
-                        logger.info("Create pipeline git check record")
+                        logger.info("Create pipeline git check record, pipelineId:$pipelineId, buildId:$buildId, commitId:$commitId")
                         scmService.addGitCommitCheck(
                             event = event,
                             targetUrl = targetUrl,
-                            context = pipelineName,
+                            context = context,
                             description = description
                         )
-                        pluginGitCheckDao.create(dslContext, pipelineId, buildNum.toInt(), repositoryConfig, commitId)
+                        pluginGitCheckDao.create(
+                            dslContext = dslContext,
+                            pipelineId = pipelineId,
+                            buildNumber = buildNum.toInt(),
+                            repositoryConfig = repositoryConfig,
+                            commitId = commitId,
+                            context = context
+                        )
                     } else {
-                        if (buildNum.toInt() >= record.buildNumber) {
-                            logger.info("Update pipeline git check record")
-                            scmService.addGitCommitCheck(
-                                event = event,
-                                targetUrl = targetUrl,
-                                context = pipelineName,
-                                description = description
-                            )
-                            pluginGitCheckDao.update(dslContext, record.id, buildNum.toInt())
-                        } else {
-                            logger.info("Code web hook commit check has bigger build number(${record.buildNumber})")
-                        }
+                        logger.info("Update pipeline git check record, pipelineId:$pipelineId, buildId:$buildId, commitId:$commitId, record.context:${record.context}")
+                        scmService.addGitCommitCheck(
+                            event = event,
+                            targetUrl = targetUrl,
+                            context = record.context ?: pipelineName,
+                            description = description
+                        )
+                        pluginGitCheckDao.update(
+                            dslContext = dslContext,
+                            id = record.id
+                        )
                     }
                     return
                 }

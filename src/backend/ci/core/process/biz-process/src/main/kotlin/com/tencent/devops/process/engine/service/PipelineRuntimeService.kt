@@ -567,7 +567,8 @@ class PipelineRuntimeService @Autowired constructor(
                 deleteReason = "",
                 currentTimestamp = currentTimestamp,
                 material = if (material != null) {
-                    JsonUtil.getObjectMapper().readValue(material) as List<PipelineBuildMaterial>
+                    val materialList = JsonUtil.getObjectMapper().readValue(material) as List<PipelineBuildMaterial>
+                    materialList.sortedBy { it.aliasName }
                 } else {
                     null
                 },

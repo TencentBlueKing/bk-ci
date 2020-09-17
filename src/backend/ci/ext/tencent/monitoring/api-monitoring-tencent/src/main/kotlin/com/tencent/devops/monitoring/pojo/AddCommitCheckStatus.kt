@@ -25,21 +25,12 @@
  */
 package com.tencent.devops.monitoring.pojo
 
+import com.tencent.devops.monitoring.pojo.annotions.InfluxTag
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("scm调用工蜂addCommitCheckStatus接口的状态上报")
 data class AddCommitCheckStatus(
-//    @ApiModelProperty("蓝盾项目ID", required = true)
-//    val projectId: String,
-//    @ApiModelProperty("流水线ID", required = true)
-//    val pipelineId: String,
-//    @ApiModelProperty("构建ID", required = true)
-//    val buildId: String,
-//    @ApiModelProperty("vmSeqId", required = true)
-//    val vmSeqId: String,
-//    @ApiModelProperty("channelCode", required = true)
-//    val channelCode: ChannelCode,
     @ApiModelProperty("请求时间(时间戳，毫秒)", required = true)
     val requestTime: Long,
     @ApiModelProperty("响应时间(时间戳，毫秒)", required = true)
@@ -50,12 +41,19 @@ data class AddCommitCheckStatus(
     val statusCode: String?,
     @ApiModelProperty("状态码对应的错误信息", required = false)
     val statusMessage: String?,
+    @ApiModelProperty("错误类型", required = true)
+    val errorType: String? = null,
     @ApiModelProperty("蓝盾错误码", required = true)
+    @InfluxTag
     val errorCode: String,
     @ApiModelProperty("错误信息", required = false)
     val errorMsg: String?,
     @ApiModelProperty("工蜂项目名", required = false)
     val projectName: String,
     @ApiModelProperty("commitId", required = false)
-    val commitId: String
+    val commitId: String,
+    @ApiModelProperty("block", required = false)
+    val block: Boolean? = null,
+    @ApiModelProperty("详情url", required = false)
+    val targetUrl: String? = null
 )

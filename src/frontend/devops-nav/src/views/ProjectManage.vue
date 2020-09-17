@@ -19,7 +19,7 @@
                         <bk-button
                             theme="primary"
                             icon="icon-plus"
-                            @click="!hasCreatePermission ? togglePMDialog(true) : applyCreatePermission()"
+                            @click="hasCreatePermission ? togglePMDialog(true) : applyCreatePermission()"
                         >
                             {{ $t('addProject') }}
                         </bk-button>
