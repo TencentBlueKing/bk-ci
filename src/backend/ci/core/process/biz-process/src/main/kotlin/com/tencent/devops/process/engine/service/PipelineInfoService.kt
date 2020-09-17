@@ -22,6 +22,7 @@ import com.tencent.devops.process.service.PipelineSettingService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.util.FileCopyUtils
 import java.io.FileOutputStream
 import java.io.OutputStream
 import javax.servlet.http.HttpServletResponse
@@ -56,16 +57,11 @@ class PipelineInfoService @Autowired constructor(
                 model = model,
                 setting = settingInfo!!
         )
-        logger.info("exportPipeline |$pipelineId | $projectId| $modelAndSetting")
-        // 写入文件
-        response.writer.println(JsonUtil.toJson(modelAndSetting))
-//
-//
-//        // 返回文件
-//
-//        return Response.ok(file.inputStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
-//                .header("Content-disposition", "attachment;filename=$projectId/$pipelineId")
-//                .header("Cache-Control", "no-cache").build()
+        logger.info("exportPipeline |$pipelineId | $projectId| ${modelAndSetting.toString()}")
+//        // 写入文件
+//        response.writer.println(JsonUtil.toJson(modelAndSetting))
+
+        FileCopyUtils.copy(modelAndSetting.toString().byteInputStream(), response.outputStream)
     }
 
     fun uploadPipeline(userId: String, projectId: String, pipelineModelAndSetting: PipelineModelAndSetting): String? {
