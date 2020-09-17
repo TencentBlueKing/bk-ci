@@ -27,7 +27,6 @@
 package com.tencent.devops.common.ci.task
 
 import com.tencent.devops.common.ci.CiBuildConfig
-import com.tencent.devops.common.ci.yaml.Condition
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -42,7 +41,7 @@ data class SyncLocalCodeTask(
     @ApiModelProperty("入参", required = true)
     override var inputs: SyncLocalCodeInput?,
     @ApiModelProperty("执行条件", required = true)
-    override val condition: Condition?
+    override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
         const val taskType = "syncLocalCode"
