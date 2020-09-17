@@ -317,7 +317,7 @@
         "known": "知道了",
         "noExecution": "未执行过",
         "copyAs": "复制为",
-        "exportPipelineJson": "导出JSON",
+        "exportPipelineJson": "导出",
         "sucToStartBuild": "启动构建成功",
         "failToStartBuild": "启动构建失败",
         "view": "查看",

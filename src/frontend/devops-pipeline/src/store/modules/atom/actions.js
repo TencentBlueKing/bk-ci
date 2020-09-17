@@ -472,8 +472,5 @@ export default {
     },
     setImportedPipelineJson ({ commit }, importedJson) {
         commit(SET_IMPORTED_JSON, importedJson)
-    },
-    exportPipelineJson (_, { projectId, pipelineId }) {
-        return request.get(`${PROCESS_API_URL_PREFIX}/user/pipelines/${pipelineId}/projects/${projectId}/export`)
     }
 }

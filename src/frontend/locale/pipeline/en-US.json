@@ -316,7 +316,7 @@
         "known": "OK",
         "noExecution": "No builds",
         "copyAs": "Copy",
-        "exportPipelineJson": "Export JSON",
+        "exportPipelineJson": "Export",
         "sucToStartBuild": "Start build successfully",
         "failToStartBuild": "Failed to start build",
         "view": "View",
