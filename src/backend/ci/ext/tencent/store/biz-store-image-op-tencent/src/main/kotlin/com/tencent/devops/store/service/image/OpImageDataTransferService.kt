@@ -392,7 +392,12 @@ class OpImageDataTransferService @Autowired constructor(
                 // 内部已做防重复处理
                 imageMemberService.add(
                     userId = creator,
-                    storeMemberReq = StoreMemberReq(managers, StoreMemberTypeEnum.ADMIN, imageCode),
+                    storeMemberReq = StoreMemberReq(
+                        member = managers,
+                        type = StoreMemberTypeEnum.ADMIN,
+                        storeCode = imageCode,
+                        storeType = StoreTypeEnum.IMAGE
+                    ),
                     storeType = StoreTypeEnum.IMAGE,
                     sendNotify = false
                 )

@@ -194,12 +194,19 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         )
     }
 
-    override fun getMrInfo(repoName: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrInfo {
+    override fun getMrInfo(
+        repoName: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String,
+        repoUrl: String?
+    ): GitMrInfo {
         return client.getScm(ServiceGitResource::class).getMergeRequestInfo(
             repoName = repoName,
             mrId = mrId,
             tokenType = tokenType,
-            token = token
+            token = token,
+            repoUrl = repoUrl
         ).data!!
     }
 
@@ -223,13 +230,15 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         repoName: String,
         mrId: Long,
         tokenType: TokenTypeEnum,
-        token: String
+        token: String,
+        repoUrl: String?
     ): GitMrReviewInfo {
         return client.getScm(ServiceGitResource::class).getMergeRequestReviewersInfo(
             repoName = repoName,
             mrId = mrId,
             tokenType = tokenType,
-            token = token
+            token = token,
+            repoUrl = repoUrl
         ).data!!
     }
 
@@ -237,13 +246,15 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         repoName: String,
         mrId: Long,
         tokenType: TokenTypeEnum,
-        token: String
+        token: String,
+        repoUrl: String?
     ): GitMrChangeInfo {
         return client.getScm(ServiceGitResource::class).getMergeRequestChangeInfo(
             repoName = repoName,
             mrId = mrId,
             tokenType = tokenType,
-            token = token
+            token = token,
+            repoUrl = repoUrl
         ).data!!
     }
 

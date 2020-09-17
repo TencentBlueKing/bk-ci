@@ -43,8 +43,7 @@ class ArtifactoryReportService @Autowired constructor(
     private val jFrogService: JFrogService
 ) : ReportService {
     override fun get(projectId: String, pipelineId: String, buildId: String, elementId: String, path: String) {
-        logger.info("report get ($projectId, $pipelineId, $buildId, $elementId, $path)")
-
+        logger.info("get, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, elementId: $elementId, path: $path")
         val normalizePath = JFrogUtil.normalize(path)
         val realPath = JFrogUtil.getReportPath(projectId, pipelineId, buildId, elementId, normalizePath)
         if (!jFrogService.exist(realPath)) {

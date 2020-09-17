@@ -1084,8 +1084,8 @@ class RepositoryService @Autowired constructor(
         return client.get(ServiceGitResourceImpl::class).getAuthUrl(authParamJsonStr)
     }
 
-    fun getInfoByIds(ids: List<String>): List<RepositoryInfo> {
-        val repositoryIds = ids.map { it.toLong() }
+    fun getInfoByHashIds(hashIds: List<String>): List<RepositoryInfo> {
+        val repositoryIds = hashIds.map { HashUtil.decodeOtherIdToLong(it) }
         val repositoryInfos = repositoryDao.getRepoByIds(
                 dslContext = dslContext,
                 repositoryIds = repositoryIds,

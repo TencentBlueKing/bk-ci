@@ -29,6 +29,7 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -144,6 +145,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         projectCreateInfo.projectName
                     )
                 )
+            } catch (e: PermissionForbiddenException) {
+                throw e
             } catch (e: Exception) {
                 logger.warn("权限中心创建项目信息： $projectCreateInfo", e)
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
@@ -437,7 +440,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
         if (!validate) {
             logger.warn("$projectCode| $userId| ${permission.value} validatePermission fail")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
         }
         return true
     }

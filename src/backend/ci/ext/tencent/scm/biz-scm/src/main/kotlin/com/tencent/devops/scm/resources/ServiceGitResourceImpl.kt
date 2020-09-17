@@ -28,7 +28,6 @@ package com.tencent.devops.scm.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -46,6 +45,7 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.services.GitService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletResponse
@@ -155,9 +155,16 @@ class ServiceGitResourceImpl @Autowired constructor(
         repoName: String,
         mrId: Long,
         tokenType: TokenTypeEnum,
-        token: String
+        token: String,
+        repoUrl: String?
     ): Result<GitMrInfo> {
-        return Result(gitService.getMrInfo(repoName, mrId, tokenType, token))
+        return Result(gitService.getMrInfo(
+            id = repoName,
+            mrId = mrId,
+            tokenType = tokenType,
+            token = token,
+            repoUrl = repoUrl
+        ))
     }
 
     override fun downloadGitRepoFile(repoName: String, sha: String?, token: String, tokenType: TokenTypeEnum, response: HttpServletResponse) {
@@ -168,18 +175,36 @@ class ServiceGitResourceImpl @Autowired constructor(
         repoName: String,
         mrId: Long,
         tokenType: TokenTypeEnum,
-        token: String
+        token: String,
+        repoUrl: String?
     ): Result<GitMrReviewInfo> {
-        return Result(gitService.getMrReviewInfo(repoName, mrId, tokenType, token))
+        return Result(
+            gitService.getMrReviewInfo(
+                id = repoName,
+                mrId = mrId,
+                tokenType = tokenType,
+                token = token,
+                repoUrl = repoUrl
+            )
+        )
     }
 
     override fun getMergeRequestChangeInfo(
         repoName: String,
         mrId: Long,
         tokenType: TokenTypeEnum,
-        token: String
+        token: String,
+        repoUrl: String?
     ): Result<GitMrChangeInfo> {
-        return Result(gitService.getMrChangeInfo(repoName, mrId, tokenType, token))
+        return Result(
+            gitService.getMrChangeInfo(
+                id = repoName,
+                mrId = mrId,
+                tokenType = tokenType,
+                token = token,
+                repoUrl = repoUrl
+            )
+        )
     }
 
     override fun getRepoMembers(repoName: String, tokenType: TokenTypeEnum, token: String): Result<List<GitMember>> {

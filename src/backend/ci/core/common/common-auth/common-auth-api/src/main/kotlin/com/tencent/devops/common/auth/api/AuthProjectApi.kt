@@ -106,5 +106,5 @@ interface AuthProjectApi {
      * @param projectCode 项目编码
      * @param projectId 项目id
      */
-    fun getProjectInfo(serviceCode: AuthServiceCode, projectId: String): BkAuthProjectInfoResources?
+    fun getProjectInfo(serviceCode: AuthServiceCode, projectCode: String): BkAuthProjectInfoResources?
 }

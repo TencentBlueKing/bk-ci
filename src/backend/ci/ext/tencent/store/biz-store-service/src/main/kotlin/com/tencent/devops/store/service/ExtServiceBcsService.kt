@@ -99,7 +99,8 @@ class ExtServiceBcsService {
         userId: String,
         namespaceName: String,
         serviceCode: String,
-        version: String
+        version: String,
+        checkPermissionFlag: Boolean = true
     ): DeployApp {
         val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
         val grayFlag = namespaceName == extServiceBcsNameSpaceConfig.grayNamespaceName
@@ -110,7 +111,8 @@ class ExtServiceBcsService {
             storeType = StoreTypeEnum.SERVICE.name,
             storeCode = serviceCode,
             scopes = scopes,
-            isDecrypt = true
+            isDecrypt = true,
+            checkPermissionFlag = checkPermissionFlag
         )
         if (storeEnvVarInfoListResult.isNotOk()) {
             throw ErrorCodeException(errorCode = storeEnvVarInfoListResult.status.toString())
@@ -171,7 +173,13 @@ class ExtServiceBcsService {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val namespaceName = if (!grayFlag) extServiceBcsNameSpaceConfig.namespaceName else extServiceBcsNameSpaceConfig.grayNamespaceName
-        val deployApp = generateDeployApp(userId, namespaceName, serviceCode, version)
+        val deployApp = generateDeployApp(
+            userId = userId,
+            namespaceName = namespaceName,
+            serviceCode = serviceCode,
+            version = version,
+            checkPermissionFlag = checkPermissionFlag
+        )
         val bcsDeployAppResult = client.get(ServiceBcsResource::class).bcsDeployApp(
             userId = userId,
             deployApp = deployApp

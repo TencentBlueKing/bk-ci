@@ -149,6 +149,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     @Autowired
     lateinit var extServiceItemRelDao: ExtServiceItemRelDao
     @Autowired
+    lateinit var extServiceCommonService: ExtServiceCommonService
+    @Autowired
     lateinit var storeCommonService: StoreCommonService
     @Autowired
     lateinit var extServiceVersionLogDao: ExtServiceVersionLogDao
@@ -992,7 +994,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     versionContent = serviceVersion?.content ?: "",
                     releaseType = ReleaseTypeEnum.getReleaseType(
                         serviceVersion?.releaseType?.toInt() ?: ReleaseTypeEnum.NEW.releaseType
-                    )
+                    ),
+                    editFlag = extServiceCommonService.checkEditCondition(serviceCode)
                 )
             )
         }
@@ -1101,37 +1104,22 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     private fun validateAddServiceReq(
         userId: String,
         extensionInfo: InitExtServiceDTO
-    ): Result<Boolean> {
+    ) {
         logger.info("the validateExtServiceReq userId is :$userId,info[$extensionInfo]")
         val serviceCode = extensionInfo.serviceCode
-        if (!Pattern.matches("^[a-z]([-a-z-0-9]*[a-z-0-9])?\$", serviceCode)) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(serviceCode),
-                false
-            )
+        if (!Pattern.matches("^[a-z]([-a-z-0-9]*[a-z|0-9])?\$", serviceCode)) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(serviceCode))
         }
         // 判断扩展服务是否存在
         val codeInfo = extServiceDao.getServiceLatestByCode(dslContext, serviceCode)
         if (codeInfo != null) {
-            // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(serviceCode),
-                false
-            )
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_EXIST, params = arrayOf(serviceCode))
         }
         val serviceName = extensionInfo.serviceName
         val nameInfo = extServiceDao.getServiceByName(dslContext, serviceName)
         if (nameInfo != null) {
-            // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(serviceName),
-                false
-            )
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_EXIST, params = arrayOf(serviceName))
         }
-        return Result(true)
     }
 
     private fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem> {
@@ -1409,8 +1397,34 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return bkServiceId.toLong()
     }
 
-    fun updateExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: EditInfoDTO): Result<Boolean> {
+    fun updateExtInfo(
+        userId: String,
+        serviceId: String,
+        serviceCode: String,
+        infoResp: EditInfoDTO,
+        checkPermissionFlag: Boolean = true
+    ): Result<Boolean> {
         logger.info("updateExtInfo: serviceId[$serviceId], serviceCode[$serviceCode] infoResp[$infoResp]")
+        // 判断当前用户是否是该扩展的成员
+        if (checkPermissionFlag && !storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = serviceCode,
+                storeType = StoreTypeEnum.SERVICE.type.toByte()
+            )
+        ) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+        }
+        // 查询扩展的最新记录
+        val newestServiceRecord = extServiceDao.getNewestServiceByCode(dslContext, serviceCode)
+            ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(serviceCode))
+        val editFlag = extServiceCommonService.checkEditCondition(serviceCode)
+        if (!editFlag) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
+                params = arrayOf(newestServiceRecord.serviceName, newestServiceRecord.version)
+            )
+        }
         val baseInfo = infoResp.baseInfo
         val settingInfo = infoResp.settingInfo
         if (baseInfo != null) {

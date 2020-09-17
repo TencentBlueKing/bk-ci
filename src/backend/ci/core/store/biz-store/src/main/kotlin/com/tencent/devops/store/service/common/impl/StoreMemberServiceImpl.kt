@@ -136,11 +136,23 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     /**
      * 添加store组件成员
      */
-    override fun add(userId: String, storeMemberReq: StoreMemberReq, storeType: StoreTypeEnum, collaborationFlag: Boolean?, sendNotify: Boolean): Result<Boolean> {
+    override fun add(
+        userId: String,
+        storeMemberReq: StoreMemberReq,
+        storeType: StoreTypeEnum,
+        collaborationFlag: Boolean?,
+        sendNotify: Boolean,
+        checkPermissionFlag: Boolean
+    ): Result<Boolean> {
         logger.info("addMember userId is:$userId,storeMemberReq is:$storeMemberReq,storeType is:$storeType")
         val storeCode = storeMemberReq.storeCode
         val type = storeMemberReq.type.type.toByte()
-        if (!storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType.type.toByte())) {
+        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte()
+            )) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val receivers = mutableSetOf<String>()
@@ -183,9 +195,21 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     /**
      * 删除store组件成员
      */
-    override fun delete(userId: String, id: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
+    override fun delete(
+        userId: String,
+        id: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        checkPermissionFlag: Boolean
+    ): Result<Boolean> {
         logger.info("deleteMember userId is:$userId,id is:$id,storeCode is:$storeCode,storeType is:$storeType")
-        if (!storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType.type.toByte())) {
+        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte()
+            )
+        ) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val record = storeMemberDao.getById(dslContext, id)
@@ -233,14 +257,22 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     override fun changeMemberTestProjectCode(
         accessToken: String,
         userId: String,
+        storeMember: String,
         projectCode: String,
         storeCode: String,
         storeType: StoreTypeEnum
     ): Result<Boolean> {
-        logger.info("changeMemberTestProjectCode userId is:$userId,accessToken is:$accessToken")
+        logger.info("changeMemberTestProjectCode userId is:$userId,accessToken is:$accessToken,storeMember is:$storeMember")
         logger.info("changeMemberTestProjectCode projectCode is:$projectCode,storeCode is:$storeCode,storeType is:$storeType")
-        if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType.type.toByte())) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+        if (userId != storeMember) {
+            // 如果要修改其他插件成员的调试项目，则要求修改人是插件的管理员
+            if (!storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType.type.toByte())) {
+                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            }
+        } else {
+            if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType.type.toByte())) {
+                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            }
         }
         val validateFlag: Boolean?
         try {
@@ -248,10 +280,10 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             validateFlag = client.get(ServiceProjectResource::class).verifyUserProjectPermission(
                 accessToken = accessToken,
                 projectCode = projectCode,
-                userId = userId
+                userId = storeMember
             ).data
         } catch (e: Exception) {
-            logger.error("verifyUserProjectPermission error is :$e", e)
+            logger.warn("verifyUserProjectPermission error is :$e", e)
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         }
         logger.info("the validateFlag is :$validateFlag")
@@ -264,7 +296,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             // 更新用户的调试项目
             storeProjectRelDao.updateUserStoreTestProject(
                 dslContext = context,
-                userId = userId,
+                userId = storeMember,
                 projectCode = projectCode,
                 storeProjectType = StoreProjectTypeEnum.TEST,
                 storeCode = storeCode,
