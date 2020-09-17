@@ -471,6 +471,7 @@ interface UserPipelineResource {
     @ApiOperation("导出流水线模板")
     @GET
     @Path("{pipelineId}/projects/{projectId}/export")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun exportPipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -480,10 +481,8 @@ interface UserPipelineResource {
         projectId: String,
         @ApiParam(value = "流水线Id", required = true)
         @PathParam("pipelineId")
-        pipelineId: String,
-        @Context
-        response: HttpServletResponse
-    )
+        pipelineId: String
+    ): Response
 
     @ApiOperation("导入流水线模板")
     @POST
