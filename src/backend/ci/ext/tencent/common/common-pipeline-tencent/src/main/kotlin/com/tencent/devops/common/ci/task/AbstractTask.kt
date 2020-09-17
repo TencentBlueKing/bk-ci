@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = TASK_TYPE)
 @JsonSubTypes(
     JsonSubTypes.Type(value = BashTask::class, name = BashTask.taskType + BashTask.taskVersion),
+    JsonSubTypes.Type(value = WindowsScriptTask::class, name = WindowsScriptTask.taskType + WindowsScriptTask.taskVersion),
     JsonSubTypes.Type(value = CodeCCScanTask::class, name = CodeCCScanTask.taskType + CodeCCScanTask.taskVersion),
     JsonSubTypes.Type(value = CodeCCScanClientTask::class, name = CodeCCScanClientTask.taskType + CodeCCScanClientTask.taskVersion),
     JsonSubTypes.Type(value = DockerRunDevCloudTask::class, name = DockerRunDevCloudTask.taskType + DockerRunDevCloudTask.taskVersion),
