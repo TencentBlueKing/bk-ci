@@ -129,12 +129,14 @@ class ESAutoConfiguration : DisposableBean {
                 throw IllegalArgumentException("未找到 truststore 文件，请检查路径是否正确: $truststoreFilePath")
             }
             val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
-            keyStore.load(FileInputStream(keystoreFile), keystorePassword!!.toCharArray())
+            val keystorePasswordCharArray = keystorePassword!!.toCharArray()
+            keyStore.load(FileInputStream(keystoreFile), keystorePasswordCharArray)
             val truststore = KeyStore.getInstance(KeyStore.getDefaultType())
-            truststore.load(FileInputStream(truststoreFile), truststorePassword!!.toCharArray())
+            val truststorePasswordCharArray = truststorePassword!!.toCharArray()
+            truststore.load(FileInputStream(truststoreFile), truststorePasswordCharArray)
             SSLContexts.custom()
                 .loadTrustMaterial(truststore, null)
-                .loadKeyMaterial(keyStore, keystorePassword.toCharArray())
+                .loadKeyMaterial(keyStore, keystorePasswordCharArray)
                 .build()
         } else null
 
