@@ -58,6 +58,7 @@ import com.tencent.devops.scm.code.git.api.GitBranchCommit
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -910,6 +911,35 @@ class GitService @Autowired constructor(
             val data = it.body()!!.string()
             logger.info("get mr changes info response body: $data")
             return JsonUtil.to(data)
+        }
+    }
+
+    override fun getRepoRecentCommitInfo(
+        repoName: String,
+        sha: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?> {
+        logger.info("getRepoRecentCommitInfo repoName:$repoName, sha:$sha, token:$token, tokenType is:$tokenType")
+        val encodeProjectName = URLEncoder.encode(repoName, Charsets.UTF_8.name())
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/commits/$sha")
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            logger.info("getRepoRecentCommitInfo token is:$token, response>> $data")
+            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            if (!StringUtils.isEmpty(data)) {
+                val dataMap = JsonUtil.toMap(data)
+                val message = dataMap["message"]
+                if (StringUtils.isEmpty(message)) {
+                    return Result(JsonUtil.to(data, GitCommit::class.java))
+                }
+            }
+            return Result(data = null)
         }
     }
 }
