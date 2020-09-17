@@ -79,7 +79,7 @@
                 return this.$route.params.tab || 'pipeline'
             },
             isDraftEdit () {
-                return this.$router.name === 'pipelineImportEdit'
+                return this.$route.name === 'pipelineImportEdit'
             },
             panels () {
                 return [{
