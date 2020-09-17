@@ -57,11 +57,10 @@ class PipelineInfoService @Autowired constructor(
                 model = model,
                 setting = settingInfo!!
         )
-        logger.info("exportPipeline |$pipelineId | $projectId| ${modelAndSetting.toString()}")
+        logger.info("exportPipeline |$pipelineId | $projectId| ${JsonUtil.toJson(modelAndSetting)}")
 //        // 写入文件
 //        response.writer.println(JsonUtil.toJson(modelAndSetting))
-
-        FileCopyUtils.copy(modelAndSetting.toString().byteInputStream(), response.outputStream)
+        FileCopyUtils.copy(JsonUtil.toJson(modelAndSetting).byteInputStream(), response.outputStream)
     }
 
     fun uploadPipeline(userId: String, projectId: String, pipelineModelAndSetting: PipelineModelAndSetting): String? {
