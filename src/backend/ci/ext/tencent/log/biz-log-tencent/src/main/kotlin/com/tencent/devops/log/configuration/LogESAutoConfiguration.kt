@@ -34,9 +34,11 @@ import com.tencent.devops.log.client.impl.MultiESLogClient
 import com.tencent.devops.log.dao.IndexDao
 import com.tencent.devops.log.dao.TencentIndexDao
 import org.apache.http.HttpHost
+import org.apache.http.auth.AuthScope
+import org.apache.http.auth.UsernamePasswordCredentials
+import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.ssl.SSLContexts
 import org.elasticsearch.client.RestClient
-import org.elasticsearch.client.RestClientBuilder
 import org.elasticsearch.client.RestHighLevelClient
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -52,6 +54,7 @@ import org.springframework.core.Ordered
 import java.io.File
 import java.io.FileInputStream
 import java.security.KeyStore
+import javax.net.ssl.SSLContext
 
 @Configuration
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
@@ -65,14 +68,10 @@ class LogESAutoConfiguration {
     private val e1Port: Int? = 0
     @Value("\${elasticsearch.cluster:#{null}}")
     private val e1Cluster: String? = null
-    @Value("\${elasticsearch.keystore.filePath:#{null}}")
-    private val e1KeystoreFilePath: String? = null
-    @Value("\${elasticsearch.keystore.password:#{null}}")
-    private val e1KeystorePassword: String? = null
-    @Value("\${elasticsearch.truststore.filePath:#{null}}")
-    private val e1TruststoreFilePath: String? = null
-    @Value("\${elasticsearch.truststore.password:#{null}}")
-    private val e1TruststorePassword: String? = null
+    @Value("\${elasticsearch.username:#{null}}")
+    private val e1Username: String? = null
+    @Value("\${elasticsearch.password:#{null}}")
+    private val e1Password: String? = null
     @Value("\${elasticsearch.name:#{null}}")
     private val e1Name: String? = null
     @Value("\${elasticsearch.mainCluster:#{null}}")
@@ -84,14 +83,10 @@ class LogESAutoConfiguration {
     private val e2Port: Int? = 0
     @Value("\${elasticsearch2.cluster:#{null}}")
     private val e2Cluster: String? = null
-    @Value("\${elasticsearch2.keystore.filePath:#{null}}")
-    private val e2KeystoreFilePath: String? = null
-    @Value("\${elasticsearch2.keystore.password:#{null}}")
-    private val e2KeystorePassword: String? = null
-    @Value("\${elasticsearch2.truststore.filePath:#{null}}")
-    private val e2TruststoreFilePath: String? = null
-    @Value("\${elasticsearch2.truststore.password:#{null}}")
-    private val e2TruststorePassword: String? = null
+    @Value("\${elasticsearch2.username:#{null}}")
+    private val e2Username: String? = null
+    @Value("\${elasticsearch2.password:#{null}}")
+    private val e2Password: String? = null
     @Value("\${elasticsearch2.name:#{null}}")
     private val e2Name: String? = null
     @Value("\${elasticsearch2.mainCluster:#{null}}")
@@ -111,15 +106,12 @@ class LogESAutoConfiguration {
             throw IllegalArgumentException("ES唯一名称尚未配置")
         }
 
-        val builder = getRestClientBuilder(
-            ip = e1IP!!,
-            port = e1Port ?: 9200,
-            keystoreFilePath = e1KeystoreFilePath!!,
-            truststoreFilePath = e1TruststoreFilePath!!,
-            keystorePassword = e1KeystorePassword!!,
-            truststorePassword = e1TruststorePassword!!
-        )
-        logger.info("Init the log es1 transport client with host($e1Name:$e1MainCluster:$e1IP:$e1Port), cluster($e1Cluster), keystore($e1KeystoreFilePath|$e1KeystorePassword), truststore($e1TruststoreFilePath|$e1TruststorePassword)")
+        val builder = RestClient.builder(HttpHost(e1IP, e1Port ?: 9200, "http"))
+        builder.setHttpClientConfigCallback { httpClientBuilder ->
+            httpClientBuilder.setDefaultCredentialsProvider(getBasicCredentialsProvider(e1Username!!, e1Password!!))
+            httpClientBuilder
+        }
+        logger.info("Init the log es1 transport client with host($e1Name:$e1MainCluster:$e1IP:$e1Port), cluster($e1Cluster), credential($e1Username|$e1Password)")
         return ESClient(e1Name!!, RestHighLevelClient(builder), mainCluster(e1MainCluster))
     }
 
@@ -138,15 +130,12 @@ class LogESAutoConfiguration {
             throw IllegalArgumentException("ES2唯一名称尚未配置")
         }
 
-        val builder = getRestClientBuilder(
-            ip = e2IP!!,
-            port = e2Port ?: 9200,
-            keystoreFilePath = e2KeystoreFilePath!!,
-            truststoreFilePath = e2TruststoreFilePath!!,
-            keystorePassword = e2KeystorePassword!!,
-            truststorePassword = e2TruststorePassword!!
-        )
-        logger.info("Init the log es2 transport client with host($e2Name:$e2MainCluster:$e2IP:$e2Port), cluster($e2Cluster), keystore($e2KeystoreFilePath|$e2KeystorePassword), truststore($e2TruststoreFilePath|$e2TruststorePassword)")
+        val builder = RestClient.builder(HttpHost(e2IP, e2Port ?: 9200, "http"))
+        builder.setHttpClientConfigCallback { httpClientBuilder ->
+            httpClientBuilder.setDefaultCredentialsProvider(getBasicCredentialsProvider(e2Username!!, e2Password!!))
+            httpClientBuilder
+        }
+        logger.info("Init the log es2 transport client with host($e2Name:$e2MainCluster:$e2IP:$e2Port), cluster($e2Cluster), credential($e2Username|$e2Password)")
         return ESClient(e2Name!!, RestHighLevelClient(builder), mainCluster(e2MainCluster))
     }
 
@@ -158,34 +147,36 @@ class LogESAutoConfiguration {
         @Autowired dslContext: DSLContext
     ) = MultiESLogClient(listOf(client(), client2()), redisOperation, dslContext, tencentIndexDao, indexDao)
 
-    private fun getRestClientBuilder(
-        ip: String,
-        port: Int,
+    private fun getSSLContext(
         keystoreFilePath: String,
         truststoreFilePath: String,
         keystorePassword: String,
         truststorePassword: String
-    ): RestClientBuilder {
+    ): SSLContext {
         val keystoreFile = File(keystoreFilePath)
         if (!keystoreFile.exists()) {
             throw IllegalArgumentException("未找到 keystore 文件，请检查路径是否正确: $keystoreFilePath")
         }
         val truststoreFile = File(truststoreFilePath)
         if (!truststoreFile.exists()) {
-            throw IllegalArgumentException("未找到 truststore 文件，请检查路径是否正确: $truststoreFile")
+            throw IllegalArgumentException("未找到 truststore 文件，请检查路径是否正确: $truststoreFilePath")
         }
-
         val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
-        keyStore.load(FileInputStream(keystoreFile), keystorePassword.toCharArray())
-        val sslContext = SSLContexts.custom()
-            .loadTrustMaterial(truststoreFile, truststorePassword.toCharArray(), null)
-            .loadKeyMaterial(keyStore, keystorePassword.toCharArray())
+        val keystorePasswordCharArray = keystorePassword.toCharArray()
+        keyStore.load(FileInputStream(keystoreFile), keystorePasswordCharArray)
+        val truststore = KeyStore.getInstance(KeyStore.getDefaultType())
+        val truststorePasswordCharArray = truststorePassword.toCharArray()
+        truststore.load(FileInputStream(truststoreFile), truststorePasswordCharArray)
+        return SSLContexts.custom()
+            .loadTrustMaterial(truststore, null)
+            .loadKeyMaterial(keyStore, keystorePasswordCharArray)
             .build()
-        return RestClient.builder(HttpHost(ip, port, "http"))
-            .setHttpClientConfigCallback { httpClientBuilder ->
-                httpClientBuilder.setSSLContext(sslContext)
-                httpClientBuilder
-            }
+    }
+
+    private fun getBasicCredentialsProvider(username: String, password: String): BasicCredentialsProvider {
+        val provider = BasicCredentialsProvider()
+        provider.setCredentials(AuthScope.ANY, UsernamePasswordCredentials(username, password))
+        return provider
     }
 
     private fun mainCluster(main: String?): Boolean {
