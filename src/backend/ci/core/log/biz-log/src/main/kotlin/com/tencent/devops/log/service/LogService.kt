@@ -61,6 +61,7 @@ import org.elasticsearch.client.RequestOptions
 import org.elasticsearch.client.indices.CreateIndexRequest
 import org.elasticsearch.client.indices.GetIndexRequest
 import org.elasticsearch.common.unit.TimeValue
+import org.elasticsearch.common.xcontent.XContentType
 import org.elasticsearch.index.IndexNotFoundException
 import org.elasticsearch.index.query.BoolQueryBuilder
 import org.elasticsearch.index.query.Operator
@@ -2020,11 +2021,14 @@ class LogService @Autowired constructor(
         index: String,
         type: String
     ): IndexRequest? {
+        val builder = getDocumentObject(buildId, logMessage, index, type)
         return try {
-            IndexRequest(index).source(getDocumentObject(buildId, logMessage, index, type))
+            IndexRequest(index).source(builder, XContentType.JSON)
         } catch (e: IOException) {
             logger.error("[$buildId] Convert logMessage to es document failure", e)
             null
+        } finally {
+            builder.close()
         }
     }
 
@@ -2100,7 +2104,7 @@ class LogService @Autowired constructor(
             logger.info("[$index|$type] Start to create the index and type")
             val request = CreateIndexRequest(index)
                 .settings(getIndexSettings())
-                .mapping(type, getTypeMappings().contentType())
+                .mapping(getTypeMappings())
             request.setTimeout(TimeValue.timeValueSeconds(30))
             val response = client.restClient(buildId).indices()
                 .create(request, RequestOptions.DEFAULT)
