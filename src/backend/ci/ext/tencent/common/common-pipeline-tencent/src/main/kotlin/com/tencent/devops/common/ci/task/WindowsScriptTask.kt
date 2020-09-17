@@ -28,7 +28,6 @@ package com.tencent.devops.common.ci.task
 
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -41,22 +40,22 @@ data class WindowsScriptTask(
     @ApiModelProperty("displayName", required = false)
     override var displayName: String?,
     @ApiModelProperty("入参", required = true)
-    override val inputs: LinuxScriptInput,
+    override val inputs: WindowsScriptInput,
     @ApiModelProperty("执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
-        const val taskType = "windowScript"
+        const val taskType = "windowsScript"
         const val taskVersion = "@latest"
     }
 
     override fun covertToElement(config: CiBuildConfig): WindowsScriptElement {
         return WindowsScriptElement(
-            displayName ?: "WindowScript",
+            displayName ?: "WindowsScript",
             null,
             null,
             inputs.content,
-            BuildScriptType.BAT
+            inputs.scriptType ?: BuildScriptType.BAT
         )
     }
 }
@@ -64,5 +63,7 @@ data class WindowsScriptTask(
 @ApiModel("脚本任务（win环境）")
 data class WindowsScriptInput(
     @ApiModelProperty("脚本内容", required = true)
-    val content: String
+    val content: String,
+    @ApiModelProperty("脚本类型", required = true)
+    val scriptType: BuildScriptType?
 ) : AbstractInput()
