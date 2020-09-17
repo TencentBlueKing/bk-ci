@@ -27,6 +27,7 @@
 dependencies {
     compile project(":core:store:api-store")
     compile project(":core:log:api-log")
+    compile project(":core:plugin:codecc-plugin:common-codecc")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"
