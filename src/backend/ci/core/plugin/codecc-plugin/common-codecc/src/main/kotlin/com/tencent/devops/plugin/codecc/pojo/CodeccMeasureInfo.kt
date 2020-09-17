@@ -37,6 +37,8 @@ data class CodeccMeasureInfo(
     val codeStyleScore: Double,
     @ApiModelProperty("安全得分", required = true)
     val codeSecurityScore: Double,
+    @ApiModelProperty("度量得分", required = true)
+    val codeMeasureScore: Double,
     @ApiModelProperty("工具执行信息", required = true)
     val lastAnalysisResultList: List<CodeccToolAnalysisInfo>
 )
