@@ -31,8 +31,8 @@ import com.tencent.devops.common.es.ESProperties
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
 import com.tencent.devops.log.client.impl.MultiESLogClient
-import com.tencent.devops.log.dao.TencentIndexDao
 import com.tencent.devops.log.dao.IndexDao
+import com.tencent.devops.log.dao.TencentIndexDao
 import org.apache.http.HttpHost
 import org.apache.http.ssl.SSLContexts
 import org.elasticsearch.client.RestClient
@@ -50,6 +50,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import java.io.File
+import java.io.FileInputStream
+import java.security.KeyStore
 
 @Configuration
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
@@ -57,11 +59,11 @@ import java.io.File
 @AutoConfigureAfter(LogClientConfiguration::class)
 @EnableConfigurationProperties(ESProperties::class)
 class LogESAutoConfiguration {
-    @Value("\${elasticsearch.ip}")
+    @Value("\${elasticsearch.ip:#{null}}")
     private val e1IP: String? = null
-    @Value("\${elasticsearch.port}")
+    @Value("\${elasticsearch.port:#{null}}")
     private val e1Port: Int? = 0
-    @Value("\${elasticsearch.cluster}")
+    @Value("\${elasticsearch.cluster:#{null}}")
     private val e1Cluster: String? = null
     @Value("\${elasticsearch.keystore.filePath:#{null}}")
     private val e1KeystoreFilePath: String? = null
@@ -71,16 +73,16 @@ class LogESAutoConfiguration {
     private val e1TruststoreFilePath: String? = null
     @Value("\${elasticsearch.truststore.password:#{null}}")
     private val e1TruststorePassword: String? = null
-    @Value("\${elasticsearch.name}")
+    @Value("\${elasticsearch.name:#{null}}")
     private val e1Name: String? = null
     @Value("\${elasticsearch.mainCluster:#{null}}")
     private val e1MainCluster: String? = null
 
-    @Value("\${elasticsearch2.ip}")
+    @Value("\${elasticsearch2.ip:#{null}}")
     private val e2IP: String? = null
-    @Value("\${elasticsearch2.port}")
+    @Value("\${elasticsearch2.port:#{null}}")
     private val e2Port: Int? = 0
-    @Value("\${elasticsearch2.cluster}")
+    @Value("\${elasticsearch2.cluster:#{null}}")
     private val e2Cluster: String? = null
     @Value("\${elasticsearch2.keystore.filePath:#{null}}")
     private val e2KeystoreFilePath: String? = null
@@ -90,7 +92,7 @@ class LogESAutoConfiguration {
     private val e2TruststoreFilePath: String? = null
     @Value("\${elasticsearch2.truststore.password:#{null}}")
     private val e2TruststorePassword: String? = null
-    @Value("\${elasticsearch2.name}")
+    @Value("\${elasticsearch2.name:#{null}}")
     private val e2Name: String? = null
     @Value("\${elasticsearch2.mainCluster:#{null}}")
     private val e2MainCluster: String? = null
@@ -172,9 +174,12 @@ class LogESAutoConfiguration {
         if (!truststoreFile.exists()) {
             throw IllegalArgumentException("未找到 truststore 文件，请检查路径是否正确: $truststoreFile")
         }
+
+        val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
+        keyStore.load(FileInputStream(keystoreFile), keystorePassword.toCharArray())
         val sslContext = SSLContexts.custom()
             .loadTrustMaterial(truststoreFile, truststorePassword.toCharArray(), null)
-            .loadKeyMaterial(keystoreFile, keystorePassword.toCharArray(), null)
+            .loadKeyMaterial(keyStore, keystorePassword.toCharArray())
             .build()
         return RestClient.builder(HttpHost(ip, port, "http"))
             .setHttpClientConfigCallback { httpClientBuilder ->
