@@ -70,6 +70,7 @@ import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
@@ -344,9 +345,9 @@ class RepositoryService @Autowired constructor(
         val moveProjectToGroupResult: Result<GitProjectInfo?>
         return try {
             moveProjectToGroupResult = gitService.moveProjectToGroup(
-                groupCode = token,
-                repoName = groupCode ?: devopsGroupName,
-                token = repo.projectName,
+                groupCode = groupCode ?: devopsGroupName,
+                repoName = repo.projectName,
+                token = token,
                 tokenType = finalTokenType
             )
             logger.info("moveProjectToGroupResult is :$moveProjectToGroupResult")
@@ -1369,6 +1370,29 @@ class RepositoryService @Autowired constructor(
             return false
         }
         return true
+    }
+
+    fun getRepoRecentCommitInfo(
+        userId: String,
+        sha: String,
+        repositoryConfig: RepositoryConfig,
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?> {
+        logger.info("getRepoRecentCommitInfo userId:$userId,sha:$sha,repositoryConfig:$repositoryConfig,tokenType:$tokenType")
+        val repo: CodeGitRepository = serviceGet("", repositoryConfig) as CodeGitRepository
+        logger.info("the repo is:$repo")
+        val finalTokenType = generateFinalTokenType(tokenType, repo.projectName)
+        val getGitTokenResult = getGitToken(finalTokenType, userId)
+        if (getGitTokenResult.isNotOk()) {
+            return Result(status = getGitTokenResult.status, message = getGitTokenResult.message ?: "")
+        }
+        val token = getGitTokenResult.data!!
+        return gitService.getRepoRecentCommitInfo(
+            repoName = repo.projectName,
+            sha = sha,
+            token = token,
+            tokenType = finalTokenType
+        )
     }
 
     companion object {
