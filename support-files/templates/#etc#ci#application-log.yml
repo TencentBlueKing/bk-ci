@@ -14,6 +14,9 @@ elasticsearch:
   port: __BKCI_ES_PORT__
   cluster: __BKCI_ES_CLUSTER__
   name: DEVOPS
+#  ES集群如果要求账号密码认证，则需要需要打开以下2个配置项， 设置ES的访问账号密码
+  username:
+  password:
 #  ES集群如果要求HTTPS协议请求，则需要需要打开以下5个配置项， 设置keystore文件和truststore文件以及密码
 #  https: true
 #  keystore:
