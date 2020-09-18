@@ -62,9 +62,7 @@ object ESIndexUtils {
 
     fun getDocumentObject(
         buildId: String,
-        logMessage: LogMessageWithLineNo,
-        index: String,
-        type: String
+        logMessage: LogMessageWithLineNo
     ): XContentBuilder {
         return XContentFactory.jsonBuilder()
             .startObject()
