@@ -651,6 +651,10 @@
             @include ellipsis();
             display: block;
             width: 100%;
+            white-space: normal;
+            > span {
+                white-space: nowrap;
+            }
         }
     }
     .artifact-list-popup {
