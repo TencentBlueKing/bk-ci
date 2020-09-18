@@ -41,6 +41,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_STORE_CODECC"], description = "store组件代码扫描")
@@ -49,7 +50,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface TxUserStoreCodeccResource {
 
-    @ApiOperation("获取codecc度量信息")
+    @ApiOperation("根据组件标识获取codecc度量信息")
     @GET
     @Path("/types/{storeType}/codes/{storeCode}/measurement")
     fun getCodeccMeasureInfo(
@@ -63,7 +64,11 @@ interface TxUserStoreCodeccResource {
         @ApiParam("组件标识", required = true)
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeCode: String
+        storeCode: String,
+        @ApiParam("组件ID", required = false)
+        @QueryParam("storeId")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE, required = false)
+        storeId: String?
     ): Result<CodeccMeasureInfo?>
 
     @ApiOperation("触发codecc扫描任务")
