@@ -87,6 +87,7 @@ class SubPipelineStartUpService(
         atomCode: String,
         taskId: String,
         runMode: String,
+        channelCode: ChannelCode? = null,
         values: Map<String, String>
     ): Result<ProjectBuildId> {
         val project = if (callProjectId.isNotBlank()) {
