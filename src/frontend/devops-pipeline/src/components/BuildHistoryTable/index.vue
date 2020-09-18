@@ -89,10 +89,9 @@
                 </template>
                 <template v-else-if="col.prop === 'errorCode'" v-slot="props">
                     <template v-if="Array.isArray(props.row.errorInfoList) && props.row.errorInfoList.length > 0">
-                        <div @click.stop="" class="error-code-item" v-for="item in props.row.errorInfoList" :key="item.taskId">
-                            <i :title="$t('userError')" v-if="item.errorType === 'USER'" class="devops-icon icon-user "></i>
-                            <i :title="$t('systemError')" v-else-if="item.errorType === 'SYSTEM'" class="devops-icon icon-cog"></i>
-                            <span :title="item.errorCode + ': ' + item. errorMsg" v-if="item.errorCode">{{ item.errorCode + ': ' + item. errorMsg }} </span>
+                        <div @click.stop="" class="error-code-item" :style="`max-width: ${col.width}px`" v-for="item in props.row.errorInfoList" :key="item.taskId">
+                            <i v-if="errorTypeMap[item.errorType]" :title="$t(errorTypeMap[item.errorType].title)" :class="`devops-icon icon-${errorTypeMap[item.errorType].icon}`"></i>
+                            <span :title="item.errorMsg" v-if="item.errorMsg">{{ item.errorMsg }} </span>
                         </div>
                     </template>
                     <span v-else>--</span>
@@ -190,6 +189,26 @@
                     SKIP: 'redo-arrow'
                 }
             },
+            errorTypeMap () {
+                return [
+                    {
+                        title: 'systemError',
+                        icon: 'user'
+                    },
+                    {
+                        title: 'userError',
+                        icon: 'cog'
+                    },
+                    {
+                        title: 'thirdPartyError',
+                        icon: 'cog'
+                    },
+                    {
+                        title: 'pluginError',
+                        icon: 'cog'
+                    }
+                ]
+            },
             data () {
                 return this.buildList.map((item, index) => {
                     const active = index === this.activeIndex
@@ -255,12 +274,8 @@
             },
             column () {
                 Object.keys(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).map(item => {
-                    if (item === 'material') {
-                        const localStorageVal = localStorage.getItem('materialWidth')
-                        this.BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal || 500
-                    }
-                    if (item === 'stageStatus') {
-                        const localStorageVal = localStorage.getItem('stageStatusWidth')
+                    if (['material', 'stageStatus', 'errorCode'].includes(item)) {
+                        const localStorageVal = localStorage.getItem(`${item}Width`)
                         if (localStorageVal) {
                             this.BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal
                         }
@@ -356,6 +371,9 @@
             handleDragend (newWidth, oldWidth, column) {
                 if (column.property === 'material') localStorage.setItem('materialWidth', newWidth)
                 if (column.property === 'stageStatus') localStorage.setItem('stageStatusWidth', newWidth)
+                if (column.property === 'errorCode') localStorage.setItem('errorCode', newWidth)
+
+                this.BUILD_HISTORY_TABLE_COLUMNS_MAP[column.property].width = newWidth
             },
             getArchiveUrl ({ id: buildNo }, type = '', codelib = '') {
                 const { projectId, pipelineId } = this.$route.params
@@ -648,12 +666,12 @@
         }
 
         .error-code-item {
-            @include ellipsis();
-            display: block;
+            display: flex;
             width: 100%;
-            white-space: normal;
+            align-items: center;
             > span {
-                white-space: nowrap;
+                margin-left: 4px;
+                @include ellipsis();
             }
         }
     }
