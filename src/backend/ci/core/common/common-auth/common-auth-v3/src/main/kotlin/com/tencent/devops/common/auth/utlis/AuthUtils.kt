@@ -165,6 +165,7 @@ object AuthUtils {
                     isReturn = startWithPair.first
                     if (isReturn && cacheList.size == 0) {
                         cacheList.addAll(startWithPair.second)
+                        successCount += 1
                     }
                 }
                 else -> cacheList = emptySet<String>() as MutableSet<String>

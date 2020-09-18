@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.FileUtil
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
@@ -333,13 +332,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun list(limit: Int, offset: Int): Page<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
-        val pageNotNull = limit ?: 1
-        val pageSizeNotNull = offset ?: 20
-        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         var success = false
         try {
             val list = ArrayList<ProjectVO>()
-            projectDao.list(dslContext, sqlLimit.limit, sqlLimit.offset).map {
+            projectDao.list(dslContext, limit, offset).map {
                 list.add(ProjectUtils.packagingBean(it, emptySet()))
             }
             val count = projectDao.getCount(dslContext)

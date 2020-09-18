@@ -549,18 +549,9 @@ class EnvService @Autowired constructor(
             nodeIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) })
     }
 
-    override fun listEnvironmentByPage(projectId: String, page: Int?, pageSize: Int?): Page<EnvWithPermission> {
-        var limit = page ?: 1
-        if (limit <= 0) {
-            limit = 1
-        }
-        var offset = pageSize ?: 10
-        if (offset > 50) {
-            offset = 50
-        }
-
+    override fun listEnvironmentByLimit(projectId: String, offset: Int?, limit: Int?): Page<EnvWithPermission> {
         val envList = mutableListOf<EnvWithPermission>()
-        val envRecords = envDao.listPage(dslContext, limit, offset, projectId)
+        val envRecords = envDao.listPage(dslContext, offset!!, limit!!, projectId)
         envRecords.map {
             envList.add(
                 EnvWithPermission(

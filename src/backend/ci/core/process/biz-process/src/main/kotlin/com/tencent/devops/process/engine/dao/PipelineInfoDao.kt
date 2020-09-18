@@ -194,7 +194,7 @@ class PipelineInfoDao {
         return with(T_PIPELINE_INFO) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(DELETE.eq(false)).limit(limit!!).offset(offset!!)
+                .and(DELETE.eq(false)).limit(limit).offset(offset)
                 .fetch()
         }
     }

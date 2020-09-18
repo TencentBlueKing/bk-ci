@@ -2,7 +2,6 @@ package com.tencent.devops.repository.resources
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceAuthRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
@@ -14,12 +13,9 @@ class ServiceAuthRepositoryResourceImpl @Autowired constructor(
     private val repositoryService: RepositoryService
 ) : ServiceAuthRepositoryResource {
 
-    override fun listByProjects(projectId: String, page: Int?, pageSize: Int?): Result<Page<RepositoryInfo>> {
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 20
-        val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        val result = repositoryService.listByProject(setOf(projectId), null, limit.offset, limit.limit)
-        return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
+    override fun listByProjects(projectId: String, offset: Int?, limit: Int?): Result<Page<RepositoryInfo>> {
+        val result = repositoryService.listByProject(setOf(projectId), null, offset!!, limit!!)
+        return Result(Page(limit!!, offset!!, result.count, result.records))
     }
 
     override fun getInfos(repositoryIds: List<String>): Result<List<RepositoryInfo>?> {

@@ -43,7 +43,7 @@ interface IEnvService {
     fun listEnvironment(userId: String, projectId: String): List<EnvWithPermission>
     fun listUsableServerEnvs(userId: String, projectId: String): List<EnvWithPermission>
     fun listEnvironmentByType(userId: String, projectId: String, envType: EnvType): List<EnvWithNodeCount>
-    fun listEnvironmentByPage(projectId: String, page: Int?, pageSize: Int?): Page<EnvWithPermission>
+    fun listEnvironmentByLimit(projectId: String, offset: Int?, limit: Int?): Page<EnvWithPermission>
     fun listBuildEnvs(userId: String, projectId: String, os: OS): List<EnvWithNodeCount>
     fun getEnvironment(userId: String, projectId: String, envHashId: String): EnvWithPermission
     fun listRawEnvByHashIds(userId: String, projectId: String, envHashIds: List<String>): List<EnvWithPermission>
