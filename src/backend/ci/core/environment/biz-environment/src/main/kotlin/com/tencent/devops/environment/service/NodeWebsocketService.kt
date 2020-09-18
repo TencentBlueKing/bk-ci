@@ -40,7 +40,7 @@ class NodeWebsocketService @Autowired constructor(
                 notifyPost = NotifyPost(
                         module = "environment",
                         level = NotityLevel.LOW_LEVEL.getLevel(),
-                        message = "",
+                        message = emptyMap<String, String>().toString(),
                         dealUrl = null,
                         code = 200,
                         webSocketType = WebSocketType.changWebType(WebSocketType.AMD),
