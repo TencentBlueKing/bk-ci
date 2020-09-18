@@ -360,7 +360,7 @@ class DockerHostBuildService(
                 try {
                     // logger.info("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId} containerName: ${container.names[0]}")
                     val containerName = container.names[0]
-                    if (containerName.contains("dockerRun-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}")) {
+                    if (containerName.contains(getDockerRunStopPattern(dockerBuildInfo))) {
                         logger.info("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId} stop dockerRun container, containerId: ${container.id}")
                         httpLongDockerCli.stopContainerCmd(container.id).withTimeout(15).exec()
                     }
@@ -368,6 +368,15 @@ class DockerHostBuildService(
                     logger.error("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId} Stop dockerRun container failed, containerId: ${container.id}", e)
                 }
             }
+        }
+    }
+
+    private fun getDockerRunStopPattern(dockerBuildInfo: DockerHostBuildInfo): String {
+        // 用户取消操作
+        return if (dockerBuildInfo.vmSeqId == 0) {
+            "dockerRun-${dockerBuildInfo.buildId}"
+        } else {
+            "dockerRun-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}"
         }
     }
 
