@@ -14,42 +14,42 @@ import org.springframework.stereotype.Service
 
 @Service
 class NodeWebsocketService @Autowired constructor(
-		val objectMapper: ObjectMapper,
-		val redisOperation: RedisOperation
+    val objectMapper: ObjectMapper,
+    val redisOperation: RedisOperation
 ) {
-	fun buildDetailMessage(
-			projectId: String,
-			userId: String
-	): NodeWebsocketPush {
-		val page = NodePath().buildPage(
-				buildPageInfo = BuildPageInfo(
-						buildId = null,
-						pipelineId = null,
-						projectId = projectId,
-						atomId = null
-				)
-		)
-		logger.info("nodeList websocket: page[$page],project:[$projectId]")
-		return NodeWebsocketPush(
-				projectId = projectId,
-				userId = userId,
-				redisOperation = redisOperation,
-				page = page,
-				pushType = WebSocketType.DETAIL,
-				objectMapper = objectMapper,
-				notifyPost = NotifyPost(
-						module = "environment",
-						level = NotityLevel.LOW_LEVEL.getLevel(),
-						message = "",
-						dealUrl = null,
-						code = 200,
-						webSocketType = WebSocketType.changWebType(WebSocketType.AMD),
-						page = page
-				)
-		)
-	}
+    fun buildDetailMessage(
+        projectId: String,
+        userId: String
+    ): NodeWebsocketPush {
+        val page = NodePath().buildPage(
+                buildPageInfo = BuildPageInfo(
+                        buildId = null,
+                        pipelineId = null,
+                        projectId = projectId,
+                        atomId = null
+                )
+        )
+        logger.info("nodeList websocket: page[$page],project:[$projectId]")
+        return NodeWebsocketPush(
+                projectId = projectId,
+                userId = userId,
+                redisOperation = redisOperation,
+                page = page,
+                pushType = WebSocketType.DETAIL,
+                objectMapper = objectMapper,
+                notifyPost = NotifyPost(
+                        module = "environment",
+                        level = NotityLevel.LOW_LEVEL.getLevel(),
+                        message = "",
+                        dealUrl = null,
+                        code = 200,
+                        webSocketType = WebSocketType.changWebType(WebSocketType.AMD),
+                        page = page
+                )
+        )
+    }
 
-	companion object {
-		val logger = LoggerFactory.getLogger(this::class.java)
-	}
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
+    }
 }
