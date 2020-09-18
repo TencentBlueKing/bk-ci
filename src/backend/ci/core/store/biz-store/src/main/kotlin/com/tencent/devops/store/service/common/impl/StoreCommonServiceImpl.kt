@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.configuration.StoreDetailUrlConfig
+import com.tencent.devops.store.configuration.StoreRepoNameSpaceNameConfig
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
@@ -57,7 +58,8 @@ class StoreCommonServiceImpl @Autowired constructor(
     private val storeMemberDao: StoreMemberDao,
     private val storePipelineBuildRelDao: StorePipelineBuildRelDao,
     private val storeProjectRelDao: StoreProjectRelDao,
-    private val storeDetailUrlConfig: StoreDetailUrlConfig
+    private val storeDetailUrlConfig: StoreDetailUrlConfig,
+    private val storeRepoNameSpaceNameConfig: StoreRepoNameSpaceNameConfig
 ) : StoreCommonService {
 
     private val logger = LoggerFactory.getLogger(StoreCommonServiceImpl::class.java)
@@ -172,9 +174,22 @@ class StoreCommonServiceImpl @Autowired constructor(
             StoreTypeEnum.TEMPLATE -> "${storeDetailUrlConfig.templateDetailBaseUrl}$storeCode"
             StoreTypeEnum.IMAGE -> "${storeDetailUrlConfig.imageDetailBaseUrl}$storeCode"
             StoreTypeEnum.IDE_ATOM -> "${storeDetailUrlConfig.ideAtomDetailBaseUrl}$storeCode"
+            StoreTypeEnum.SERVICE -> "${storeDetailUrlConfig.serviceDetailBaseUrl}$storeCode"
             else -> ""
         }
         logger.info("getStoreDetailUrl url is :$url")
         return url
+    }
+
+    override fun getStoreRepoNameSpaceName(storeType: StoreTypeEnum): String {
+        logger.info("getStoreRepoNameSpaceName storeType is :$storeType,")
+        val repoNameSpaceName = when (storeType) {
+            StoreTypeEnum.ATOM -> "${storeRepoNameSpaceNameConfig.pluginNameSpaceName}"
+            StoreTypeEnum.IDE_ATOM -> "${storeRepoNameSpaceNameConfig.idePluginNameSpaceName}"
+            StoreTypeEnum.SERVICE -> "${storeRepoNameSpaceNameConfig.serviceNameSpaceName}"
+            else -> ""
+        }
+        logger.info("getStoreDetailUrl repoNameSpaceName is :$repoNameSpaceName")
+        return repoNameSpaceName
     }
 }

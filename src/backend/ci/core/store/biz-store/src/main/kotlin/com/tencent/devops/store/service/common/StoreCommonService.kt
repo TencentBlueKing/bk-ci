@@ -79,4 +79,9 @@ interface StoreCommonService {
      * 获取store组件详情页地址
      */
     fun getStoreDetailUrl(storeType: StoreTypeEnum, storeCode: String): String
+
+    /**
+     * 获取store组件代码库group名称
+     */
+    fun getStoreRepoNameSpaceName(storeType: StoreTypeEnum): String
 }

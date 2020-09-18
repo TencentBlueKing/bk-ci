@@ -360,11 +360,12 @@ open class CodeccApi constructor(
         return objectMapper.readValue(result)
     }
 
-    fun getCodeccMeasureInfo(repoProjectName: String, commitId: String): Result<CodeccMeasureInfo?> {
+    fun getCodeccMeasureInfo(repoProjectName: String, commitId: String? = null): Result<CodeccMeasureInfo?> {
         val encodeProjectName = URLEncoder.encode(repoProjectName, Charsets.UTF_8.name())
+        val headers = if (null != commitId) mapOf(COMMIT_ID to commitId) else null
         val result = taskExecution(
             body = mapOf(),
-            headers = mapOf(COMMIT_ID to commitId),
+            headers = headers,
             path = "/ms/defect/api/service/defect/repo/$encodeProjectName/measurement",
             method = HttpMethod.GET
         )
