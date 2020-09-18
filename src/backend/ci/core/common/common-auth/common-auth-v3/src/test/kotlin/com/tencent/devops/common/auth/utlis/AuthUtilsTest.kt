@@ -353,7 +353,7 @@ class AuthUtilsTest {
         val e41 = ExpressionDTO()
         e41.operator = ExpressionOperationEnum.IN
         e41.field = "credential.id"
-        e41.value = listOf("fabio","dsahs")
+        e41.value = listOf("fabio", "dsahs")
         e41.content = null
         val e42 = ExpressionDTO()
         e42.operator = ExpressionOperationEnum.START_WITH
@@ -364,7 +364,7 @@ class AuthUtilsTest {
         val e43 = ExpressionDTO()
         e43.operator = ExpressionOperationEnum.IN
         e43.field = "credential.id"
-        e43.value = listOf("001","002","003")
+        e43.value = listOf("001", "002", "003")
         e43.content = null
         val e44 = ExpressionDTO()
         e44.operator = ExpressionOperationEnum.START_WITH
