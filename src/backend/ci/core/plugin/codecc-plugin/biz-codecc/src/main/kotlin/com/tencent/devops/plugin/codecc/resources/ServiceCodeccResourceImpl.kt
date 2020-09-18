@@ -87,11 +87,11 @@ class ServiceCodeccResourceImpl @Autowired constructor(
         return codeccApi.getCodeccMeasureInfo(repoProjectName, commitId)
     }
 
-    override fun getCodeccTaskStatusInfo(repoProjectName: String, commitId: String): Result<Int> {
+    override fun getCodeccTaskStatusInfo(repoProjectName: String, commitId: String?): Result<Int> {
         return codeccApi.getCodeccTaskStatusInfo(repoProjectName, commitId)
     }
 
-    override fun startCodeccTask(repoProjectName: String, commitId: String): Result<Boolean> {
+    override fun startCodeccTask(repoProjectName: String, commitId: String?): Result<Boolean> {
         return codeccApi.startCodeccTask(repoProjectName, commitId)
     }
 }
