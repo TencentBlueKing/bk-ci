@@ -60,11 +60,9 @@ object ESIndexUtils {
             .endObject()
     }
 
-    fun indexRequest(
+    fun getDocumentObject(
         buildId: String,
-        logMessage: LogMessageWithLineNo,
-        index: String,
-        type: String
+        logMessage: LogMessageWithLineNo
     ): XContentBuilder {
         return XContentFactory.jsonBuilder()
             .startObject()
