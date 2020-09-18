@@ -19,7 +19,7 @@
                             <bk-select v-model="codelibUrl"
                                 searchable
                                 :clearable="false"
-                                v-validate="&quot;required&quot;"
+                                v-validate="'required'"
                                 name="name"
                                 class="codelib-credential-selector"
                                 :placeholder="$t('codelib.codelibUrlPlaceholder')"
@@ -30,7 +30,7 @@
                                     :name="option.httpUrl">
                                 </bk-option>
                             </bk-select>
-                            <span class="error-tips" v-if="urlErrMsg || errors.has(&quot;name&quot;)">
+                            <span class="error-tips" v-if="urlErrMsg || errors.has('name')">
                                 {{ urlErrMsg || errors.first("name") }}
                             </span>
                         </div>
@@ -40,9 +40,9 @@
                     <!-- 别名 start -->
                     <div class="bk-form-item is-required">
                         <label class="bk-label">{{ $t('codelib.aliasName') }}:</label>
-                        <div class="bk-form-content" :class="{ &quot;is-danger&quot;: errors.has(&quot;aliasName&quot;) }">
-                            <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="codelibAliasName" v-model.trim="codelibAliasName" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ &quot;is-danger&quot;: errors.has(&quot;codelibAliasName&quot;) }">
-                            <span class="error-tips" v-if="errors.has(&quot;codelibAliasName&quot;)">
+                        <div class="bk-form-content" :class="{ 'is-danger': errors.has('aliasName') }">
+                            <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="codelibAliasName" v-model.trim="codelibAliasName" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ 'is-danger': errors.has('codelibAliasName') }">
+                            <span class="error-tips" v-if="errors.has('codelibAliasName')">
                                 {{ errors.first('codelibAliasName') }}
                             </span>
                         </div>
@@ -50,10 +50,10 @@
                     <!-- 别名 end -->
                 </div>
                 <div class="bk-form-item is-required" v-else>
-                    <div class="bk-form-content" :class="{ &quot;is-danger&quot;: errors.has(&quot;powerValidate&quot;) }" :style="isGithub ? { textAlign: &quot;center&quot;, marginLeft: 0 } : {}">
+                    <div class="bk-form-content" :class="{ 'is-danger': errors.has('powerValidate') }" :style="isGithub ? { textAlign: 'center', marginLeft: 0 } : {}">
                         <button class="bk-button bk-primary" type="button" @click="openValidate">{{ $t('codelib.oauthCert') }}</button>
                         <input type="text" value="" name="powerValidate" v-validate="{ required: true }" style="width: 0; height: 0; border: none; z-index: -20; opacity: 0;">
-                        <span class="error-tips" v-if="errors.has(&quot;powerValidate&quot;)">
+                        <span class="error-tips" v-if="errors.has('powerValidate')">
                             {{ errors.first('powerValidate') }}
                         </span>
                     </div>
@@ -71,8 +71,8 @@
                 <div class="bk-form-item is-required">
                     <label class="bk-label">{{ $t('codelib.codelibUrl') }}:</label>
                     <div class="bk-form-content">
-                        <input type="text" class="bk-form-input" :placeholder="urlPlaceholder" name="codelibUrl" v-model.trim="codelibUrl" v-validate="&quot;required&quot;" :class="{ &quot;is-danger&quot;: urlErrMsg || errors.has(&quot;codelibUrl&quot;) }">
-                        <span class="error-tips" v-if="urlErrMsg || errors.has(&quot;codelibUrl&quot;)">
+                        <input type="text" class="bk-form-input" :placeholder="urlPlaceholder" name="codelibUrl" v-model.trim="codelibUrl" v-validate="'required'" :class="{ 'is-danger': urlErrMsg || errors.has('codelibUrl') }">
+                        <span class="error-tips" v-if="urlErrMsg || errors.has('codelibUrl')">
                             {{ urlErrMsg || errors.first("codelibUrl") }}
                         </span>
                     </div>
@@ -82,9 +82,9 @@
                 <!-- 别名 start -->
                 <div class="bk-form-item is-required">
                     <label class="bk-label">{{ $t('codelib.aliasName') }}:</label>
-                    <div class="bk-form-content" :class="{ &quot;is-danger&quot;: errors.has(&quot;aliasName&quot;) }">
-                        <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="codelibAliasName" v-model.trim="codelibAliasName" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ &quot;is-danger&quot;: errors.has(&quot;codelibAliasName&quot;) }">
-                        <span class="error-tips" v-if="errors.has(&quot;codelibAliasName&quot;)">
+                    <div class="bk-form-content" :class="{ 'is-danger': errors.has('aliasName') }">
+                        <input type="text" class="bk-form-input" :placeholder="$t('codelib.aliasNameEnter')" name="codelibAliasName" v-model.trim="codelibAliasName" data-vv-validate-on="blur" v-validate="{ required: true, max: 60, aliasUnique: [projectId, repositoryHashId] }" :class="{ 'is-danger': errors.has('codelibAliasName') }">
+                        <span class="error-tips" v-if="errors.has('codelibAliasName')">
                             {{ errors.first('codelibAliasName') }}
                         </span>
                     </div>
@@ -94,12 +94,12 @@
                 <!-- 访问凭据 start -->
                 <div class="bk-form-item is-required" v-if="codelibConfig.label !== 'Github'">
                     <label class="bk-label">{{ $t('codelib.codelibCredential') }}:</label>
-                    <div class="bk-form-content code-lib-credential" :class="{ &quot;is-danger&quot;: errors.has(&quot;credentialId&quot;) }">
+                    <div class="bk-form-content code-lib-credential" :class="{ 'is-danger': errors.has('credentialId') }">
                         <bk-select v-model="credentialId"
                             :loading="isLoadingTickets"
                             searchable
                             :clearable="false"
-                            v-validate="&quot;required&quot;"
+                            v-validate="'required'"
                             name="credentialId"
                             class="codelib-credential-selector"
                             :placeholder="$t('codelib.credentialPlaceholder')"
@@ -115,7 +115,7 @@
                         </bk-select>
                         <span class="text-link" @click="addCredential">{{ $t('codelib.new') }}</span>
                     </div>
-                    <span class="error-tips" v-if="errors.has(&quot;credentialId&quot;)">{{ $t('codelib.credentialRequired') }}</span>
+                    <span class="error-tips" v-if="errors.has('credentialId')">{{ $t('codelib.credentialRequired') }}</span>
                 </div>
                 <!-- 访问凭据 end -->
             </div>
