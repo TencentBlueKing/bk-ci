@@ -127,9 +127,9 @@ interface ServiceCodeccResource {
         @ApiParam("代码库名称", required = true)
         @PathParam("repoProjectName")
         repoProjectName: String,
-        @ApiParam("代码库提交ID", required = true)
+        @ApiParam("代码库提交ID", required = false)
         @QueryParam("commitId")
-        commitId: String
+        commitId: String? = null
     ): Result<CodeccMeasureInfo?>
 
     @ApiOperation("获取codecc任务状态信息")

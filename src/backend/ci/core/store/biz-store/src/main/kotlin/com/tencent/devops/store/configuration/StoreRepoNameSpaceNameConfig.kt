@@ -30,20 +30,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class StoreDetailUrlConfig {
+class StoreRepoNameSpaceNameConfig {
 
-    @Value("\${store.atomDetailBaseUrl}")
-    val atomDetailBaseUrl: String? = null
+    @Value("\${git.plugin.nameSpaceName}")
+    val pluginNameSpaceName: String? = null
 
-    @Value("\${store.templateDetailBaseUrl}")
-    val templateDetailBaseUrl: String? = null
+    @Value("\${git.idePlugin.nameSpaceName}")
+    val idePluginNameSpaceName: String? = null
 
-    @Value("\${store.ideAtomDetailBaseUrl}")
-    val ideAtomDetailBaseUrl: String? = null
-
-    @Value("\${store.imageDetailBaseUrl}")
-    val imageDetailBaseUrl: String? = null
-
-    @Value("\${store.serviceDetailBaseUrl}")
-    val serviceDetailBaseUrl: String? = null
+    @Value("\${git.service.nameSpaceName}")
+    val serviceNameSpaceName: String? = null
 }
