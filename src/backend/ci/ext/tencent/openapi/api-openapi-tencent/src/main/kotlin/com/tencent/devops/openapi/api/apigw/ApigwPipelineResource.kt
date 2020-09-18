@@ -78,7 +78,7 @@ interface ApigwPipelineResource {
         projectId: String,
         @ApiParam(value = "流水线模型", required = true)
         pipeline: Model,
-        @ApiParam(value = "ChannelCode", required = true)
+        @ApiParam(value = "ChannelCode", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<PipelineId>
@@ -104,7 +104,7 @@ interface ApigwPipelineResource {
         pipelineId: String,
         @ApiParam(value = "流水线模型", required = true)
         pipeline: Model,
-        @ApiParam(value = "ChannelCode", required = true)
+        @ApiParam(value = "ChannelCode", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<Boolean>
