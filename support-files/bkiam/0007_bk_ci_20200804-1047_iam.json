@@ -25,6 +25,10 @@
                 "required": false
               },
               {
+                "id": "project_manage",
+                "required": false
+              },
+              {
                 "id": "pipeline_create",
                 "required": false
               },
