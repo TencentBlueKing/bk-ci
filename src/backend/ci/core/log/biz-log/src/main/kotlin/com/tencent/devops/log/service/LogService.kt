@@ -58,10 +58,10 @@ import org.elasticsearch.action.search.MultiSearchRequest
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.action.search.SearchScrollRequest
 import org.elasticsearch.client.RequestOptions
+import org.elasticsearch.client.core.CountRequest
 import org.elasticsearch.client.indices.CreateIndexRequest
 import org.elasticsearch.client.indices.GetIndexRequest
 import org.elasticsearch.common.unit.TimeValue
-import org.elasticsearch.common.xcontent.XContentType
 import org.elasticsearch.index.IndexNotFoundException
 import org.elasticsearch.index.query.BoolQueryBuilder
 import org.elasticsearch.index.query.Operator
@@ -258,7 +258,7 @@ class LogService @Autowired constructor(
                     .must(QueryBuilders.rangeQuery("lineNo").gte(start).lte(end))
 
                 val searchRequest = SearchRequest(index)
-                    .searchType(type)
+                    .types(type)
                     .source(SearchSourceBuilder()
                         .query(query)
                         .highlighter(
@@ -464,7 +464,7 @@ class LogService @Autowired constructor(
 
         val scrollClient = client.restClient(buildId)
         val searchRequest = SearchRequest(indexAndType.index)
-            .searchType(indexAndType.type)
+            .types(indexAndType.type)
             .source(SearchSourceBuilder()
                 .query(query)
                 .docValueField("lineNo")
@@ -732,7 +732,7 @@ class LogService @Autowired constructor(
         val result = mutableListOf<LogLine>()
         val scrollClient = client.restClient(buildId)
         val searchRequest = SearchRequest(index)
-            .searchType(type)
+            .types(type)
             .source(SearchSourceBuilder()
                 .query(query)
                 .docValueField("lineNo")
@@ -776,7 +776,7 @@ class LogService @Autowired constructor(
         val query = getQuery(buildId, tag, subTag, jobId, executeCount)
 
         val searchRequest = SearchRequest(index.index)
-            .searchType(index.type)
+            .types(index.type)
             .source(SearchSourceBuilder()
                 .query(query)
                 .docValueField("lineNo")
@@ -852,7 +852,7 @@ class LogService @Autowired constructor(
                     .must(QueryBuilders.matchQuery("logType", LogType.START.name))
                     .must(QueryBuilders.rangeQuery("lineNo").from(start))
                 val srbFoldStart = SearchRequest(index)
-                    .searchType(type)
+                    .types(type)
                     .source(SearchSourceBuilder()
                         .query(startQuery)
                         .docValueField("lineNo")
@@ -862,7 +862,7 @@ class LogService @Autowired constructor(
                     .must(QueryBuilders.matchQuery("logType", LogType.END.name))
                     .must(QueryBuilders.rangeQuery("lineNo").from(start))
                 val srbFoldStop = SearchRequest(index)
-                    .searchType(type)
+                    .types(type)
                     .source(SearchSourceBuilder()
                         .query(stopQuery)
                         .docValueField("lineNo")
@@ -883,7 +883,7 @@ class LogService @Autowired constructor(
                     .must(QueryBuilders.rangeQuery("lineNo").from(start))
 
                 val srbKeyword = SearchRequest(index)
-                    .searchType(type)
+                    .types(type)
                     .source(SearchSourceBuilder()
                         .query(query)
                         .highlighter(
@@ -931,7 +931,7 @@ class LogService @Autowired constructor(
                     .must(QueryBuilders.rangeQuery("lineNo").gte(start))
 
             val searchRequest = SearchRequest(index)
-                .searchType(type)
+                .types(type)
                 .source(SearchSourceBuilder()
                     .query(query)
                     .docValueField("lineNo")
@@ -1020,7 +1020,7 @@ class LogService @Autowired constructor(
                 .must(QueryBuilders.rangeQuery("lineNo").gte(start))
 
             val searchRequest = SearchRequest(index)
-                .searchType(type)
+                .types(type)
                 .source(SearchSourceBuilder()
                     .query(query)
                     .docValueField("lineNo")
@@ -1199,15 +1199,15 @@ class LogService @Autowired constructor(
         executeCount: Int?
     ): Long {
         val query = getQuery(buildId, tag, subTag, jobId, executeCount)
-        val searchRequest = SearchRequest(index)
-            .searchType(type)
-            .source(SearchSourceBuilder()
-                .query(query)
-                .size(0)
-                .timeout(TimeValue.timeValueSeconds(60)))
-
-        val searchResponse = client.restClient(buildId).search(searchRequest, RequestOptions.DEFAULT)
-        return searchResponse.hits.hits.size.toLong()
+        val countRequest = CountRequest(index)
+            .source(SearchSourceBuilder().query(query))
+        return try {
+            val countResponse = client.restClient(buildId).count(countRequest, RequestOptions.DEFAULT)
+            countResponse.count
+        } catch (e: Throwable) {
+            logger.error("[$buildId] Get log size with error: ${e.printStackTrace()}")
+            0
+        }
     }
 
     private fun getQuery(
@@ -1294,7 +1294,7 @@ class LogService @Autowired constructor(
             logger.info("Get the query builder: $boolQueryBuilder")
 
             val searchRequest = SearchRequest(index)
-                .searchType(type)
+                .types(type)
                 .source(SearchSourceBuilder()
                     .query(boolQueryBuilder)
                     .docValueField("lineNo")
@@ -1387,7 +1387,7 @@ class LogService @Autowired constructor(
             ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
 
             val searchRequest = SearchRequest(index)
-                .searchType(type)
+                .types(type)
                 .source(SearchSourceBuilder()
                     .query(boolQueryBuilder)
                     .docValueField("lineNo")
@@ -1510,7 +1510,7 @@ class LogService @Autowired constructor(
 
         keywords.forEach {
             val srbKeyword = SearchRequest(index)
-                .searchType(type)
+                .types(type)
                 .source(SearchSourceBuilder()
                     .query(query
                         .must(QueryBuilders.matchQuery("message", it).operator(Operator.AND))
@@ -1591,13 +1591,13 @@ class LogService @Autowired constructor(
         if (wholeQuery && tag.isNullOrBlank()) {
 
             val srbFoldStart = SearchRequest(index)
-                .searchType(type)
+                .types(type)
                 .source(SearchSourceBuilder()
                     .query(QueryBuilders.matchQuery("logType", LogType.START.name))
                     .docValueField("lineNo")
                     .size(100))
             val srbFoldStop = SearchRequest(index)
-                .searchType(type)
+                .types(type)
                 .source(SearchSourceBuilder()
                     .query(QueryBuilders.matchQuery("logType", LogType.START.name))
                     .docValueField("lineNo")
@@ -1609,7 +1609,7 @@ class LogService @Autowired constructor(
 
         keywords.forEach {
             val srbKeyword = SearchRequest(index)
-                .searchType(type)
+                .types(type)
                 .source(SearchSourceBuilder()
                     .query(query
                         .must(QueryBuilders.matchQuery("message", it).operator(Operator.AND))
@@ -1697,7 +1697,7 @@ class LogService @Autowired constructor(
             boolQueryBuilder.must(rangeQuery)
 
             val searchRequest = SearchRequest(index)
-                .searchType(type)
+                .types(type)
                 .source(SearchSourceBuilder()
                     .query(boolQueryBuilder)
                     .docValueField("lineNo")
@@ -1909,23 +1909,25 @@ class LogService @Autowired constructor(
         logger.info("[$index|$type|$tag|$subTag|$jobId|$executeCount|$size] Get log range with query ($q)")
 
         val searchRequest = SearchRequest(index)
-            .searchType(type)
+            .types(type)
             .source(SearchSourceBuilder()
                 .query(q)
                 .docValueField("lineNo")
                 .size(200)
                 .sort("lineNo", SortOrder.ASC)
                 .timeout(TimeValue.timeValueSeconds(60)))
-
-        val hits = client.restClient(buildId)
-            .search(searchRequest, RequestOptions.DEFAULT)
-            .hits
-
-        logger.info("hits 0 for build($type) with response (${hits.hits.size})")
-
-        if (hits.hits.isEmpty()) return Pair(0, 0)
-
-        return getRangeIndex(hits, tag, subTag, jobId)
+        try {
+            val searchResponse = client.restClient(buildId)
+                .search(searchRequest, RequestOptions.DEFAULT)
+            val hits = searchResponse.hits
+            logger.info("[$index|$type|$tag|$subTag|$jobId|$executeCount|$size] Get log range with searchResponse $searchResponse")
+            logger.info("hits 0 for build($type) with response (${hits.hits.size})")
+            if (hits.hits.isEmpty()) return Pair(0, 0)
+            return getRangeIndex(hits, tag, subTag, jobId)
+        } catch (e: Exception) {
+            logger.error("Get log range with error", e.toString())
+            return Pair(0, 0)
+        }
     }
 
     private fun getRangeIndex(
@@ -1967,7 +1969,7 @@ class LogService @Autowired constructor(
         val indexAndType = indexService.getIndexAndType(buildId)
 
         var lines = 0
-        val bulkRequest = BulkRequest()
+        val bulkRequest = BulkRequest(indexAndType.index, indexAndType.type)
         for (i in logMessages.indices) {
             val logMessage = logMessages[i]
 
@@ -2021,9 +2023,9 @@ class LogService @Autowired constructor(
         index: String,
         type: String
     ): IndexRequest? {
-        val builder = getDocumentObject(buildId, logMessage, index, type)
+        val builder = getDocumentObject(buildId, logMessage)
         return try {
-            IndexRequest(index).source(builder, XContentType.JSON)
+            IndexRequest(index, type).source(builder)
         } catch (e: IOException) {
             logger.error("[$buildId] Convert logMessage to es document failure", e)
             null
