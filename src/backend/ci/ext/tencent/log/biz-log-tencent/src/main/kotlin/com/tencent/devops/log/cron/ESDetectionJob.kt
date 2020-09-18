@@ -38,7 +38,7 @@ import com.tencent.devops.log.util.ESIndexUtils.getIndexSettings
 import com.tencent.devops.log.util.ESIndexUtils.getTypeMappings
 import com.tencent.devops.log.util.IndexNameUtils
 import com.tencent.devops.log.util.IndexNameUtils.getTypeByIndex
-import org.elasticsearch.ResourceAlreadyExistsException
+import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.bulk.BulkRequest
 import org.elasticsearch.action.delete.DeleteRequest
 import org.elasticsearch.action.index.IndexRequest
@@ -125,7 +125,7 @@ class ESDetectionJob @Autowired constructor(
                 .indices()
                 .create(request, RequestOptions.DEFAULT)
             logger.info("Get the create index response: $response")
-        } catch (e: ResourceAlreadyExistsException) {
+        } catch (e: ElasticsearchStatusException) {
             logger.warn("Index already exist, ignore", e)
         } finally {
             logger.info("[${esClient.name}|$index] It took ${System.currentTimeMillis() - startEpoch}ms to create index")
@@ -137,7 +137,7 @@ class ESDetectionJob @Autowired constructor(
         try {
             logger.info("[${esClient.name}|$index|$buildId] Start to add lines")
             val type = getTypeByIndex(index)
-            val bulkRequest = BulkRequest()
+            val bulkRequest = BulkRequest(index, type)
             for (i in 1 until MULTI_LOG_LINES) {
                 val log = LogMessageWithLineNo(
                     tag = "test-tag-$i",
@@ -154,7 +154,6 @@ class ESDetectionJob @Autowired constructor(
                 )
                 if (indexRequest != null) {
                     indexRequest.create(false)
-                        .source(getDocumentObject(buildId, log, index, type))
                         .timeout(TimeValue.timeValueSeconds(60))
                     bulkRequest.add(indexRequest)
                 }
@@ -182,9 +181,9 @@ class ESDetectionJob @Autowired constructor(
         index: String,
         type: String
     ): IndexRequest? {
-        val builder = getDocumentObject(buildId, logMessage, index, type)
+        val builder = getDocumentObject(buildId, logMessage)
         return try {
-            IndexRequest(index).source(builder, XContentType.JSON)
+            IndexRequest(index, type).source(builder)
         } catch (e: IOException) {
             logger.error("[$buildId] Convert logMessage to es document failure", e)
             null
@@ -231,7 +230,7 @@ class ESDetectionJob @Autowired constructor(
                     return
                 }
                 val type = getTypeByIndex(index)
-                val bulkRequest = BulkRequest().timeout(TimeValue.timeValueSeconds(30))
+                val bulkRequest = BulkRequest(index, type).timeout(TimeValue.timeValueSeconds(30))
                 documentIds.forEach {
                     bulkRequest.add(DeleteRequest(index, type, it))
                 }
