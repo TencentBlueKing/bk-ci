@@ -29,11 +29,11 @@ apply plugin: "maven"
 apply plugin: "kotlin-spring"
 apply plugin: "maven-publish"
 apply plugin: "signing"
-apply plugin:"java-library"
 
 task sourceJar(type: Jar) {
     classifier "sources"
     from sourceSets.main.allJava
+    from sourceSets.main.kotlin
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
