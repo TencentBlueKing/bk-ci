@@ -18,9 +18,9 @@
             }
         },
         render (h) {
-            const { value, readOnly, handleInput, name, handleBlur, title } = this
+            const { value, readOnly, handleInput, name, handleBlur, title, clickUnfold } = this
             return (
-                <textarea title={title} onBlur={handleBlur} onInput={handleInput} class='bk-form-textarea pointer-events-auto' name={name} disabled={readOnly} value={value} />
+                <textarea title={title} onBlur={handleBlur} onInput={handleInput} class={['bk-form-textarea pointer-events-auto', clickUnfold ? 'textarea-styles' : '']} name={name} disabled={readOnly} value={value} />
             )
         }
     }
@@ -29,5 +29,16 @@
 <style lang="scss" scoped>
     .bk-form-textarea {
         resize: vertical;
+    }
+    .textarea-styles {
+        position: absolute;
+        resize: none;
+        min-height: 32px;
+        line-height: 20px !important;
+        margin-top: 1px;
+        &:focus {
+            height: 100px!important;
+            z-index: 10;
+        }
     }
 </style>

@@ -9,6 +9,7 @@ spring:
       port: __BKCI_CONSUL_PORT__
       discovery:
         tags: __BKCI_CONSUL_TAG__
+        instanceId: ${spring.application.name}-${server.port}-${spring.cloud.client.hostname}
 # redis config
   redis:
 #   # Redis sentinel 集群方式配置
@@ -43,6 +44,10 @@ service-suffix: "-__BKCI_CONSUL_TAG__"
 server:
   undertow:
     worker-threads: 100
+    accesslog:
+      enabled: true
+      pattern: '%h %I "%{i,X-DEVOPS-UID}" [%{time,yyyyMMddHHmmss.S}] "%r" %s %D %b "%{i,Referer}" "%{i,User-Agent}"'
+      dir: ${service.log.dir}
 
 # gateway for system
 devopsGateway:
@@ -95,7 +100,8 @@ esb:
     url: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/api/c/compapi/v2/sops/
   cmdb:
     searchhosturl: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/api/c/compapi/v2/
-
+  iam:
+    url: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__
 
 # codecc config
 codecc:

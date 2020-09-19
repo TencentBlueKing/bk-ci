@@ -12,5 +12,6 @@ enum class ErrorCodeEnum(
     LOAD_BUILD_AGENT_FAIL(2128006, "获取第三方构建机失败/Load build agent fail"),
     VM_NODE_NULL(2128007, "第三方构建机环境的节点为空"),
     GET_VM_ENV_ERROR(2128008, "获取第三方构建机环境失败"),
-    GET_VM_ERROR(2128009, "获取第三方构建机失败")
+    GET_VM_ERROR(2128009, "获取第三方构建机失败"),
+    JOB_QUOTA_EXCESS(2128010, "JOB配额超限")
 }

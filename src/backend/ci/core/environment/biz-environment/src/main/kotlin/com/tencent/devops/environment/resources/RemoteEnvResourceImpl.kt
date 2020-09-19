@@ -16,4 +16,8 @@ class RemoteEnvResourceImpl @Autowired constructor(
     override fun listEnvByPage(projectId: String, page: Int?, pageSize: Int?): Result<Page<EnvWithPermission>> {
         return Result(envService.listEnvironmentByPage(projectId, page, pageSize))
     }
+
+    override fun getEnvInfos(envIds: List<String>): Result<List<EnvWithPermission>> {
+        return Result(envService.listRawEnvByHashIdsAllType(envIds))
+    }
 }

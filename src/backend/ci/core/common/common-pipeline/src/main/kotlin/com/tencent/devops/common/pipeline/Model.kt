@@ -26,7 +26,6 @@
 
 package com.tencent.devops.common.pipeline
 
-import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -52,9 +51,7 @@ data class Model(
     @ApiModelProperty("源模版ID", required = false)
     var srcTemplateId: String? = null,
     @ApiModelProperty("模板ID", required = false)
-    var templateId: String? = null,
-    @ApiModelProperty("构建错误信息", required = false)
-    var errorInfoList: List<ErrorInfo>? = null
+    var templateId: String? = null
 ) {
 
     companion object {

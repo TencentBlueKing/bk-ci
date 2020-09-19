@@ -4,7 +4,7 @@
             <slot name="tool"></slot>
         </template>
         <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index">
-            <transition name="fade">
+            <transition name="atom-fade">
                 <ul v-if="activeTab === panel.name && panel.showChildTab" class="transition-child-tabs">
                     <li v-for="childPanel in panel.children.filter(x => !x.hidden)"
                         :key="childPanel.name"

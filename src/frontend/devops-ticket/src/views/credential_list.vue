@@ -20,8 +20,8 @@
                     <bk-table-column :label="$t('ticket.remark')" prop="credentialRemark"></bk-table-column>
                     <bk-table-column :label="$t('ticket.operation')" width="200">
                         <template slot-scope="props">
-                            <bk-button theme="primary" text :disabled="!props.row.permissions || !props.row.permissions.edit" @click="handleEditCredential(props.row.credentialId)">{{ $t('ticket.edit') }}</bk-button>
-                            <bk-button theme="primary" text :disabled="!props.row.permissions || !props.row.permissions.delete" @click="handleDeleteCredentail(props.row.credentialId)">{{ $t('ticket.delete') }}</bk-button>
+                            <bk-button theme="primary" :class="{ 'cert-operation-btn': true, disabled: !hasPermission(props.row.permissions, 'edit') }" text @click="handleEditCredential(props.row)">{{ $t('ticket.edit') }}</bk-button>
+                            <bk-button theme="primary" :class="{ 'cert-operation-btn': true, disabled: !hasPermission(props.row.permissions, 'delete') }" text @click="handleDeleteCredentail(props.row)">{{ $t('ticket.delete') }}</bk-button>
                         </template>
                     </bk-table-column>
                 </bk-table>
@@ -156,39 +156,74 @@
                 }
                 this.showContent = true
             },
-            async handleDeleteCredentail (id) {
-                this.$bkInfo({
-                    title: `${this.$t('ticket.credential.deleteCredentialTips')}?`,
-                    confirmFn: async () => {
-                        let message, theme
+            async handleDeleteCredentail (credential) {
+                if (this.hasPermission(credential.permissions, 'delete')) {
+                    this.$bkInfo({
+                        width: 500,
+                        theme: 'warning',
+                        type: 'warning',
+                        title: `${this.$t('ticket.credential.deleteCredentialTips', [credential.credentialId])}`,
+                        confirmFn: async () => {
+                            let message, theme
 
-                        try {
-                            await this.$store.dispatch('ticket/toDeleteCredential', {
-                                projectId: this.projectId,
-                                id: id
-                            })
-                            message = this.$t('ticket.credential.successfullyDeletedCredential')
-                            theme = 'success'
-                        } catch (err) {
-                            message = err.message ? err.message : err
-                            theme = 'error'
-                        } finally {
-                            this.$bkMessage({
-                                message,
-                                theme
-                            })
+                            try {
+                                await this.$store.dispatch('ticket/toDeleteCredential', {
+                                    projectId: this.projectId,
+                                    id: credential.credentialId
+                                })
+                                message = this.$t('ticket.credential.successfullyDeletedCredential')
+                                theme = 'success'
+                            } catch (err) {
+                                message = err.message ? err.message : err
+                                theme = 'error'
+                            } finally {
+                                this.$bkMessage({
+                                    message,
+                                    theme
+                                })
+                            }
+                            this.requestList()
                         }
-                        this.requestList()
-                    }
-                })
+                    })
+                } else {
+                    this.$showAskPermissionDialog({
+                        noPermissionList: [{
+                            actionId: this.$permissionActionMap.delete,
+                            resourceId: this.$permissionResourceMap.credential,
+                            instanceId: [{
+                                id: credential.credentialId,
+                                name: credential.credentialId
+                            }],
+                            projectId: this.projectId
+                        }]
+                    })
+                }
             },
-            handleEditCredential (id) {
-                this.$router.push({
-                    name: 'editCredential',
-                    params: {
-                        credentialId: id
-                    }
-                })
+            handleEditCredential (credential) {
+                if (this.hasPermission(credential.permissions, 'edit')) {
+                    this.$router.push({
+                        name: 'editCredential',
+                        params: {
+                            credentialType: credential.credentialType,
+                            credentialId: credential.credentialId
+                        }
+                    })
+                } else {
+                    this.$showAskPermissionDialog({
+                        noPermissionList: [{
+                            actionId: this.$permissionActionMap.edit,
+                            resourceId: this.$permissionResourceMap.credential,
+                            instanceId: [{
+                                id: credential.credentialId,
+                                name: credential.credentialId
+                            }],
+                            projectId: this.projectId
+                        }]
+                    })
+                }
+            },
+            hasPermission (permissions, action) {
+                return permissions && permissions[action]
             },
             changeTicketType (row, col, type) {
                 const curType = this.ticketType.find(item => item.id === type)
@@ -203,4 +238,7 @@
 
 <style lang="scss">
     @import './../scss/conf';
+    .credential-operation-btn[disabled] {
+      cursor: url(../images/cursor-lock.png),auto !important;
+    }
 </style>

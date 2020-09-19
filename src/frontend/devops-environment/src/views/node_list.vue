@@ -342,12 +342,19 @@
                 this.$toggleProjectMenu(true)
             },
             goToApplyPerm () {
-                const url = `/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_creator=env_node`
-                window.open(url, '_blank')
+                this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.envNode, [{
+                    id: this.projectId,
+                    type: this.$permissionResourceTypeMap.PROJECT
+                }])
             },
             toNodeApplyPerm (row) {
-                const url = `/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_manager=env_node:${row.nodeHashId}`
-                window.open(url, '_blank')
+                this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.envNode, [{
+                    id: this.projectId,
+                    type: this.$permissionResourceTypeMap.PROJECT
+                }, {
+                    id: row.nodeHashId,
+                    type: this.$permissionResourceTypeMap.ENVIRONMENT_ENV_NODE
+                }])
             },
             dropdownIsShow (isShow) {
                 if (isShow === 'show') {
@@ -369,17 +376,11 @@
                 const id = row.nodeHashId
 
                 params.push(id)
-
-                const h = this.$createElement
-                const content = h('p', {
-                    style: {
-                        textAlign: 'center'
-                    }
-                }, `${this.$t('environment.nodeInfo.deleteNodetips')}(${row.nodeId})？`)
-
                 this.$bkInfo({
+                    theme: 'warning',
+                    type: 'warning',
                     title: this.$t('environment.delete'),
-                    subHeader: content,
+                    subTitle: `${this.$t('environment.nodeInfo.deleteNodetips', [row.nodeId])}`,
                     confirmFn: async () => {
                         let message, theme
                         try {
@@ -391,10 +392,24 @@
                             message = this.$t('environment.successfullyDeleted')
                             theme = 'success'
                         } catch (err) {
-                            message = err.data ? err.data.message : err
-                            theme = 'error'
+                            if (err.code === 403) {
+                                this.$showAskPermissionDialog({
+                                    noPermissionList: [{
+                                        actionId: this.$permissionActionMap.delete,
+                                        resourceId: this.$permissionResourceMap.envNode,
+                                        instanceId: [{
+                                            id,
+                                            name: row.nodeId
+                                        }],
+                                        projectId: this.projectId
+                                    }]
+                                })
+                            } else {
+                                message = err.data ? err.data.message : err
+                                theme = 'error'
+                            }
                         } finally {
-                            this.$bkMessage({
+                            message && this.$bkMessage({
                                 message,
                                 theme
                             })
@@ -638,10 +653,11 @@
             },
             async saveEdit (node) {
                 const valid = await this.$validator.validate()
+                const displayName = this.curEditNodeDisplayName.trim()
                 if (valid) {
                     let message, theme
                     const params = {
-                        displayName: this.curEditNodeDisplayName.trim()
+                        displayName
                     }
 
                     try {
@@ -654,10 +670,24 @@
                         message = this.$t('environment.successfullyModified')
                         theme = 'success'
                     } catch (err) {
-                        message = err.message ? err.message : err
-                        theme = 'error'
+                        if (err.code === 403) {
+                            this.$showAskPermissionDialog({
+                                noPermissionList: [{
+                                    actionId: this.$permissionActionMap.edit,
+                                    resourceId: this.$permissionResourceMap.envNode,
+                                    instanceId: [{
+                                        id: node.nodeHashId,
+                                        name: displayName
+                                    }],
+                                    projectId: this.projectId
+                                }]
+                            })
+                        } else {
+                            message = err.message ? err.message : err
+                            theme = 'error'
+                        }
                     } finally {
-                        this.$bkMessage({
+                        message && this.$bkMessage({
                             message,
                             theme
                         })

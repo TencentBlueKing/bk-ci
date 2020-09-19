@@ -166,6 +166,16 @@ class EnvDao {
         }
     }
 
+    fun listServerEnvByIdsAllType(dslContext: DSLContext, envIds: Collection<Long>): List<TEnvRecord> {
+        with(TEnv.T_ENV) {
+            return dslContext.selectFrom(this)
+                    .where(IS_DELETED.eq(false))
+                    .and(ENV_ID.`in`(envIds))
+                    .orderBy(ENV_ID.desc())
+                    .fetch()
+        }
+    }
+
     fun listServerEnvByEnvNames(dslContext: DSLContext, projectId: String, envNames: List<String>): List<TEnvRecord> {
         with(TEnv.T_ENV) {
             return dslContext.selectFrom(this)
