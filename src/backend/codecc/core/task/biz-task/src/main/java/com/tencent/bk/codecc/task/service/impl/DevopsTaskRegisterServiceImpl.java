@@ -29,6 +29,7 @@ package com.tencent.bk.codecc.task.service.impl;
 import com.tencent.bk.codecc.defect.api.ServiceCheckerSetRestResource;
 import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.service.AbstractTaskRegisterService;
+import com.tencent.bk.codecc.task.utils.CommonKafkaClient;
 import com.tencent.bk.codecc.task.vo.BatchRegisterVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.bk.codecc.task.vo.TaskIdVO;
@@ -63,6 +64,9 @@ public class DevopsTaskRegisterServiceImpl extends AbstractTaskRegisterService
     @Autowired
     private AuthExRegisterApi authExRegisterApi;
 
+    @Autowired
+    private CommonKafkaClient commonKafkaClient;
+
     @Override
     public TaskIdVO registerTask(TaskDetailVO taskDetailVO, String userName)
     {
@@ -70,7 +74,10 @@ public class DevopsTaskRegisterServiceImpl extends AbstractTaskRegisterService
         taskDetailVO.setCreateFrom(ComConstants.BsTaskCreateFrom.BS_CODECC.value());
         String nameEn = getTaskStreamName(taskDetailVO.getProjectId(), taskDetailVO.getNameCn(), taskDetailVO.getCreateFrom());
         taskDetailVO.setNameEn(nameEn);
+        taskDetailVO.setAtomCode(ComConstants.AtomCode.CODECC_V3.code());
         TaskInfoEntity taskInfoEntity = createTask(taskDetailVO, userName);
+        //推送任务信息至数据平台
+        commonKafkaClient.pushTaskDetailToKafka(taskInfoEntity);
 
         // 将任务注册到权限中心
         try

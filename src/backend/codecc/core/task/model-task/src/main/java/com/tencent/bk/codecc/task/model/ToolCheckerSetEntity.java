@@ -38,8 +38,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
  * @date 2019/11/2
  */
 @Data
-public class ToolCheckerSetEntity
-{
+public class ToolCheckerSetEntity {
     /**
      * 工具名称
      */

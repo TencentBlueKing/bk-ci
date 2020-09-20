@@ -57,24 +57,11 @@ devops:
     attempt: 7
     interval: 1000
 
-tof:
-  rootpath:
-  codecc:
-    appcode:
-    appsecret:
-
-custom:
-  projectName:
-    svnName:
-    svnPassword:
-    pcgName:
-    pcgPassword:
 enc:
   key:
 jasypt:
   encryptor:
     password:
-
 
 codecc:
   node:

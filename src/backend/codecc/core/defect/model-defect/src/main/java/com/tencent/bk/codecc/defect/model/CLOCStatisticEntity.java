@@ -37,6 +37,9 @@ public class CLOCStatisticEntity extends CommonEntity
     @Indexed
     private Long taskId;
 
+    @Field("build_id")
+    private String buildId;
+
     @Field("stream_name")
     private String streamName;
 
@@ -52,6 +55,21 @@ public class CLOCStatisticEntity extends CommonEntity
     @Field("sum_comment")
     private Long sumComment;
 
+    @Field("blank_change")
+    private Long blankChange;
+
+    @Field("code_change")
+    private Long codeChange;
+
+    @Field("comment_change")
+    private Long commentChange;
+
     @Field("language")
     private String language;
+
+    @Field("file_num")
+    private Long fileNum;
+
+    @Field("file_num_change")
+    private Long fileNumChange;
 }

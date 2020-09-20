@@ -100,4 +100,9 @@ public interface TaskMessageCode
      * 注册klocwork项目失败
      */
     String REGISTER_KW_PROJ_FAIL = "2301012";
+
+    /**
+     * 校验工蜂项目失败
+     */
+    String CHECK_GONGFENG_PROJ_FAIL = "2301013";
 }
