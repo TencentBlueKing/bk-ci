@@ -53,7 +53,6 @@ object ArchiveUtils {
         filePath.split(",").map { it.removePrefix("./") }.filterNot { it.isBlank() }.forEach { path ->
             fileList.addAll(matchFiles(workspace, path).map { it.absolutePath })
         }
-        LoggerService.addNormalLine("${fileList.size} file match: ")
         if (fileList.size > MAX_FILE_COUNT) {
             throw TaskExecuteException(
                 errorCode = ErrorCode.USER_INPUT_INVAILD,
@@ -61,7 +60,10 @@ object ArchiveUtils {
                 errorMsg = "单次归档文件数太多，请打包后再归档！"
             )
         }
-
+        LoggerService.addNormalLine("${fileList.size} file match: ")
+        fileList.forEach {
+            LoggerService.addNormalLine("  $it")
+        }
         fileList.forEach {
             api.uploadCustomize(File(it), destPath, buildVariables)
         }
@@ -73,13 +75,16 @@ object ArchiveUtils {
         filePath.split(",").map { it.removePrefix("./") }.filterNot { it.isBlank() }.forEach { path ->
             fileList.addAll(matchFiles(workspace, path).map { it.absolutePath })
         }
-        LoggerService.addNormalLine("${fileList.size} file match")
         if (fileList.size > MAX_FILE_COUNT) {
             throw TaskExecuteException(
                 errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorType = ErrorType.USER,
                 errorMsg = "单次归档文件数太多，请打包后再归档！"
             )
+        }
+        LoggerService.addNormalLine("${fileList.size} file match:")
+        fileList.forEach {
+            LoggerService.addNormalLine("  $it")
         }
         fileList.forEach {
             api.uploadPipeline(File(it), buildVariables)
@@ -100,7 +105,7 @@ object ArchiveUtils {
         }
         return fileList.filter {
             if (it.name.endsWith(".DS_STORE", ignoreCase = true)) {
-                LoggerService.addYellowLine("${it.absolutePath} will not upload")
+                LoggerService.addYellowLine("${it.canonicalPath} will not upload")
                 false
             } else {
                 true

@@ -112,9 +112,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             .build()
 
         val request = buildPost(url, requestBody)
-
         val response = request(request, "上传流水线文件失败")
-
         try {
             val obj = JsonParser().parse(response).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("上传流水线文件失败")
