@@ -84,8 +84,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val path = purePath + "/" + file.name
         LoggerService.addNormalLine("upload file >>> $path")
 
-        val url =
-            "/ms/artifactory/api/build/artifactories/file/archive?fileType=${FileTypeEnum.BK_CUSTOM}&customFilePath=$purePath"
+        val url = "/ms/artifactory/api/build/artifactories/file/archive?fileType=${FileTypeEnum.BK_CUSTOM}&customFilePath=$purePath"
         val fileBody = RequestBody.create(MultipartFormData, file)
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)

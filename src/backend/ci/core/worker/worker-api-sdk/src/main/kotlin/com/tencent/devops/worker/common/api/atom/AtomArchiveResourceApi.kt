@@ -110,8 +110,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             throw ExecuteException("too many(${files.size}) atom file: $filePath")
         }
         val file = files[0]
-        if (!ArchiveUtils.isFileLegal(file.name)) throw ExecuteException("not allow to archive ${file.name} file")
-        uploadAtom(file, destPath, buildVariables)
+        uploadAtom(files[0], destPath, buildVariables)
         return file.inputStream().use { ShaUtils.sha1InputStream(it) }
     }
 
