@@ -46,15 +46,23 @@ import java.nio.file.attribute.BasicFileAttributes
 object ArchiveUtils {
 
     private val api = ApiFactory.create(ArchiveSDKApi::class)
-    private const val maxFileCount = 100
+    private const val MAX_FILE_COUNT = 100
 
     fun archiveCustomFiles(filePath: String, destPath: String, workspace: File, buildVariables: BuildVariables): Int {
         var fileList = mutableSetOf<String>()
         filePath.split(",").map { it.removePrefix("./") }.filterNot { it.isBlank() }.forEach { path ->
             fileList.addAll(matchFiles(workspace, path).map { it.absolutePath })
         }
-        LoggerService.addNormalLine("${fileList.size} file match")
-        fileList.forEach{
+        LoggerService.addNormalLine("${fileList.size} file match: ")
+        if (fileList.size > MAX_FILE_COUNT) {
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
+                errorType = ErrorType.USER,
+                errorMsg = "单次归档文件数太多，请打包后再归档！"
+            )
+        }
+
+        fileList.forEach {
             api.uploadCustomize(File(it), destPath, buildVariables)
         }
         return fileList.size
@@ -66,7 +74,14 @@ object ArchiveUtils {
             fileList.addAll(matchFiles(workspace, path).map { it.absolutePath })
         }
         LoggerService.addNormalLine("${fileList.size} file match")
-        fileList.forEach{
+        if (fileList.size > MAX_FILE_COUNT) {
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
+                errorType = ErrorType.USER,
+                errorMsg = "单次归档文件数太多，请打包后再归档！"
+            )
+        }
+        fileList.forEach {
             api.uploadPipeline(File(it), buildVariables)
         }
         return fileList.size
@@ -77,17 +92,17 @@ object ArchiveUtils {
         var fullFile = if (!isAbsPath) File(workspace.absolutePath + File.separator + path) else File(path)
         if (fullFile.isDirectory) throw RuntimeException("invalid path, path is a directory(${fullFile.absolutePath})")
         val fullPath = fullFile.absolutePath.replace("\\", "/")
-        val fileList = if(fullPath.contains("**")) {
+        val fileList = if (fullPath.contains("**")) {
             val startPath = File("${fullPath.substring(0, fullPath.indexOf("**"))}a").parent.toString()
             globMatch("glob:$fullPath", startPath)
         } else {
             fileMatch(fullPath)
         }
         return fileList.filter {
-            if(it.name.endsWith(".DS_STORE", ignoreCase = true)){
+            if (it.name.endsWith(".DS_STORE", ignoreCase = true)) {
                 LoggerService.addYellowLine("${it.absolutePath} will not upload")
                 false
-            } else{
+            } else {
                 true
             }
 
@@ -101,13 +116,13 @@ object ArchiveUtils {
         if (!dirPath.contains("*")) {
             val pathMatcher = FileSystems.getDefault().getPathMatcher(glob)
             val regex = Regex(pattern = "\\]|\\[|\\}|\\{|\\?")
-            if (!fullPath.contains(regex) && File(fullPath).exists()) {
+            if (!fullPath.contains(regex) && File(fullPath).exists() && !File(fullPath).isDirectory) {
                 resultList.add(File(fullPath))
                 return resultList
             }
             val parentFile = File(fullPath).parentFile
             parentFile.listFiles()?.forEach { f ->
-                if (pathMatcher.matches(f.toPath())) {
+                if (pathMatcher.matches(f.toPath()) && !f.isDirectory) {
                     resultList.add(f)
                 }
             }
@@ -130,7 +145,7 @@ object ArchiveUtils {
                 dirMatchFile.forEach { f ->
                     pathMatcher = FileSystems.getDefault().getPathMatcher(glob)
                     f.listFiles()?.forEach { file ->
-                        if (pathMatcher.matches(file.toPath())) {
+                        if (pathMatcher.matches(file.toPath()) && !file.isDirectory) {
                             resultList.add(file)
                         }
                     }
@@ -149,8 +164,7 @@ object ArchiveUtils {
             Paths.get(location),
             object : SimpleFileVisitor<Path>() {
                 override fun visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult {
-                    LoggerService.addNormalLine(">>>is matching $path")
-                    if (pathMatcher.matches(path)) {
+                    if (pathMatcher.matches(path) && !File(path.toString()).isDirectory) {
                         resultList.add(File(path.toString()))
                     }
                     return FileVisitResult.CONTINUE
