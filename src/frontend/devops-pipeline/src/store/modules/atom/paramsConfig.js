@@ -18,6 +18,7 @@
  */
 
 export const STRING = 'STRING'
+export const TEXTAREA = 'TEXTAREA'
 export const BOOLEAN = 'BOOLEAN'
 export const ENUM = 'ENUM'
 export const MULTIPLE = 'MULTIPLE'
@@ -42,6 +43,14 @@ export const DEFAULT_PARAM = {
         desc: '',
         type: STRING,
         typeDesc: 'string',
+        required: true
+    },
+    [TEXTAREA]: {
+        id: 'textarea',
+        defaultValue: '',
+        desc: '',
+        type: TEXTAREA,
+        typeDesc: 'textarea',
         required: true
     },
     [BOOLEAN]: {
@@ -179,6 +188,7 @@ export function getParamsDefaultValueLabelTips (type) {
 
 export const ParamComponentMap = {
     [STRING]: 'VuexInput',
+    [TEXTAREA]: 'VuexTextarea',
     [BOOLEAN]: 'EnumInput',
     [ENUM]: 'Selector',
     [MULTIPLE]: 'Selector',
@@ -242,6 +252,7 @@ export const CODE_LIB_TYPE = [
 ]
 
 export const isStringParam = paramType(STRING)
+export const isTextareaParam = paramType(TEXTAREA)
 export const isBooleanParam = paramType(BOOLEAN)
 export const isEnumParam = paramType(ENUM)
 export const isMultipleParam = paramType(MULTIPLE)
