@@ -35,11 +35,11 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.job.JobClient
 import com.tencent.devops.common.job.api.pojo.EnvSet
 import com.tencent.devops.common.job.api.pojo.FastPushFileRequest
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.ReportArchiveServiceElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS
 import com.tencent.devops.process.engine.atom.AtomResponse
