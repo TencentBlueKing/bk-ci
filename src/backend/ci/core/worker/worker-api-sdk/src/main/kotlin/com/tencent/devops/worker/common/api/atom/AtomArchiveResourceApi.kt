@@ -107,7 +107,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             throw ExecuteException("no found atom file: $filePath")
         }
         if (files.size > 1) {
-            throw ExecuteException("too many(${files.size}) atom file: $filePath")
+            throw ExecuteException("tissue_2615oo many(${files.size}) atom file: $filePath")
         }
         val file = files[0]
         uploadAtom(file, destPath, buildVariables)
