@@ -14,14 +14,8 @@ package com.tencent.bk.codecc.codeccjob.consumer;
 
 import com.tencent.devops.common.service.ToolMetaCacheService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.annotation.Exchange;
-import org.springframework.amqp.rabbit.annotation.Queue;
-import org.springframework.amqp.rabbit.annotation.QueueBinding;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import static com.tencent.devops.common.web.mq.ConstantsKt.*;
 
 /**
  * 刷新工具缓存的消费者

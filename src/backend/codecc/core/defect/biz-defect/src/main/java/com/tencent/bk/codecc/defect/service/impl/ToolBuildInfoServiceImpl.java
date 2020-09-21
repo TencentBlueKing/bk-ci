@@ -1,6 +1,7 @@
 package com.tencent.bk.codecc.defect.service.impl;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.tencent.bk.codecc.defect.dao.mongorepository.CodeRepoInfoRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildInfoRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildStackRepository;
@@ -13,16 +14,19 @@ import com.tencent.bk.codecc.defect.model.incremental.ToolBuildStackEntity;
 import com.tencent.bk.codecc.defect.service.ToolBuildInfoService;
 import com.tencent.bk.codecc.defect.vo.SetForceFullScanReqVO;
 import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO;
-import com.tencent.bk.codecc.task.vo.pipeline.CodeRepoInfoVO;
+import com.tencent.devops.common.api.CodeRepoVO;
 import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.util.PathUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.ListUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -57,8 +61,14 @@ public class ToolBuildInfoServiceImpl implements ToolBuildInfoService
     @Override
     public AnalyzeConfigInfoVO getBuildInfo(AnalyzeConfigInfoVO analyzeConfigInfoVO)
     {
+        Integer scanType = analyzeConfigInfoVO.getScanType() == null ? ComConstants.ScanType.FULL.code : analyzeConfigInfoVO.getScanType();
+
+        // 把接口传进来的scanType置空，确保返回的scanType一定表示的是强制全量，而不是用户设置的全量
+        analyzeConfigInfoVO.setScanType(null);
+
         Long taskId = analyzeConfigInfoVO.getTaskId();
         String toolName = analyzeConfigInfoVO.getMultiToolType();
+        String buildId = analyzeConfigInfoVO.getBuildId();
         ToolBuildInfoEntity toolBuildInfoEntity = toolBuildInfoRepository.findByTaskIdAndToolName(taskId, toolName);
         if (null == toolBuildInfoEntity)
         {
@@ -67,8 +77,9 @@ public class ToolBuildInfoServiceImpl implements ToolBuildInfoService
 
         // 加入上次扫描的仓库列表
         CodeRepoInfoEntity codeRepoInfoEntity = codeRepoRepository.findByTaskIdAndBuildId(taskId, toolBuildInfoEntity.getDefectBaseBuildId());
-        List<String> lastRepoWhiteList = null;
-        List<String> lastRepos = Lists.newArrayList();
+        Set<String> lastRepoWhiteList = Sets.newHashSet();
+        Set<String> lastRepoIds = Sets.newHashSet();
+        Set<String> lastRepoUrls = Sets.newHashSet();
         if (codeRepoInfoEntity != null)
         {
             if (CollectionUtils.isNotEmpty(codeRepoInfoEntity.getRepoList()))
@@ -76,39 +87,63 @@ public class ToolBuildInfoServiceImpl implements ToolBuildInfoService
                 analyzeConfigInfoVO.setLastCodeRepos(Lists.newArrayList());
                 for (CodeRepoEntity codeRepoEntity : codeRepoInfoEntity.getRepoList())
                 {
-                    CodeRepoInfoVO codeRepoInfoVO = new CodeRepoInfoVO();
-                    BeanUtils.copyProperties(codeRepoEntity, codeRepoInfoVO);
-                    analyzeConfigInfoVO.getLastCodeRepos().add(codeRepoInfoVO);
-                    lastRepos.add(codeRepoEntity.getRepoId());
+                    CodeRepoVO codeRepoVO = new CodeRepoVO();
+                    BeanUtils.copyProperties(codeRepoEntity, codeRepoVO);
+                    analyzeConfigInfoVO.getLastCodeRepos().add(codeRepoVO);
+                    lastRepoIds.add(codeRepoEntity.getRepoId());
+                    lastRepoUrls.add(PathUtils.formatRepoUrlToHttp(codeRepoEntity.getUrl()));
                 }
             }
-            lastRepoWhiteList = codeRepoInfoEntity.getRepoWhiteList();
+            if (CollectionUtils.isNotEmpty(codeRepoInfoEntity.getRepoWhiteList()))
+            {
+                lastRepoWhiteList.addAll(codeRepoInfoEntity.getRepoWhiteList());
+            }
         }
 
-        Integer scanType = analyzeConfigInfoVO.getScanType();
         // 如果设置了强制全量扫描标志，则本次全量扫描
         if (ComConstants.CommonJudge.COMMON_Y.value().equals(toolBuildInfoEntity.getForceFullScan()))
         {
-            scanType = ComConstants.ScanType.FULL.code;
+            analyzeConfigInfoVO.setScanType(ComConstants.ScanType.FULL.code);
         }
         // 流水线任务增量要判断代码库和白名单是否有变化, 如果修改过代码仓库列表或修改过扫描目录白名单，则本次全量扫描
         else if (ComConstants.ScanType.INCREMENTAL.code == scanType && analyzeConfigInfoVO.isPipelineTask())
         {
-            List<String> reqRepoIds = analyzeConfigInfoVO.getRepoIds() == null ? Lists.newArrayList() : analyzeConfigInfoVO.getRepoIds();
-            lastRepoWhiteList = lastRepoWhiteList == null ? Lists.newArrayList() : lastRepoWhiteList;
-            List<String> reqRepoWhiteList = analyzeConfigInfoVO.getRepoWhiteList() == null ? Lists.newArrayList() : analyzeConfigInfoVO.getRepoWhiteList();
-            if (!ListUtils.isEqualList(lastRepos, reqRepoIds) || !ListUtils.isEqualList(lastRepoWhiteList, reqRepoWhiteList))
+            String atomCode = analyzeConfigInfoVO.getAtomCode();
+            List<String> repoWhiteList = CollectionUtils.isEmpty(analyzeConfigInfoVO.getRepoWhiteList()) ? Lists.newArrayList() : analyzeConfigInfoVO.getRepoWhiteList();
+            if (!CollectionUtils.isEqualCollection(lastRepoWhiteList, repoWhiteList))
             {
-                scanType = ComConstants.ScanType.FULL.code;
+                log.info("repoWhiteList has changed, taskId: {}, toolName: {}, buildId: {}", taskId, toolName, buildId);
+                analyzeConfigInfoVO.setScanType(ComConstants.ScanType.FULL.code);
+            }
+            // V1、V2插件通过"repoIds"参数传递"代码仓库repoId列表"
+            else if (StringUtils.isEmpty(atomCode) || ComConstants.AtomCode.CODECC_V2.code().equalsIgnoreCase(atomCode))
+            {
+                List<String> repoIds = CollectionUtils.isEmpty(analyzeConfigInfoVO.getRepoIds()) ? Lists.newArrayList() : analyzeConfigInfoVO.getRepoIds();
+                if (!CollectionUtils.isEqualCollection(lastRepoIds, repoIds))
+                {
+                    log.info("repoIds has changed, taskId: {}, toolName: {}, buildId: {}", taskId, toolName, buildId);
+                    analyzeConfigInfoVO.setScanType(ComConstants.ScanType.FULL.code);
+                }
+            }
+            // V3插件通过参数"codeRepos"传递"本次扫描的代码仓库列表"
+            else
+            {
+                Set<String> reqRepoUrls = CollectionUtils.isEmpty(analyzeConfigInfoVO.getCodeRepos()) ? Sets.newHashSet() :
+                        analyzeConfigInfoVO.getCodeRepos().stream().map(codeRepoVO -> PathUtils.formatRepoUrlToHttp(codeRepoVO.getUrl())).collect(Collectors.toSet());
+                if (!CollectionUtils.isEqualCollection(lastRepoUrls, reqRepoUrls))
+                {
+                    log.info("reqRepoUrls has changed, taskId: {}, toolName: {}, buildId: {}", taskId, toolName, buildId);
+                    analyzeConfigInfoVO.setScanType(ComConstants.ScanType.FULL.code);
+                }
             }
         }
-        analyzeConfigInfoVO.setScanType(scanType);
 
+        scanType = analyzeConfigInfoVO.getScanType() == null ? scanType : analyzeConfigInfoVO.getScanType();
         ToolBuildStackEntity toolBuildStackEntity = toolBuildStackRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, analyzeConfigInfoVO.getBuildId());
         if (toolBuildStackEntity == null)
         {
             // 保存构建运行时栈表
-            log.info("set force full scan, taskId:{}, toolNames:{}", analyzeConfigInfoVO.getTaskId(), analyzeConfigInfoVO.getMultiToolType());
+            log.info("set tool build stack, taskId:{}, toolNames:{}, scanType: {}", analyzeConfigInfoVO.getTaskId(), analyzeConfigInfoVO.getMultiToolType(), scanType);
             toolBuildStackEntity = new ToolBuildStackEntity();
             toolBuildStackEntity.setTaskId(taskId);
             toolBuildStackEntity.setToolName(toolName);
@@ -118,7 +153,7 @@ public class ToolBuildInfoServiceImpl implements ToolBuildInfoService
             toolBuildStackDao.upsert(toolBuildStackEntity);
         }
 
-
+        log.info("get build info finish, taskId: {}, toolName: {}, buildId: {}, scanType: {}", taskId, toolName, buildId, analyzeConfigInfoVO.getScanType());
         return analyzeConfigInfoVO;
     }
 
@@ -142,6 +177,9 @@ public class ToolBuildInfoServiceImpl implements ToolBuildInfoService
                     }).collect(Collectors.toList());
             toolBuildStackDao.batchUpsert(toolBuildStackEntitys);
         }
+
+        setForceFullScan(taskId, toolNames);
+
         log.info("end setToolBuildStackFullScan.");
         return true;
     }

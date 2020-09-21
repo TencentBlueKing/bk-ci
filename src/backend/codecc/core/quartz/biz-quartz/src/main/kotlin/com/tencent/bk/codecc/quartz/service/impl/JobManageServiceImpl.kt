@@ -109,6 +109,39 @@ class JobManageServiceImpl @Autowired constructor(
         jobNameList.clear()
     }
 
+
+    override fun refreshOpensourceCronExpression(period : Int, startTime : Int){
+        val jobInstances = jobInstanceRepository.findByClassName("TriggerPipelineScheduleTask")
+        val currentTime = System.currentTimeMillis()
+        jobInstances.forEach {
+            try{
+                if(it.jobParam.isNullOrEmpty()){
+                    return@forEach
+                }
+                if(it.jobParam["gongfengId"] == null){
+                    return@forEach
+                }
+                val gongfengId = it.jobParam["gongfengId"] as Int
+                if(gongfengId == 0){
+                    return@forEach
+                }
+                it.cronExpression = getGongfengTriggerCronExpression(gongfengId, period, startTime)
+                it.updatedDate = currentTime
+            } catch (e : Exception){
+                logger.info("update cron expression fail!")
+            }
+        }
+        jobInstanceRepository.save(jobInstances)
+    }
+
+    //将定时时间全天平均，以10分钟为间隔
+    private fun getGongfengTriggerCronExpression(gongfengId: Int, period : Int, startTime : Int): String {
+        val remainder = gongfengId % (period * 6)
+        val minuteNum = (remainder % 6) * 10
+        val hourNum = (startTime + ((remainder / 6) % period)) % 24
+        return "0 $minuteNum $hourNum * * ?"
+    }
+
     override fun convert(jobInstanceEntity: JobInstanceEntity): JobInfoVO {
         return with(jobInstanceEntity) {
             JobInfoVO(
