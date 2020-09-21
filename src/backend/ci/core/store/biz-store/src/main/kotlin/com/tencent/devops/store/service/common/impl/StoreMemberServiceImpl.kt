@@ -72,9 +72,20 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     /**
      * store组件成员列表
      */
-    override fun list(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<List<StoreMemberItem?>> {
-        logger.info("getStoreMemberList userId is:$userId,storeCode is:$storeCode,storeType is:$storeType")
-        if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType.type.toByte())) {
+    override fun list(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        checkPermissionFlag: Boolean
+    ): Result<List<StoreMemberItem?>> {
+        logger.info("getStoreMemberList userId:$userId,storeCode:$storeCode,storeType:$storeType,checkPermissionFlag:$checkPermissionFlag")
+        if (checkPermissionFlag && !storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte()
+            )
+        ) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val records = storeMemberDao.list(dslContext, storeCode, null, storeType.type.toByte())
