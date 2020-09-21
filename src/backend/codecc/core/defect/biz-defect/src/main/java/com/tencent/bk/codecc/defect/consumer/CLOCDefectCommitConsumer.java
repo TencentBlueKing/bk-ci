@@ -17,6 +17,7 @@ import com.tencent.bk.codecc.defect.dao.mongorepository.CLOCDefectRepository;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.CLOCDefectDao;
 import com.tencent.bk.codecc.defect.model.CLOCDefectEntity;
 import com.tencent.bk.codecc.defect.model.DefectJsonFileEntity;
+import com.tencent.bk.codecc.defect.model.incremental.ToolBuildStackEntity;
 import com.tencent.bk.codecc.defect.service.CLOCUploadStatisticService;
 import com.tencent.bk.codecc.defect.vo.CLOCLanguageVO;
 import com.tencent.bk.codecc.defect.vo.CommitDefectVO;
@@ -51,50 +52,85 @@ public class CLOCDefectCommitConsumer extends AbstractDefectCommitConsumer
     private CLOCUploadStatisticService clocUploadStatisticService;
 
     @Override
-    protected void uploadDefects(CommitDefectVO commitDefectVO, Map<String, ScmBlameVO> fileChangeRecordsMap, Map<String, RepoSubModuleVO> codeRepoIdMap)
-    {
+    protected void uploadDefects(CommitDefectVO commitDefectVO, Map<String, ScmBlameVO> fileChangeRecordsMap,
+            Map<String, RepoSubModuleVO> codeRepoIdMap) {
         long taskId = commitDefectVO.getTaskId();
         String streamName = commitDefectVO.getStreamName();
         String toolName = commitDefectVO.getToolName();
         String buildId = commitDefectVO.getBuildId();
 
+        // 判断本次是增量还是全量扫描
+        ToolBuildStackEntity toolBuildStackEntity =
+                toolBuildStackRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        boolean isFullScan = toolBuildStackEntity == null || toolBuildStackEntity.isFullScan();
+
         // 读取原生（未经压缩）告警文件
         String defectListJson = scmJsonComponent.loadRawDefects(streamName, toolName, buildId);
-        DefectJsonFileEntity<CLOCDefectEntity> defectJsonFileEntity = JsonUtil.INSTANCE.to(defectListJson, new TypeReference<DefectJsonFileEntity<CLOCDefectEntity>>()
-        {
-        });
-        clocDefectDao.batchDisableClocInfo(taskId);
-        //告警详情先删除
+        DefectJsonFileEntity<CLOCDefectEntity> defectJsonFileEntity =
+                JsonUtil.INSTANCE.to(defectListJson, new TypeReference<DefectJsonFileEntity<CLOCDefectEntity>>() {
+                });
         List<CLOCDefectEntity> clocDefectEntityList = defectJsonFileEntity.getDefects();
-        if(CollectionUtils.isNotEmpty(clocDefectEntityList))
-        {
+
+        // 增量告警，获取删除文件列表，设置失效位
+        if (!isFullScan && CollectionUtils.isNotEmpty(toolBuildStackEntity.getDeleteFiles())) {
+            log.info("start to disable deleted CLOC defect entity, taskId: {} | buildId: {} | stream Name: {}",
+                    taskId, buildId, streamName);
+            clocDefectDao.batchDisableClocInfoByFileName(taskId, toolBuildStackEntity.getDeleteFiles());
+        } else if (isFullScan) {
+            // 全量告警将当前任务所有告警设置为失效
+            log.info("start to disable all CLOC defect entity, taskId: {} | buildId: {} | stream Name: {}",
+                    taskId, buildId, streamName);
+            clocDefectDao.batchDisableClocInfo(taskId);
+        }
+        if (CollectionUtils.isNotEmpty(clocDefectEntityList)) {
             Long currentTime = System.currentTimeMillis();
             clocDefectEntityList.forEach(clocDefectEntity -> {
                 clocDefectEntity.setTaskId(taskId);
+                clocDefectEntity.setStreamName(streamName);
                 clocDefectEntity.setCreatedDate(currentTime);
                 clocDefectEntity.setUpdatedDate(currentTime);
             });
         }
         //告警详情再upsert
         clocDefectDao.batchUpsertClocInfo(clocDefectEntityList);
+        log.info("start to insert CLOC defect statistic, taskId: {} | buildId: {} | streamName: {}",
+                taskId, buildId, streamName);
 
+        // 获取全量告警记录，用于统计信息
+        clocDefectEntityList = clocDefectRepository.findByTaskIdAndStatusIsNot(taskId, "DISABLED");
         //上报统计信息
         UploadCLOCStatisticVO uploadCLOCStatisticVO = new UploadCLOCStatisticVO();
         uploadCLOCStatisticVO.setTaskId(taskId);
         uploadCLOCStatisticVO.setStreamName(streamName);
-        Map<String, List<CLOCDefectEntity>> clocLanguageMap = clocDefectEntityList.stream().collect(Collectors.groupingBy(CLOCDefectEntity::getLanguage));
-        List<CLOCLanguageVO> languageVOList = clocLanguageMap.entrySet().stream().map(stringListEntry -> {
-            CLOCLanguageVO clocLanguageVO = new CLOCLanguageVO();
-            clocLanguageVO.setLanguage(stringListEntry.getKey());
-            List<CLOCDefectEntity> clocInfoVOS = stringListEntry.getValue();
-            clocLanguageVO.setCodeSum(clocInfoVOS.stream().map(CLOCDefectEntity::getCode).reduce((o1, o2) -> o1 + o2).orElse(0L));
-            clocLanguageVO.setBlankSum(clocInfoVOS.stream().map(CLOCDefectEntity::getBlank).reduce((o1, o2) -> o1 + o2).orElse(0L));
-            clocLanguageVO.setCommentSum(clocInfoVOS.stream().map(CLOCDefectEntity::getComment).reduce((o1, o2) -> o1 + o2).orElse(0L));
-            return clocLanguageVO;
-        }).collect(Collectors.toList());
+        Map<String, List<CLOCDefectEntity>> clocLanguageMap = clocDefectEntityList.stream()
+                .collect(Collectors.groupingBy(CLOCDefectEntity::getLanguage));
+        List<CLOCLanguageVO> languageVOList = clocLanguageMap.entrySet()
+                .stream()
+                .map(stringListEntry -> {
+                    CLOCLanguageVO clocLanguageVO = new CLOCLanguageVO();
+                    clocLanguageVO.setLanguage(stringListEntry.getKey());
+                    List<CLOCDefectEntity> clocInfoVOS = stringListEntry.getValue();
+                    clocLanguageVO.setCodeSum(clocInfoVOS.stream()
+                            .map(CLOCDefectEntity::getCode)
+                            .reduce((o1, o2) -> o1 + o2)
+                            .orElse(0L));
+                    clocLanguageVO.setBlankSum(clocInfoVOS.stream()
+                            .map(CLOCDefectEntity::getBlank)
+                            .reduce((o1, o2) -> o1 + o2)
+                            .orElse(0L));
+                    clocLanguageVO.setCommentSum(clocInfoVOS.stream()
+                            .map(CLOCDefectEntity::getComment)
+                            .reduce((o1, o2) -> o1 + o2)
+                            .orElse(0L));
+                    return clocLanguageVO;
+                }).collect(Collectors.toList());
         uploadCLOCStatisticVO.setLanguageCodeList(languageVOList);
-        uploadCLOCStatisticVO.setLanguages(clocDefectEntityList.stream().map(CLOCDefectEntity::getLanguage).distinct().collect(Collectors.toList()));
-        clocUploadStatisticService.uploadStatistic(uploadCLOCStatisticVO);
+        uploadCLOCStatisticVO.setLanguages(clocDefectEntityList
+                .stream()
+                .map(CLOCDefectEntity::getLanguage)
+                .distinct()
+                .collect(Collectors.toList()));
+        clocUploadStatisticService.uploadNewStatistic(uploadCLOCStatisticVO, clocLanguageMap, buildId, streamName);
 
         // 更新告警快照基准构建ID
         toolBuildInfoDao.updateDefectBaseBuildId(taskId, toolName, buildId);

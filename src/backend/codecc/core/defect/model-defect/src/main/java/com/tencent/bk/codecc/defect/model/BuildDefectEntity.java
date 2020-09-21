@@ -72,22 +72,4 @@ public class BuildDefectEntity extends CommonEntity
      */
     @Field("file_defect_ids")
     private Set<String> fileDefectIds;
-
-    /**
-     * 单次构建上报的告警文件缓存
-     */
-    @Field("temp_defect_file")
-    private LintFileEntity tempDefectFile;
-
-    /**
-     * 单次构建上报的圈复杂度风险函数缓存
-     */
-    @Field("temp_ccn_defect")
-    private CCNDefectEntity tempCcnDefect;
-
-    /**
-     * 单次构建上报的圈复杂度风险函数缓存
-     */
-    @Field("temp_dupc_defect_file")
-    private DUPCDefectEntity tempDupcDefectFile;
 }

@@ -35,6 +35,7 @@ dependencies {
     compile project(":core:common:common-api")
     compile project(":core:common:common-web")
     compile project(":core:common:common-service")
+    compile project(":core:common:common-client")
 }
 bootRun {
     jvmArgs = ["-Dspring.output.ansi.enabled=ALWAYS",

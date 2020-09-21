@@ -51,52 +51,17 @@ public class ServicePkgDefectRestResourceImpl implements ServicePkgDefectRestRes
     private BizServiceFactory<IQueryWarningBizService> fileAndDefectQueryFactory;
 
     @Autowired
-    private LintQueryWarningBizServiceImpl lintQueryWarningBizService;
-
-    @Autowired
     private ApiBizService apiBizService;
 
     @Autowired
     private ICLOCQueryCodeLineService iclocQueryCodeLineService;
 
     @Override
-    public CodeCCResult<CheckerPkgDefectVO> getPkgDefectList(String toolName, String pkgId, Integer bgId, Long taskId,
-                                                             Integer pageNum, Integer pageSize, String sortField, Sort.Direction sortType) {
-        //校验参数逻辑
-        if (!toolNameVerify(toolName)) {
-            log.error("invalid tool name! tool name: {}", toolName);
-            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"tool name"}, null);
-        }
-        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(toolName,
-                ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
-        return new CodeCCResult<>(queryWarningBizService.getPkgDefectList(toolName, pkgId, bgId, taskId, pageNum, pageSize, sortField, sortType));
-    }
-
-    @Override
-    public CodeCCResult<CheckerPkgDefectRespVO> queryCheckerPkgDefect(String toolName, String pkgId, Integer bgId,
-                                                                      Integer deptId, Integer pageNum, Integer pageSize, Sort.Direction sortType)
-    {
-        // 校验参数逻辑
-        if (!toolNameVerify(toolName)) {
-            log.error("invalid tool name! tool name: {}", toolName);
-            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"tool name"}, null);
-        }
-
-        IQueryWarningBizService bizService = fileAndDefectQueryFactory.createBizService(toolName,
-                ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
-        return new CodeCCResult<>(bizService
-                .processCheckerPkgDefectRequest(toolName, pkgId, bgId, deptId, pageNum, pageSize, sortType));
-    }
-
-
-    @Override
     public CodeCCResult<ToolDefectRspVO> queryToolDefectList(Long taskId, DefectQueryReqVO defectQueryReqVO,
-                                                             Integer pageNum, Integer pageSize, String sortField, Sort.Direction sortType) {
+                                                       Integer pageNum, Integer pageSize, String sortField, Sort.Direction sortType) {
         IQueryWarningBizService bizService = fileAndDefectQueryFactory
-                .createBizService(defectQueryReqVO.getToolName(), ComConstants.BusinessType.QUERY_WARNING.value(),
-                        IQueryWarningBizService.class);
-        return new CodeCCResult<>(
-                bizService.processToolWarningRequest(taskId, defectQueryReqVO, pageNum, pageSize, sortField, sortType));
+                .createBizService(defectQueryReqVO.getToolName(), ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
+        return new CodeCCResult<>(bizService.processToolWarningRequest(taskId, defectQueryReqVO, pageNum, pageSize, sortField, sortType));
     }
 
     @Override
@@ -105,23 +70,9 @@ public class ServicePkgDefectRestResourceImpl implements ServicePkgDefectRestRes
         return new CodeCCResult<>(iclocQueryCodeLineService.getCodeLineInfo(taskId));
     }
 
-
-    @Override
-    public CodeCCResult<CheckerPkgDefectRespVO> queryOverallDefect(DeptTaskDefectExtReqVO reqVO, Integer pageNum, Integer pageSize, Sort.Direction sortType)
-    {
-        String toolName = reqVO.getToolName();
-        // 校验参数逻辑
-        if (StringUtils.isNotBlank(toolName) && !toolNameVerify(toolName)) {
-            log.error("invalid tool name! tool name: {}", toolName);
-            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"tool name"}, null);
-        }
-        return new CodeCCResult<>(
-                lintQueryWarningBizService.processOverallDefectRequest(toolName, reqVO, pageNum, pageSize, sortType));
-    }
-
     @Override
     public CodeCCResult<TaskOverviewDetailRspVO> queryTaskOverview(DeptTaskDefectReqVO reqVO, Integer pageNum,
-                                                                   Integer pageSize, Sort.Direction sortType)
+            Integer pageSize, Sort.Direction sortType)
     {
         // TODO 临时限定接口只允许查询pcg的任务
         if (reqVO.getBgId() != 29292 && CollectionUtils.isEmpty(reqVO.getDeptIds()))
@@ -137,16 +88,5 @@ public class ServicePkgDefectRestResourceImpl implements ServicePkgDefectRestRes
                                                                          Integer pageSize, Sort.Direction sortType)
     {
         return new CodeCCResult<>(apiBizService.statCustomTaskOverview(customProjSource, pageNum, pageSize, sortType));
-    }
-
-
-    private Boolean toolNameVerify(String toolName) {
-        for (ComConstants.Tool tool : ComConstants.Tool.values()) {
-            if (tool.name().equals(toolName)) {
-                return true;
-            }
-        }
-        return false;
-
     }
 }
