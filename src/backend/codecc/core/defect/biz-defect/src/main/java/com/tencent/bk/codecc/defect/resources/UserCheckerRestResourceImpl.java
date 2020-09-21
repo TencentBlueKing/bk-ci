@@ -80,7 +80,7 @@ public class UserCheckerRestResourceImpl implements UserCheckerRestResource
     @Override
     @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
     public CodeCCResult<Boolean> updateCheckerSet(Long taskId, String toolName, String checkerSetId, UpdateCheckerSetReqVO updateCheckerSetReqVO, String user,
-                                                  String projectId)
+            String projectId)
     {
         return new CodeCCResult<>(checkerSetBizService.updateCheckerSet(taskId, toolName, checkerSetId, updateCheckerSetReqVO, user, projectId));
     }
@@ -100,7 +100,7 @@ public class UserCheckerRestResourceImpl implements UserCheckerRestResource
 
     @Override
     public CodeCCResult<CheckerSetDifferenceVO> getCheckerSetVersionDifference(String user, String projectId, String toolName, String checkerSetId,
-                                                                               CheckerSetDifferenceVO checkerSetDifferenceVO)
+            CheckerSetDifferenceVO checkerSetDifferenceVO)
     {
         return new CodeCCResult<>(checkerSetBizService.getCheckerSetVersionDifference(user, projectId, toolName, checkerSetId, checkerSetDifferenceVO));
     }
@@ -118,7 +118,7 @@ public class UserCheckerRestResourceImpl implements UserCheckerRestResource
 
     @Override
     public CodeCCResult<List<CheckerDetailVO>> queryCheckerDetailList(CheckerListQueryReq checkerListQueryReq, String projectId, Integer pageNum,
-                                                                      Integer pageSize, Sort.Direction sortType, CheckerListSortType sortField)
+                                                                Integer pageSize, Sort.Direction sortType, CheckerListSortType sortField)
     {
         return new CodeCCResult<>(checkerService.queryCheckerDetailList(checkerListQueryReq, projectId, pageNum, pageSize, sortType, sortField));
     }

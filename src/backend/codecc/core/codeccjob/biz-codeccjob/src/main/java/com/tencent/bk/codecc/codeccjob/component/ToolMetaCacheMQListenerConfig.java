@@ -101,8 +101,8 @@ public class ToolMetaCacheMQListenerConfig
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory);
         container.setConnectionFactory(connectionFactory);
         container.setQueueNames(toolMetaCacheQueue.getName());
-        container.setConcurrentConsumers(5);
-        container.setMaxConcurrentConsumers(10);
+        container.setConcurrentConsumers(2);
+        container.setMaxConcurrentConsumers(2);
         container.setRabbitAdmin(toolMetaCacheRabbitAdmin);
         container.setStartConsumerMinInterval(10000);
         container.setConsecutiveActiveTrigger(5);

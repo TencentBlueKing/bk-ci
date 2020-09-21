@@ -9,5 +9,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     JsonSubTypes.Type(value = CodeCCTokenAuthInfo::class, name = "token")
 )
 abstract class CodeCCAuthInfo (
-    open val authType : String
+    open val authType : String,
+    open val commitId : String?
 )
