@@ -16,7 +16,6 @@ server:
 # 可配置文件暂存目录、临时文件过期时间、数据库记录清理策略
 artifactory:
   archiveLocalBasePath: __INSTALL_PATH__/public/__MODULE__/artifactory
-  archiveJFrogBasePath: /tmp
   fileTask:
     savedir: /tmp/bkee/ci/artifactory/filetask/
     file:
@@ -25,13 +24,5 @@ artifactory:
       clear:
         enable: false
         expireTimeDays: 7
-
-# 自已有部署Jfrog的可以对接
-jfrog:
-  url: __JFROG_URL__
-  docker_url: __DOCKER_URL__
-  docker_port: __DOCKER_PORT__
-  username: __JFROG_USERNAME__
-  password: __JFROG_PASSWORD__
   
   
