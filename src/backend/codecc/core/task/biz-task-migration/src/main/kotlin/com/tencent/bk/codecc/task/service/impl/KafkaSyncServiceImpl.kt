@@ -180,7 +180,7 @@ open class KafkaSyncServiceImpl @Autowired constructor(
             taskMap["openSource"] = true
             taskMap["activity"] = true
             taskMap["devopsUrl"] =
-                    "http://$/codecc/${it.projectId}/task/${it.taskId}/detail"
+                    "http://${allProperties.codeccGateWay}/codecc/${it.projectId}/task/${it.taskId}/detail"
 /*            rabbitTemplate.convertAndSend(
                 EXCHANGE_KAFKA_DATA_PLATFORM,
                 ROUTE_KAFKA_DATA_TASK_DETAIL,

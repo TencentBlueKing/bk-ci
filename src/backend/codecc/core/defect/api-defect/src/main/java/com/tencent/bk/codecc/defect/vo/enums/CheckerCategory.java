@@ -49,7 +49,7 @@ public enum CheckerCategory
     /**
      * 通用
      */
-    GENERAL("通用");
+    CODE_STATISTIC("代码统计");
 
 
     private String name;

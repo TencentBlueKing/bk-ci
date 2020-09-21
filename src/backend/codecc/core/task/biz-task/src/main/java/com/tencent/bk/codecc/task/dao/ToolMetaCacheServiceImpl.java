@@ -41,11 +41,10 @@ import com.tencent.devops.common.service.ToolMetaCacheService;
 import com.tencent.devops.common.service.utils.GlobalMessageUtil;
 import com.tencent.devops.common.util.CompressionUtils;
 import com.tencent.devops.common.util.JsonUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -64,19 +63,16 @@ import static com.tencent.devops.common.constant.RedisKeyConstants.GLOBAL_TOOL_D
  * @version V1.0
  * @date 2019/3/7
  */
+@Slf4j
 @Component
 public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
 {
-    private static Logger logger = LoggerFactory.getLogger(ToolMetaCacheServiceImpl.class);
-
     private static final String TOOL_CACHE_KEY = "TOOL_METADATA";
 
     @Autowired
     private ToolMetaRepository toolMetaRepository;
-
     @Autowired
     private GlobalMessageUtil globalMessageUtil;
-
     @Autowired
     private RedisTemplate redisTemplate;
 
@@ -137,7 +133,7 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
 
         redisTemplate.opsForValue().set(TOOL_CACHE_KEY, JsonUtil.INSTANCE.toJson(toolMetaDetailVOS));
 
-        logger.info("load tool cache success");
+        log.info("load tool cache success");
         return toolMetaDetailVOS;
     }
 
@@ -261,7 +257,7 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
 
         if (Objects.isNull(toolMetaDetailVOResult))
         {
-            logger.error("tool[{}] is invalid.", toolName);
+            log.error("tool[{}] is invalid.", toolName);
             throw new CodeCCException(CommonMessageCode.INVALID_TOOL_NAME, new String[]{toolName}, null);
         }
 
@@ -366,4 +362,22 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
         toolMetaBasicMap.put(newToolMetaBaseVO.getName(), newToolMetaBaseVO);
         return newToolMetaBaseVO;
     }
+
+    /**
+     * 缓存工具基础信息
+     *
+     * @param toolName
+     */
+    public void cacheToolBaseMeta(String toolName)
+    {
+        ToolMetaEntity toolMetaEntity = toolMetaRepository.findByName(toolName);
+        if (toolMetaEntity != null)
+        {
+            ToolMetaBaseVO newToolMetaBaseVO = new ToolMetaBaseVO();
+            BeanUtils.copyProperties(toolMetaEntity, newToolMetaBaseVO);
+            toolMetaBasicMap.put(newToolMetaBaseVO.getName(), newToolMetaBaseVO);
+            log.info("cache tool success. {}", toolName);
+        }
+    }
+
 }
