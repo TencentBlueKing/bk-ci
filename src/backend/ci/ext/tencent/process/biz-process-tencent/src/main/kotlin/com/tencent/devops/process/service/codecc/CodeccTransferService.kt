@@ -494,7 +494,7 @@ class CodeccTransferService @Autowired constructor(
     }
 
     private fun getCodeccDataMap(oldCodeccElement: MarketBuildAtomElement, transferRequest: TransferRequest): Map<String, Any> {
-        val params = oldCodeccElement.genTaskParams()["input"] as Map<String, Any>
+        val params = oldCodeccElement.data["input"] as Map<String, Any>
 
         // get rule set
         val ruleSetMap = getNewRuleSetMapV3(params["languages"] as List<String>, transferRequest.langRuleMap)
@@ -682,7 +682,7 @@ class CodeccTransferService @Autowired constructor(
             checkTemplate = false
         )
 
-        return "update pipeline codecc success to $updateCodeccVersion "
+        return "update pipeline $updateCodeccVersion codecc success to v3 "
     }
 
     //  [ "COVERITY", "KLOCWORK", "PINPOINT", "CPPLINT", "CHECKSTYLE", "ESLINT", "STYLECOP", "PHPCS", "PYLINT", "GOML", "DETEKT", "OCCHECK", "SENSITIVE", "HORUSPY", "WOODPECKER_SENSITIVE", "RIPS", "CCN", "DUPC" ]
