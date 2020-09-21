@@ -428,20 +428,12 @@
                         })
                     }
                 } catch (e) {
-                    if (e.code === 403) { // 没有权限创建
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: this.$t('pipeline'),
-                                option: this.$t('create')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.$route.params.projectId}&service_code=pipeline&role_creator=pipeline`
-                        })
-                    } else {
-                        this.$showTips({
-                            message: e.message,
-                            theme: 'error'
-                        })
-                    }
+                    this.handleError(e, [{
+                        actionId: this.$permissionActionMap.create,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [],
+                        projectId: this.this.$route.params.projectId
+                    }])
                 } finally {
                     this.isDisabled = false
                 }

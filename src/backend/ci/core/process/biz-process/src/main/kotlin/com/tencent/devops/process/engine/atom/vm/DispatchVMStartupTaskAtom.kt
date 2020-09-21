@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.atom.vm
 
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -44,7 +45,7 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.common.pipeline.type.tstack.TStackDispatchType
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_AGENT_STATUS_EXCEPTION
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
@@ -61,12 +62,12 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -86,7 +87,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val dispatchTypeParser: DispatchTypeParser
 ) : IAtomTask<VMBuildContainer> {
     override fun getParamElement(task: PipelineBuildTask): VMBuildContainer {
@@ -100,31 +101,44 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         param: VMBuildContainer,
         runVariables: Map<String, String>
     ): AtomResponse {
-        var status: BuildStatus = BuildStatus.FAILED
+        var atomResponse: AtomResponse
         try {
-            status = execute(task, param)
-        } catch (t: BuildTaskException) {
-            LogUtils.addRedLine(
-                rabbitTemplate,
-                task.buildId,
-                "Fail to execute the task atom: ${t.message}",
-                task.taskId,
-                task.containerHashId,
-                task.executeCount ?: 1
+            atomResponse = execute(task, param)
+        } catch (e: BuildTaskException) {
+            buildLogPrinter.addRedLine(
+                buildId = task.buildId,
+                message = "Fail to execute the task atom: ${e.message}",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
+            logger.warn("Fail to execute the task atom", e)
+            atomResponse = AtomResponse(
+                buildStatus = BuildStatus.FAILED,
+                errorType = e.errorType,
+                errorCode = e.errorCode,
+                errorMsg = e.message
+            )
+        } catch (t: Throwable) {
+            buildLogPrinter.addRedLine(
+                buildId = task.buildId,
+                message = "Fail to execute the task atom: ${t.message}",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
             )
             logger.warn("Fail to execute the task atom", t)
-        } catch (ignored: Throwable) {
-            LogUtils.addRedLine(
-                rabbitTemplate, task.buildId,
-                "Fail to execute the task atom: ${ignored.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
+            atomResponse = AtomResponse(
+                buildStatus = BuildStatus.FAILED,
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
+                errorMsg = t.message
             )
-            logger.warn("Fail to execute the task atom", ignored)
-        } finally {
-            return AtomResponse(status)
         }
+        return atomResponse
     }
 
-    fun execute(task: PipelineBuildTask, param: VMBuildContainer): BuildStatus {
+    fun execute(task: PipelineBuildTask, param: VMBuildContainer): AtomResponse {
         val projectId = task.projectId
         val pipelineId = task.pipelineId
         val buildId = task.buildId
@@ -132,6 +146,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
 
         // 构建环境容器序号ID
         val vmSeqId = task.containerId
+
         // 预指定VM名称列表（逗号分割）
         val vmNames = param.vmNames.joinToString(",")
 
@@ -171,7 +186,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         pipelineBuildDetailService.containerPreparing(buildId, vmSeqId.toInt())
 
         // 读取插件市场中的插件信息，写入待构建处理
-        val atoms = AtomUtils.parseContainerMarketAtom(container, task, client, rabbitTemplate)
+        val atoms = AtomUtils.parseContainerMarketAtom(
+            container = container,
+            task = task,
+            client = client,
+            buildLogPrinter = buildLogPrinter
+        )
 
         val source = "vmStartupTaskAtom"
         val dispatchType = getDispatchType(projectId, pipelineId, buildId, param, param.baseOS)
@@ -222,7 +242,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             )
         )
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
-        return BuildStatus.CALL_WAITING
+        return AtomResponse(BuildStatus.CALL_WAITING)
     }
 
     private fun getDispatchType(
@@ -361,7 +381,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     override fun tryFinish(task: PipelineBuildTask, param: VMBuildContainer, runVariables: Map<String, String>, force: Boolean): AtomResponse {
         return if (force) {
             if (BuildStatus.isFinish(task.status)) {
-                AtomResponse(task.status)
+                AtomResponse(
+                    buildStatus = task.status,
+                    errorType = task.errorType,
+                    errorCode = task.errorCode,
+                    errorMsg = task.errorMsg
+                )
             } else { // 强制终止的设置为失败
                 logger.warn("[${task.buildId}]|[FORCE_STOP_IN_START_TASK]")
                 pipelineEventDispatcher.dispatch(
@@ -379,7 +404,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 defaultFailAtomResponse
             }
         } else {
-            AtomResponse(task.status)
+            AtomResponse(
+                buildStatus = task.status,
+                errorType = task.errorType,
+                errorCode = task.errorCode,
+                errorMsg = task.errorMsg
+            )
         }
     }
 
@@ -410,6 +440,10 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
 
             val taskParams = container.genTaskParams()
             taskParams["elements"] = emptyList<Element>() // elements可能过多导致存储问题
+            val taskAtom = AtomUtils.parseAtomBeanName(DispatchVMStartupTaskAtom::class.java)
+            val buildType = (container as VMBuildContainer).dispatchType?.buildType()?.name ?: BuildType.DOCKER.name
+            val baseOS = (container as VMBuildContainer).baseOS.name
+
             return PipelineBuildTask(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -422,14 +456,15 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 taskId = VMUtils.genStartVMTaskId(container.id!!),
                 taskName = "Prepare_Job#${container.id!!}",
                 taskType = EnvControlTaskType.VM.name,
-                taskAtom = AtomUtils.parseAtomBeanName(DispatchVMStartupTaskAtom::class.java),
+                taskAtom = taskAtom,
                 status = BuildStatus.QUEUE,
                 taskParams = taskParams,
                 executeCount = 1,
                 starter = userId,
                 approver = null,
                 subBuildId = null,
-                additionalOptions = null
+                additionalOptions = null,
+                atomCode = "$taskAtom-$buildType-$baseOS"
             )
         }
     }

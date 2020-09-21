@@ -31,7 +31,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.OpLogResource
 import com.tencent.devops.log.cron.CleanBuildJob
 import com.tencent.devops.log.cron.ESIndexCloseJob
-import com.tencent.devops.log.service.v2.LogServiceV2
+import com.tencent.devops.log.service.LogService
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
@@ -42,7 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpLogResourceImpl @Autowired constructor(
     private val esIndexCloseJob: ESIndexCloseJob,
     private val cleanBuildJob: CleanBuildJob,
-    private val logServiceV2: LogServiceV2
+    private val logService: LogService
 ) : OpLogResource {
 
     override fun getBuildExpire(): Result<Int> {
@@ -64,6 +64,6 @@ class OpLogResourceImpl @Autowired constructor(
     }
 
     override fun reopenIndex(buildId: String): Result<Boolean> {
-        return Result(logServiceV2.reopenIndex(buildId))
+        return Result(logService.reopenIndex(buildId))
     }
 }

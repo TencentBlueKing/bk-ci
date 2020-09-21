@@ -55,21 +55,11 @@ data class CodeTGitRepository(
     //    override fun getStartPrefix() = "git@git.tencent.com"
     override fun getStartPrefix(): String {
         return when (authType) {
-            RepoAuthType.SSH -> "git@git.tencent.com"
-            RepoAuthType.OAUTH -> "http://git.tencent.com"
-            RepoAuthType.HTTP -> ("http://git.tencent.com")
-            RepoAuthType.HTTPS -> ("https://git.tencent.com")
-            else -> "git@git.tencent.com"
-        }
-    }
-
-    override fun isLegal(): Boolean {
-        return when (authType) {
-            RepoAuthType.SSH -> url.startsWith("git@git.tencent.com")
-            RepoAuthType.OAUTH -> url.startsWith("http://git.tencent.com")
-            RepoAuthType.HTTP -> url.startsWith("http://git.tencent.com")
-            RepoAuthType.HTTPS -> url.startsWith("https://git.tencent.com")
-            else -> false
+            RepoAuthType.SSH -> "git@"
+            RepoAuthType.OAUTH -> "http://"
+            RepoAuthType.HTTP -> "http://"
+            RepoAuthType.HTTPS -> "https://"
+            else -> "git@"
         }
     }
 }

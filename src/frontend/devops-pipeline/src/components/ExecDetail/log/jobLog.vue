@@ -1,70 +1,28 @@
 <template>
     <section class="job-log">
-        <search :worker="worker"
-            :execute-count="executeCount"
-            :search-str.sync="searchStr"
-            :show-time.sync="showTime"
-            :down-load-link="downLoadLink"
-            @showSearchLog="showSearchLog"
-            @changeExecute="changeExecute"
-
-        ></search>
-        <ul class="job-plugin-list-log">
-            <li v-for="plugin in pluginList" :key="plugin.id" class="plugin-item">
-                <p class="item-head" @click="expendLog(plugin)">
-                    <span :class="[{ 'show-all': !!curFoldList[plugin.id] }, 'log-folder']"></span>
-                    <status-icon :status="plugin.status"></status-icon>
-                    {{ plugin.name }}
-                </p>
-                <virtual-scroll class="log-scroll" :ref="plugin.id" v-show="curFoldList[plugin.id]" :id="plugin.id" :worker="worker">
-                    <template slot-scope="item">
-                        <span class="item-txt selection-color">
-                            <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
-                            <span :class="['selection-color', { 'cur-search': curSearchIndex === item.data.index }]" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
-                        </span>
-                    </template>
-                </virtual-scroll>
-            </li>
-        </ul>
+        <bk-log-search :down-load-link="downLoadLink" :execute-count="executeCount" class="log-tools"></bk-log-search>
+        <bk-multiple-log ref="multipleLog"
+            class="bk-log"
+            :log-list="pluginList"
+            @open-log="openLog"
+            @tag-change="tagChange"
+        >
+            <template slot-scope="log">
+                <status-icon :status="log.data.status" class="multiple-log-status"></status-icon>
+                {{ log.data.name }}
+            </template>
+        </bk-multiple-log>
     </section>
 </template>
 
 <script>
     import { mapActions } from 'vuex'
-    import virtualScroll from './virtualScroll'
     import statusIcon from '../status'
-    import search from '../tools/search'
-    // eslint-disable-next-line
-    const Worker = require('worker-loader!./worker.js')
-    // eslint-disable-next-line
-    const DataWorker = require('worker-loader!./dataWorker.js')
-
-    function prezero (num) {
-        num = Number(num)
-        if (num < 10) return '0' + num
-        return num
-    }
-
-    function millisecond (num) {
-        num = Number(num)
-        if (num < 10) return '00' + num
-        else if (num < 100) return '0' + num
-        return num
-    }
+    import { hashID } from '@/utils/util.js'
 
     export default {
-        filters: {
-            timeFilter (val) {
-                if (!val) return ''
-                const time = new Date(val)
-                return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}:${millisecond(time.getMilliseconds())}`
-            }
-        },
-
         components: {
-            virtualScroll,
-            statusIcon,
-            search
+            statusIcon
         },
 
         props: {
@@ -82,29 +40,13 @@
         data () {
             return {
                 executeCount: 1,
-                searchStr: '',
-                showTime: false,
-                worker: new Worker(),
-                dataWorker: new DataWorker(),
-                curFoldList: this.pluginList.map(plugin => ({ [plugin.id]: false })),
-                curSearchIndex: 0,
                 logPostData: {},
-                closeTags: []
+                closeIds: []
             }
         },
 
-        mounted () {
-            this.initAssistWorker()
-            this.worker.postMessage({ type: 'initStatus', pluginList: this.pluginList.map(x => x.id) })
-        },
-
         beforeDestroy () {
-            this.worker.terminate()
-            this.dataWorker.terminate()
-            Object.keys(this.logPostData).forEach(key => {
-                const postData = this.logPostData[key]
-                this.closeTags.push(postData.tag)
-            })
+            this.closeLog()
         },
 
         methods: {
@@ -113,27 +55,27 @@
                 'getAfterLog'
             ]),
 
-            initAssistWorker () {
-                const dataChannel = new MessageChannel()
-                this.dataWorker.postMessage({ type: 'init', dataPort: dataChannel.port1 }, [dataChannel.port1])
-                this.worker.postMessage({ type: 'initAssistWorker', dataPort: dataChannel.port2 }, [dataChannel.port2])
+            tagChange (tag, id) {
+                const ref = this.$refs.multipleLog
+                const postData = this.logPostData[id]
+                clearTimeout(postData.timeId)
+                this.closeIds.push(postData.hashId)
+                ref.changeExecute(id)
+                postData.lineNo = 0
+                postData.subTag = tag
+                this.getLog(id, postData)
             },
 
-            showSearchLog ({ index, refId, realIndex }) {
-                this.curSearchIndex = realIndex
-                index -= 5
-                if (index < 0) index = 0
-                const ref = this.$refs[refId][0]
-                const ele = ref.$el
-                if (!this.curFoldList[refId]) this.curFoldList[refId] = true
-                ele.scrollIntoViewIfNeeded()
-                ref.scrollPageByIndex(index)
+            closeLog () {
+                Object.keys(this.logPostData).forEach(key => {
+                    const postData = this.logPostData[key]
+                    this.closeIds.push(postData.hashId)
+                    clearTimeout(postData.timeId)
+                })
             },
 
-            expendLog (plugin) {
+            openLog (plugin) {
                 const id = plugin.id
-                this.$set(this.curFoldList, [id], !this.curFoldList[id])
-                let ref = this.$refs[id]
                 let postData = this.logPostData[id]
                 if (!postData) {
                     postData = this.logPostData[id] = {
@@ -146,19 +88,19 @@
                     }
 
                     this.$nextTick(() => {
-                        ref = this.$refs[id][0]
-                        ref.setVisWidth()
-                        this.getLog(ref, postData)
+                        this.getLog(id, postData)
                     })
                 }
             },
 
-            getLog (ref, postData) {
+            getLog (id, postData) {
+                const hashId = postData.hashId = hashID()
                 let logMethod = this.getAfterLog
                 if (postData.lineNo <= 0) logMethod = this.getInitLog
+                const ref = this.$refs.multipleLog
 
                 logMethod(postData).then((res) => {
-                    if (this.closeTags.includes(postData.tag)) return
+                    if (this.closeIds.includes(hashId)) return
 
                     res = res.data || {}
                     if (res.status !== 0) {
@@ -177,8 +119,15 @@
                                 errMessage = this.$t('history.logErr')
                                 break
                         }
-                        ref.handleApiErr(errMessage)
+                        ref.handleApiErr(errMessage, id)
                         return
+                    }
+
+                    const subTags = res.subTags
+                    if (subTags && subTags.length > 0) {
+                        const tags = subTags.map((tag) => ({ label: tag, value: tag }))
+                        tags.unshift({ label: 'All', value: '' })
+                        ref.setSubTag(tags, id)
                     }
 
                     const logs = res.logs || []
@@ -188,47 +137,19 @@
 
                     if (res.finished) {
                         if (res.hasMore) {
-                            ref.addLogData(logs)
-                            setTimeout(() => this.getLog(ref, postData), 100)
+                            ref.addLogData(logs, id)
+                            postData.timeId = setTimeout(() => this.getLog(id, postData), 100)
                         } else {
-                            ref.addLogData(logs)
+                            ref.addLogData(logs, id)
                         }
                     } else {
-                        ref.addLogData(logs)
-                        setTimeout(() => this.getLog(ref, postData), 1000)
+                        ref.addLogData(logs, id)
+                        postData.timeId = setTimeout(() => this.getLog(id, postData), 1000)
                     }
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
-                    ref.handleApiErr(err.message)
+                    if (ref) ref.handleApiErr(err.message, id)
                 })
-            },
-
-            valuefilter (val) {
-                const valArr = val.split(/<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi)
-                const transSearch = this.searchStr.replace(/\*|\.|\?|\+|\$|\^|\[|\]|\(|\)|\{|\}|\||\\|\//g, (str) => `\\${str}`)
-                const searchReg = new RegExp(`^${transSearch}$`, 'i')
-                const transVal = (val = '') => {
-                    let regStr = '\\s|<|>'
-                    if (transSearch !== '') regStr += `|${transSearch}`
-                    const tranReg = new RegExp(regStr, 'gi')
-                    return val.replace(tranReg, (str) => {
-                        if (str === '<') return '&lt;'
-                        else if (str === '>') return '&gt;'
-                        else if (searchReg.test(str)) return `<span class="search-str">${str}</span>`
-                        else if (/\t/.test(str)) return '&nbsp;&nbsp;&nbsp;&nbsp;'
-                        else return '&nbsp;'
-                    })
-                }
-                let valRes = ''
-                for (let index = 0; index < valArr.length; index += 3) {
-                    if (typeof valArr[index] === 'undefined') continue
-                    const firstVal = valArr[index]
-                    const secVal = valArr[index + 1]
-                    const thirdVal = valArr[index + 2]
-                    valRes += transVal(firstVal)
-                    if (secVal) valRes += `<a href='${secVal}' target='_blank'>${transVal(thirdVal)}</a>`
-                }
-                return valRes
             }
         }
     }
@@ -237,104 +158,27 @@
 <style lang="scss" scoped>
     .job-log {
         height: calc(100% - 59px);
-        .job-plugin-list-log {
-            height: 100%;
-            overflow: auto;
-        }
     }
-    .plugin-item {
-        color: #ffffff;
-        font-family: Consolas, "Courier New", monospace;
-        font-weight: normal;
-        font-size: 12px;
-        line-height: 16px;
-        .item-head {
-            display: flex;
-            justify-items: center;
-            cursor: pointer;
-            padding: 8px;
-        }
-        .log-folder {
-            position: inherit;
-            transform: rotate(-90deg);
-            &.show-all {
-                transform: rotate(0deg);
-            }
-        }
-        /deep/ .log-status {
+
+    .log-tools {
+        position: absolute;
+        right: 20px;
+        top: 13px;
+        display: flex;
+        align-items: center;
+        line-height: 30px;
+        user-select: none;
+        background: none;
+    }
+
+    .multiple-log-status {
+        width: 14px;
+        height: 15px;
+        margin: 0 9px;
+        padding: 1px 0;
+        /deep/ svg {
             width: 14px;
-            height: 15px;
-            margin: 0 9px;
-            padding: 1px 0;
-            svg {
-                width: 14px;
-                height: 14px;
-            }
-            i:before {
-                top: -13px;
-                left: 1px;
-                position: absolute;
-            }
-        }
-    }
-    .log-scroll {
-        color: #ffffff;
-        font-family: Consolas, "Courier New", monospace;
-        font-weight: normal;
-        cursor: text;
-        white-space: nowrap;
-        letter-spacing: 0px;
-        font-size: 12px;
-        line-height: 16px;
-        margin: 0 20px;
-        /deep/ .log-loading .lds-ring {
-            height: 15px;
-            width: 15px;
-            div {
-                height: 16px;
-                width: 16px;
-            }
-        }
-        .item-txt {
-            position: relative;
-            padding: 0 5px;
-            .cur-search {
-                /deep/ .search-str {
-                    color: rgb(255, 255, 255);
-                    background: rgb(33, 136, 255);
-                    outline: rgb(121, 184, 255) solid 1px;
-                }
-            }
-            /deep/ .search-str {
-                color: rgb(36, 41, 46);
-                background: rgb(255, 223, 93);
-                outline: rgb(255, 223, 93) solid 1px;
-            }
-        }
-        .item-time {
-            display: inline-block;
-            min-width: 166px;
-            color: #959da5;
-            font-weight: 400;
-            padding-right: 5px;
-        }
-        /deep/ a {
-            color: #3c96ff;
-            text-decoration: underline;
-            &:active, &:visited, &:hover {
-                color: #3c96ff;
-            }
-        }
-        /deep/ a, /deep/ .selection-color {
-            &::selection {
-                background-color: rgba(70, 146, 222, 0.54);
-            }
-            &::-moz-selection {
-                background: rgba(70, 146, 222, 0.54);
-            }
-            &::-webkit-selection {
-                background: rgba(70, 146, 222, 0.54);
-            }
+            height: 14px;
         }
     }
 </style>

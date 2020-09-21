@@ -178,8 +178,7 @@
             this.showDialog = false
         }
 
-        async addProject () {
-            const data = this.newProject
+        async addProject (data) {
             try {
                 const res = await this.ajaxAddPM(data)
 
@@ -192,20 +191,12 @@
                     await this.getProjects()
                     eventBus.$emit('addNewProject', data)
                 } else {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: this.$t('exception.apiError')
-                    })
+                    throw Error(this.$t('exception.apiError'))
                 }
-                setTimeout(() => {
-                    this.isCreating = false
-                }, 100)
             } catch (err) {
-                this.$bkMessage({
-                    theme: 'error',
-                    message: err.message || this.$t('exception.apiError')
-                })
-                setTimeout(() => {
+                this.handleError(err, this.$permissionActionMap.create)
+            } finally {
+              setTimeout(() => {
                     this.isCreating = false
                 }, 100)
             }
@@ -222,21 +213,18 @@
                     this.closeDialog()
                     await this.getProjects()
                 } else {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: this.$t('exception.apiError')
-                    })
+                    throw Error(this.$t('exception.apiError'))
                 }
+            } catch (err) {
+                this.handleError(err, this.$permissionActionMap.edit, [{
+                    id: data.projectCode,
+                    name: data.projectName
+                }])
                 setTimeout(() => {
                     this.isCreating = false
                 }, 100)
-            } catch (err) {
-                const message = err.message || this.$t('exception.apiError')
-                this.$bkMessage({
-                    theme: 'error',
-                    message
-                })
-                setTimeout(() => {
+            } finally {
+              setTimeout(() => {
                     this.isCreating = false
                 }, 100)
             }
@@ -251,7 +239,7 @@
             }
             this.isCreating = true
             if (this.isNew) {
-                this.addProject()
+                this.addProject(data)
             } else {
                 const { projectCode } = this.newProject
                 const params = {
@@ -266,6 +254,23 @@
         cancelProject () {
             this.isCreating = false
             this.showDialog = false
+        }
+
+        handleError (e, actionId, instanceId = []) {
+          if (e.code === 403) {
+            this.$showAskPermissionDialog({
+                noPermissionList: [{
+                    actionId,
+                    instanceId,
+                    resourceId: this.$permissionResourceMap.project
+                }]
+            })
+          } else {
+            this.$bkMessage({
+                theme: 'error',
+                message: e.message || this.$t('exception.apiError')
+            })
+          }
         }
     }
 </script>

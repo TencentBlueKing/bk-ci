@@ -71,6 +71,13 @@ object HostUtils {
         }
     }
 
+    fun getRealSession(query: String?): String? {
+        if (query == null || query.isNullOrEmpty()) {
+            return null
+        }
+        return query.substringAfter("sessionId=")?.substringBefore("&t=")
+    }
+
     private const val DEFAULT_IP = "127.0.0.1"
     private val logger = LoggerFactory.getLogger(javaClass)
 }

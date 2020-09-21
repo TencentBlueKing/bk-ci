@@ -63,13 +63,15 @@ object BatScriptUtil {
         runtimeVariables: Map<String, String>,
         dir: File,
         systemEnvVariables: Map<String, String>? = null,
-        prefix: String = ""
+        prefix: String = "",
+        errorMessage: String? = null
     ): String {
         try {
             val file = getCommandFile(buildId, script, runtimeVariables, dir, systemEnvVariables)
             return CommandLineUtils.execute("cmd.exe /C \"${file.canonicalPath}\"", dir, true, prefix)
         } catch (e: Throwable) {
-            logger.warn("Fail to execute bat script $script", e)
+            val errorInfo = errorMessage ?: "Fail to execute bat script $script"
+            logger.warn(errorInfo, e)
             throw e
         }
     }

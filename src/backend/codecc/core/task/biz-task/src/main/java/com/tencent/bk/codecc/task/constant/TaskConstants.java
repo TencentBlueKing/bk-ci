@@ -153,5 +153,14 @@ public interface TaskConstants
         SPOTBUGS
     }
 
+    /**
+     * 工蜂任务检查方式
+     */
+    enum GongfengCheckType
+    {
+        SCHEDULE_TASK,
+        CUSTOM_TRIGGER_TASK
+    }
+
 
 }

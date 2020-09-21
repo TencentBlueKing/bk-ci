@@ -40,6 +40,8 @@ interface OpProjectService {
 
     fun setRepoGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
 
+    fun setRepoNotGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
+
     fun setMacOSGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
 
     fun updateProjectFromOp(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Int

@@ -1077,6 +1077,28 @@ class RepositoryService @Autowired constructor(
         )
     }
 
+    fun getInfoByHashIds(hashIds: List<String>): List<RepositoryInfo> {
+        val repositoryIds = hashIds.map { HashUtil.decodeOtherIdToLong(it) }
+        val repositoryInfos = repositoryDao.getRepoByIds(
+                dslContext = dslContext,
+                repositoryIds = repositoryIds,
+                checkDelete = true
+        )
+        val result = mutableListOf<RepositoryInfo>()
+        repositoryInfos?.map {
+            result.add(
+                    RepositoryInfo(
+                            repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
+                            aliasName = it.aliasName,
+                            url = it.url,
+                            type = ScmType.valueOf(it.type),
+                            updatedTime = it.updatedTime.timestampmilli()
+                    )
+            )
+        }
+        return result
+    }
+
     private fun validatePermission(user: String, projectId: String, authPermission: AuthPermission): Boolean {
         return repositoryPermissionService.hasPermission(
             userId = user,

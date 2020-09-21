@@ -27,7 +27,7 @@ package com.tencent.bk.codecc.openapi.service
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
-import com.tencent.bk.codecc.apiquery.op.model.OrgDetailEntity
+import com.tencent.bk.codecc.openapi.op.model.OrgDetailEntity
 import com.tencent.bk.codecc.openapi.dao.AppCodeOrgDao
 import com.tencent.bk.codecc.openapi.dao.AppCodeProjectDao
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource
