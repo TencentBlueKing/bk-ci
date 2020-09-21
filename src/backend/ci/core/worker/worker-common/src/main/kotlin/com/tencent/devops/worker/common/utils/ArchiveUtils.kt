@@ -110,7 +110,6 @@ object ArchiveUtils {
             } else {
                 true
             }
-
         }
     }
 
@@ -154,9 +153,7 @@ object ArchiveUtils {
                             resultList.add(file)
                         }
                     }
-
                 }
-
             }
         }
         return resultList
