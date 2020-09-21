@@ -89,7 +89,7 @@
                 </template>
                 <template v-else-if="col.prop === 'errorCode'" v-slot="props">
                     <template v-if="Array.isArray(props.row.errorInfoList) && props.row.errorInfoList.length > 0">
-                        <div @click.stop="" class="error-code-item" :style="`max-width: ${col.width}px`" v-for="item in props.row.errorInfoList" :key="item.taskId">
+                        <div @click.stop="" class="error-code-item" :style="`max-width: ${col.width - 30}px`" v-for="item in props.row.errorInfoList" :key="item.taskId">
                             <i v-if="errorTypeMap[item.errorType]" :title="$t(errorTypeMap[item.errorType].title)" :class="`devops-icon icon-${errorTypeMap[item.errorType].icon}`"></i>
                             <span :title="item.errorMsg" v-if="item.errorMsg">{{ item.errorMsg }} </span>
                         </div>
@@ -274,7 +274,7 @@
             },
             column () {
                 Object.keys(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).map(item => {
-                    if (['material', 'stageStatus', 'errorCode'].includes(item)) {
+                    if (this.customColumn.includes(item)) {
                         const localStorageVal = localStorage.getItem(`${item}Width`)
                         if (localStorageVal) {
                             this.BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal
@@ -369,9 +369,9 @@
                 }
             },
             handleDragend (newWidth, oldWidth, column) {
-                if (column.property === 'material') localStorage.setItem('materialWidth', newWidth)
-                if (column.property === 'stageStatus') localStorage.setItem('stageStatusWidth', newWidth)
-                if (column.property === 'errorCode') localStorage.setItem('errorCode', newWidth)
+                if (this.customColumn.includes(column.property)) {
+                    localStorage.setItem(`${column.property}Width`, newWidth)
+                }
 
                 this.BUILD_HISTORY_TABLE_COLUMNS_MAP[column.property].width = newWidth
             },
