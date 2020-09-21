@@ -408,7 +408,11 @@ class PreBuildService @Autowired constructor(
             executeCount = null
         ).data!!
         val cleanLogs = mutableListOf<LogLine>()
-        cleanLogs.addAll(originLog.logs.filterNot { it.message.contains("soda_fold") })
+        cleanLogs.addAll(originLog.logs.filterNot {
+            it.message.contains("soda_fold")
+        }.run {
+            if (debugLog) this else filterNot { it.tag.startsWith("startVM") }
+        })
         return QueryLogs(
             originLog.buildId,
             originLog.finished,
