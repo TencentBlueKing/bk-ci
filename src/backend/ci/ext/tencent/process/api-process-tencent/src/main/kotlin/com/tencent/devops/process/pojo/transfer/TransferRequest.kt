@@ -1,6 +1,6 @@
 package com.tencent.devops.process.pojo.transfer
 
-data class TransferRequest (
+data class TransferRequest(
     val projectId: String,
     val pipelineIds: Set<String>?,
     val channelCode: String?,
