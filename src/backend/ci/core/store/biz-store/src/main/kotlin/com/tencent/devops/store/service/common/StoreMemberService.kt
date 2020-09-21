@@ -36,7 +36,12 @@ interface StoreMemberService {
     /**
      * store组件成员列表
      */
-    fun list(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<List<StoreMemberItem?>>
+    fun list(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        checkPermissionFlag: Boolean = true
+    ): Result<List<StoreMemberItem?>>
 
     /**
      * 查看store组件成员信息
