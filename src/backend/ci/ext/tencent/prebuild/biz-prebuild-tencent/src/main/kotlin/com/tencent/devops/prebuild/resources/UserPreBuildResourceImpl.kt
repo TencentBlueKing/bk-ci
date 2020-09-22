@@ -112,7 +112,7 @@ class UserPreBuildResourceImpl @Autowired constructor(
         userId: String,
         preProjectId: String,
         buildId: String,
-        debugLog: Boolean
+        debugLog: Boolean?
     ): Result<QueryLogs> {
         return Result(preBuildService.getInitLogs(userId, preProjectId, buildId, debugLog))
     }
@@ -122,7 +122,7 @@ class UserPreBuildResourceImpl @Autowired constructor(
         preProjectId: String,
         buildId: String,
         start: Long,
-        debugLog: Boolean
+        debugLog: Boolean?
     ): Result<QueryLogs> {
         return Result(preBuildService.getAfterLogs(userId, preProjectId, buildId, start, debugLog))
     }

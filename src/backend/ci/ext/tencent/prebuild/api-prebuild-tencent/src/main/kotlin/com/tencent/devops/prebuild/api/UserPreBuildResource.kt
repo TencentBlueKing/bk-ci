@@ -190,9 +190,9 @@ interface UserPreBuildResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("是否拉取DEBUG日志", required = true)
+        @ApiParam("是否拉取DEBUG日志", required = false)
         @QueryParam("debugLog")
-        debugLog: Boolean
+        debugLog: Boolean?
     ): Result<QueryLogs>
 
     @ApiOperation("获取某行后的日志")
@@ -211,9 +211,9 @@ interface UserPreBuildResource {
         @ApiParam("起始行号", required = true)
         @QueryParam("start")
         start: Long,
-        @ApiParam("是否拉取DEBUG日志", required = true)
+        @ApiParam("是否拉取DEBUG日志", required = false)
         @QueryParam("debugLog")
-        debugLog: Boolean
+        debugLog: Boolean?
     ): Result<QueryLogs>
 
     @ApiOperation("获取报告")

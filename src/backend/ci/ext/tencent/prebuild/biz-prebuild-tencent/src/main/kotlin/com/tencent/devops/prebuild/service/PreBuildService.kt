@@ -366,7 +366,7 @@ class PreBuildService @Autowired constructor(
             .getBuildDetail(userId, preProjectRecord.projectId, preProjectRecord.pipelineId, buildId, channelCode)
     }
 
-    fun getInitLogs(userId: String, pipelineId: String, buildId: String, debugLog: Boolean): QueryLogs {
+    fun getInitLogs(userId: String, pipelineId: String, buildId: String, debugLog: Boolean?): QueryLogs {
         val projectId = getUserProjectId(userId)
         val originLog = client.get(ServiceLogResource::class).getInitLogs(
             projectId = projectId,
@@ -382,7 +382,7 @@ class PreBuildService @Autowired constructor(
         cleanLogs.addAll(originLog.logs.filterNot {
             it.message.contains("soda_fold")
         }.run {
-            if (debugLog) this else filterNot { it.tag.startsWith("startVM") }
+            if (null == debugLog || debugLog) this else filterNot { it.tag.startsWith("startVM") }
         })
         return QueryLogs(
             originLog.buildId,
@@ -394,7 +394,13 @@ class PreBuildService @Autowired constructor(
         )
     }
 
-    fun getAfterLogs(userId: String, preProjectId: String, buildId: String, start: Long, debugLog: Boolean): QueryLogs {
+    fun getAfterLogs(
+        userId: String,
+        preProjectId: String,
+        buildId: String,
+        start: Long,
+        debugLog: Boolean?
+    ): QueryLogs {
         val prebuildProjRecord = getPreProjectInfo(preProjectId, userId)
         val originLog = client.get(ServiceLogResource::class).getAfterLogs(
             projectId = prebuildProjRecord.projectId,
@@ -411,7 +417,7 @@ class PreBuildService @Autowired constructor(
         cleanLogs.addAll(originLog.logs.filterNot {
             it.message.contains("soda_fold")
         }.run {
-            if (debugLog) this else filterNot { it.tag.startsWith("startVM") }
+            if (null == debugLog || debugLog) this else filterNot { it.tag.startsWith("startVM") }
         })
         return QueryLogs(
             originLog.buildId,
