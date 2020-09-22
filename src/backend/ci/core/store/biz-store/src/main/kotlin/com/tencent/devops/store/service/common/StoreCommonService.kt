@@ -79,4 +79,12 @@ interface StoreCommonService {
      * 获取store组件详情页地址
      */
     fun getStoreDetailUrl(storeType: StoreTypeEnum, storeCode: String): String
+
+    /**
+     * 删除store组件信息
+     */
+    fun deleteStoreInfo(
+        storeCode: String,
+        storeType: Byte
+    ): Boolean
 }
