@@ -112,11 +112,12 @@ class CommitService @Autowired constructor(
                 page = page,
                 pageSize = pageSize) ?: return listOf()
         } else {
+            val repoName = repositoryDao.getByName(dslContext, projectId, repositoryId).aliasName
             commitDao.getLatestCommitByName(
                 dslContext = dslContext,
                 pipelineId = pipelineId,
                 elementId = elementId,
-                repoName = repositoryId,
+                repoName = repoName,
                 page = page,
                 pageSize = pageSize) ?: return listOf()
         }

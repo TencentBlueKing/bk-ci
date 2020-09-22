@@ -685,16 +685,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             // 入库卸载原因
             unInstallReq.reasonList.forEach {
                 if (it?.reasonId != null) {
-                    reasonRelDao.add(
-                        dslContext = context,
-                        id = UUIDUtil.generate(),
-                        userId = userId,
-                        storeCode = atomCode,
-                        storeType = StoreTypeEnum.ATOM.type.toByte(),
-                        reasonId = it.reasonId,
-                        note = it.note,
-                        type = ReasonTypeEnum.UNINSTALLATOM.type
-                    )
+                    val id = UUIDUtil.generate()
+                    reasonRelDao.add(context, id, userId, atomCode, it.reasonId, it.note, ReasonTypeEnum.UNINSTALLATOM.type)
                 }
             }
         }

@@ -326,7 +326,6 @@ export default {
                     },
                     elements: [],
                     containerId: `c-${hashID(32)}`,
-                    nfsSwitch: false,
                     isError
                 }
             })

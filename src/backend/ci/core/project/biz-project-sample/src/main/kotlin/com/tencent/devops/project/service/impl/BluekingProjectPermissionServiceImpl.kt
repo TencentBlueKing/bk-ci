@@ -34,7 +34,6 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
 import com.tencent.devops.common.auth.code.GLOBAL_SCOPE_TYPE
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
-import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -93,8 +92,7 @@ class BluekingProjectPermissionServiceImpl @Autowired constructor(
     override fun createResources(
         userId: String,
         accessToken: String?,
-        resourceRegisterInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?
+        resourceRegisterInfo: ResourceRegisterInfo
     ): String {
         val projectList = mutableListOf<ResourceRegisterInfo>()
         projectList.add(resourceRegisterInfo)

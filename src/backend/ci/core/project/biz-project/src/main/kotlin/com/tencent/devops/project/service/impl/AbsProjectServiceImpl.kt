@@ -134,26 +134,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 throw OperationException("${result.status}:${result.message}")
             }
             val logoAddress = result.data!!
-            val userDeptDetail = UserDeptDetail(
-                    bgName = "",
-                    bgId = "1",
-                    centerName = "",
-                    centerId = "1",
-                    deptName = "",
-                    deptId = "1",
-                    groupId = "0",
-                    groupName = ""
-            )
+
             try {
                 // 注册项目到权限中心
                 projectPermissionService.createResources(
                     userId = userId,
                     accessToken = "",
                     resourceRegisterInfo = ResourceRegisterInfo(
-                            resourceCode = projectCreateInfo.englishName,
-                            resourceName = projectCreateInfo.projectName
-                    ),
-                    userDeptDetail = userDeptDetail
+                        projectCreateInfo.englishName,
+                        projectCreateInfo.projectName
+                    )
                 )
             } catch (e: PermissionForbiddenException) {
                 throw e
@@ -163,6 +153,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             }
 
             val projectId = UUIDUtil.generate()
+            val userDeptDetail = UserDeptDetail(
+                bgName = "",
+                bgId = "1",
+                centerName = "",
+                centerId = "1",
+                deptName = "",
+                deptId = "1",
+                groupId = "0",
+                groupName = ""
+            )
             try {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)

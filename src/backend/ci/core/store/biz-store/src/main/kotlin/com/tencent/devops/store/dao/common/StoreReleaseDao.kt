@@ -80,13 +80,4 @@ class StoreReleaseDao {
             }
         }
     }
-
-    fun deleteStoreReleaseInfo(dslContext: DSLContext, storeCode: String, storeType: Byte) {
-        with(TStoreRelease.T_STORE_RELEASE) {
-            dslContext.deleteFrom(this)
-                .where(STORE_CODE.eq(storeCode))
-                .and(STORE_TYPE.eq(storeType))
-                .execute()
-        }
-    }
 }

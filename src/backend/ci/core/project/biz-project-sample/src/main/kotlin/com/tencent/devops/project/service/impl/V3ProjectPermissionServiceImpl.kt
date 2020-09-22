@@ -12,7 +12,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
-import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -41,8 +40,7 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
     override fun createResources(
         userId: String,
         accessToken: String?,
-        resourceRegisterInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?
+        resourceRegisterInfo: ResourceRegisterInfo
     ): String {
         val validateCreatePermission = authPermissionApi.validateUserResourcePermission(userId, projectAuthServiceCode, AuthResourceType.PROJECT, "", AuthPermission.CREATE)
         if (!validateCreatePermission) {

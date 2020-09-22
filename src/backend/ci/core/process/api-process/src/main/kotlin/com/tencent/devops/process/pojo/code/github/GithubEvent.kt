@@ -47,7 +47,7 @@ data class GithubCommit(
 data class GithubUser(
     val name: String,
     val email: String,
-    val username: String? = null
+    val username: String
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
