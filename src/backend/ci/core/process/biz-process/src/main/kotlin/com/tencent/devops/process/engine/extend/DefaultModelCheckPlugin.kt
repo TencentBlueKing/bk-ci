@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PARAM_IN_JOB_CONDITION
@@ -133,24 +134,27 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
     }
 
     override fun beforeDeleteElementInExistsModel(
-        userId: String,
         existModel: Model,
         sourceModel: Model?,
-        pipelineId: String?
+        param: BeforeDeleteParam
     ) {
+        logger.info("before delete element source model: $sourceModel")
+
         existModel.stages.forEach { s ->
             s.containers.forEach { c ->
                 c.elements.forEach { e ->
-                    deletePrepare(sourceModel, e, userId, pipelineId)
+                    deletePrepare(sourceModel, e, param)
                 }
             }
         }
     }
 
-    private fun deletePrepare(sourceModel: Model?, e: Element, userId: String, pipelineId: String?) {
+    private fun deletePrepare(sourceModel: Model?, e: Element, param: BeforeDeleteParam) {
         if (sourceModel == null || !sourceModel.elementExist(e.id)) {
             logger.info("The element(${e.name}/${e.id}) is delete")
-            ElementBizRegistrar.getPlugin(e)?.beforeDelete(e, userId, pipelineId)
+            ElementBizRegistrar.getPlugin(e)?.beforeDelete(e, param)
+        } else {
+            logger.info("The element(${e.name}/${e.id}) is not delete")
         }
     }
 

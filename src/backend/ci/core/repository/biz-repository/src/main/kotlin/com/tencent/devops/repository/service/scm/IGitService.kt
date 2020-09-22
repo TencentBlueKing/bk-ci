@@ -108,7 +108,14 @@ interface IGitService {
         tokenType: TokenTypeEnum
     ): Result<GitProjectInfo?>
 
-    fun getMrInfo(repoName: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrInfo
+    fun getMrInfo(
+        repoName: String,
+        mrId: Long,
+        tokenType:
+        TokenTypeEnum,
+        token: String,
+        repoUrl: String? = null
+    ): GitMrInfo
 
     fun downloadGitRepoFile(
         repoName: String,
@@ -118,9 +125,21 @@ interface IGitService {
         response: HttpServletResponse
     )
 
-    fun getMrReviewInfo(repoName: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrReviewInfo
+    fun getMrReviewInfo(
+        repoName: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String,
+        repoUrl: String? = null
+    ): GitMrReviewInfo
 
-    fun getMrChangeInfo(repoName: String, mrId: Long, tokenType: TokenTypeEnum, token: String): GitMrChangeInfo
+    fun getMrChangeInfo(
+        repoName: String,
+        mrId: Long,
+        tokenType: TokenTypeEnum,
+        token: String,
+        repoUrl: String? = null
+    ): GitMrChangeInfo
 
     fun getRepoMembers(accessToken: String, userId: String, repoName: String): List<GitMember>
 }

@@ -29,10 +29,15 @@ package com.tencent.bk.codecc.codeccjob.service.impl;
 import com.tencent.bk.codecc.defect.model.OperationHistoryEntity;
 import com.tencent.bk.codecc.codeccjob.dao.mongorepository.OperationHistoryRepository;
 import com.tencent.bk.codecc.codeccjob.service.OperationHistoryService;
+import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
+import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.web.aop.model.OperationHistoryDTO;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 
 /**
  * 操作记录服务实现类
@@ -46,11 +51,25 @@ public class OperationHistoryServiceImpl implements OperationHistoryService
     @Autowired
     private OperationHistoryRepository operationHistoryRepository;
 
+    @Autowired
+    private Client client;
+
     @Override
     public void saveOperationHistory(OperationHistoryDTO operationHistoryDTO)
     {
+        Long taskId = operationHistoryDTO.getTaskId();
+        if (taskId == 0 && StringUtils.isNotBlank(operationHistoryDTO.getPipelineId()))
+        {
+            taskId = Objects.requireNonNull(
+                client.get(ServiceTaskRestResource.class).getPipelineTask(
+                    operationHistoryDTO.getPipelineId(),
+                    operationHistoryDTO.getOperator())
+                    .getData())
+                .getTaskId();
+        }
+
         OperationHistoryEntity operationHistoryEntity = new OperationHistoryEntity();
-        operationHistoryEntity.setTaskId(operationHistoryDTO.getTaskId());
+        operationHistoryEntity.setTaskId(taskId);
         operationHistoryEntity.setFuncId(operationHistoryDTO.getFuncId());
         operationHistoryEntity.setOperType(operationHistoryDTO.getOperType());
         operationHistoryEntity.setTime(operationHistoryDTO.getTime());

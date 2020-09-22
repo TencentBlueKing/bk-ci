@@ -109,13 +109,15 @@ class PipelineWebhookService @Autowired constructor(
                     repo.projectName
                 }
                 ScmType.CODE_TGIT -> {
-                    // do nothing
+                    scmProxyService.addTGitWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
+                }
+                else -> {
                     null
                 }
             }
-            pipelineWebhook.projectName = projectName
             logger.info("add $projectName webhook to [$pipelineWebhook]")
             if (!projectName.isNullOrBlank()) {
+                pipelineWebhook.projectName = projectName
                 saveOrUpdateWebhook(pipelineWebhook)
                 webhookRedisUtils.addWebhook2Redis(
                     pipelineWebhook.pipelineId,

@@ -12,8 +12,13 @@
 
 package com.tencent.bk.codecc.defect.service;
 
+import com.tencent.bk.codecc.defect.model.CLOCDefectEntity;
 import com.tencent.bk.codecc.defect.vo.UploadCLOCStatisticVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.constant.CommonMessageCode;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * cloc工具上传统计数据接口
@@ -21,9 +26,13 @@ import com.tencent.devops.common.api.pojo.CodeCCResult;
  * @version V1.0
  * @date 2019/10/7
  */
+@Deprecated
 public interface CLOCUploadStatisticService
 {
-
-
     CodeCCResult uploadStatistic(UploadCLOCStatisticVO uploadCLOCStatisticVO);
+
+    CodeCCResult<CommonMessageCode> uploadNewStatistic(UploadCLOCStatisticVO uploadCLOCStatisticVO,
+            Map<String, List<CLOCDefectEntity>> clocLanguageMap,
+            String buildId,
+            String streamName);
 }

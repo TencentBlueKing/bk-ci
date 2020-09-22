@@ -56,7 +56,7 @@ import org.json.JSONObject;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -82,8 +82,7 @@ public abstract class AbstractTaskRegisterService implements TaskRegisterService
     protected TaskRepository taskRepository;
 
     @Autowired
-    @Qualifier("redisTemplate")
-    protected RedisTemplate redisTemplate;
+    protected StringRedisTemplate redisTemplate;
 
     @Autowired
     protected PipelineService pipelineService;
@@ -123,8 +122,8 @@ public abstract class AbstractTaskRegisterService implements TaskRegisterService
         // 校验新接入的项目英文名是否已经被注册过
         if (checkeIsStreamRegistered(taskDetailVO.getNameEn()))
         {
-            log.error("the task name has been registered! task name: {}", taskDetailVO.getNameEn());
-            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"任务名称"}, null);
+            log.error("the task name has been registered! task name: {}", taskDetailVO.getNameCn());
+            throw new CodeCCException(CommonMessageCode.KEY_IS_EXIST, new String[]{taskDetailVO.getNameCn()}, null);
         }
 
         // 创建新项目到数据库

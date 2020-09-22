@@ -19,8 +19,9 @@ import com.tencent.bk.codecc.apiquery.vo.DeptInfoVO;
 import com.tencent.bk.codecc.apiquery.vo.TaskInfoExtVO;
 import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO;
 import com.tencent.bk.codecc.apiquery.vo.ToolConfigPlatformVO;
-import com.tencent.devops.common.api.pojo.Page;
+import com.tencent.bk.codecc.apiquery.vo.op.ActiveTaskStatisticsVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -33,8 +34,7 @@ import java.util.List;
  * @date 2020/4/24
  */
 @RestResource
-public class OpTaskRestResourceImpl implements OpTaskRestResource
-{
+public class OpTaskRestResourceImpl implements OpTaskRestResource {
 
     @Autowired
     private ToolService toolService;
@@ -45,28 +45,30 @@ public class OpTaskRestResourceImpl implements OpTaskRestResource
 
     @Override
     public CodeCCResult<Page<ToolConfigPlatformVO>> getPlatformInfo(Long taskId, String toolName, String platformIp,
-                                                                    Integer pageNum, Integer pageSize, String sortType)
-    {
+                                                                    Integer pageNum, Integer pageSize, String sortType) {
         return new CodeCCResult<>(toolService.getPlatformInfoList(taskId, toolName, platformIp, pageNum, pageSize, sortType));
     }
 
     @Override
-    public CodeCCResult<ToolConfigPlatformVO> getPlatformDetail(Long taskId, String toolName)
-    {
+    public CodeCCResult<ToolConfigPlatformVO> getPlatformDetail(Long taskId, String toolName) {
         return new CodeCCResult<>(toolService.getTaskPlatformDetail(taskId, toolName));
     }
 
     @Override
     public CodeCCResult<Page<TaskInfoExtVO>> getOverAllTaskList(TaskToolInfoReqVO reqVO, Integer pageNum, Integer pageSize,
-                                                                String sortField, String sortType)
-    {
+                                                                String sortField, String sortType) {
         return new CodeCCResult<>(taskService.getOverAllTaskList(reqVO, pageNum, pageSize, sortField, sortType));
     }
 
     @Override
-    public CodeCCResult<List<DeptInfoVO>> getDeptList(String parentId)
-    {
+    public CodeCCResult<List<DeptInfoVO>> getDeptList(String parentId) {
         return new CodeCCResult<>(taskService.getChildDeptList(parentId));
+    }
+
+    @Override
+    public CodeCCResult<Page<ActiveTaskStatisticsVO>> queryActiveTaskListByLog(String userName,
+                                                                               TaskToolInfoReqVO taskToolInfoReqVO, Integer pageNum, Integer pageSize, String sortField, String sortType) {
+        return new CodeCCResult<>(taskService.getActiveTaskList(taskToolInfoReqVO, pageNum, pageSize, sortField, sortType));
     }
 
 

@@ -27,6 +27,7 @@
 package com.tencent.devops.common.auth.api.external
 
 import com.tencent.devops.common.auth.api.pojo.external.KEY_ADMIN_MEMBER
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.util.List2StrUtil
@@ -36,6 +37,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.core.RedisTemplate
 
 abstract class AbstractAuthExPermissionApi @Autowired constructor(
+        val client: Client,
         val authPropertiesData: AuthExPropertiesData,
         val redisTemplate: RedisTemplate<String, String>
 ) : AuthExPermissionApi {

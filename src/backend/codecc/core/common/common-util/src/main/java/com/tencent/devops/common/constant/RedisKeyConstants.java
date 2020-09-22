@@ -192,4 +192,14 @@ public interface RedisKeyConstants
      * 分析机器集群
      */
     String KEY_FILE_INFO = "FILE_INFO";
+
+    /**
+     * lint告警表迁移标志: MIGRATION_FLAG:taskId:toolName
+     */
+    String KEY_MIGRATION_FLAG = "MIGRATION_FLAG:";
+
+    /**
+     * 任务工具告警的自增序列key
+     */
+    String PREFIX_DEFECT_SEQUENCE = "DEFECT_SEQUENCE:";
 }

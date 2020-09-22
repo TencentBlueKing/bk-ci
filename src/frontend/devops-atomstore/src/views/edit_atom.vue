@@ -1,16 +1,8 @@
 <template>
     <div class="edit-atom-wrapper" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
-        <h3 class="market-home-title">
-            <icon class="title-icon" name="color-logo-store" size="25" />
-            <p class="title-name">
-                <span class="back-home" @click="toAtomStore()"> {{ $t('store.研发商店') }} </span>
-                <i class="right-arrow banner-arrow"></i>
-                <span class="back-home" @click="toAtomList()"> {{ $t('store.工作台') }} </span>
-                <i class="right-arrow banner-arrow"></i>
-                <span class="">{{ curTitle }}（{{ atomForm.atomCode }}）</span>
-            </p>
-            <a class="title-work" target="_blank" :href="docsLink"> {{ $t('store.插件指引') }} </a>
-        </h3>
+        <bread-crumbs :bread-crumbs="navList" type="atom">
+            <a class="g-title-work" target="_blank" :href="docsLink"> {{ $t('store.插件指引') }} </a>
+        </bread-crumbs>
 
         <div class="edit-atom-content" v-if="showContent">
             <form class="bk-form edit-atom-form g-form-radio">
@@ -134,7 +126,7 @@
                         <bk-popover placement="left">
                             <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p> {{ $t('store["插件详细介绍，请说明插件功能、使用场景、使用限制和受限解决方案[可选]、常见的失败原因和解决方案、以及接口人联系方式。"]') }} </p>
+                                <p> {{ $t('store.atomRemark') }} </p>
                                 <p> {{ $t('store.展示在插件市场查看插件详情界面，帮助用户快速了解插件和解决遇到的问题。') }} </p>
                             </template>
                         </bk-popover>
@@ -240,11 +232,13 @@
     import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
     import bkFileUpload from '@/components/common/file-upload'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
 
     export default {
         components: {
             selectLogo,
-            bkFileUpload
+            bkFileUpload,
+            breadCrumbs
         },
         data () {
             return {
@@ -299,6 +293,7 @@
                 },
                 atomForm: {
                     name: '',
+                    atomCode: '',
                     logoUrl: '',
                     category: 'TASK',
                     classifyCode: '',
@@ -336,6 +331,13 @@
             },
             releasePackageUrl () {
                 return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/atoms/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
+            },
+            navList () {
+                const name = `${this.curTitle}（${this.atomForm.atomCode}）`
+                return [
+                    { name: this.$t('store.工作台'), to: { name: 'atomWork' } },
+                    { name }
+                ]
             }
         },
         watch: {
@@ -385,14 +387,6 @@
             this.requestAtomClassify()
         },
         methods: {
-            toAtomList () {
-                this.$router.push({
-                    name: 'workList',
-                    params: {
-                        type: 'atom'
-                    }
-                })
-            },
             toPublishProgress (type, id) {
                 this.$router.push({
                     name: 'releaseProgress',
@@ -705,66 +699,15 @@
 
 <style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
+    .atom-item-content {
+        max-width: calc(100% - 110px);
+    }
 
     .edit-atom-wrapper {
         height: 100%;
-        .info-header {
-            display: flex;
-            padding: 14px 24px;
-            width: 100%;
-            height: 50px;
-            border-bottom: 1px solid #DDE4EB;
-            background-color: #fff;
-            box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
-            .title {
-                display: flex;
-                align-items: center;
-            }
-            .first-level,
-            .secondary {
-                color: $primaryColor;
-                cursor: pointer;
-            }
-            .third-leve {
-                color: $fontWeightColor;
-            }
-            .nav-icon {
-                width: 24px;
-                height: 24px;
-                margin-right: 10px;
-            }
-            .right-arrow {
-                display :inline-block;
-                position: relative;
-                width: 19px;
-                height: 36px;
-                margin-right: 4px;
-            }
-            .right-arrow::after {
-                display: inline-block;
-                content: " ";
-                height: 4px;
-                width: 4px;
-                border-width: 1px 1px 0 0;
-                border-color: $lineColor;
-                border-style: solid;
-                transform: matrix(0.71, 0.71, -0.71, 0.71, 0, 0);
-                position: absolute;
-                top: 50%;
-                right: 6px;
-                margin-top: -9px;
-            }
-            .develop-guide-link {
-                position: absolute;
-                right: 36px;
-                margin-top: 2px;
-                color: $primaryColor;
-                cursor: pointer;
-            }
-        }
         .edit-atom-content {
             padding: 20px 0 40px;
-            height: calc(100% - 50px);
+            height: calc(100% - 5.6vh);
             overflow: auto;
             display: flex;
             justify-content: center;
@@ -836,6 +779,7 @@
             .atom-introduction-input,
             .atom-remark-input {
                 min-width: 100%;
+                max-width: 100%;
                 border: 1px solid #c4c6cc;
             }
             .version-num-form-item {

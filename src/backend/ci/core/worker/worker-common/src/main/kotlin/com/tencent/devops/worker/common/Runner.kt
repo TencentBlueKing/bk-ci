@@ -57,6 +57,7 @@ object Runner {
 
     fun run(workspaceInterface: WorkspaceInterface, systemExit: Boolean = true) {
         var workspacePathFile: File? = null
+        var failed = false
         try {
             logger.info("Start the worker ...")
             // 启动成功了，报告process我已经启动了
@@ -123,6 +124,8 @@ object Runner {
                                 )
                                 logger.info("Finish completing the task ($buildTask)")
                             } catch (e: Throwable) {
+                                failed = true
+
                                 var message: String
                                 var errorType: String
                                 var errorCode: Int
@@ -183,6 +186,7 @@ object Runner {
                     }
                 }
             } catch (e: Exception) {
+                failed = true
                 logger.error("Other unknown error has occurred:", e)
                 LoggerService.addRedLine("Other unknown error has occurred: " + e.message)
             } finally {
@@ -191,10 +195,11 @@ object Runner {
                 ProcessService.endBuild()
             }
         } catch (e: Exception) {
+            failed = true
             logger.warn("Catch unknown exceptions", e)
             throw e
         } finally {
-            if (workspacePathFile != null && checkIfNeed2CleanWorkspace()) {
+            if (workspacePathFile != null && checkIfNeed2CleanWorkspace(failed)) {
                 val file = workspacePathFile.absoluteFile.normalize()
                 logger.warn("Need to clean up the workspace(${file.absolutePath})")
                 // 去除workspace目录下的软连接，再清空workspace
@@ -220,11 +225,12 @@ object Runner {
         }
     }
 
-    private fun checkIfNeed2CleanWorkspace(): Boolean {
+    private fun checkIfNeed2CleanWorkspace(failed: Boolean): Boolean {
         // current only add this option for pcg docker
-        if (BuildEnv.getBuildType() != BuildType.DOCKER) {
+        if ((BuildEnv.getBuildType() != BuildType.DOCKER) || failed) {
             return false
         }
+
         if (System.getProperty(CLEAN_WORKSPACE)?.trim() == true.toString()) {
             return true
         }
