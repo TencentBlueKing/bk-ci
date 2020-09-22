@@ -1,13 +1,13 @@
 # Image Service Template 服务配置文件模板
 spring:
   datasource:
-    url: jdbc:mysql://__MYSQL_IP0__:__MYSQL_PORT__/devops_ci_image?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
-    username: __MYSQL_USER__
-    password: __MYSQL_PASS__
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_image?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: __BK_CI_MYSQL_USER__
+    password: __BK_CI_MYSQL_PASSWORD__
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21933
 server:
-  port: __BKCI_IMAGE_API_PORT__
+  port: __BK_CI_IMAGE_API_PORT__
 
 
 image:
@@ -15,7 +15,7 @@ image:
     dockerHost: unix:///var/run/docker.sock
     dockerConfig: /root/.docker
     apiVersion: 1.23
-    registryUrl: __JFROG_URL__
-    registryUsername: __DOCKER_REGISTRY_USERNAME__
-    registryPassword: __DOCKER_REGISTRY_PASSWORD__
-    imagePrefix: __DOCKER_IMAGE_PREFIX__:__DOCKER_PORT__
+    registryUrl: __BK_CI_DOCKER_REGISTRY_URL__  # 什么类型的url?
+    registryUsername: __BK_CI_DOCKER_REGISTRY_USER__
+    registryPassword: __BK_CI_DOCKER_REGISTRY_PASSWORD__
+    imagePrefix: __BK_CI_DOCKER_IMAGE_PREFIX__
