@@ -73,12 +73,12 @@
     <!-- end devops:assets -->
     
     <script>
-        var WEBSITE_URL = '__HTTP_SCHEMA__://__BKCI_FQDN__'
-        var GW_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/ms'     // api接口前缀
-        var WS_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/'
-        var PERM_URL_PREFIX = '__HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/o/bk_iam_app' // EE PERM URL PREFIX
-        var DOCS_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_IWIKI_FQDN__'  // 文档中心域名
-        var LOGIN_SERVICE_URL = '__LOGIN_SERVICE_URL__'
+        var WEBSITE_URL = '__BK_CI_PUBLIC_URL__'
+        var GW_URL_PREFIX = '__BK_CI_PUBLIC_URL__/ms'     // api接口前缀
+        var WS_URL_PREFIX = '__BK_CI_PUBLIC_URL__/'
+        var PERM_URL_PREFIX = '__BK_PAAS_PUBLIC_URL__/o/bk_iam_app' // EE PERM URL PREFIX
+        var DOCS_URL_PREFIX = '__BK_CI_DOCS_URL__'  // 文档中心域名
+        var LOGIN_SERVICE_URL = '__BK_PAAS_PUBLIC_URL__'
         var DEVOPS_LS_VERSION = '<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>'
         var ENTERPRISE_VERSION = false
     </script>
