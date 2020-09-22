@@ -74,6 +74,14 @@ class ServiceGitResourceImpl @Autowired constructor(
         return gitService.deleteGitProjectMember(userIdList, repositorySpaceName, token, tokenType)
     }
 
+    override fun deleteGitProject(
+        repositorySpaceName: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return gitService.deleteGitProject(repositorySpaceName, token, tokenType)
+    }
+
     override fun moveProjectToGroup(token: String, groupCode: String, repositoryName: String, tokenType: TokenTypeEnum): Result<GitProjectInfo?> {
         return gitService.moveProjectToGroup(groupCode, repositoryName, token, tokenType)
     }
