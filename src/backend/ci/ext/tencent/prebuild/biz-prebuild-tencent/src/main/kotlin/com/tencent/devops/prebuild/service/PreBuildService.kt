@@ -59,7 +59,6 @@ import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
-import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
@@ -94,8 +93,7 @@ class PreBuildService @Autowired constructor(
     private val dslContext: DSLContext,
     private val prebuildProjectDao: PrebuildProjectDao,
     private val prebuildPersonalMachineDao: PrebuildPersonalMachineDao,
-    private val preBuildConfig: PreBuildConfig,
-    private val profile: Profile
+    private val preBuildConfig: PreBuildConfig
 ) {
     private val channelCode = ChannelCode.BS
 
@@ -104,11 +102,7 @@ class PreBuildService @Autowired constructor(
     }
 
     private fun getUserProjectId(userId: String): String {
-        return if (profile.isProd() && !profile.isProdGray()) {
-            "_$userId"
-        } else {
-            "_${userId}_${profile.getEnv().name}"
-        }
+        return "_$userId"
     }
 
     fun projectNameExist(userId: String, prebuildProjId: String) =
