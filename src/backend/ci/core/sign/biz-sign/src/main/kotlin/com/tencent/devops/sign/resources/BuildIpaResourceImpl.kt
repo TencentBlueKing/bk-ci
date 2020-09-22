@@ -34,6 +34,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.sign.api.builds.BuildIpaResource
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.api.pojo.SignResult
 import com.tencent.devops.sign.service.AsyncSignService
 import com.tencent.devops.sign.service.DownloadService
 import com.tencent.devops.sign.service.SignInfoService
@@ -75,7 +76,12 @@ class BuildIpaResourceImpl @Autowired constructor(
             syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
             return Result(resignId)
         } catch (e: Exception) {
-            signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount)
+            signInfoService.failResign(
+                resignId = resignId,
+                info = ipaSignInfo,
+                executeCount = taskExecuteCount,
+                message = e.message ?: "Start sign task with exception"
+            )
             throw e
         }
     }
@@ -85,8 +91,8 @@ class BuildIpaResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         resignId: String
-    ): Result<String> {
-        return Result(signService.getSignStatus(resignId).getValue())
+    ): Result<SignResult> {
+        return Result(signService.getSignStatus(resignId))
     }
 
     override fun downloadUrl(

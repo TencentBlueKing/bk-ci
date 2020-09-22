@@ -33,10 +33,10 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.sign.api.constant.SignMessageCode
-import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaInfoPlist
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
+import com.tencent.devops.sign.api.pojo.SignResult
 import com.tencent.devops.sign.service.ArchiveService
 import com.tencent.devops.sign.service.FileService
 import com.tencent.devops.sign.service.SignInfoService
@@ -139,7 +139,7 @@ class SignServiceImpl @Autowired constructor(
         signInfoService.successResign(resignId, ipaSignInfo, taskExecuteCount)
     }
 
-    override fun getSignStatus(resignId: String): EnumResignStatus {
+    override fun getSignStatus(resignId: String): SignResult {
         return signInfoService.getSignStatus(resignId)
     }
 

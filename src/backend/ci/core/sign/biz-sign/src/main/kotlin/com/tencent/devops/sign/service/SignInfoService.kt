@@ -32,6 +32,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.api.pojo.SignResult
 import com.tencent.devops.sign.dao.SignHistoryDao
 import com.tencent.devops.sign.dao.SignIpaInfoDao
 import com.tencent.devops.sign.utils.IpaFileUtil
@@ -153,24 +154,34 @@ class SignInfoService(
         )
     }
 
-    fun failResign(resignId: String, info: IpaSignInfo, executeCount: Int = 1) {
+    fun failResign(resignId: String, info: IpaSignInfo, executeCount: Int = 1, message: String) {
         logger.info("[$resignId] fail resign|buildId=${info.buildId}")
         if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) buildLogPrinter.addLine(
             buildId = info.buildId!!,
-            message = "End resign ipa file.",
+            message = message,
             tag = info.taskId!!,
             jobId = null,
             executeCount = executeCount
         )
         signHistoryDao.failResign(
             dslContext = dslContext,
-            resignId = resignId
+            resignId = resignId,
+            message = message
         )
     }
 
-    fun getSignStatus(resignId: String): EnumResignStatus {
+    fun getSignStatus(resignId: String): SignResult {
         val record = signHistoryDao.getSignHistory(dslContext, resignId)
-        return EnumResignStatus.parse(record?.status)
+        val status = EnumResignStatus.parse(record?.status)
+        return SignResult(
+            resignId = resignId,
+            status = status.getValue(),
+            message = when (status) {
+                EnumResignStatus.SUCCESS -> "Sign finished."
+                EnumResignStatus.RUNNING -> "Sign is running..."
+                else -> record?.errorMessage ?: "Unknown error."
+            }
+        )
     }
 
     /*

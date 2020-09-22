@@ -34,5 +34,7 @@ data class SignResult(
     @ApiModelProperty("签名ID", required = true)
     val resignId: String,
     @ApiModelProperty("是否完成", required = true)
-    val finished: Boolean
+    val status: String,
+    @ApiModelProperty("描述信息", required = true)
+    val message: String
 )

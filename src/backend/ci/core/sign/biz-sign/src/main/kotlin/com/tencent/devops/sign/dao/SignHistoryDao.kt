@@ -178,14 +178,16 @@ class SignHistoryDao {
 
     fun failResign(
         dslContext: DSLContext,
-        resignId: String
+        resignId: String,
+        message: String
     ) {
         with(TSignHistory.T_SIGN_HISTORY) {
             dslContext.update(this)
-                    .set(END_TIME, LocalDateTime.now())
-                    .set(STATUS, EnumResignStatus.FAIL.getValue())
-                    .where(RESIGN_ID.eq(resignId))
-                    .execute()
+                .set(END_TIME, LocalDateTime.now())
+                .set(STATUS, EnumResignStatus.FAIL.getValue())
+                .set(ERROR_MESSAGE, message)
+                .where(RESIGN_ID.eq(resignId))
+                .execute()
         }
     }
 
