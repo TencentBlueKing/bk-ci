@@ -38,7 +38,7 @@ import com.tencent.devops.common.ci.task.SyncLocalCodeInput
 import com.tencent.devops.common.ci.task.SyncLocalCodeTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.ci.yaml.Job
-import com.tencent.devops.common.ci.yaml.VmType
+import com.tencent.devops.common.ci.yaml.ResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.LogLine
 import com.tencent.devops.common.log.pojo.QueryLogs
@@ -49,7 +49,6 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
@@ -259,7 +258,7 @@ class PreBuildService @Autowired constructor(
         userId: String
     ): VMBuildContainer {
         val elementList = mutableListOf<Element>()
-        val vmType = job.job.vmType
+        val vmType = job.job.resourceType
         job.job.steps.forEach {
             if (it is CodeCCScanInContainerTask && startUpReq.extraParam != null) {
                 val whitePath = mutableListOf<String>()
@@ -274,7 +273,7 @@ class PreBuildService @Autowired constructor(
 
             // 启动子流水线将代码拉到远程构建机
             if (it is SyncLocalCodeTask) {
-                if (vmType != VmType.REMOTE) {
+                if (vmType != ResourceType.REMOTE) {
                     return@forEach
                 }
                 it.inputs = SyncLocalCodeInput(
@@ -294,7 +293,7 @@ class PreBuildService @Autowired constructor(
         }
 
         val dispatchType = getDispatchType(job, startUpReq, agentInfo)
-        val vmBaseOS = if (vmType == VmType.REMOTE) {
+        val vmBaseOS = if (vmType == ResourceType.REMOTE) {
             when (dispatchType) {
                 is MacOSDispatchType -> VMBaseOS.MACOS
                 else -> VMBaseOS.LINUX
@@ -325,29 +324,39 @@ class PreBuildService @Autowired constructor(
     }
 
     fun getDispatchType(job: Job, startUpReq: StartUpReq, agentInfo: ThirdPartyAgentStaticInfo): DispatchType {
-        return with(job.job.pool) {
-            when {
-                job.job.vmType == VmType.LOCAL -> { // 使用本地构建
-                    ThirdPartyAgentIDDispatchType(
-                        displayName = agentInfo.agentId,
-                        workspace = startUpReq.workspace,
-                        agentType = AgentType.ID
-                    )
-                }
-                null == this -> { // 使用默认的远程构建
-                    DockerDispatchType(DockerVersion.TLINUX2_2.value)
-                }
-                else -> {
+        return when (job.job.resourceType) {
+            ResourceType.LOCAL, null -> {
+                ThirdPartyAgentIDDispatchType(
+                    displayName = agentInfo.agentId,
+                    workspace = startUpReq.workspace,
+                    agentType = AgentType.ID
+                )
+            }
+
+            ResourceType.REMOTE -> {
+                with(job.job.pool) {
                     when {
+                        this == null -> {
+                            logger.error("getDispatchType , remote , pool is null")
+                            throw OperationException("当 resourceType = REMOTE, pool参数不能为空")
+                        }
+
                         this.container != null -> DockerDispatchType(
                             this.container
                         )
-                        this.macOS != null -> MacOSDispatchType(
-                            macOSEvn = this.macOS!!.systemVersion!! + ":" + this.macOS!!.xcodeVersion!!,
-                            systemVersion = this.macOS!!.systemVersion!!,
-                            xcodeVersion = this.macOS!!.xcodeVersion!!
-                        )
-                        else -> DockerDispatchType(DockerVersion.TLINUX2_2.value)
+
+                        this.macOS != null -> with(this.macOS!!) {
+                            MacOSDispatchType(
+                                macOSEvn = this.systemVersion!! + ":" + this.xcodeVersion!!,
+                                systemVersion = this.systemVersion!!,
+                                xcodeVersion = this.xcodeVersion!!
+                            )
+                        }
+
+                        else -> {
+                            logger.error("getDispatchType , remote , yaml is illegal")
+                            throw OperationException("无法解析当前pool参数")
+                        }
                     }
                 }
             }

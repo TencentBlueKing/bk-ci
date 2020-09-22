@@ -1,6 +1,6 @@
 package com.tencent.devops.common.ci.yaml
 
-enum class VmType {
+enum class ResourceType {
     LOCAL,
 
     REMOTE,
