@@ -31,13 +31,19 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.OpJobQuotaSystemResource
 import com.tencent.devops.dispatch.pojo.JobQuotaSystem
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import com.tencent.devops.dispatch.service.JobQuotaBusinessService
 import com.tencent.devops.dispatch.service.JobQuotaManagerService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpJobQuotaSystemResourceImpl @Autowired constructor(
-    private val jobQuotaManagerService: JobQuotaManagerService
+    private val jobQuotaManagerService: JobQuotaManagerService,
+    private val jobQuotaBusinessService: JobQuotaBusinessService
 ) : OpJobQuotaSystemResource {
+    override fun list(): Result<List<JobQuotaSystem>> {
+        return Result(jobQuotaManagerService.listSystemQuota())
+    }
+
     override fun get(jobQuotaVmType: JobQuotaVmType): Result<List<JobQuotaSystem>> {
         return if (jobQuotaVmType == JobQuotaVmType.ALL) {
             Result(jobQuotaManagerService.getSystemQuota())
@@ -56,5 +62,10 @@ class OpJobQuotaSystemResourceImpl @Autowired constructor(
 
     override fun update(jobQuotaVmType: JobQuotaVmType, jobQuota: JobQuotaSystem): Result<Boolean> {
         return Result(jobQuotaManagerService.updateSystemQuota(jobQuotaVmType, jobQuota))
+    }
+
+    override fun restore(vmType: JobQuotaVmType): Result<Boolean> {
+        jobQuotaBusinessService.restoreProjectJobTime(null, vmType)
+        return Result(true)
     }
 }
