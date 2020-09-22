@@ -278,7 +278,7 @@ class PreBuildService @Autowired constructor(
                 it.inputs.path = whitePath
             }
 
-            //启动子流水线将代码拉到远程构建机
+            // 启动子流水线将代码拉到远程构建机
             if (it is SyncLocalCodeTask) {
                 if (vmType != VmType.REMOTE) {
                     return@forEach
@@ -288,7 +288,7 @@ class PreBuildService @Autowired constructor(
                     startUpReq.workspace
                 )
 
-                installMarketAtom(userId, "syncCodeToRemote")//确保同步代码插件安装
+                installMarketAtom(userId, "syncCodeToRemote") // 确保同步代码插件安装
             }
 
             val element = it.covertToElement(getCiBuildConf(preBuildConfig))
@@ -333,7 +333,7 @@ class PreBuildService @Autowired constructor(
     fun getDispatchType(job: Job, startUpReq: StartUpReq, agentInfo: ThirdPartyAgentStaticInfo): DispatchType {
         return with(job.job.pool) {
             when {
-                job.job.vmType == VmType.LOCAL -> { //使用本地构建
+                job.job.vmType == VmType.LOCAL -> { // 使用本地构建
                     ThirdPartyAgentIDDispatchType(
                         displayName = agentInfo.agentId,
                         workspace = startUpReq.workspace,
