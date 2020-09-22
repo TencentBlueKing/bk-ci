@@ -815,13 +815,15 @@ CREATE TABLE IF NOT EXISTS `T_REASON_REL`
 (
     `ID`          varchar(32) NOT NULL DEFAULT '' COMMENT '主键',
     `TYPE`        varchar(32) NOT NULL COMMENT '类型',
-    `STORE_CODE`  varchar(64) NOT NULL DEFAULT '' COMMENT '商城组件编码',
+    `STORE_CODE`  varchar(64) NOT NULL DEFAULT '' COMMENT 'store组件编码',
+	`STORE_TYPE`  tinyint(4)  NOT NULL DEFAULT '0' COMMENT 'store组件类型',
     `REASON_ID`   varchar(32) NOT NULL COMMENT '原因ID',
     `NOTE`        text COMMENT '原因说明',
     `CREATOR`     varchar(50) NOT NULL DEFAULT 'system' COMMENT '创建人',
     `CREATE_TIME` datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`ID`),
     KEY `store_code` (`STORE_CODE`),
+	KEY `inx_trr_store_type` (`STORE_TYPE`),
     KEY `type` (`TYPE`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT='原因和组件关联关系';
