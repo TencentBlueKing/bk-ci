@@ -63,7 +63,13 @@ class ArchiveAtomToLocalServiceImpl : ArchiveAtomServiceImpl() {
         return Result(content)
     }
 
-    override fun handleArchiveFile(disposition: FormDataContentDisposition, inputStream: InputStream, projectCode: String, atomCode: String, version: String) {
+    override fun handleArchiveFile(
+        disposition: FormDataContentDisposition,
+        inputStream: InputStream,
+        projectCode: String,
+        atomCode: String,
+        version: String
+    ) {
         unzipFile(disposition, inputStream, projectCode, atomCode, version)
     }
 
