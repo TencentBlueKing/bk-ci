@@ -27,7 +27,8 @@
 dependencies {
     compile project(":core:common:common-web")
     compile "org.elasticsearch:elasticsearch"
-    compile "org.elasticsearch.client:transport"
+    compile "org.elasticsearch.client:elasticsearch-rest-client"
+    compile "org.elasticsearch.client:elasticsearch-rest-high-level-client"
     compile "org.apache.logging.log4j:log4j-core"
     compile "org.apache.logging.log4j:log4j-api"
     compile "com.floragunn:search-guard-ssl"

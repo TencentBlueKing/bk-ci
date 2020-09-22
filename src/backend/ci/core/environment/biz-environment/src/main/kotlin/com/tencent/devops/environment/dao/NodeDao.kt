@@ -146,6 +146,15 @@ class NodeDao {
         }
     }
 
+    fun listServerNodesByIds(dslContext: DSLContext, nodeIds: Collection<Long>): List<TNodeRecord> {
+        with(TNode.T_NODE) {
+            return dslContext.selectFrom(this)
+                    .where(NODE_ID.`in`(nodeIds))
+                    .orderBy(NODE_ID.desc())
+                    .fetch()
+        }
+    }
+
     fun listServerNodesByIps(dslContext: DSLContext, projectId: String, ips: List<String>): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
@@ -476,16 +485,16 @@ class NodeDao {
         }
     }
 
-    fun listPageForAuth(dslContext: DSLContext, page: Int, pageSize: Int, projectId: String?): List<TNodeRecord> {
+    fun listPageForAuth(dslContext: DSLContext, offset: Int, limit: Int, projectId: String?): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return if (projectId.isNullOrBlank()) {
                 dslContext.selectFrom(this)
-                    .limit(pageSize).offset((page - 1) * pageSize)
+                    .limit(limit).offset(offset)
                     .fetch()
             } else {
                 dslContext.selectFrom(this)
                     .where(PROJECT_ID.like(projectId))
-                    .limit(pageSize).offset((page - 1) * pageSize)
+                    .limit(limit).offset(offset)
                     .fetch()
             }
         }

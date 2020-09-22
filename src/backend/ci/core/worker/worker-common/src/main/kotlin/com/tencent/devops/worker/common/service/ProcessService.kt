@@ -69,7 +69,8 @@ object ProcessService {
         type: String?,
         message: String? = null,
         errorType: String? = null,
-        errorCode: Int? = null
+        errorCode: Int? = null,
+        monitorData: Map<String, Any>? = null
     ) {
         if (buildResult.isNotEmpty()) {
             buildResult.forEach { (key, value) ->
@@ -89,7 +90,8 @@ object ProcessService {
             message = message,
             type = type,
             errorType = errorType,
-            errorCode = errorCode
+            errorCode = errorCode,
+            monitorData = monitorData
         )
         val result = buildApi.completeTask(taskResult)
         if (result.isNotOk()) {

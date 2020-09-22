@@ -45,6 +45,10 @@ service-suffix: "-__BK_CI_CONSUL_DISCOVERY_TAG__"
 server:
   undertow:
     worker-threads: 100
+    accesslog:
+      enabled: true
+      pattern: '%h %I "%{i,X-DEVOPS-UID}" [%{time,yyyyMMddHHmmss.S}] "%r" %s %D %b "%{i,Referer}" "%{i,User-Agent}"'
+      dir: ${service.log.dir}
 
 # gateway for system
 devopsGateway:
@@ -85,6 +89,7 @@ auth:
   appSecret: __BK_CI_APP_TOKEN__
   bkloginUrl: __BK_PAAS_PRIVATE_URL__/login/api/v2
   iamCallBackUser: __BK_CI_IAM_CALLBACK_USER__
+
 
 
 #bk esb config for cd plugin in pipeline

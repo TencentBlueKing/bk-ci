@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -54,6 +55,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
@@ -597,10 +599,16 @@ class PipelineRuntimeService @Autowired constructor(
                 },
                 startType = getStartType(trigger, webhookType),
                 recommendVersion = recommendVersion,
-                errorType = if (errorType != null) ErrorType.values()[errorType].name else null,
-                errorCode = errorCode,
-                errorMsg = errorMsg,
-                retry = isRetry ?: false
+                retry = isRetry ?: false,
+                errorInfoList = if (errorInfo != null) {
+                    try {
+                        JsonUtil.getObjectMapper().readValue(errorInfo) as List<ErrorInfo>
+                    } catch (e: Exception) {
+                        null
+                    }
+                } else {
+                    null
+                }
             )
         }
     }
@@ -626,6 +634,9 @@ class PipelineRuntimeService @Autowired constructor(
                     }
                     CodeType.GITHUB.name -> {
                         CodeGithubWebHookTriggerElement.classType
+                    }
+                    CodeType.TGIT.name -> {
+                        CodeTGitWebHookTriggerElement.classType
                     }
                     else -> RemoteTriggerElement.classType
                 }
@@ -856,7 +867,8 @@ class PipelineRuntimeService @Autowired constructor(
                                 executeCount = 1,
                                 starter = userId,
                                 approver = null,
-                                subBuildId = null
+                                subBuildId = null,
+                                atomCode = atomElement.getAtomCode()
                             )
                         )
                     } else {
@@ -1516,9 +1528,7 @@ class PipelineRuntimeService @Autowired constructor(
     fun finishLatestRunningBuild(
         latestRunningBuild: LatestRunningBuild,
         currentBuildStatus: BuildStatus,
-        errorType: ErrorType?,
-        errorCode: Int?,
-        errorMsg: String?
+        errorInfoList: List<ErrorInfo>?
     ) {
         if (BuildStatus.isReadyToRun(currentBuildStatus)) {
             // 减1,当作没执行过
@@ -1568,9 +1578,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildParameters = JsonUtil.toJson(buildParameters),
                 recommendVersion = recommendVersion,
                 remark = remark,
-                errorType = errorType,
-                errorCode = errorCode,
-                errorMsg = errorMsg
+                errorInfoList = errorInfoList
             )
             webSocketDispatcher.dispatch(
                 pipelineWebsocketService.buildHistoryMessage(
@@ -1655,6 +1663,23 @@ class PipelineRuntimeService @Autowired constructor(
         )
     }
 
+    fun setTaskErrorInfo(
+        buildId: String,
+        taskId: String,
+        errorType: ErrorType,
+        errorCode: Int,
+        errorMsg: String
+    ) {
+        pipelineBuildTaskDao.setTaskErrorInfo(
+            dslContext = dslContext,
+            buildId = buildId,
+            taskId = taskId,
+            errorType = errorType,
+            errorCode = errorCode,
+            errorMsg = errorMsg
+        )
+    }
+
     fun updateTaskStatus(
         buildId: String,
         taskId: String,
@@ -1664,7 +1689,7 @@ class PipelineRuntimeService @Autowired constructor(
         errorCode: Int? = null,
         errorMsg: String? = null
     ) {
-        logger.info("[$buildId]|updateTaskStatus|buildStatus=$buildStatus|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
+        logger.info("[$buildId]|updateTaskStatus|taskId=$taskId|buildStatus=$buildStatus|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
         val task = getBuildTask(buildId, taskId)
         if (task != null) {
             updateTaskStatus(

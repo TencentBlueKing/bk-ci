@@ -28,11 +28,13 @@ package com.tencent.devops.dispatch.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.common.Constants
+import com.tencent.devops.dispatch.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
@@ -124,9 +126,9 @@ class DockerHostUtils @Autowired constructor(
 
         if (dockerPair.first.isEmpty()) {
             if (specialIpSet.isNotEmpty()) {
-                throw DockerServiceException("Start build Docker VM failed, no available Docker VM in $specialIpSet")
+                throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorCode, "Start build Docker VM failed, no available Docker VM in $specialIpSet")
             }
-            throw DockerServiceException("Start build Docker VM failed, no available Docker VM. Please wait a moment and try again.")
+            throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.NO_AVAILABLE_VM_ERROR.errorCode, "Start build Docker VM failed, no available Docker VM. Please wait a moment and try again.")
         }
 
         return dockerPair
@@ -167,10 +169,10 @@ class DockerHostUtils @Autowired constructor(
                     }
                 }
             }
-            throw DockerServiceException("构建机启动失败，没有空闲的构建机了！")
+            throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode, "构建机启动失败，没有空闲的构建机了！")
         } catch (e: Exception) {
             logger.error("$pipelineId|$vmSeq getIdlePoolNo error.", e)
-            throw DockerServiceException("容器并发池分配异常")
+            throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.POOL_VM_ERROR.errorCode, "容器并发池分配异常")
         } finally {
             lock.unlock()
         }
@@ -259,7 +261,8 @@ class DockerHostUtils @Autowired constructor(
         dockerHostPort: Int = 0
     ): String {
         val url = if (dockerHostPort == 0) {
-            val dockerIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, dockerIp) ?: throw DockerServiceException("Docker IP: $dockerIp is not available.")
+            val dockerIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, dockerIp) ?: throw DockerServiceException(
+                ErrorType.SYSTEM, ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorCode, "Docker IP: $dockerIp is not available.")
             "http://$dockerIp:${dockerIpInfo.dockerHostPort}$devnetUri"
         } else {
             "http://$dockerIp:$dockerHostPort$devnetUri"

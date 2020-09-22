@@ -31,7 +31,11 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.util.IndexNameUtils.LOG_PREFIX
-import org.elasticsearch.client.Client
+import org.elasticsearch.action.admin.indices.close.CloseIndexRequest
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest
+import org.elasticsearch.client.indices.GetIndexRequest
+import org.elasticsearch.client.RequestOptions
+import org.elasticsearch.client.RestHighLevelClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -46,7 +50,8 @@ class ESIndexCloseJob @Autowired constructor(
     private val redisOperation: RedisOperation
 ) {
 
-    private var expireIndexInDay = 30 // default is expire in 30 days
+    private var closeIndexInDay = 30 // default is expire in 30 days
+    private var deleteIndexInDay = 90 // default be deleted in 90 days
 
     /**
      * 2 am every day
@@ -61,6 +66,7 @@ class ESIndexCloseJob @Autowired constructor(
                 return
             }
             closeESIndexes()
+            deleteESIndexes()
         } catch (t: Throwable) {
             logger.warn("Fail to close the index", t)
         } finally {
@@ -69,29 +75,28 @@ class ESIndexCloseJob @Autowired constructor(
     }
 
     fun updateExpireIndexDay(expired: Int) {
-        logger.warn("Update the expire index day from $expired to ${this.expireIndexInDay}")
+        logger.warn("Update the expire index day from $expired to ${this.closeIndexInDay}")
         if (expired <= 10) {
             logger.warn("The expired is illegal")
             throw OperationException("Expired is illegal")
         }
-        this.expireIndexInDay = expired
+        this.closeIndexInDay = expired
     }
 
-    fun getExpireIndexDay() = expireIndexInDay
+    fun getExpireIndexDay() = closeIndexInDay
 
     private fun closeESIndexes() {
         client.getActiveClients().forEach { c ->
-            val indexes = c.client.admin()
+            val indexes = c.client
                 .indices()
-                .prepareGetIndex()
-                .get()
+                .get(GetIndexRequest(), RequestOptions.DEFAULT)
 
             if (indexes.indices.isEmpty()) {
                 return
             }
 
             val deathLine = LocalDateTime.now()
-                .minus(expireIndexInDay.toLong(), ChronoUnit.DAYS)
+                .minus(closeIndexInDay.toLong(), ChronoUnit.DAYS)
             logger.info("Get the death line - ($deathLine)")
             indexes.indices.forEach { index ->
                 if (expire(deathLine, index)) {
@@ -101,13 +106,39 @@ class ESIndexCloseJob @Autowired constructor(
         }
     }
 
-    private fun closeESIndex(c: Client, index: String) {
+    private fun closeESIndex(c: RestHighLevelClient, index: String) {
         logger.info("[$index] Start to close ES index")
-        val resp = c.admin()
-            .indices()
-            .prepareClose(index)
-            .get()
+        val resp = c.indices()
+            .close(CloseIndexRequest(index), RequestOptions.DEFAULT)
         logger.info("Get the close es response - ${resp.isAcknowledged}")
+    }
+
+    private fun deleteESIndexes() {
+        client.getActiveClients().forEach { c ->
+            val indexes = c.client
+                .indices()
+                .get(GetIndexRequest(), RequestOptions.DEFAULT)
+
+            if (indexes.indices.isEmpty()) {
+                return
+            }
+
+            val deathLine = LocalDateTime.now()
+                .minus(deleteIndexInDay.toLong(), ChronoUnit.DAYS)
+            logger.info("Get the death line - ($deathLine)")
+            indexes.indices.forEach { index ->
+                if (expire(deathLine, index)) {
+                    deleteESIndex(c.client, index)
+                }
+            }
+        }
+    }
+
+    private fun deleteESIndex(c: RestHighLevelClient, index: String) {
+        logger.info("[$index] Start to delete ES index")
+        val resp = c.indices()
+            .delete(DeleteIndexRequest(index), RequestOptions.DEFAULT)
+        logger.info("Get the delete es response - ${resp.isAcknowledged}")
     }
 
     private fun expire(deathLine: LocalDateTime, index: String): Boolean {

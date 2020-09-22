@@ -36,6 +36,10 @@ dockerCli:
   volumeNpmRc: /root/.npmrc
   volumeCcache: /root/.ccache
   volumeGradleCache: /root/.gradle/caches
+  volumeGolangCache: /root/go/pkg/mod
+  volumeSbtCache: /root/.ivy2
+  volumeSbt2Cache: /root/.cache
+  volumeYarnCache: /usr/local/share/.cache/
   hostPathLinkDir: /tmp/bkci
   hostPathHosts: /etc/hosts
 

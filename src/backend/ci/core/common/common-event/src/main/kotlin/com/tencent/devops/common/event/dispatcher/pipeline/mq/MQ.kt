@@ -161,6 +161,11 @@ object MQ {
     const val ROUTE_GITHUB_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.github.event"
     const val QUEUE_GITHUB_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.github.event"
 
+    // CodeTGit代码仓库webhook请求回调
+    const val EXCHANGE_TGIT_BUILD_REQUEST_EVENT = "e.engine.pipeline.hook.tgit.event"
+    const val ROUTE_TGIT_BUILD_REQUEST_EVENT = "r.engine.pipeline.hook.tgit.event"
+    const val QUEUE_TGIT_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.tgit.event"
+
     // 广播清理文件
     const val EXCHANGE_BKJOB_CLEAR_JOB_TMP_FANOUT = "e.bkjob.clear.file.fanout"
     const val ROUTE_BKJOB_CLEAR_JOB_TMP_EVENT = "r.bkjob.clear.file"
@@ -208,4 +213,7 @@ object MQ {
     const val QUEUE_PROJECT_CREATE_EVENT = "q.project.create.project.queue"
     const val QUEUE_PROJECT_UPDATE_EVENT = "q.project.update.project.queue"
     const val QUEUE_PROJECT_UPDATE_LOGO_EVENT = "q.project.update.logo.project.queue"
+
+    // 蓝盾监控数据上报事件广播
+    const val EXCHANGE_ATOM_MONITOR_DATA_REPORT_FANOUT = "e.engine.atom.monitor.data.report.fanout"
 }
