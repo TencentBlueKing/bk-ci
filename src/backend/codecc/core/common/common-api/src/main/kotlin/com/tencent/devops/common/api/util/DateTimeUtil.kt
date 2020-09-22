@@ -71,6 +71,11 @@ object DateTimeUtil {
         return simpleDateFormat.format(date)
     }
 
+    fun formatDate(date: Long?, format: String = "yyyy-MM-dd HH:mm:ss"): String {
+        if (date == null) return ""
+        return formatDate(Date(date))
+    }
+
     fun convertLocalDateTimeToTimestamp(localDateTime: LocalDateTime?): Long {
         return localDateTime?.toEpochSecond(ZoneOffset.ofHours(8)) ?: 0L
     }

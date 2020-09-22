@@ -135,9 +135,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             osName = agentRecord.detectOs,
             ip = agentRecord.ip,
             createdUser = nodeRecord.createdUser,
-            createdTime = if (null == nodeRecord.createdTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(
-                nodeRecord.createdTime
-            ),
+            createdTime = if (null == nodeRecord.createdTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                .format(
+                    nodeRecord.createdTime
+                ),
             agentVersion = agentRecord.masterVersion ?: "",
             slaveVersion = agentRecord.version ?: "",
             agentInstallPath = agentRecord.agentInstallPath ?: "",
@@ -490,7 +491,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     fun listAgents(
         userId: String,
         projectId: String,
-        os: OS
+        os: OS?
     ): List<ThirdPartyAgentInfo> {
         val agents = thirdPartyAgentDao.listImportAgent(dslContext = dslContext, projectId = projectId, os = os)
         if (agents.isEmpty()) {
@@ -540,7 +541,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     status = NodeStatus.valueOf(node.nodeStatus!!).statusName,
                     hostname = agent.hostname,
                     ip = agent.ip,
-                    displayName = node.displayName
+                    displayName = node.displayName,
+                    detailName = "${node.displayName}/${agent.ip}/${agent.hostname}/${node.osName}"
                 )
             )
         }
@@ -974,7 +976,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 agentChanged = true
             }
             if (newHeartbeatInfo.slaveVersion != agentRecord.version) {
-                agentRecord.version = newHeartbeatInfo.slaveVersion
+                var slaveVersion = newHeartbeatInfo.slaveVersion
+                if (slaveVersion.length > 128) {
+                    logger.warn("slaveVersion size too long, substring 127| $slaveVersion| $projectId| ${agentRecord.id}")
+                    slaveVersion = slaveVersion.substring(0, 127)
+                }
+                agentRecord.version = slaveVersion
                 agentChanged = true
             }
             if (newHeartbeatInfo.agentIp != agentRecord.ip) {
@@ -1005,7 +1012,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             val agentStatus = when (status) {
                 AgentStatus.UN_IMPORT -> {
                     logger.info("update the agent($agentHashId) status to un-import ok")
-                    thirdPartyAgentDao.updateStatus(context, agentRecord.id, null, projectId, AgentStatus.UN_IMPORT_OK)
+                    thirdPartyAgentDao.updateStatus(
+                            dslContext = context,
+                            id = agentRecord.id,
+                            nodeId = null,
+                            projectId = projectId,
+                            status = AgentStatus.UN_IMPORT_OK
+                    )
                     AgentStatus.UN_IMPORT_OK
                 }
                 AgentStatus.UN_IMPORT_OK -> {
@@ -1184,6 +1197,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             thirdPartyAgentHeartbeatUtils.heartbeat(projectId, agentId)
             agentStatus
         }
+    }
+
+    fun getOs(userId: String, projectId: String, agentId: String): String {
+        return thirdPartyAgentDao.getAgent(dslContext, HashUtil.decodeIdToLong(agentId), projectId)?.os ?: "LINUX"
     }
 
     fun enableThirdPartyAgent(projectId: String, enable: Boolean) =

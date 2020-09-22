@@ -529,6 +529,7 @@
         }
     },
     "editPage": {
+        "atomHelpDoc": "Help documentation",
         "macSystemVersion": "MacOS系统版本",
         "xcodeVersion": "XCode版本",
         "notRecomendPlugin": "This plugin is not recommended",
@@ -748,9 +749,10 @@
             "templateDownload": "Download",
             "otherChoice": "Other Choice"
         },
-        "stageOption": "Advance"
+        "stageOption": "Control option"
     },
     "storeMap": {
+        "textarea": "Textarea",
         "string": "String",
         "bool": "Boolean",
         "enum": "Radio",

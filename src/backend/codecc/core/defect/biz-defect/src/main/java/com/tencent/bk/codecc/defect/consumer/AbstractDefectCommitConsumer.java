@@ -15,6 +15,7 @@ package com.tencent.bk.codecc.defect.consumer;
 import com.google.common.collect.Maps;
 import com.tencent.bk.codecc.defect.api.ServiceReportTaskLogRestResource;
 import com.tencent.bk.codecc.defect.component.ScmJsonComponent;
+import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildInfoRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildStackRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.TransferAuthorRepository;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.BuildDao;
@@ -57,8 +58,6 @@ public abstract class AbstractDefectCommitConsumer
     protected static final int MAX_PER_BATCH = 30000;
 
     @Autowired
-    private ServiceReportTaskLogRestResource serviceReportTaskLogRestResource;
-    @Autowired
     public ToolBuildInfoDao toolBuildInfoDao;
     @Autowired
     public ThirdPartySystemCaller thirdPartySystemCaller;
@@ -68,6 +67,8 @@ public abstract class AbstractDefectCommitConsumer
     public BuildDao buildDao;
     @Autowired
     public ToolBuildStackRepository toolBuildStackRepository;
+    @Autowired
+    public ToolBuildInfoRepository toolBuildInfoRepository;
     @Autowired
     public RedLineReportService redLineReportService;
     @Autowired
@@ -210,16 +211,7 @@ public abstract class AbstractDefectCommitConsumer
     @NotNull
     protected Set<String> getFilterPaths(TaskDetailVO taskVO)
     {
-        Set<String> filterPaths = new HashSet<>();
-        if (CollectionUtils.isNotEmpty(taskVO.getFilterPath()))
-        {
-            filterPaths.addAll(taskVO.getFilterPath());
-        }
-        if (CollectionUtils.isNotEmpty(taskVO.getDefaultFilterPath()))
-        {
-            filterPaths.addAll(taskVO.getDefaultFilterPath());
-        }
-        return filterPaths;
+        return new HashSet<>(taskVO.getAllFilterPaths());
     }
 
     /**
@@ -242,7 +234,7 @@ public abstract class AbstractDefectCommitConsumer
         uploadTaskLogStepVO.setStepNum(ComConstants.Step4MutliTool.COMMIT.value());
         uploadTaskLogStepVO.setPipelineBuildId(commitDefectVO.getBuildId());
         uploadTaskLogStepVO.setTriggerFrom(commitDefectVO.getTriggerFrom());
-        serviceReportTaskLogRestResource.uploadTaskLog(uploadTaskLogStepVO);
+        thirdPartySystemCaller.uploadTaskLog(uploadTaskLogStepVO);
     }
 
 }

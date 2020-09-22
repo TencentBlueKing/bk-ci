@@ -202,7 +202,7 @@ class ResourceService @Autowired constructor(
         return result
     }
 
-    private fun getRepositoryInfo(hashId:List<Any>?): FetchInstanceInfoResponseDTO? {
+    private fun getRepositoryInfo(hashId: List<Any>?): FetchInstanceInfoResponseDTO? {
         val repositoryInfos =
                 client.get(ServiceAuthRepositoryResource::class)
                         .getInfos(hashId as List<String>).data
