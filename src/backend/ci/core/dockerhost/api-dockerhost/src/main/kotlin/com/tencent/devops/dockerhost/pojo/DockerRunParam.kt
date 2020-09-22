@@ -42,5 +42,7 @@ data class DockerRunParam(
     @ApiModelProperty("环境变量", required = false)
     val env: Map<String, String?>?,
     @ApiModelProperty("并发构建池序号", required = false)
-    val poolNo: String? = "0"
+    val poolNo: String? = "0",
+    @ApiModelProperty("映射端口列表", required = false)
+    val portList: List<Int>? = emptyList()
 )
