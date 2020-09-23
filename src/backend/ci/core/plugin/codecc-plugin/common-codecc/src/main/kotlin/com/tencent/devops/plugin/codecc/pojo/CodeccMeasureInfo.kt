@@ -52,5 +52,7 @@ data class CodeccMeasureInfo(
     @ApiModelProperty("任务状态(失败：1， 执行中: 3， 成功：0, 未执行：2)", required = false)
     val status: Int?,
     @ApiModelProperty("工具执行信息", required = false)
-    val lastAnalysisResultList: List<CodeccToolAnalysisInfo>?
+    val lastAnalysisResultList: List<CodeccToolAnalysisInfo>?,
+    @ApiModelProperty("是否合格", required = false)
+    var qualifiedFlag: Boolean? = null
 )
