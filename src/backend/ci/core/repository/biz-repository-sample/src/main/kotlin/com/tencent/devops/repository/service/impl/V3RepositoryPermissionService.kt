@@ -108,7 +108,7 @@ class V3RepositoryPermissionService constructor(
         if (cacheOwner.isNullOrEmpty()) {
             val projectVo = client.get(ServiceProjectResource::class).get(projectId).data ?: return false
             val projectCreator = projectVo.creator
-            logger.info("repository permission get ProjectOwner $projectId | $projectCreator")
+            logger.info("repository permission get ProjectOwner $projectId | $projectCreator| $userId")
             return if (!projectCreator.isNullOrEmpty()) {
                 redisOperation.set(OwnerUtils.getOwnerRedisKey(projectId), projectCreator!!)
                 userId == projectCreator

@@ -117,7 +117,7 @@ class V3CertPermissionService @Autowired constructor(
         if (cacheOwner.isNullOrEmpty()) {
             val projectVo = client.get(ServiceProjectResource::class).get(projectId).data ?: return false
             val projectCreator = projectVo.creator
-            logger.info("cert permission get ProjectOwner $projectId | $projectCreator")
+            logger.info("cert permission get ProjectOwner $projectId | $projectCreator | $userId")
             return if (!projectCreator.isNullOrEmpty()) {
                 redisOperation.set(OwnerUtils.getOwnerRedisKey(projectId), projectCreator!!)
                 userId == projectCreator
