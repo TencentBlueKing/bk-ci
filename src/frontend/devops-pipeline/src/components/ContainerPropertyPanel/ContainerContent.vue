@@ -515,14 +515,14 @@
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
                     systemVersion: item,
-                    value: `${this.systemVersion}:${this.xcodeVersion}`
+                    value: `${item}:${this.xcodeVersion}`
                 }))
             },
             chooseXcode (item) {
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
                     xcodeVersion: item,
-                    value: `${this.systemVersion}:${this.xcodeVersion}`
+                    value: `${this.systemVersion}:${item}`
                 }))
             },
             setContainerValidate (addErrors, removeErrors) {
