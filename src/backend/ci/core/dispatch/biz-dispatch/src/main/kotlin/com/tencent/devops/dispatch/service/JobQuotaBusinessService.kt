@@ -658,7 +658,7 @@ class JobQuotaBusinessService @Autowired constructor(
         val runningTime: Long
     ) : Comparable<ProjectVmTypeTime> {
         override fun compareTo(other: ProjectVmTypeTime): Int {
-            return this.runningTime.compareTo(other.runningTime)
+            return other.runningTime.compareTo(this.runningTime)
         }
     }
 }
