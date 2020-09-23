@@ -154,5 +154,14 @@ interface ServiceCodeccResource {
         @ApiParam("代码库提交ID", required = false)
         @QueryParam("commitId")
         commitId: String? = null
+    ): Result<String>
+
+    @ApiOperation("创建codecc扫描流水线")
+    @POST
+    @Path("/task/repo/{repoProjectName}/pipeline/create")
+    fun createCodeccPipeline(
+        @ApiParam("代码库名称", required = true)
+        @PathParam("repoProjectName")
+        repoProjectName: String
     ): Result<Boolean>
 }
