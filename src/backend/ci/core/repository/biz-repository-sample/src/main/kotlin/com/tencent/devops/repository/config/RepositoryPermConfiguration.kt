@@ -29,6 +29,8 @@ package com.tencent.devops.repository.config
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.CodeAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.service.RepositoryPermissionService
 import com.tencent.devops.repository.service.impl.BluekingRepositoryPermissionService
@@ -80,6 +82,8 @@ class RepositoryPermConfiguration {
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
     fun v3RepositoryPermissionService(
         dslContext: DSLContext,
+        client: Client,
+        redisOperation: RedisOperation,
         repositoryDao: RepositoryDao,
         authResourceApi: AuthResourceApi,
         authPermissionApi: AuthPermissionApi,
@@ -89,6 +93,8 @@ class RepositoryPermConfiguration {
         repositoryDao = repositoryDao,
         authResourceApi = authResourceApi,
         authPermissionApi = authPermissionApi,
-        codeAuthServiceCode = codeAuthServiceCode
+        codeAuthServiceCode = codeAuthServiceCode,
+            client = client,
+            redisOperation = redisOperation
     )
 }

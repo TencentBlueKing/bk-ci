@@ -29,6 +29,8 @@ package com.tencent.devops.ticket.config
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.ticket.dao.CertDao
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.service.BluekingCertPermissionService
@@ -82,6 +84,8 @@ class TicketPermConfiguration {
     fun v3CertPermissionService(
         dslContext: DSLContext,
         certDao: CertDao,
+        client: Client,
+        redisOperation: RedisOperation,
         authResourceApi: AuthResourceApi,
         authPermissionApi: AuthPermissionApi,
         ticketAuthServiceCode: TicketAuthServiceCode
@@ -90,13 +94,17 @@ class TicketPermConfiguration {
         certDao = certDao,
         authResourceApi = authResourceApi,
         authPermissionApi = authPermissionApi,
-        ticketAuthServiceCode = ticketAuthServiceCode
+        ticketAuthServiceCode = ticketAuthServiceCode,
+            client = client,
+            redisOperation = redisOperation
     )
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
     fun v3CredentialPermissionService(
         dslContext: DSLContext,
+        client: Client,
+        redisOperation: RedisOperation,
         credentialDao: CredentialDao,
         authResourceApi: AuthResourceApi,
         authPermissionApi: AuthPermissionApi,
@@ -106,7 +114,9 @@ class TicketPermConfiguration {
         credentialDao = credentialDao,
         authResourceApi = authResourceApi,
         authPermissionApi = authPermissionApi,
-        ticketAuthServiceCode = ticketAuthServiceCode
+        ticketAuthServiceCode = ticketAuthServiceCode,
+            client = client,
+            redisOperation = redisOperation
     )
 
     @Bean
