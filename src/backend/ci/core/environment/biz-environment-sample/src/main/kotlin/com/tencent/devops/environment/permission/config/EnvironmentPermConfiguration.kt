@@ -29,6 +29,8 @@ package com.tencent.devops.environment.permission.config
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
@@ -85,6 +87,8 @@ class EnvironmentPermConfiguration {
         dslContext: DSLContext,
         envDao: EnvDao,
         nodeDao: NodeDao,
+        client: Client,
+        redisOperation: RedisOperation,
         authResourceApi: AuthResourceApi,
         authPermissionApi: AuthPermissionApi,
         environmentAuthServiceCode: EnvironmentAuthServiceCode
@@ -94,6 +98,8 @@ class EnvironmentPermConfiguration {
         nodeDao = nodeDao,
         authResourceApi = authResourceApi,
         authPermissionApi = authPermissionApi,
-        environmentAuthServiceCode = environmentAuthServiceCode
+        environmentAuthServiceCode = environmentAuthServiceCode,
+        client = client,
+        redisOperation = redisOperation
     )
 }
