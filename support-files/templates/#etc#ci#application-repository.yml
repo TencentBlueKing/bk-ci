@@ -1,48 +1,48 @@
 # 服务配置文件模板
 spring:
   datasource:
-    url: jdbc:mysql://__MYSQL_IP0__:__MYSQL_PORT__/devops_ci_repository?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
-    username: __MYSQL_USER__
-    password: __MYSQL_PASS__
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_repository?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: __BK_CI_MYSQL_USER__
+    password: __BK_CI_MYSQL_PASSWORD__
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21916
 server:
-  port: __BKCI_REPOSITORY_API_PORT__
+  port: __BK_CI_REPOSITORY_API_PORT__
 
 repository:
   git: # git 管理私有Token，一般不用，用于插件库分组
-    devopsPrivateToken: __DEVOPS_GIT_PRIVATE_TOKEN__
-    devopsGroupName: __DEVOPS_GIT_PLUGIN_GROUP_NAME__
+    devopsPrivateToken: __BK_CI_REPOSITORY_GIT_PRIVATE_TOKEN__
+    devopsGroupName: __BK_CI_REPOSITORY_GIT_PLUGIN_GROUP_NAME__
 
 scm:
   #svn open api url，如果不需要则放着即可
   svn:
-    apiKey: __SVN_API_KEY__
-    apiUrl: __SVN_URL__/rest
-    webhookApiUrl: __SVN_URL__/rest/webhooks
-    svnHookUrl: __HTTP_SCHEMA__://__BKCI_FQDN__/ms/process/api/external/scm/codesvn/commit
+    apiKey: __BK_CI_REPOSITORY_SVN_API_KEY__
+    apiUrl: __BK_CI_REPOSITORY_SVN_API_URL__  # 结尾一般为 /rest 
+    webhookApiUrl: __BK_CI_REPOSITORY_SVN_WEBHOOK_URL__  # 一般为 SVN_API_URL/webhooks
+    svnHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/codesvn/commit
   # git 仓库配置，如果不需要则放着即可
   git:
-    url: __GIT_URL__
-    apiUrl: __GIT_URL__/api/v3
+    url: __BK_CI_REPOSITORY_GIT_URL__
+    apiUrl: __BK_CI_REPOSITORY_GIT_URL__/api/v3
     clientId: clientId
     clientSecret: Secret
-    redirectUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/codelib
-    redirectAtomMarketUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomList
-    gitHookUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/ms/process/api/external/scm/codegit/commit
-    public:
+    redirectUrl: __BK_CI_PUBLIC_URL__/console/codelib
+    redirectAtomMarketUrl: __BK_CI_PUBLIC_URL__/console/store/atomList
+    gitHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/codegit/commit
+    public:  # TODO 无用配置, 待清理.
       account: devops
       email: devops@devops.com
       secret: devops123
   external:
-    #gitlab typo repository
+    #gitlab v4.
     gitlab:
-      apiUrl: __GITLAB_URL__/api/v4
-      gitlabHookUrl: __HTTP_SCHEMA__://__BKCI_FQDN__/ms/process/api/external/scm/gitlab/commit
+      apiUrl: __BK_CI_REPOSITORY_GITLAB_URL__/api/v4
+      gitlabHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/gitlab/commit
     github:
-      clientId: __GITHUB_CLIENT_ID__
-      clientSecret: __GITHUB_CLIENT_SECRET__
-      callbackUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/external/api/external/github/oauth/callback
-      redirectUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/codelib
-      appUrl: https://github.com/apps/__GITHUB_APP__
-      signSecret: __GITHUB_SIGN_SECRET__
+      clientId: __BK_CI_REPOSITORY_GITHUB_CLIENT_ID__
+      clientSecret: __BK_CI_REPOSITORY_GITHUB_CLIENT_SECRET__
+      callbackUrl: __BK_CI_PUBLIC_URL__/external/api/external/github/oauth/callback
+      redirectUrl: __BK_CI_PUBLIC_URL__/console/codelib
+      appUrl: https://github.com/apps/__BK_CI_REPOSITORY_GITHUB_APP__
+      signSecret: __BK_CI_REPOSITORY_GITHUB_SIGN_SECRET__

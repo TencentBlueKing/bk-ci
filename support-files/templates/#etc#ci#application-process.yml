@@ -1,26 +1,26 @@
 # 服务配置文件模板
 spring:
   datasource:
-    url: jdbc:mysql://__MYSQL_IP0__:__MYSQL_PORT__/devops_ci_process?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
-    username: __MYSQL_USER__
-    password: __MYSQL_PASS__
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: __BK_CI_MYSQL_USER__
+    password: __BK_CI_MYSQL_PASSWORD__
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21921
 server:
-  port: __BKCI_PROCESS_API_PORT__
+  port: __BK_CI_PROCESS_API_PORT__
 
 # 流水线加密参数密钥
 parameter:
   password:
-    pswKey: __PASSWORD_KEY__
+    pswKey: __BK_CI_PIPELINE_PARAMETER_ENCRYPT_PASSWORD__
 
 # 流水线引擎并发配置
 queueConcurrency:
-  buildStart: __PROCESS_EVENT_CONCURRENT__    # 构建启动消息并发处理数量
-  stage: __PROCESS_EVENT_CONCURRENT__         # 步骤消息并发处理数量
-  container: __PROCESS_EVENT_CONCURRENT__     # Job消息并发处理数量
-  task: __PROCESS_EVENT_CONCURRENT__          # Task消息并发处理数量
-  buildFinish: __PROCESS_EVENT_CONCURRENT__   # 构建结束消息并发处理数量
+  buildStart: __BK_CI_PROCESS_EVENT_CONCURRENT__    # 构建启动消息并发处理数量
+  stage: __BK_CI_PROCESS_EVENT_CONCURRENT__         # 步骤消息并发处理数量
+  container: __BK_CI_PROCESS_EVENT_CONCURRENT__     # Job消息并发处理数量
+  task: __BK_CI_PROCESS_EVENT_CONCURRENT__          # Task消息并发处理数量
+  buildFinish: __BK_CI_PROCESS_EVENT_CONCURRENT__   # 构建结束消息并发处理数量
 
 build:
   atomMonitorData:
