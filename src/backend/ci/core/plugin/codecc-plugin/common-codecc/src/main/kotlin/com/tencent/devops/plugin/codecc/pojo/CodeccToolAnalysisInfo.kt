@@ -33,6 +33,10 @@ import io.swagger.annotations.ApiModelProperty
 data class CodeccToolAnalysisInfo(
     @ApiModelProperty("工具名称", required = true)
     val toolName: String,
+    @ApiModelProperty("工具展示名称", required = true)
+    val displayName: String,
+    @ApiModelProperty("工具类型", required = true)
+    val type: String,
     @ApiModelProperty("分析耗时", required = true)
     val elapseTime: Long,
     @ApiModelProperty("第几次构建", required = true)
