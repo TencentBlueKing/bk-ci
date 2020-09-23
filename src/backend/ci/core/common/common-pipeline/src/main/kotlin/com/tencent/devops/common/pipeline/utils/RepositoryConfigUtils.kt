@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -89,6 +90,11 @@ object RepositoryConfigUtils {
                 element.data.input.repositoryHashId,
                 element.data.input.repositoryName,
                 element.data.input.repositoryType ?: RepositoryType.ID
+            )
+            is CodeGitGenericWebHookTriggerElement -> RepositoryConfig(
+                repositoryHashId = null,
+                repositoryName = element.data.input.repositoryUrl,
+                repositoryType = RepositoryType.NAME
             )
             else -> throw InvalidParamException("Unknown code element -> $element")
         }

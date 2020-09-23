@@ -27,15 +27,18 @@
 package com.tencent.devops.process.engine.listener.pipeline
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.constant.WebsocketCode
@@ -48,6 +51,7 @@ import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.pojo.PipelineWebhook
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.engine.utils.RepositoryUtils
 import com.tencent.devops.process.websocket.page.EditPageBuild
 import com.tencent.devops.process.websocket.push.WebHookWebsocketPush
 import org.springframework.beans.factory.annotation.Autowired
@@ -105,25 +109,64 @@ class MQPipelineCreateListener @Autowired constructor(
                 ScmType.CODE_TGIT,
                 e.data.input.eventType
             )
+            is CodeGitGenericWebHookTriggerElement -> {
+                val repositoryConfig = if (event.variables != null) {
+                    RepositoryConfigUtils.replaceCodeProp(
+                        repositoryConfig = RepositoryConfigUtils.buildConfig(e),
+                        variables = event.variables as Map<String, String>
+                    )
+                } else {
+                    RepositoryConfigUtils.buildConfig(e)
+                }
+                Triple(
+                    repositoryConfig,
+                    ScmType.valueOf(e.data.input.scmType),
+                    CodeEventType.valueOf(e.data.input.eventType)
+                )
+            }
             else -> Triple(null, null, null)
         }
 
         if (repositoryConfig != null && scmType != null) {
             logger.info("[${event.pipelineId}]| Trying to add the $scmType web hook for repo($repositoryConfig)")
             try {
-                pipelineWebhookService.saveWebhook(
-                    pipelineWebhook = PipelineWebhook(
+                if (e is CodeGitGenericWebHookTriggerElement) {
+                    val repo = RepositoryUtils.buildRepository(
                         projectId = event.projectId,
-                        pipelineId = event.pipelineId,
-                        repositoryType = scmType,
-                        repoType = repositoryConfig.repositoryType,
-                        repoHashId = repositoryConfig.repositoryHashId,
-                        repoName = repositoryConfig.repositoryName,
-                        taskId = e.id
-                    ), codeEventType = eventType, variables = event.variables as Map<String, String>,
+                        userName = event.userId,
+                        scmType = scmType,
+                        repositoryUrl = repositoryConfig.repositoryName!!,
+                        credentialId = e.data.input.credentialId
+                    )
+                    pipelineWebhookService.saveWebhook(
+                        pipelineWebhook = PipelineWebhook(
+                            projectId = event.projectId,
+                            pipelineId = event.pipelineId,
+                            repositoryType = scmType,
+                            repoType = repositoryConfig.repositoryType,
+                            repoHashId = repositoryConfig.repositoryHashId,
+                            repoName = repo.aliasName,
+                            taskId = e.id
+                        ),
+                        repo = repo,
+                        codeEventType = eventType,
+                        hookUrl = e.data.input.hookUrl
+                    )
+                } else {
+                    pipelineWebhookService.saveWebhook(
+                        pipelineWebhook = PipelineWebhook(
+                            projectId = event.projectId,
+                            pipelineId = event.pipelineId,
+                            repositoryType = scmType,
+                            repoType = repositoryConfig.repositoryType,
+                            repoHashId = repositoryConfig.repositoryHashId,
+                            repoName = repositoryConfig.repositoryName,
+                            taskId = e.id
+                        ), codeEventType = eventType, variables = event.variables as Map<String, String>,
                         // TODO 此处需做成传入参数
                         createPipelineFlag = true
-                )
+                    )
+                }
             } catch (e: Exception) {
                 val post = NotifyPost(
                         module = "process",

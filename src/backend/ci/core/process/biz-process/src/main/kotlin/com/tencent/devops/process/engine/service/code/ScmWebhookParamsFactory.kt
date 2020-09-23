@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.service.code
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -82,6 +83,11 @@ object ScmWebhookParamsFactory {
                 )
             is CodeTGitWebHookTriggerElement ->
                 TGitWebhookElementParams().getWebhookElementParams(
+                    element = element,
+                    variables = variables
+                )
+            is CodeGitGenericWebHookTriggerElement ->
+                GitGenericWebHookElementParams().getWebhookElementParams(
                     element = element,
                     variables = variables
                 )

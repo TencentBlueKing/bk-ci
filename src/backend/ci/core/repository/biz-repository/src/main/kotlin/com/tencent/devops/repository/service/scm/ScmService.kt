@@ -251,12 +251,13 @@ class ScmService @Autowired constructor(
         token: String?,
         region: CodeSvnRegion?,
         userName: String,
-        event: String?
+        event: String?,
+        hookUrl: String?
     ) {
         logger.info("[$projectName|$url|$type|$token|$region|$userName|$event] Start to add web hook")
         val startEpoch = System.currentTimeMillis()
         try {
-            val hookUrl = when (type) {
+            val realHookUrl = hookUrl ?: when (type) {
                 ScmType.CODE_GIT -> {
                     gitConfig.gitHookUrl
                 }
@@ -286,7 +287,7 @@ class ScmService @Autowired constructor(
                 userName = userName,
                 event = event
             )
-                .addWebHook(hookUrl)
+                .addWebHook(realHookUrl)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add web hook")
         }

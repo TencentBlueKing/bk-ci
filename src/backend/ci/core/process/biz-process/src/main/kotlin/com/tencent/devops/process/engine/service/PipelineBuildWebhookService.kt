@@ -28,12 +28,14 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -49,6 +51,7 @@ import com.tencent.devops.process.engine.service.code.GithubWebHookMatcher
 import com.tencent.devops.process.engine.service.code.GitlabWebHookMatcher
 import com.tencent.devops.process.engine.service.code.ScmWebhookParamsFactory
 import com.tencent.devops.process.engine.service.code.SvnWebHookMatcher
+import com.tencent.devops.process.engine.utils.RepositoryUtils
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.code.git.GitEvent
@@ -198,43 +201,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                  * 验证流水线参数构建启动参数
                  */
                 val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-                var canWebhookStartup = false
-                run lit@{
-                    triggerContainer.elements.forEach {
-                        when (codeRepositoryType) {
-                            CodeSVNWebHookTriggerElement.classType -> {
-                                if (it is CodeSVNWebHookTriggerElement && it.isElementEnable()) {
-                                    canWebhookStartup = true
-                                    return@lit
-                                }
-                            }
-                            CodeGitWebHookTriggerElement.classType -> {
-                                if (it is CodeGitWebHookTriggerElement && it.isElementEnable()) {
-                                    canWebhookStartup = true
-                                    return@lit
-                                }
-                            }
-                            CodeGithubWebHookTriggerElement.classType -> {
-                                if (it is CodeGithubWebHookTriggerElement && it.isElementEnable()) {
-                                    canWebhookStartup = true
-                                    return@lit
-                                }
-                            }
-                            CodeGitlabWebHookTriggerElement.classType -> {
-                                if (it is CodeGitlabWebHookTriggerElement && it.isElementEnable()) {
-                                    canWebhookStartup = true
-                                    return@lit
-                                }
-                            }
-                            CodeTGitWebHookTriggerElement.classType -> {
-                                if (it is CodeTGitWebHookTriggerElement && it.isElementEnable()) {
-                                    canWebhookStartup = true
-                                    return@lit
-                                }
-                            }
-                        }
-                    }
-                }
+                var canWebhookStartup = canWebhookStartup(triggerContainer, codeRepositoryType)
 
                 if (!canWebhookStartup) {
                     logger.info("can not start by $codeRepositoryType, ignore")
@@ -248,6 +215,56 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
 
         return true
+    }
+
+    private fun canWebhookStartup(
+        triggerContainer: TriggerContainer,
+        codeRepositoryType: String
+    ): Boolean {
+        var canWebhookStartup = false
+        run lit@{
+            triggerContainer.elements.forEach {
+                when (codeRepositoryType) {
+                    CodeSVNWebHookTriggerElement.classType -> {
+                        if (it is CodeSVNWebHookTriggerElement && it.isElementEnable()) {
+                            canWebhookStartup = true
+                            return@lit
+                        }
+                    }
+                    CodeGitWebHookTriggerElement.classType -> {
+                        if (it is CodeGitWebHookTriggerElement && it.isElementEnable()) {
+                            canWebhookStartup = true
+                            return@lit
+                        }
+                    }
+                    CodeGithubWebHookTriggerElement.classType -> {
+                        if (it is CodeGithubWebHookTriggerElement && it.isElementEnable()) {
+                            canWebhookStartup = true
+                            return@lit
+                        }
+                    }
+                    CodeGitlabWebHookTriggerElement.classType -> {
+                        if (it is CodeGitlabWebHookTriggerElement && it.isElementEnable()) {
+                            canWebhookStartup = true
+                            return@lit
+                        }
+                    }
+                    CodeTGitWebHookTriggerElement.classType -> {
+                        if (it is CodeTGitWebHookTriggerElement && it.isElementEnable()) {
+                            canWebhookStartup = true
+                            return@lit
+                        }
+                    }
+                    CodeGitGenericWebHookTriggerElement.classType -> {
+                        if (it is CodeGitGenericWebHookTriggerElement && it.isElementEnable()) {
+                            canWebhookStartup = true
+                            return@lit
+                        }
+                    }
+                }
+            }
+        }
+        return canWebhookStartup
     }
 
     fun webhookTriggerPipelineBuild(
@@ -284,8 +301,18 @@ class PipelineBuildWebhookService @Autowired constructor(
             }
 
             logger.info("Get the code trigger pipeline $pipelineId branch ${webHookParams.branchName}")
-            val repo = client.get(ServiceRepositoryResource::class)
-                .get(projectId, repositoryConfig.getURLEncodeRepositoryId(), repositoryConfig.repositoryType).data
+            val repo = if (element is CodeGitGenericWebHookTriggerElement) {
+                RepositoryUtils.buildRepository(
+                    projectId = pipelineInfo.projectId,
+                    userName = pipelineInfo.lastModifyUser,
+                    scmType = ScmType.valueOf(element.data.input.scmType),
+                    repositoryUrl = repositoryConfig.repositoryName!!,
+                    credentialId = element.data.input.credentialId
+                )
+            } else {
+                client.get(ServiceRepositoryResource::class)
+                    .get(projectId, repositoryConfig.getURLEncodeRepositoryId(), repositoryConfig.repositoryType).data
+            }
             if (repo == null) {
                 logger.warn("repo[$repositoryConfig] does not exist")
                 return@elements

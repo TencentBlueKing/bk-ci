@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.webhook
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -99,5 +100,14 @@ class CodeSVNWebHookTriggerElementBizPlugin constructor(
 ) : WebHookTriggerElementBizPlugin<CodeSVNWebHookTriggerElement>(pipelineWebhookService) {
     override fun elementClass(): Class<CodeSVNWebHookTriggerElement> {
         return CodeSVNWebHookTriggerElement::class.java
+    }
+}
+
+@ElementBiz
+class CodeGitGenericWebHookTriggerElementBizPlugin constructor(
+    private val pipelineWebhookService: PipelineWebhookService
+) : WebHookTriggerElementBizPlugin<CodeGitGenericWebHookTriggerElement>(pipelineWebhookService) {
+    override fun elementClass(): Class<CodeGitGenericWebHookTriggerElement> {
+        return CodeGitGenericWebHookTriggerElement::class.java
     }
 }

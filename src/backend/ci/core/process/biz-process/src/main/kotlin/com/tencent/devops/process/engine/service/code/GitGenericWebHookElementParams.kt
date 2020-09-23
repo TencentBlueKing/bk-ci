@@ -26,16 +26,18 @@
 
 package com.tencent.devops.process.engine.service.code
 
-import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.pojo.code.ScmWebhookElementParams
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 
-class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerElement> {
+class GitGenericWebHookElementParams : ScmWebhookElementParams<CodeGitGenericWebHookTriggerElement> {
+
     override fun getWebhookElementParams(
-        element: CodeTGitWebHookTriggerElement,
+        element: CodeGitGenericWebHookTriggerElement,
         variables: Map<String, String>
     ): ScmWebhookMatcher.WebHookParams? {
         val params = ScmWebhookMatcher.WebHookParams(
@@ -45,26 +47,25 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             )
         )
         with(element.data.input) {
-            params.excludeUsers = if (excludeUsers == null || excludeUsers!!.isEmpty()) {
-                ""
-            } else {
-                EnvUtils.parseEnv(excludeUsers!!.joinToString(","), variables)
-            }
-            if (branchName == null) {
-                return null
-            }
-            params.block = block ?: false
-            params.branchName = EnvUtils.parseEnv(branchName!!, variables)
-            params.eventType = eventType
-            params.excludeBranchName = EnvUtils.parseEnv(excludeBranchName ?: "", variables)
-            params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
-            params.excludePaths = EnvUtils.parseEnv(excludePaths ?: "", variables)
-            params.codeType = CodeType.GIT
-            params.tagName = EnvUtils.parseEnv(tagName ?: "", variables)
-            params.excludeTagName = EnvUtils.parseEnv(excludeTagName ?: "", variables)
-            params.excludeSourceBranchName = EnvUtils.parseEnv(excludeSourceBranchName ?: "", variables)
-            params.includeSourceBranchName = EnvUtils.parseEnv(includeSourceBranchName ?: "", variables)
-            return params
+            params.eventType = CodeEventType.valueOf(eventType)
+            params.codeType = getCodeType(scmType)
+        }
+        return params
+    }
+
+    private fun getCodeType(scmType: String): CodeType {
+        return when (scmType) {
+            ScmType.CODE_SVN.name ->
+                CodeType.SVN
+            ScmType.CODE_TGIT.name ->
+                CodeType.TGIT
+            ScmType.CODE_GIT.name ->
+                CodeType.GIT
+            ScmType.GITHUB.name ->
+                CodeType.GITHUB
+            ScmType.CODE_GITLAB.name ->
+                CodeType.GITLAB
+            else -> throw RuntimeException("Unknown repository type")
         }
     }
 }

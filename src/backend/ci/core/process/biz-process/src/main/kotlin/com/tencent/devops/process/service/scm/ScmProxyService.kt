@@ -417,6 +417,35 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         return repo.projectName
     }
 
+    fun addGenericWebhook(
+        projectId: String,
+        repo: Repository,
+        scmType: ScmType,
+        codeEventType: CodeEventType?,
+        hookUrl: String? = null
+    ): String {
+        val token = getCredential(projectId, repo).privateKey
+        val event = when (codeEventType) {
+            null, CodeEventType.PUSH -> CodeGitWebhookEvent.PUSH_EVENTS.value
+            CodeEventType.TAG_PUSH -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
+            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
+            else -> null
+        }
+        client.get(ServiceScmResource::class).addWebHook(
+            projectName = repo.projectName,
+            url = repo.url,
+            type = scmType,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = repo.userName,
+            event = event,
+            hookUrl = hookUrl
+        )
+        return repo.projectName
+    }
+
     fun addGithubCheckRuns(
         projectId: String,
         repositoryConfig: RepositoryConfig,
