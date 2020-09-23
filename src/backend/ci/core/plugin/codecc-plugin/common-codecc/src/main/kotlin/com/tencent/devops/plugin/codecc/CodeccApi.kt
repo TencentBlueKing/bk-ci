@@ -384,13 +384,23 @@ open class CodeccApi constructor(
         return objectMapper.readValue(result)
     }
 
-    fun startCodeccTask(repoProjectName: String, commitId: String? = null): Result<Boolean> {
+    fun startCodeccTask(repoProjectName: String, commitId: String? = null): Result<String> {
         val encodeProjectName = URLEncoder.encode(repoProjectName, Charsets.UTF_8.name())
         val headers = if (null != commitId) mapOf(COMMIT_ID to commitId) else null
         val result = taskExecution(
             body = mapOf(),
             path = "/ms/task/api/service/openScan/trigger/repo/$encodeProjectName",
             headers = headers,
+            method = HttpMethod.POST
+        )
+        return objectMapper.readValue(result)
+    }
+
+    fun createCodeccPipeline(repoProjectName: String): Result<Boolean> {
+        val encodeProjectName = URLEncoder.encode(repoProjectName, Charsets.UTF_8.name())
+        val result = taskExecution(
+            body = mapOf(),
+            path = "/ms/task/api/service/task/repo/$encodeProjectName/create",
             method = HttpMethod.POST
         )
         return objectMapper.readValue(result)

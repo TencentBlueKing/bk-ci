@@ -91,7 +91,11 @@ class ServiceCodeccResourceImpl @Autowired constructor(
         return codeccApi.getCodeccTaskStatusInfo(repoProjectName, commitId)
     }
 
-    override fun startCodeccTask(repoProjectName: String, commitId: String?): Result<Boolean> {
+    override fun startCodeccTask(repoProjectName: String, commitId: String?): Result<String> {
         return codeccApi.startCodeccTask(repoProjectName, commitId)
+    }
+
+    override fun createCodeccPipeline(repoProjectName: String): Result<Boolean> {
+        return codeccApi.createCodeccPipeline(repoProjectName)
     }
 }

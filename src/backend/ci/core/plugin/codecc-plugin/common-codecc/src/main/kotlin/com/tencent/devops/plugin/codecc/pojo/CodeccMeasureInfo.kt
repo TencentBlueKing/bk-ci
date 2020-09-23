@@ -33,12 +33,24 @@ import io.swagger.annotations.ApiModelProperty
 data class CodeccMeasureInfo(
     @ApiModelProperty("项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("规范得分", required = true)
-    val codeStyleScore: Double,
-    @ApiModelProperty("安全得分", required = true)
-    val codeSecurityScore: Double,
-    @ApiModelProperty("度量得分", required = true)
-    val codeMeasureScore: Double,
-    @ApiModelProperty("工具执行信息", required = true)
-    val lastAnalysisResultList: List<CodeccToolAnalysisInfo>
+    @ApiModelProperty("任务ID", required = false)
+    val taskId: Long?,
+    @ApiModelProperty("代码库提交ID", required = false)
+    val commitId: String?,
+    @ApiModelProperty("代码库url地址", required = false)
+    val repoUrl: String?,
+    @ApiModelProperty("codecc扫描详情url地址", required = false)
+    val codeccUrl: String?,
+    @ApiModelProperty("规范得分", required = false)
+    val codeStyleScore: Double?,
+    @ApiModelProperty("安全得分", required = false)
+    val codeSecurityScore: Double?,
+    @ApiModelProperty("度量得分", required = false)
+    val codeMeasureScore: Double?,
+    @ApiModelProperty("最近一次分析触发时间", required = false)
+    val lastAnalysisTime: Long?,
+    @ApiModelProperty("任务状态(失败：1， 执行中: 3， 成功：0, 未执行：2)", required = false)
+    val status: Int?,
+    @ApiModelProperty("工具执行信息", required = false)
+    val lastAnalysisResultList: List<CodeccToolAnalysisInfo>?
 )
