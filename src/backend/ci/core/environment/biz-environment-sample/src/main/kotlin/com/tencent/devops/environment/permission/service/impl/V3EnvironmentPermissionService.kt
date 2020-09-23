@@ -38,28 +38,28 @@ class V3EnvironmentPermissionService constructor(
     }
 
     override fun checkEnvPermission(userId: String, projectId: String, envId: Long, permission: AuthPermission): Boolean {
-        if(isProjectOwner(projectId, userId)) {
+        if (isProjectOwner(projectId, userId)) {
             return true
         }
         return super.checkEnvPermission(userId, projectId, envId, permission)
     }
 
     override fun checkEnvPermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
-        if(isProjectOwner(projectId, userId)) {
+        if (isProjectOwner(projectId, userId)) {
             return true
         }
         return super.checkEnvPermission(userId, projectId, permission)
     }
 
     override fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean {
-        if(isProjectOwner(projectId, userId)) {
+        if (isProjectOwner(projectId, userId)) {
             return true
         }
         return super.checkNodePermission(userId, projectId, nodeId, permission)
     }
 
     override fun checkNodePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
-        if(isProjectOwner(projectId, userId)) {
+        if (isProjectOwner(projectId, userId)) {
             return true
         }
         return super.checkNodePermission(userId, projectId, permission)
