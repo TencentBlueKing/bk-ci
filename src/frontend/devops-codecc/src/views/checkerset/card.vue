@@ -3,11 +3,11 @@
         <span :title="$t('默认规则集将会在创建任务时被自动开启')" class="codecc-icon icon-default-mark default-mark" v-if="checkerset.defaultCheckerSet"></span>
         <section class="ruleset-info">
             <p class="ruleset-name">
-                <span class="name-content" :title="checkerset.checkerSetName" @click="handleMannge(checkerset, 'edit')">
+                <a class="name-content" :title="checkerset.checkerSetName" :href="handleHref(checkerset)">
                     <span :class="{ 'new-tips': hasNewTips && newTipsClass }" v-if="hasNewTips" v-bk-tooltips="newTipsHtmlConfig">{{checkerset.checkerSetName}}</span>
                     <span v-else-if="hasCcnTips" v-bk-tooltips="ccnTipsHtmlConfig">{{checkerset.checkerSetName}}</span>
                     <span v-else>{{checkerset.checkerSetName}}</span>
-                </span>
+                </a>
                 <span v-if="['DEFAULT', 'RECOMMEND'].includes(checkerset.checkerSetSource)"
                     :class="['use-mark', { 'preferred': checkerset.checkerSetSource === 'DEFAULT', 'recommend': checkerset.checkerSetSource === 'RECOMMEND' }]"
                 >{{checkerset.checkerSetSource === 'DEFAULT' ? '精选' : '推荐'}}</span>
@@ -320,6 +320,17 @@
             },
             goToNew () {
                 this.$router.push({ name: 'task-new' })
+            },
+            handleHref (checkerset) {
+                const link = {
+                    name: 'checkerset-manage',
+                    params: {
+                        projectId: this.projectId,
+                        checkersetId: checkerset.checkerSetId,
+                        version: checkerset.version
+                    }
+                }
+                return this.$router.resolve(link).href
             }
         }
     }
@@ -382,6 +393,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             cursor: pointer;
+            color: #63656e;
             &:hover {
                 color: #3a84ff;
             }

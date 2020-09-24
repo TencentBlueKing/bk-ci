@@ -9,6 +9,7 @@
                         :key="index">
                     </bk-tab-panel>
                 </bk-tab>
+                <span class="codecc-icon icon-export-excel excel-download" @click="downloadExcel" v-bk-tooltips="$t('导出Excel')"></span>
             </div>
         </div>
         <div class="main-container">
@@ -220,6 +221,8 @@
 <script>
     import chart from '@/mixins/chart'
     import { format } from 'date-fns'
+    // eslint-disable-next-line
+    import { export_json_to_excel } from 'vendor/export2Excel'
 
     export default {
         components: {
@@ -374,6 +377,24 @@
             },
             handleHref (query) {
                 this.resolveHref('defect-coverity-list', query)
+            },
+            downloadExcel () {
+                const excelData1 = this.getExcelData([this.$t('问题处理人'), this.$t('总数'), this.$t('严重'), this.$t('一般'), this.$t('提示')], ['authorName', 'total', 'serious', 'normal', 'prompt'], this.existAuthorsTableData, '待修复问题处理人分布')
+                const excelData2 = this.getExcelData([this.$t('日期'), this.$t('新增数'), this.$t('待修复数')], ['tips', 'newCount', 'existCount'], this.trendNewTableData, this.$t('每日新增问题'))
+                const excelData3 = this.getExcelData([this.$t('日期'), this.$t('关闭总数'), this.$t('修复数'), this.$t('忽略数'), this.$t('过滤屏蔽数')], ['tips', 'closedCount', 'repairedCount', 'ignoreCount', 'excludedCount'], this.trendFixedTableData, this.$t('每日关闭或修复问题'))
+                const excelData = [excelData1, excelData2, excelData3]
+                const title = `${this.taskDetail.nameCn}-${this.taskDetail.taskId}-${this.toolId}-数据报表-${new Date().toISOString()}`
+                const sheets = ['待修复问题处理人分布', '每日新增问题', '每日关闭或修复问题']
+                export_json_to_excel('', excelData, title, sheets)
+            },
+            getExcelData (tHeader, filterVal, list, sheetName) {
+                const data = this.formatJson(filterVal, list)
+                return { tHeader, data, sheetName }
+            },
+            formatJson (filterVal, list) {
+                return list.map(item => filterVal.map(j => {
+                    return item[j]
+                }))
             }
         }
     }
@@ -459,6 +480,16 @@
                 width: 100%;
                 height: 215px;
             }
+        }
+    }
+    .excel-download {
+        position: absolute;
+        right: 20px;
+        top: 29px;
+        cursor: pointer;
+        padding-right: 10px;
+        &:hover {
+            color: #3a84ff;
         }
     }
 </style>

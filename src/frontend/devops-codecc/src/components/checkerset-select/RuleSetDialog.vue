@@ -1,29 +1,32 @@
 <template>
     <bk-dialog v-model="visiable"
-        width="650px"
         ext-cls="install-more-dialog"
-        :position="{ top: positionTop }"
         :theme="'primary'"
-        :close-icon="false">
+        :close-icon="false"
+        width="650px"
+        :position="{ top: positionTop }">
         <div class="main-content" v-bkloading="{ isLoading: loading, opacity: 0.3 }">
             <div class="info-header">
-                <span>{{$t('更多规则集')}}<i class="bk-icon icon-refresh checkerset-fresh" :class="fetchingList ? 'spin-icon' : ''" @click="refresh" /></span>
-                <bk-select class="search-select" v-model="language" multiple style="width: 120px;" :placeholder="$t('请选择语言')">
-                    <bk-option v-for="option in codeLangs"
-                        :key="option.displayName"
-                        :id="option.displayName"
-                        :name="option.displayName">
-                    </bk-option>
-                </bk-select>
-                <bk-input
-                    class="search-input"
-                    :placeholder="'快速搜索'"
-                    :clearable="true"
-                    :right-icon="'bk-icon icon-search'"
-                    v-model="keyWord"
-                    @input="handleClear"
-                    @enter="handleKeyWordSearch">
-                </bk-input>
+                <span>选择规则集<i class="bk-icon icon-refresh checkerset-fresh" :class="fetchingList ? 'spin-icon' : ''" @click="refresh" /></span>
+                <div class="handle-option">
+                    <bk-select class="search-select" v-model="language" multiple style="width: 120px;" placeholder="请选择语言">
+                        <bk-option v-for="option in codeLangs"
+                            :key="option.displayName"
+                            :id="option.displayName"
+                            :name="option.displayName">
+                        </bk-option>
+                    </bk-select>
+                    <bk-input
+                        class="search-input"
+                        :placeholder="'快速搜索'"
+                        :clearable="true"
+                        :right-icon="'bk-icon icon-search'"
+                        v-model="keyWord"
+                        @input="handleClear"
+                        @enter="handleKeyWordSearch">
+                    </bk-input>
+                    <i class="bk-icon icon-close" @click="closeDialog" />
+                </div>
             </div>
             <bk-tab class="checkerset-tab" size="small" ref="tab" :active.sync="classifyCode" type="unborder-card">
                 <bk-tab-panel
@@ -35,15 +38,13 @@
                     :label="classify.cnName"
                     render-directive="if">
                     <section ref="checkersetList">
-                        <div class="info-card"
+                        <div :class="['info-card', { 'disabled': checkerSet.codeLangList.length > 1 || !checkerSet.codeLangList.includes(curLang), 'selected': checkIsSelected(checkerSet.checkerSetId) }]"
                             v-for="(checkerSet, index) in checkerSetList"
-                            :key="index"
-                            @mouseover="currentHoverItem = index"
-                            @mouseout="currentHoverItem = -1">
+                            :key="index">
                             <div :class="['checkerset-icon', getIconColorClass(checkerSet.checkerSetId)]">{{(checkerSet.checkerSetName || '')[0]}}</div>
                             <div class="info-content">
                                 <p class="checkerset-main">
-                                    <span class="name">{{checkerSet.checkerSetName}}</span>
+                                    <span class="name" :title="checkerSet.checkerSetName">{{checkerSet.checkerSetName}}</span>
                                     <span v-if="['DEFAULT', 'RECOMMEND'].includes(checkerSet.checkerSetSource)"
                                         :class="['use-mark', { 'preferred': checkerSet.checkerSetSource === 'DEFAULT', 'recommend': checkerSet.checkerSetSource === 'RECOMMEND' }]"
                                     >{{checkerSet.checkerSetSource === 'DEFAULT' ? '精选' : '推荐'}}</span>
@@ -55,24 +56,30 @@
                                     <span>共 {{checkerSet.checkerCount || 0}} 条规则</span>
                                 </p>
                             </div>
-                            <div class="info-operate">
+                            <div class="info-operate"
+                                @mouseenter="currentHoverItem = index"
+                                @mouseleave="currentHoverItem = -1">
                                 <bk-button
-                                    :theme="!checkerSet.projectInstalled ? 'primary' : 'default'"
                                     size="small"
-                                    class="install-btn"
-                                    :disabled="checkerSet.projectInstalled"
-                                    @click="install(checkerSet)"
-                                >{{checkerSet.projectInstalled ? '已安装' : '安装'}}</bk-button>
+                                    class="handle-btn"
+                                    v-bk-tooltips="getToolTips(checkerSet.codeLangList.length > 1, !checkerSet.codeLangList.includes(curLang))"
+                                    :class="[checkerSet.codeLangList.length > 1 || !checkerSet.codeLangList.includes(curLang) ? 'disable-btn' : 'enable-btn']"
+                                    :theme="classifyCode === 'store' && !checkerSet.projectInstalled ? 'primary' : 'default'"
+                                    @click="handleOption(checkerSet.codeLangList.length > 1 || !checkerSet.codeLangList.includes(curLang), classifyCode === 'store' && !checkerSet.projectInstalled, checkerSet, checkIsSelected(checkerSet.checkerSetId))"
+                                >{{ getSelectText(checkerSet, index) }}</bk-button>
                             </div>
                         </div>
                     </section>
                     <div v-if="!checkerSetList.length">
                         <div class="codecc-table-empty-text">
-                            <img src="../../images/empty.png" class="empty-img">
-                            <div>{{$t('暂无数据')}}</div>
+                            <img src="@/images/empty.png" class="empty-img">
+                            <div>暂无数据</div>
                         </div>
                     </div>
                 </bk-tab-panel>
+                <template slot="setting">
+                    <a :href="linkUrl" target="_blank" class="codecc-link">创建规则集</a>
+                </template>
             </bk-tab>
         </div>
         <div slot="footer">
@@ -90,7 +97,19 @@
                 type: Boolean,
                 default: false
             },
-            refreshList: Function
+            curLang: {
+                type: String,
+                default: ''
+            },
+            defaultLang: {
+                type: Array,
+                default: () => ([])
+            },
+            selectedList: {
+                type: Array,
+                default: () => ([])
+            },
+            handleSelect: Function
         },
         data () {
             return {
@@ -108,15 +127,18 @@
                     checkerSetCategory: [],
                     checkerSetLanguage: [],
                     pageNum: 1,
-                    pageSize: 20
+                    pageSize: 10000
                 },
                 classifyCode: 'all',
-                classifyCodeList: [{ cnName: '所有', enName: 'all' }],
-                checkerSetList: [],
-                codeLangs: []
+                checkerSetList: []
             }
         },
         computed: {
+            ...mapState('checkerset', {
+                categoryList: 'categoryList',
+                checkerSetLanguage: 'checkerSetLanguage',
+                codeLangs: 'codeLangs'
+            }),
             ...mapState([
                 'toolMeta'
             ]),
@@ -131,6 +153,15 @@
                     target = this.checkerSetList.filter(item => item.catagories.some(val => val.enName === this.classifyCode))
                 }
                 return target || []
+            },
+            linkUrl () {
+                return `${window.DEVOPS_SITE_URL}/console/codecc/${this.projectId}/checkerset/list#new`
+            },
+            classifyCodeList () {
+                if (this.categoryList.length) {
+                    return [{ cnName: '所有', enName: 'all' }, ...this.categoryList, { cnName: '研发商店', enName: 'store' }]
+                }
+                return []
             },
             positionTop () {
                 const top = (window.innerHeight - 693) / 2
@@ -148,11 +179,19 @@
                         checkerSetCategory: [],
                         checkerSetLanguage: [],
                         pageNum: 1,
-                        pageSize: 20
+                        pageSize: 10000
                     }
                     this.classifyCode = 'all'
+                    // 兼容语言
+                    if (this.codeLangs.findIndex(val => val.displayName === this.defaultLang[0]) < 0) {
+                        this.language = []
+                        this.params.checkerSetLanguage = []
+                    } else {
+                        this.language = this.defaultLang
+                        this.params.checkerSetLanguage = this.defaultLang
+                    }
                     this.requestList(true)
-                    this.addScrollLoadMore()
+                    // this.addScrollLoadMore()
                 } else {
                     this.classifyCode = ''
                 }
@@ -161,9 +200,9 @@
                 if (this.visiable && !this.isOpen) {
                     this.removeScrollLoadMore()
                     this.params.pageNum = 1
-                    this.params.checkerSetCategory = ['all'].includes(newVal) ? [] : [newVal]
+                    this.params.checkerSetCategory = ['all', 'store'].includes(newVal) ? [] : [newVal]
                     this.requestList(true)
-                    this.addScrollLoadMore()
+                    // this.addScrollLoadMore()
                 }
             },
             language (newVal) {
@@ -175,9 +214,6 @@
                 }
             }
         },
-        created () {
-            this.getFormParams()
-        },
         mounted () {
             // this.addScrollLoadMore()
         },
@@ -188,23 +224,31 @@
             closeDialog () {
                 this.$emit('update:visiable', false)
             },
-            async getFormParams () {
-                const res = await this.$store.dispatch('checkerset/params')
-                this.classifyCodeList = [...this.classifyCodeList, ...res.catatories]
-                this.codeLangs = res.codeLangs
-            },
             async requestList (isInit, params = this.params) {
                 this.loading = true
                 this.isLoadingMore = true
-                params.projectInstalled = this.classifyCode === 'store' ? false : undefined
+                params.projectInstalled = this.classifyCode !== 'store' ? true : undefined
                 const res = await this.$store.dispatch('checkerset/otherList', params).finally(() => {
                     this.loading = false
                     this.isOpen = false
                 })
-                this.checkerSetList = this.pageChange ? this.checkerSetList.concat(res.content) : res.content
+                // this.checkerSetList = this.pageChange ? this.checkerSetList.concat(res.content) : res.content
+                this.checkerSetList = res.content
                 this.loadEnd = res.last
                 this.pageChange = false
                 this.isLoadingMore = false
+            },
+            checkIsSelected (checkerSetId) {
+                return this.selectedList.some(item => item.checkerSetId === checkerSetId)
+            },
+            getSelectText (checkerSet, index) {
+                let txt = ''
+                if (this.classifyCode === 'store' && !checkerSet.projectInstalled) {
+                    txt = '安装'
+                } else {
+                    txt = this.checkIsSelected(checkerSet.checkerSetId) ? this.currentHoverItem === index ? '取消选中' : '已选中' : '选择'
+                }
+                return txt
             },
             getIconColorClass (checkerSetId) {
                 return checkerSetId ? `c${(checkerSetId[0].charCodeAt() % 6) + 1}` : 'c1'
@@ -216,6 +260,12 @@
                     }
                 }).filter(name => name)
                 return names.join('、')
+            },
+            handleOption (isDisabled, isInstall, checkerSet, isCancel) {
+                if (!isDisabled) {
+                    if (isInstall) this.install(checkerSet)
+                    else this.handleSelect(checkerSet, isCancel, this.curLang)
+                }
             },
             handleKeyWordSearch (value) {
                 this.keyWord = value.trim()
@@ -229,7 +279,7 @@
                     this.handleKeyWordSearch('')
                 }
             },
-            refresh () {
+            async refresh () {
                 if (this.keyWord === '') {
                     this.requestList(true)
                 } else {
@@ -262,14 +312,6 @@
                 const mainBody = document.querySelector('.checkerset-panel')
                 if (mainBody) mainBody.removeEventListener('scroll', this.scrollLoadMore, { passive: true })
             },
-            resetInsatllStatus (checkerSetId) {
-                this.checkerSetList = this.checkerSetList.map(checker => {
-                    return {
-                        ...checker,
-                        projectInstalled: checker.checkerSetId === checkerSetId ? true : checker.projectInstalled
-                    }
-                })
-            },
             install (checkerSet) {
                 const params = {
                     type: 'PROJECT',
@@ -277,26 +319,42 @@
                     checkerSetId: checkerSet.checkerSetId,
                     version: checkerSet.version
                 }
+                this.loading = true
                 this.$store.dispatch('checkerset/install', params).then(res => {
                     if (res.code === '0') {
                         this.$bkMessage({ theme: 'success', message: '安装成功' })
-                        this.refreshList()
-                        this.resetInsatllStatus(checkerSet.checkerSetId)
+                        this.refresh()
                     }
                 }).catch(e => {
-                    console.error(e)
+                    this.$bkMessage({
+                        message: '安装失败',
+                        theme: 'error'
+                    })
                 })
+            },
+            getToolTips (hasMultiLang, notCurLang) {
+                if (hasMultiLang) {
+                    return '该规则集不适用于当前插件'
+                } else if (notCurLang) {
+                    return '该规则集不适用于当前插件已选择的语言'
+                }
+                return { disabled: true }
             }
         }
     }
 </script>
 <style lang="postcss">
     .install-more-dialog {
+        border: 1px solid #ebf0f5;
+        p {
+            margin: 0;
+            padding: 0;
+        }
         .bk-dialog-tool {
             display: none;
         }
-        .bk-dialog-body {
-            padding: 20px 24px 16px 32px;
+        .bk-dialog .bk-dialog-body {
+            padding: 8px 16px 0;
         }
         .main-content {
             height: 600px;
@@ -317,20 +375,30 @@
             padding: 4px;
             margin-left: 3px;
             position: relative;
+            top: 2px;
             color: #3c96ff;;
             &.spin-icon {
                 color: #c3cdd7;
             }
         }
+        .handle-option {
+            display: flex;
+            .icon-close {
+                margin-left: 10px;
+                font-size: 28px;
+                color: #979ba5;
+                cursor: pointer;
+                z-index: 3000;
+            }
+        }
         .search-input {
-            width: 180px;
+            width: 120px;
         }
         .search-select {
-            width: 120px;
-            margin-left: 150px;
+            margin-right: 10px;
+            width: 100px;
         }
         .checkerset-tab {
-            margin-top: 10px;
             height: calc(100% - 40px);
             border: 0;
             font-size: 12px;
@@ -371,9 +439,9 @@
             align-items: center;
             margin: 0 0 6px;
             padding: 0 10px 0 8px;
-            height: 80px;
+            height: 66px;
             &:first-child {
-                margin-top: 18px;
+                margin-top: 12px;
             }
             .checkerset-icon {
                 width: 48px;
@@ -388,8 +456,8 @@
                 &.c1 { background: #37dab9; }
                 &.c2 { background: #7f6efa; }
                 &.c3 { background: #ffca2b; }
-                &.c4 { background: #fe8f65; },
-                &.c5 { background: #f787d9; },
+                &.c4 { background: #fe8f65; }
+                &.c5 { background: #f787d9; }
                 &.c6 { background: #5e7bff; }
             }
             .logo {
@@ -404,25 +472,6 @@
                 display: flex;
                 align-items: center;
                 line-height: 14px;
-            }
-            .use-mark {
-                margin-left: 8px;
-                font-size: 12px;
-                height: 20px;
-                display: inline-block;
-                padding: 2px 10px;
-                border-radius: 2px;
-                white-space: nowrap;
-                &.preferred {
-                    background-color: rgba(134, 223, 38, 0.3);
-                    color: rgba(53, 99, 22, 0.8);
-                    border: 1px solid rgba(102, 197, 1, 0.3);
-                }
-                &.recommend {
-                    background-color: rgba(211, 224, 255, 0.3);
-                    color: rgba(61, 76, 138, 0.8);
-                    border: 1px solid rgba(187, 204, 244, 0.3);
-                }
             }
             .info-content {
                 padding: 24px 0 20px;
@@ -442,8 +491,27 @@
                     font-weight: bold;
                     text-overflow: ellipsis;
                 }
+                .use-mark {
+                    margin-left: 8px;
+                    font-size: 12px;
+                    height: 20px;
+                    display: inline-block;
+                    padding: 2px 10px;
+                    border-radius: 2px;
+                    white-space: nowrap;
+                    &.preferred {
+                        background-color: rgba(134, 223, 38, 0.3);
+                        color: rgba(53, 99, 22, 0.8);
+                        border: 1px solid rgba(102, 197, 1, 0.3);
+                    }
+                    &.recommend {
+                        background-color: rgba(211, 224, 255, 0.3);
+                        color: rgba(61, 76, 138, 0.8);
+                        border: 1px solid rgba(187, 204, 244, 0.3);
+                    }
+                }
                 .language {
-                    max-width: 300px;
+                    max-width: 240px;
                     white-space: nowrap;
                     overflow: hidden;
                     display: inline;
@@ -451,8 +519,8 @@
                     padding-left: 8px;
                     font-size: 12px;
                     color: #63656e;
-                    border-left: 1px solid #d8d8d8;
                     text-overflow: ellipsis;
+                    border-left: 1px solid #d8d8d8;
                 }
             }
             .checkerset-desc {
@@ -477,9 +545,31 @@
                     margin-left: 10px;
                 }
             }
-            .install-btn {
+            .handle-btn {
+                width: 74px;
                 line-height: 22px;
                 font-weight: normal;
+                &.enable-btn:hover {
+                    background-color: #3a84ff;
+                    color: white;
+                }
+                &.disable-btn {
+                    background-color: #fff;
+                    border-color: #dcdee5;
+                    color: #c4c6cc;
+                    cursor: not-allowed;
+                }
+            }
+            &.disabled .info-content {
+                .name,
+                .language,
+                .checkerset-desc,
+                .other-msg {
+                    color: #c3cdd7;
+                }
+            }
+            &.selected {
+                background-color: #E9F4FF;
             }
         }
         .info-card:hover {
@@ -499,6 +589,14 @@
         .codecc-table-empty-text {
             text-align: center;
             margin-top: 180px;
+        }
+        .codecc-link {
+            position: relative;
+            top: 4px;
+            padding-right: 12px;
+            text-decoration: none;
+            color: #3a84ff;
+            cursor: pointer;
         }
     }
 </style>
