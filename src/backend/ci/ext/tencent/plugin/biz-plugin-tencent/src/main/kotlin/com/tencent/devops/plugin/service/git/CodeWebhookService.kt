@@ -134,9 +134,7 @@ class CodeWebhookService @Autowired constructor(
             val webhookEventType = CodeEventType.valueOf(webhookEventTypeStr!!)
 
             when {
-                webhookType == CodeType.GIT &&
-                    (webhookEventType == CodeEventType.MERGE_REQUEST ||
-                        webhookEventType == CodeEventType.PUSH) -> {
+                webhookType == CodeType.GIT && webhookEventType == CodeEventType.MERGE_REQUEST  -> {
                     val block = variables[PIPELINE_WEBHOOK_BLOCK]?.toBoolean() ?: false
                     val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
                     val state =
