@@ -149,10 +149,9 @@ class PipelineInfoService @Autowired constructor(
                 output.write(sb.toString().toByteArray())
                 output.flush()
         }
-        val fileName = pipelineName.toByteArray(Charsets.UTF_8).toString()
         return Response
                 .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-                .header("content-disposition", "attachment; filename = $fileName.json")
+                .header("content-disposition", "attachment; filename = $pipelineName.json")
                 .header("Cache-Control", "no-cache")
                 .build()
     }
