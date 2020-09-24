@@ -962,7 +962,7 @@ class GitService @Autowired constructor(
         // 限制最多50页
         for (page in 1..50) {
             val request = Request.Builder()
-                .url("$url&page=$page&per_page=100")
+                .url("$url&page=$page&per_page=200")
                 .get()
                 .build()
             OkhttpUtils.doHttp(request).use {
@@ -973,7 +973,7 @@ class GitService @Autowired constructor(
                 logger.info("get repo member response body: $data")
                 val pageResult = JsonUtil.to(data, object : TypeReference<List<GitMember>>() {})
                 result.addAll(pageResult)
-                if (pageResult.size < 100) return result
+                if (pageResult.size < 200) return result
             }
         }
         return result
@@ -989,7 +989,7 @@ class GitService @Autowired constructor(
         // 限制最多50页
         for (page in 1..50) {
             val request = Request.Builder()
-                .url("$url&page=$page&per_page=100")
+                .url("$url&page=$page&per_page=200")
                 .get()
                 .build()
             OkhttpUtils.doHttp(request).use {
@@ -1000,7 +1000,7 @@ class GitService @Autowired constructor(
                 logger.info("get repo member response body: $data")
                 val pageResult = JsonUtil.to(data, object : TypeReference<List<GitMember>>() {})
                 result.addAll(pageResult)
-                if (pageResult.size < 100) return result
+                if (pageResult.size < 200) return result
             }
         }
         return result
