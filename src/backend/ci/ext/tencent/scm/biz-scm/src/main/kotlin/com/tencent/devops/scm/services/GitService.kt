@@ -848,7 +848,7 @@ class GitService @Autowired constructor(
         token: String,
         repoUrl: String? = null
     ): GitMrInfo {
-        val url = StringBuilder("$${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId")
+        val url = StringBuilder("${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId")
         logger.info("get mr info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -873,7 +873,7 @@ class GitService @Autowired constructor(
         token: String,
         repoUrl: String? = null
     ): GitMrReviewInfo {
-        val url = StringBuilder("$${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/review")
+        val url = StringBuilder("${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/review")
         logger.info("get mr review info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -898,7 +898,7 @@ class GitService @Autowired constructor(
         token: String,
         repoUrl: String? = null
     ): GitMrChangeInfo {
-        val url = StringBuilder("$${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/changes")
+        val url = StringBuilder("${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/changes")
         logger.info("get mr changes info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
