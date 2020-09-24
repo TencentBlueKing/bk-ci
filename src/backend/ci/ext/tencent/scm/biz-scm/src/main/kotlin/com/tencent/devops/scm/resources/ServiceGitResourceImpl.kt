@@ -219,6 +219,10 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getRepoMembers(repoName, tokenType, token))
     }
 
+    override fun getRepoAllMembers(repoName: String, tokenType: TokenTypeEnum, token: String): Result<List<GitMember>> {
+        return Result(gitService.getRepoAllMembers(repoName, tokenType, token))
+    }
+
     override fun addCommitCheck(request: CommitCheckRequest): Result<Boolean> {
         gitService.addCommitCheck(request)
         return Result(true)

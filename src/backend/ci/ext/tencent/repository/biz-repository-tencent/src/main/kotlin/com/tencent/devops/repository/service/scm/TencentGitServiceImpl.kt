@@ -273,4 +273,12 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             token = accessToken
         ).data!!
     }
+
+    override fun getRepoAllMembers(accessToken: String, userId: String, repoName: String): List<GitMember> {
+        return client.getScm(ServiceGitResource::class).getRepoAllMembers(
+            repoName = repoName,
+            tokenType = TokenTypeEnum.OAUTH,
+            token = accessToken
+        ).data!!
+    }
 }
