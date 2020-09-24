@@ -26,7 +26,7 @@ config = {
   http_schema = "__BK_HTTP_SCHEMA__", -- 蓝鲸PaaS平台访问协议 http or https, 如果有对接才配置修改，开源默认没对接
   paas_host = "__BK_PAAS_FQDN__", -- 蓝鲸PaaS平台域名, 如果有对接才配置修改，开源默认没对接
   paas_http_port = "__BK_PAAS_HTTPS_PORT__", -- 蓝鲸PaaS平台域名的端口, 如果有对接才配置修改，开源默认没对接
-  login_url = "__BK_PAAS_PUBLIC_URL__",   -- 蓝鲸PaaS平台域名, 如果有对接才配置修改，开源默认没对接
+  login_url = "__BK_CI_PAAS_LOGIN_URL__",   -- 蓝鲸PaaS平台登录URL, 如果有对接才配置修改，开源默认没对接
   service_name = "",  -- 指定后台微服务名称，如果对接后端是boot-assembly的单体微服务，则该配置项为bk-ci, 否则请置空会自动路由相应微服务
   allow_hosts = {
     "__BK_CI_GATEWAY_CORS_ALLOW_LIST__"
