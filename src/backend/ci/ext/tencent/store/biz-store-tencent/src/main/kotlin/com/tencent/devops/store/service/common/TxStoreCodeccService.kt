@@ -35,7 +35,7 @@ interface TxStoreCodeccService {
         userId: String,
         storeType: String,
         storeCode: String,
-        storeId: String? =null
+        storeId: String? = null
     ): Result<CodeccMeasureInfo?>
 
     fun startCodeccTask(
@@ -43,5 +43,7 @@ interface TxStoreCodeccService {
         storeType: String,
         storeCode: String,
         storeId: String? = null
-    ): Result<Boolean>
+    ): Result<String?>
+
+    fun getQualifiedScore(storeType: String, scoreType: String): Double
 }

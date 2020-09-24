@@ -72,6 +72,7 @@ import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.TxAtomReleaseService
+import com.tencent.devops.store.service.common.TxStoreCodeccService
 import org.apache.commons.lang.StringEscapeUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -99,6 +100,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
 
     @Autowired
     lateinit var businessConfigDao: BusinessConfigDao
+
+    @Autowired
+    lateinit var txStoreCodeccService: TxStoreCodeccService
 
     @Value("\${git.plugin.nameSpaceId}")
     private lateinit var pluginNameSpaceId: String
@@ -161,6 +165,16 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
         if (null == repositoryInfo) {
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_CREATE_REPOSITORY_FAIL)
+        }
+        // 创建codecc扫描流水线
+        val createCodeccPipelineResult = client.get(ServiceCodeccResource::class).createCodeccPipeline(repositoryInfo.aliasName)
+        logger.info("createCodeccPipelineResult is :$createCodeccPipelineResult")
+        val createFlag = createCodeccPipelineResult.data
+        if (createCodeccPipelineResult.isNotOk() || createFlag != true) {
+            throw ErrorCodeException(
+                errorCode = createCodeccPipelineResult.status.toString(),
+                defaultMessage = createCodeccPipelineResult.message
+            )
         }
         return Result(mapOf("repositoryHashId" to repositoryInfo.repositoryHashId!!, "codeSrc" to repositoryInfo.url))
     }
@@ -280,27 +294,48 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 expiredInSecond = 259200
             )
         }
-        val codeccMeasureInfoResult = client.get(ServiceCodeccResource::class).getCodeccMeasureInfo(
-            repoProjectName = repoProjectName,
-            commitId = commitId
-        )
-        logger.info("validateAtomPassTestCondition atomId:$atomId,codeccMeasureInfoResult:$codeccMeasureInfoResult")
-        val codeccMeasureInfo = codeccMeasureInfoResult.data
-        if (codeccMeasureInfoResult.isNotOk() || codeccMeasureInfo == null) return false
-        val codeStyleQualifiedScore = getQualifiedScore("codeStyle")
-        val codeSecurityQualifiedScore = getQualifiedScore("codeSecurity")
-        val codeMeasureQualifiedScore = getQualifiedScore("codeMeasure")
-        return codeccMeasureInfo.codeStyleScore >= codeStyleQualifiedScore && codeccMeasureInfo.codeSecurityScore >= codeSecurityQualifiedScore && codeccMeasureInfo.codeMeasureScore >= codeMeasureQualifiedScore
+        return handleAtomCodeccValidateStatus(repoProjectName, commitId)
     }
 
-    private fun getQualifiedScore(scoreType: String): Double {
-        val qualifiedScoreConfig = businessConfigDao.get(
-            dslContext = dslContext,
-            business = StoreTypeEnum.ATOM.name,
-            feature = "codeccQualifiedScore",
-            businessValue = scoreType
-        )
-        return (qualifiedScoreConfig?.configValue ?: "90").toDouble()
+    private fun handleAtomCodeccValidateStatus(repoProjectName: String, commitId: String?): Boolean {
+        val startTime = System.currentTimeMillis()
+        var validateFlag = false
+        loop@ while (true) {
+            // 睡眠3秒再轮询去查扫描结果信息
+            Thread.sleep(3000)
+            val codeccMeasureInfoResult = client.get(ServiceCodeccResource::class).getCodeccMeasureInfo(
+                repoProjectName = repoProjectName,
+                commitId = commitId
+            )
+            logger.info("handleAtomCodeccValidateStatus codeccMeasureInfoResult: $codeccMeasureInfoResult")
+            val codeccMeasureInfo = codeccMeasureInfoResult.data
+            val status = codeccMeasureInfo?.status
+            if (codeccMeasureInfoResult.isNotOk() || codeccMeasureInfo == null || status == null) break@loop
+            if (status != 3) {
+                if (status == 0) {
+                    val codeStyleScore = codeccMeasureInfo.codeStyleScore
+                    val codeSecurityScore = codeccMeasureInfo.codeSecurityScore
+                    val codeMeasureScore = codeccMeasureInfo.codeMeasureScore
+                    if (codeStyleScore != null && codeSecurityScore != null && codeMeasureScore != null) {
+                        val storeType = StoreTypeEnum.ATOM.name
+                        val codeStyleQualifiedScore = txStoreCodeccService.getQualifiedScore(storeType, "codeStyle")
+                        val codeSecurityQualifiedScore =
+                            txStoreCodeccService.getQualifiedScore(storeType, "codeSecurity")
+                        val codeMeasureQualifiedScore = txStoreCodeccService.getQualifiedScore(storeType, "codeMeasure")
+                        // 判断插件代码库的扫描分数是否合格
+                        if (codeStyleScore > codeStyleQualifiedScore && codeSecurityScore > codeSecurityQualifiedScore && codeMeasureScore > codeMeasureQualifiedScore)
+                            validateFlag = true
+                    }
+                }
+                break@loop
+            } else {
+                // 轮询超时则直接返回校验失败
+                if ((System.currentTimeMillis() - startTime) > 10 * 60 * 1000) {
+                    break@loop
+                }
+            }
+        }
+        return validateFlag
     }
 
     override fun rebuild(projectCode: String, userId: String, atomId: String): Result<Boolean> {
@@ -524,13 +559,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             )
         }
         val taskStatus = taskStatusInfoResult.data
-        if (taskStatus != 1 && taskStatus != 3) {
-            // 如果代码扫描任务没有被触发则调接口触发
+        if (taskStatus != 0 && taskStatus != 3) {
+            // 如果代码扫描任务没有被触发或者失败则调接口触发
             val startCodeccTaskResult = client.get(ServiceCodeccResource::class).startCodeccTask(
                 repoProjectName = repoProjectName,
                 commitId = commitId
             )
-            if (startCodeccTaskResult.isNotOk() || startCodeccTaskResult.data == false) {
+            if (startCodeccTaskResult.isNotOk() || startCodeccTaskResult.data.isNullOrBlank()) {
                 throw ErrorCodeException(
                     errorCode = startCodeccTaskResult.status.toString(),
                     defaultMessage = startCodeccTaskResult.message
@@ -609,7 +644,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             recordStatus != AtomStatusEnum.TESTING.status.toByte()
         ) {
             validateFlag = false
-        }  else if (status == AtomStatusEnum.AUDITING.status.toByte() &&
+        } else if (status == AtomStatusEnum.AUDITING.status.toByte() &&
             recordStatus != AtomStatusEnum.CODECCING.status.toByte()
         ) {
             validateFlag = false

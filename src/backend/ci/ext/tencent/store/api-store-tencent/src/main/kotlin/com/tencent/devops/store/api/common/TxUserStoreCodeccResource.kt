@@ -86,5 +86,5 @@ interface TxUserStoreCodeccResource {
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String
-    ): Result<Boolean>
+    ): Result<String?>
 }

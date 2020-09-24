@@ -27,45 +27,28 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.DEVOPS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.plugin.api.ServiceCodeccResource
-import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
-import com.tencent.devops.repository.api.ServiceGitRepositoryResource
-import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
-import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
-import com.tencent.devops.store.dao.common.TxStoreCodeccDao
-import com.tencent.devops.store.pojo.common.STORE_CODECC_FAILED_TEMPLATE_SUFFIX
-import com.tencent.devops.store.pojo.common.STORE_CODECC_QUALIFIED_TEMPLATE_SUFFIX
 import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.StoreCodeccInfo
-import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreCommonService
-import com.tencent.devops.store.service.common.StoreNotifyService
 import com.tencent.devops.store.service.common.TxStoreCodeccService
-import com.tencent.devops.store.service.common.TxStoreCodeccValidateService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
-import java.time.LocalDateTime
-import kotlin.math.pow
 
 @Service
 class TxStoreCodeccServiceImpl @Autowired constructor(
     private val client: Client,
     private val storeMemberDao: StoreMemberDao,
+    private val businessConfigDao: BusinessConfigDao,
     private val storeCommonService: StoreCommonService,
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext
@@ -81,17 +64,33 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
     ): Result<CodeccMeasureInfo?> {
         logger.info("getCodeccMeasureInfo userId:$userId,storeType:$storeType,storeCode:$storeCode,storeId:$storeId")
         validatePermission(userId, storeCode, storeType)
-        var commitId:String? = null
+        var commitId: String? = null
         if (storeId != null) {
             // 如果组件ID不为空则会去redis中获取当时构建拉代码存的commitId
             commitId = redisOperation.get("$STORE_REPO_COMMIT_KEY_PREFIX:$storeType:$storeId")
         }
         logger.info("getCodeccMeasureInfo commitId:$commitId")
         val mameSpaceName = storeCommonService.getStoreRepoNameSpaceName(StoreTypeEnum.valueOf(storeType))
-        return client.get(ServiceCodeccResource::class).getCodeccMeasureInfo(
+        val codeccMeasureInfoResult = client.get(ServiceCodeccResource::class).getCodeccMeasureInfo(
             repoProjectName = "$mameSpaceName/$storeCode",
             commitId = commitId
         )
+        val codeccMeasureInfo = codeccMeasureInfoResult.data
+        if (codeccMeasureInfo != null) {
+            val codeStyleScore = codeccMeasureInfo.codeStyleScore
+            val codeSecurityScore = codeccMeasureInfo.codeSecurityScore
+            val codeMeasureScore = codeccMeasureInfo.codeMeasureScore
+            if (codeStyleScore != null && codeSecurityScore != null && codeMeasureScore != null) {
+                val codeStyleQualifiedScore = getQualifiedScore(storeType, "codeStyle")
+                val codeSecurityQualifiedScore = getQualifiedScore(storeType, "codeSecurity")
+                val codeMeasureQualifiedScore = getQualifiedScore(storeType, "codeMeasure")
+                // 判断插件代码库的扫描分数是否合格
+                codeccMeasureInfo.qualifiedFlag =
+                    codeStyleScore > codeStyleQualifiedScore && codeSecurityScore > codeSecurityQualifiedScore && codeMeasureScore > codeMeasureQualifiedScore
+            }
+        }
+        logger.info("getCodeccMeasureInfo codeccMeasureInfoResult:$codeccMeasureInfoResult")
+        return codeccMeasureInfoResult
     }
 
     override fun startCodeccTask(
@@ -99,10 +98,10 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
         storeType: String,
         storeCode: String,
         storeId: String?
-    ): Result<Boolean> {
+    ): Result<String?> {
         logger.info("startCodeccTask userId:$userId,storeType:$storeType,storeCode:$storeCode,storeId:$storeId")
         validatePermission(userId, storeCode, storeType)
-        var commitId:String? = null
+        var commitId: String? = null
         if (storeId != null) {
             // 如果组件ID不为空则会去redis中获取当时构建拉代码存的commitId
             commitId = redisOperation.get("$STORE_REPO_COMMIT_KEY_PREFIX:$storeType:$storeId")
@@ -113,6 +112,16 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
             repoProjectName = "$mameSpaceName/$storeCode",
             commitId = commitId
         )
+    }
+
+    override fun getQualifiedScore(storeType: String, scoreType: String): Double {
+        val qualifiedScoreConfig = businessConfigDao.get(
+            dslContext = dslContext,
+            business = storeType,
+            feature = "codeccQualifiedScore",
+            businessValue = scoreType
+        )
+        return (qualifiedScoreConfig?.configValue ?: "90").toDouble()
     }
 
     private fun validatePermission(userId: String, storeCode: String, storeType: String) {
