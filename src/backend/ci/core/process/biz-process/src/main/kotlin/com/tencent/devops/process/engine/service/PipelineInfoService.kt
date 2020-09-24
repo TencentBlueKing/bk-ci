@@ -4,10 +4,8 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.log.pojo.LogLine
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -24,11 +22,6 @@ import com.tencent.devops.process.service.PipelineSettingService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.util.FileCopyUtils
-import java.io.FileOutputStream
-import java.io.OutputStream
-import java.sql.Date
-import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
@@ -62,7 +55,7 @@ class PipelineInfoService @Autowired constructor(
                 setting = settingInfo!!
         )
         logger.info("exportPipeline |$pipelineId | $projectId| ${JsonUtil.toJson(modelAndSetting)}")
-        return exportModelToFile(modelAndSetting, pipelineId)
+        return exportModelToFile(modelAndSetting, settingInfo.pipelineName)
     }
 
     fun uploadPipeline(userId: String, projectId: String, pipelineModelAndSetting: PipelineModelAndSetting): String? {
@@ -148,7 +141,7 @@ class PipelineInfoService @Autowired constructor(
         )
     }
 
-    private fun exportModelToFile(modelAndSetting: PipelineModelAndSetting, pipelineId: String): Response {
+    private fun exportModelToFile(modelAndSetting: PipelineModelAndSetting, pipelineName: String): Response {
         // 流式下载
         val fileStream = StreamingOutput { output ->
                 val sb = StringBuilder()
@@ -156,9 +149,10 @@ class PipelineInfoService @Autowired constructor(
                 output.write(sb.toString().toByteArray())
                 output.flush()
         }
+        val fileName = pipelineName.toByteArray(Charsets.UTF_8).toString()
         return Response
                 .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-                .header("content-disposition", "attachment; filename = $pipelineId.json")
+                .header("content-disposition", "attachment; filename = $fileName.json")
                 .header("Cache-Control", "no-cache")
                 .build()
     }
