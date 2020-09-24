@@ -91,7 +91,6 @@ auth:
   iamCallBackUser: __BK_CI_IAM_CALLBACK_USER__
 
 
-
 #bk esb config for cd plugin in pipeline
 esb:
   code: __BK_CI_APP_CODE__

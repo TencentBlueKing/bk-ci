@@ -99,11 +99,16 @@ const pipelineConstMixin = {
                 },
                 errorCode: {
                     index: 13,
-                    width: 260,
+                    width: 280,
                     prop: 'errorCode',
                     label: this.$t('history.errorCode')
                 }
             }
+        }
+    },
+    computed: {
+        customColumn () {
+            return ['material', 'stageStatus', 'errorCode']
         }
     },
     methods: {

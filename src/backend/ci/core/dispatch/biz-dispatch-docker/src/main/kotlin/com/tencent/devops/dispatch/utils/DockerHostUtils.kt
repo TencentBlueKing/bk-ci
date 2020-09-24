@@ -116,7 +116,7 @@ class DockerHostUtils @Autowired constructor(
         val dockerPair = if (firstPair.first.isEmpty()) {
             val secondPair = dockerLoadCheck(dockerHostLoadConfigTriple.second, grayEnv, specialIpSet, unAvailableIpList)
             if (secondPair.first.isEmpty()) {
-                dockerLoadCheck(dockerHostLoadConfigTriple.third, grayEnv, specialIpSet, unAvailableIpList)
+                dockerLoadCheck(dockerHostLoadConfigTriple.third, grayEnv, specialIpSet, unAvailableIpList, true)
             } else {
                 secondPair
             }
@@ -297,20 +297,20 @@ class DockerHostUtils @Autowired constructor(
                     dockerHostLoadConfig["first"] ?: DockerHostLoadConfig(
                         cpuLoadThreshold = 80,
                         memLoadThreshold = 50,
-                        diskLoadThreshold = 60,
+                        diskLoadThreshold = 80,
                         diskIOLoadThreshold = 80
                     ),
                     dockerHostLoadConfig["second"] ?: DockerHostLoadConfig(
                         cpuLoadThreshold = 90,
                         memLoadThreshold = 70,
-                        diskLoadThreshold = 80,
-                        diskIOLoadThreshold = 90
+                        diskLoadThreshold = 90,
+                        diskIOLoadThreshold = 85
                     ),
                     dockerHostLoadConfig["third"] ?: DockerHostLoadConfig(
                         cpuLoadThreshold = 100,
                         memLoadThreshold = 80,
-                        diskLoadThreshold = 100,
-                        diskIOLoadThreshold = 100
+                        diskLoadThreshold = 95,
+                        diskIOLoadThreshold = 85
                     )
                 )
             } catch (e: Exception) {
@@ -319,13 +319,19 @@ class DockerHostUtils @Autowired constructor(
         }
 
         return Triple(
-            first = DockerHostLoadConfig(80, 50, 60, 80),
-            second = DockerHostLoadConfig(90, 70, 80, 90),
-            third = DockerHostLoadConfig(100, 80, 100, 100)
+            first = DockerHostLoadConfig(80, 50, 80, 80),
+            second = DockerHostLoadConfig(90, 70, 90, 85),
+            third = DockerHostLoadConfig(100, 80, 95, 85)
         )
     }
 
-    private fun dockerLoadCheck(dockerHostLoadConfig: DockerHostLoadConfig, grayEnv: Boolean, specialIpSet: Set<String>, unAvailableIpList: Set<String>): Pair<String, Int> {
+    private fun dockerLoadCheck(
+        dockerHostLoadConfig: DockerHostLoadConfig,
+        grayEnv: Boolean,
+        specialIpSet: Set<String>,
+        unAvailableIpList: Set<String>,
+        finalCheck: Boolean = false
+    ): Pair<String, Int> {
         val dockerIpList =
             pipelineDockerIpInfoDao.getAvailableDockerIpList(
                 dslContext = dslContext,
@@ -337,11 +343,26 @@ class DockerHostUtils @Autowired constructor(
                 specialIpSet = specialIpSet
             )
 
-        return if (dockerIpList.isNotEmpty) {
+        return if (dockerIpList.isNotEmpty && sufficientResources(finalCheck, dockerIpList.size, grayEnv)) {
             selectAvailableDockerIp(dockerIpList, unAvailableIpList)
         } else {
             Pair("", 0)
         }
+    }
+
+    private fun sufficientResources(finalCheck: Boolean, fittingIpCount: Int, grayEnv: Boolean): Boolean {
+        val enableIpCount = pipelineDockerIpInfoDao.getEnableDockerIpCount(dslContext, grayEnv)
+        // 最后一次check无论还剩几个可用ip，都要顶上，或者集群规模小于10不做判断
+        if (enableIpCount < 10 || finalCheck) {
+            return true
+        }
+
+        // 集群规模数大于10并且可用IP数小于集群规模的10%，自动跳到下一档
+        if ((enableIpCount / 10) >= fittingIpCount) {
+            return false
+        }
+
+        return true
     }
 
     private fun selectAvailableDockerIp(

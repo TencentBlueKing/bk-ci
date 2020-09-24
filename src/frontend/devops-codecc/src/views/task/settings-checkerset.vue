@@ -2,7 +2,7 @@
     <div class="main-content-inner checker">
         <span v-if="taskDetail.createFrom === 'gongfeng_scan'" class="fs12 go-pipeline">{{$t('规则集配置由CodeCC开源扫描集群自动生成')}}</span>
         <span v-else-if="editDisabled" class="fs12 go-pipeline">{{$t('修改规则集配置，请前往流水线')}}
-            <a class="ml15" @click="hanldeToPipeline" target="_blank" :href="`${DEVOPS_SITE_URL}/console/pipeline/${taskDetail.projectId}/${taskDetail.pipelineId}/edit#codecc`">{{$t('立即前往>>')}}</a>
+            <a class="ml15" @click="hanldeToPipeline" target="_blank" :href="`${DEVOPS_SITE_URL}/console/pipeline/${taskDetail.projectId}/${taskDetail.pipelineId}/edit#${taskDetail.atomCode}`">{{$t('立即前往>>')}}</a>
         </span>
         <div v-if="checkersetList.length">
             <p class="checker-title">
@@ -27,7 +27,7 @@
                 <div>{{$t('暂无数据')}}</div>
             </div>
         </div>
-        <bk-dialog
+        <!-- <bk-dialog
             v-model="checkersetDialogVisiable"
             class="ckeckerset-dialog"
             :render-directive="'if'"
@@ -44,18 +44,18 @@
                     :update-checker-list="updateCheckerList">
                 </checkerset-manage>
             </div>
-        </bk-dialog>
+        </bk-dialog> -->
     </div>
 </template>
 
 <script>
     import { mapState } from 'vuex'
     import card from './../checkerset/card'
-    import checkersetManage from './../checkerset/manage'
+    // import checkersetManage from './../checkerset/manage'
     export default {
         components: {
-            card,
-            checkersetManage
+            card
+            // checkersetManage
         },
         data () {
             return {
@@ -102,18 +102,18 @@
                 this.$store.commit('setMainContentLoading', false)
             },
             handleCheckerset (checkerset) {
-                this.checkersetId = checkerset.checkerSetId
-                this.version = checkerset.version
-                this.checkersetDialogVisiable = true
-                // const href = this.$router.resolve({
-                //     name: 'checkerset-manage',
-                //     params: {
-                //         projectId: this.projectId,
-                //         checkersetId: checkerset.checkerSetId,
-                //         version: checkerset.version
-                //     }
-                // }).href
-                // window.open(`${window.JUMP_SITE_URL}${href}`)
+                // this.checkersetId = checkerset.checkerSetId
+                // this.version = checkerset.version
+                // this.checkersetDialogVisiable = true
+                const href = this.$router.resolve({
+                    name: 'checkerset-manage',
+                    params: {
+                        projectId: this.projectId,
+                        checkersetId: checkerset.checkerSetId,
+                        version: checkerset.version
+                    }
+                }).href
+                window.open(`${window.JUMP_SITE_URL}${href}`)
             },
             goToCheckerset () {
                 this.$router.push({
@@ -121,7 +121,7 @@
                 })
             },
             hanldeToPipeline () {
-                window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${this.taskDetail.projectId}/${this.taskDetail.pipelineId}/edit#codecc`, '_blank')
+                window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${this.taskDetail.projectId}/${this.taskDetail.pipelineId}/edit#${this.taskDetail.atomCode}`, '_blank')
             },
             hasCcnTips (checkerset) {
                 const isNotPipeline = this.taskDetail.createFrom !== 'bs_pipeline'

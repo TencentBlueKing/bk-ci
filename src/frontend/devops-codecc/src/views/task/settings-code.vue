@@ -5,12 +5,12 @@
                 <span v-if="taskDetail.createFrom === 'gongfeng_scan'">{{$t('基础信息配置由CodeCC开源扫描集群自动生成')}}</span>
                 <span v-else>{{$t('修改基础信息配置，请前往流水线')}} <a @click="hanldeToPipeline" href="javascript:;">{{$t('立即前往>>')}}</a></span>
             </div>
-            <div>
-                <span class="pipeline-label">{{$t('任务名称')}}</span>
+            <div class="disf">
+                <span class="pipeline-label disf">{{$t('任务名称')}}</span>
                 <span class="fs14">{{ formData.nameCn }}</span>
             </div>
-            <div>
-                <span class="pipeline-label">{{$t('任务语言')}}</span>
+            <div class="disf">
+                <span class="pipeline-label disf">{{$t('任务语言')}}</span>
                 <span :class="index === 0 ? '' : 'lang'" class="fs14" v-for="(lang, index) in formatLang(taskDetail.codeLang)" :key="lang">{{ lang }}</span>
             </div>
             <bk-form :label-width="130">
@@ -114,7 +114,8 @@
                     ]
                 },
                 paramsValue: {},
-                buttonLoading: false
+                buttonLoading: false,
+                codeMessage: {}
             }
         },
         computed: {
@@ -126,9 +127,6 @@
             }),
             ...mapState('task', {
                 taskDetail: 'detail'
-            }),
-            ...mapState('task', {
-                codeMessage: 'codes'
             }),
             configData () {
                 const configData = []
@@ -184,7 +182,7 @@
                 }
                 res.codeLang = this.toolMeta.LANG.map(lang => lang.key & res.codeLang).filter(lang => lang > 0)
                 this.formData = res
-                await this.$store.dispatch('task/getCodeMessage')
+                this.codeMessage = await this.$store.dispatch('task/getCodeMessage')
             },
             handleLangChange (newValue) {
                 if (!newValue) {
@@ -258,7 +256,7 @@
                 return tools
             },
             hanldeToPipeline () {
-                window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${this.taskDetail.projectId}/${this.taskDetail.pipelineId}/edit#codecc`, '_blank')
+                window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${this.taskDetail.projectId}/${this.taskDetail.pipelineId}/edit#${this.taskDetail.atomCode}`, '_blank')
             }
         }
     }
@@ -299,13 +297,13 @@
             width: 104px;
             text-align: left;
             font-size: 14px;
-            line-height: 14px;
+            /* line-height: 14px; */
             height: 46px;
             font-weight: 600;
         }
         .lang::before {
             content: ' | ';
-            width: 30px;
+            /* width: 30px; */
             height: 12px;
             color: #d8d8d8;
             right: 0;

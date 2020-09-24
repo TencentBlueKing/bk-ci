@@ -50,7 +50,6 @@ import javax.validation.constraints.NotNull;
 public class CommonDefectDetailQueryReqVO
 {
     @ApiModelProperty(value = "告警主键id", required = true)
-    @NotNull(message = "告警主键id不能为空")
     private String entityId;
 
     @ApiModelProperty(value = "工具名", required = true)

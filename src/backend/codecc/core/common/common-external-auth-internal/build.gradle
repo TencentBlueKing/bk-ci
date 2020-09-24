@@ -2,6 +2,8 @@ apply plugin: "maven"
 
 dependencies {
     compile project(":core:common:common-external-auth")
-    compile project(":ext:tencent:common:common-auth-gongfeng")
     compile project(":core:common:common-redis")
+    compile project(":core:common:common-client")
+    compile project(":ext:tencent:common:common-auth-gongfeng")
+    compile group: 'com.tencent.bk.devops.ci.repository', name: 'api-repository', version: '1.1.11-RELEASE', changing: true
 }

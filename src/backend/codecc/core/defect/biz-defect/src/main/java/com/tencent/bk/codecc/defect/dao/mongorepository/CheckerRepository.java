@@ -27,6 +27,7 @@
 package com.tencent.bk.codecc.defect.dao.mongorepository;
 
 import com.tencent.bk.codecc.defect.model.CheckerDetailEntity;
+import com.tencent.bk.codecc.defect.model.checkerset.CheckerSetEntity;
 import com.tencent.bk.codecc.defect.vo.enums.CheckerCategory;
 import com.tencent.bk.codecc.defect.vo.enums.CheckerRecommendType;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -70,6 +71,11 @@ public interface CheckerRepository extends MongoRepository<CheckerDetailEntity, 
     @Query(fields = "{'checker_key':1}", value = "{'tool_name': ?0, 'pkg_kind': ?1}")
     List<CheckerDetailEntity> findByToolNameAndPkgKind(String toolName, String pkgId);
 
-
-
+    /**
+     * 通过规则ID列表查询
+     *
+     * @param checkerSetIds
+     * @return
+     */
+    List<CheckerDetailEntity> findByCheckerKeyIn(Set<String> checkerSetIds);
 }

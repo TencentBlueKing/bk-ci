@@ -30,20 +30,43 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.tencent.bk.codecc.defect.dao.mongorepository.*;
-import com.tencent.bk.codecc.defect.model.*;
+import com.tencent.bk.codecc.defect.dao.mongorepository.BuildDefectRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.CCNDefectRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.CCNStatisticRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.CheckerPackageRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.CheckerRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.DUPCDefectRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.DUPCStatisticRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.DefectRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.LintDefectV2Repository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.RedLineMetaRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.RedLineRepository;
+import com.tencent.bk.codecc.defect.model.CCNDefectEntity;
+import com.tencent.bk.codecc.defect.model.CCNStatisticEntity;
+import com.tencent.bk.codecc.defect.model.CheckerDetailEntity;
+import com.tencent.bk.codecc.defect.model.CheckerPackageEntity;
+import com.tencent.bk.codecc.defect.model.DUPCDefectEntity;
+import com.tencent.bk.codecc.defect.model.DUPCStatisticEntity;
+import com.tencent.bk.codecc.defect.model.DefectEntity;
+import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;
+import com.tencent.bk.codecc.defect.model.RedLineMetaEntity;
 import com.tencent.bk.codecc.defect.model.pipelinereport.RedLineEntity;
 import com.tencent.bk.codecc.defect.service.CheckerService;
 import com.tencent.bk.codecc.defect.service.FileDefectGatherService;
 import com.tencent.bk.codecc.defect.service.IConfigCheckerPkgBizService;
 import com.tencent.bk.codecc.defect.service.RedLineReportService;
 import com.tencent.bk.codecc.defect.service.newdefectjudge.NewDefectJudgeService;
-import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
 import com.tencent.bk.codecc.defect.vo.CheckerDetailVO;
 import com.tencent.bk.codecc.defect.vo.CheckerPkgRspVO;
 import com.tencent.bk.codecc.defect.vo.FileDefectGatherVO;
-import com.tencent.bk.codecc.defect.vo.redline.*;
-import com.tencent.bk.codecc.task.vo.*;
+import com.tencent.bk.codecc.defect.vo.redline.PipelineRedLineCallbackVO;
+import com.tencent.bk.codecc.defect.vo.redline.RLCcnAndDupcDefectVO;
+import com.tencent.bk.codecc.defect.vo.redline.RLCompileDefectVO;
+import com.tencent.bk.codecc.defect.vo.redline.RLLintDefectVO;
+import com.tencent.bk.codecc.defect.vo.redline.RedLineVO;
+import com.tencent.bk.codecc.task.vo.TaskBaseVO;
+import com.tencent.bk.codecc.task.vo.TaskDetailVO;
+import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.ToolMetaCacheService;
@@ -51,19 +74,23 @@ import com.tencent.devops.common.util.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.tencent.bk.codecc.defect.constant.DefectConstants.*;
+import static com.tencent.bk.codecc.defect.constant.DefectConstants.FORBIDDEN_COUNT;
+import static com.tencent.bk.codecc.defect.constant.DefectConstants.FORBIDDEN_COUNT_F;
+import static com.tencent.bk.codecc.defect.constant.DefectConstants.LINUX_CODECC_SCRIPT;
+import static com.tencent.bk.codecc.defect.constant.DefectConstants.LINUX_PAAS_CODECC_SCRIPT;
+import static com.tencent.bk.codecc.defect.constant.DefectConstants.PASS_COUNT;
 
 /**
  * 上报质量红线服务实现
@@ -97,7 +124,7 @@ public class RedLineReportServiceImpl implements RedLineReportService
     private DUPCDefectRepository dupcDefectRepository;
 
     @Autowired
-    private LintDefectRepository lintDefectRepository;
+    private LintDefectV2Repository lintDefectV2Repository;
 
     @Autowired
     private RedLineMetaRepository redLineMetaRepository;
@@ -145,7 +172,7 @@ public class RedLineReportServiceImpl implements RedLineReportService
      * @param buildId
      * @return
      */
-    private PipelineRedLineCallbackVO getRedLineIndicators(TaskDetailVO taskDetailVO, List<String> effectiveTools, String buildId, String toolName)
+    private PipelineRedLineCallbackVO getRedLineIndicators(TaskDetailVO taskDetailVO, List<String> effectiveTools, String toolName)
     {
         // 拼装请求数据
         PipelineRedLineCallbackVO metadataCallback = new PipelineRedLineCallbackVO();
@@ -181,7 +208,7 @@ public class RedLineReportServiceImpl implements RedLineReportService
             String pattern = toolMeta.getPattern();
             if (ComConstants.ToolPattern.LINT.name().equals(pattern))
             {
-                getLintAnalysisResult(taskDetailVO, toolMeta, toolConfig, metadataModel, metadataCallback, effectiveTools, buildId);
+                getLintAnalysisResult(taskDetailVO, toolMeta, toolConfig, metadataModel, metadataCallback, effectiveTools);
             }
             else if (ComConstants.ToolPattern.COVERITY.name().equals(pattern))
             {
@@ -194,7 +221,7 @@ public class RedLineReportServiceImpl implements RedLineReportService
             else if (ComConstants.ToolPattern.CCN.name().equals(pattern)
                     || ComConstants.ToolPattern.DUPC.name().equals(pattern))
             {
-                getCcnAndDupcResult(taskDetailVO, toolMeta, metadataModel, metadataCallback, effectiveTools, toolConfig, buildId);
+                getCcnAndDupcResult(taskDetailVO, toolMeta, metadataModel, metadataCallback, effectiveTools, toolConfig);
             }
         }
 
@@ -209,10 +236,9 @@ public class RedLineReportServiceImpl implements RedLineReportService
      * @param metadataModel    元数据
      * @param metadataCallback 发送到蓝盾的元数据
      * @param effectiveTools   有效的工具
-     * @param buildId          构建ID
      */
     private void getLintAnalysisResult(TaskDetailVO taskDetailVO, ToolMetaBaseVO toolInfo, ToolConfigInfoVO toolConfig, Map<String, RedLineVO> metadataModel,
-                                       PipelineRedLineCallbackVO metadataCallback, List<String> effectiveTools, String buildId)
+                                       PipelineRedLineCallbackVO metadataCallback, List<String> effectiveTools)
     {
         long taskId = taskDetailVO.getTaskId();
         String toolName = toolInfo.getName();
@@ -250,77 +276,6 @@ public class RedLineReportServiceImpl implements RedLineReportService
             }
             else
             {
-                // 查询本次构建的告警文件列表
-                Map<String, Set<String>> buildFileDefectMap = Maps.newHashMap();
-                if (StringUtils.isNotEmpty(buildId))
-                {
-                    List<BuildDefectEntity> buildFiles = buildDefectRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
-                    if (CollectionUtils.isNotEmpty(buildFiles))
-                    {
-                        for (BuildDefectEntity buildDefectEntity : buildFiles)
-                        {
-                            if (buildFileDefectMap.get(buildDefectEntity.getFileRelPath()) == null)
-                            {
-                                buildFileDefectMap.put(buildDefectEntity.getFileRelPath(), Sets.newHashSet());
-                            }
-                            if (CollectionUtils.isNotEmpty(buildDefectEntity.getFileDefectIds()))
-                            {
-                                buildFileDefectMap.get(buildDefectEntity.getFileRelPath()).addAll(buildDefectEntity.getFileDefectIds());
-                            }
-                        }
-                    }
-                }
-
-                List<LintDefectEntity> newDefectList = Lists.newArrayList();
-                List<LintDefectEntity> historyDefectList = Lists.newArrayList();
-                if (MapUtils.isNotEmpty(buildFileDefectMap))
-                {
-                    List<LintFileEntity> lintFileEntities = lintDefectRepository.findByTaskIdAndToolNameAndStatusAndRelPathIn(taskId, toolName,
-                            ComConstants.FileType.NEW.value(), buildFileDefectMap.keySet());
-                    if (CollectionUtils.isNotEmpty(lintFileEntities))
-                    {
-                        // 查询新老告警判定时间
-                        long newDefectJudgeTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, toolName, taskDetailVO);
-
-                        // 查询接入前和接入后告警详情
-                        for (LintFileEntity lintFile : lintFileEntities)
-                        {
-                            // 按构建号筛选
-                            if (!buildFileDefectMap.keySet().contains(lintFile.getRelPath()))
-                            {
-                                continue;
-                            }
-                            Set<String> buildFileDefectIds = buildFileDefectMap.get(lintFile.getRelPath());
-                            if (CollectionUtils.isNotEmpty(lintFile.getDefectList()))
-                            {
-                                for (LintDefectEntity defectEntity : lintFile.getDefectList())
-                                {
-                                    if (defectEntity.getStatus() != ComConstants.DefectStatus.NEW.value()
-                                            || !buildFileDefectIds.contains(defectEntity.getDefectId()))
-                                    {
-                                        continue;
-                                    }
-                                    // 按新老告警判定时间获取新老告警列表
-                                    Long lineUpdateTime = defectEntity.getLineUpdateTime();
-                                    if (lineUpdateTime == null)
-                                    {
-                                        lineUpdateTime = defectEntity.getCreateTime();
-                                    }
-                                    long defectLastUpdateTime = DateTimeUtils.getThirteenTimestamp(lineUpdateTime);
-                                    if (defectLastUpdateTime >= newDefectJudgeTime)
-                                    {
-                                        newDefectList.add(defectEntity);
-                                    }
-                                    else
-                                    {
-                                        historyDefectList.add(defectEntity);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
                 Set<String> tosaCheckers = Sets.newHashSet();
                 boolean isTosaPkgOpened = false;
 
@@ -381,40 +336,45 @@ public class RedLineReportServiceImpl implements RedLineReportService
                     }
                 }
 
-                // 统计接入后告警数量
-                if (CollectionUtils.isNotEmpty(newDefectList))
+                List<LintDefectV2Entity> defectV2EntityList = lintDefectV2Repository.findFiledsByTaskIdAndToolNameAndStatus(taskId, toolName, ComConstants.DefectStatus.NEW.value());
+                if (CollectionUtils.isNotEmpty(defectV2EntityList))
                 {
-                    for (LintDefectEntity defectModel : newDefectList)
+                    // 查询新老告警判定时间
+                    long newDefectJudgeTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, toolName, taskDetailVO);
+
+                    // 查询接入前和接入后告警详情
+                    for (LintDefectV2Entity defect : defectV2EntityList)
                     {
-                        // 统计接入后各严重级别告警数
-                        updateLintSeverityCount(defectModel.getSeverity(), ComConstants.FileType.NEW, lintRLModel);
+                        // 按新老告警判定时间获取新老告警列表
+                        long defectLastUpdateTime = DateTimeUtils.getThirteenTimestamp(defect.getLineUpdateTime());
 
-                        // 统计各规则包告警数，工具与项目语言不符合的不做统计
-                        updateLintCheckerPkgCount(lintRLModel.getNewCheckerPkgCounts(), defectModel.getChecker(),
-                                allCheckerMap, tosaCheckers, isTosaPkgOpened);
+                        // 统计接入后告警数量
+                        if (defectLastUpdateTime >= newDefectJudgeTime)
+                        {
+                            // 统计接入后各严重级别告警数
+                            updateLintSeverityCount(defect.getSeverity(), ComConstants.FileType.NEW, lintRLModel);
 
-                        // 统计接入后各规则告警数量
-                        updateLintCheckerCount(lintRLModel.getNewCheckerCounts(), defectModel.getChecker(), toolName);
-                    }
-                }
+                            // 统计各规则包告警数，工具与项目语言不符合的不做统计
+                            updateLintCheckerPkgCount(lintRLModel.getNewCheckerPkgCounts(), defect.getChecker(), allCheckerMap, tosaCheckers, isTosaPkgOpened);
 
-                // 统计接入前告警数量
-                if (CollectionUtils.isNotEmpty(historyDefectList))
-                {
-                    for (LintDefectEntity defectModel : historyDefectList)
-                    {
-                        // 统计接入前各严重级别告警数
-                        updateLintSeverityCount(defectModel.getSeverity(), ComConstants.FileType.HISTORY, lintRLModel);
+                            // 统计接入后各规则告警数量
+                            updateLintCheckerCount(lintRLModel.getNewCheckerCounts(), defect.getChecker(), toolName);
+                        }
+                        // 统计接入前告警数量
+                        else
+                        {
+                            // 统计接入前各严重级别告警数
+                            updateLintSeverityCount(defect.getSeverity(), ComConstants.FileType.HISTORY, lintRLModel);
 
-                        /**
-                         * 统计各规则包告警数，工具与项目语言不符合的不做统计
-                         * 由于目前腾讯开源包告警数量是统计接入前和接入后之和，所以此处把接入前的数据累加到接入后的数据中
-                         */
-                        updateLintCheckerPkgCount(lintRLModel.getNewCheckerPkgCounts(), defectModel.getChecker(),
-                                allCheckerMap, tosaCheckers, isTosaPkgOpened);
+                            /**
+                             * 统计各规则包告警数，工具与项目语言不符合的不做统计
+                             * 由于目前腾讯开源包告警数量是统计接入前和接入后之和，所以此处把接入前的数据累加到接入后的数据中
+                             */
+                            updateLintCheckerPkgCount(lintRLModel.getNewCheckerPkgCounts(), defect.getChecker(), allCheckerMap, tosaCheckers, isTosaPkgOpened);
 
-                        // 统计接入前各规则告警数量
-                        updateLintCheckerCount(lintRLModel.getHistoryCheckerCounts(), defectModel.getChecker(), toolName);
+                            // 统计接入前各规则告警数量
+                            updateLintCheckerCount(lintRLModel.getHistoryCheckerCounts(), defect.getChecker(), toolName);
+                        }
                     }
                 }
             }
@@ -655,8 +615,7 @@ public class RedLineReportServiceImpl implements RedLineReportService
                     }
                 }
             }
-            PipelineRedLineCallbackVO pipelineRedLineCallbackVO = getRedLineIndicators(taskDetailVO, Lists.newArrayList(effectiveTools),
-                    buildId, toolName);
+            PipelineRedLineCallbackVO pipelineRedLineCallbackVO = getRedLineIndicators(taskDetailVO, Lists.newArrayList(effectiveTools), toolName);
             if (pipelineRedLineCallbackVO != null && CollectionUtils.isNotEmpty(pipelineRedLineCallbackVO.getData()))
             {
                 List<RedLineEntity> redLineEntities = Lists.newArrayList();
@@ -704,7 +663,7 @@ public class RedLineReportServiceImpl implements RedLineReportService
      * @param toolConfig       工具配置
      */
     private void getCcnAndDupcResult(TaskBaseVO taskInfo, ToolMetaBaseVO toolInfo, Map<String, RedLineVO> metadataModel,
-                                     PipelineRedLineCallbackVO metadataCallback, List<String> effectiveTools, ToolConfigInfoVO toolConfig, String buildId)
+                                     PipelineRedLineCallbackVO metadataCallback, List<String> effectiveTools, ToolConfigInfoVO toolConfig)
     {
         long taskId = taskInfo.getTaskId();
         String toolName = toolInfo.getName();
@@ -746,7 +705,7 @@ public class RedLineReportServiceImpl implements RedLineReportService
                 // 查询圈复杂度和重复率的告警数量
                 if (ComConstants.Tool.CCN.name().equals(toolName))
                 {
-                    getCcnDefectCount(ccnDupcDefect, taskId, toolConfig, buildId);
+                    getCcnDefectCount(ccnDupcDefect, taskId, toolConfig);
                     updateValue(toolName + "_SINGLE_FUNC_MAX", String.valueOf(ccnDupcDefect.getSingleFuncMax()), metadataModel, metadataCallback);
                     updateValue(toolName + "_NEW_SINGLE_FUNC_MAX", String.valueOf(ccnDupcDefect.getNewSingleFuncMax()), metadataModel, metadataCallback);
                     updateValue(toolName + "_NEW_FUNC_COUNT", String.valueOf(ccnDupcDefect.getNewFuncCount()), metadataModel, metadataCallback);
@@ -927,28 +886,6 @@ public class RedLineReportServiceImpl implements RedLineReportService
     }
 
     /**
-     * 获取查询规则的语言
-     *
-     * @param toolName
-     * @param taskInfo
-     * @param toolInfo
-     * @return
-     */
-    public long getQueryCodeLang(String toolName, TaskBaseVO taskInfo, ToolMetaBaseVO toolInfo)
-    {
-        long queryCodeLang;
-        if (ComConstants.Tool.COVERITY.name().equals(toolName) || ComConstants.Tool.KLOCWORK.name().equals(toolName))
-        {
-            queryCodeLang = taskInfo.getCodeLang();
-        }
-        else
-        {
-            queryCodeLang = toolInfo.getLang();
-        }
-        return queryCodeLang;
-    }
-
-    /**
      * 判断规则包里的规则是否全部打开
      *
      * @param checkerPkg
@@ -995,11 +932,11 @@ public class RedLineReportServiceImpl implements RedLineReportService
         }
     }
 
-    private void getCcnDefectCount(RLCcnAndDupcDefectVO ccnDupcDefect, long taskId, ToolConfigInfoVO toolConfig, String buildId)
+    private void getCcnDefectCount(RLCcnAndDupcDefectVO ccnDupcDefect, long taskId, ToolConfigInfoVO toolConfig)
     {
         long succTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, ComConstants.Tool.CCN.name(), null);
         // 获取超标圈复杂度阈值，优先从规则里面取，取不到从个性化参数里面取，再取不到就是用默认值
-        int ccnThreshold = getCcnThreshold(toolConfig, ComConstants.Tool.CCN.name());
+        int ccnThreshold = checkerService.getCcnThreshold(toolConfig);
 
         List<CCNDefectEntity> ccnDefectList = ccnDefectRepository.findByTaskIdAndStatus(taskId, ComConstants.DefectStatus.NEW.value());
         long maxCcn = 0L;
@@ -1009,28 +946,8 @@ public class RedLineReportServiceImpl implements RedLineReportService
         int historyFuncBeyondThresholdSum = 0;
         if (CollectionUtils.isNotEmpty(ccnDefectList))
         {
-            // 查询本次构建的告警文件列表
-            Set<String> buildCcnEntityIds = Sets.newHashSet();
-            if (ComConstants.Tool.CCN.name().equals(ComConstants.Tool.CCN.name()) && StringUtils.isNotEmpty(buildId))
-            {
-                List<BuildDefectEntity> buildFiles = buildDefectRepository.findByTaskIdAndToolNameAndBuildId(taskId, ComConstants.Tool.CCN.name(), buildId);
-                if (CollectionUtils.isNotEmpty(buildFiles))
-                {
-                    for (BuildDefectEntity buildDefectEntity : buildFiles)
-                    {
-                        buildCcnEntityIds.add(buildDefectEntity.getDefectId());
-                    }
-                }
-            }
-
             for (CCNDefectEntity defectModel : ccnDefectList)
             {
-                // 按构建号过滤
-                if (!buildCcnEntityIds.contains(defectModel.getEntityId()))
-                {
-                    continue;
-                }
-
                 // 获取圈复杂度和代码修改时间
                 long ccn = defectModel.getCcn();
                 long defectUpdateTime = defectModel.getLatestDateTime() == null ? 0L : DateTimeUtils.getThirteenTimestamp(defectModel.getLatestDateTime());
@@ -1065,35 +982,6 @@ public class RedLineReportServiceImpl implements RedLineReportService
             ccnDupcDefect.setNewFuncBeyondThresholdSum(newFuncBeyondThresholdSum);
             ccnDupcDefect.setHistoryFuncBeyondThresholdSum(historyFuncBeyondThresholdSum);
         }
-    }
-
-    private int getCcnThreshold(ToolConfigInfoVO toolConfig, String toolName)
-    {
-        long taskId = toolConfig.getTaskId();
-        int ccnThreshold = ComConstants.DEFAULT_CCN_THRESHOLD;
-        AnalyzeConfigInfoVO analyzeConfigInfoVO = new AnalyzeConfigInfoVO();
-        analyzeConfigInfoVO.setTaskId(taskId);
-        analyzeConfigInfoVO.setMultiToolType(toolName);
-        analyzeConfigInfoVO = checkerService.getTaskCheckerConfig(analyzeConfigInfoVO);
-        List<OpenCheckerVO> openCheckers = analyzeConfigInfoVO.getOpenCheckers();
-        if (CollectionUtils.isNotEmpty(openCheckers) && CollectionUtils.isNotEmpty(openCheckers.get(0).getCheckerOptions()))
-        {
-            String ccnThresholdStr = openCheckers.get(0).getCheckerOptions().get(0).getCheckerOptionValue();
-            ccnThreshold = StringUtils.isEmpty(ccnThresholdStr) ? ComConstants.DEFAULT_CCN_THRESHOLD : Integer.valueOf(ccnThresholdStr.trim());
-        }
-        else
-        {
-            if (StringUtils.isNotEmpty(toolConfig.getParamJson()))
-            {
-                JSONObject paramJson = new JSONObject(toolConfig.getParamJson());
-                if (paramJson.has(ComConstants.KEY_CCN_THRESHOLD))
-                {
-                    String ccnThresholdStr = paramJson.getString(ComConstants.KEY_CCN_THRESHOLD);
-                    ccnThreshold = StringUtils.isEmpty(ccnThresholdStr) ? ComConstants.DEFAULT_CCN_THRESHOLD : Integer.valueOf(ccnThresholdStr.trim());
-                }
-            }
-        }
-        return ccnThreshold;
     }
 
     /**

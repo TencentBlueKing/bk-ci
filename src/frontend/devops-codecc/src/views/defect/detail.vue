@@ -78,21 +78,21 @@
                             </span>
                         </div>
                         <div v-if="currentFile.status === 1" class="item">
-                            <bk-button v-if="currentFile.mark" class="item-button" @click="handleMark(0, false, entityId, currentFile.defectId)">
+                            <bk-button v-if="currentFile.mark" class="item-button" @click="handleMark(0, false, entityId)">
                                 {{$t('取消标记')}}
                             </bk-button>
-                            <bk-button v-else theme="primary" class="item-button" @click="handleMark(1, false, entityId, currentFile.defectId)">
+                            <bk-button v-else theme="primary" class="item-button" @click="handleMark(1, false, entityId)">
                                 {{$t('标记处理')}}
                             </bk-button>
                         </div>
                         <div class="item">
-                            <bk-button class="item-button" @click="handleComent(entityId, currentFile.defectId)">{{$t('评论')}}</bk-button>
+                            <bk-button class="item-button" @click="handleComent(entityId)">{{$t('评论')}}</bk-button>
                         </div>
                         <div class="item">
-                            <bk-button v-if="currentFile.status & 4" class="item-button" @click="handleIgnore('RevertIgnore', false, entityId, currentFile.defectId)">
+                            <bk-button v-if="currentFile.status & 4" class="item-button" @click="handleIgnore('RevertIgnore', false, entityId)">
                                 {{$t('恢复忽略')}}
                             </bk-button>
-                            <bk-button v-else-if="!(currentFile.status & 2)" class="item-button" @click="handleIgnore('IgnoreDefect', false, entityId, currentFile.defectId)">
+                            <bk-button v-else-if="!(currentFile.status & 2)" class="item-button" @click="handleIgnore('IgnoreDefect', false, entityId)">
                                 {{$t('忽略问题')}}
                             </bk-button>
                         </div>
@@ -100,7 +100,7 @@
                     <div class="block">
                         <div class="item">
                             <dt>{{$t('ID')}}</dt>
-                            <dd>{{currentFile.defectId}}</dd>
+                            <dd>{{currentFile.entityId}}</dd>
                         </div>
                         <div class="item">
                             <dt>{{$t('级别')}}</dt>
@@ -143,7 +143,7 @@
                     </div>
                     <div class="block">
                         <div class="item">
-                            <dt v-if="currentFile.status === 1" class="curpt" @click.stop="handleAuthor(1, entityId, currentFile.author, currentFile.defectId)">
+                            <dt v-if="currentFile.status === 1" class="curpt" @click.stop="handleAuthor(1, entityId, currentFile.author)">
                                 {{$t('处理人')}}
                                 <span class="bk-icon icon-edit2 fs20"></span>
                             </dt>
@@ -162,7 +162,7 @@
                     <div class="block">
                         <div class="item disb">
                             <dt>{{$t('代码库路径')}}</dt>
-                            <dd>{{lintDetail.filePath}}</dd>
+                            <a target="_blank" :href="lintDetail.filePath">{{lintDetail.filePath}}</a>
                         </div>
                     </div>
                 </div>
@@ -358,15 +358,15 @@
                             <p class="handle-head">
                                 <a class="btn codecc-icon ${item.mark ? (item.mark === 1 ? 'icon-marked' : 'icon-marked re-marked') : 'icon-mark un-mark'}"
                                     data-option="mark" 
-                                    data-defectid="${item.defectId}" 
+                                    data-entityid="${item.entityId}" 
                                     data-mark="${item.mark}">
                                     <span>${item.mark ? '取消标记为已处理' : '标记为已处理'}</span>
                                 </a>
-                                <a class="btn codecc-icon icon-ignore" data-option="ignore" data-defectid="${item.defectId}">
+                                <a class="btn codecc-icon icon-ignore" data-option="ignore" data-entityid="${item.entityId}">
                                     <span>忽略问题</span>
                                 </a>
                                 <a class="btn codecc-icon icon-comment" data-option="comment"
-                                    data-defectid="${item.defectId}"
+                                    data-entityid="${item.entityId}"
                                     data-commentId="${hasComment ? item.codeComment.entityId : ''}">
                                     <span>评论问题</span>
                                 </a>
@@ -409,7 +409,7 @@
                                 <span class="tag">
                                     <span class="codecc-icon icon-creator"></span>
                                     ${item.author || '--'}
-                                    ${this.type === 'defect' ? '' : `<span class="bk-icon icon-edit2 fs20" data-defectid="${item.defectId}" data-author="${item.author || '--'}"></span>`}
+                                    ${this.type === 'defect' ? '' : `<span class="bk-icon icon-edit2 fs20" data-entityid="${item.entityId}" data-author="${item.author || '--'}"></span>`}
                                 </span>
                                 <span class="tag">
                                     <span class="codecc-icon icon-time"></span>
@@ -452,23 +452,23 @@
                 // 如果点击的是标记/忽略/评论按钮
                 if (headHanle) {
                     const type = headHanle.getAttribute('data-option')
-                    const defectId = headHanle.dataset['defectid']
+                    const entityId = headHanle.dataset['entityid']
                     if (type === 'comment') {
                         const commentId = headHanle.getAttribute('data-commentId')
-                        this.handleComent(this.entityId, defectId, commentId)
+                        this.handleComent(entityId, commentId)
                     } else if (type === 'mark') {
                         let mark = headHanle.dataset['mark']
                         mark = mark === '0' || mark === 'undefined' ? 1 : 0
-                        this.handleMark(mark, false, this.entityId, defectId)
+                        this.handleMark(mark, false, entityId)
                     } else if (type === 'ignore') {
-                        this.handleIgnore('IgnoreDefect', false, this.entityId, defectId)
+                        this.handleIgnore('IgnoreDefect', false, entityId)
                     }
                     return
                 }
                 if (editAuthor) {
                     const author = editAuthor.dataset['author']
-                    const defectId = editAuthor.dataset['defectid']
-                    this.handleAuthor(1, this.entityId, author, defectId)
+                    const entityId = editAuthor.dataset['entityid']
+                    this.handleAuthor(1, entityId, author)
                     return
                 }
                 // 如果点击的是删除评论
@@ -730,6 +730,10 @@
                         &.small {
                             width: 80px;
                         }
+                    }
+                    a {
+                        color: #313238;
+                        word-break: break-all;
                     }
                     .item-button {
                         width: 200px;
