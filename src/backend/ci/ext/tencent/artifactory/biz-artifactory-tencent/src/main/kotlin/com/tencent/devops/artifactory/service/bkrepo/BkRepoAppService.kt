@@ -30,7 +30,6 @@ import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.AppService
 import com.tencent.devops.artifactory.service.PipelineService
-import com.tencent.devops.artifactory.service.artifactory.ArtifactoryDownloadService
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
@@ -61,22 +60,21 @@ class BkRepoAppService @Autowired constructor(
         ttl: Int,
         directed: Boolean
     ): Url {
-        logger.info("getExternalDownloadUrl, userId: $userId, projectId: $projectId, " +
-            "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed")
+        logger.info("getExternalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
-        val properties = bkRepoClient.listMetadata(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
-        if (properties[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
-            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
+        when (artifactoryType) {
+            ArtifactoryType.CUSTOM_DIR -> {
+                pipelineService.validatePermission(userId, projectId, message = "用户（$userId) 没有项目（$projectId）下载权限)")
+            }
+            ArtifactoryType.PIPELINE -> {
+                val properties = bkRepoClient.listMetadata(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
+                if (properties[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
+                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
+                }
+                val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]
+                pipelineService.validatePermission(userId, projectId, pipelineId!!, AuthPermission.DOWNLOAD, "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限")
+            }
         }
-        val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]
-        pipelineService.validatePermission(
-            userId,
-            projectId,
-            pipelineId!!,
-            AuthPermission.DOWNLOAD,
-            "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限"
-        )
-
         val url = bkRepoService.externalDownloadUrl(
             userId,
             projectId,
@@ -99,16 +97,27 @@ class BkRepoAppService @Autowired constructor(
         ttl: Int,
         directed: Boolean
     ): Url {
-        val normalizePath = PathUtils.checkAndNormalizeAbsPath(argPath)
-        val metadata = bkRepoClient.listMetadata(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizePath)
-        val pipelineId = metadata[ARCHIVE_PROPS_PIPELINE_ID] ?: throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
-        pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
-
-        val url = StringUtil.chineseUrlEncode("${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?path=$normalizePath")
+        logger.info("getExternalPlistDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed")
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
+        when (artifactoryType) {
+            ArtifactoryType.CUSTOM_DIR -> {
+                pipelineService.validatePermission(userId, projectId, message = "用户（$userId) 没有项目（$projectId）下载权限)")
+            }
+            ArtifactoryType.PIPELINE -> {
+                val properties = bkRepoClient.listMetadata(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
+                if (properties[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
+                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
+                }
+                val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]
+                pipelineService.validatePermission(userId, projectId, pipelineId!!, AuthPermission.DOWNLOAD, "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限")
+            }
+        }
+        val url = StringUtil.chineseUrlEncode("${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?path=$normalizedPath")
         return Url(url)
     }
 
     override fun getPlistFile(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean, experienceHashId: String?): String {
+        logger.info("getPlistFile, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, directed: $directed, experienceHashId: $experienceHashId")
         val userName = if (experienceHashId != null) {
             val experience = client.get(ServiceExperienceResource::class).get(userId, projectId, experienceHashId)
             if (experience.isOk() && experience.data != null) {
@@ -173,6 +182,6 @@ class BkRepoAppService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ArtifactoryDownloadService::class.java)
+        private val logger = LoggerFactory.getLogger(BkRepoAppService::class.java)
     }
 }

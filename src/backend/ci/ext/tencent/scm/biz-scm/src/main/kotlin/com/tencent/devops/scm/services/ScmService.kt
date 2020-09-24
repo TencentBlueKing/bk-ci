@@ -243,6 +243,13 @@ class ScmService @Autowired constructor(
                     }
                     svnConfig.svnHookUrl
                 }
+                ScmType.CODE_TGIT -> {
+                    if (gitConfig.tGitHookUrl.isBlank()) {
+                        logger.warn("The tgit webhook url is not settle")
+                        throw RuntimeException("The tgit webhook url is not settle")
+                    }
+                    gitConfig.tGitHookUrl
+                }
                 else -> {
                     logger.warn("Unknown repository type ($type) when add webhook")
                     throw RuntimeException("Unknown repository type ($type) when add webhook")
@@ -295,10 +302,12 @@ class ScmService @Autowired constructor(
             scmMonitorService.reportCommitCheck(
                 requestTime = requestTime,
                 responseTime = responseTime,
-                statusCode = statusCode.toString(),
+                statusCode = statusCode,
                 statusMessage = statusMessage,
                 projectName = request.projectName,
-                commitId = request.commitId
+                commitId = request.commitId,
+                block = request.block,
+                targetUrl = request.targetUrl
             )
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
         }

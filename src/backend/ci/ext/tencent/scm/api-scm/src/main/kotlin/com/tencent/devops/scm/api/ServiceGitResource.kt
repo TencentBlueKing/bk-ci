@@ -372,7 +372,10 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum,
         @ApiParam(value = "token", required = true)
         @QueryParam("token")
-        token: String
+        token: String,
+        @ApiParam(value = "仓库url", required = true)
+        @QueryParam("repoUrl")
+        repoUrl: String? = null
     ): Result<GitMrInfo>
 
     @ApiOperation("下载git仓库")
@@ -410,7 +413,10 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum,
         @ApiParam(value = "token", required = true)
         @QueryParam("token")
-        token: String
+        token: String,
+        @ApiParam(value = "仓库url", required = true)
+        @QueryParam("repoUrl")
+        repoUrl: String? = null
     ): Result<GitMrReviewInfo>
 
     @ApiOperation("获取mr信息")
@@ -428,13 +434,31 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum,
         @ApiParam(value = "token", required = true)
         @QueryParam("token")
-        token: String
+        token: String,
+        @ApiParam(value = "仓库url", required = true)
+        @QueryParam("repoUrl")
+        repoUrl: String? = null
     ): Result<GitMrChangeInfo>
 
-    @ApiOperation("获取mr信息")
+    @ApiOperation("获取项目成员信息")
     @GET
     @Path("/getRepoMembers")
     fun getRepoMembers(
+        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @ApiParam(value = "token", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<List<GitMember>>
+
+    @ApiOperation("获取所有项目成员信息")
+    @GET
+    @Path("/getRepoMembers/all")
+    fun getRepoAllMembers(
         @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
         @QueryParam("repoName")
         repoName: String,

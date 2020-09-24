@@ -13,5 +13,6 @@ enum class ErrorCodeEnum(
     END_VM_ERROR(2127007, "End build Docker VM failed"),
     START_VM_FAIL(2127008, "Start build Docker VM failed"),
     RETRY_START_VM_FAIL(2127009, "Start build Docker VM failed, retry times."),
-    GET_VM_STATUS_FAIL(2127010, "Get container status failed")
+    GET_VM_STATUS_FAIL(2127010, "Get container status failed"),
+    GET_CREDENTIAL_FAIL(2127011, "Get credential failed")
 }

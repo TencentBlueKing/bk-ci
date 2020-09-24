@@ -1,17 +1,8 @@
 <template>
     <div class="edit-template-wrapper" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
-        <div class="info-header">
-            <div class="title first-level" @click="toAtomStore">
-                <logo :name="&quot;store&quot;" size="30" class="nav-icon" />
-                <div class="title first-level"> {{ $t('store.研发商店') }} </div>
-            </div>
-            <i class="right-arrow"></i>
-            <div class="title secondary" @click="toAtomList"> {{ $t('store.工作台') }} </div>
-            <i class="right-arrow"></i>
-            <div class="title third-level"> {{ $t('store.上架模板') }} </div>
-            <a class="develop-guide-link" target="_blank"
-                :href="docsLink"> {{ $t('store.模板指引') }} </a>
-        </div>
+        <bread-crumbs :bread-crumbs="navList" type="template">
+            <a class="g-title-work" target="_blank" :href="docsLink"> {{ $t('store.模板指引') }} </a>
+        </bread-crumbs>
         <div class="edit-template-content" v-if="showContent">
             <form class="bk-form edit-template-form">
                 <div class="bk-form-item name-form-item is-required">
@@ -164,11 +155,13 @@
 
 <script>
     import selectLogo from '@/components/common/selectLogo'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
     import { toolbars } from '@/utils/editor-options'
 
     export default {
         components: {
-            selectLogo
+            selectLogo,
+            breadCrumbs
         },
         data () {
             return {
@@ -209,6 +202,12 @@
             },
             toolbarOptions () {
                 return toolbars
+            },
+            navList () {
+                return [
+                    { name: this.$t('store.工作台'), to: { name: 'templateWork' } },
+                    { name: this.$t('store.上架模板') }
+                ]
             }
         },
         watch: {
@@ -351,15 +350,6 @@
                     this.$refs.templateName.focus()
                 })
             },
-            
-            toAtomList () {
-                this.$router.push({
-                    name: 'workList',
-                    params: {
-                        type: 'template'
-                    }
-                })
-            },
             toAtomStore () {
                 this.$router.push({
                     name: 'atomHome'
@@ -482,63 +472,9 @@
 
     .edit-template-wrapper {
         height: 100%;
-        .info-header {
-            display: flex;
-            padding: 14px 24px;
-            width: 100%;
-            height: 50px;
-            border-bottom: 1px solid #DDE4EB;
-            background-color: #fff;
-            box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
-            .title {
-                display: flex;
-                align-items: center;
-            }
-            .first-level,
-            .secondary {
-                color: $primaryColor;
-                cursor: pointer;
-            }
-            .third-leve {
-                color: $fontWeightColor;
-            }
-            .nav-icon {
-                width: 24px;
-                height: 24px;
-                margin-right: 10px;
-            }
-            .right-arrow {
-                display :inline-block;
-                position: relative;
-                width: 19px;
-                height: 36px;
-                margin-right: 4px;
-            }
-            .right-arrow::after {
-                display: inline-block;
-                content: " ";
-                height: 4px;
-                width: 4px;
-                border-width: 1px 1px 0 0;
-                border-color: $lineColor;
-                border-style: solid;
-                transform: matrix(0.71, 0.71, -0.71, 0.71, 0, 0);
-                position: absolute;
-                top: 50%;
-                right: 6px;
-                margin-top: -9px;
-            }
-            .develop-guide-link {
-                position: absolute;
-                right: 36px;
-                margin-top: 2px;
-                color: $primaryColor;
-                cursor: pointer;
-            }
-        }
         .edit-template-content {
-            margin: 20px 0 10px;
-            height: calc(100% - 80px);
+            margin: 20px 0;
+            height: calc(100% - 5.6vh - 40px);
             overflow: auto;
             display: flex;
             justify-content: center;

@@ -55,6 +55,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
@@ -566,7 +567,8 @@ class PipelineRuntimeService @Autowired constructor(
                 deleteReason = "",
                 currentTimestamp = currentTimestamp,
                 material = if (material != null) {
-                    JsonUtil.getObjectMapper().readValue(material) as List<PipelineBuildMaterial>
+                    val materialList = JsonUtil.getObjectMapper().readValue(material) as List<PipelineBuildMaterial>
+                    materialList.sortedBy { it.aliasName }
                 } else {
                     null
                 },
@@ -633,6 +635,9 @@ class PipelineRuntimeService @Autowired constructor(
                     }
                     CodeType.GITHUB.name -> {
                         CodeGithubWebHookTriggerElement.classType
+                    }
+                    CodeType.TGIT.name -> {
+                        CodeTGitWebHookTriggerElement.classType
                     }
                     else -> RemoteTriggerElement.classType
                 }

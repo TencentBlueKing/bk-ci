@@ -88,7 +88,13 @@ class OpServiceResourceImpl @Autowired constructor(
         serviceCode: String,
         updateInfo: EditInfoDTO
     ): Result<Boolean> {
-        return extServiceBaseService.updateExtInfo(userId, serviceId, serviceCode, updateInfo)
+        return extServiceBaseService.updateExtInfo(
+            userId = userId,
+            serviceId = serviceId,
+            serviceCode = serviceCode,
+            infoResp = updateInfo,
+            checkPermissionFlag = false
+        )
     }
 
     override fun listServiceVersionListByCode(

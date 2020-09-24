@@ -24,35 +24,32 @@ const marketHome = () => import(/* webpackChunkName: 'atomHome' */ '@/views/mark
 const marketList = () => import(/* webpackChunkName: 'atomStore' */ '@/views/market/list.vue') // 流水线插件市场列表
 const marketDetail = () => import(/* webpackChunkName: 'atomDetails' */ '@/views/market/detail.vue') // 流水线插件信息
 
-const workList = () => import(/* webpackChunkName: 'workList' */ '@/views/atom_list.vue') // 工作台
+const workList = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/index.vue') // 工作台
+const atomWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/atom.vue') // 工作台
+const templateWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/template.vue') // 工作台
+const imageWork = () => import(/* webpackChunkName: 'workList' */ '@/views/workList/image.vue') // 工作台
 
 const install = () => import(/* webpackChunkName: 'install' */ '@/views/install.vue') // 研发商店安装页面
+const manage = () => import(/* webpackChunkName: 'manage' */ '@/views/manage/index.vue') // 研发商店管理页面
+const detail = () => import(/* webpackChunkName: 'detail' */ '@/views/manage/detail/index.vue') // 研发商店管理页面
+const show = () => import(/* webpackChunkName: 'detail' */ '@/views/manage/detail/show.vue') // 研发商店管理页面
+const edit = () => import(/* webpackChunkName: 'detail' */ '@/views/manage/detail/edit.vue') // 研发商店管理页面
+const overView = () => import(/* webpackChunkName: 'overView' */ '@/views/manage/over-view.vue') // 研发商店管理页面
+const approval = () => import(/* webpackChunkName: 'approval' */ '@/views/manage/approval.vue') // 研发商店管理页面
+const setting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/index.vue') // 研发商店管理页面
+const memberSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/member-setting.vue') // 研发商店管理页面
+const privateSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/private-setting.vue') // 研发商店管理页面
+const releaseManage = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/index.vue') // 研发商店管理页面
+const version = () => import(/* webpackChunkName: 'releaseManage' */ '@/views/manage/release-manage/version.vue') // 研发商店管理页面
 
 const editAtom = () => import(/* webpackChunkName: 'editAtom' */ '@/views/edit_atom.vue') // 上架/升级流水线插件
 const releaseProgress = () => import(/* webpackChunkName: 'releaseProgress' */ '@/views/release_progress.vue') // 发布进度
-const atomDatail = () => import(/* webpackChunkName: 'atomDatail' */ '@/views/atomDetail/index.vue') // 流水线插件概览
-const atomOverview = () => import(/* webpackChunkName: 'atomOverview' */ '@/views/atomDetail/overview.vue') // 流水线插件概览
-const settings = () => import(/* webpackChunkName: 'settings' */ '@/views/atomDetail/settings.vue') // 流水线插件设置
-const atomInformation = () => import(/* webpackChunkName: 'atomInformation' */ '@/views/atomDetail/detail.vue') // 流水线插件详情
-const approval = () => import(/* webpackChunkName: 'approval' */ '@/views/atomDetail/approval.vue') // 流水线插件审批
-const memberManage = () => import(/* webpackChunkName: 'memberManage' */ '@/views/atomDetail/member_manage.vue') // 成员管理
-const privateSetting = () => import(/* webpackChunkName: 'privateSetting' */ '@/views/atomDetail/private_setting.vue') // 私有配置
-const edit = () => import(/* webpackChunkName: 'editAtom' */ '@/views/atomDetail/edit.vue') // 编辑插件详情
 
 const editTemplate = () => import(/* webpackChunkName: 'editTemplate' */ '@/views/edit_template.vue') // 上架模板
 const upgradeTemplate = () => import(/* webpackChunkName: 'upgradeTemplate' */ '@/views/upgrade_template.vue') // 上架模板进度
-const tplDatail = () => import(/* webpackChunkName: 'tplDatail' */ '@/views/templateDetail/index.vue') // 模板概览
-const tplOverview = () => import(/* webpackChunkName: 'tplOverview' */ '@/views/templateDetail/overview.vue') // 模板概览
-const tplSettings = () => import(/* webpackChunkName: 'tplSettings' */ '@/views/templateDetail/settings.vue') // 模板设置
 
 const editImage = () => import(/* webpackChunkName: 'editImage' */ '@/views/edit_image.vue') // 上架镜像
 const imageProgress = () => import(/* webpackChunkName: 'imageProgress' */ '@/views/imageProgress.vue') // 镜像进度
-const imageDatailIndex = () => import(/* webpackChunkName: 'imageDatailIndex' */ '@/views/imageDetail/index.vue') // 镜像详情总览
-const imageDetail = () => import(/* webpackChunkName: 'imageDetail' */ '@/views/imageDetail/detail.vue') // 镜像详情页面
-const imageOverview = () => import(/* webpackChunkName: 'imageOverview' */ '@/views/imageDetail/overView.vue') // 镜像概览
-const imageSettings = () => import(/* webpackChunkName: 'imageSettings' */ '@/views/imageDetail/settings.vue') // 镜像设置
-const imageMemberManage = () => import(/* webpackChunkName: 'imageMemberManage' */ '@/views/imageDetail/memberManage.vue') // 镜像成员管理
-const imageEdit = () => import(/* webpackChunkName: 'imageEdit' */ '@/views/imageDetail/edit.vue') // 编辑镜像详情
 
 const routes = [
     {
@@ -115,11 +112,91 @@ const routes = [
                 }
             },
             {
-                path: 'workList/:type',
+                path: 'workList',
                 name: 'workList',
                 component: workList,
+                children: [
+                    {
+                        path: 'atom',
+                        name: 'atomWork',
+                        component: atomWork
+                    },
+                    {
+                        path: 'template',
+                        name: 'templateWork',
+                        component: templateWork
+                    },
+                    {
+                        path: 'image',
+                        name: 'imageWork',
+                        component: imageWork
+                    }
+                ]
+            },
+            {
+                path: 'manage/:type/:code',
+                name: 'manage',
+                component: manage,
+                children: [
+                    {
+                        path: 'detail',
+                        name: 'detail',
+                        component: detail,
+                        children: [
+                            {
+                                path: 'show',
+                                name: 'show',
+                                component: show
+                            },
+                            {
+                                path: 'edit',
+                                name: 'edit',
+                                component: edit
+                            }
+                        ]
+                    },
+                    {
+                        path: 'setting',
+                        name: 'setting',
+                        component: setting,
+                        children: [
+                            {
+                                path: 'member',
+                                name: 'member',
+                                component: memberSetting
+                            },
+                            {
+                                path: 'private',
+                                name: 'private',
+                                component: privateSetting
+                            }
+                        ]
+                    },
+                    {
+                        path: 'overview',
+                        name: 'overView',
+                        component: overView
+                    },
+                    {
+                        path: 'approval',
+                        name: 'approval',
+                        component: approval
+                    },
+                    {
+                        path: 'releaseManage',
+                        name: 'releaseManage',
+                        component: releaseManage,
+                        children: [
+                            {
+                                path: 'version',
+                                name: 'version',
+                                component: version
+                            }
+                        ]
+                    }
+                ],
                 meta: {
-                    title: 'workList',
+                    title: 'manage',
                     logo: 'store',
                     header: 'store',
                     to: 'atomHome'
@@ -202,185 +279,6 @@ const routes = [
                     header: 'store',
                     to: 'atomHome'
                 }
-            },
-            {
-                path: 'atom/:atomCode',
-                name: 'atomDetail',
-                component: atomDatail,
-                children: [
-                    {
-                        path: 'overview',
-                        name: 'overview',
-                        component: atomOverview,
-                        meta: {
-                            title: 'overview',
-                            logo: 'store',
-                            header: 'store',
-                            to: 'atomHome'
-                        }
-                    },
-                    {
-                        path: 'detail',
-                        name: 'detail',
-                        component: atomInformation,
-                        meta: {
-                            title: 'detail',
-                            logo: 'store',
-                            header: 'store',
-                            to: 'atomHome'
-                        }
-                    },
-                    {
-                        path: 'edit',
-                        name: 'edit',
-                        component: edit,
-                        meta: {
-                            title: 'edit',
-                            logo: 'store',
-                            header: 'store',
-                            to: 'atomHome'
-                        }
-                    },
-                    {
-                        path: 'approval',
-                        name: 'approval',
-                        component: approval,
-                        meta: {
-                            title: 'approval',
-                            logo: 'store',
-                            header: 'store',
-                            to: 'atomHome'
-                        }
-                    },
-                    {
-                        path: 'settings',
-                        name: 'settings',
-                        component: settings,
-                        meta: {
-                            title: 'settings',
-                            logo: 'store',
-                            header: 'store',
-                            to: 'atomHome'
-                        },
-                        children: [
-                            {
-                                path: 'member',
-                                name: 'member',
-                                component: memberManage,
-                                meta: {
-                                    title: 'member',
-                                    logo: 'store',
-                                    header: 'store',
-                                    to: 'atomHome'
-                                }
-                            },
-                            {
-                                path: 'private',
-                                name: 'private',
-                                component: privateSetting,
-                                meta: {
-                                    title: 'private',
-                                    logo: 'store',
-                                    header: 'store',
-                                    to: 'atomHome'
-                                }
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                path: 'template/:templateCode',
-                name: 'tplDatail',
-                component: tplDatail,
-                children: [
-                    {
-                        path: 'overview',
-                        name: 'tplOverview',
-                        component: tplOverview,
-                        meta: {
-                            title: 'overview',
-                            logo: 'store',
-                            header: 'store',
-                            to: 'atomHome'
-                        }
-                    },
-                    {
-                        path: 'settings',
-                        name: 'tplSettings',
-                        component: tplSettings,
-                        meta: {
-                            title: 'settings',
-                            logo: 'store',
-                            header: 'store',
-                            to: 'atomHome'
-                        }
-                    }
-                ]
-            },
-            {
-                path: 'image/:imageCode',
-                name: 'imageDatailIndex',
-                component: imageDatailIndex,
-                children: [
-                    {
-                        path: 'overview',
-                        name: 'imageOverview',
-                        component: imageOverview,
-                        meta: {
-                            title: '概览',
-                            logo: 'store',
-                            header: '研发商店',
-                            to: 'atomHome'
-                        }
-                    },
-                    {
-                        path: 'detail',
-                        name: 'imageDetail',
-                        component: imageDetail,
-                        meta: {
-                            title: '详情',
-                            logo: 'store',
-                            header: '研发商店',
-                            to: 'atomHome'
-                        }
-                    },
-                    {
-                        path: 'edit',
-                        name: 'imageEdit',
-                        component: imageEdit,
-                        meta: {
-                            title: '编辑',
-                            logo: 'store',
-                            header: '研发商店',
-                            to: 'atomHome'
-                        }
-                    },
-                    {
-                        path: 'settings',
-                        name: 'imageSettings',
-                        component: imageSettings,
-                        meta: {
-                            title: '设置',
-                            logo: 'store',
-                            header: '研发商店',
-                            to: 'atomHome'
-                        },
-                        children: [
-                            {
-                                path: 'member',
-                                name: 'imageMemberManage',
-                                component: imageMemberManage,
-                                meta: {
-                                    title: '成员管理',
-                                    logo: 'store',
-                                    header: '研发商店',
-                                    to: 'atomHome'
-                                }
-                            }
-                        ]
-                    }
-                ]
             },
             {
                 path: 'install',

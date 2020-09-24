@@ -41,12 +41,14 @@ class PluginGitCheckDao {
         dslContext: DSLContext,
         pipelineId: String,
         repositoryConfig: RepositoryConfig,
-        commitId: String
+        commitId: String,
+        buildNumber: Int
     ): TPluginGitCheckRecord? {
         with(TPluginGitCheck.T_PLUGIN_GIT_CHECK) {
             val step = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(COMMIT_ID.eq(commitId))
+                .and(BUILD_NUMBER.eq(buildNumber))
             when (repositoryConfig.repositoryType) {
                 RepositoryType.ID -> step.and(REPO_ID.eq(repositoryConfig.getRepositoryId()))
                 RepositoryType.NAME -> step.and(REPO_NAME.eq(repositoryConfig.getRepositoryId()))
@@ -60,7 +62,8 @@ class PluginGitCheckDao {
         pipelineId: String,
         buildNumber: Int,
         repositoryConfig: RepositoryConfig,
-        commitId: String
+        commitId: String,
+        context: String
     ) {
         val now = LocalDateTime.now()
         with(TPluginGitCheck.T_PLUGIN_GIT_CHECK) {
@@ -72,7 +75,8 @@ class PluginGitCheckDao {
                 REPO_NAME,
                 COMMIT_ID,
                 CREATE_TIME,
-                UPDATE_TIME
+                UPDATE_TIME,
+                CONTEXT
             ).values(
                 pipelineId,
                 buildNumber,
@@ -80,15 +84,16 @@ class PluginGitCheckDao {
                 repositoryConfig.repositoryName,
                 commitId,
                 now,
-                now
+                now,
+                context
             ).execute()
         }
     }
 
-    fun update(dslContext: DSLContext, id: Long, buildNumber: Int) {
+    fun update(dslContext: DSLContext, id: Long) {
         with(TPluginGitCheck.T_PLUGIN_GIT_CHECK) {
             dslContext.update(this)
-                .set(BUILD_NUMBER, buildNumber)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(id))
                 .execute()
         }
