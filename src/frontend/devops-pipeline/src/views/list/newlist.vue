@@ -6,11 +6,12 @@
                     v-if="!slotProps.list.length"
                     :has-filter="hasFilter"
                     @showCreate="toggleTemplatePopup"
+                    @showImport="toggleImportPipelinePopup"
                     @showSlide="showSlide"
                     :has-pipeline="hasPipeline">
                 </list-empty>
 
-                <section v-if="slotProps.list.length">
+                <section v-else>
                     <list-create-header
                         :layout="layout"
                         :has-filter="hasFilter"

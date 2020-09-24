@@ -51,22 +51,31 @@
                 reader.readAsText(fileObj.origin)
 
                 reader.addEventListener('loadend', e => {
-                    const jsonResult = JSON.parse(reader.result)
-                    const isValid = this.checkJosnValid(jsonResult)
-                    const code = isValid ? 0 : 1
-                    const message = isValid ? null : this.$t('invalidPipelineJson')
+                    try {
+                        const jsonResult = JSON.parse(reader.result)
+                        const isValid = this.checkJosnValid(jsonResult)
+                        const code = isValid ? 0 : 1
+                        const message = isValid ? null : this.$t('invalidPipelineJson')
 
-                    onSuccess({
-                        code,
-                        message,
-                        result: jsonResult
-                    }, fileObj)
+                        onSuccess({
+                            code,
+                            message,
+                            result: jsonResult
+                        }, fileObj)
 
-                    if (isValid) {
-                        this.handleSuccess(jsonResult)
+                        if (isValid) {
+                            this.handleSuccess(jsonResult)
+                        }
+                    } catch (e) {
+                        console.log(e)
+                        onSuccess({
+                            code: 1,
+                            message: this.$t('invalidPipelineJson'),
+                            result: ''
+                        }, fileObj)
+                    } finally {
+                        onDone(fileObj)
                     }
-
-                    onDone(fileObj)
                 })
 
                 reader.addEventListener('progress', onProgress)
