@@ -979,6 +979,33 @@ class GitService @Autowired constructor(
         return result
     }
 
+    // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
+    fun getRepoAllMembers(repoName: String, tokenType: TokenTypeEnum, token: String): List<GitMember> {
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/members/all")
+        logger.info("get repo member url: $url")
+        setToken(tokenType, url, token)
+
+        val result = mutableListOf<GitMember>()
+        // 限制最多50页
+        for (page in 1..50) {
+            val request = Request.Builder()
+                .url("$url&page=$page&per_page=100")
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                if (!it.isSuccessful) {
+                    throw RuntimeException("get repo member error for $repoName(${it.code()}): ${it.message()}")
+                }
+                val data = it.body()!!.string()
+                logger.info("get repo member response body: $data")
+                val pageResult = JsonUtil.to(data, object : TypeReference<List<GitMember>>() {})
+                result.addAll(pageResult)
+                if (pageResult.size < 100) return result
+            }
+        }
+        return result
+    }
+
     private fun setToken(tokenType: TokenTypeEnum, url: StringBuilder, token: String) {
         if (TokenTypeEnum.OAUTH == tokenType) {
             url.append("?access_token=$token")
