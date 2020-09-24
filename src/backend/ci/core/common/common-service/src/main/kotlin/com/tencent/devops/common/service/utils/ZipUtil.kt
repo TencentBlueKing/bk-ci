@@ -71,7 +71,7 @@ object ZipUtil {
                 inputStream = pair.second
             }
         } catch (e: IOException) {
-            logger.error("unzip error!", e)
+            logger.error("UNZIP file[${srcFile.canonicalPath}] with error: ", e)
         } finally {
             closeUnzipFileStream(fos, inputStream, zipFile)
         }
@@ -84,13 +84,13 @@ object ZipUtil {
                     try {
                         zipFiles(zipOutputStream, srcDir, "")
                     } catch (e: Exception) {
-                        logger.error("zip error: ", e)
+                        logger.error("ZIP file[${srcDir.canonicalPath}] with error: ", e)
                     } finally {
                         try {
                             zipOutputStream.closeEntry()
                             zipOutputStream.close()
                         } catch (e: IOException) {
-                            logger.error("zip close error:", e)
+                            logger.error("ZIP OutputStream close error:", e)
                         }
                     }
                 }
@@ -113,14 +113,12 @@ object ZipUtil {
                 val entry = ZipEntry(basePath + File.separator)
                 entry.time = f.lastModified()
                 entry.size = f.length()
-                logger.info("zip -> Adding directory: $basePath")
                 zipOut.putNextEntry(entry)
 
                 zipFiles(zipOut, f, basePath)
             } else {
                 FileInputStream(f).use { fi ->
                     BufferedInputStream(fi).use { origin ->
-                        logger.info("zip -> Adding file: $basePath")
                         val entry = ZipEntry(basePath)
                         entry.time = f.lastModified()
                         entry.size = f.length()
