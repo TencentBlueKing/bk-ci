@@ -24,17 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-websocket")
-    compile project(":core:store:api-store")
-    compile project(":core:project:api-project")
-    compile project(":core:process:api-process")
-    compile project(":core:quality:api-quality")
-    compile project(":core:artifactory:api-artifactory-store")
-    compile project(":core:store:model-store")
-    testCompile project(":core:common:common-test")
-    compile "net.coobird:thumbnailator:0.4.8"
-}
+package com.tencent.devops.store.pojo.common
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("store组件logo信息")
+data class StoreLogoInfo(
+    @ApiModelProperty("logo地址", required = false)
+    val logoUrl: String?,
+    @ApiModelProperty("icon图标base64字符串", required = false)
+    val iconData: String?
+)

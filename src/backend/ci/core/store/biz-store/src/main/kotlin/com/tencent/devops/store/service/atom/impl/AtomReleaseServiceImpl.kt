@@ -26,7 +26,6 @@
 
 package com.tencent.devops.store.service.atom.impl
 
-import com.tencent.devops.artifactory.api.service.ServiceImageManageResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEPLOY
 import com.tencent.devops.common.api.constant.DEVELOP
@@ -358,16 +357,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
         val classType = if (marketAtomUpdateRequest.os.isEmpty()) "marketBuildLess" else "marketBuild"
         val logoUrl = marketAtomUpdateRequest.logoUrl
-        var iconData: String? = ""
-        if (null != logoUrl) {
-            try {
-                iconData = client.get(ServiceImageManageResource::class).compressImage(logoUrl, 18, 18).data
-                logger.info("the iconData is :$iconData")
-            } catch (e: Exception) {
-                logger.error("compressImage error is :$e", e)
-            }
-        }
-
         marketAtomUpdateRequest.os.sort() // 给操作系统排序
         val atomStatus =
             if (atomPackageSourceType == AtomPackageSourceTypeEnum.REPO) AtomStatusEnum.COMMITTING else AtomStatusEnum.TESTING
@@ -385,30 +374,28 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     releaseType.releaseType.toByte()
                 }
                 updateMarketAtom(
-                    context,
-                    userId,
-                    atomId,
-                    atomStatus,
-                    classType,
-                    props,
-                    iconData,
-                    finalReleaseType,
-                    marketAtomUpdateRequest,
-                    atomEnvRequest
+                    context = context,
+                    userId = userId,
+                    atomId = atomId,
+                    atomStatus = atomStatus,
+                    classType = classType,
+                    props = props,
+                    releaseType = finalReleaseType,
+                    marketAtomUpdateRequest = marketAtomUpdateRequest,
+                    atomEnvRequest = atomEnvRequest
                 )
             } else {
                 // 升级插件
                 upgradeMarketAtom(
-                    marketAtomUpdateRequest,
-                    context,
-                    userId,
-                    atomId,
-                    atomStatus,
-                    classType,
-                    props,
-                    iconData,
-                    atomEnvRequest,
-                    atomRecord
+                    marketAtomUpdateRequest = marketAtomUpdateRequest,
+                    context = context,
+                    userId = userId,
+                    atomId = atomId,
+                    atomStatus = atomStatus,
+                    classType = classType,
+                    props = props,
+                    atomEnvRequest = atomEnvRequest,
+                    atomRecord = atomRecord
                 )
             }
             // 更新标签信息
@@ -439,7 +426,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         atomStatus: AtomStatusEnum,
         classType: String,
         props: String,
-        iconData: String?,
         releaseType: Byte,
         marketAtomUpdateRequest: MarketAtomUpdateRequest,
         atomEnvRequest: AtomEnvRequest
@@ -451,7 +437,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             atomStatus = atomStatus,
             classType = classType,
             props = props,
-            iconData = iconData,
             marketAtomUpdateRequest = marketAtomUpdateRequest
         )
         marketAtomVersionLogDao.addMarketAtomVersion(
@@ -717,28 +702,26 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         atomStatus: AtomStatusEnum,
         classType: String,
         props: String,
-        iconData: String?,
         atomEnvRequest: AtomEnvRequest,
         atomRecord: TAtomRecord
     ) {
         marketAtomDao.upgradeMarketAtom(
-            context,
-            userId,
-            atomId,
-            atomStatus,
-            classType,
-            props,
-            iconData,
-            atomRecord,
-            marketAtomUpdateRequest
+            dslContext = context,
+            userId = userId,
+            id = atomId,
+            atomStatus = atomStatus,
+            classType = classType,
+            props = props,
+            atomRecord = atomRecord,
+            atomRequest = marketAtomUpdateRequest
         )
         marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequest)
         marketAtomVersionLogDao.addMarketAtomVersion(
-            context,
-            userId,
-            atomId,
-            marketAtomUpdateRequest.releaseType.releaseType.toByte(),
-            marketAtomUpdateRequest.versionContent
+            dslContext = context,
+            userId = userId,
+            atomId = atomId,
+            releaseType = marketAtomUpdateRequest.releaseType.releaseType.toByte(),
+            versionContent = marketAtomUpdateRequest.versionContent
         )
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)

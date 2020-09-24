@@ -448,7 +448,6 @@ class MarketImageDao @Autowired constructor(
         userId: String,
         imageId: String,
         imageSize: String,
-        iconData: String?,
         marketImageUpdateRequest: MarketImageUpdateRequest
     ) {
         val a = TClassify.T_CLASSIFY.`as`("a")
@@ -461,7 +460,7 @@ class MarketImageDao @Autowired constructor(
                 .set(IMAGE_NAME, marketImageUpdateRequest.imageName)
                 .set(CLASSIFY_ID, classifyId)
                 .set(LOGO_URL, marketImageUpdateRequest.logoUrl)
-                .set(ICON, iconData)
+                .set(ICON, marketImageUpdateRequest.iconData)
                 .set(IMAGE_STATUS, ImageStatusEnum.COMMITTING.status.toByte())
                 .set(IMAGE_SIZE, imageSize)
                 .set(IMAGE_SOURCE_TYPE, marketImageUpdateRequest.imageSourceType.type)
@@ -492,7 +491,6 @@ class MarketImageDao @Autowired constructor(
         userId: String,
         imageId: String,
         imageSize: String,
-        iconData: String?,
         imageRecord: TImageRecord,
         marketImageUpdateRequest: MarketImageUpdateRequest
     ) {
@@ -545,7 +543,7 @@ class MarketImageDao @Autowired constructor(
                     marketImageUpdateRequest.ticketId,
                     JsonUtil.toJson(marketImageUpdateRequest.agentTypeScope),
                     marketImageUpdateRequest.logoUrl,
-                    iconData,
+                    marketImageUpdateRequest.iconData,
                     marketImageUpdateRequest.summary,
                     marketImageUpdateRequest.description,
                     marketImageUpdateRequest.publisher,

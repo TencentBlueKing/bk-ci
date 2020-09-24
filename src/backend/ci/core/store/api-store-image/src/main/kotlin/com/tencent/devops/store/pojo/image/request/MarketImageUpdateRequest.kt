@@ -51,6 +51,8 @@ data class MarketImageUpdateRequest(
     val description: String?,
     @ApiModelProperty("logo地址", required = false)
     val logoUrl: String?,
+    @ApiModelProperty("icon图标base64字符串", required = false)
+    val iconData: String?,
     @ApiModelProperty("ticket身份ID", required = false)
     val ticketId: String?,
     @ApiModelProperty("镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
