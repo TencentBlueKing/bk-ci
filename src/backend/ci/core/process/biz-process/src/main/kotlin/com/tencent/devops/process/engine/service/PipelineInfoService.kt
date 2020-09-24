@@ -22,6 +22,8 @@ import com.tencent.devops.process.service.PipelineSettingService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.io.File
+import java.net.URLEncoder
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
@@ -149,9 +151,10 @@ class PipelineInfoService @Autowired constructor(
                 output.write(sb.toString().toByteArray())
                 output.flush()
         }
+        val fileName = URLEncoder.encode("$pipelineName.json", "UTF-8")
         return Response
                 .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-                .header("content-disposition", "attachment; filename = $pipelineName.json")
+                .header("content-disposition", "attachment; filename = $fileName")
                 .header("Cache-Control", "no-cache")
                 .build()
     }
