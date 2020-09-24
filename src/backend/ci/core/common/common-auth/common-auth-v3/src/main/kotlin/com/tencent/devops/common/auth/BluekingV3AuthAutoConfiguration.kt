@@ -46,6 +46,7 @@ import com.tencent.devops.common.auth.code.BluekingV3QualityAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3RepoAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3TicketAuthServiceCode
 import com.tencent.devops.common.auth.service.IamEsbService
+import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -137,5 +138,5 @@ class BluekingV3AuthAutoConfiguration() {
 
     @Bean
     @Primary
-    fun authPermissionApi() = BluekingV3AuthPermissionApi(authHelper(), policyService(), iamConfiguration())
+    fun authPermissionApi(redisOperation: RedisOperation) = BluekingV3AuthPermissionApi(authHelper(), policyService(), redisOperation, iamConfiguration())
 }
