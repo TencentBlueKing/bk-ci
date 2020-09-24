@@ -61,4 +61,8 @@ class ExternalCodeccRepoResourceImpl @Autowired constructor(
     override fun getRepoMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
         return commonRepoFileService.getGitProjectMembers(repoUrl, userId)
     }
+
+    override fun getRepoAllMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
+        return commonRepoFileService.getGitProjectAllMembers(repoUrl, userId)
+    }
 }
