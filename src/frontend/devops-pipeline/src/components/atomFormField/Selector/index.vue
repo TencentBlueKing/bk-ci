@@ -11,6 +11,10 @@
         :search-key="displayKey"
         @change="onChange"
         :popover-options="popoverOptions"
+        :enable-virtual-scroll="list.length > 3000"
+        :list="list"
+        :id-key="settingKey"
+        :display-key="displayKey"
     >
         <bk-option
             v-for="item in list"

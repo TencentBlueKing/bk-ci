@@ -9,6 +9,8 @@
         @toggle="toggleVisible"
         @clear="handleClear"
         :popover-options="popoverOptions"
+        :enable-virtual-scroll="list.length > 3000"
+        :list="list"
     >
         <bk-option
             v-for="item in list"
@@ -114,16 +116,14 @@
                     this.list = []
                     return
                 }
-                try {
-                    const { atomValue = {}, transformList, $route: { params = {} }, mergedOptionsConf } = this
-                    const changeUrl = this.urlParse(mergedOptionsConf.url, {
-                        ...params,
-                        ...atomValue
-                    })
-                    this.isLoading = true
-
-                    const res = await this.$ajax.get(changeUrl)
-
+                const { atomValue = {}, transformList, $route: { params = {} }, mergedOptionsConf } = this
+                const changeUrl = this.urlParse(mergedOptionsConf.url, {
+                    ...params,
+                    ...atomValue
+                })
+                this.isLoading = true
+                this.$ajax.get(changeUrl).then((res) => {
+                    console.time('list')
                     this.list = transformList(res)
                     // 添加无权限查看项
                     const valueArray = mergedOptionsConf.multiple && Array.isArray(this.value) ? this.value : [this.value]
@@ -142,15 +142,16 @@
                     })
 
                     this.$emit('change', this.list)
-                } catch (e) {
+                }).catch((e) => {
                     console.log(e)
                     this.$showTips({
                         message: e.message,
                         theme: 'error'
                     })
-                } finally {
+                }).finally(() => {
+                    console.timeEnd('list')
                     this.isLoading = false
-                }
+                })
             }
         }
     }

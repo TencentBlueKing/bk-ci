@@ -6,11 +6,29 @@
             <div class="sub-view-port" v-if="!isINstallSuccess">
                 <div class="atom-name">{{ name }}</div>
                 <div class="title"> {{ $t('store.请选择项目：') }} </div>
-                <big-select v-model="project" :loading="projectListLoading" :searchable="true" :multiple="true" :show-select-all="true" :options="projectList" setting-key="projectCode" display-key="projectName" @selected="selectProject" :placeholder="$t('store.请选择')">
+                <bk-select v-model="project"
+                    searchable
+                    multiple
+                    show-select-all
+                    @selected="selectProject"
+                    :placeholder="$t('store.请选择')"
+                    :loading="projectListLoading"
+                    :enable-virtual-scroll="projectList && projectList.length > 3000"
+                    :list="projectList"
+                    id-key="projectCode"
+                    display-key="projectName"
+                >
+                    <bk-option
+                        v-for="item in projectList"
+                        :key="item.projectCode"
+                        :id="item.projectCode"
+                        :name="item.projectName"
+                    >
+                    </bk-option>
                     <div slot="extension" style="cursor: pointer;">
                         <a href="/console/pm" target="_blank"><i class="devops-icon icon-plus-circle" /> {{ $t('store.新建项目') }} </a>
                     </div>
-                </big-select>
+                </bk-select>
                 <p class="template-tip" v-if="type === 'template'">{{ $t('store.若模版中有未安装的插件，将自动安装') }}</p>
                 <div v-if="installError" class="error-tips"> {{ $t('store.项目不能为空') }} </div>
                 <div class="form-footer">
@@ -18,7 +36,7 @@
                     <button class="bk-button bk-default" type="button" @click="toBack"> {{ $t('store.取消') }} </button>
                 </div>
                 <section v-if="installedProject.length">
-                    <p class="project-title">该{{ type|typeFilter }}{{ $t('store.已安装至以下项目：') }} </p>
+                    <p class="project-title">{{ $t('store.该') }}{{ type|typeFilter }}{{ $t('store.已安装至以下项目：') }} </p>
                     <table class="bk-table project-table">
                         <thead>
                         </thead>
