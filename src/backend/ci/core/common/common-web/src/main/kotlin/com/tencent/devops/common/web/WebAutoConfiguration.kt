@@ -41,6 +41,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.Profile
 import org.springframework.context.annotation.PropertySource
 import org.springframework.core.Ordered
+import org.springframework.core.env.Environment
 
 /**
  *
@@ -74,5 +75,5 @@ class WebAutoConfiguration {
     fun versionInfoResource() = VersionInfoResource()
 
     @Bean
-    fun jmxAutoConfiguration() = JmxAutoConfiguration()
+    fun jmxAutoConfiguration(environment: Environment) = JmxAutoConfiguration(environment)
 }

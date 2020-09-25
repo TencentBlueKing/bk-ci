@@ -36,6 +36,7 @@ dependencies {
     compile group: 'org.apache.skywalking', name: 'apm-toolkit-log4j-2.x', version: '6.6.0'
     compile "org.jolokia:jolokia-core"
     compile "javax.servlet:javax.servlet-api"
+    compile "org.springframework:spring-web"
 
     testCompile "org.springframework.boot:spring-boot-starter-test"
 }

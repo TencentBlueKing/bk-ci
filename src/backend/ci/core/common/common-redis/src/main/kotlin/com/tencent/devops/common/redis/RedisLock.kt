@@ -26,10 +26,12 @@
 
 package com.tencent.devops.common.redis
 
+import io.lettuce.core.ScriptOutputType
+import io.lettuce.core.SetArgs
+import io.lettuce.core.api.async.RedisAsyncCommands
+import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.RedisCallback
-import redis.clients.jedis.Jedis
-import redis.clients.jedis.JedisCluster
 import java.util.UUID
 
 open class RedisLock(
@@ -109,19 +111,24 @@ open class RedisLock(
      * @return
      */
     private fun set(key: String, value: String, seconds: Long): String? {
-        return redisOperation.execute(RedisCallback { connection ->
-            val nativeConnection = connection.nativeConnection
+        return redisOperation.execute { connection ->
             val result =
-                when (nativeConnection) {
-                    is JedisCluster -> nativeConnection.set(key, value, NX, EX, seconds)
-                    is Jedis -> nativeConnection.set(key, value, NX, EX, seconds)
+                when (val nativeConnection = connection.nativeConnection) {
+                    is RedisAsyncCommands<*, *> -> (nativeConnection as RedisAsyncCommands<String, String>).statefulConnection.sync()
+                        .set(
+                            key, value, SetArgs.Builder.nx().ex(seconds)
+                        )
+                    is RedisAdvancedClusterAsyncCommands<*, *> -> (nativeConnection as RedisAdvancedClusterAsyncCommands<String, String>).statefulConnection.sync()
+                        .set(
+                            key, value, SetArgs.Builder.nx().ex(seconds)
+                        )
                     else -> {
                         logger.warn("Unknown redis connection($nativeConnection)")
                         null
                     }
                 }
             result
-        })
+        }
     }
 
     /**
@@ -137,23 +144,32 @@ open class RedisLock(
         // 只有加锁成功并且锁还有效才去释放锁
         if (locked) {
 //            logger.info("Start to unlock the key($lockKey) of value($lockValue)")
-            return redisOperation.execute(RedisCallback { connection ->
+            return redisOperation.execute { connection ->
                 val nativeConnection = connection.nativeConnection
 
-                val keys = listOf(lockKey)
-                val values = listOf(lockValue)
+                val keys = arrayOf(lockKey)
                 val result =
                     when (nativeConnection) {
-                        is JedisCluster -> nativeConnection.eval(UNLOCK_LUA, keys, values)
-                        is Jedis -> nativeConnection.eval(UNLOCK_LUA, keys, values)
+                        is RedisAsyncCommands<*, *> -> (nativeConnection as RedisAsyncCommands<String, String>).eval<Int>(
+                            UNLOCK_LUA,
+                            ScriptOutputType.INTEGER,
+                            keys,
+                            lockValue
+                        ).get()
+                        is RedisAdvancedClusterAsyncCommands<*, *> -> (nativeConnection as RedisAdvancedClusterAsyncCommands<String, String>).eval<Int>(
+                            UNLOCK_LUA,
+                            ScriptOutputType.INTEGER,
+                            keys,
+                            lockValue
+                        ).get()
                         else -> {
                             logger.warn("Unknown redis connection($nativeConnection)")
-                            0L
+                            0
                         }
                     }
                 locked = result == 0
                 result == 1
-            })
+            }
         } else {
             logger.info("It's already unlock")
         }
