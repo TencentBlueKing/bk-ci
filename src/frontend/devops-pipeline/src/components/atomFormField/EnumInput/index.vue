@@ -2,7 +2,7 @@
     <form class="enum-input-main">
         <bk-radio-group @change="handleSelect" :value="value" :name="name">
             <template v-for="item in list">
-                <bk-popover v-if="!item.hidden" :style="`width: calc(${100 / lineNumber}% - 10px)`" :disabled="!item.tips" :key="item.id" :content="item.tips" placement="bottom">
+                <bk-popover class="bkdevops-running-lock-setting-tab" v-if="!item.hidden" :style="`width: calc(${100 / lineNumber}% - 10px)`" :disabled="!item.tips" :key="item.id" :content="item.tips" placement="bottom">
                     <bk-radio class="bkdevops-radio" :value="item.value" :disabled="disabled || item.disabled">
                         <span class="overflow" v-bk-overflow-tips>{{ item.label }}</span>
                     </bk-radio>
