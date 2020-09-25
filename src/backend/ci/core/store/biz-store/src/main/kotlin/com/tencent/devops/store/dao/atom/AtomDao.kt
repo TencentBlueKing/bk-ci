@@ -570,6 +570,9 @@ class AtomDao : AtomBaseDao() {
             if (null != atomUpdateRequest.logoUrl) {
                 baseStep.set(LOGO_URL, atomUpdateRequest.logoUrl)
             }
+            if (null != atomUpdateRequest.iconData) {
+                baseStep.set(ICON, atomUpdateRequest.iconData)
+            }
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .where(ID.eq(id))

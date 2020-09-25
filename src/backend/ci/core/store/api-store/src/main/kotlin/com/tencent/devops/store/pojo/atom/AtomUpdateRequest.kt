@@ -66,6 +66,8 @@ data class AtomUpdateRequest(
     val data: String?,
     @ApiModelProperty("插件logo", required = false)
     val logoUrl: String?,
+    @ApiModelProperty("icon图标base64字符串", required = false)
+    val iconData: String?,
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
     @ApiModelProperty("yaml可用标识 true：是，false：否")
