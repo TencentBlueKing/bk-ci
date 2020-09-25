@@ -51,6 +51,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -462,13 +463,15 @@ class StageControl @Autowired constructor(
         val reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(projectId, pipelineId, buildId)
         val dataTime = DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss")
         val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
+        val buildNum = runVariables[PIPELINE_BUILD_NUM] ?: "1"
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE,
             receivers = receivers.toMutableSet(),
             cc = receivers.toMutableSet(),
             titleParams = mapOf(
                 "projectName" to projectName,
-                "pipelineName" to pipelineName
+                "pipelineName" to pipelineName,
+                "buildNum" to buildNum
             ),
             bodyParams = mapOf(
                 "projectName" to projectName,
