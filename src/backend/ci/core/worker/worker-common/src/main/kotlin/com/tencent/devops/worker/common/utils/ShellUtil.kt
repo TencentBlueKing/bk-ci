@@ -83,13 +83,13 @@ object ShellUtil {
         buildId: String,
         script: String,
         dir: File,
-        workspace: File,
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
         systemEnvVariables: Map<String, String>? = null,
         prefix: String = "",
-        errorMessage: String? = null
+        errorMessage: String? = null,
+        workspace: File = dir
     ): String {
         return executeUnixCommand(
             command = getCommandFile(
@@ -112,11 +112,11 @@ object ShellUtil {
         buildId: String,
         script: String,
         dir: File,
-        workspace: File,
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
-        systemEnvVariables: Map<String, String>? = null
+        systemEnvVariables: Map<String, String>? = null,
+        workspace: File = dir
     ): File {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
         file.deleteOnExit()

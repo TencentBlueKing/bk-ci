@@ -62,10 +62,10 @@ object BatScriptUtil {
         script: String,
         runtimeVariables: Map<String, String>,
         dir: File,
-        workspace: File,
         systemEnvVariables: Map<String, String>? = null,
         prefix: String = "",
-        errorMessage: String? = null
+        errorMessage: String? = null,
+        workspace: File = dir
     ): String {
         try {
             val file = getCommandFile(
@@ -89,8 +89,8 @@ object BatScriptUtil {
         script: String,
         runtimeVariables: Map<String, String>,
         dir: File,
-        workspace: File,
-        systemEnvVariables: Map<String, String>? = null
+        systemEnvVariables: Map<String, String>? = null,
+        workspace: File = dir
     ): File {
         val tmpDir = System.getProperty("java.io.tmpdir")
         val file = if (tmpDir.isNullOrBlank()) {
