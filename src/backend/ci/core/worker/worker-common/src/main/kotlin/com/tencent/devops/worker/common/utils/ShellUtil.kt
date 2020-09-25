@@ -83,6 +83,7 @@ object ShellUtil {
         buildId: String,
         script: String,
         dir: File,
+        workspace: File,
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
@@ -95,6 +96,7 @@ object ShellUtil {
                 buildId = buildId,
                 script = script,
                 dir = dir,
+                workspace = workspace,
                 buildEnvs = buildEnvs,
                 runtimeVariables = runtimeVariables,
                 continueNoneZero = continueNoneZero,
@@ -110,6 +112,7 @@ object ShellUtil {
         buildId: String,
         script: String,
         dir: File,
+        workspace: File,
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
@@ -124,7 +127,7 @@ object ShellUtil {
             command.append(bashStr).append("\n")
         }
 
-        command.append("export $WORKSPACE_ENV=${dir.absolutePath}\n")
+        command.append("export $WORKSPACE_ENV=${workspace.absolutePath}\n")
             .append("export DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\n")
 
         // 设置系统环境变量
