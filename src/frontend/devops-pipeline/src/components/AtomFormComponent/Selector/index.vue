@@ -98,20 +98,22 @@
             transformList (res) {
                 const list = this.getResponseData(res, this.mergedOptionsConf.dataPath)
                 return list.map(item => {
+                    let curItem = {}
                     if (typeof item === 'string') {
-                        return {
+                        curItem = {
                             id: item,
                             name: item
                         }
                     }
-                    return {
+                    curItem = {
                         ...item,
                         id: item[this.mergedOptionsConf.paramId],
                         name: item[this.mergedOptionsConf.paramName]
                     }
+                    return Object.freeze(curItem)
                 })
             },
-            async freshList () {
+            freshList () {
                 if (this.isLackParam) { // 缺少参数时，选择列表置空
                     this.list = []
                     return
@@ -123,8 +125,7 @@
                 })
                 this.isLoading = true
                 this.$ajax.get(changeUrl).then((res) => {
-                    console.time('list')
-                    this.list = transformList(res)
+                    this.list = Object.freeze(transformList(res))
                     // 添加无权限查看项
                     const valueArray = mergedOptionsConf.multiple && Array.isArray(this.value) ? this.value : [this.value]
                     const listMap = this.list.reduce((listMap, item) => {
@@ -149,7 +150,6 @@
                         theme: 'error'
                     })
                 }).finally(() => {
-                    console.timeEnd('list')
                     this.isLoading = false
                 })
             }
