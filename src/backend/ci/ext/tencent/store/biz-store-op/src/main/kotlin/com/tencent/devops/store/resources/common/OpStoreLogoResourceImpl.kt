@@ -30,6 +30,7 @@ import com.tencent.devops.store.api.common.OpStoreLogoResource
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.pojo.common.Logo
+import com.tencent.devops.store.pojo.common.StoreLogoInfo
 import com.tencent.devops.store.pojo.common.StoreLogoReq
 import com.tencent.devops.store.pojo.common.enums.LogoTypeEnum
 import com.tencent.devops.store.service.common.StoreLogoService
@@ -46,8 +47,13 @@ class OpStoreLogoResourceImpl @Autowired constructor(
         userId: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): Result<String?> {
-        return storeLogoService.uploadStoreLogo(userId, inputStream, disposition)
+    ): Result<StoreLogoInfo?> {
+        return storeLogoService.uploadStoreLogo(
+            userId = userId,
+            compressFlag = true,
+            inputStream = inputStream,
+            disposition = disposition
+        )
     }
 
     override fun add(userId: String, logoType: LogoTypeEnum, storeLogoReq: StoreLogoReq): Result<Boolean> {

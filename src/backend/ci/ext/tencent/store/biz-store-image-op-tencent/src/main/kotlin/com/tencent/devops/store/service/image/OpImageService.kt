@@ -129,6 +129,7 @@ class OpImageService @Autowired constructor(
                 summary = imageCreateRequest.summary,
                 description = imageCreateRequest.description,
                 logoUrl = imageCreateRequest.logoUrl,
+                iconData = imageCreateRequest.iconData,
                 ticketId = imageCreateRequest.ticketId,
                 imageSourceType = imageSourceType,
                 imageRepoUrl = imageCreateRequest.imageRepoUrl,

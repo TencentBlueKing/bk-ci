@@ -378,6 +378,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         status = serviceStatus.status,
                         statusMsg = "",
                         logoUrl = submitDTO.logoUrl,
+                        iconData = submitDTO.iconData,
                         summary = submitDTO.summary,
                         description = submitDTO.description,
                         latestFlag = null,
@@ -410,6 +411,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         creatorUser = userId,
                         version = submitDTO.version,
                         logoUrl = submitDTO.logoUrl,
+                        iconData = submitDTO.iconData,
                         latestFlag = latestFlag,
                         summary = submitDTO.summary,
                         description = submitDTO.description,
@@ -1435,6 +1437,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 extServiceUpdateInfo = ExtServiceUpdateInfo(
                     serviceName = baseInfo.serviceName,
                     logoUrl = baseInfo.logoUrl,
+                    iconData = baseInfo.iconData,
                     summary = baseInfo.summary,
                     description = baseInfo.description,
                     modifierUser = userId,
