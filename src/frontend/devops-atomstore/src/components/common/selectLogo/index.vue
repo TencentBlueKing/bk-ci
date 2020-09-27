@@ -1,8 +1,8 @@
 <template>
     <section>
         <section class="select-logo" ref="selectLogo" :style="`top: ${top}px; right: ${right}px`">
-            <section v-if="form.logoUrl" @click="uploadLogo" class="has-upload">
-                <img :src="form.logoUrl" :title="$t('store.选择logo')">
+            <section v-if="form.logoUrl || form.iconData" @click="uploadLogo" class="has-upload">
+                <img :src="form.logoUrl || form.iconData" :title="$t('store.选择logo')">
                 <span>{{ $t('store.editLogo') }}</span>
             </section>
             <section v-else @click="uploadLogo" :class="[{ 'logo-error': isErr }, 'un-upload']">
@@ -70,6 +70,7 @@
                 imgs: [],
                 showDialog: false,
                 selectedUrl: '',
+                iconData: '',
                 loading: false
             }
         },
@@ -94,6 +95,7 @@
 
             chooseSysImg (url) {
                 this.selectedUrl = url
+                this.iconData = ''
                 this.resetUploadInput()
             },
 
@@ -155,7 +157,8 @@
                         config
                     })
 
-                    this.selectedUrl = res
+                    this.selectedUrl = res.logoUrl
+                    this.iconData = res.iconData
                 } catch (err) {
                     message = err.message ? err.message : err
                     theme = 'error'
@@ -170,11 +173,13 @@
             uploadLogo () {
                 this.showDialog = true
                 this.selectedUrl = this.form.logoUrl
+                this.iconData = this.form.iconData
             },
 
             async toConfirmLogo () {
-                if (this.selectedUrl) {
+                if (this.selectedUrl || this.iconData) {
                     this.form.logoUrl = this.selectedUrl
+                    this.form.iconData = this.iconData
                     this.showDialog = false
                     this.isErr = false
                 } else if (!this.selectedUrl) {
@@ -188,7 +193,6 @@
 
             toCloseDialog () {
                 this.showDialog = false
-                this.selectedFile = undefined
                 this.resetUploadInput()
             }
         }
