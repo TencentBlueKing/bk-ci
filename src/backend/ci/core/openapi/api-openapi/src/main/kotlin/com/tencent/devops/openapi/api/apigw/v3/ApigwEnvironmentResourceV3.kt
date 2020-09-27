@@ -54,6 +54,6 @@ interface ApigwEnvironmentResourceV3 {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("节点 hashIds", required = true)
-        nodeHashIds: List<String>
+        nodeHashIds: List<String>?
     ): Result<List<NodeWithPermission>>
 }
