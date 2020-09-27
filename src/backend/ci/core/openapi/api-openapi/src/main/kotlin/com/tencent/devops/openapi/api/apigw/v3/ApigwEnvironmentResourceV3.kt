@@ -10,6 +10,7 @@ import com.tencent.devops.environment.pojo.NodeWithPermission
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import org.springframework.web.bind.annotation.RequestBody
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 
@@ -38,8 +39,8 @@ interface ApigwEnvironmentResourceV3 {
     ): Result<List<NodeBaseInfo>>
 
     @ApiOperation("获取指定构建机状态")
-    @POST
     @Path("/thirdPartAgent/nodes/status")
+    @POST
     fun getNodeStatus(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -54,6 +55,7 @@ interface ApigwEnvironmentResourceV3 {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("节点 hashIds", required = true)
+        @RequestBody
         nodeHashIds: List<String>?
     ): Result<List<NodeWithPermission>>
 }
