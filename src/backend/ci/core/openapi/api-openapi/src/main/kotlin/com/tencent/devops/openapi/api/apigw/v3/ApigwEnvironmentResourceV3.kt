@@ -38,7 +38,7 @@ interface ApigwEnvironmentResourceV3 {
     ): Result<List<NodeBaseInfo>>
 
     @ApiOperation("获取指定构建机状态")
-    @GET
+    @POST
     @Path("/thirdPartAgent/nodes/{nodeId}/status")
     fun getNodeStatus(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
