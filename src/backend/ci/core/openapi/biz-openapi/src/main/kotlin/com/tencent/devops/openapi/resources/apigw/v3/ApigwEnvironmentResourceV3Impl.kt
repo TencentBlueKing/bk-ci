@@ -24,6 +24,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
 	override fun getNodeStatus(appCode: String?, apigwType: String?, userId: String, projectId: String, nodeHashIds: List<String>?): Result<List<NodeWithPermission>> {
 		logger.info("getNodeStatus userId:$userId, projectId: $projectId, nodeHashIds: $nodeHashIds")
 		if(nodeHashIds == null || nodeHashIds.isEmpty()) {
+			logger.warn("nodeHashIds is empty")
 			return Result(emptyList())
 		}
 		return client.get(ServiceNodeResource::class).listByHashIds(userId, projectId, nodeHashIds!!)
