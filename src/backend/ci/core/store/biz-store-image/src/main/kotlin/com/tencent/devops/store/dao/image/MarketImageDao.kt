@@ -738,7 +738,10 @@ class MarketImageDao @Autowired constructor(
         val logoUrl = imageBaseInfoUpdateRequest.logoUrl
         if (!logoUrl.isNullOrBlank()) {
             baseStep.set(LOGO_URL, logoUrl)
-            baseStep.set(ICON, supportService.getIconDataByLogoUrl(logoUrl!!))
+        }
+        val iconData = imageBaseInfoUpdateRequest.iconData
+        if (!iconData.isNullOrBlank()) {
+            baseStep.set(ICON, iconData)
         }
         val publisher = imageBaseInfoUpdateRequest.publisher
         if (!publisher.isNullOrBlank()) {

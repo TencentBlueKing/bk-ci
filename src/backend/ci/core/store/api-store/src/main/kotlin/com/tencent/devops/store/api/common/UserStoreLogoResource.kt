@@ -61,6 +61,9 @@ interface UserStoreLogoResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("contentLength", required = true)
+        @HeaderParam("content-length")
+        contentLength: Long,
         @ApiParam("是否压缩", required = false)
         @QueryParam("compressFlag")
         compressFlag: Boolean? = false,
