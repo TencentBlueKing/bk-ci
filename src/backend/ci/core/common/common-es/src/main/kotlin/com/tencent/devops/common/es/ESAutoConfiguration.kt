@@ -65,7 +65,7 @@ class ESAutoConfiguration : DisposableBean {
     private val username: String? = null
     @Value("\${elasticsearch.password:#{null}}")
     private val password: String? = null
-    @Value("\${elasticsearch.https}")
+    @Value("\${elasticsearch.https:#{null}}")
     private val https: String? = null
     @Value("\${elasticsearch.keystore.filePath:#{null}}")
     private val keystoreFilePath: String? = null
