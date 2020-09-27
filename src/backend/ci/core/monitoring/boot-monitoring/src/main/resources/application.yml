@@ -1,6 +1,6 @@
 spring:
   application:
-    name: monitoring{service-suffix}
+    name: monitoring${service-suffix}
     desc: DevOps monitoring Service
     version: 4.0
     packageName: com.tencent.devops.monitoring
