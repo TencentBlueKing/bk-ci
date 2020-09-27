@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VA
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -34,7 +35,7 @@ interface ApigwEnvironmentResourceV3 {
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
         projectId: String
-    ): Result<List<NodeWithPermission>>
+    ): Result<List<NodeBaseInfo>>
 
     @ApiOperation("获取指定构建机状态")
     @GET
