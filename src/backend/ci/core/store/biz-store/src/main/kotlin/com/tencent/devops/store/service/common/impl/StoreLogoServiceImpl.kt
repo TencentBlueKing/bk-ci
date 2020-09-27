@@ -88,11 +88,12 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
      */
     override fun uploadStoreLogo(
         userId: String,
+        contentLength: Long,
         compressFlag: Boolean?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<StoreLogoInfo?> {
-        logger.info("uploadStoreLogo upload file info is:$disposition")
+        logger.info("uploadStoreLogo upload file info is:$disposition,contentLength is:$contentLength")
         val fileName = disposition.fileName
         val index = fileName.lastIndexOf(".")
         val fileType = fileName.substring(index + 1).toLowerCase()
@@ -105,9 +106,8 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
             )
         }
         // 校验上传文件大小是否超出限制
-        val fileSize = disposition.size
         val maxFileSize = maxUploadLogoSize.toLong()
-        if (fileSize > maxFileSize) {
+        if (contentLength > maxFileSize) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.UPLOAD_LOGO_IS_TOO_LARGE,
                 arrayOf((maxFileSize / 1048576).toString() + "M")
