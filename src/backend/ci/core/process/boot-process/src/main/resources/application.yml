@@ -4,6 +4,8 @@ spring:
     desc: DevOps Pipeline Service
     version: 4.0.0
     packageName: com.tencent.devops.process
+  jmx:
+    enabled: true
 
 # 并发配置
 queueConcurrency:
