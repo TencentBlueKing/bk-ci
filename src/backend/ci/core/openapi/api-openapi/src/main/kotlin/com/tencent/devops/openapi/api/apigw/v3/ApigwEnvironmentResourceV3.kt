@@ -55,7 +55,7 @@ interface ApigwEnvironmentResourceV3 {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("节点 hashIds", required = true)
-        @RequestBody
-        nodeHashIds: List<String>?
+        @QueryParam("nodeId")
+        nodeId: String
     ): Result<List<NodeWithPermission>>
 }
