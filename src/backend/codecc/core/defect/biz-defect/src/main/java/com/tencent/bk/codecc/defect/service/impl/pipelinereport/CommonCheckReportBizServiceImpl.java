@@ -96,7 +96,9 @@ public class CommonCheckReportBizServiceImpl implements ICheckReportBizService
             if (clocStatisticEntityList != null) {
                 totalLines = clocStatisticEntityList.stream().mapToLong(CLOCStatisticEntity::getSumCode).sum();
                 totalBlankLines = clocStatisticEntityList.stream().mapToLong(CLOCStatisticEntity::getSumBlank).sum();
-                totalCommentLines = clocStatisticEntityList.stream().mapToLong(CLOCStatisticEntity::getSumComment).sum();
+                totalCommentLines = clocStatisticEntityList.stream()
+                        .mapToLong(CLOCStatisticEntity::getSumComment)
+                        .sum();
             }
             covReport.setTotalLines(totalLines);
             covReport.setTotalBlankLines(totalBlankLines);

@@ -34,6 +34,7 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -102,7 +103,8 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     override fun createResources(
         userId: String,
         accessToken: String?,
-        resourceRegisterInfo: ResourceRegisterInfo
+        resourceRegisterInfo: ResourceRegisterInfo,
+        userDeptDetail: UserDeptDetail?
     ): String {
         val projectList = mutableListOf<ResourceRegisterInfo>()
         projectList.add(resourceRegisterInfo)

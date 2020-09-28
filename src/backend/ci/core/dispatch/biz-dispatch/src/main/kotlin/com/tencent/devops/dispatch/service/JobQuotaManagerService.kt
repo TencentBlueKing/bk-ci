@@ -42,6 +42,33 @@ class JobQuotaManagerService @Autowired constructor(
     private val jobQuotaSystemDao: JobQuotaSystemDao,
     private val dslContext: DSLContext
 ) {
+    fun listProjectQuota(projectId: String?): List<JobQuotaProject> {
+        val record = jobQuotaProjectDao.list(dslContext, projectId)
+        val result = mutableListOf<JobQuotaProject>()
+        record.filter { it != null && JobQuotaVmType.parse(it.vmType) != null }.forEach {
+            result.add(JobQuotaProject(
+                projectId = it!!.projectId,
+                vmType = JobQuotaVmType.parse(it.vmType)!!,
+                runningJobMax = it.runningJobsMax,
+                runningTimeJobMax = it.runningTimeJobMax,
+                runningTimeProjectMax = it.runningTimeProjectMax,
+                createdTime = it.createdTime.timestamp(),
+                updatedTime = it.updatedTime.timestamp(),
+                operator = it.operator
+            ))
+        }
+        return result
+    }
+
+    fun listSystemQuota(): List<JobQuotaSystem> {
+        val record = jobQuotaSystemDao.list(dslContext)
+        val result = mutableListOf<JobQuotaSystem>()
+        record.filter { it != null && JobQuotaVmType.parse(it.vmType) != null }.forEach {
+            result.add(jobQuotaSystemDao.convert(JobQuotaVmType.parse(it!!.vmType)!!, it))
+        }
+        return result
+    }
+
     /**
      * 获取job的某类构件机配额，如果没有，则取系统默认值
      */

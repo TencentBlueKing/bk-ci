@@ -617,13 +617,17 @@ class MarketAtomDao : AtomBaseDao() {
         atomOldStatus: Byte,
         atomNewStatus: Byte,
         userId: String,
-        msg: String?
+        msg: String?,
+        latestFlag: Boolean?
     ) {
         with(TAtom.T_ATOM) {
             val baseStep = dslContext.update(this)
                 .set(ATOM_STATUS, atomNewStatus)
             if (!msg.isNullOrEmpty()) {
                 baseStep.set(ATOM_STATUS_MSG, msg)
+            }
+            if (null != latestFlag) {
+                baseStep.set(LATEST_FLAG, latestFlag)
             }
             baseStep.set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
@@ -717,6 +721,30 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(atomId))
                 .execute()
+        }
+    }
+
+    fun getNewestUndercarriagedAtomsByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
+        return with(TAtom.T_ATOM) {
+            dslContext.selectFrom(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .and(ATOM_STATUS.eq(AtomStatusEnum.UNDERCARRIAGED.status.toByte()))
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
+    fun getReleaseAtomsByCode(dslContext: DSLContext, atomCode: String, num: Int? = null): Result<TAtomRecord>? {
+        return with(TAtom.T_ATOM) {
+            val baseStep = dslContext.selectFrom(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .and(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+                .orderBy(CREATE_TIME.desc())
+            if (null != num) {
+                baseStep.limit(num)
+            }
+            baseStep.fetch()
         }
     }
 }

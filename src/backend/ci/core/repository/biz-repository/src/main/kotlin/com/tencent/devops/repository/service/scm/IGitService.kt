@@ -94,6 +94,12 @@ interface IGitService {
         tokenType: TokenTypeEnum
     ): Result<Boolean>
 
+    fun deleteGitProject(
+        repoName: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
     fun updateGitProjectInfo(
         projectName: String,
         updateGitProjectInfo: UpdateGitProjectInfo,
@@ -142,4 +148,6 @@ interface IGitService {
     ): GitMrChangeInfo
 
     fun getRepoMembers(accessToken: String, userId: String, repoName: String): List<GitMember>
+
+    fun getRepoAllMembers(accessToken: String, userId: String, repoName: String): List<GitMember>
 }
