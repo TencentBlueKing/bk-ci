@@ -339,7 +339,12 @@ class TemplateService @Autowired constructor(
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
             val pipelines =
-                templatePipelineDao.listPipeline(context, templateId, PipelineInstanceTypeEnum.CONSTRAINT.type, version)
+                templatePipelineDao.listPipeline(
+                    dslContext = context,
+                    templateId = templateId,
+                    instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
+                    version = version
+                )
             if (pipelines.isNotEmpty) {
                 logger.warn("There are ${pipelines.size} pipeline attach to $templateId of version $version")
                 throw ErrorCodeException(
@@ -347,6 +352,26 @@ class TemplateService @Autowired constructor(
                     defaultMessage = "模板还存在实例，不允许删除")
             }
             templateDao.delete(dslContext, templateId, setOf(version)) == 1
+        }
+    }
+
+    fun deleteTemplate(projectId: String, userId: String, templateId: String, versionName: String): Boolean {
+        logger.info("Start to delete the template [$projectId|$userId|$templateId|$versionName]")
+        checkPermission(projectId, userId)
+        return dslContext.transactionResult { configuration ->
+            val context = DSL.using(configuration)
+            val pipelines =
+                templatePipelineDao.listPipeline(
+                    dslContext = context,
+                    templateId = templateId,
+                    instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
+                    versionName = versionName
+                )
+            if (pipelines.isNotEmpty) {
+                logger.warn("There are ${pipelines.size} pipeline attach to $templateId of versionName $versionName")
+                throw ErrorCodeException(errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE)
+            }
+            templateDao.delete(dslContext = dslContext, templateId = templateId, versionName = versionName) == 1
         }
     }
 
