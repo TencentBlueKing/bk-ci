@@ -30,10 +30,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.webhook.WebhookEventType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_WEBHOOK"], description = "用户-webhook")
@@ -48,7 +51,11 @@ interface UserScmWebhookResource {
     fun updateProjectNameAndTaskId(): Result<Boolean>
 
     @ApiOperation("根据代码库类型获取事件")
-    @PUT
+    @GET
     @Path("/eventType")
-    fun getEventType(scmType: String): Result<List<WebhookEventType>>
+    fun getEventType(
+        @ApiParam("代码库请求类型", required = false)
+        @QueryParam("scmType")
+        scmType: String
+    ): Result<List<WebhookEventType>>
 }
