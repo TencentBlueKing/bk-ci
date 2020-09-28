@@ -358,7 +358,7 @@ class TemplateService @Autowired constructor(
     fun deleteTemplate(projectId: String, userId: String, templateId: String, versionName: String): Boolean {
         logger.info("Start to delete the template [$projectId|$userId|$templateId|$versionName]")
         checkPermission(projectId, userId)
-        return dslContext.transactionResult { configuration ->
+        dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val pipelines =
                 templatePipelineDao.listPipeline(
@@ -371,8 +371,9 @@ class TemplateService @Autowired constructor(
                 logger.warn("There are ${pipelines.size} pipeline attach to $templateId of versionName $versionName")
                 throw ErrorCodeException(errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE)
             }
-            templateDao.delete(dslContext = dslContext, templateId = templateId, versionName = versionName) == 1
+            templateDao.delete(dslContext = dslContext, templateId = templateId, versionName = versionName)
         }
+        return true
     }
 
     fun updateTemplate(
