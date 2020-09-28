@@ -109,11 +109,11 @@ class ListenerConfiguration {
         val concurrency = webhookConcurrency!!
         container.setConcurrentConsumers(concurrency)
         container.setMaxConcurrentConsumers(Math.max(10, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -158,11 +158,11 @@ class ListenerConfiguration {
         val concurrency = gitCommitCheckConcurrency!!
         container.setConcurrentConsumers(concurrency)
         container.setMaxConcurrentConsumers(Math.max(5, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -197,11 +197,11 @@ class ListenerConfiguration {
         val concurrency = githubPrConcurrency!!
         container.setConcurrentConsumers(concurrency)
         container.setMaxConcurrentConsumers(Math.max(5, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -240,11 +240,11 @@ class ListenerConfiguration {
         val concurrency = measureConcurrency!!
         container.setConcurrentConsumers(concurrency)
         container.setMaxConcurrentConsumers(Math.max(5, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 }
