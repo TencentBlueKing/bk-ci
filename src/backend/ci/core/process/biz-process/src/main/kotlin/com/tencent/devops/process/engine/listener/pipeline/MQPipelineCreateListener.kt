@@ -27,7 +27,6 @@
 package com.tencent.devops.process.engine.listener.pipeline
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener

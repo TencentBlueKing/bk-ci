@@ -24,31 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.user
+package com.tencent.devops.process.pojo.webhook
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.webhook.WebhookEventType
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import javax.ws.rs.Consumes
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Api(tags = ["USER_WEBHOOK"], description = "用户-webhook")
-@Path("/user/webhook")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface UserScmWebhookResource {
-
-    @ApiOperation("更新所有的webhook项目名")
-    @PUT
-    @Path("/updateProjectNameAndTaskId")
-    fun updateProjectNameAndTaskId(): Result<Boolean>
-
-    @ApiOperation("根据代码库类型获取事件")
-    @PUT
-    @Path("/eventType")
-    fun getEventType(scmType: String): Result<List<WebhookEventType>>
-}
+@ApiModel("WEBHOOK-事件类型")
+data class WebhookEventType(
+    @ApiModelProperty("eventType", required = true)
+    val eventType: String,
+    @ApiModelProperty("eventTypeName", required = true)
+    val eventTypeName: String
+)
