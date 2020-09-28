@@ -38,7 +38,7 @@ buildscript {
         springConsulVersion = "2.2.4.RELEASE"
         swaggerVersion = "1.5.17"
         jaxrsVersion = "2.0"
-        jacksonVersion = "2.9.10"
+        jacksonVersion = "2.11.2"
         esVersion = "5.6.14"
         searchGuardSSLVersion = "5.6.14-23"
         hashidsVersion = "1.0.3"
