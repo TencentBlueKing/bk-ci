@@ -40,7 +40,7 @@ interface ApigwEnvironmentResourceV3 {
 
     @ApiOperation("获取指定构建机状态")
     @Path("/thirdPartAgent/nodes/status")
-    @POST
+    @GET
     fun getNodeStatus(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -54,8 +54,8 @@ interface ApigwEnvironmentResourceV3 {
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("节点 hashIds", required = true)
-        @QueryParam("nodeId")
-        nodeId: String
-    ): Result<List<NodeWithPermission>>
+        @ApiParam("节点 hashId", required = true)
+        @QueryParam("nodeHashId")
+        nodeHashId: String
+    ): Result<NodeWithPermission?>
 }

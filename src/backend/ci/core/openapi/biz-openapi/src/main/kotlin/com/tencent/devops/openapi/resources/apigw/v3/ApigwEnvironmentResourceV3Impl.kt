@@ -21,13 +21,13 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
 		return client.get(ServiceNodeResource::class).listNodeByNodeType(projectId, NodeType.THIRDPARTY)
 	}
 
-	override fun getNodeStatus(appCode: String?, apigwType: String?, userId: String, projectId: String, nodeId: String): Result<List<NodeWithPermission>> {
+	override fun getNodeStatus(appCode: String?, apigwType: String?, userId: String, projectId: String, nodeId: String): Result<NodeWithPermission?> {
 		logger.info("getNodeStatus userId:$userId, projectId: $projectId, nodeId: $nodeId")
-		if(nodeId == null || nodeId.isEmpty()) {
-			logger.warn("nodeId is empty")
-			return Result(emptyList())
+		val nodeList = client.get(ServiceNodeResource::class).listByHashIds(userId, projectId, arrayListOf(nodeId)).data
+		if(nodeList != null && nodeList.isNotEmpty()) {
+			return Result(nodeList[0])
 		}
-		return client.get(ServiceNodeResource::class).listByHashIds(userId, projectId, arrayListOf(nodeId))
+		return Result(null)
 	}
 
 	companion object {
