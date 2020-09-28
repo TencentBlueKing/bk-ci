@@ -4,7 +4,5 @@ spring:
     desc: DevOps Project Service
     version: 4.0.0
     packageName: com.tencent.devops.project
-  jmx:
-    enabled: true
 
   port: 21912
