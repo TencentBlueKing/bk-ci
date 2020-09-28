@@ -145,6 +145,7 @@ class MQPipelineCreateListener @Autowired constructor(
                             repoType = repositoryConfig.repositoryType,
                             repoHashId = repositoryConfig.repositoryHashId,
                             repoName = repo.aliasName,
+                            projectName = repo.projectName,
                             taskId = e.id
                         ),
                         repo = repo,

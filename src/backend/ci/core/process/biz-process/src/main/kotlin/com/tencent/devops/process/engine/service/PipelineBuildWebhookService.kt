@@ -35,6 +35,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
@@ -226,37 +227,40 @@ class PipelineBuildWebhookService @Autowired constructor(
             triggerContainer.elements.forEach {
                 when (codeRepositoryType) {
                     CodeSVNWebHookTriggerElement.classType -> {
-                        if (it is CodeSVNWebHookTriggerElement && it.isElementEnable()) {
+                        if ((it is CodeSVNWebHookTriggerElement && it.isElementEnable()) ||
+                            canGitGenericWebhookStartUp(it)
+                        ) {
                             canWebhookStartup = true
                             return@lit
                         }
                     }
                     CodeGitWebHookTriggerElement.classType -> {
-                        if (it is CodeGitWebHookTriggerElement && it.isElementEnable()) {
+                        if ((it is CodeGitWebHookTriggerElement && it.isElementEnable()) ||
+                            canGitGenericWebhookStartUp(it)) {
                             canWebhookStartup = true
                             return@lit
                         }
                     }
                     CodeGithubWebHookTriggerElement.classType -> {
-                        if (it is CodeGithubWebHookTriggerElement && it.isElementEnable()) {
+                        if ((it is CodeGithubWebHookTriggerElement && it.isElementEnable()) ||
+                            canGitGenericWebhookStartUp(it)
+                        ) {
                             canWebhookStartup = true
                             return@lit
                         }
                     }
                     CodeGitlabWebHookTriggerElement.classType -> {
-                        if (it is CodeGitlabWebHookTriggerElement && it.isElementEnable()) {
+                        if ((it is CodeGitlabWebHookTriggerElement && it.isElementEnable()) ||
+                            canGitGenericWebhookStartUp(it)
+                        ) {
                             canWebhookStartup = true
                             return@lit
                         }
                     }
                     CodeTGitWebHookTriggerElement.classType -> {
-                        if (it is CodeTGitWebHookTriggerElement && it.isElementEnable()) {
-                            canWebhookStartup = true
-                            return@lit
-                        }
-                    }
-                    CodeGitGenericWebHookTriggerElement.classType -> {
-                        if (it is CodeGitGenericWebHookTriggerElement && it.isElementEnable()) {
+                        if ((it is CodeTGitWebHookTriggerElement && it.isElementEnable()) ||
+                            canGitGenericWebhookStartUp(it)
+                        ) {
                             canWebhookStartup = true
                             return@lit
                         }
@@ -265,6 +269,15 @@ class PipelineBuildWebhookService @Autowired constructor(
             }
         }
         return canWebhookStartup
+    }
+
+    private fun canGitGenericWebhookStartUp(
+        element: Element
+    ): Boolean {
+        if (element is CodeGitGenericWebHookTriggerElement && element.isElementEnable()) {
+            return true
+        }
+        return false
     }
 
     fun webhookTriggerPipelineBuild(
