@@ -68,7 +68,7 @@ buildscript {
         poiVersion = "3.17"
         sigarVersion = "1.6.4"
         poiVersion = "3.17"
-        commonLang3Version = "3.5"
+        commonCodecVersion = "1.15"
         luceneVersion = "8.6.0"
         springKafkaVersion = "1.3.10.RELEASE"
         luceneVersion = "8.6.0"
@@ -257,6 +257,7 @@ subprojects {
             dependency "com.github.ulisesbocchio:jasypt-spring-boot-starter:$jasyptVersion"
             dependency "org.jolokia:jolokia-core:$jolokiaVersion"
             dependency("org.apache.commons:commons-lang3:${commonLang3Version}")
+            dependency("commons-codec:commons-codec:${commonCodecVersion}")
             dependency("org.jooq:jooq:$jooqVersion")
             dependency("org.apache.lucene:lucene-core:$luceneVersion")
 
