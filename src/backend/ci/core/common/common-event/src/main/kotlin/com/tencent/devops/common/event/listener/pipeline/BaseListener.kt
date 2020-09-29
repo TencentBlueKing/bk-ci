@@ -26,13 +26,11 @@
 
 package com.tencent.devops.common.event.listener.pipeline
 
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.common.service.trace.TraceTag.BIZIDTAG
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 

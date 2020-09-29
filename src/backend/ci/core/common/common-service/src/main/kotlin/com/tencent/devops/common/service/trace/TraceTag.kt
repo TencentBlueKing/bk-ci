@@ -8,7 +8,7 @@ object TraceTag {
     const val TRACE_HEADER_DEVOPS_TRACE = "X-DEVOPS-TRACE-ID"
     const val BIZIDTAG = "biz"
 
-    fun buildBiz() : String {
+    fun buildBiz(): String {
         return "$BIZIDTAG-${UUIDUtil.generate()}"
     }
 }

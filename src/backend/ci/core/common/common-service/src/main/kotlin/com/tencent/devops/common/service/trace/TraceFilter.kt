@@ -1,6 +1,5 @@
 package com.tencent.devops.common.service.trace
 
-import com.tencent.devops.common.api.util.UUIDUtil
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.stereotype.Component
