@@ -31,20 +31,24 @@ class DUPCQueryWarningBizServiceImpl @Autowired constructor(
                 defectQueryParam.status,
                 pageable
             )
-        return Page(pageable.pageNumber + 1, pageable.pageSize, 0L, dupcDefectList)
+        return Page(pageable.pageNumber + 1, pageable.pageSize, dupcDefectList.size.toLong(), dupcDefectList)
     }
 
     override fun queryLintDefectStatistic(
         taskIdList: List<Long>,
         toolName: String?,
+        startTime: Long?,
+        endTime: Long?,
         filterFields: List<String>?,
+        buildId: String?,
         pageNum: Int?,
         pageSize: Int?,
         sortField: String?,
         sortType: String?
     ): Page<DUPCStatisticModel> {
         val pageable = PageUtils.convertPageSizeToPageable(pageNum, pageSize, sortField, sortType)
-        val dupcStatisticList = statisticDao.findDUPCByTaskIdInAndToolName(taskIdList, filterFields, pageable)
-        return Page(pageable.pageNumber + 1, pageable.pageSize, 0L, dupcStatisticList)
+        val dupcStatisticList = statisticDao.findDUPCByTaskIdInAndToolName(taskIdList, startTime, endTime,
+                filterFields, pageable)
+        return Page(pageable.pageNumber + 1, pageable.pageSize, dupcStatisticList.size.toLong(), dupcStatisticList)
     }
 }

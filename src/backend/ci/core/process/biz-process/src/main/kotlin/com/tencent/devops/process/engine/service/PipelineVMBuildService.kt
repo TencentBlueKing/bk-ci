@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.constant.KEY_START_TIME
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.pojo.OrganizationDetailInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -51,7 +51,8 @@ import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
@@ -70,13 +71,14 @@ import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.common.KEY_VERSION
 import okhttp3.Request
 import org.apache.lucene.util.RamUsageEstimator
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
@@ -92,7 +94,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     private val buildVariableService: BuildVariableService,
     @Autowired(required = false)
     private val measureService: MeasureService?,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val atomMonitorEventDispatcher: AtomMonitorEventDispatcher,
     private val pipelineTaskService: PipelineTaskService,
@@ -189,6 +191,13 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         vmSeqId = vmSeqId,
                         buildStatus = BuildStatus.SUCCEED
                     )
+                    // 告诉dispatch agent启动了，为JOB计时服务
+                    try {
+                        client.get(ServiceJobQuotaBusinessResource::class).addRunningAgent(buildInfo.projectId, buildId, vmSeqId)
+                    } catch (e: Throwable) {
+                        logger.error("Add running agent to job quota failed.")
+                    }
+
                     return BuildVariables(
                         buildId = buildId,
                         vmSeqId = vmSeqId,
@@ -216,7 +225,10 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         pipelineId: String,
         buildId: String,
         vmSeqId: String,
-        buildStatus: BuildStatus
+        buildStatus: BuildStatus,
+        errorType: ErrorType? = null,
+        errorCode: Int? = null,
+        errorMsg: String? = null
     ): Boolean {
         // 针VM启动不是在第一个的情况，第一个可能是人工审核插件（避免占用VM）
         // agent上报状态需要判断根据ID来获取真正的启动VM的任务，否则兼容处理取第一个插件的状态（正常情况）
@@ -234,13 +246,16 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             return false
         }
 
-        // 如果是成功的状态，则更新构建机启动插件的状态
+        // 如果是完成状态，则更新构建机启动插件的状态
         if (BuildStatus.isFinish(buildStatus)) {
             pipelineRuntimeService.updateTaskStatus(
                 buildId = buildId,
                 taskId = startUpVMTask.taskId,
                 userId = startUpVMTask.starter,
-                buildStatus = buildStatus
+                buildStatus = buildStatus,
+                errorType = errorType,
+                errorCode = errorCode,
+                errorMsg = errorMsg
             )
 
             // #2043 上报启动构建机状态时，重新刷新开始时间，以防止调度的耗时占用了Job的超时时间
@@ -372,8 +387,13 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         ) {
                             if (!ControlUtils.checkCustomVariableSkip(buildId = buildId, additionalOptions = additionalOptions, variables = allVariable)) {
                                 queueTasks.add(task)
-                            } else {
-                                pipelineBuildDetailService.taskSkip(buildId, task.taskId)
+                                /* #2400 此处逻辑有问题不能在这直接设置Model为跳过：
+                                    举例按顺序 Job2 下的Task1 和 Task2 插件都未开始执行， Task2设置为指定条件执行，但条件依赖于Task1生成。
+                                    1. Task1正常执行并结束情况下，但执行过程中影响展示上在Task1执行时会提前将Task2设置为跳过，存在误导，但Task1结束后，只要条件满足，Task2仍然会执行
+                                    2. Task1失败了，导致条件没设置成功，构建结束。 此时进行重试，Task1重试成功了，条件也设置成功了， 但Task2仍然为SKIP（在启动时就决定了）
+                                 */
+//                            } else {
+//                                pipelineBuildDetailService.taskSkip(buildId, task.taskId)
                             }
                         }
                     }
@@ -561,12 +581,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             errorMsg = result.message
         )
 
-        // 发送度量数据
-        sendElementData(
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            result = result
-        )
         logger.info("Complete the task(${result.taskId}) of build($buildId) and seqId($vmSeqId)")
         pipelineRuntimeService.completeClaimBuildTask(
             buildId = buildId,
@@ -588,8 +602,15 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 actionType = ActionType.END
             )
         )
-        LogUtils.stopLog(
-            rabbitTemplate = rabbitTemplate,
+
+        // 发送度量数据
+        sendElementData(
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            result = result
+        )
+
+        buildLogPrinter.stopLog(
             buildId = buildId,
             tag = result.elementId,
             jobId = result.containerId ?: ""
@@ -639,7 +660,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             val task = pipelineRuntimeService.getBuildTask(buildId, taskId)!!
             val buildStatus = if (result.success) BuildStatus.SUCCEED else BuildStatus.FAILED
             val taskParams = task.taskParams
-            val atomCode = taskParams["atomCode"] as String? ?: ""
+            val atomCode = task.atomCode ?: taskParams["atomCode"] as String? ?: task.taskType
             measureService?.postTaskData(
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
@@ -672,17 +693,15 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 }
             }
             val version = taskParams[KEY_VERSION] as String? ?: ""
-            val startTimeStr = monitorDataMap?.get(KEY_START_TIME)
-            val startTime = if (startTimeStr == null) {
-                task.startTime?.timestampmilli()
-            } else {
-                DateTimeUtil.stringToLocalDateTime(startTimeStr.toString()).timestampmilli()
-            }
-            val endTimeStr = monitorDataMap?.get(KEY_END_TIME)
-            val endTime = if (endTimeStr == null) {
-                task.endTime?.timestampmilli()
-            } else {
-                DateTimeUtil.stringToLocalDateTime(endTimeStr.toString()).timestampmilli()
+            val monitorStartTime = monitorDataMap?.get(KEY_START_TIME)
+            val startTime = (monitorStartTime as? Long) ?: task.startTime?.timestampmilli()
+            val monitorEndTime = monitorDataMap?.get(KEY_END_TIME)
+            val endTime = (monitorEndTime as? Long) ?: task.endTime?.timestampmilli()
+            var project: ProjectVO? = null
+            try {
+                project = client.get(ServiceProjectResource::class).get(task.projectId).data
+            } catch (e: Exception) {
+                logger.error("get project(${task.projectId}) info error", e)
             }
             val atomMonitorData = AtomMonitorData(
                 errorCode = result.errorCode ?: -1,
@@ -699,6 +718,14 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 elapseTime = (endTime ?: 0) - (startTime ?: 0),
                 channel = monitorDataMap?.get(KEY_CHANNEL) as? String,
                 starter = task.starter,
+                organizationDetailInfo = OrganizationDetailInfo(
+                    bgId = project?.bgId?.toInt(),
+                    bgName = project?.bgName,
+                    centerId = project?.centerId?.toInt(),
+                    centerName = project?.centerName,
+                    deptId = project?.deptId?.toInt(),
+                    deptName = project?.deptName
+                ),
                 extData = monitorDataMap?.get("extData") as? Map<String, Any>
             )
             atomMonitorEventDispatcher.dispatch(AtomMonitorReportBroadCastEvent(atomMonitorData))

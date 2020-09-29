@@ -89,6 +89,18 @@ class DockerHostConfig {
     @Value("\${dockerCli.volumeGradleCache:/root/.gradle/caches}")
     var volumeGradleCache: String? = null
 
+    @Value("\${dockerCli.volumeGolangCache:/root/go/pkg/mod}")
+    var volumeGolangCache: String? = null
+
+    @Value("\${dockerCli.volumeSbtCache:/root/.ivy2}")
+    var volumeSbtCache: String? = null
+
+    @Value("\${dockerCli.volumeSbt2Cache:/root/.cache}")
+    var volumeSbt2Cache: String? = null
+
+    @Value("\${dockerCli.volumeYarnCache:/usr/local/share/.cache/}")
+    var volumeYarnCache: String? = null
+
     @Value("\${dockerCli.hostPathWorkspace:#{null}}")
     var hostPathWorkspace: String? = null
 
@@ -128,6 +140,18 @@ class DockerHostConfig {
     @Value("\${dockerCli.hostPathGradleCache:#{null}}")
     var hostPathGradleCache: String? = null
 
+    @Value("\${dockerCli.hostPathGolangCache:#{null}}")
+    var hostPathGolangCache: String? = null
+
+    @Value("\${dockerCli.hostPathSbtCache:#{null}}")
+    var hostPathSbtCache: String? = null
+
+    @Value("\${dockerCli.hostPathSbt2Cache:#{null}}")
+    var hostPathSbt2Cache: String? = null
+
+    @Value("\${dockerCli.hostPathYarnCache:#{null}}")
+    var hostPathYarnCache: String? = null
+
     @Value("\${dockerCli.hostPathLinkDir}")
     var hostPathLinkDir: String = "/tmp/bkci"
 
@@ -160,6 +184,9 @@ class DockerHostConfig {
 
     @Value("\${dockerhost.mode:#{null}}")
     var dockerhostMode: String? = null
+
+    @Value("\${dockerhost.dockerRun.StartPort:20000}")
+    var startPort: Int? = 20000
 
     @Value("\${codecc.dockerRun.log:false}")
     var dockerRunLog: Boolean? = false

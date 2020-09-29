@@ -85,8 +85,10 @@ class OperationHistoryAop @Autowired constructor(
         //获取任务id
         val request = (RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes).request
         val taskId = request.getHeader(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)?.toLong() ?: 0L
+        // 获取流水线id
+        val pipelineId = request.getParameter("pipelineId") ?: ""
         //获取操作用户
-        val userName = request.getHeader(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+        val userName = request.getHeader(CODECC_AUTH_HEADER_DEVOPS_USER_ID) ?: request.getParameter("userName")
         //获取操作消息
         val paramArray = getParamArray(joinPoint, funcId, userName)
         //获取当前时间
@@ -94,6 +96,7 @@ class OperationHistoryAop @Autowired constructor(
 
         val operationHistoryDTO = OperationHistoryDTO(
                 taskId = taskId,
+                pipelineId = pipelineId,
                 funcId = funcId,
                 operType = operType,
                 operTypeName = null,
@@ -106,7 +109,6 @@ class OperationHistoryAop @Autowired constructor(
         //发送消息，异步处理
         rabbitTemplate.convertAndSend(EXCHANGE_OPERATION_HISTORY,
                 ROUTE_OPERATION_HISTORY, operationHistoryDTO)
-
     }
 
 

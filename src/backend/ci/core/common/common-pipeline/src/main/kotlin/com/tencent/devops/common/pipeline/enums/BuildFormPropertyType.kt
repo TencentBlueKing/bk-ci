@@ -28,6 +28,7 @@ package com.tencent.devops.common.pipeline.enums
 
 enum class BuildFormPropertyType(val value: String) {
     STRING("string"),
+    TEXTAREA("textarea"),
     ENUM("enum"),
     DATE("date"),
     LONG("long"),
@@ -39,6 +40,7 @@ enum class BuildFormPropertyType(val value: String) {
     CONTAINER_TYPE("container_type"), // 构建机类型(公共构建机，第三方构建机，PCG构建机等)
     ARTIFACTORY("artifactory"), // 版本仓库
     SUB_PIPELINE("sub_pipeline"), // 子流水线
+    CUSTOM_FILE("custom_file"), // 自定义仓库文件
     PASSWORD("password");
 
     override fun toString() = value

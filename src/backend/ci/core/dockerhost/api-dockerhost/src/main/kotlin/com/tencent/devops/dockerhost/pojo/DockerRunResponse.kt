@@ -34,5 +34,7 @@ data class DockerRunResponse(
     @ApiModelProperty("容器Id", required = true)
     val containerId: String,
     @ApiModelProperty("容器启动时间戳", required = true)
-    val startTimeStamp: Int
+    val startTimeStamp: Int,
+    @ApiModelProperty("端口绑定列表", required = false)
+    val dockerRunPortBindings: List<DockerRunPortBinding>?
 )

@@ -1,22 +1,25 @@
 <template>
     <section v-bkloading="{ isLoading }" class="bkdevops-pipeline-edit-wrapper">
-        <bk-tab :active="currentTab" @tab-change="switchTab" class="bkdevops-pipeline-tab-card bkdevops-pipeline-edit-tab" type="unborder-card">
-            <bk-tab-panel
-                v-for="panel in panels"
-                v-bind="{ name: panel.name, label: panel.label }"
-                render-directive="if"
-                :key="panel.name"
-            >
-                <component :is="panel.component" v-bind="panel.bindData" @hideColumnPopup="toggleColumnsSelectPopup(false)"></component>
-            </bk-tab-panel>
-        </bk-tab>
         <empty-tips
             v-if="hasNoPermission"
+            :show-lock="true"
             :title="noPermissionTipsConfig.title"
             :desc="noPermissionTipsConfig.desc"
             :btns="noPermissionTipsConfig.btns">
         </empty-tips>
-        <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section" v-if="!isLoading && currentTab === 'pipeline'"></mini-map>
+        <template v-else>
+            <bk-tab :active="currentTab" @tab-change="switchTab" class="bkdevops-pipeline-tab-card bkdevops-pipeline-edit-tab" type="unborder-card">
+                <bk-tab-panel
+                    v-for="panel in panels"
+                    v-bind="{ name: panel.name, label: panel.label }"
+                    render-directive="if"
+                    :key="panel.name"
+                >
+                    <component :is="panel.component" v-bind="panel.bindData" @hideColumnPopup="toggleColumnsSelectPopup(false)"></component>
+                </bk-tab-panel>
+            </bk-tab>
+            <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section" v-if="!isLoading && currentTab === 'pipeline'"></mini-map>
+        </template>
     </section>
 </template>
 
@@ -57,7 +60,10 @@
                             theme: 'success',
                             size: 'normal',
                             handler: () => {
-                                this.goToApplyPerm('role_viewer')
+                                this.toApplyPermission(this.$permissionActionMap.edit, {
+                                    id: this.pipelineId,
+                                    name: this.pipelineId
+                                })
                             },
                             text: this.$t('applyPermission')
                         }
