@@ -21,7 +21,7 @@ class TraceFilter : Filter {
         val httpServletRequest = request as HttpServletRequest
         val bizId = httpServletRequest?.getHeader(TraceTag.BIZID)
         if (bizId.isNullOrEmpty()) {
-            MDC.put(TraceTag.BIZID, "b-${UUIDUtil.generate()}")
+            MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
         } else {
             MDC.put(TraceTag.BIZID, bizId)
         }
