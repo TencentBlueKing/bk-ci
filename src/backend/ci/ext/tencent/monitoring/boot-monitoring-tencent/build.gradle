@@ -26,5 +26,6 @@
 
 dependencies {
     compile project(":ext:tencent:monitoring:biz-monitoring-tencent")
+    compile ("com.squareup.okhttp3:okhttp:3.14.4")
 }
 apply from: "$rootDir/task_spring_boot_package.gradle"
