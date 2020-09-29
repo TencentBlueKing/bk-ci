@@ -1,6 +1,5 @@
-package com.tencent.devops.environment.websocket.page
 
-import com.tencent.devops.common.websocket.IPath
+import com.tencent.devops.common.websocket.page.IPath
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
 class NodePath : IPath {

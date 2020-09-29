@@ -1,5 +1,6 @@
-package com.tencent.devops.environment.service
+package com.tencent.devops.misc.service
 
+import MiscNodeWebsocketPush
 import NodePath
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
@@ -7,20 +8,19 @@ import com.tencent.devops.common.websocket.enum.NotityLevel
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
-import com.tencent.devops.environment.websocket.NodeWebsocketPush
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class NodeWebsocketService @Autowired constructor(
+class MiscNodeWebsocketService @Autowired constructor(
     val objectMapper: ObjectMapper,
     val redisOperation: RedisOperation
 ) {
     fun buildDetailMessage(
         projectId: String,
         userId: String
-    ): NodeWebsocketPush {
+    ): MiscNodeWebsocketPush {
         val page = NodePath().buildPage(
                 buildPageInfo = BuildPageInfo(
                         buildId = null,
@@ -30,7 +30,7 @@ class NodeWebsocketService @Autowired constructor(
                 )
         )
         logger.info("nodeList websocket: page[$page],project:[$projectId]")
-        return NodeWebsocketPush(
+        return MiscNodeWebsocketPush(
                 projectId = projectId,
                 userId = userId,
                 redisOperation = redisOperation,
