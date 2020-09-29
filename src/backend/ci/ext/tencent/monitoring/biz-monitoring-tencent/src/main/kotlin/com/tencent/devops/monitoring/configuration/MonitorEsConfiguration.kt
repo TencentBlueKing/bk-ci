@@ -37,6 +37,6 @@ class MonitorEsConfiguration {
                 )
             }
 
-        return RestHighLevelClient(builder.build())
+        return RestHighLevelClient(builder)
     }
 }
