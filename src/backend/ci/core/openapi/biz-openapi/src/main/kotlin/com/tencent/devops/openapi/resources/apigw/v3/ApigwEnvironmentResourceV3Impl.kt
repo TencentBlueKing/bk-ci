@@ -15,27 +15,27 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwEnvironmentResourceV3Impl @Autowired constructor(
-		val client: Client
+    val client: Client
 ) : ApigwEnvironmentResourceV3 {
 
-	override fun thirdPartAgentList(appCode: String?, apigwType: String?, userId: String, projectId: String): Result<List<NodeBaseInfo>> {
-		logger.info("thirdPartAgentList userId $userId, project $projectId")
-		return client.get(ServiceNodeResource::class).listNodeByNodeType(projectId, NodeType.THIRDPARTY)
-	}
+    override fun thirdPartAgentList(appCode: String?, apigwType: String?, userId: String, projectId: String): Result<List<NodeBaseInfo>> {
+        logger.info("thirdPartAgentList userId $userId, project $projectId")
+        return client.get(ServiceNodeResource::class).listNodeByNodeType(projectId, NodeType.THIRDPARTY)
+    }
 
-	override fun getNodeStatus(appCode: String?, apigwType: String?, userId: String, projectId: String, nodeHashId: String): Result<NodeWithPermission?> {
-		logger.info("getNodeStatus userId:$userId, projectId: $projectId, nodeHashId: $nodeHashId")
-		val nodeList = client.get(ServiceNodeResource::class).listByHashIds(userId, projectId, arrayListOf(nodeHashId)).data
-		if(nodeList != null && nodeList.isNotEmpty()) {
-			return Result(nodeList[0])
-		}
-		throw ErrorCodeException(
-				errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
-				params = arrayOf(nodeHashId)
-		)
-	}
+    override fun getNodeStatus(appCode: String?, apigwType: String?, userId: String, projectId: String, nodeHashId: String): Result<NodeWithPermission?> {
+        logger.info("getNodeStatus userId:$userId, projectId: $projectId, nodeHashId: $nodeHashId")
+        val nodeList = client.get(ServiceNodeResource::class).listByHashIds(userId, projectId, arrayListOf(nodeHashId)).data
+        if (nodeList != null && nodeList.isNotEmpty()) {
+            return Result(nodeList[0])
+        }
+        throw ErrorCodeException(
+                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+                params = arrayOf(nodeHashId)
+        )
+    }
 
-	companion object {
-		val logger = LoggerFactory.getLogger(this:: class.java)
-	}
+    companion object {
+        val logger = LoggerFactory.getLogger(this:: class.java)
+    }
 }
