@@ -33,13 +33,13 @@ import java.time.ZoneOffset
 @Component
 @RefreshScope
 class MonitorNotifyJob @Autowired constructor(
-        private val client: Client,
-        private val influxdbClient: InfluxdbClient,
-        private val slaDailyDao: SlaDailyDao,
-        private val dslContext: DSLContext,
-        private val restHighLevelClient: RestHighLevelClient,
-        private val profile: Profile,
-        private val redisOperation: RedisOperation
+    private val client: Client,
+    private val influxdbClient: InfluxdbClient,
+    private val slaDailyDao: SlaDailyDao,
+    private val dslContext: DSLContext,
+    private val restHighLevelClient: RestHighLevelClient,
+    private val profile: Profile,
+    private val redisOperation: RedisOperation
 ) {
 
     @Value("\${sla.receivers:#{null}}")
@@ -143,7 +143,6 @@ class MonitorNotifyJob @Autowired constructor(
             redisLock.unlock()
         }
     }
-
 
     private fun commitCheck(startTime: Long, endTime: Long): EmailModuleData {
         val sql =
