@@ -90,7 +90,8 @@
                 <template v-else-if="col.prop === 'errorCode'" v-slot="props">
                     <template v-if="Array.isArray(props.row.errorInfoList) && props.row.errorInfoList.length > 0">
                         <div @click.stop="" class="error-code-item" :style="`max-width: ${col.width - 30}px`" v-for="item in props.row.errorInfoList" :key="item.taskId">
-                            <i v-if="errorTypeMap[item.errorType]" :title="$t(errorTypeMap[item.errorType].title)" :class="`devops-icon icon-${errorTypeMap[item.errorType].icon}`"></i>
+                            <logo v-if="errorTypeMap[item.errorType]" :title="$t(errorTypeMap[item.errorType].title)" :name="errorTypeMap[item.errorType].icon" size="20" />
+                            <!-- <i v-if="errorTypeMap[item.errorType]" :title="$t(errorTypeMap[item.errorType].title)" :class="`devops-icon icon-${errorTypeMap[item.errorType].icon}`"></i> -->
                             <span :title="item.errorMsg" v-if="item.errorMsg">{{ item.errorMsg }} </span>
                         </div>
                     </template>
@@ -201,11 +202,11 @@
                     },
                     {
                         title: 'thirdPartyError',
-                        icon: 'cog'
+                        icon: 'third-party'
                     },
                     {
                         title: 'pluginError',
-                        icon: 'cog'
+                        icon: 'plugin'
                     }
                 ]
             },
