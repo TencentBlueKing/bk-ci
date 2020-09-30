@@ -90,7 +90,7 @@
                 <template v-else-if="col.prop === 'errorCode'" v-slot="props">
                     <template v-if="Array.isArray(props.row.errorInfoList) && props.row.errorInfoList.length > 0">
                         <div @click.stop="" class="error-code-item" :style="`max-width: ${col.width - 30}px`" v-for="item in props.row.errorInfoList" :key="item.taskId">
-                            <logo class="svg-error-icon" v-if="errorTypeMap[item.errorType]" :title="$t(errorTypeMap[item.errorType].title)" :name="errorTypeMap[item.errorType].icon" size="14"></logo>
+                            <logo class="svg-error-icon" v-if="errorTypeMap[item.errorType]" :title="$t(errorTypeMap[item.errorType].title)" :name="errorTypeMap[item.errorType].icon" size="12"></logo>
                             <span :title="item.errorMsg" v-if="item.errorMsg">{{ item.errorMsg }} </span>
                         </div>
                     </template>
@@ -676,8 +676,8 @@
                 @include ellipsis();
             }
             .svg-error-icon {
-                min-width: 14px;
-                min-height: 14px;
+                min-width: 12px;
+                min-height: 12px;
             }
         }
     }
