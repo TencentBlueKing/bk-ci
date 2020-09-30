@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.service.code
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
@@ -49,6 +50,27 @@ class GitGenericWebHookElementParams : ScmWebhookElementParams<CodeGitGenericWeb
         with(element.data.input) {
             params.eventType = CodeEventType.valueOf(eventType)
             params.codeType = getCodeType(scmType)
+
+            params.excludeUsers = if (excludeUsers == null || excludeUsers!!.isEmpty()) {
+                ""
+            } else {
+                EnvUtils.parseEnv(excludeUsers!!.joinToString(","), variables)
+            }
+            params.includeUsers = if (includeUsers == null || includeUsers!!.isEmpty()) {
+                ""
+            } else {
+                EnvUtils.parseEnv(includeUsers!!.joinToString(","), variables)
+            }
+            params.block = block ?: false
+            params.branchName = EnvUtils.parseEnv(branchName ?: "", variables)
+            params.excludeBranchName = EnvUtils.parseEnv(excludeBranchName ?: "", variables)
+            params.relativePath = EnvUtils.parseEnv(relativePath ?: "", variables)
+            params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
+            params.excludePaths = EnvUtils.parseEnv(excludePaths ?: "", variables)
+            params.tagName = EnvUtils.parseEnv(tagName ?: "", variables)
+            params.excludeTagName = EnvUtils.parseEnv(excludeTagName ?: "", variables)
+            params.excludeSourceBranchName = EnvUtils.parseEnv(excludeSourceBranchName ?: "", variables)
+            params.includeSourceBranchName = EnvUtils.parseEnv(includeSourceBranchName ?: "", variables)
         }
         return params
     }
@@ -65,7 +87,7 @@ class GitGenericWebHookElementParams : ScmWebhookElementParams<CodeGitGenericWeb
                 CodeType.GITHUB
             ScmType.CODE_GITLAB.name ->
                 CodeType.GITLAB
-            else -> throw RuntimeException("Unknown repository type")
+            else -> throw RuntimeException("Unknown scm type")
         }
     }
 }

@@ -254,7 +254,7 @@ class ScmService @Autowired constructor(
         event: String?,
         hookUrl: String?
     ) {
-        logger.info("[$projectName|$url|$type|$token|$region|$userName|$event] Start to add web hook")
+        logger.info("[$projectName|$url|$type|$token|$region|$userName|$event|$hookUrl] Start to add web hook")
         val startEpoch = System.currentTimeMillis()
         try {
             val realHookUrl = hookUrl ?: when (type) {

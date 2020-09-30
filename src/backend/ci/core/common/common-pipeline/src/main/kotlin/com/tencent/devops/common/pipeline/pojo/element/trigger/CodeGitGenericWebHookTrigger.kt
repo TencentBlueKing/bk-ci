@@ -62,5 +62,29 @@ data class CodeGitGenericWebHookTriggerInput(
     @ApiModelProperty("触发事件", required = true)
     val eventType: String = CodeEventType.PUSH.name,
     @ApiModelProperty("hook地址,目前只对codecc开放", required = true)
-    var hookUrl: String?
+    var hookUrl: String?,
+    @ApiModelProperty("branch", required = false)
+    val branchName: String?,
+    @ApiModelProperty("excludeBranch", required = false)
+    val excludeBranchName: String?,
+    @ApiModelProperty("includePaths", required = false)
+    val includePaths: String?,
+    @ApiModelProperty("相对路径", required = true)
+    val relativePath: String?,
+    @ApiModelProperty("excludePaths", required = false)
+    val excludePaths: String?,
+    @ApiModelProperty("excludeUsers", required = false)
+    val excludeUsers: List<String>?,
+    @ApiModelProperty("用户白名单", required = false)
+    val includeUsers: List<String>?,
+    @ApiModelProperty("block", required = false)
+    val block: Boolean?,
+    @ApiModelProperty("tagName", required = false)
+    val tagName: String? = null,
+    @ApiModelProperty("excludeTagName", required = false)
+    val excludeTagName: String? = null,
+    @ApiModelProperty("excludeSourceBranchName", required = false)
+    val excludeSourceBranchName: String? = null,
+    @ApiModelProperty("includeSourceBranchName", required = false)
+    val includeSourceBranchName: String? = null
 )

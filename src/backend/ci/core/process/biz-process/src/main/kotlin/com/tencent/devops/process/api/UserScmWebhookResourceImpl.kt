@@ -58,7 +58,7 @@ class UserScmWebhookResourceImpl @Autowired constructor(
                 listOf(
                     WebhookEventType(eventType = CodeEventType.PUSH.name, eventTypeName = "Commit Push Hook"),
                     WebhookEventType(eventType = CodeEventType.CREATE.name, eventTypeName = "Create Branch Or Tag"),
-                    WebhookEventType(eventType = CodeEventType.MERGE_REQUEST.name, eventTypeName = "Pull Request Hook")
+                    WebhookEventType(eventType = CodeEventType.PULL_REQUEST.name, eventTypeName = "Pull Request Hook")
                 )
             else ->
                 listOf(

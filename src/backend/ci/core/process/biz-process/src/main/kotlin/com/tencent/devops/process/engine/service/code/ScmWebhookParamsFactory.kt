@@ -149,6 +149,14 @@ object ScmWebhookParamsFactory {
                     matcher = matcher as GitWebHookMatcher,
                     matchResult = matchResult
                 ).getStartParams(element)
+            is CodeGitGenericWebHookTriggerElement ->
+                GitGenericWebHookElementStartParam(
+                    projectId = projectId,
+                    repo = repo,
+                    params = params,
+                    matcher = matcher,
+                    matchResult = matchResult
+                ).getStartParams(element)
             else -> {
                 emptyMap()
             }
