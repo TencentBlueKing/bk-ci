@@ -24,26 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.option
+package com.tencent.devops.common.pipeline.pojo
 
-import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.DependOnType
-import com.tencent.devops.common.pipeline.enums.JobRunCondition
 
-/**
- * Job流程控制
- * @version 1.0
- */
-data class JobControlOption(
-    val enable: Boolean, // 是否启用Job
-    val prepareTimeout: Int? = 10, // Job准备环境的超时时间
-    val timeout: Int?, // Job执行的超时时间
-    val runCondition: JobRunCondition, // 运行条件
-    val customVariables: List<NameAndValue>? = null, // 自定义变量
-    val customCondition: String? = null, // 自定义条件
-    // job依赖
-    val dependOnType: DependOnType? = null,
-    var dependOnId: List<String>? = null, // 需要过滤不存在的job，定义为var类型
-    val dependOnName: String? = null,
-    var dependOnContainerId2JobIds: Map<String, String>? = null // containerId与jobId映射，depend on运行时使用的是containerId
+data class DependOnConfig(
+    val dependOnType: DependOnType? = DependOnType.ID,
+    val dependOnId: List<String>? = null,
+    val dependOnName: String? = null
 )

@@ -69,7 +69,8 @@ class ContainerControl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val buildVariableService: BuildVariableService,
-    private val mutexControl: MutexControl
+    private val mutexControl: MutexControl,
+    private val dependOnControl: DependOnControl
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -109,7 +110,27 @@ class ContainerControl @Autowired constructor(
         )
         val containerTaskList = pipelineRuntimeService.listContainerBuildTasks(buildId, containerId)
 
-        // 仅在初次进入Container时进行跳过判断
+        if (BuildStatus.isReadyToRun(container.status) || BuildStatus.DEPENDENT_WAITING == container.status) {
+            // 当有依赖job时，根据依赖job的运行状态执行
+            when (dependOnControl.dependOnStatus(this, container)) {
+                BuildStatus.FAILED -> {
+                    logger.info("[$buildId]|stage=$stageId|container=$containerId| fail due to dependency fail or skip")
+                    dependOnControl.updateContainerStatus(container, BuildStatus.FAILED)
+                    return sendBackStage("container_dependOn_failed")
+                }
+                BuildStatus.SUCCEED -> {
+                    // 所有依赖都成功运行,则继续执行
+                    logger.info("[$buildId]|stage=$stageId|container=$containerId| all dependency run success")
+                }
+                else -> {
+                    logger.info("[$buildId]|stage=$stageId|container=$containerId| some dependency not finished | status changes to DEPENDENT_WAITING")
+                    dependOnControl.updateContainerStatus(container, BuildStatus.DEPENDENT_WAITING)
+                    return
+                }
+            }
+        }
+
+        // 仅在初次进入Container时进行跳过和依赖判断
         if (BuildStatus.isReadyToRun(container.status)) {
             if (checkIfAllSkip(
                     buildId = buildId,
