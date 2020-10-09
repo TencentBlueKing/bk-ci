@@ -38,6 +38,7 @@ class ReasonRelDao {
         id: String,
         userId: String,
         storeCode: String,
+        storeType: Byte,
         reasonId: String,
         note: String?,
         type: String
@@ -49,6 +50,7 @@ class ReasonRelDao {
                 REASON_ID,
                 NOTE,
                 STORE_CODE,
+                STORE_TYPE,
                 TYPE,
                 CREATOR
             )
@@ -57,6 +59,7 @@ class ReasonRelDao {
                     reasonId,
                     note,
                     storeCode,
+                    storeType,
                     type,
                     userId
                 ).execute()
@@ -72,6 +75,15 @@ class ReasonRelDao {
                 .from(this)
                 .where(REASON_ID.eq(id))
                 .fetchOne(0, Long::class.java) != 0L
+        }
+    }
+
+    fun deleteReasonRel(dslContext: DSLContext, storeCode: String, storeType: Byte) {
+        with(TReasonRel.T_REASON_REL) {
+            dslContext.deleteFrom(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType))
+                .execute()
         }
     }
 }

@@ -12,7 +12,6 @@ const TaskSettingsReport = () => import(/* webpackChunkName: 'task-settings' */'
 const TaskSettingsIgnore = () => import(/* webpackChunkName: 'task-settings' */'../views/task/settings-ignore')
 const TaskSettingsManage = () => import(/* webpackChunkName: 'task-settings' */'../views/task/settings-manage')
 const TaskSettingsCheckerset = () => import(/* webpackChunkName: 'task-settings' */'../views/task/settings-checkerset')
-const TaskSettingsBlank = () => import(/* webpackChunkName: 'task-settings' */'../views/task/white-blank')
 
 const routes = [
     {
@@ -101,12 +100,6 @@ const routes = [
                 path: 'manage',
                 name: 'task-settings-manage',
                 component: TaskSettingsManage
-            },
-            // 跳转中继站
-            {
-                path: 'blank',
-                name: 'task-settings-blank',
-                component: TaskSettingsBlank
             }
         ]
     }

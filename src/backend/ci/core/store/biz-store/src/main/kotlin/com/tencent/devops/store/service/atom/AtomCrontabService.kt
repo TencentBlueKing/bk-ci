@@ -69,9 +69,13 @@ class AtomCrontabService @Autowired constructor(
                 dslContext.transaction { t ->
                     val context = DSL.using(t)
                     marketAtomDao.setAtomStatusByCode(
-                        context, it.atomCode,
-                        AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
-                        AtomStatusEnum.UNDERCARRIAGED.status.toByte(), "system", null
+                        dslContext = context,
+                        atomCode = it.atomCode,
+                        atomOldStatus = AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
+                        atomNewStatus = AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
+                        userId = "system",
+                        msg = null,
+                        latestFlag = null
                     )
                     marketAtomOfflineDao.setStatus(context, it.id, 1, "system")
                 }

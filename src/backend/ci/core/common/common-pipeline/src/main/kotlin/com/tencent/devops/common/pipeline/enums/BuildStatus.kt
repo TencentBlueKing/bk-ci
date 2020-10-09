@@ -57,6 +57,7 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
     PAUSE("暂停执行", true), // 21 暂停执行，等待事件
     STAGE_SUCCESS("阶段性完成", true), // 22 流水线阶段性完成,
     QUOTA_FAILED("配额不够失败", true), // 23 失败
+    DEPENDENT_WAITING("依赖等待", true), // 24 依赖等待
     UNKNOWN("未知状态", false); // 99
 
     companion object {

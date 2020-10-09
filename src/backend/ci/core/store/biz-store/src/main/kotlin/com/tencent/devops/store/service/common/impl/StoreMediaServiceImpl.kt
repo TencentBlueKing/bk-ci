@@ -76,7 +76,7 @@ class StoreMediaServiceImpl : StoreMediaService {
 
     override fun deleteByStoreCode(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
         logger.info("deleteByStoreCode input: userId[$userId] storeCode[$storeCode] storeType:[${storeType.type}]")
-        storeMediaInfoDao.deleteByStoreCode(dslContext, storeCode, storeType)
+        storeMediaInfoDao.deleteByStoreCode(dslContext, storeCode, storeType.type.toByte())
         return Result(true)
     }
 

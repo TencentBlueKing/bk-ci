@@ -241,6 +241,11 @@ class JFrogArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl()
         return Result(Count(0))
     }
 
+    override fun deleteFile(filePath: String): Result<Boolean> {
+        jFrogService.tryDelete("${getBasePath()}$filePath")
+        return Result(true)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(JFrogArchiveFileServiceImpl::class.java)
     }

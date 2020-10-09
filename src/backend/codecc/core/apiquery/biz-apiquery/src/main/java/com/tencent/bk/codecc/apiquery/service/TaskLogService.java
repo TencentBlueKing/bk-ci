@@ -39,4 +39,15 @@ public interface TaskLogService
      */
     Map<Long, Integer> batchTaskLogCountList(Set<Long> taskIds, String toolName);
 
+
+    /**
+     * 按时间批量获取最近成功的记录
+     *
+     * @param taskIds   任务ID集合
+     * @param startTime 开始时间
+     * @param endTime   结束时间
+     * @return list
+     */
+    Map<Long, List<TaskLogModel>> batchFindByTaskIdListAndTime(List<Long> taskIds, Long startTime, Long endTime);
+
 }

@@ -42,18 +42,21 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @date 2019/10/20
  */
 @RestResource
-public class ServiceDefectRestResourceImpl implements ServiceDefectRestResource
-{
+public class ServiceDefectRestResourceImpl implements ServiceDefectRestResource {
     @Autowired
     private BizServiceFactory<IBizService> bizServiceFactory;
 
     @Override
-    public CodeCCResult<Boolean> batchDefectProcess(long taskId, String userName, BatchDefectProcessReqVO batchDefectProcessReqVO)
+    public CodeCCResult<Boolean> batchDefectProcess(long taskId,
+                                              String userName,
+                                              BatchDefectProcessReqVO batchDefectProcessReqVO)
     {
         batchDefectProcessReqVO.setTaskId(taskId);
         batchDefectProcessReqVO.setIgnoreAuthor(userName);
-        IBizService<BatchDefectProcessReqVO> bizService = bizServiceFactory.createBizService(batchDefectProcessReqVO.getToolName(),
-                ComConstants.BATCH_PROCESSOR_INFIX + batchDefectProcessReqVO.getBizType(), IBizService.class);
+        IBizService<BatchDefectProcessReqVO> bizService =
+            bizServiceFactory.createBizService(batchDefectProcessReqVO.getToolName(),
+                ComConstants.BATCH_PROCESSOR_INFIX + batchDefectProcessReqVO.getBizType(),
+                IBizService.class);
         return bizService.processBiz(batchDefectProcessReqVO);
     }
 }

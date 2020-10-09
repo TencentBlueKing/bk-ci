@@ -48,6 +48,16 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpJobQuotaSystemResource {
 
+    @ApiOperation("统计已运行的配额信息")
+    @GET
+    @Path("/all/statistics")
+    fun statistics(): Result<Map<String, Any>>
+
+    @ApiOperation("获取全部的JOB配额信息")
+    @GET
+    @Path("/all/list")
+    fun list(): Result<List<JobQuotaSystem>>
+
     @ApiOperation("获取系统默认JOB配额信息")
     @GET
     @Path("/{jobQuotaVmType}")
@@ -83,5 +93,14 @@ interface OpJobQuotaSystemResource {
         jobQuotaVmType: JobQuotaVmType,
         @ApiParam(value = "Job配额信息", required = true)
         jobQuota: JobQuotaSystem
+    ): Result<Boolean>
+
+    @ApiOperation("清零当月已运行时间")
+    @POST
+    @Path("/clear/vm/{vmType}")
+    fun restore(
+        @ApiParam(value = "构建机类型", required = true)
+        @PathParam("vmType")
+        vmType: JobQuotaVmType
     ): Result<Boolean>
 }

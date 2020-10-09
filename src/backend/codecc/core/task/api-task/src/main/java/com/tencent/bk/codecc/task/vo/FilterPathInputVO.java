@@ -86,4 +86,10 @@ public class FilterPathInputVO
 
     @ApiModelProperty(value = "工具名")
     private String toolName;
+
+    private List<String> testSourceFilterPath;
+
+    private List<String> autoGenFilterPath;
+
+    private List<String> thirdPartyFilterPath;
 }

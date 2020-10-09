@@ -16,6 +16,7 @@ import com.tencent.bk.codecc.apiquery.vo.DeptInfoVO;
 import com.tencent.bk.codecc.apiquery.vo.TaskInfoExtVO;
 import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO;
 import com.tencent.bk.codecc.apiquery.vo.ToolConfigPlatformVO;
+import com.tencent.bk.codecc.apiquery.vo.op.ActiveTaskStatisticsVO;
 import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
@@ -26,6 +27,8 @@ import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
+
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
 
 
 /**
@@ -74,5 +77,19 @@ public interface OpTaskRestResource
     @Path("/dept/list")
     @GET
     CodeCCResult<List<DeptInfoVO>> getDeptList(@ApiParam(value = "父级部门ID") @QueryParam("parentId") String parentId);
+
+
+    @ApiOperation("通过分析记录查询时间范围内的活跃项目")
+    @Path("/activeTask/list")
+    @POST
+    CodeCCResult<Page<ActiveTaskStatisticsVO>> queryActiveTaskListByLog(
+            @ApiParam(value = "用户名", required = true) @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID) String userName,
+            @ApiParam(value = "按组织架构查询任务告警请求", required = true) @Valid TaskToolInfoReqVO taskToolInfoReqVO,
+            @ApiParam(value = "页数") @QueryParam(value = "pageNum") Integer pageNum,
+            @ApiParam(value = "每页多少条") @QueryParam(value = "pageSize") Integer pageSize,
+            @ApiParam(value = "排序字段") @QueryParam(value = "sortField") String sortField,
+            @ApiParam(value = "排序类型") @QueryParam(value = "sortType") String sortType
+    );
+
 
 }
