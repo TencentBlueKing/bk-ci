@@ -234,7 +234,7 @@ class MonitorNotifyJob @Autowired constructor(
 
     fun dispatchStatus(startTime: Long, endTime: Long): EmailModuleData {
         val sql =
-                "SELECT sum(devcloud_total_count),sum(devcloud_success_count) FROM DispatchStatus_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000 GROUP BY buildType"
+                "SELECT sum(devcloud_total_count),sum(devcloud_success_count) FROM DispatchStatus_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000 AND startTime > 0 GROUP BY buildType"
         val queryResult = influxdbClient.select(sql)
 
         val rowList = mutableListOf<Triple<String, Double, String>>()
