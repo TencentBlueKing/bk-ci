@@ -98,7 +98,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
 
         if (retryFlag && retryCount > 0) {
             logger.warn(
-                "Fail to request($request), retry after 3 seconds"
+                "Fail to request($request), retry after $sleepTimeMills ms"
             )
             Thread.sleep(sleepTimeMills)
             return requestForResponse(request, connectTimeoutInSec, readTimeoutInSec, writeTimeoutInSec, retryCount - 1)
