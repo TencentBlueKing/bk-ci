@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration debug="false" scan="false">
+    <springProperty scope="context" name="logging.path" source="logging.path" defaultValue="logs"/>
+    <springProperty scope="context" name="application.name" source="spring.application.name" defaultValue="application"/>
+
+    <property name="logging.app.file" value="${logging.path}/${application.name}.log"/>
+    <property name="logging.job.file" value="${logging.path}/${application.name}-job.log"/>
+    <property name="logging.error.file" value="${logging.path}/${application.name}-error.log"/>
+    <property name="logging.access.file" value="${logging.path}/${application.name}-access.log"/>
+    <property name="logging.file.pattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS}|%X{ip:--}|%F|%L|%level|%X{err_code:-0}|%tid||||[%t] %m%ex%n"/>
+    <property name="logging.console.pattern" value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} [%clr(%tid)] %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+
+    <!-- 彩色日志依赖的渲染类 -->
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
+    <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter"/>
+    <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter"/>
+
+    <appender name="app_log" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logging.app.file}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${logging.app.file}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <maxFileSize>1GB</maxFileSize>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.TraceIdPatternLogbackLayout">
+                <pattern>${logging.file.pattern}</pattern>
+            </layout>
+        </encoder>
+    </appender>
+    <appender name="async_app_log" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="app_log" />
+        <queueSize>1024</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>true</neverBlock>
+    </appender>
+
+    <appender name="access_log" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logging.access.file}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${logging.access.file}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <maxFileSize>1GB</maxFileSize>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%m%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="async_access_log" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="access_log" />
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>true</neverBlock>
+    </appender>
+
+    <appender name="job_log" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logging.job.file}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logging.job.file}.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.TraceIdPatternLogbackLayout">
+                <pattern>${logging.file.pattern}</pattern>
+            </layout>
+        </encoder>
+    </appender>
+    <appender name="async_job_log" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="job_log" />
+        <discardingThreshold>0</discardingThreshold>
+    </appender>
+
+    <appender name="error_log" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logging.error.file}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${logging.error.file}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <maxFileSize>1GB</maxFileSize>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.TraceIdPatternLogbackLayout">
+                <pattern>${logging.file.pattern}</pattern>
+            </layout>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+    <appender name="async_error_log" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="error_log" />
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>false</neverBlock>
+    </appender>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.TraceIdPatternLogbackLayout">
+                <pattern>${logging.console.pattern}</pattern>
+            </layout>
+        </encoder>
+    </appender>
+
+    <springProfile name="default">
+        <logger name="com.tencent.bkrepo" level="DEBUG" additivity="false">
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="com.tencent.bkrepo.common.service.feign.FeignFilterRequestMappingHandlerMapping" level="INFO" additivity="false">
+            <appender-ref ref="console"/>
+        </logger>
+        <root level="INFO">
+            <appender-ref ref="console"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="dev, test, prod">
+        <logger name="JobLogger" level="INFO" additivity="false">
+            <appender-ref ref="async_job_log"/>
+        </logger>
+        <logger name="AccessLogger" level="INFO" additivity="false">
+            <appender-ref ref="async_access_log"/>
+        </logger>
+        <root level="INFO">
+            <appender-ref ref="async_app_log"/>
+            <appender-ref ref="async_error_log"/>
+        </root>
+    </springProfile>
+
+</configuration>
