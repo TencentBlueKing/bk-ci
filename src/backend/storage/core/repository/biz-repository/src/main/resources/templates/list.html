@@ -1,0 +1,21 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Index of ' + ${path}">Index of /</title>
+</head>
+<body>
+    <h1 th:text="'Index of ' + ${path}">Index of /</h1>
+    <pre th:text="${title}">Name    Last modified      Size</pre>
+    <hr/>
+    <pre>
+        <a th:if="${path != '/'}" href="../">../</a>
+        <th:block th:each="item : ${itemList}">
+            <a th:href="${item.name}" th:text="${item.name}></a>
+            [[${item.lastModifiedDate} + '      ' + ${item.size}]]
+        </th:block>
+    </pre>
+    <hr/>
+</body>
+</html>
