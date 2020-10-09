@@ -78,7 +78,7 @@
         var WS_URL_PREFIX = '__BK_CI_PUBLIC_URL__/'
         var PERM_URL_PREFIX = '__BK_PAAS_PUBLIC_URL__/o/bk_iam_app' // EE PERM URL PREFIX
         var DOCS_URL_PREFIX = '__BK_CI_DOCS_URL__'  // 文档中心域名
-        var LOGIN_SERVICE_URL = '__BK_PAAS_PUBLIC_URL__'
+        var LOGIN_SERVICE_URL = '__BK_CI_PAAS_LOGIN_URL__' // 蓝鲸PaaS登录入口
         var DEVOPS_LS_VERSION = '<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>'
         var ENTERPRISE_VERSION = false
     </script>
@@ -197,13 +197,17 @@
     <script>
         
         window.getLoginUrl = function () {
-            var c_url = location.origin + location.pathname + encodeURIComponent(location.search)
+            var cUrl = location.origin + location.pathname + encodeURIComponent(location.search)
             if (/=%s/.test(LOGIN_SERVICE_URL)) { 
-                return LOGIN_SERVICE_URL.replace(/%s/, c_url)
-            } else if (/\?/.test(LOGIN_SERVICE_URL)) { 
-                LOGIN_SERVICE_URL =  LOGIN_SERVICE_URL + '&c_url=' + c_url
-            } else {
-                return LOGIN_SERVICE_URL =  LOGIN_SERVICE_URL + '?c_url=' + c_url
+                return LOGIN_SERVICE_URL.replace(/%s/, cUrl)
+            }else {
+                const loginUrl = new URL(LOGIN_SERVICE_URL)
+                if (/=$/.test(loginUrl.search)) {
+                  return LOGIN_SERVICE_URL + cUrl
+                } else {
+                  loginUrl.searchParams.append('c_url', cUrl)
+                  return loginUrl.href
+                }
             }
             return LOGIN_SERVICE_URL
         }

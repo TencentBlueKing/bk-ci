@@ -148,4 +148,6 @@ interface IGitService {
     ): GitMrChangeInfo
 
     fun getRepoMembers(accessToken: String, userId: String, repoName: String): List<GitMember>
+
+    fun getRepoAllMembers(accessToken: String, userId: String, repoName: String): List<GitMember>
 }

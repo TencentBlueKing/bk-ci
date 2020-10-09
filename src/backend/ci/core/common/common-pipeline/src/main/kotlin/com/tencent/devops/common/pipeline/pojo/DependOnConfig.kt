@@ -24,15 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom
+package com.tencent.devops.common.pipeline.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.enums.DependOnType
 
-@ApiModel("下架插件请求报文")
-data class AtomOfflineReq(
-    @ApiModelProperty("下架原因")
-    val reason: String?,
-    @ApiModelProperty("版本号")
-    val version: String? = null
+data class DependOnConfig(
+    val dependOnType: DependOnType? = DependOnType.ID,
+    val dependOnId: List<String>? = null,
+    val dependOnName: String? = null
 )
