@@ -175,11 +175,16 @@
                 return ['manager', 'viewer', 'member']
             }
         },
+        created () {
+            if (this.taskDetail.createFrom !== 'gongfeng_scan') {
+                this.init()
+            }
+        },
         methods: {
             changeTab (name) {
                 this.tabSelect = name
             },
-            fetchPageData () {
+            init () {
                 this.$store.dispatch('task/getCodeMessage')
                 this.getCodeccList()
             },

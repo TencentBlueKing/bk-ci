@@ -34,5 +34,28 @@ data class JobDetail(
     val type: String?,
     val pool: Pool?,
     val steps: List<AbstractTask>,
-    val condition: String?
+    val condition: String?,
+    val resourceType: ResourceType?
 )
+
+/**
+ * @Tip 后面的修改以下面的格式为准 , 如果不确定 , 需拉上相关开发和产品讨论
+ *
+ * stages:
+ *   - stage:
+ *       - job:
+ *           resourceType: REMOTE | LOCAL
+ *           pool:
+ *             type: dockerOnVm | dockerOnDevCloud | dockerOnPcg | windows | macos | selfHosted
+ *             container: mirrors.tencent.com/tlinux2.2:latest
+ *             credential:
+ *               user: xxx
+ *               password: xxx
+ *             systemVersion: 10.15.6 | win10
+ *             xcodeVersion: xcode10
+ *             visualStudioVersion: 2019 | 2020
+ *             agentId: xxx
+ *             workspace: xxx
+ *             env:
+ *               jdk: 1.8.0_161
+ */

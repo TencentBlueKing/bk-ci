@@ -168,4 +168,12 @@ class StoreCommentDao {
                 .fetch()
         }
     }
+
+    fun deleteStoreComment(dslContext: DSLContext, storeCode: String, storeType: Byte) {
+        with(TStoreComment.T_STORE_COMMENT) {
+            dslContext.deleteFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
+                .execute()
+        }
+    }
 }

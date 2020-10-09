@@ -28,6 +28,7 @@
                     <div class="data-tree" v-if="treeList.length">
                         <bk-big-tree
                             ref="tree"
+                            height="227"
                             :options="{ 'idKey': 'treeId' }"
                             :show-checkbox="true"
                             :data="treeList"

@@ -160,7 +160,7 @@ public class ObjectDynamicCreator
         }
     }
 
-    private static Object typeConversion(Class<?> cls, String str)
+    public static Object typeConversion(Class<?> cls, String str)
     {
         Object obj = null;
         String nameType = cls.getSimpleName();

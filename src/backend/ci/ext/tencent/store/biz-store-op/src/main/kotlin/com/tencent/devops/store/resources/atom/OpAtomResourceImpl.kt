@@ -32,11 +32,13 @@ import com.tencent.devops.store.api.atom.OpAtomResource
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
+import com.tencent.devops.store.pojo.atom.AtomOfflineReq
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
+import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.atom.OpAtomService
@@ -46,7 +48,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpAtomResourceImpl @Autowired constructor(
     private val atomService: AtomService,
     private val opAtomService: OpAtomService,
-    private val marketAtomService: MarketAtomService
+    private val marketAtomService: MarketAtomService,
+    private val atomReleaseService: AtomReleaseService
 ) : OpAtomResource {
 
     override fun add(userId: String, atomCreateRequest: AtomCreateRequest): Result<Boolean> {
@@ -92,5 +95,14 @@ class OpAtomResourceImpl @Autowired constructor(
         defaultShowFlag: Boolean?
     ): Result<String> {
         return Result(marketAtomService.generateCiYaml(atomCode, os, classType, defaultShowFlag))
+    }
+
+    override fun offlineAtom(userId: String, atomCode: String, atomOfflineReq: AtomOfflineReq): Result<Boolean> {
+        return atomReleaseService.offlineAtom(
+            userId = userId,
+            atomCode = atomCode,
+            atomOfflineReq = atomOfflineReq,
+            checkPermissionFlag = false
+        )
     }
 }

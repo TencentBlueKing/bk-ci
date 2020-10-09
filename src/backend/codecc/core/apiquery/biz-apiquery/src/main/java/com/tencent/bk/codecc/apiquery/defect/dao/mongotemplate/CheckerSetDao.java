@@ -9,6 +9,7 @@
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.tencent.bk.codecc.apiquery.defect.dao.mongotemplate;
 
 import com.google.common.collect.Lists;
@@ -17,12 +18,14 @@ import com.tencent.bk.codecc.apiquery.defect.model.CheckerSetTaskRelationshipMod
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -35,8 +38,7 @@ import java.util.List;
  * @date 2020/5/12
  */
 @Repository
-public class CheckerSetDao
-{
+public class CheckerSetDao {
     @Autowired
     @Qualifier("defectMongoTemplate")
     private MongoTemplate mongoTemplate;
@@ -48,11 +50,9 @@ public class CheckerSetDao
      * @param taskIdSet 任务ID集合
      * @return list
      */
-    public List<CheckerSetTaskRelationshipModel> findByTaskId(Collection<Long> taskIdSet)
-    {
+    public List<CheckerSetTaskRelationshipModel> findByTaskId(Collection<Long> taskIdSet) {
         Criteria criteria = new Criteria();
-        if (CollectionUtils.isNotEmpty(taskIdSet))
-        {
+        if (CollectionUtils.isNotEmpty(taskIdSet)) {
             criteria.andOperator(Criteria.where("task_id").in(taskIdSet));
         }
 
@@ -72,11 +72,9 @@ public class CheckerSetDao
      * @param withProps        是否查询checkerProps字段
      * @return list
      */
-    public List<CheckerSetModel> findByCheckerSetIdList(Collection<String> checkerSetIdList, Boolean withProps)
-    {
+    public List<CheckerSetModel> findByCheckerSetIdList(Collection<String> checkerSetIdList, Boolean withProps) {
         List<CheckerSetModel> checkerSetModelList = Lists.newArrayList();
-        if (CollectionUtils.isEmpty(checkerSetIdList))
-        {
+        if (CollectionUtils.isEmpty(checkerSetIdList)) {
             return checkerSetModelList;
         }
 
@@ -86,8 +84,7 @@ public class CheckerSetDao
         List<String> queryFieldList = Lists.newArrayList("checker_set_id", "checker_set_name", "code_lang",
                 "checker_set_lang", "scope", "version", "creator", "create_time", "last_update_time", "checker_count",
                 "task_usage", "enable", "sort_weight", "project_id", "description", "catagories", "legacy", "official");
-        if (withProps)
-        {
+        if (withProps) {
             queryFieldList.add("checker_props");
         }
         ProjectionOperation project = Aggregation.project(queryFieldList.toArray(new String[0]));
@@ -99,6 +96,27 @@ public class CheckerSetDao
                 mongoTemplate.aggregate(agg, "t_checker_set", CheckerSetModel.class);
         return queryResults.getMappedResults();
 
+    }
+
+
+    /**
+     * 根据规则集id和版本查询规则集
+     */
+    public CheckerSetModel findByCheckerSetIdAndVersion(String checkerSetId, int version) {
+        Query query = new Query();
+        query.addCriteria(
+                Criteria.where("checker_set_id").is(checkerSetId)
+                        .and("version").is(version)
+        );
+        return mongoTemplate.findOne(query, CheckerSetModel.class, "t_checker_set");
+    }
+
+    public CheckerSetModel findLatestVersionByCheckerSetId(String checkerSetId) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("checker_set_id").is(checkerSetId))
+                .with(new Sort(Sort.Direction.DESC,"version"));
+
+        return mongoTemplate.findOne(query, CheckerSetModel.class, "t_checker_set");
     }
 
 }

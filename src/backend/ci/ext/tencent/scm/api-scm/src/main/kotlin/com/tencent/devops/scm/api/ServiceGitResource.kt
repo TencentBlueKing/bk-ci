@@ -357,6 +357,21 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum
     ): Result<Boolean>
 
+    @ApiOperation("删除项目")
+    @DELETE
+    @Path("/deleteGitProject")
+    fun deleteGitProject(
+        @ApiParam(value = "代码库命名空间名称", required = true)
+        @QueryParam("repositorySpaceName")
+        repositorySpaceName: String,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
     @ApiOperation("获取mr信息")
     @GET
     @Path("/getMergeRequestInfo")
