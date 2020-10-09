@@ -14,7 +14,6 @@ package com.tencent.bk.codecc.task.enums;
 
 import com.tencent.bk.codecc.task.model.CustomProjEntity;
 import com.tencent.bk.codecc.task.pojo.TriggerPipelineOldReq;
-import com.tencent.bk.codecc.task.pojo.TriggerPipelineReq;
 import com.tencent.bk.codecc.task.service.ICustomPipelineService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

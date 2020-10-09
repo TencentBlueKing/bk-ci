@@ -7,7 +7,7 @@ spring:
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21923
 server:
-  port: __BKCI_DOCKERHOST_API_PORT__
+  port: __BK_CI_DOCKERHOST_API_PORT__
 
 dockerhost:
   mode: docker_no_build
@@ -18,9 +18,9 @@ dockerCli:
   dockerConfig: /root/.docker
   apiVersion: 1.23
   # docker hub 配置
-  registryUrl: __DOCKER_REGISTRY_URL__
-  registryUsername: __DOCKER_REGISTRY_USERNAME__
-  registryPassword: __DOCKER_REGISTRY_PASSWORD__
+  registryUrl: __BK_CI_DOCKER_REGISTRY_URL__
+  registryUsername: __BK_CI_DOCKER_REGISTRY_USER__
+  registryPassword: __BK_CI_DOCKER_REGISTRY_PASSWORD__
 
   # 以下一般不用修改
   volumeWorkspace: /data/devops/workspace
@@ -44,28 +44,28 @@ dockerCli:
   hostPathHosts: /etc/hosts
 
   # docker 母机上的配置，workspace用于存放构建的工作空间，可以以挂载的方式提供
-  hostPathWorkspace: __INSTALL_PATH__/public/__MODULE__/docker/workspace
-  hostPathApps: __INSTALL_PATH__/public/__MODULE__/docker/apps/
-  hostPathInit: __INSTALL_PATH__/__MODULE__/agent-package/script/init.sh
-  hostPathSleep: __INSTALL_PATH__/__MODULE__/agent-package/script/sleep.sh
-  hostPathLogs: __INSTALL_PATH__/logs/__MODULE__/docker
+  hostPathWorkspace: __BK_CI_DATA_DIR__/docker/workspace
+  hostPathApps: __BK_CI_DATA_DIR__/docker/apps/
+  hostPathInit: __BK_CI_HOME__/agent-package/script/init.sh
+  hostPathSleep: __BK_CI_HOME__/agent-package/script/sleep.sh
+  hostPathLogs: __BK_CI_LOGS_DIR__/docker
   hostPathCodecc: /data/devops/codecc
-  hostPathProjectShare: __INSTALL_PATH__/public/__MODULE__/docker/share/project
-  hostPathMavenRepo: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/maven_repo
-  hostPathNpmPrefix: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/npm_prefix
-  hostPathNpmCache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/npm_cache
-  hostPathNpmRc: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/.npmrc
-  hostPathCcache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/ccache/
-  hostPathGradleCache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/gradle_caches
-  hostPathGolangCache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/go_cache/
-  hostPathSbtCache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/.ivy2/
-  hostPathSbt2Cache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/sbt_cache/
-  hostPathYarnCache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/yarn_cache/
+  hostPathProjectShare: __BK_CI_DATA_DIR__/docker/share/project
+  hostPathMavenRepo: __BK_CI_DATA_DIR__/docker/thirdparty/maven_repo
+  hostPathNpmPrefix: __BK_CI_DATA_DIR__/docker/thirdparty/npm_prefix
+  hostPathNpmCache: __BK_CI_DATA_DIR__/docker/thirdparty/npm_cache
+  hostPathNpmRc: __BK_CI_DATA_DIR__/docker/thirdparty/.npmrc
+  hostPathCcache: __BK_CI_DATA_DIR__/docker/thirdparty/ccache/
+  hostPathGradleCache: __BK_CI_DATA_DIR__/docker/thirdparty/gradle_caches
+  hostPathGolangCache: __BK_CI_DATA_DIR__/docker/thirdparty/go_cache/
+  hostPathSbtCache: __BK_CI_DATA_DIR__/docker/thirdparty/.ivy2/
+  hostPathSbt2Cache: __BK_CI_DATA_DIR__/docker/thirdparty/sbt_cache/
+  hostPathYarnCache: __BK_CI_DATA_DIR__/docker/thirdparty/yarn_cache/
   # 需要共享的项目
   shareProjectCodeWhiteList:
   # docker.jar 存储路径
-  dockerAgentPath: __INSTALL_PATH__/__MODULE__/agent-package/worker-agent.jar
-  downloadDockerAgentUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/ms/dispatch/gw/build/docker.jar
+  dockerAgentPath: __BK_CI_HOME__/agent-package/worker-agent.jar
+  downloadDockerAgentUrl: __BK_CI_PRIVATE_URL__/ms/dispatch/gw/build/docker.jar
   # 定期下载
   downloadAgentCron: 0 0 3 * * ?
   landunEnv: prod

@@ -63,7 +63,7 @@ public class OpDefectRestResourceImpl implements OpDefectRestResource
 
     @Override
     public CodeCCResult<ToolDefectRspVO> queryDeptDefectList(String userName, DeptTaskDefectReqVO deptTaskDefectReqVO,
-                                                             Integer pageNum, Integer pageSize, String sortField, Sort.Direction sortType)
+            Integer pageNum, Integer pageSize, String sortField, Sort.Direction sortType)
     {
         // 判断是否为管理员
         if (!authExPermissionApi.isAdminMember(userName))

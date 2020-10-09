@@ -27,6 +27,7 @@
 package com.tencent.devops.common.pipeline.option
 
 import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 
 /**
@@ -39,5 +40,10 @@ data class JobControlOption(
     val timeout: Int?, // Job执行的超时时间
     val runCondition: JobRunCondition, // 运行条件
     val customVariables: List<NameAndValue>? = null, // 自定义变量
-    val customCondition: String? = null // 自定义条件
+    val customCondition: String? = null, // 自定义条件
+    // job依赖
+    val dependOnType: DependOnType? = null,
+    var dependOnId: List<String>? = null, // 需要过滤不存在的job，定义为var类型
+    val dependOnName: String? = null,
+    var dependOnContainerId2JobIds: Map<String, String>? = null // containerId与jobId映射，depend on运行时使用的是containerId
 )

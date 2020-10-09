@@ -1,5 +1,8 @@
 {
     "store": "Store",
+    "deleteAtomTip": "To avoid misoperation, please enter the identifier {0} before submitting for deletion",
+    "删除时将清理数据，包括工蜂代码库。删除后不可恢复！": "Data will be cleaned up when deleted, including the worker bee code base. Unrecoverable after deletion!",
+    "请输入插件标识": "Please enter the plugin ID",
     "由汉字、英文字母、数字、连字符(-)和下划线组成，长度小于20个字符": "It is composed of Chinese characters, English letters, numbers, hyphens (-) and underscores, and the length is less than 20 characters",
     "请输入关键字": "Please enter key words",
     "协作审批": "Collaborative approval",
@@ -420,7 +423,7 @@
     "1、插件市场不再展示插件": "1、plugin is no longer displayed in the plugin store",
     "2、已安装插件的项目不能再添加插件到流水线": "2、projects with this plugin installed will no longer be able to add plugin into pipeline",
     "3、已使用插件的流水线可以继续使用，但有插件已下架标识": "3、pipelines with this plugin integrated can continue to it, but a \"Unpublish Plugin\" logo must be displayed in the pipeline.",
-    "确定删除插件": "Delete plugin ({0})?",
+    "确定删除插件": "Delete plugin {0} ?",
     "0天": "0 day",
     "7天": "7 days",
     "15天": "15 days",

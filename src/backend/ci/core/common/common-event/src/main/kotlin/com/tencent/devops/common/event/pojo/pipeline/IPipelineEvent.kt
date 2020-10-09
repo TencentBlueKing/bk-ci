@@ -27,6 +27,8 @@
 package com.tencent.devops.common.event.pojo.pipeline
 
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.service.trace.TraceTag
+import org.slf4j.MDC
 
 /**
  * 流水线事件
@@ -38,5 +40,6 @@ abstract class IPipelineEvent(
     open val pipelineId: String,
     open val userId: String,
     open var delayMills: Int,
-    open var retryTime: Int = 1
+    open var retryTime: Int = 1,
+    open var traceId: String? = MDC.get(TraceTag.BIZID)
 )

@@ -62,7 +62,7 @@ public class ServiceCheckerSetRestResourceImpl implements ServiceCheckerSetRestR
     }
 
     @Override
-    public CodeCCResult<List<CheckerSetVO>> queryCheckerSetsForOpenScan(Set<String> checkerSetList, String projectId) {
+    public CodeCCResult<List<CheckerSetVO>> queryCheckerSetsForOpenScan(Set<CheckerSetVO> checkerSetList, String projectId) {
         return new CodeCCResult<>(checkerSetBizService.queryCheckerSetsForOpenScan(checkerSetList, projectId));
     }
 }

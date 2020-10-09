@@ -3,7 +3,6 @@ rootProject.name = 'codecc'
 // CodeCC Core Micro Service
 include ":core"
 include ":core:common"
-include ":core:common"
 include ":core:common:common-api"
 include ":core:common:common-client"
 include ":core:common:common-db"
@@ -11,10 +10,23 @@ include ":core:common:common-service"
 include ":core:common:common-web"
 include ":core:common:common-util"
 include ":core:common:common-external-auth"
-include ":core:common:common-external-auth-blueking"
 include ":core:common:common-external-auth-internal"
 include ":core:common:common-redis"
+include ":core:common:common-event"
 
+include ":core:defect"
+include ":core:defect:api-defect"
+include ":core:defect:biz-defect"
+include ":core:defect:biz-defect-migration"
+include ":core:defect:model-defect"
+include ":core:defect:boot-defect"
+
+include ":core:task"
+include ":core:task:api-task"
+include ":core:task:biz-task"
+include ":core:task:biz-task-migration"
+include ":core:task:model-task"
+include ":core:task:boot-task"
 
 include ":core:codeccjob"
 include ":core:codeccjob:api-codeccjob"
@@ -47,22 +59,6 @@ include ":core:schedule:model-schedule"
 include ":core:schedule:biz-schedule"
 include ":core:schedule:boot-schedule"
 
-
-include ":core:defect"
-include ":core:defect:api-defect"
-include ":core:defect:biz-defect"
-include ":core:defect:biz-defect-blueking"
-include ":core:defect:biz-defect-migration"
-include ":core:defect:model-defect"
-include ":core:defect:boot-defect"
-
-include ":core:task"
-include ":core:task:api-task"
-include ":core:task:biz-task"
-include ":core:task:biz-task-blueking"
-include ":core:task:biz-task-migration"
-include ":core:task:model-task"
-include ":core:task:boot-task"
-
-
+//  =================================== tencent ============================================================
+include ":ext"
 
