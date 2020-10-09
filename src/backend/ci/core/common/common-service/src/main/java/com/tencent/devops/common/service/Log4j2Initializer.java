@@ -93,7 +93,7 @@ public class Log4j2Initializer implements ApplicationContextInitializer<Configur
 
     private void configLog4j2(ConfigurableEnvironment environment) {
 
-        String pattern = "%d{yyyy-MM-dd HH:mm:ss.SSS}|%traceId|%X{ip:--}|%F|%L|%level|%X{err_code:-0}|||||[%t] %m%ex%n";
+        String pattern = "%d{yyyy-MM-dd HH:mm:ss.SSS}|%X{bizId}|%X{ip:--}|%F|%L|%level|%X{err_code:-0}|||||[%t] %m%ex%n";
         String appName = environment.getProperty("spring.application.name");
 
         ConfigurationBuilder<BuiltConfiguration> builder = ConfigurationBuilderFactory.newConfigurationBuilder();
@@ -130,7 +130,7 @@ public class Log4j2Initializer implements ApplicationContextInitializer<Configur
                     .add(builder.newAppenderRef("Stdout")));
         } else {
             LayoutComponentBuilder rollingLayoutBuilder = builder.newLayout("PatternLayout")
-                    .addAttribute("pattern", "%d{yyyy.MM.dd HH:mm:ss,SSS}|%traceId| [%12.12t] %5level %-40.40c{1.} %-4.4L %msg%n%throwable")
+                    .addAttribute("pattern", "%d{yyyy.MM.dd HH:mm:ss,SSS}|%X{bizId}| [%12.12t] %5level %-40.40c{1.} %-4.4L %msg%n%throwable")
                     .addAttribute("charset", "UTF-8");
 
             ComponentBuilder triggeringPolicy = builder.newComponent("Policies")

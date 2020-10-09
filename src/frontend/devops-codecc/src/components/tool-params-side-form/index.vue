@@ -1,3 +1,4 @@
+<!-- deprecated -->
 <template>
     <div class="params-side" :class="{ 'mini': !isParamsSideFormShow }">
         <div v-show="isParamsSideFormShow">

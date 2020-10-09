@@ -27,6 +27,6 @@
 apply plugin: "maven"
 
 dependencies {
-    compile project(":core:common:common-api")
+    compile project(":core:common:common-service")
     compileOnly "org.springframework.boot:spring-boot-starter-amqp"
 }

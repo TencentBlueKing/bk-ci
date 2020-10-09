@@ -24,10 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.websocket
+package com.tencent.devops.common.pipeline.enums
 
-import com.tencent.devops.common.websocket.pojo.BuildPageInfo
-
-interface IPath {
-    fun buildPage(buildPageInfo: BuildPageInfo): String
+enum class DependOnType {
+    ID,
+    NAME
 }
