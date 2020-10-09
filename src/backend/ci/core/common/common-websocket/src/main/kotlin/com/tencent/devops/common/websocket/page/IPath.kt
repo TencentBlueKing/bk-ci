@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.websocket
+package com.tencent.devops.common.websocket.page
 
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
