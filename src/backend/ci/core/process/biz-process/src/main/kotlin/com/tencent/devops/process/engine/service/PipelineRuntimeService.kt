@@ -784,9 +784,9 @@ class PipelineRuntimeService @Autowired constructor(
             // 当前 stage 是否是重试的 stage
             val retryStage = stageId == retryStartTaskId
 
-            // 如果是stage重试不是当前stage，则直接进入下一个stage
-            if (isStageRetry && !retryStage) {
-                logger.info("[$buildId|RETRY|STAGE(#$stageId)(${stage.name}) is not in retry STAGE($retryStartTaskId)")
+            // #2318 如果是stage重试不是当前stage，并且当前stage已经是完成状态，则直接跳过
+            if (isStageRetry && !retryStage && BuildStatus.parse(stage.status).isFinish()) {
+                logger.info("[$buildId|RETRY|STAGE(#$stageId)(${stage.name})(${stage.status}) is not in retry STAGE($retryStartTaskId)")
                 containerSeq += stage.containers.size // Job跳过计数也需要增加
                 return@nextStage
             }
@@ -829,7 +829,7 @@ class PipelineRuntimeService @Autowired constructor(
                  */
                 if (BuildStatus.parse(container.status).isFailure() && !retryStage && !retryStartTaskId.isNullOrBlank() && lastTimeBuildContainerRecords.isNotEmpty()) {
                     if (null == findTaskRecord(lastTimeBuildTaskRecords = lastTimeBuildTaskRecords, container = container, retryStartTaskId = retryStartTaskId!!)) {
-                        logger.info("[$buildId|RETRY|JOB(#$containerId)(${container.name}) is not in retry range")
+                        logger.info("[$buildId|RETRY_SKIP_JOB|JOB(#$containerId)(${container.name}) is not in retry range")
                         containerSeq++
                         return@nextContainer
                     }
