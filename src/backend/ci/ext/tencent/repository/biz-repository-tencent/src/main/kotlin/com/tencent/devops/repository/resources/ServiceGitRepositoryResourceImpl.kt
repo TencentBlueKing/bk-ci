@@ -81,7 +81,20 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
         return Result(repoFileService.getFileContent(RepositoryConfigUtils.buildConfig(repoId, repositoryType), filePath, reversion, branch))
     }
 
-    override fun delete(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
+    override fun delete(
+        userId: String,
+        projectId: String,
+        repositoryHashId: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        val deleteGitProjectResult = repositoryService.deleteGitProject(
+            userId = userId,
+            repositoryConfig = RepositoryConfigUtils.buildConfig(repositoryHashId, null),
+            tokenType = tokenType
+        )
+        if (deleteGitProjectResult.isNotOk()) {
+            return deleteGitProjectResult
+        }
         repositoryService.userDelete(userId, projectId, repositoryHashId)
         return Result(true)
     }

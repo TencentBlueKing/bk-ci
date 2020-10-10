@@ -55,7 +55,7 @@ object CiYamlUtils {
 
     private val logger = LoggerFactory.getLogger(CiYamlUtils::class.java)
 
-//    private const val dockerHubUrl = "https://index.docker.io/v1/"
+    //    private const val dockerHubUrl = "https://index.docker.io/v1/"
     private const val dockerHubUrl = ""
 
     fun parseImage(imageNameInput: String): Triple<String, String, String> {
@@ -77,7 +77,11 @@ object CiYamlUtils {
                 } else {
                     if (str.last().contains(":")) {
                         val nameTag = str.last().split(":")
-                        Triple(str[0], imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]), nameTag[1])
+                        Triple(
+                            str[0],
+                            imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]),
+                            nameTag[1]
+                        )
                     } else {
                         Triple(str[0], str.last(), "latest")
                     }
@@ -148,10 +152,30 @@ object CiYamlUtils {
         }
         val pipelineName = originYaml.pipelineName ?: ""
         val defaultTrigger = originYaml.trigger ?: Trigger(false, MatchRule(listOf("*"), null), null, null)
-        val defaultMr = originYaml.mr ?: MergeRequest(disable = false, autoCancel = true, branches = MatchRule(listOf("*"), null), paths = null)
+        val defaultMr = originYaml.mr ?: MergeRequest(
+            disable = false,
+            autoCancel = true,
+            branches = MatchRule(listOf("*"), null),
+            paths = null
+        )
         val variable = originYaml.variables
         val services = originYaml.services
-        val stages = originYaml.stages ?: listOf(Stage(listOf(Job(JobDetail("job1", VM_JOB, Pool(null, null, null, null), originYaml.steps!!, null)))))
+        val stages = originYaml.stages ?: listOf(
+            Stage(
+                listOf(
+                    Job(
+                        JobDetail(
+                            "job1",
+                            VM_JOB,
+                            Pool(null, null, null, null),
+                            originYaml.steps!!,
+                            null,
+                            null
+                        )
+                    )
+                )
+            )
+        )
 
         // 校验job类型
         stages.forEach {
@@ -174,7 +198,22 @@ object CiYamlUtils {
             throw CustomException(Response.Status.BAD_REQUEST, "stages和steps不能并列存在!")
         }
 
-        val stages = originYaml.stages ?: listOf(Stage(listOf(Job(JobDetail("job1", "vmBuild", Pool(null, null, null, null), originYaml.steps!!, null)))))
+        val stages = originYaml.stages ?: listOf(
+            Stage(
+                listOf(
+                    Job(
+                        JobDetail(
+                            "job1",
+                            "vmBuild",
+                            Pool(null, null, null, null),
+                            originYaml.steps!!,
+                            null,
+                            null
+                        )
+                    )
+                )
+            )
+        )
 
         return CIBuildYaml(null, null, null, null, null, stages, null)
     }
@@ -239,16 +278,16 @@ object CiYamlUtils {
         schema.schemaNode.with("properties").with("steps").put("item", getAbstractTaskSchema())
         schema.schemaNode.with("properties").with("services").put("item", getAbstractServiceSchema())
         schema.schemaNode.with("properties")
-                .with("stages")
-                .with("items")
-                .with("properties")
-                .with("stage")
-                .with("items")
-                .with("properties")
-                .with("job")
-                .with("properties")
-                .with("steps")
-                .put("item", getAbstractTaskSchema())
+            .with("stages")
+            .with("items")
+            .with("properties")
+            .with("stage")
+            .with("items")
+            .with("properties")
+            .with("job")
+            .with("properties")
+            .with("steps")
+            .put("item", getAbstractTaskSchema())
         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema)
     }
 

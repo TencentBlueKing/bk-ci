@@ -27,17 +27,24 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.pojo.ProjectOrganization
 import com.tencent.devops.project.api.service.BuildProjectResource
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectService
+import com.tencent.devops.project.service.ProjectTxInfoService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildProjectResourceImpl @Autowired constructor(
-    private val projectService: ProjectService
+    private val projectService: ProjectService,
+    private val projectTxInfoService: ProjectTxInfoService
 ) : BuildProjectResource {
     override fun listByProjectCode(projectCode: String): Result<List<ProjectVO>> {
         return Result(projectService.list(setOf(projectCode)))
+    }
+
+    override fun getProjectOrganizations(projectCode: String): Result<ProjectOrganization?> {
+        return Result(projectTxInfoService.getProjectOrganizations(projectCode))
     }
 }
