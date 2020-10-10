@@ -150,7 +150,8 @@ class MQPipelineCreateListener @Autowired constructor(
                         ),
                         repo = repo,
                         codeEventType = eventType,
-                        hookUrl = e.data.input.hookUrl
+                        hookUrl = e.data.input.hookUrl,
+                        token = e.data.input.token
                     )
                 } else {
                     pipelineWebhookService.saveWebhook(
