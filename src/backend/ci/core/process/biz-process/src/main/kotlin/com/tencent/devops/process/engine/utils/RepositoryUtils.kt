@@ -45,15 +45,16 @@ object RepositoryUtils {
         userName: String,
         scmType: ScmType,
         repositoryUrl: String,
-        credentialId: String
+        credentialId: String?
     ): Repository {
+        val realCredentialId = credentialId ?: ""
         return when (scmType) {
             ScmType.CODE_SVN -> {
                 val projectName = SvnUtils.getSvnProjectName(repositoryUrl)
                 CodeSvnRepository(
                     aliasName = "$PREFIX_ALIAS_NAME$projectName",
                     url = repositoryUrl,
-                    credentialId = credentialId,
+                    credentialId = realCredentialId,
                     projectName = projectName,
                     userName = userName,
                     projectId = projectId,
@@ -66,7 +67,7 @@ object RepositoryUtils {
                 CodeGitRepository(
                     aliasName = "$PREFIX_ALIAS_NAME$projectName",
                     url = repositoryUrl,
-                    credentialId = credentialId,
+                    credentialId = realCredentialId,
                     projectName = projectName,
                     userName = userName,
                     authType = RepoAuthType.HTTP,
@@ -79,7 +80,7 @@ object RepositoryUtils {
                 CodeGitRepository(
                     aliasName = "$PREFIX_ALIAS_NAME$projectName",
                     url = repositoryUrl,
-                    credentialId = credentialId,
+                    credentialId = realCredentialId,
                     projectName = projectName,
                     userName = userName,
                     authType = RepoAuthType.HTTP,
@@ -92,7 +93,7 @@ object RepositoryUtils {
                 CodeGitlabRepository(
                     aliasName = "$PREFIX_ALIAS_NAME$projectName",
                     url = repositoryUrl,
-                    credentialId = credentialId,
+                    credentialId = realCredentialId,
                     projectName = projectName,
                     userName = userName,
                     projectId = projectId,

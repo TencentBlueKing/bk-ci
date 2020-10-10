@@ -57,12 +57,14 @@ data class CodeGitGenericWebHookTriggerInput(
     val scmType: String,
     @ApiModelProperty("代码库链接", required = true)
     val repositoryUrl: String,
-    @ApiModelProperty("凭证ID", required = true)
-    val credentialId: String,
+    @ApiModelProperty("凭证ID", required = false)
+    val credentialId: String? = null,
+    @ApiModelProperty("凭证ID", required = false)
+    val token: String? = null,
     @ApiModelProperty("触发事件", required = true)
     val eventType: String = CodeEventType.PUSH.name,
-    @ApiModelProperty("hook地址,目前只对codecc开放", required = true)
-    var hookUrl: String?,
+    @ApiModelProperty("hook地址,目前只对codecc开放", required = false)
+    var hookUrl: String? = null,
     @ApiModelProperty("branch", required = false)
     val branchName: String?,
     @ApiModelProperty("excludeBranch", required = false)

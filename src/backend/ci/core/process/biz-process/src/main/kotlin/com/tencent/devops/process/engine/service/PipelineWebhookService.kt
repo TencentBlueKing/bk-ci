@@ -135,7 +135,8 @@ class PipelineWebhookService @Autowired constructor(
         pipelineWebhook: PipelineWebhook,
         repo: Repository,
         codeEventType: CodeEventType? = null,
-        hookUrl: String? = null
+        hookUrl: String? = null,
+        token: String? = null
     ) {
         logger.info("save generic Webhook[$pipelineWebhook]")
         scmProxyService.addGenericWebhook(
@@ -143,7 +144,8 @@ class PipelineWebhookService @Autowired constructor(
             repo = repo,
             scmType = pipelineWebhook.repositoryType,
             codeEventType = codeEventType,
-            hookUrl = hookUrl
+            hookUrl = hookUrl,
+            token = token
         )
         saveOrUpdateWebhook(pipelineWebhook)
     }

@@ -422,9 +422,14 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         repo: Repository,
         scmType: ScmType,
         codeEventType: CodeEventType?,
-        hookUrl: String? = null
+        hookUrl: String? = null,
+        token: String? = null
     ): String {
-        val token = getCredential(projectId, repo).privateKey
+        val realToken = if (token.isNullOrBlank()) {
+            getCredential(projectId, repo).privateKey
+        } else {
+            token!!
+        }
         val event = when (codeEventType) {
             null, CodeEventType.PUSH -> CodeGitWebhookEvent.PUSH_EVENTS.value
             CodeEventType.TAG_PUSH -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
@@ -437,7 +442,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             type = scmType,
             privateKey = null,
             passPhrase = null,
-            token = token,
+            token = realToken,
             region = null,
             userName = repo.userName,
             event = event,

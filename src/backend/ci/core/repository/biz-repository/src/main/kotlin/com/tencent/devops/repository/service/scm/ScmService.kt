@@ -257,22 +257,26 @@ class ScmService @Autowired constructor(
         logger.info("[$projectName|$url|$type|$token|$region|$userName|$event|$hookUrl] Start to add web hook")
         val startEpoch = System.currentTimeMillis()
         try {
-            val realHookUrl = hookUrl ?: when (type) {
-                ScmType.CODE_GIT -> {
-                    gitConfig.gitHookUrl
-                }
-                ScmType.CODE_GITLAB -> {
-                    gitConfig.gitlabHookUrl
-                }
-                ScmType.CODE_SVN -> {
-                    svnConfig.svnHookUrl
-                }
-                ScmType.CODE_TGIT -> {
-                    gitConfig.tGitHookUrl
-                }
-                else -> {
-                    logger.warn("Unknown repository type ($type) when add webhook")
-                    throw RuntimeException("Unknown repository type ($type) when add webhook")
+            val realHookUrl = if (!hookUrl.isNullOrBlank()) {
+                hookUrl!!
+            } else {
+                when (type) {
+                    ScmType.CODE_GIT -> {
+                        gitConfig.gitHookUrl
+                    }
+                    ScmType.CODE_GITLAB -> {
+                        gitConfig.gitlabHookUrl
+                    }
+                    ScmType.CODE_SVN -> {
+                        svnConfig.svnHookUrl
+                    }
+                    ScmType.CODE_TGIT -> {
+                        gitConfig.tGitHookUrl
+                    }
+                    else -> {
+                        logger.warn("Unknown repository type ($type) when add webhook")
+                        throw RuntimeException("Unknown repository type ($type) when add webhook")
+                    }
                 }
             }
             ScmFactory.getScm(
