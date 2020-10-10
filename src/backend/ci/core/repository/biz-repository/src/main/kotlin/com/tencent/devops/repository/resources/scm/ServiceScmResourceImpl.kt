@@ -171,7 +171,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         event: String?,
         hookUrl: String?
     ): Result<Boolean> {
-        logger.info("Start to add the web hook of (projectName=$projectName, url=$url, type=$type, token=$token, username=$userName, event=$event)")
+        logger.info("Start to add the web hook of (projectName=$projectName, url=$url, type=$type, token=$token, username=$userName, event=$event, hookUrl=$hookUrl)")
         scmService.addWebHook(
             projectName = projectName,
             url = url,
