@@ -24,14 +24,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type
+package com.tencent.devops.dispatch.docker.pojo
 
-enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
-    DOCKER_VM(".docker.vm"),
-    PCG(".pcg.sumeru"),
-    DEVCLOUD(".devcloud.public"),
-    IDC(".idc.public"),
-    GITCI(".gitci.public"),
-    CODECC(".codecc.scan"),
-    MACOS(".macos")
-}
+import com.fasterxml.jackson.annotation.JsonProperty
+
+data class DockerHostBuildInfo(
+    val projectId: String,
+    val agentId: String,
+    val pipelineId: String,
+    val buildId: String,
+    val vmSeqId: Int,
+    val secretKey: String,
+    val status: Int,
+    val imageName: String,
+    val containerId: String,
+    @JsonProperty("wsInHost")
+    val wsInHost: Boolean,
+    val poolNo: Int,
+    val registryUser: String?,
+    val registryPwd: String?,
+    val imageType: String?,
+    val imagePublicFlag: Boolean?,
+    val imageRDType: String?,
+    val containerHashId: String?
+)

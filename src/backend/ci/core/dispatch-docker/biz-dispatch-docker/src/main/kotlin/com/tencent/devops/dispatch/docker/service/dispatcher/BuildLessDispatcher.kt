@@ -24,14 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type
+package com.tencent.devops.dispatch.docker.service.dispatcher
 
-enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
-    DOCKER_VM(".docker.vm"),
-    PCG(".pcg.sumeru"),
-    DEVCLOUD(".devcloud.public"),
-    IDC(".idc.public"),
-    GITCI(".gitci.public"),
-    CODECC(".codecc.scan"),
-    MACOS(".macos")
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+
+interface BuildLessDispatcher {
+
+    fun canDispatch(event: PipelineBuildLessStartupDispatchEvent): Boolean
+
+    fun startUp(event: PipelineBuildLessStartupDispatchEvent)
+
+    fun shutdown(event: PipelineBuildLessShutdownDispatchEvent)
 }

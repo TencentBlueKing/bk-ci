@@ -24,14 +24,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type
+package com.tencent.devops.dispatch.docker.controller
 
-enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
-    DOCKER_VM(".docker.vm"),
-    PCG(".pcg.sumeru"),
-    DEVCLOUD(".devcloud.public"),
-    IDC(".idc.public"),
-    GITCI(".gitci.public"),
-    CODECC(".codecc.scan"),
-    MACOS(".macos")
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.docker.api.builds.BuildDockerResource
+import com.tencent.devops.dispatch.docker.service.vm.DockerDownloaderService
+import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
+
+@RestResource
+class BuildDockerResourceImpl @Autowired constructor(private val downloaderService: DockerDownloaderService) :
+    BuildDockerResource {
+    override fun download(eTag: String?): Response {
+        return downloaderService.downloadDocker(eTag)
+    }
 }

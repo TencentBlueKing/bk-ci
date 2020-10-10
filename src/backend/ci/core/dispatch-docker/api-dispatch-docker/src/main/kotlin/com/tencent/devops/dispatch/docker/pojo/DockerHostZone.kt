@@ -24,14 +24,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type
+package com.tencent.devops.dispatch.docker.pojo
 
-enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
-    DOCKER_VM(".docker.vm"),
-    PCG(".pcg.sumeru"),
-    DEVCLOUD(".devcloud.public"),
-    IDC(".idc.public"),
-    GITCI(".gitci.public"),
-    CODECC(".codecc.scan"),
-    MACOS(".macos")
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+/**
+ * DockerHostZone
+ */
+@ApiModel("DockerHostZone")
+data class DockerHostZone(
+    @ApiModelProperty("hostIp", required = true)
+    val hostIp: String,
+    @ApiModelProperty("zone", required = true)
+    val zone: String,
+    @ApiModelProperty("enable", required = true)
+    val enable: Boolean,
+    @ApiModelProperty("remark", required = true)
+    val remark: String?,
+    @ApiModelProperty("createTime", required = true)
+    val createTime: Long,
+    @ApiModelProperty("updateTime", required = true)
+    val updateTime: Long
+)

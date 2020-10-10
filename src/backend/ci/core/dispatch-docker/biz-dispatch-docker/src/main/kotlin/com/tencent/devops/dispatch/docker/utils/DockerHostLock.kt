@@ -24,14 +24,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type
+package com.tencent.devops.dispatch.docker.utils
 
-enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
-    DOCKER_VM(".docker.vm"),
-    PCG(".pcg.sumeru"),
-    DEVCLOUD(".devcloud.public"),
-    IDC(".idc.public"),
-    GITCI(".gitci.public"),
-    CODECC(".codecc.scan"),
-    MACOS(".macos")
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import kotlin.math.min
+
+class DockerHostLock(redisOperation: RedisOperation, pipelineId: String? = "") {
+
+    private val redisLock = RedisLock(redisOperation, "DISPATCH_REDIS_LOCK_DOCKER_HOST_KEY_$pipelineId", 60L)
+
+//    fun tryLock() = tryLockElapse(timeout = 0, interval = 0)
+
+    fun tryLock(timeout: Long = 0, interval: Long = 40): Boolean {
+        val sleep = min(interval, timeout) // 不允许sleep过长时间，最大1000ms
+        val start = System.currentTimeMillis()
+        var tryLock = redisLock.tryLock()
+        while (timeout > 0 && !tryLock && timeout > (System.currentTimeMillis() - start)) {
+            Thread.sleep(sleep)
+            tryLock = redisLock.tryLock()
+        }
+        return tryLock
+    }
+
+    fun lock() = redisLock.lock()
+
+    fun unlock() = redisLock.unlock()
 }

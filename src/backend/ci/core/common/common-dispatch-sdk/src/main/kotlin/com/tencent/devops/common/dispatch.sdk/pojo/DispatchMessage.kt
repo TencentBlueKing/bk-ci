@@ -24,14 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type
+package com.tencent.devops.common.dispatch.sdk.pojo
 
-enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
-    DOCKER_VM(".docker.vm"),
-    PCG(".pcg.sumeru"),
-    DEVCLOUD(".devcloud.public"),
-    IDC(".idc.public"),
-    GITCI(".gitci.public"),
-    CODECC(".codecc.scan"),
-    MACOS(".macos")
-}
+import com.tencent.devops.common.api.pojo.Zone
+import com.tencent.devops.common.pipeline.type.DispatchType
+
+data class DispatchMessage(
+    val id: String,
+    val secretKey: String,
+    val gateway: String,
+    val projectId: String,
+    val pipelineId: String,
+    val buildId: String,
+    val dispatchMessage: String,
+    val userId: String,
+    val vmSeqId: String,
+    val channelCode: String,
+    val vmNames: String,
+    val atoms: Map<String, String> = mapOf(),
+    val zone: Zone?,
+    val containerHashId: String?,
+    val executeCount: Int?,
+    val containerId: String,
+    val containerType: String,
+    val stageId: String,
+    val dispatchType: DispatchType?
+)
