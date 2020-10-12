@@ -47,7 +47,6 @@ class PipelineBuildTurboExtService @Autowired constructor(
 			logger.info("Get turbo task info, request url: $url")
 			val startTime = System.currentTimeMillis()
 			val request = Request.Builder().url(url).get().build()
-			LogUtils.costTime("call turbo cost", startTime)
 			OkhttpUtils.doHttp(request).use { response ->
 				val data = response.body()?.string() ?: return ""
 				logger.info("Get turbo task info, response: $data")
@@ -63,6 +62,7 @@ class PipelineBuildTurboExtService @Autowired constructor(
 					throw RemoteServiceException(data)
 				}
 			}
+			LogUtils.costTime("call turbo cost", startTime)
 		} catch (e: Throwable) {
 			logger.warn("Get turbo task info failed, $e")
 			return ""
