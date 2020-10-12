@@ -1002,7 +1002,8 @@ class PipelineRuntimeService @Autowired constructor(
                 if (stage.tag == null) stage.tag = listOf(defaultStageTagId)
             }
 
-            if (stageOption?.stageControlOption?.manualTrigger == true) {
+            // 只在第一次启动时刷新为QUEUE，若重试则保持原审核状态
+            if (stageOption?.stageControlOption?.manualTrigger == true && retryStartTaskId.isNullOrBlank()) {
                 stage.reviewStatus = BuildStatus.QUEUE.name
             }
 
