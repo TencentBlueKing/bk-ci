@@ -43,7 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class PipelineBuildLessDispatchService @Autowired constructor(
+class PipelineAgentLessDispatchService @Autowired constructor(
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
     private val jobQuotaBusinessService: JobQuotaBusinessService
@@ -134,6 +134,6 @@ class PipelineBuildLessDispatchService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineBuildLessDispatchService::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineAgentLessDispatchService::class.java)
     }
 }
