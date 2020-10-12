@@ -150,7 +150,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         }
         val logoUrl = uploadStoreLogo(userId, file).data
         logger.info("uploadStoreLogo logoUrl is:$logoUrl")
-        var iconData:String? = null
+        var iconData: String? = null
         if (compressFlag == true) {
             // 生成压缩图标
             val tmpFile = Files.createTempFile(UUIDUtil.generate(), ".png").toFile()

@@ -25,7 +25,6 @@
  */
 package com.tencent.devops.store.service.image
 
-import com.tencent.devops.artifactory.api.service.ServiceImageManageResource
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
