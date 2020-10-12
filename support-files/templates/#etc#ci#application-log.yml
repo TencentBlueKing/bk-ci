@@ -11,7 +11,7 @@ server:
 
 elasticsearch:
   ip: __BKCI_ES_IP__
-  port: __BKCI_ES_PORT__De
+  port: __BKCI_ES_PORT__
   cluster: __BKCI_ES_CLUSTER__
   name: DEVOPS
 #  ES集群如果不要求账号密码认证，则可以去掉以下2个ES的访问账号密码配置项
