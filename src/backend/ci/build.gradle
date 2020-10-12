@@ -39,7 +39,7 @@ buildscript {
         swaggerVersion = "1.5.17"
         jaxrsVersion = "2.0"
         jacksonVersion = "2.9.10"
-        esVersion = "6.8.1"
+        esVersion = "7.0.0"
         searchGuardSSLVersion = "5.6.14-23"
         hashidsVersion = "1.0.3"
         feignVersion = "9.5.1"
