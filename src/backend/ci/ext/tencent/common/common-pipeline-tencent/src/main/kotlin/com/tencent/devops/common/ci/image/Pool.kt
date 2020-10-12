@@ -27,10 +27,11 @@
 package com.tencent.devops.common.ci.image
 
 data class Pool(
-    val container: String?,
-    val credential: Credential?,
-    val macOS: MacOS?,
-    val third: Boolean?,
-    val performanceConfigId: String? = "0",
-    val env: Map<String, String>? = mapOf()
+        val type: PoolType?,
+        val container: String?,
+        val credential: Credential?,
+        val macOS: MacOS?,
+        val third: Boolean?,
+        val performanceConfigId: String? = "0",
+        val env: Map<String, String>? = mapOf()
 )

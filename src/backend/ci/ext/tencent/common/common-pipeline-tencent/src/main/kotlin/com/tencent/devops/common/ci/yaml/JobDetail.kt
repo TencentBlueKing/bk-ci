@@ -46,7 +46,7 @@ data class JobDetail(
  *       - job:
  *           resourceType: REMOTE | LOCAL
  *           pool:
- *             type: dockerOnVm | dockerOnDevCloud | dockerOnPcg | windows | macos | selfHosted
+ *             type: DockerOnVm | DockerOnDevCloud | DockerOnPcg | Windows | Macos | SelfHosted
  *             container: mirrors.tencent.com/tlinux2.2:latest
  *             credential:
  *               user: xxx
