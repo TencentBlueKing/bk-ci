@@ -27,5 +27,5 @@
 dependencies {
     compile project(":core:dispatch-docker:api-dispatch-docker")
     compile project(":core:dispatch:biz-dispatch")
-    // compile project(":core:common:common-dispatch-sdk")
+    compile project(":core:common:common-dispatch-sdk")
 }

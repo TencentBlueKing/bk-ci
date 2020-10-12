@@ -30,6 +30,8 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
+import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.redis.RedisOperation
@@ -41,8 +43,6 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
-import com.tencent.devops.dispatch.docker.sdk.listener.BuildListener
-import com.tencent.devops.dispatch.docker.sdk.pojo.DispatchMessage
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
@@ -81,7 +81,7 @@ class DockerVMListener @Autowired constructor(
     }
 
     override fun getVmType(): JobQuotaVmType? {
-        return JobQuotaVmType.DOCKER_DEVCLOUD
+        return JobQuotaVmType.DOCKER_VM
     }
 
     override fun onStartup(dispatchMessage: DispatchMessage) {
