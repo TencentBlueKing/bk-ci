@@ -101,6 +101,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     private val redisOperation: RedisOperation,
     private val jmxElements: JmxElements,
     private val consulClient: ConsulDiscoveryClient?,
+    private val buildExtService: PipelineBuildExtService,
     private val client: Client
 ) {
 
@@ -458,20 +459,20 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
         }
 
-        val turboTaskId = getTurboTask(task.pipelineId, task.taskId)
+        val extVarMap = buildExtService.buildExt(task)
 
         // 认领任务
         pipelineRuntimeService.claimBuildTask(buildId, task, userId)
 
         val buildVariable = mutableMapOf(
             PIPELINE_VMSEQ_ID to vmSeqId,
-            PIPELINE_ELEMENT_ID to task.taskId,
-            PIPELINE_TURBO_TASK_ID to turboTaskId
+            PIPELINE_ELEMENT_ID to task.taskId
         )
 
         PipelineVarUtil.fillOldVar(buildVariable)
 
         buildVariable.putAll(allVariable)
+        buildVariable.putAll(extVarMap)
 
         val buildTask = BuildTask(
             buildId = buildId,
@@ -731,40 +732,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             atomMonitorEventDispatcher.dispatch(AtomMonitorReportBroadCastEvent(atomMonitorData))
         } catch (t: Throwable) {
             logger.warn("[$buildId]| Fail to send the measure element data", t)
-        }
-    }
-
-    @Suppress("UNCHECKED_CAST") // FIXME: 需要重新定义接口拆分实现，此处非开源所需要
-    fun getTurboTask(pipelineId: String, elementId: String): String {
-        try {
-            val instances = consulClient!!.getInstances("turbo")
-                ?: return ""
-            if (instances.isEmpty()) {
-                return ""
-            }
-            val url = "${if (instances[0].isSecure) "https" else
-                "http"}://${instances[0].host}:${instances[0].port}/api/service/turbo/task/pipeline/$pipelineId/$elementId"
-
-            logger.info("Get turbo task info, request url: $url")
-            val request = Request.Builder().url(url).get().build()
-            OkhttpUtils.doHttp(request).use { response ->
-                val data = response.body()?.string() ?: return ""
-                logger.info("Get turbo task info, response: $data")
-                if (!response.isSuccessful) {
-                    throw RemoteServiceException(data)
-                }
-                val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
-                val code = responseData["status"] as Int
-                if (0 == code) {
-                    val dataMap = responseData["data"] as Map<String, Any>
-                    return dataMap["taskId"] as String? ?: ""
-                } else {
-                    throw RemoteServiceException(data)
-                }
-            }
-        } catch (e: Throwable) {
-            logger.warn("Get turbo task info failed, $e")
-            return ""
         }
     }
 
