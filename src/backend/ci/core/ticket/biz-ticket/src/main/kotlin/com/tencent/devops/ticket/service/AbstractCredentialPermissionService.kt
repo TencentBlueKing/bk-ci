@@ -26,19 +26,18 @@
 
 package com.tencent.devops.ticket.service
 
-import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
 import com.tencent.devops.ticket.service.CredentialPermissionService.Companion.CredentialResourceType
-import javax.ws.rs.core.Response
 
 abstract class AbstractCredentialPermissionService constructor(
-    private val authResourceApi: AuthResourceApi,
+    val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
-    private val ticketAuthServiceCode: TicketAuthServiceCode
+    val ticketAuthServiceCode: TicketAuthServiceCode
 ) : CredentialPermissionService {
 
     override fun validatePermission(
@@ -48,7 +47,7 @@ abstract class AbstractCredentialPermissionService constructor(
         message: String
     ) {
         if (!validatePermission(userId, projectId, authPermission)) {
-            throw CustomException(Response.Status.FORBIDDEN, message)
+            throw PermissionForbiddenException(message)
         }
     }
 
@@ -60,7 +59,7 @@ abstract class AbstractCredentialPermissionService constructor(
         message: String
     ) {
         if (!validatePermission(userId, projectId, resourceCode, authPermission)) {
-            throw CustomException(Response.Status.FORBIDDEN, message)
+            throw PermissionForbiddenException(message)
         }
     }
 

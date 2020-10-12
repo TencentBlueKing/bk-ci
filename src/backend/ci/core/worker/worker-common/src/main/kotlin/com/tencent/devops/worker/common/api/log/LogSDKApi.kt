@@ -27,11 +27,11 @@
 package com.tencent.devops.worker.common.api.log
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.log.model.message.LogMessage
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
 interface LogSDKApi : WorkerRestApiSDK {
     fun addLogMultiLine(logMessages: List<LogMessage>): Result<Boolean>
 
-    fun finishLog(tag: String?, jobId: String?, executeCount: Int?): Result<Boolean>
+    fun finishLog(tag: String?, jobId: String?, executeCount: Int?, subTag: String?): Result<Boolean>
 }

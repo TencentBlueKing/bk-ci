@@ -13,6 +13,7 @@
     "public:external": "cross-env NODE_ENV=external npm run public --"
   },
   "dependencies": {
+    "@blueking/log": "1.1.1",
     "@icon-cool/bk-icon-devops": "0.0.6",
     "axios": "^0.18.1",
     "bk-magic-vue": "2.1.12",
@@ -34,6 +35,7 @@
     "vue-router": "^2.8.1",
     "vuedraggable": "^2.16.0",
     "vuex": "^2.4.0",
+    "worker-loader": "^3.0.1",
     "xterm": "^3.1.0"
   },
   "devDependencies": {
@@ -56,8 +58,6 @@
     "babel-preset-stage-2": "^6.24.1",
     "body-parser": "^1.18.2",
     "chalk": "^2.1.0",
-    "eslint": "^7.3.1",
-    "eslint-plugin-vue": "^6.2.2",
     "cheerio": "^1.0.0-rc.2",
     "compression-webpack-plugin": "^1.0.0",
     "connect-history-api-fallback": "^1.3.0",
@@ -65,6 +65,7 @@
     "cross-env": "^5.0.5",
     "css-loader": "^0.28.7",
     "cssnano": "^3.10.0",
+    "eslint": "^7.3.1",
     "eslint-config-standard": "^12.0.0",
     "eslint-friendly-formatter": "^4.0.1",
     "eslint-loader": "^2.1.2",
@@ -73,6 +74,7 @@
     "eslint-plugin-node": "^8.0.0",
     "eslint-plugin-promise": "^4.0.1",
     "eslint-plugin-standard": "^4.0.0",
+    "eslint-plugin-vue": "^6.2.2",
     "eventsource-polyfill": "^0.9.6",
     "express": "^4.15.5",
     "extract-text-webpack-plugin": "^3.0.0",

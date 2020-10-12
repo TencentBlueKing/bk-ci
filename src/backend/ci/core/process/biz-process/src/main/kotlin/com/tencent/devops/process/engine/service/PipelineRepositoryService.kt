@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -71,10 +72,12 @@ import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicInteger
 import javax.ws.rs.core.Response
@@ -101,6 +104,9 @@ class PipelineRepositoryService constructor(
     private val modelCheckPlugin: ModelCheckPlugin,
     private val templatePipelineDao: TemplatePipelineDao
 ) {
+
+    @Value("\${notify.silent.channel:AM,CODECC,CODECC_EE,GONGFENGSCAN}")
+    private val notifySilentChannels: String = ""
 
     fun deployPipeline(
         model: Model,
@@ -138,6 +144,7 @@ class PipelineRepositoryService constructor(
         }
 
         return if (!create) {
+            val pipelineSetting = pipelineSettingDao.getSetting(dslContext, pipelineId)
             update(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -147,7 +154,8 @@ class PipelineRepositoryService constructor(
                 canElementSkip = canElementSkip,
                 buildNo = buildNo,
                 modelTasks = modelTasks,
-                channelCode = channelCode
+                channelCode = channelCode,
+                maxPipelineResNum = pipelineSetting?.maxPipelineResNum
             )
         } else {
             val version = 1
@@ -303,6 +311,11 @@ class PipelineRepositoryService constructor(
                     Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), CodeEventType.PUSH) }
                 is CodeGithubWebHookTriggerElement -> {
                     Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), e.eventType) }
+                is CodeTGitWebHookTriggerElement -> {
+                    // CodeEventType.MERGE_REQUEST_ACCEPT 和 CodeEventType.MERGE_REQUEST等价处理
+                    val eventType = if (e.data.input.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) CodeEventType.MERGE_REQUEST else e.data.input.eventType
+                    Pair(RepositoryConfig(e.data.input.repositoryHashId, e.data.input.repositoryName, e.data.input.repositoryType ?: RepositoryType.ID), eventType)
+                }
                 else -> return@forEach
             }
             val repositoryConfig = pair.first
@@ -473,17 +486,21 @@ class PipelineRepositoryService constructor(
             ) {
                 if (null == pipelineSettingDao.getSetting(transactionContext, pipelineId)) {
                     var notifyTypes = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}"
-                    if (channelCode == ChannelCode.AM) {
+                    if (channelCode.name in notifySilentChannels.split(",")) {
                         // 研发商店创建的内置流水线默认不发送通知消息
                         notifyTypes = ""
                     }
+                    // 渠道为工蜂或者开源扫描只需为流水线模型保留一个版本
+                    val filterList = listOf(ChannelCode.GIT, ChannelCode.GONGFENGSCAN)
+                    val maxPipelineResNum = if (channelCode in filterList) 1 else PIPELINE_RES_NUM_MIN
                     pipelineSettingDao.insertNewSetting(
                         dslContext = transactionContext,
                         projectId = projectId,
                         pipelineId = pipelineId,
                         pipelineName = model.name,
                         successNotifyTypes = notifyTypes,
-                        failNotifyTypes = notifyTypes
+                        failNotifyTypes = notifyTypes,
+                        maxPipelineResNum = maxPipelineResNum
                     )
                 } else {
                     pipelineSettingDao.updateSetting(
@@ -528,7 +545,8 @@ class PipelineRepositoryService constructor(
         canElementSkip: Boolean,
         buildNo: BuildNo?,
         modelTasks: Set<PipelineModelTask>,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        maxPipelineResNum: Int? = null
     ): String {
         val taskCount: Int = model.taskCount()
         dslContext.transaction { configuration ->
@@ -557,6 +575,9 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId
             )
+            if (maxPipelineResNum != null) {
+                pipelineResDao.deleteEarlyVersion(dslContext, pipelineId, maxPipelineResNum)
+            }
             pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
         }
 
@@ -789,7 +810,9 @@ class PipelineRepositoryService constructor(
                 successSubscription = Subscription(), failSubscription = Subscription(),
                 labels = emptyList(),
                 waitQueueTimeMinute = t.waitQueueTimeSecond / 60,
-                maxQueueSize = t.maxQueueSize
+                maxQueueSize = t.maxQueueSize,
+                maxPipelineResNum = t.maxPipelineResNum,
+                maxConRunningQueueSize = t.maxConRunningQueueSize
             )
         } else null
     }

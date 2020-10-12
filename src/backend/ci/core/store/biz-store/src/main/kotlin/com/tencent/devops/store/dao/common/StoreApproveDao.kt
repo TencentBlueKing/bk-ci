@@ -200,4 +200,12 @@ class StoreApproveDao {
                 .fetchOne()
         }
     }
+
+    fun deleteApproveInfo(dslContext: DSLContext, storeCode: String, storeType: Byte) {
+        with(TStoreApprove.T_STORE_APPROVE) {
+            dslContext.deleteFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
+                .execute()
+        }
+    }
 }

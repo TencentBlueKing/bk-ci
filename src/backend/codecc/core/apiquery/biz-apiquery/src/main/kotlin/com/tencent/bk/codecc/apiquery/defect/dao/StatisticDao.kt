@@ -25,6 +25,8 @@ class StatisticDao @Autowired constructor(
     fun findCommonByTaskIdInAndToolName(
         taskIds: List<Long>,
         toolName: String?,
+        startTime: Long?,
+        endTime: Long?,
         filterFields: List<String>?,
         pageable: Pageable?
     ): List<CommonStatisticModel> {
@@ -37,6 +39,18 @@ class StatisticDao @Autowired constructor(
             Criteria.where("task_id").`in`(taskIds).and("tool_name").`is`(toolName)
         }
         query.addCriteria(criteria)
+        if (null != startTime && null != endTime)
+        {
+            query.addCriteria(Criteria.where("time").gte(startTime).lt(endTime))
+        }
+        else if (null != startTime)
+        {
+            query.addCriteria(Criteria.where("time").gte(startTime))
+        }
+        else if (null != endTime)
+        {
+            query.addCriteria(Criteria.where("time").lt(endTime))
+        }
         if (null != pageable) {
             query.with(pageable)
         }
@@ -49,7 +63,10 @@ class StatisticDao @Autowired constructor(
     fun findLintByTaskIdInAndToolName(
         taskIds: List<Long>,
         toolName: String?,
+        startTime: Long?,
+        endTime: Long?,
         filterFields: List<String>?,
+        buildId: String?,
         pageable: Pageable?
     ): List<LintStatisticModel> {
         val fieldsObj = BasicDBObject()
@@ -61,6 +78,21 @@ class StatisticDao @Autowired constructor(
             Criteria.where("task_id").`in`(taskIds).and("tool_name").`is`(toolName)
         }
         query.addCriteria(criteria)
+        if (null != startTime && null != endTime)
+        {
+            query.addCriteria(Criteria.where("time").gte(startTime).lt(endTime))
+        }
+        else if (null != startTime)
+        {
+            query.addCriteria(Criteria.where("time").gte(startTime))
+        }
+        else if (null != endTime)
+        {
+            query.addCriteria(Criteria.where("time").lt(endTime))
+        }
+        if (null != buildId) {
+            query.addCriteria(Criteria.where("build_id").`is`(buildId))
+        }
         if (null != pageable) {
             query.with(pageable)
         }
@@ -73,13 +105,31 @@ class StatisticDao @Autowired constructor(
      */
     fun findCCNByTaskIdInAndToolName(
         taskIds: List<Long>,
+        startTime: Long?,
+        endTime: Long?,
         filterFields: List<String>?,
+        buildId: String?,
         pageable: Pageable?
     ): List<CCNStatisticModel> {
         val fieldsObj = BasicDBObject()
         PageUtils.getFilterFields(filterFields, fieldsObj)
         val query = BasicQuery(BasicDBObject(), fieldsObj)
         query.addCriteria(Criteria.where("task_id").`in`(taskIds))
+        if (null != startTime && null != endTime)
+        {
+            query.addCriteria(Criteria.where("time").gte(startTime).lt(endTime))
+        }
+        else if (null != startTime)
+        {
+            query.addCriteria(Criteria.where("time").gte(startTime))
+        }
+        else if (null != endTime)
+        {
+            query.addCriteria(Criteria.where("time").lt(endTime))
+        }
+        if (null != buildId) {
+            query.addCriteria(Criteria.where("build_id").`is`(buildId))
+        }
         if (null != pageable) {
             query.with(pageable)
         }
@@ -92,6 +142,8 @@ class StatisticDao @Autowired constructor(
      */
     fun findDUPCByTaskIdInAndToolName(
         taskIds: List<Long>,
+        startTime: Long?,
+        endTime: Long?,
         filterFields: List<String>?,
         pageable: Pageable?
     ): List<DUPCStatisticModel> {
@@ -99,6 +151,18 @@ class StatisticDao @Autowired constructor(
         PageUtils.getFilterFields(filterFields, fieldsObj)
         val query = BasicQuery(BasicDBObject(), fieldsObj)
         query.addCriteria(Criteria.where("task_id").`in`(taskIds))
+        if (null != startTime && null != endTime)
+        {
+            query.addCriteria(Criteria.where("time").gte(startTime).lt(endTime))
+        }
+        else if (null != startTime)
+        {
+            query.addCriteria(Criteria.where("time").gte(startTime))
+        }
+        else if (null != endTime)
+        {
+            query.addCriteria(Criteria.where("time").lt(endTime))
+        }
         if (null != pageable) {
             query.with(pageable)
         }
@@ -110,13 +174,31 @@ class StatisticDao @Autowired constructor(
      */
     fun findCLOCByTaskIdInAndToolName(
         taskIds: List<Long>,
+        startTime: Long?,
+        endTime: Long?,
         filterFields: List<String>?,
+        buildId: String?,
         pageable: Pageable?
     ): List<CLOCStatisticModel> {
         val fieldsObj = BasicDBObject()
         PageUtils.getFilterFields(filterFields, fieldsObj)
         val query = BasicQuery(BasicDBObject(), fieldsObj)
         query.addCriteria(Criteria.where("task_id").`in`(taskIds))
+        if (null != startTime && null != endTime)
+        {
+            query.addCriteria(Criteria.where("updated_date").gte(startTime).lt(endTime))
+        }
+        else if (null != startTime)
+        {
+            query.addCriteria(Criteria.where("updated_date").gte(startTime))
+        }
+        else if (null != endTime)
+        {
+            query.addCriteria(Criteria.where("updated_date").lt(endTime))
+        }
+        if (null != buildId) {
+            query.addCriteria(Criteria.where("build_id").`is`(buildId))
+        }
         if (null != pageable) {
             query.with(pageable)
         }

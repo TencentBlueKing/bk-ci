@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.common.VMUtils
@@ -274,7 +275,8 @@ class PipelineService @Autowired constructor(
                 throw ignored
             } finally {
                 if (!success) {
-                    modelCheckPlugin.beforeDeleteElementInExistsModel(userId, model, null, pipelineId)
+                    val param = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId ?: "", channelCode = channelCode)
+                    modelCheckPlugin.beforeDeleteElementInExistsModel(model, null, param)
                 }
             }
         } finally {
@@ -547,7 +549,8 @@ class PipelineService @Autowired constructor(
                     defaultMessage = "指定要复制的流水线-模型不存在"
                 )
             // 对已经存在的模型做处理
-            modelCheckPlugin.beforeDeleteElementInExistsModel(userId, existModel, model, pipelineId)
+            val param = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId, channelCode = channelCode)
+            modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
 
             pipelineRepositoryService.deployPipeline(model, projectId, pipelineId, userId, channelCode, false)
             if (checkPermission) {
@@ -693,6 +696,7 @@ class PipelineService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
                 defaultMessage = "指定要复制的流水线-模型不存在"
             )
+
         try {
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             val buildNo = triggerContainer.buildNo
@@ -1604,13 +1608,34 @@ class PipelineService @Autowired constructor(
         logger.info("getPipelineByIds|[$projectId]|watch=$watch")
         return pipelines.map {
             SimplePipeline(
-                it.projectId,
-                it.pipelineId,
-                it.pipelineName,
-                it.pipelineDesc,
-                it.taskCount,
-                it.delete,
-                templatePipelineIds.contains(it.pipelineId)
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    pipelineName = it.pipelineName,
+                    pipelineDesc = it.pipelineDesc,
+                    taskCount = it.taskCount,
+                    isDelete = it.delete,
+                    instanceFromTemplate = templatePipelineIds.contains(it.pipelineId)
+            )
+        }
+    }
+
+    fun getPipelineByIds(pipelineIds: Set<String>): List<SimplePipeline> {
+        if (pipelineIds.isEmpty()) return listOf()
+
+        val watch = StopWatch()
+        watch.start("s_r_list_b_ps")
+        val pipelines = pipelineInfoDao.listInfoByPipelineIds(dslContext, pipelineIds)
+        watch.stop()
+        logger.info("getPipelineByIds|[$pipelineIds]|watch=$watch")
+        return pipelines.map {
+            SimplePipeline(
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    pipelineName = it.pipelineName,
+                    pipelineDesc = it.pipelineDesc,
+                    taskCount = it.taskCount,
+                    isDelete = it.delete,
+                    instanceFromTemplate = true
             )
         }
     }
@@ -1891,7 +1916,7 @@ class PipelineService @Autowired constructor(
         model.stages.forEachIndexed { index, stage ->
             stage.id = stage.id ?: VMUtils.genStageId(index + 1)
             if (index == 0) {
-                stages.add(Stage(listOf(fixedTriggerContainer), stage.id))
+                stages.add(stage.copy(containers = listOf(fixedTriggerContainer)))
             } else {
                 model.stages.forEach {
                     if (it.name.isNullOrBlank()) it.name = it.id

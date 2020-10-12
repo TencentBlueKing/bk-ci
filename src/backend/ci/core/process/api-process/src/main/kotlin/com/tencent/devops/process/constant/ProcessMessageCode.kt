@@ -183,8 +183,13 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_DENY_RUN = "2101197" // 流水线不能执行
     const val ERROR_PIPELINE_IS_RUNNING_LOCK = "2101198" // 流水线正在运行中，锁定
     const val ERROR_PIPELINE_TIMER_SCM_NO_CHANGE = "2101190" // 流水线定时触发时代码没有变更
+    const val ERROR_PIPELINE_SUMMARY_NOT_FOUND = "2101191" // 异常：流水线的基础构建数据Summary不存在，请联系管理员
 
     // callback error
     const val ERROR_CALLBACK_URL_INVALID = "2101180" // 回调的url非法
     const val USER_NEED_PROJECT_X_PERMISSION = "2101181" // 用户（{0}）无（{1}）项目权限
+
+    const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101301" // ({0})与({1})的jobId循环依赖
+    const val ERROR_PIPELINE_JOBID_EXIST = "2101302" // ({0})的jobId({1})已存在
+    const val ERROR_PIPELINE_DEPENDEON_NOT_EXIST = "2101303" // job:({0})依赖的({1})不存在
 }

@@ -36,7 +36,12 @@ interface StoreMemberService {
     /**
      * store组件成员列表
      */
-    fun list(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<List<StoreMemberItem?>>
+    fun list(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        checkPermissionFlag: Boolean = true
+    ): Result<List<StoreMemberItem?>>
 
     /**
      * 查看store组件成员信息
@@ -54,12 +59,26 @@ interface StoreMemberService {
     /**
      * 添加store组件成员
      */
-    fun add(userId: String, storeMemberReq: StoreMemberReq, storeType: StoreTypeEnum, collaborationFlag: Boolean? = false, sendNotify: Boolean = true): Result<Boolean>
+    fun add(
+        userId: String,
+        storeMemberReq: StoreMemberReq,
+        storeType: StoreTypeEnum,
+        collaborationFlag: Boolean? = false,
+        sendNotify: Boolean = true,
+        checkPermissionFlag: Boolean = true,
+        testProjectCode: String? = null
+    ): Result<Boolean>
 
     /**
      * 删除store组件成员
      */
-    fun delete(userId: String, id: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean>
+    fun delete(
+        userId: String,
+        id: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        checkPermissionFlag: Boolean = true
+    ): Result<Boolean>
 
     /**
      * 更改store组件成员的调试项目
@@ -67,6 +86,7 @@ interface StoreMemberService {
     fun changeMemberTestProjectCode(
         accessToken: String,
         userId: String,
+        storeMember: String,
         projectCode: String,
         storeCode: String,
         storeType: StoreTypeEnum

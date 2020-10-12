@@ -47,12 +47,6 @@ public class CodeRepoFromAnalyzeLogEntity
     private long taskId;
 
     /**
-     * 构建ID
-     */
-    @Field("build_id")
-    private String buildId;
-
-    /**
      * 代码仓库
      */
     @Field("code_repo_list")
@@ -62,6 +56,8 @@ public class CodeRepoFromAnalyzeLogEntity
     @Data
     public static class CodeRepo
     {
+        private String buildId;
+
         private String url;
 
         private String branch;
@@ -74,7 +70,7 @@ public class CodeRepoFromAnalyzeLogEntity
         public boolean equals(Object obj) {
             if (obj instanceof CodeRepo) {
                 CodeRepo codeRepo = (CodeRepo) obj;
-                return (url.equals(codeRepo.url));
+                return (url.equals(codeRepo.url) && branch.equals(codeRepo.branch));
             }
             return super.equals(obj);
         }
@@ -82,7 +78,6 @@ public class CodeRepoFromAnalyzeLogEntity
         @Override
         public int hashCode() {
             return url.hashCode();
-
         }
     }
 }

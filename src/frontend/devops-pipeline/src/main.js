@@ -35,7 +35,8 @@ import validDictionary from './utils/validDictionary'
 import PortalVue from 'portal-vue' // eslint-disable-line
 import createLocale from '../../locale'
 import '@icon-cool/bk-icon-devops/src/index'
-
+import log from '@blueking/log'
+import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
 import bkMagic from 'bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
 require('bk-magic-vue/dist/bk-magic-vue.min.css')
@@ -45,6 +46,7 @@ const { i18n, setLocale } = createLocale(require.context('@locale/pipeline/', fa
 Vue.use(focus)
 Vue.use(bkMagic)
 Vue.use(PortalVue)
+Vue.use(log)
 
 Vue.use(VeeValidate, {
     i18nRootKey: 'validations', // customize the root path for validation messages.
@@ -59,6 +61,41 @@ VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
 
 Vue.prototype.$setLocale = setLocale
+Vue.prototype.$permissionActionMap = actionMap
+Vue.prototype.$permissionResourceMap = resourceMap
+Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
+
+Vue.mixin({
+    methods: {
+        // handleError (e, permissionAction, instance, projectId, resourceMap = this.$permissionResourceMap.pipeline) {
+        handleError (e, noPermissionList) {
+            if (e.code === 403) { // 没有权限编辑
+                // this.setPermissionConfig(resourceMap, permissionAction, instance ? [instance] : [], projectId)
+                this.$showAskPermissionDialog({
+                    noPermissionList
+                })
+            } else {
+                this.$showTips({
+                    message: e.message || e,
+                    theme: 'error'
+                })
+            }
+        },
+        /**
+         * 设置权限弹窗的参数
+         */
+        setPermissionConfig (resourceId, actionId, instanceId = [], projectId = this.$route.params.projectId) {
+            this.$showAskPermissionDialog({
+                noPermissionList: [{
+                    actionId,
+                    resourceId,
+                    instanceId,
+                    projectId
+                }]
+            })
+        }
+    }
+})
 
 global.pipelineVue = new Vue({
     el: '#app',
