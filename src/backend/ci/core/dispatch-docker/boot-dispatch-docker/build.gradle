@@ -24,14 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type
-
-enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
-    DOCKER_VM(".docker.vm"),
-    PCG(".pcg.sumeru"),
-    DEVCLOUD(".devcloud.public"),
-    IDC(".idc.public"),
-    GITCI(".gitci.public"),
-    CODECC(".codecc.scan"),
-    MACOS(".macos")
+dependencies {
+    compile project(":core:dispatch-docker:biz-dispatch-docker")
+    compile project(":core:common:common-auth:common-auth-mock")
+    compile project(":core:common:common-auth:common-auth-blueking")
+    compile project(":core:common:common-auth:common-auth-v3")
 }
+
+apply from: "$rootDir/task_spring_boot_package.gradle"

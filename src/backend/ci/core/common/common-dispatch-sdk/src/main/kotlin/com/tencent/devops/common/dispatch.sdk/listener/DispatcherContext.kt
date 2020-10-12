@@ -24,14 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type
+package com.tencent.devops.common.dispatch.sdk.listener
 
-enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
-    DOCKER_VM(".docker.vm"),
-    PCG(".pcg.sumeru"),
-    DEVCLOUD(".devcloud.public"),
-    IDC(".idc.public"),
-    GITCI(".gitci.public"),
-    CODECC(".codecc.scan"),
-    MACOS(".macos")
+import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+
+object DispatcherContext {
+
+    private val currentEvent = ThreadLocal<PipelineAgentStartupEvent>()
+
+    fun setEvent(event: PipelineAgentStartupEvent) {
+        currentEvent.set(event)
+    }
+
+    fun getEvent(): PipelineAgentStartupEvent? {
+        return currentEvent.get()
+    }
+
+    fun removeEvent() {
+        currentEvent.remove()
+    }
 }

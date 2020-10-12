@@ -24,14 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type
+package com.tencent.devops.common.dispatch.sdk
 
-enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
-    DOCKER_VM(".docker.vm"),
-    PCG(".pcg.sumeru"),
-    DEVCLOUD(".devcloud.public"),
-    IDC(".idc.public"),
-    GITCI(".gitci.public"),
-    CODECC(".codecc.scan"),
-    MACOS(".macos")
-}
+import com.tencent.devops.common.api.pojo.ErrorType
+
+class BuildFailureException(
+    val errorType: ErrorType,
+    val errorCode: Int,
+    val formatErrorMessage: String,
+    errorMessage: String
+) : Exception(errorMessage)

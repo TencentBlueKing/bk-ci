@@ -24,14 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type
-
-enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
-    DOCKER_VM(".docker.vm"),
-    PCG(".pcg.sumeru"),
-    DEVCLOUD(".devcloud.public"),
-    IDC(".idc.public"),
-    GITCI(".gitci.public"),
-    CODECC(".codecc.scan"),
-    MACOS(".macos")
+subprojects {
+    group "com.tencent.bk.devops.ci.dispatch.docker"
+    dependencies {
+        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+        compile "org.jetbrains.kotlin:kotlin-reflect"
+        testCompile "junit:junit"
+        testCompile "org.springframework.boot:spring-boot-starter-test"
+    }
 }
