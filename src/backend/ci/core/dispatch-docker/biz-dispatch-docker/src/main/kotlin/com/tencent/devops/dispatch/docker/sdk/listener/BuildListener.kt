@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.dispatch.sdk.listener
+package com.tencent.devops.dispatch.docker.sdk.listener
 
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
@@ -33,13 +33,13 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCast
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.dispatch.docker.sdk.BuildFailureException
+import com.tencent.devops.dispatch.docker.sdk.DispatchSdkErrorCode
+import com.tencent.devops.dispatch.docker.sdk.jmx.BuildBean
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
-import com.tencent.devops.common.dispatch.sdk.jmx.BuildBean
-import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
-import com.tencent.devops.common.dispatch.sdk.service.DispatchService
-import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
+import com.tencent.devops.dispatch.docker.sdk.pojo.DispatchMessage
+import com.tencent.devops.dispatch.docker.sdk.service.DispatchService
+import com.tencent.devops.dispatch.docker.sdk.service.JobQuotaService
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.process.engine.common.VMUtils

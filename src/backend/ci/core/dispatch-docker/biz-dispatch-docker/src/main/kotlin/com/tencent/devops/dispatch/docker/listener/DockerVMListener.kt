@@ -52,13 +52,10 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
 
-@Component
+@Service
 class DockerVMListener @Autowired constructor(
-    private val redisOperation: RedisOperation,
-    private val client: Client,
-    private val gray: Gray,
     private val buildLogPrinter: BuildLogPrinter,
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostClient: DockerHostClient,
@@ -79,11 +76,12 @@ class DockerVMListener @Autowired constructor(
     }
 
     override fun getStartupQueue(): String {
+        logger.info("getStartupQueue ......")
         return ".docker.vm"
     }
 
     override fun getVmType(): JobQuotaVmType? {
-        return JobQuotaVmType.DOCKER_DEVCLOUD
+        return JobQuotaVmType.DOCKER_VM
     }
 
     override fun onStartup(dispatchMessage: DispatchMessage) {
