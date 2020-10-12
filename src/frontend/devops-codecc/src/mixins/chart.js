@@ -28,10 +28,10 @@ export default {
         ]),
         toolList () {
             const toolType = this.toolMeta['TOOL_TYPE'].filter(item => {
-                return item.key !== 'CCN' && item.key !== 'DUPC'
+                return item.key !== 'CCN' && item.key !== 'DUPC' && item.key !== 'CLOC'
             })
             const enTooList = this.taskDetail.enableToolList.filter(item => {
-                return item.toolName !== 'CCN' && item.toolName !== 'DUPC'
+                return item.toolName !== 'CCN' && item.toolName !== 'DUPC' && item.key !== 'CLOC'
             })
             if (this.toolMap) {
                 toolType.forEach(item => {
@@ -70,7 +70,7 @@ export default {
                     minInterval: 1
                 },
                 grid: {
-                    left: '50'
+                    left: '65'
                 },
                 series: [
                     {

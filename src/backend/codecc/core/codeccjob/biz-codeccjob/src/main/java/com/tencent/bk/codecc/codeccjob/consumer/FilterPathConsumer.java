@@ -134,6 +134,19 @@ public class FilterPathConsumer
                 {
                     ignoredPaths.addAll(fileDir);
                 }
+                // code.yml屏蔽路径
+                if (!CollectionUtils.isEmpty(filterPathInputVO.getTestSourceFilterPath()))
+                {
+                    ignoredPaths.addAll(filterPathInputVO.getTestSourceFilterPath());
+                }
+                if (!CollectionUtils.isEmpty(filterPathInputVO.getAutoGenFilterPath()))
+                {
+                    ignoredPaths.addAll(filterPathInputVO.getAutoGenFilterPath());
+                }
+                if (!CollectionUtils.isEmpty(filterPathInputVO.getThirdPartyFilterPath()))
+                {
+                    ignoredPaths.addAll(filterPathInputVO.getThirdPartyFilterPath());
+                }
             }
 
             if (CollectionUtils.isEmpty(ignoredPaths))

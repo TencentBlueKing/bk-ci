@@ -36,6 +36,11 @@ public class ScanConfigurationVO extends CommonVO
      */
     private List<TransferAuthorPair> transferAuthorList;
 
+    /*
+     * 是否回写工蜂
+     */
+    private Boolean mrCommentEnable;
+
     @Data
     public static class TransferAuthorPair
     {

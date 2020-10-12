@@ -1,0 +1,7 @@
+server.port: 25903
+
+spring.cloud.stream.bindings:
+  event-input:
+    destination: event-topic
+    group: replication
+    concurrency: 5

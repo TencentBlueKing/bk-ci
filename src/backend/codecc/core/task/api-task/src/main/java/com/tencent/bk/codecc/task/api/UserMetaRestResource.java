@@ -30,6 +30,7 @@ import com.tencent.bk.codecc.task.vo.BuildEnvVO;
 import com.tencent.bk.codecc.task.vo.MetadataVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.ToolMetaDetailVO;
+import com.tencent.devops.common.api.annotation.UserLogin;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

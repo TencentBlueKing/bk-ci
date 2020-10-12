@@ -51,5 +51,12 @@ public interface JobInstanceRepository extends MongoRepository<JobInstanceEntity
      */
     void deleteByJobName(String jobName);
 
+    /**
+     * 通过class_name来查找
+     * @param className
+     * @return
+     */
+    List<JobInstanceEntity> findByClassName(String className);
+
 
 }

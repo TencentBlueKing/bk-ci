@@ -1,3 +1,4 @@
+<!-- deprecated -->
 <template>
     <div>
         <bk-tab :active.sync="active" type="unborder-card">

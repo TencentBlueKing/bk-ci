@@ -570,6 +570,21 @@ class AtomDao : AtomBaseDao() {
             if (null != atomUpdateRequest.logoUrl) {
                 baseStep.set(LOGO_URL, atomUpdateRequest.logoUrl)
             }
+            if (null != atomUpdateRequest.publisher) {
+                baseStep.set(PUBLISHER, atomUpdateRequest.publisher)
+            }
+            val visibilityLevel = atomUpdateRequest.visibilityLevel
+            val privateReason = atomUpdateRequest.privateReason
+            if (null != visibilityLevel) {
+                baseStep.set(VISIBILITY_LEVEL, visibilityLevel.level)
+            }
+            if (visibilityLevel == VisibilityLevelEnum.LOGIN_PUBLIC) {
+                baseStep.set(PRIVATE_REASON, "") // 选择开源则清空不开源原因
+            } else {
+                if (null != privateReason) {
+                    baseStep.set(PRIVATE_REASON, privateReason)
+                }
+            }
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .where(ID.eq(id))

@@ -116,9 +116,10 @@
                 <div class="settings-body">
                     <bk-form-item :label-width="110" class="input" v-for="(item, index) in authorList" :key="index">
                         <bk-input v-model="item.sourceAuthor"></bk-input>
+                        <!-- <bk-input class="compile-version" v-model="item.targetAuthor" :palceholder="'新处理人'"></bk-input> -->
                         <!-- <bk-member-selector v-model="item.sourceAuthor"></bk-member-selector> -->
-                        <!-- <bk-member-selector class="compile-version" v-model="item.targetAuthor" :palceholder="'新处理人'"></bk-member-selector> -->
                         <bk-input class="compile-version" v-model="item.targetAuthor" :palceholder="'新处理人'"></bk-input>
+                        <!-- <bk-member-selector class="compile-version" v-model="item.targetAuthor" :palceholder="'新处理人'"></bk-member-selector> -->
                         <div class="tool-icon">
                             <i class="bk-icon icon-plus" @click="addTool(index)" v-if="index === authorList.length - 1"></i>
                             <i class="bk-icon icon-close" @click="deleteTool(index)" v-if="authorList.length > 1"></i>
@@ -311,7 +312,7 @@
                 }
             },
             hanldeToPipeline () {
-                window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${this.taskDetail.projectId}/${this.taskDetail.pipelineId}/edit`, '_blank')
+                window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${this.taskDetail.projectId}/${this.taskDetail.pipelineId}/edit#${this.taskDetail.atomCode}`, '_blank')
             }
         }
     }

@@ -129,4 +129,5 @@ public class ServiceToolRestResourceImpl implements ServiceToolRestResource
     {
         return new CodeCCResult<>(toolService.batchGetToolConfigList(queryTaskListReqVO));
     }
+
 }
