@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class BuildLessAgentStartupListener @Autowired
+class AgentLessStartupListener @Autowired
 constructor(private val pipelineDispatchService: PipelineBuildLessDispatchService) {
 
     @RabbitListener(
@@ -65,6 +65,6 @@ constructor(private val pipelineDispatchService: PipelineBuildLessDispatchServic
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BuildLessAgentStartupListener::class.java)
+        private val logger = LoggerFactory.getLogger(AgentLessStartupListener::class.java)
     }
 }
