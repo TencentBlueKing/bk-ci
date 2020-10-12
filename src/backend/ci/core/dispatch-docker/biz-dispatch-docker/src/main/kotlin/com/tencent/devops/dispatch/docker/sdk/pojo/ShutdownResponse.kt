@@ -24,8 +24,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:dispatch-docker:api-dispatch-docker")
-    compile project(":core:dispatch:biz-dispatch")
-    // compile project(":core:common:common-dispatch-sdk")
-}
+package com.tencent.devops.dispatch.docker.sdk.pojo
+
+data class ShutdownResponse(
+    val vmSeqIds: List<String>
+)
