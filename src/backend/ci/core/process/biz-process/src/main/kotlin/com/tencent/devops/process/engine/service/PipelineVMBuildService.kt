@@ -64,7 +64,6 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.service.measure.AtomMonitorEventDispatcher
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
-import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -72,7 +71,6 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.common.KEY_VERSION
-import okhttp3.Request
 import org.apache.lucene.util.RamUsageEstimator
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -96,7 +94,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val redisOperation: RedisOperation,
     private val jmxElements: JmxElements,
-    private val consulClient: ConsulDiscoveryClient?,
     private val buildExtService: PipelineBuildExtService,
     private val client: Client
 ) {
