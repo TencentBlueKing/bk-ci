@@ -42,7 +42,7 @@ import org.springframework.stereotype.Service
 class BuildLessAgentShutdownListener @Autowired
 constructor(private val pipelineDispatchService: PipelineBuildLessDispatchService) {
 
-    @RabbitListener(
+/*    @RabbitListener(
         bindings = [(QueueBinding(
             key = MQ.ROUTE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH, value = Queue(
                 value = MQ.QUEUE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH, durable = "true"
@@ -54,7 +54,7 @@ constructor(private val pipelineDispatchService: PipelineBuildLessDispatchServic
                 type = ExchangeTypes.DIRECT
             )
         ))]
-    )
+    )*/
     fun listenAgentStartUpEvent(pipelineBuildLessDockerAgentShutdownEvent: PipelineBuildLessShutdownDispatchEvent) {
         try {
             pipelineDispatchService.shutdown(pipelineBuildLessDockerAgentShutdownEvent)
