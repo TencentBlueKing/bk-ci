@@ -64,6 +64,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.service.measure.AtomMonitorEventDispatcher
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
+import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -451,16 +452,16 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
         }
 
-        val extVarMap = buildExtService.buildExt(task)
+        val turboTaskId = buildExtService.buildExt(task)
 
         // 认领任务
         pipelineRuntimeService.claimBuildTask(buildId, task, userId)
 
         val buildVariable = mutableMapOf(
             PIPELINE_VMSEQ_ID to vmSeqId,
-            PIPELINE_ELEMENT_ID to task.taskId
+            PIPELINE_ELEMENT_ID to task.taskId,
+            PIPELINE_TURBO_TASK_ID to turboTaskId
         )
-        buildVariable.putAll(extVarMap)
 
         PipelineVarUtil.fillOldVar(buildVariable)
 
