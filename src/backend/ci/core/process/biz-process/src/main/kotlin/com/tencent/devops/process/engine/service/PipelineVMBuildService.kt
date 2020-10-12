@@ -460,11 +460,11 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             PIPELINE_VMSEQ_ID to vmSeqId,
             PIPELINE_ELEMENT_ID to task.taskId
         )
+        buildVariable.putAll(extVarMap)
 
         PipelineVarUtil.fillOldVar(buildVariable)
 
         buildVariable.putAll(allVariable)
-        buildVariable.putAll(extVarMap)
 
         val buildTask = BuildTask(
             buildId = buildId,
