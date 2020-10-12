@@ -75,7 +75,6 @@ import org.apache.lucene.util.RamUsageEstimator
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
