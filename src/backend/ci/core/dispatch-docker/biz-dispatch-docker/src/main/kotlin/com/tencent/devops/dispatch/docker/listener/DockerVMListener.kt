@@ -73,7 +73,6 @@ class DockerVMListener @Autowired constructor(
     }
 
     override fun getStartupQueue(): String {
-        logger.info("getStartupQueue ......")
         return ".docker.vm"
     }
 
