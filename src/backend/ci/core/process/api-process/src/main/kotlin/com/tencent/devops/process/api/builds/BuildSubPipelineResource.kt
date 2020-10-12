@@ -30,10 +30,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.PipelineId
-import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
+import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -94,6 +95,8 @@ interface BuildSubPipelineResource {
         @ApiParam("运行方式", required = true)
         @QueryParam("runMode")
         runMode: String,
+        @QueryParam("channelCode")
+        channelCode: ChannelCode?,
         @ApiParam("启动参数", required = true)
         values: Map<String, String>
     ): Result<ProjectBuildId>

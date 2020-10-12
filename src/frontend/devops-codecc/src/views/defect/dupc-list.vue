@@ -11,24 +11,15 @@
                         </bk-tab-panel>
                     </bk-tab>
                 </div>
+                <div>
+                    <bk-button style="border: none" v-if="exportLoading" icon="loading" :disabled="true" :title="$t('导出Excel')"></bk-button>
+                    <span v-else class="codecc-icon icon-export-excel excel-download" @click="downloadExcel" v-bk-tooltips="$t('导出Excel')"></span>
+                </div>
             </div>
             <div class="main-container">
                 <div class="main-content-inner main-content-list">
-                    <bk-form :label-width="90" class="search-form">
+                    <bk-form :label-width="60" class="search-form">
                         <container class="cc-container">
-                            <div class="cc-col">
-                                <bk-form-item :label="$t('风险级别')">
-                                    <bk-checkbox-group v-model="searchParams.severity" class="checkbox-group">
-                                        <bk-checkbox
-                                            v-for="(name, value, index) in defectSeverityMap"
-                                            :value="Number(value)"
-                                            :key="index"
-                                        >
-                                            {{name}}(<em :class="['count', `count-${['major', 'minor', 'info'][index]}`]">{{getDefectCountBySeverity(value)}}</em>)
-                                        </bk-checkbox>
-                                    </bk-checkbox-group>
-                                </bk-form-item>
-                            </div>
                             <div class="cc-col">
                                 <bk-form-item :label="$t('处理人')">
                                     <bk-select v-model="searchParams.author" searchable>
@@ -64,6 +55,7 @@
                                                         <div class="content-bd" v-if="treeList.length">
                                                             <bk-big-tree
                                                                 ref="filePathTree"
+                                                                height="340"
                                                                 :options="{ 'idKey': 'treeId' }"
                                                                 :show-checkbox="true"
                                                                 :data="treeList"
@@ -106,6 +98,19 @@
                                     </bk-dropdown-menu>
                                 </bk-form-item>
                             </div>
+                            <div class="cc-col">
+                                <bk-form-item :label="$t('风险级别')">
+                                    <bk-checkbox-group v-model="searchParams.severity" class="checkbox-group">
+                                        <bk-checkbox
+                                            v-for="(name, value, index) in defectSeverityMap"
+                                            :value="Number(value)"
+                                            :key="index"
+                                        >
+                                            {{name}}(<em :class="['count', `count-${['major', 'minor', 'info'][index]}`]">{{getDefectCountBySeverity(value)}}</em>)
+                                        </bk-checkbox>
+                                    </bk-checkbox-group>
+                                </bk-form-item>
+                            </div>
                         </container>
                     </bk-form>
 
@@ -131,7 +136,7 @@
                         <bk-table-column :label="$t('重复块数')" prop="blockNum"></bk-table-column>
                         <bk-table-column :label="$t('重复行数')" prop="dupLines" sortable="custom" label-class-name="col-sort-label" class-name="col-sort"></bk-table-column>
                         <bk-table-column :label="$t('函数总行数')" prop="totalLines"></bk-table-column>
-                        <bk-table-column :label="$t('重复率')" prop="dupRateValue" sortable="custom">
+                        <bk-table-column :label="$t('重复率')" prop="dupRate" sortable="custom">
                             <template slot-scope="props">
                                 <span>{{props.row.dupRate}}</span>
                             </template>
@@ -172,7 +177,7 @@
                 <div class="no-task">
                     <empty title="" :desc="$t('CodeCC集成了重复率工具，可以发现冗余和重复代码，以便代码抽象和重构')">
                         <template v-slot:action>
-                            <bk-button size="large" theme="primary" @click="addTool({ from: 'ccndupc' })">{{$t('配置规则集')}}</bk-button>
+                            <bk-button size="large" theme="primary" @click="addTool({ from: 'dupc' })">{{$t('配置规则集')}}</bk-button>
                         </template>
                     </empty>
                 </div>
@@ -181,6 +186,7 @@
         <bk-dialog
             v-model="detailVisiable"
             :fullscreen="true"
+            :show-mask="false"
             :show-footer="false">
             <dupc-detail
                 :entity-id="entityId"
@@ -196,6 +202,8 @@
     import newAnalyse from '@/components/new-analyse'
     import dupcDetail from './dupc-detail'
     import Empty from '@/components/empty'
+    // eslint-disable-next-line
+    import { export_json_to_excel } from 'vendor/export2Excel'
 
     export default {
         components: {
@@ -263,7 +271,8 @@
                 filePath: '',
                 fileIndex: 0,
                 tableLoading: false,
-                isFetched: false
+                isFetched: false,
+                exportLoading: false
             }
         },
         computed: {
@@ -476,6 +485,7 @@
                 document.onkeydown = keyDown
                 function keyDown (event) {
                     const e = event || window.event
+                    if (e.target.nodeName !== 'BODY') return
                     switch (e.code) {
                         case 'Enter': // enter
                             // e.path.length < 5 防止规则等搜索条件里面的回车触发打开详情
@@ -558,6 +568,48 @@
                         }
                     }, 500)
                 }
+            },
+            getSearchParams () {
+                const params = { ...this.searchParams }
+                return params
+            },
+            downloadExcel () {
+                const params = this.getSearchParams()
+                params.pageSize = 300000
+                if (this.totalCount > 300000) {
+                    this.$bkMessage({
+                        message: this.$t('当前问题数已超过30万个，无法直接导出excel，请筛选后再尝试导出。')
+                    })
+                    return
+                }
+                this.exportLoading = true
+                this.$store.dispatch('defect/lintList', params).then(res => {
+                    const list = res && res.defectList && res.defectList.content
+                    this.generateExcel(list)
+                }).finally(() => {
+                    this.exportLoading = false
+                })
+            },
+            generateExcel (list = []) {
+                const tHeader = [this.$t('序号'), this.$t('文件名'), this.$t('路径'), this.$t('重复块数'), this.$t('重复行数'), this.$t('函数总行数'), this.$t('重复率'), this.$t('相关作者'), this.$t('风险'), this.$t('修改时间')]
+                const filterVal = ['index', 'fileName', 'filePath', 'blockNum', 'dupLines', 'totalLines', 'dupRate', 'authorList', 'riskFactor', 'fileChangeTime']
+                const data = this.formatJson(filterVal, list)
+                const title = `${this.taskDetail.nameCn}-${this.taskDetail.taskId}-${this.toolId}-${this.$t('重复文件')}-${new Date().toISOString()}`
+                export_json_to_excel(tHeader, data, title)
+            },
+            formatJson (filterVal, list) {
+                let index = 1
+                return list.map(item => filterVal.map(j => {
+                    if (j === 'index') {
+                        return index++
+                    } else if (j === 'riskFactor') {
+                        return this.defectSeverityMap[item.riskFactor]
+                    } else if (j === 'fileChangeTime') {
+                        return this.formatTime(item.fileChangeTime, 'YYYY-MM-DD')
+                    } else {
+                        return item[j]
+                    }
+                }))
             }
         }
     }
@@ -641,6 +693,19 @@
     >>>.checkbox-group {
         .bk-checkbox-text {
             font-size: 12px;
+        }
+    }
+    .excel-download {
+        line-height: 32px;
+        cursor: pointer;
+        padding-right: 10px;
+        &:hover {
+            color: #3a84ff;
+        }
+    }
+    >>>.bk-button .bk-icon {
+        .loading {
+            color: #3a92ff;
         }
     }
 </style>

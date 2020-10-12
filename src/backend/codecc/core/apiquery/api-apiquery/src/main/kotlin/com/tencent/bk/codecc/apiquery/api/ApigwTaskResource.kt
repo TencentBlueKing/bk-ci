@@ -1,10 +1,13 @@
 package com.tencent.bk.codecc.apiquery.api
 
 import com.tencent.bk.codecc.apiquery.task.TaskQueryReq
+import com.tencent.bk.codecc.apiquery.task.model.BuildIdRelationshipModel
 import com.tencent.bk.codecc.apiquery.task.model.CustomProjModel
+import com.tencent.bk.codecc.apiquery.task.model.TaskFailRecordModel
 import com.tencent.bk.codecc.apiquery.task.model.TaskInfoModel
 import com.tencent.bk.codecc.apiquery.task.model.ToolConfigInfoModel
 import com.tencent.bk.codecc.apiquery.vo.pipeline.PipelineTaskVO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.CODECC_AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.CodeCCResult
@@ -122,5 +125,60 @@ interface ApigwTaskResource {
         sortType: String?
     ): CodeCCResult<Page<ToolConfigInfoModel>>
 
+    @ApiOperation("根据流水线ID获取任务有效信息")
+    @Path("/by/pipelines")
+    @POST
+    fun getPipelineTask(
+        @ApiParam(value = "任务查询请求体", required = true)
+        taskQueryReq: TaskQueryReq,
+        @ApiParam(value = "应用code", required = false)
+        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode : String,
+        @ApiParam(value = "页面数")
+        @QueryParam("pageNum")
+        pageNum: Int?,
+        @ApiParam(value = "页面大小")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam(value = "排序字段")
+        @QueryParam("sortField")
+        sortField: String?,
+        @ApiParam(value = "排序类型")
+        @QueryParam("sortType")
+        sortType: String?
+    ): CodeCCResult<Page<PipelineTaskVO>>
 
+    @ApiOperation("查询任务失败信息")
+    @Path("/fail/list")
+    @POST
+    fun findTaskFailRecord(
+        @ApiParam(value = "任务查询请求体", required = true)
+        taskQueryReq: TaskQueryReq,
+        @ApiParam(value = "应用code", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String,
+        @ApiParam(value = "页面数")
+        @QueryParam("pageNum")
+        pageNum: Int?,
+        @ApiParam(value = "页面大小")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam(value = "排序字段")
+        @QueryParam("sortField")
+        sortField: String?,
+        @ApiParam(value = "排序类型")
+        @QueryParam("sortType")
+        sortType: String?
+    ) : CodeCCResult<List<TaskFailRecordModel>>
+
+    @ApiOperation("")
+    @Path("/buildId")
+    @POST
+    fun getbuilIdRelationship(
+        @ApiParam(value = "任务查询请求体", required = true)
+        taskQueryReq: TaskQueryReq,
+        @ApiParam(value = "应用code", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode : String
+    ): CodeCCResult<BuildIdRelationshipModel?>
 }

@@ -150,8 +150,8 @@ public class AuthorTransferConsumer
                     List<String> oldTargetAuthorList = entry.getValue();
 
                     // 如果转换关系是之前已经存在的，则不需要重新刷新数据
-                    if (ListUtils.isEqualList(newSourceAuthorList, oldSourceAuthorList)
-                            && ListUtils.isEqualList(newTargetAuthorList, oldTargetAuthorList))
+                    if (CollectionUtils.isEqualCollection(newSourceAuthorList, oldSourceAuthorList)
+                            && CollectionUtils.isEqualCollection(newTargetAuthorList, oldTargetAuthorList))
                     {
                         needRefresh = false;
                         break;

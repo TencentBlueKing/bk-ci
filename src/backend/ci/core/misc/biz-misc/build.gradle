@@ -36,5 +36,6 @@ dependencies {
     compile project(":core:notify:api-notify")
     compile project(":core:project:api-project")
     compile project(":core:misc:api-misc")
+    compile project(":core:common:common-websocket")
     compile ("org.json:json")
 }

@@ -32,17 +32,31 @@ import com.tencent.bk.codecc.defect.vo.GetFileContentSegmentReqVO;
 import com.tencent.bk.codecc.defect.vo.SingleCommentVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectReqVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectRspVO;
-import com.tencent.bk.codecc.defect.vo.common.*;
+import com.tencent.bk.codecc.defect.vo.common.BuildVO;
+import com.tencent.bk.codecc.defect.vo.common.CommonDefectDetailQueryReqVO;
+import com.tencent.bk.codecc.defect.vo.common.CommonDefectDetailQueryRspVO;
+import com.tencent.bk.codecc.defect.vo.common.CommonDefectQueryRspVO;
+import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO;
+import com.tencent.bk.codecc.defect.vo.common.QueryWarningPageInitRspVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.constant.ComConstants;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.data.domain.Sort;
 
 import javax.validation.Valid;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
 import java.util.List;
 
 import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_TASK_ID;
@@ -55,8 +69,7 @@ import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEAD
 @Path("/user/warn")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public interface UserDefectRestResource
-{
+public interface UserDefectRestResource {
     @ApiOperation("初始化告警管理页面的缺陷类型、作者以及树")
     @Path("/checker/authors/toolName/{toolName}")
     @GET
@@ -66,7 +79,10 @@ public interface UserDefectRestResource
                     Long taskId,
             @ApiParam(value = "工具名称", required = true)
             @PathParam(value = "toolName")
-                    String toolName
+                    String toolName,
+            @ApiParam(value = "告警状态")
+            @QueryParam(value = "status")
+                    String status
     );
 
 
@@ -101,6 +117,9 @@ public interface UserDefectRestResource
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
                     long taskId,
+            @ApiParam(value = "用户ID", required = true)
+            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+                String userId,
             @ApiParam(value = "查询参数详情", required = true)
             @Valid
                     CommonDefectDetailQueryReqVO commonDefectDetailQueryReqVO,
@@ -118,6 +137,9 @@ public interface UserDefectRestResource
             @ApiParam(value = "任务ID", required = true)
             @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
                     long taskId,
+            @ApiParam(value = "用户ID", required = true)
+            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+                    String userId,
             @ApiParam(value = "获取文件片段", required = true)
             @Valid
                     GetFileContentSegmentReqVO getFileContentSegmentReqVO);
@@ -157,27 +179,25 @@ public interface UserDefectRestResource
             @Valid
                     DeptTaskDefectReqVO deptTaskDefectReqVO
     );
+
     @ApiOperation("添加代码评论")
     @Path("/codeComment/toolName/{toolName}")
     @POST
     CodeCCResult<Boolean> addCodeComment(
-            @ApiParam(value = "文件主键id", required = true)
-            @QueryParam(value = "fileId")
-            String fileId,
             @ApiParam(value = "告警主键id", required = true)
             @QueryParam(value = "defectId")
-            String defectId,
+                    String defectId,
             @ApiParam(value = "工具名", required = true)
             @PathParam(value = "toolName")
-            String toolName,
+                    String toolName,
             @ApiParam(value = "评论主键id", required = true)
             @QueryParam(value = "commentId")
-            String commentId,
+                    String commentId,
             @ApiParam(value = "用户名", required = true)
             @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
-            String userName,
+                    String userName,
             @ApiParam(value = "评论信息", required = true)
-            SingleCommentVO singleCommentVO);
+                    SingleCommentVO singleCommentVO);
 
 
     @ApiOperation("更新代码评论")
@@ -225,4 +245,30 @@ public interface UserDefectRestResource
             @ApiParam(value = "工具名", required = true)
             @PathParam(value = "toolName")
                     String toolName);
+
+    @ApiOperation("查询代码统计清单")
+    @Path("/list/toolName/{toolName}/orderBy/{orderBy}")
+    @GET
+    CodeCCResult<CommonDefectQueryRspVO> queryCLOCList(
+            @ApiParam(value = "任务ID", required = true)
+            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
+                long taskId,
+            @ApiParam(value = "工具名", required = true)
+            @PathParam(value = "toolName")
+                String toolName,
+            @ApiParam(value = "数据展示方式", required = true)
+            @PathParam(value = "orderBy")
+                ComConstants.CLOCOrder orderBy);
+
+    @ApiOperation("告警管理初始化页面")
+    @Path("/initpage")
+    @POST
+    CodeCCResult<QueryWarningPageInitRspVO> pageInit(
+            @ApiParam(value = "任务ID", required = true)
+            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
+                    long taskId,
+            @ApiParam(value = "查询参数详情", required = true)
+            @Valid
+                    DefectQueryReqVO defectQueryReqVO
+    );
 }

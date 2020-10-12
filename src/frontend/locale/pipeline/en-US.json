@@ -604,8 +604,8 @@
         "imageTicket": "Docker image  ticket",
         "workspace": "workspace on",
         "workspaceTips": "If not filled, the it will be saved in [Agent installation directory]/workspace/[pipeline ID]/ by default",
-        "envDependency": "Dependency tools",
-        "envDependencyTips": "After selecting the dependence on tools above, the following will be executed:  ",
+        "envDependency": "Mount dependent software over NFS",
+        "envDependencyTips": "Not recommended. Given software might not be compatible with your desired build environment. It is recommended to create and use your docker image instead. After selecting the dependence on tools above, the following will be executed:  ",
         "abnormal": "Abnormal",
         "noPermToView": "No permission to view",
         "selectSlave": "Select agent",
@@ -756,6 +756,7 @@
         "stageOption": "Control option"
     },
     "storeMap": {
+        "textarea": "Textarea",
         "string": "String",
         "bool": "Boolean",
         "enum": "Radio",
