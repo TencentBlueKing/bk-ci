@@ -36,7 +36,7 @@ import com.tencent.devops.ticket.service.CredentialPermissionService.Companion.C
 
 abstract class AbstractCredentialPermissionService constructor(
     val authResourceApi: AuthResourceApi,
-    private val authPermissionApi: AuthPermissionApi,
+    val authPermissionApi: AuthPermissionApi,
     val ticketAuthServiceCode: TicketAuthServiceCode
 ) : CredentialPermissionService {
 
