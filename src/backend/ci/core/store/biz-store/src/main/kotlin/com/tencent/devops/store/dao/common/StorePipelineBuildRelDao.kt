@@ -28,6 +28,7 @@ package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStorePipelineBuildRel
+import com.tencent.devops.model.store.tables.TStorePipelineRel
 import com.tencent.devops.model.store.tables.records.TStorePipelineBuildRelRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -67,6 +68,19 @@ class StorePipelineBuildRelDao {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .fetchOne()
+        }
+    }
+
+    fun deleteStorePipelineBuildRel(dslContext: DSLContext, storeCode: String, storeType: Byte) {
+        val tspr = TStorePipelineRel.T_STORE_PIPELINE_REL
+        val pipelineIds =
+            dslContext.select(tspr.PIPELINE_ID).from(tspr)
+                .where(tspr.STORE_CODE.eq(storeCode).and(tspr.STORE_TYPE.eq(storeType)))
+                .fetch()
+        with(TStorePipelineBuildRel.T_STORE_PIPELINE_BUILD_REL) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .execute()
         }
     }
 }
