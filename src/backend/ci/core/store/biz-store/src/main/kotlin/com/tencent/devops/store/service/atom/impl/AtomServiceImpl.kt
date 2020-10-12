@@ -454,7 +454,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             }
             val htmlTemplateVersion = atomRecord.htmlTemplateVersion
             var classType = atomRecord.classType
-            if ("1.0" != htmlTemplateVersion) {
+            if ("1.0" != htmlTemplateVersion
+                && (classType == "marketBuild" || classType == "marketBuildLess")
+            ) {
                 // 更新插件市场的插件才需要根据操作系统来生成插件大类
                 classType = handleClassType(atomUpdateRequest.os)
             }
