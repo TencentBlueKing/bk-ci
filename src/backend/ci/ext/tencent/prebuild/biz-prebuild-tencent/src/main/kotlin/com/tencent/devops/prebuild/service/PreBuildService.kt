@@ -351,6 +351,10 @@ class PreBuildService @Autowired constructor(
                     }
 
                     when (this.type) {
+                        null -> DockerDispatchType(
+                                this.container
+                        )
+                        
                         PoolType.DockerOnVm -> DockerDispatchType(
                                 this.container
                         )
