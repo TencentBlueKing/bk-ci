@@ -23,7 +23,6 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package com.tencent.devops.dispatch.docker
 
 import com.tencent.devops.common.service.MicroService
@@ -31,7 +30,7 @@ import com.tencent.devops.common.service.MicroServiceApplication
 import org.springframework.context.annotation.ComponentScan
 
 @MicroService
-@ComponentScan("com.tencent.devops.dispatch")
+@ComponentScan("com.tencent.devops.dispatch", "com.tencent.devops.common.dispatch.sdk")
 class Application
 
 fun main(args: Array<String>) {
