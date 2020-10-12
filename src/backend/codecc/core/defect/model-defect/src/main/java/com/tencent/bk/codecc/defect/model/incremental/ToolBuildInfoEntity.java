@@ -41,6 +41,7 @@ public class ToolBuildInfoEntity extends CommonEntity
     /**
      * 删除文件列表
      */
+    @Deprecated
     @Field("delete_files")
     private List<String> deleteFiles;
 
@@ -59,6 +60,7 @@ public class ToolBuildInfoEntity extends CommonEntity
     /**
      * 告警快照基准构建号
      */
+    @Deprecated
     @Field("defect_bas_build_num")
     private String defectBaseBuildNum;
 }

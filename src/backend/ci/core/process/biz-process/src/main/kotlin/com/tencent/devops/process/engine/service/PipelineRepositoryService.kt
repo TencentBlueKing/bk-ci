@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -76,6 +77,7 @@ import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicInteger
 import javax.ws.rs.core.Response
@@ -102,6 +104,9 @@ class PipelineRepositoryService constructor(
     private val modelCheckPlugin: ModelCheckPlugin,
     private val templatePipelineDao: TemplatePipelineDao
 ) {
+
+    @Value("\${notify.silent.channel:AM,CODECC,CODECC_EE,GONGFENGSCAN}")
+    private val notifySilentChannels: String = ""
 
     fun deployPipeline(
         model: Model,
@@ -306,6 +311,11 @@ class PipelineRepositoryService constructor(
                     Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), CodeEventType.PUSH) }
                 is CodeGithubWebHookTriggerElement -> {
                     Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), e.eventType) }
+                is CodeTGitWebHookTriggerElement -> {
+                    // CodeEventType.MERGE_REQUEST_ACCEPT 和 CodeEventType.MERGE_REQUEST等价处理
+                    val eventType = if (e.data.input.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) CodeEventType.MERGE_REQUEST else e.data.input.eventType
+                    Pair(RepositoryConfig(e.data.input.repositoryHashId, e.data.input.repositoryName, e.data.input.repositoryType ?: RepositoryType.ID), eventType)
+                }
                 else -> return@forEach
             }
             val repositoryConfig = pair.first
@@ -476,7 +486,7 @@ class PipelineRepositoryService constructor(
             ) {
                 if (null == pipelineSettingDao.getSetting(transactionContext, pipelineId)) {
                     var notifyTypes = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}"
-                    if (channelCode == ChannelCode.AM) {
+                    if (channelCode.name in notifySilentChannels.split(",")) {
                         // 研发商店创建的内置流水线默认不发送通知消息
                         notifyTypes = ""
                     }

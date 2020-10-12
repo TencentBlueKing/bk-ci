@@ -39,17 +39,16 @@ import com.tencent.bk.codecc.defect.service.TreeService;
 import com.tencent.bk.codecc.defect.service.newdefectjudge.NewDefectJudgeService;
 import com.tencent.bk.codecc.defect.utils.ConvertUtil;
 import com.tencent.bk.codecc.defect.vo.*;
-import com.tencent.bk.codecc.defect.vo.DefectDetailVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectReqVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectRspVO;
 import com.tencent.bk.codecc.defect.vo.common.*;
-import com.tencent.bk.codecc.defect.vo.openapi.*;
+import com.tencent.bk.codecc.defect.vo.openapi.DefectDetailExtVO;
+import com.tencent.bk.codecc.defect.vo.openapi.TaskDefectVO;
 import com.tencent.bk.codecc.defect.vo.report.CommonChartAuthorVO;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.constant.TaskMessageCode;
-import com.tencent.bk.codecc.task.vo.*;
-import com.tencent.bk.codecc.task.vo.gongfeng.ProjectStatVO;
-import com.tencent.devops.common.api.QueryTaskListReqVO;
+import com.tencent.bk.codecc.task.vo.MetadataVO;
+import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
@@ -69,8 +68,6 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -118,9 +115,6 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
 
     @Autowired
     private RedisTemplate redisTemplate;
-
-    @Autowired
-    protected Client client;
 
     @Value("${codecc.gateway.host}")
     private String codeccGateWay;
@@ -203,7 +197,7 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
     }
 
     @Override
-    public CommonDefectDetailQueryRspVO processQueryWarningDetailRequest(long taskId, CommonDefectDetailQueryReqVO queryWarningDetailReq, String sortField, Sort.Direction sortType)
+    public CommonDefectDetailQueryRspVO processQueryWarningDetailRequest(long taskId, String userId, CommonDefectDetailQueryReqVO queryWarningDetailReq, String sortField, Sort.Direction sortType)
     {
         DefectDetailQueryRspVO defectDetailQueryRspVO = new DefectDetailQueryRspVO();
 
@@ -249,307 +243,12 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
     }
 
     @Override
-    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName)
+    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, Set<String> statusSet)
     {
         // Coverity告警管理的页面的下拉框初始化不再通过单独的接口返回，而是通过告警列表查询接口一并返回
         return null;
     }
 
-    @Override
-    public CheckerPkgDefectVO getPkgDefectList(String toolName, String pkgId, Integer bgId, Long taskId,
-                                               Integer pageNum, Integer pageSize, String sortField, Sort.Direction sortType) {
-        CheckerPkgDefectVO checkerPkgDefectVO = new CheckerPkgDefectVO();
-        Sort pageSort;
-        if (StringUtils.isEmpty(sortField) || null == sortType) {
-            pageSort = new Sort(Sort.Direction.ASC, "id");
-        } else {
-            pageSort = new Sort(sortType, sortField);
-        }
-        //封装分页类
-        Pageable pageable = new PageRequest(null == pageNum ? 0 : pageNum - 1, null == pageSize ? 10 : pageSize, pageSort);
-        List<String> checkerNames;
-        List<CheckerDetailEntity> checkerDetailEntityList = checkerRepository.findByToolNameAndPkgKind(toolName, pkgId);
-        if (CollectionUtils.isEmpty(checkerDetailEntityList)) {
-            log.error("no checker info found! tool name: {}, pkg id: {}", toolName, pkgId);
-            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"pkg id"}, null);
-        }
-        checkerNames = checkerDetailEntityList.stream().map(CheckerDetailEntity::getCheckerKey).collect(Collectors.toList());
-        List<DefectEntity> defectEntityList;
-        Page<com.tencent.bk.codecc.defect.vo.openapi.DefectDetailVO> defectDetailVoPage;
-        List<com.tencent.bk.codecc.defect.vo.openapi.DefectDetailVO> defectDetailVoList = Lists.newArrayList();
-        //情况1，如果传了单个的任务id
-        if (null != taskId && taskId != 0L) {
-            String taskCreateFrom = authExPermissionApi.getTaskCreateFrom(taskId);
-            org.springframework.data.domain.Page<DefectEntity> defectEntityPage = defectRepository.findByCheckerNameInAndTaskIdIn(checkerNames, new ArrayList<Long>() {{
-                add(taskId);
-            }}, pageable);
-            defectEntityList = defectEntityPage.getContent();
-            CodeCCResult<TaskDetailVO> taskDetailVOCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
-            TaskDetailVO taskDetailVO;
-            if (taskDetailVOCodeCCResult.isOk() && null != taskDetailVOCodeCCResult.getData()) {
-                taskDetailVO = taskDetailVOCodeCCResult.getData();
-            } else {
-                log.error("no task info found! task id: {}", taskId);
-                throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"task id"}, null);
-            }
-            if (CollectionUtils.isNotEmpty(defectEntityList)) {
-                defectDetailVoList = defectEntityList.stream().filter(elem -> !judgeFilter(taskCreateFrom, elem.getFilePathname()))
-                        .map(defectEntity -> new com.tencent.bk.codecc.defect.vo.openapi.DefectDetailVO(
-                                defectEntity.getSeverity(),
-                                defectEntity.getIgnoreReasonType(),
-                                defectEntity.getFilePathname(),
-                                defectEntity.getAuthorList(),
-                                defectEntity.getCreateTime(),
-                                defectEntity.getCheckerName(),
-                                Math.max(defectEntity.getExcludeTime(),
-                                        Math.max(defectEntity.getIgnoreTime(),
-                                                Math.max(defectEntity.getCreateTime(), defectEntity.getFixedTime()))),
-                                null,
-                                String.format("http://%s/code/%s/task/%d/defect/coverity/list", codeccGateWay, taskDetailVO.getNameEn(), taskId),
-                                defectEntity.getFileVersion(),
-                                defectEntity.getStatus(),
-                                Long.valueOf(defectEntity.getId())
-                        )
-                ).collect(Collectors.toList());
-            }
-            defectDetailVoPage = new Page<>(defectEntityPage.getTotalElements(), null == pageNum ? 1: pageNum,
-                    null == pageSize ? 10 : pageSize, defectEntityPage.getTotalPages(), defectDetailVoList);
-        }
-        //情况2，如果传了bg_id
-        else if (null != bgId && bgId != 0L) {
-            QueryTaskListReqVO queryTaskListReqVO = new QueryTaskListReqVO();
-            // 经沟通啄木鸟接口只允许查询工蜂开源扫描的任务
-            queryTaskListReqVO.setCreateFrom(Lists.newArrayList(ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value()));
-            // 设置排除标识
-            queryTaskListReqVO.setIsExcludeTaskIds(Boolean.toString(true));
-            queryTaskListReqVO.setBgId(bgId);
-            queryTaskListReqVO.setToolName(toolName);
-            // 排除空集合
-            queryTaskListReqVO.setTaskIds(Sets.newHashSet());
-            queryTaskListReqVO.setStatus(ComConstants.Status.ENABLE.value());
-            CodeCCResult<TaskListVO> taskListCodeCCResult =
-                    client.get(ServiceTaskRestResource.class).getTaskDetailList(queryTaskListReqVO);
-
-            if (taskListCodeCCResult.isNotOk() || null == taskListCodeCCResult.getData()) {
-                log.error("query task info by bg id fail! bg id : {}", bgId);
-                throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"bg id"}, null);
-            }
-            List<TaskDetailVO> taskList = taskListCodeCCResult.getData().getEnableTasks();
-
-            org.springframework.data.domain.Page<DefectEntity> defectEntityPage = defectRepository.findByCheckerNameInAndTaskIdIn(checkerNames, taskList.stream().
-                    map(TaskDetailVO::getTaskId).collect(Collectors.toList()), pageable);
-            defectEntityList = defectEntityPage.getContent();
-            Map<Long, String> taskNameMap = taskList.stream().collect(Collectors.toMap(TaskDetailVO::getTaskId, TaskBaseVO::getNameEn));
-            if (CollectionUtils.isNotEmpty(defectEntityList))
-            {
-                defectDetailVoList = defectEntityList.stream().filter(elem -> !judgeFilter(ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value(),
-                                elem.getFilePathname()))
-                        .map(defectEntity -> new com.tencent.bk.codecc.defect.vo.openapi.DefectDetailVO(
-                                defectEntity.getSeverity(),
-                                defectEntity.getIgnoreReasonType(),
-                                defectEntity.getFilePathname(),
-                                defectEntity.getAuthorList(),
-                                defectEntity.getCreateTime(),
-                                defectEntity.getCheckerName(),
-                                Math.max(defectEntity.getExcludeTime(),
-                                        Math.max(defectEntity.getIgnoreTime(),
-                                                Math.max(defectEntity.getCreateTime(), defectEntity.getFixedTime()))),
-                                null,
-                                String.format("http://%s/code/%s/task/%d/defect/coverity/list", codeccGateWay, taskNameMap.get(defectEntity.getTaskId()),
-                                        defectEntity.getTaskId()),
-                                defectEntity.getFileVersion(),
-                                defectEntity.getStatus(),
-                                Long.valueOf(defectEntity.getId())
-                        )
-                ).collect(Collectors.toList());
-            }
-            defectDetailVoPage = new Page<>(defectEntityPage.getTotalElements(), null == pageNum ? 1 : pageNum,
-                    null == pageSize ? 10 : pageSize, defectEntityPage.getTotalPages(), defectDetailVoList);
-        }
-        //情况3，如果都没传
-        else {
-            org.springframework.data.domain.Page<DefectEntity> defectEntityPage = defectRepository.findByCheckerNameIn(checkerNames, pageable);
-            defectEntityList = defectEntityPage.getContent();
-            CodeCCResult<List<TaskBaseVO>> taskListCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfosByIds(defectEntityList.stream().map(DefectEntity::getTaskId).
-                    distinct().collect(Collectors.toList()));
-            if (taskListCodeCCResult.isNotOk() || null == taskListCodeCCResult.getData()) {
-                log.error("query task info by task id list fail!");
-                throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
-            }
-            List<TaskBaseVO> taskList = taskListCodeCCResult.getData();
-            Map<Long, String> taskNameMap = taskList.stream().collect(Collectors.toMap(TaskBaseVO::getTaskId, TaskBaseVO::getNameEn));
-            if (CollectionUtils.isNotEmpty(defectEntityList)) {
-                defectDetailVoList = defectEntityList.stream().map(defectEntity ->
-                        new com.tencent.bk.codecc.defect.vo.openapi.DefectDetailVO(
-                                defectEntity.getSeverity(),
-                                defectEntity.getIgnoreReasonType(),
-                                defectEntity.getFilePathname(),
-                                defectEntity.getAuthorList(),
-                                defectEntity.getCreateTime(),
-                                defectEntity.getCheckerName(),
-                                Math.max(defectEntity.getExcludeTime(),
-                                        Math.max(defectEntity.getIgnoreTime(),
-                                                Math.max(defectEntity.getCreateTime(), defectEntity.getFixedTime()))),
-                                null,
-                                String.format("http://%s/code/%s/task/%d/defect/coverity/list", codeccGateWay, taskNameMap.get(defectEntity.getTaskId()),
-                                        defectEntity.getTaskId()),
-                                defectEntity.getFileVersion(),
-                                defectEntity.getStatus(),
-                                Long.valueOf(defectEntity.getId())
-                        )
-                ).collect(Collectors.toList());
-            }
-            defectDetailVoPage = new Page<>(defectEntityPage.getTotalElements(), null == pageNum ? 1 : pageNum,
-                    null == pageSize ? 10 : pageSize, defectEntityPage.getTotalPages(), defectDetailVoList);
-        }
-
-
-        checkerPkgDefectVO.setTaskId(taskId);
-        checkerPkgDefectVO.setToolName(toolName);
-        checkerPkgDefectVO.setDefectList(defectDetailVoPage);
-        return checkerPkgDefectVO;
-    }
-
-    @Override
-    public CheckerPkgDefectRespVO processCheckerPkgDefectRequest(String toolName, String pkgId, Integer bgId,
-            Integer deptId, Integer pageNum, Integer pageSize, Sort.Direction sortType)
-    {
-        log.info("query tool[{}] pkgId[{}] in bg[{}]", toolName, pkgId, bgId);
-
-        // 默认条件：任务为启用状态
-        int taskStatus = ComConstants.Status.ENABLE.value();
-
-        CheckerPkgDefectRespVO pkgDefectRespVO = new CheckerPkgDefectRespVO();
-        List<TaskDefectVO> statisticsTask = Lists.newArrayList();
-
-        // 1.获取工具指定规则包的规则列表，并组装成Map
-        List<CheckerDetailEntity> detailList = checkerRepository.findByToolNameAndPkgKind(toolName, pkgId);
-        Set<String> checkerNameSet = Sets.newHashSet();
-        if (CollectionUtils.isNotEmpty(detailList))
-        {
-            checkerNameSet = detailList.stream().map(CheckerDetailEntity::getCheckerKey).collect(Collectors.toSet());
-        }
-
-        // 分页查询任务列表
-        QueryTaskListReqVO queryTaskListReqVO =
-                getQueryTaskListReqVO(toolName, bgId, deptId, taskStatus, pageNum, pageSize, sortType);
-        queryTaskListReqVO.setSortField("task_id");
-        // 经沟通啄木鸟接口只允许查询工蜂开源扫描的任务
-        queryTaskListReqVO.setCreateFrom(Lists.newArrayList(ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value()));
-
-        CodeCCResult<Page<TaskDetailVO>> taskCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskDetailPage(queryTaskListReqVO);
-        if (taskCodeCCResult.isNotOk() || taskCodeCCResult.getData() == null)
-        {
-            log.error("task list is empty! status {}, toolName {}", taskStatus, toolName);
-            throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
-        }
-
-        Page<TaskDetailVO> resultPage = taskCodeCCResult.getData();
-        List<TaskDetailVO> enableTasks = resultPage.getRecords();
-        pageNum = resultPage.getPage();
-        pageSize = resultPage.getPageSize();
-        int totalPages = resultPage.getTotalPages();
-        long totalCount = resultPage.getCount();
-
-        Set<Integer> gfProjectIds = Sets.newHashSet();
-        List<Long> taskIdList = Lists.newArrayList();
-        if (CollectionUtils.isNotEmpty(enableTasks))
-        {
-            enableTasks.forEach(elem ->{
-                Integer projectId = elem.getGongfengProjectId();
-                if (projectId != null)
-                {
-                    gfProjectIds.add(projectId);
-                }
-                taskIdList.add(elem.getTaskId());
-            });
-        }
-        log.info("commCheckerPkgDefectReq tool:{},page taskId:{}, pageNum:{}, pageSize:{}, totalPage:{}, count:{}",
-                toolName, taskIdList.size(), pageNum, pageSize, totalPages, totalCount);
-
-        // 5.获取开启规则包的任务ID 指定规则集的告警列表
-        List<DefectEntity> defectEntityList =
-                defectRepository.findByToolNameAndTaskIdInAndCheckerNameIn(toolName, taskIdList, checkerNameSet);
-
-        // 组装成Map映射
-        Map<Long, List<DefectEntity>> defectMap = getLongListDefectMap(defectEntityList);
-        // 获取代码语言类型元数据
-        List<MetadataVO> metadataVoList = getCodeLangMetadataVoList();
-        // 批量获取代码库地址
-        Map<Integer, GongfengPublicProjVO> gongfengPublicProjVoMap = getGongfengPublicProjVoMap(gfProjectIds);
-        // 获取代码库度量数据
-        Map<Integer, ProjectStatVO> gongfengStatProjVoMap = getGongfengStatProjVoMap(bgId, gfProjectIds);
-
-        Map<String, String> deptInfo =
-                (Map<String, String>) redisTemplate.opsForHash().entries(RedisKeyConstants.KEY_DEPT_INFOS);
-
-        // 获取代码行数
-        Map<Long, Long> codeLineCountMap = getCodeLineNumMap(taskIdList, null);
-
-        for (TaskDetailVO taskDetailVO : enableTasks)
-        {
-            TaskDefectVO taskDefectVO = new TaskDefectVO();
-            BeanUtils.copyProperties(taskDetailVO, taskDefectVO);
-            taskDefectVO.setCodeLang(ConvertUtil.convertCodeLang(taskDetailVO.getCodeLang(), metadataVoList));
-            taskDefectVO.setBgName(deptInfo.get(String.valueOf(taskDetailVO.getBgId())));
-            taskDefectVO.setDeptName(deptInfo.get(String.valueOf(taskDetailVO.getDeptId())));
-            taskDefectVO.setCenterName(deptInfo.get(String.valueOf(taskDetailVO.getCenterId())));
-            taskDefectVO.setAnalyzeDate("");
-
-            // 设置工蜂代码库信息
-            setGongfengInfo(gongfengPublicProjVoMap, gongfengStatProjVoMap, taskDetailVO, taskDefectVO);
-
-            long taskId = taskDetailVO.getTaskId();
-            Long codeLineCount = codeLineCountMap.get(taskId);
-            taskDefectVO.setCodeLineNum(Integer.valueOf(String.valueOf(codeLineCount == null ? 0 : codeLineCount)));
-
-            List<DefectEntity> defectList = defectMap.get(taskId);
-            if (CollectionUtils.isEmpty(defectList))
-            {
-                statisticsTask.add(taskDefectVO);
-                continue;
-            }
-
-            for (DefectEntity defect : defectList)
-            {
-                // 过滤不是啄木鸟规则的告警
-                String checkerName = defect.getCheckerName().toUpperCase();
-                if (!checkerNameSet.contains(checkerName))
-                {
-                    continue;
-                }
-
-                int status = defect.getStatus();
-                int severity = defect.getSeverity();
-                if (ComConstants.DefectStatus.NEW.value() == status)
-                {
-                    taskDefectVO.getExistCount().count(severity);
-                }
-                else if ((ComConstants.DefectStatus.FIXED.value() & status) > 0)
-                {
-                    taskDefectVO.getFixedCount().count(severity);
-                }
-                else if ((ComConstants.DefectStatus.IGNORE.value() & status) > 0)
-                {
-                    taskDefectVO.getIgnoreCount().count(defect.getIgnoreReasonType());
-                }
-                else if ((ComConstants.DefectStatus.CHECKER_MASK.value() & status) > 0 ||
-                        (ComConstants.DefectStatus.PATH_MASK.value() & status) > 0)
-                {
-                    taskDefectVO.getExcludedCount().count(severity);
-                }
-            }
-
-            statisticsTask.add(taskDefectVO);
-        }
-        // 数据列表分页
-        Page<TaskDefectVO> taskDetailVoPage = new Page<>(totalCount, pageNum, pageSize, totalPages, statisticsTask);
-
-        pkgDefectRespVO.setCheckerCount(checkerNameSet.size());
-        pkgDefectRespVO.setTaskCount(statisticsTask.size());
-        pkgDefectRespVO.setStatisticsTask(taskDetailVoPage);
-        return pkgDefectRespVO;
-    }
 
     /**
      * 根据根据前端传入的条件过滤告警，并分类统计
@@ -788,7 +487,7 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
         List<DefectEntity> defectList = defectRepository.findByTaskIdAndToolName(taskId, toolName);
 
         // 根据根据前端传入的条件过滤告警，并分类统计
-        filterDefectByCondition(taskId, defectList, queryWarningReq, toolDefectRspVO);
+        filterDefectByCondition(taskId, defectList, queryWarningReq);
 
         List<DefectDetailExtVO> defectDetailExtVOs = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(defectList))
@@ -885,6 +584,7 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
                 List<DefectEntity> defectList = defectMap.get(taskId);
                 if (CollectionUtils.isEmpty(defectList))
                 {
+                    taskDefectVO.setTimeoutDefectNum(0);
                     taskDefectList.add(taskDefectVO);
                     continue;
                 }
@@ -1024,8 +724,7 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
         return defectMap;
     }
 
-    private void filterDefectByCondition(long taskId, List<DefectEntity> defectList, DefectQueryReqVO defectQueryReqVO,
-            ToolDefectRspVO defectQueryRspVO)
+    private void filterDefectByCondition(long taskId, List<DefectEntity> defectList, DefectQueryReqVO defectQueryReqVO)
     {
         if (CollectionUtils.isEmpty(defectList))
         {
@@ -1189,6 +888,12 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
     private void replaceFileNameWithURL(DefectBaseVO defectBaseVO, Map<String, CodeFileUrlEntity> codeRepoUrlMap)
     {
         String filePathname = trimWinPathPrefix(defectBaseVO.getFilePathname());
+
+        if (StringUtils.isBlank(filePathname))
+        {
+            return;
+        }
+
         int fileNameIndex = filePathname.lastIndexOf("/");
         if (fileNameIndex == -1)
         {

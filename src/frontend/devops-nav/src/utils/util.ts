@@ -150,3 +150,11 @@ export function getServiceAliasByPath (path: string): string {
     const execRes = serviceAliasREG.exec(path) || []
     return execRes[2] || path
 }
+
+export class HttpError extends Error {
+    code = 500
+    constructor (code, message = 'http request error message') {
+        super(message)
+        this.code = code
+    }
+}

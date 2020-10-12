@@ -653,3 +653,10 @@ export function rely (fieldProps, values) {
         return true
     }
 }
+
+export class HttpError extends Error {
+    constructor (code = 500, message = 'http request error message') {
+        super(message)
+        this.code = code
+    }
+}

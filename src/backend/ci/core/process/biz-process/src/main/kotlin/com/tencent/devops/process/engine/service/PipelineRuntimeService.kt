@@ -55,12 +55,14 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
@@ -81,6 +83,7 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.control.DependOnUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
@@ -139,6 +142,7 @@ import org.jooq.Record
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -566,7 +570,8 @@ class PipelineRuntimeService @Autowired constructor(
                 deleteReason = "",
                 currentTimestamp = currentTimestamp,
                 material = if (material != null) {
-                    JsonUtil.getObjectMapper().readValue(material) as List<PipelineBuildMaterial>
+                    val materialList = JsonUtil.getObjectMapper().readValue(material) as List<PipelineBuildMaterial>
+                    materialList.sortedBy { it.aliasName }
                 } else {
                     null
                 },
@@ -600,7 +605,11 @@ class PipelineRuntimeService @Autowired constructor(
                 recommendVersion = recommendVersion,
                 retry = isRetry ?: false,
                 errorInfoList = if (errorInfo != null) {
-                    JsonUtil.getObjectMapper().readValue(errorInfo) as List<ErrorInfo>
+                    try {
+                        JsonUtil.getObjectMapper().readValue(errorInfo) as List<ErrorInfo>
+                    } catch (e: Exception) {
+                        null
+                    }
                 } else {
                     null
                 }
@@ -629,6 +638,9 @@ class PipelineRuntimeService @Autowired constructor(
                     }
                     CodeType.GITHUB.name -> {
                         CodeGithubWebHookTriggerElement.classType
+                    }
+                    CodeType.TGIT.name -> {
+                        CodeTGitWebHookTriggerElement.classType
                     }
                     else -> RemoteTriggerElement.classType
                 }
@@ -779,6 +791,7 @@ class PipelineRuntimeService @Autowired constructor(
                 return@nextStage
             }
 
+            DependOnUtils.initDependOn(stage = stage, params = params)
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach nextContainer@{ container ->
                 var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
@@ -859,7 +872,8 @@ class PipelineRuntimeService @Autowired constructor(
                                 executeCount = 1,
                                 starter = userId,
                                 approver = null,
-                                subBuildId = null
+                                subBuildId = null,
+                                atomCode = atomElement.getAtomCode()
                             )
                         )
                     } else {
@@ -1075,6 +1089,9 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 variables = startParamsWithType.map { it.key to it.value }.toMap()
             )
+
+            // 保存链路信息
+            addTraceVar(projectId = pipelineInfo.projectId, pipelineId = pipelineInfo.pipelineId, buildId = buildId)
 
             // 上一次存在的需要重试的任务直接Update，否则就插入
             if (updateExistsRecord.isEmpty()) {
@@ -1908,6 +1925,20 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 param = JsonUtil.getObjectMapper().writeValueAsString(params)
+            )
+        }
+    }
+
+    private fun addTraceVar(projectId: String, pipelineId: String, buildId: String) {
+        val traceMap = mutableMapOf<String, String>()
+        val bizId = MDC.get(TraceTag.BIZID)
+        if (!bizId.isNullOrEmpty()) {
+            traceMap[TraceTag.TRACE_HEADER_DEVOPS_BIZID] = MDC.get(TraceTag.BIZID)
+            buildVariableService.batchSetVariable(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    variables = traceMap
             )
         }
     }

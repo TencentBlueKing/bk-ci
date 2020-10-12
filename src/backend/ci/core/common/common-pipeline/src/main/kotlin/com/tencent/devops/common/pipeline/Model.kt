@@ -26,7 +26,6 @@
 
 package com.tencent.devops.common.pipeline
 
-import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -52,9 +51,7 @@ data class Model(
     @ApiModelProperty("源模版ID", required = false)
     var srcTemplateId: String? = null,
     @ApiModelProperty("模板ID", required = false)
-    var templateId: String? = null,
-    @ApiModelProperty("构建错误信息", required = false)
-    var errorInfoList: List<ErrorInfo>? = null
+    var templateId: String? = null
 ) {
 
     companion object {
@@ -99,7 +96,8 @@ data class Model(
                             jobControlOption = container.jobControlOption,
                             mutexGroup = container.mutexGroup,
                             dispatchType = container.dispatchType,
-                            showBuildResource = container.showBuildResource
+                            showBuildResource = container.showBuildResource,
+                            jobId = container.jobId
                         )
                     }
                     is NormalContainer -> {
@@ -116,7 +114,8 @@ data class Model(
                             conditions = container.conditions,
                             canRetry = container.canRetry,
                             jobControlOption = container.jobControlOption,
-                            mutexGroup = container.mutexGroup
+                            mutexGroup = container.mutexGroup,
+                            jobId = container.jobId
                         )
                     }
                     else -> {

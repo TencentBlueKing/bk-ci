@@ -6,13 +6,15 @@ import com.tencent.bk.codecc.quartz.pojo.JobInfoVO
 import com.tencent.bk.codecc.quartz.pojo.NodeInfoVO
 import com.tencent.bk.codecc.quartz.pojo.ShardInfoVO
 import com.tencent.bk.codecc.quartz.pojo.ShardingResultVO
+import com.tencent.bk.codecc.quartz.service.JobManageService
 import com.tencent.devops.common.api.pojo.CodeCCResult
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserJobRestResourceImpl @Autowired constructor(
-    private val customSchedulerManager: CustomSchedulerManager
+    private val customSchedulerManager: CustomSchedulerManager,
+    private val jobManageService: JobManageService
 ) : UserJobRestResource {
 
     override fun getExistingJob(): CodeCCResult<List<JobInfoVO>> {
@@ -28,6 +30,12 @@ class UserJobRestResourceImpl @Autowired constructor(
 
     override fun initAllJobs() : CodeCCResult<Boolean> {
         customSchedulerManager.initAllJobs()
+        return CodeCCResult(true)
+    }
+
+
+    override fun refreshOpenSourceCronExpression(period : Int, startTime : Int) : CodeCCResult<Boolean> {
+        jobManageService.refreshOpensourceCronExpression(period, startTime)
         return CodeCCResult(true)
     }
 

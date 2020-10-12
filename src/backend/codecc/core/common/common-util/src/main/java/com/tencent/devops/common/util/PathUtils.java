@@ -216,15 +216,16 @@ public class PathUtils
 
     /**
      * 根据工具侧上报的url和rel_path，获取文件的完整url
-     * 返回格式：http://github.com/xxx/website.git/xxx/xxx.java
+     * 返回格式：http://github.com/xxx/website/blob/branch/xxx/xxx.java
      *
      * @param url
+     * @param branch
      * @param relPath
      * @return
      */
-    public static String getFileUrl(String url, String relPath)
+    public static String getFileUrl(String url, String branch, String relPath)
     {
-        if (StringUtils.isBlank(url) || StringUtils.isBlank(relPath))
+        if (StringUtils.isBlank(url) || StringUtils.isBlank(branch) || StringUtils.isBlank(relPath))
         {
             return "";
         }
@@ -239,7 +240,7 @@ public class PathUtils
             url = url + relPath;
         }
 
-        return formatFileRepoUrlToHttp(url);
+        return formatFileRepoUrlToHttp(url).replace(".git", "/blob/"+branch);
     }
 
     /**
@@ -401,46 +402,6 @@ public class PathUtils
     }
 
     /**
-     * 从分析记录的Msg字符串里面提取代码仓库地址，并转换成http规范地址
-     *
-     * @param msg
-     */
-    public static List<JSONObject> extractCodeRepoUrlFromMsg(String msg)
-    {
-        String versionBeginStr = "版本号：";
-        String urlBeginStr = "对应代码库路径：";
-        String branchBeginStr = "分支：";
-        String wrapFlagStr = "\n";
-        List<JSONObject> codeRepoList = new ArrayList<>();
-        if (org.apache.commons.lang.StringUtils.isNotEmpty(msg))
-        {
-            String[] lineMsgs = msg.split(wrapFlagStr);
-
-            for (String lineMsg : lineMsgs)
-            {
-                String[] msgArr = lineMsg.trim().split(",");
-                String version = msgArr[0].trim().substring(versionBeginStr.length()).trim();
-                String url = msgArr[3].trim().substring(urlBeginStr.length()).trim();
-                String branch = "";
-                if (msgArr.length == 5)
-                {
-                    branch = msgArr[4].trim().substring(branchBeginStr.length()).trim();
-                }
-                if (StringUtils.isNotEmpty(url))
-                {
-                    JSONObject codeRepoJson = new JSONObject();
-                    String formatUrl = formatRepoUrlToHttp(url);
-                    codeRepoJson.put("url", formatUrl);
-                    codeRepoJson.put("branch", branch);
-                    codeRepoJson.put("version", version);
-                    codeRepoList.add(codeRepoJson);
-                }
-            }
-        }
-        return codeRepoList;
-    }
-
-    /**
      * 去掉windows路径的盘号和冒号
      * 比如：D:/workspace/svnauth_svr/app/exception/CodeCCException.java
      * 转换为：/workspace/svnauth_svr/app/exception/CodeCCException.java
@@ -453,7 +414,7 @@ public class PathUtils
         {
             if (Pattern.matches(REGEX_WIN_PATH_PREFIX, filePath))
             {
-                filePath = filePath.replaceAll(REGEX_WIN_PATH_PREFIX, "$1");
+                filePath = filePath.replaceAll(REGEX_WIN_PATH_PREFIX, "/$1");
             }
         }
         return filePath;
@@ -476,5 +437,19 @@ public class PathUtils
             }
         }
         return filePath;
+    }
+
+    public static String trimWinDifferentPath(String filePath)
+    {
+        if (StringUtils.isBlank(filePath)) return filePath;
+        // d:/xxxx这种路径
+        if (filePath.length() > 1 && filePath.charAt(1) == ':')
+        {
+            return trimWinPathPrefix(filePath);
+        }
+        else
+        {
+            return trimKlocworkWinPathPrefix(filePath);
+        }
     }
 }
