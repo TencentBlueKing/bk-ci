@@ -57,11 +57,11 @@ interface BuildListener {
     fun getShutdownQueue(): String
 
     fun onPipelineStartup(event: PipelineBuildStartBroadCastEvent) {
-        // logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] The pipeline start up")
+        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] The pipeline start up")
     }
 
     fun onPipelineShutdown(event: PipelineBuildFinishBroadCastEvent) {
-        // logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] The pipeline shutdown")
+        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] The pipeline shutdown")
     }
 
     fun onStartup(dispatchMessage: DispatchMessage)

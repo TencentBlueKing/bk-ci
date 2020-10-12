@@ -172,6 +172,7 @@ class MQConfiguration @Autowired constructor() {
         @Autowired buildListener: BuildListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
+        logger.info("Start listener ====== ")
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(buildStartQueue.name)
         container.setConcurrentConsumers(20)
