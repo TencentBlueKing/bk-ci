@@ -21,7 +21,7 @@ const dictionary = {
     'zh-CN': {
         messages: {
             alpha: field => '字段只能包含字母',
-            unique: field => '字段不能重复',
+            unique: field => `${field}字段不能重复`,
             required: field => '字段不能为空',
             excludeComma: field => '字段不能包含英文逗号',
             string: field => '字段只能包含数字，字母和下划线',
