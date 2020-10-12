@@ -44,7 +44,7 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 
 class DockerHostBuildResourceApi constructor(
-    private val urlPrefix: String = "ms/dispatch"
+    private val urlPrefix: String = "ms/dispatch-docker"
 ) : AbstractBuildResourceApi() {
     private val logger = LoggerFactory.getLogger(DockerHostBuildResourceApi::class.java)
 
