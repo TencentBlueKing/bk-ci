@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.stereotype.Service
-import java.util.*
+import java.util.Random
 
 @Service
 class PipelineBuildTurboExtService @Autowired constructor(
