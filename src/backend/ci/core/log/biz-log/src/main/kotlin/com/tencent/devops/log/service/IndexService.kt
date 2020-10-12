@@ -32,9 +32,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.dao.IndexDao
-import com.tencent.devops.log.model.IndexAndType
 import com.tencent.devops.log.util.IndexNameUtils
-import com.tencent.devops.log.util.IndexNameUtils.getTypeByIndex
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -97,12 +95,12 @@ class IndexService @Autowired constructor(
         return indexName
     }
 
-    fun getIndexAndType(buildId: String): IndexAndType {
+    fun getIndexName(buildId: String): String {
         val index = indexCache.get(buildId)
         if (index.isNullOrBlank()) {
             throw OperationException("Fail to get the index of build $buildId")
         }
-        return IndexAndType(index!!, getTypeByIndex(index))
+        return index
     }
 
     fun getAndAddLineNum(buildId: String, size: Int): Long? {
