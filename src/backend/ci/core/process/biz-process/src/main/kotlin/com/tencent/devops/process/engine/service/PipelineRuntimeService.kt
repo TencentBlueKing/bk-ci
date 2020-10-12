@@ -784,9 +784,9 @@ class PipelineRuntimeService @Autowired constructor(
             // 当前 stage 是否是重试的 stage
             val retryStage = stageId == retryStartTaskId
 
-            // 如果是stage重试不是当前stage，则直接进入下一个stage
-            if (isStageRetry && !retryStage) {
-                logger.info("[$buildId|RETRY|STAGE(#$stageId)(${stage.name}) is not in retry STAGE($retryStartTaskId)")
+            // #2318 如果是stage重试不是当前stage，并且当前stage已经是完成状态，则直接跳过
+            if (isStageRetry && !retryStage && BuildStatus.parse(stage.status).isFinish()) {
+                logger.info("[$buildId|RETRY|STAGE(#$stageId)(${stage.name})(${stage.status}) is not in retry STAGE($retryStartTaskId)")
                 containerSeq += stage.containers.size // Job跳过计数也需要增加
                 return@nextStage
             }
@@ -822,10 +822,14 @@ class PipelineRuntimeService @Autowired constructor(
                         return@nextContainer
                     }
                 }
-                // 如果重试的插件不在当前Job内，则跳过
-                if (!retryStage && !retryStartTaskId.isNullOrBlank() && lastTimeBuildContainerRecords.isNotEmpty()) {
+                /* #2318
+                    原则：当存在多个失败插件时，进行失败插件重试时，一次只能对单个插件进行重试，其他失败插件不会重试，所以：
+                    如果是插件失败重试，并且当前的Job状态是失败的，则检查重试的插件是不是属于该失败Job:
+                    如果不属于，则表示该Job在本次重试不会被执行到，则不做处理，保持原状态, 跳过
+                 */
+                if (BuildStatus.parse(container.status).isFailure() && !retryStage && !retryStartTaskId.isNullOrBlank() && lastTimeBuildContainerRecords.isNotEmpty()) {
                     if (null == findTaskRecord(lastTimeBuildTaskRecords = lastTimeBuildTaskRecords, container = container, retryStartTaskId = retryStartTaskId!!)) {
-                        logger.info("[$buildId|RETRY|JOB(#$containerId)(${container.name}) is not in retry range")
+                        logger.info("[$buildId|RETRY_SKIP_JOB|JOB(#$containerId)(${container.name}) is not in retry range")
                         containerSeq++
                         return@nextContainer
                     }
