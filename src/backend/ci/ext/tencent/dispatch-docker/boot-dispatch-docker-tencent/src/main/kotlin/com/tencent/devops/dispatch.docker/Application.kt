@@ -30,7 +30,7 @@ import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 import org.springframework.context.annotation.ComponentScan
 
-@ComponentScan("com.tencent.devops.dispatch.docker")
+@ComponentScan("com.tencent.devops.dispatch")
 @MicroService
 class Application
 
