@@ -35,7 +35,6 @@ import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogLine
 import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.PageQueryLogs
-import com.tencent.devops.common.log.pojo.QueryLineNo
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
@@ -1803,7 +1802,6 @@ class LogServiceElasticSearchImpl @Autowired constructor(
         val index = indexService.getIndexName(buildId)
 
         var lines = 0
-        // WARNNING 6.x和7.x在BulkRequest类的初始化上写法有区别
         val bulkRequest = BulkRequest()
         for (i in logMessages.indices) {
             val logMessage = logMessages[i]
