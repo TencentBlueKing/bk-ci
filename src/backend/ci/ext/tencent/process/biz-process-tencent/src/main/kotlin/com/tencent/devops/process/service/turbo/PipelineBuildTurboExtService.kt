@@ -7,7 +7,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
-import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -21,16 +20,13 @@ class PipelineBuildTurboExtService @Autowired constructor(
     private val consulClient: ConsulDiscoveryClient?
 ) : PipelineBuildExtService {
 
-    override fun buildExt(task: PipelineBuildTask): Map<String, String> {
+    override fun buildExt(task: PipelineBuildTask): String {
         val taskType = task.taskType
         if (taskType.contains("linuxPaasCodeCCScript") || taskType.contains("linuxScript")) {
             logger.info("task need turbo, ${task.buildId}, ${task.taskName}, ${task.taskType}")
-            val turboTask = getTurboTask(task.pipelineId, task.taskId)
-            return mutableMapOf(
-                    PIPELINE_TURBO_TASK_ID to turboTask
-            )
+            return getTurboTask(task.pipelineId, task.taskId)
         }
-        return emptyMap()
+        return ""
     }
 
     fun getTurboTask(pipelineId: String, elementId: String): String {
@@ -50,7 +46,7 @@ class PipelineBuildTurboExtService @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body()?.string() ?: return ""
                 logger.info("Get turbo task info, response: $data")
-                LogUtils.costTime("call turbo cost", startTime)
+                LogUtils.costTime("call turbo ", startTime)
                 if (!response.isSuccessful) {
                     throw RemoteServiceException(data)
                 }
