@@ -371,22 +371,28 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
     private fun matchUrl(url: String): Boolean {
         return when (event) {
             is GitPushEvent -> {
-                val repoHttpUrl = url.removePrefix("http://").removePrefix("https://")
-                val eventHttpUrl =
-                    event.repository.git_http_url.removePrefix("http://").removePrefix("https://")
-                url == event.repository.git_ssh_url || repoHttpUrl == eventHttpUrl
+                val repoProjectName = GitUtils.getProjectName(url)
+                val eventHttpProjectName =
+                    GitUtils.getProjectName(event.repository.git_http_url)
+                val eventSshProjectName =
+                    GitUtils.getProjectName(event.repository.git_ssh_url)
+                repoProjectName == eventSshProjectName || repoProjectName == eventHttpProjectName
             }
             is GitTagPushEvent -> {
-                val repoHttpUrl = url.removePrefix("http://").removePrefix("https://")
-                val eventHttpUrl =
-                    event.repository.git_http_url.removePrefix("http://").removePrefix("https://")
-                url == event.repository.git_ssh_url || repoHttpUrl == eventHttpUrl
+                val repoProjectName = GitUtils.getProjectName(url)
+                val eventHttpProjectName =
+                    GitUtils.getProjectName(event.repository.git_http_url)
+                val eventSshProjectName =
+                    GitUtils.getProjectName(event.repository.git_ssh_url)
+                repoProjectName == eventSshProjectName || repoProjectName == eventHttpProjectName
             }
             is GitMergeRequestEvent -> {
-                val repoHttpUrl = url.removePrefix("http://").removePrefix("https://")
-                val eventHttpUrl =
-                    event.object_attributes.target.http_url.removePrefix("http://").removePrefix("https://")
-                url == event.object_attributes.target.ssh_url || repoHttpUrl == eventHttpUrl
+                val repoProjectName = GitUtils.getProjectName(url)
+                val eventHttpProjectName =
+                    GitUtils.getProjectName(event.object_attributes.target.http_url)
+                val eventSshProjectName =
+                    GitUtils.getProjectName(event.object_attributes.target.ssh_url)
+                repoProjectName == eventSshProjectName || repoProjectName == eventHttpProjectName
             }
             else -> {
                 false
