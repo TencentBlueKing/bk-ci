@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreLogoResource
 import com.tencent.devops.store.pojo.common.Logo
+import com.tencent.devops.store.pojo.common.StoreLogoInfo
 import com.tencent.devops.store.pojo.common.enums.LogoTypeEnum
 import com.tencent.devops.store.service.common.StoreLogoService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -43,10 +44,18 @@ class UserStoreLogoResourceImpl @Autowired constructor(
 
     override fun uploadStoreLogo(
         userId: String,
+        contentLength: Long,
+        compressFlag: Boolean?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): Result<String?> {
-        return storeLogoService.uploadStoreLogo(userId, inputStream, disposition)
+    ): Result<StoreLogoInfo?> {
+        return storeLogoService.uploadStoreLogo(
+            userId = userId,
+            contentLength = contentLength,
+            compressFlag = compressFlag,
+            inputStream = inputStream,
+            disposition = disposition
+        )
     }
 
     override fun list(userId: String, logoType: LogoTypeEnum): Result<List<Logo>?> {
