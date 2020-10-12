@@ -32,10 +32,11 @@ import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.common.log.utils.LogMQEventDispatcher
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class LogListener constructor(
+class LogListener @Autowired constructor(
     private val logService: LogService,
     private val logMQEventDispatcher: LogMQEventDispatcher
 ) {

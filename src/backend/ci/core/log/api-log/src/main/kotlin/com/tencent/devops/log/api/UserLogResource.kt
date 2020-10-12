@@ -90,39 +90,6 @@ interface UserLogResource {
         executeCount: Int?
     ): Result<QueryLogs>
 
-    @ApiOperation("根据关键词获取含有关键字的所在行号")
-    @GET
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/{buildId}/query")
-    fun getLineNoByKeywords(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam("搜索关键字", required = true)
-        @QueryParam("queryKeywords")
-        queryKeywords: String,
-        @ApiParam("对应elementId", required = false)
-        @QueryParam("tag")
-        tag: String?,
-        @ApiParam("指定subTag", required = false)
-        @QueryParam("subTag")
-        subTag: String?,
-        @ApiParam("对应jobId", required = false)
-        @QueryParam("jobId")
-        jobId: String?,
-        @ApiParam("执行次数", required = false)
-        @QueryParam("executeCount")
-        executeCount: Int?
-    ): Result<QueryLineNo>
-
     @ApiOperation("获取更多日志")
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/more")

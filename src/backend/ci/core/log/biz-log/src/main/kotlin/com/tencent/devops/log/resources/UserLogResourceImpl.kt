@@ -78,30 +78,6 @@ class UserLogResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getLineNoByKeywords(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        queryKeywords: String,
-        tag: String?,
-        subTag: String?,
-        jobId: String?,
-        executeCount: Int?
-    ): Result<QueryLineNo> {
-        validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getLineNoByKeywords(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            queryKeywords = queryKeywords,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        )
-    }
-
     override fun getMoreLogs(
         userId: String,
         projectId: String,

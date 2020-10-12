@@ -64,28 +64,6 @@ class LogServiceDispatcher @Autowired constructor(
         )
     }
 
-    fun getLineNoByKeywords(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        queryKeywords: String,
-        tag: String?,
-        jobId: String?,
-        executeCount: Int?,
-        subTag: String? = null
-    ): Result<QueryLineNo> {
-        return Result(
-            logService.queryLineNoByKeywords(
-                buildId = buildId,
-                keywordsStr = queryKeywords,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-        )
-    }
-
     fun getInitLogsPage(
         userId: String,
         projectId: String,
