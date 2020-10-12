@@ -27,11 +27,6 @@
 apply plugin: "maven"
 
 dependencies {
-    // compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    // compile "org.jetbrains.kotlin:kotlin-reflect"
-
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-db")
     compile project(":core:common:common-event")
     compile project(":core:common:common-client")
     compile project(":core:common:common-log")

@@ -42,7 +42,7 @@ import org.springframework.stereotype.Service
 class BuildLessAgentStartupListener @Autowired
 constructor(private val pipelineDispatchService: PipelineBuildLessDispatchService) {
 
-/*    @RabbitListener(
+    @RabbitListener(
         bindings = [(QueueBinding(
             key = MQ.ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH, value = Queue(
                 value = MQ.QUEUE_BUILD_LESS_AGENT_STARTUP_DISPATCH, durable = "true"
@@ -54,7 +54,7 @@ constructor(private val pipelineDispatchService: PipelineBuildLessDispatchServic
                 type = ExchangeTypes.DIRECT
             )
         ))]
-    )*/
+    )
     fun listenAgentStartUpEvent(event: PipelineBuildLessStartupDispatchEvent) {
         try {
             logger.info("start build less($event)")
