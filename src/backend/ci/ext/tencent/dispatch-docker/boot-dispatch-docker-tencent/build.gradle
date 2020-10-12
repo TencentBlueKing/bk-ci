@@ -26,6 +26,8 @@
 
 dependencies {
     compile project(":core:dispatch-docker:biz-dispatch-docker")
+    compile project(":ext:tencent:common:common-digest-tencent")
+    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
 }
 
 
