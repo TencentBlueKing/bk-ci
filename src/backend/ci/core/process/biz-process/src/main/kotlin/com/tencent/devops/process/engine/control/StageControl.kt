@@ -26,7 +26,6 @@
 
 package com.tencent.devops.process.engine.control
 
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -35,8 +34,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.engine.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
@@ -51,15 +48,11 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE
-import com.tencent.devops.process.utils.PIPELINE_NAME
-import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.process.util.NotifyTemplateUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.Date
 
 /**
  *  步骤控制器
@@ -183,7 +176,14 @@ class StageControl @Autowired constructor(
                     val triggerUsers = stage.controlOption?.stageControlOption?.triggerUsers?.joinToString(",") ?: ""
                     val realUsers = EnvUtils.parseEnv(triggerUsers, variables).split(",").toList()
                     stage.controlOption!!.stageControlOption.triggerUsers = realUsers
-                    sendStageReviewNotify(projectId, pipelineId, buildId, realUsers, variables)
+                    NotifyTemplateUtils.sendReviewNotify(
+                        client = client,
+                        projectId = projectId,
+                        reviewUrl = pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId),
+                        reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(projectId, pipelineId, buildId),
+                        receivers = realUsers,
+                        runVariables = variables
+                    )
                     pipelineStageService.pauseStage(
                         pipelineId = pipelineId,
                         buildId = buildId,
@@ -451,38 +451,5 @@ class StageControl @Autowired constructor(
         )
     }
 
-    private fun sendStageReviewNotify(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        receivers: List<String>,
-        runVariables: Map<String, String>
-    ) {
-        val pipelineName = runVariables[PIPELINE_NAME].toString()
-        val reviewUrl = pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId)
-        val reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(projectId, pipelineId, buildId)
-        val dataTime = DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss")
-        val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
-        val buildNum = runVariables[PIPELINE_BUILD_NUM] ?: "1"
-        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
-            templateCode = PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE,
-            receivers = receivers.toMutableSet(),
-            cc = receivers.toMutableSet(),
-            titleParams = mapOf(
-                "projectName" to projectName,
-                "pipelineName" to pipelineName,
-                "buildNum" to buildNum
-            ),
-            bodyParams = mapOf(
-                "projectName" to projectName,
-                "pipelineName" to pipelineName,
-                "reviewUrl" to reviewUrl,
-                "reviewAppUrl" to reviewAppUrl,
-                "dataTime" to dataTime
-            )
-        )
-        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
-            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
-        logger.info("[$buildId]|sendStageReviewNotify|result=$sendNotifyResult")
-    }
+
 }
