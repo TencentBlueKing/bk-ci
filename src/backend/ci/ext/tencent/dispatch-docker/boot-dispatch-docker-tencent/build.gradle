@@ -24,16 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker
-
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
-
-@MicroService
-@ComponentScan("com.tencent.devops.dispatch.docker")
-class Application
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+dependencies {
+    compile project(":core:dispatch-docker:biz-dispatch-docker")
 }
+
+
+apply from: "$rootDir/task_spring_boot_package.gradle"
