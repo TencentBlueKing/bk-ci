@@ -59,6 +59,7 @@ import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -91,11 +92,11 @@ import javax.ws.rs.NotFoundException
 
 @Service
 class PreBuildService @Autowired constructor(
-    private val client: Client,
-    private val dslContext: DSLContext,
-    private val prebuildProjectDao: PrebuildProjectDao,
-    private val prebuildPersonalMachineDao: PrebuildPersonalMachineDao,
-    private val preBuildConfig: PreBuildConfig
+        private val client: Client,
+        private val dslContext: DSLContext,
+        private val prebuildProjectDao: PrebuildProjectDao,
+        private val prebuildPersonalMachineDao: PrebuildPersonalMachineDao,
+        private val preBuildConfig: PreBuildConfig
 ) {
     private val channelCode = ChannelCode.BS
 
@@ -111,11 +112,11 @@ class PreBuildService @Autowired constructor(
             null != prebuildProjectDao.get(dslContext, prebuildProjId, userId)
 
     fun startBuild(
-        userId: String,
-        preProjectId: String,
-        startUpReq: StartUpReq,
-        yaml: CIBuildYaml,
-        agentId: ThirdPartyAgentStaticInfo
+            userId: String,
+            preProjectId: String,
+            startUpReq: StartUpReq,
+            yaml: CIBuildYaml,
+            agentId: ThirdPartyAgentStaticInfo
     ): BuildId {
         val userProject = getUserProjectId(userId)
         val pipeline = getPipelineByName(userId, preProjectId)
@@ -162,10 +163,10 @@ class PreBuildService @Autowired constructor(
     }
 
     fun shutDown(
-        userId: String,
-        accessToken: String,
-        preProjectId: String,
-        buildId: String
+            userId: String,
+            accessToken: String,
+            preProjectId: String,
+            buildId: String
     ): Boolean {
         val userProject = getOrCreateUserProject(userId, accessToken)
         val projectId = userProject.projectCode
@@ -177,11 +178,11 @@ class PreBuildService @Autowired constructor(
     }
 
     private fun createPipelineModel(
-        userId: String,
-        preProjectId: String,
-        startUpReq: StartUpReq,
-        prebuild: CIBuildYaml,
-        agentInfo: ThirdPartyAgentStaticInfo
+            userId: String,
+            preProjectId: String,
+            startUpReq: StartUpReq,
+            prebuild: CIBuildYaml,
+            agentInfo: ThirdPartyAgentStaticInfo
     ): Model {
         val stageList = mutableListOf<Stage>()
 
@@ -254,11 +255,11 @@ class PreBuildService @Autowired constructor(
     }
 
     private fun createVMBuildContainer(
-        job: Job,
-        startUpReq: StartUpReq,
-        agentInfo: ThirdPartyAgentStaticInfo,
-        jobIndex: Int,
-        userId: String
+            job: Job,
+            startUpReq: StartUpReq,
+            agentInfo: ThirdPartyAgentStaticInfo,
+            jobIndex: Int,
+            userId: String
     ): VMBuildContainer {
         val elementList = mutableListOf<Element>()
         val vmType = job.job.resourceType
@@ -343,25 +344,29 @@ class PreBuildService @Autowired constructor(
                         throw OperationException("当 resourceType = REMOTE, pool参数不能为空")
                     }
 
-                    if (this.type == PoolType.DockerOnVm || this.type == PoolType.DockerOnDevCloud || this.type == PoolType.DockerOnPcg) {
+                    if (null == this.type
+                            || this.type == PoolType.DockerOnVm
+                            || this.type == PoolType.DockerOnDevCloud
+                            || this.type == PoolType.DockerOnPcg) {
                         if (null == this.container) {
                             logger.error("getDispatchType , remote , pool.type:{} , container is null", this.type)
                             throw OperationException("当 pool.type = ${this.type}, container参数不能为空")
                         }
                     }
 
+                    //TODO 凭证?
                     when (this.type) {
-                        null -> DockerDispatchType(
-                                this.container
-                        )
-                        
-                        PoolType.DockerOnVm -> DockerDispatchType(
-                                this.container
+                        null, PoolType.DockerOnVm -> DockerDispatchType(
+                                dockerBuildVersion = this.container,
+                                imageType = ImageType.THIRD
+
                         )
 
                         PoolType.DockerOnDevCloud -> PublicDevCloudDispathcType(
                                 this.container!!,
-                                "0"
+                                "0",
+                                imageType = ImageType.THIRD
+
                         )
 
                         PoolType.DockerOnPcg -> PCGDispatchType(
@@ -413,11 +418,11 @@ class PreBuildService @Autowired constructor(
     }
 
     fun getAfterLogs(
-        userId: String,
-        preProjectId: String,
-        buildId: String,
-        start: Long,
-        debugLog: Boolean?
+            userId: String,
+            preProjectId: String,
+            buildId: String,
+            start: Long,
+            debugLog: Boolean?
     ): QueryLogs {
         val prebuildProjRecord = getPreProjectInfo(preProjectId, userId)
         val originLog = client.get(ServiceLogResource::class).getAfterLogs(
