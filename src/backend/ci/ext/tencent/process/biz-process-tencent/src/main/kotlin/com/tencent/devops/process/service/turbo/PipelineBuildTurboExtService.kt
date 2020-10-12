@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.stereotype.Service
-import java.util.*
+import java.util.Random
 
 @Service
 class PipelineBuildTurboExtService @Autowired constructor(
@@ -50,6 +50,7 @@ class PipelineBuildTurboExtService @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body()?.string() ?: return ""
                 logger.info("Get turbo task info, response: $data")
+                LogUtils.costTime("call turbo cost", startTime)
                 if (!response.isSuccessful) {
                     throw RemoteServiceException(data)
                 }
@@ -62,7 +63,6 @@ class PipelineBuildTurboExtService @Autowired constructor(
                     throw RemoteServiceException(data)
                 }
             }
-            LogUtils.costTime("call turbo cost", startTime)
         } catch (e: Throwable) {
             logger.warn("Get turbo task info failed, $e")
             return ""
