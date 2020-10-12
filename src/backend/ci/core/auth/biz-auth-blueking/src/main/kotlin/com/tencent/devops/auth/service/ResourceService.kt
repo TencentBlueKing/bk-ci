@@ -464,7 +464,7 @@ class ResourceService @Autowired constructor(
             limit = page.limit.toInt()
         }
         val projectRecords =
-                client.get(ServiceAuthProjectResource::class).list(offset, limit).data
+                client.get(ServiceAuthProjectResource::class).list(limit, offset).data
         logger.info("projectRecords $projectRecords")
         val count = projectRecords?.count ?: 0L
         val projectInfo = mutableListOf<InstanceInfoDTO>()
