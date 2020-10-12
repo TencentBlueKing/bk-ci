@@ -32,13 +32,11 @@ import com.tencent.devops.dispatch.docker.service.dispatcher.BuildLessDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 class BuildLessDockerDispatcher @Autowired constructor(
-    private val rabbitTemplate: RabbitTemplate,
     private val buildLogPrinter: BuildLogPrinter,
     private val dockerHostBuildService: DockerHostBuildService
 ) : BuildLessDispatcher {

@@ -27,7 +27,7 @@
 package com.tencent.devops.dispatch.docker.listener
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.dispatch.docker.service.PipelineBuildLessDispatchService
+import com.tencent.devops.dispatch.docker.service.PipelineAgentLessDispatchService
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -39,8 +39,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class BuildLessAgentStartupListener @Autowired
-constructor(private val pipelineDispatchService: PipelineBuildLessDispatchService) {
+class AgentLessStartupListener @Autowired
+constructor(private val pipelineAgentLessDispatchService: PipelineAgentLessDispatchService) {
 
     @RabbitListener(
         bindings = [(QueueBinding(
@@ -58,13 +58,13 @@ constructor(private val pipelineDispatchService: PipelineBuildLessDispatchServic
     fun listenAgentStartUpEvent(event: PipelineBuildLessStartupDispatchEvent) {
         try {
             logger.info("start build less($event)")
-            pipelineDispatchService.startUpBuildLess(event)
+            pipelineAgentLessDispatchService.startUpBuildLess(event)
         } catch (ignored: Throwable) {
             logger.error("Fail to start the pipe build($event)", ignored)
         }
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BuildLessAgentStartupListener::class.java)
+        private val logger = LoggerFactory.getLogger(AgentLessStartupListener::class.java)
     }
 }
