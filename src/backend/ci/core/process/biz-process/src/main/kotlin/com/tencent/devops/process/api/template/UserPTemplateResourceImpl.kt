@@ -63,7 +63,26 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateServi
     }
 
     override fun deleteTemplate(userId: String, projectId: String, templateId: String, version: Long): Result<Boolean> {
-        return Result(templateService.deleteTemplate(projectId, userId, templateId, version))
+        return Result(templateService.deleteTemplate(
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            version = version
+        ))
+    }
+
+    override fun deleteTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        versionName: String
+    ): Result<Boolean> {
+        return Result(templateService.deleteTemplate(
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            versionName = versionName
+        ))
     }
 
     override fun updateTemplate(

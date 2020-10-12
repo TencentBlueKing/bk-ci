@@ -26,7 +26,6 @@
 
 package com.tencent.devops.dispatch.docker.pojo
 
-import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

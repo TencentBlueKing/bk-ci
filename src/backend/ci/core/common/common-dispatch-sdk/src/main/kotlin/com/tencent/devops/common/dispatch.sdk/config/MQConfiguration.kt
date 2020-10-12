@@ -27,11 +27,11 @@
 package com.tencent.devops.common.dispatch.sdk.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.EXCHANGE_AGENT_LISTENER_DIRECT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_SHUTDOWN
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_STARTUP
-import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -45,13 +45,11 @@ import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
 @Configuration
-@ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class MQConfiguration @Autowired constructor() {
 
@@ -71,7 +69,8 @@ class MQConfiguration @Autowired constructor() {
     }
 
     @Bean
-    fun pipelineBuildStartQueue(@Autowired buildListener: BuildListener) = Queue(MQ.QUEUE_PIPELINE_BUILD_START_DISPATCHER + getStartQueue(buildListener))
+    fun pipelineBuildStartQueue(@Autowired buildListener: BuildListener) =
+        Queue(MQ.QUEUE_PIPELINE_BUILD_START_DISPATCHER + getStartQueue(buildListener))
 
     @Bean
     fun pipelineBuildStartQueueBind(
@@ -112,7 +111,8 @@ class MQConfiguration @Autowired constructor() {
     }
 
     @Bean
-    fun pipelineBuildFinishQueue(@Autowired buildListener: BuildListener) = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_DISPATCHER + getShutdownQueue(buildListener))
+    fun pipelineBuildFinishQueue(@Autowired buildListener: BuildListener) =
+        Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_DISPATCHER + getShutdownQueue(buildListener))
 
     @Bean
     fun pipelineBuildFinishQueueBind(

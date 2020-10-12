@@ -35,7 +35,6 @@ import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import com.tencent.devops.common.client.Client
@@ -43,7 +42,6 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 
 @Configuration
-@ConditionalOnWebApplication
 class SDKConfiguration {
     @Value("\${gateway.url:#{null}}")
     private val gateway: String? = "devgw.devops.oa.com"
@@ -56,7 +54,7 @@ class SDKConfiguration {
         @Autowired client: Client,
         @Autowired buildLogPrinter: BuildLogPrinter
     ) =
-            DispatchService(redisOperation, objectMapper, pipelineEventDispatcher, gateway, client, buildLogPrinter)
+        DispatchService(redisOperation, objectMapper, pipelineEventDispatcher, gateway, client, buildLogPrinter)
 
     @Bean
     fun jobQuotaService(
