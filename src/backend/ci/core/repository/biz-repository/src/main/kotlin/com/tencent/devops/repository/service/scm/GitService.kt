@@ -645,6 +645,32 @@ class GitService @Autowired constructor(
         }
     }
 
+    override fun deleteGitProject(repoName: String, token: String, tokenType: TokenTypeEnum): Result<Boolean> {
+        logger.info("deleteGitProject repoName is:$repoName,token is:$token,tokenType is:$tokenType")
+        val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName")
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .delete()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            logger.info("deleteGitProject token is:$token, response>> $data")
+            if (!StringUtils.isEmpty(data)) {
+                val dataMap = JsonUtil.toMap(data)
+                val message = dataMap["message"]
+                if (!StringUtils.isEmpty(message)) {
+                    val validateResult: Result<String?> =
+                        MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.USER_UPDATE_GIT_CODE_REPOSITORY_FAIL)
+                    // 把工蜂的错误提示抛出去
+                    return Result(validateResult.status, "${validateResult.message}（git error:$message）")
+                }
+            }
+            return Result(data = true)
+        }
+    }
+
     fun getGitUserInfo(userId: String, token: String, tokenType: TokenTypeEnum): Result<GitUserInfo?> {
         logger.info("getGitUserInfo token is:$token, userId is:$userId,tokenType is:$tokenType")
         val url = StringBuilder("${gitConfig.gitApiUrl}/users/$userId")
@@ -897,7 +923,7 @@ class GitService @Autowired constructor(
         val url = StringBuilder(
             "${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/members"
         )
-        logger.info("get mr changes info url: $url")
+        logger.info("get repo member url: $url")
         setToken(TokenTypeEnum.OAUTH, url, accessToken)
         val request = Request.Builder()
             .url(url.toString())
@@ -908,7 +934,27 @@ class GitService @Autowired constructor(
                 throw RuntimeException("get repo members for $userId, $repoName fail(${it.code()}): ${it.message()}")
             }
             val data = it.body()!!.string()
-            logger.info("get mr changes info response body: $data")
+            logger.info("get repo members response body: $data")
+            return JsonUtil.to(data)
+        }
+    }
+
+    override fun getRepoAllMembers(accessToken: String, userId: String, repoName: String): List<GitMember> {
+        val url = StringBuilder(
+            "${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/members/all"
+        )
+        logger.info("get repo all member url: $url")
+        setToken(TokenTypeEnum.OAUTH, url, accessToken)
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                throw RuntimeException("get repo all members for $userId, $repoName fail(${it.code()}): ${it.message()}")
+            }
+            val data = it.body()!!.string()
+            logger.info("get repo all members response body: $data")
             return JsonUtil.to(data)
         }
     }

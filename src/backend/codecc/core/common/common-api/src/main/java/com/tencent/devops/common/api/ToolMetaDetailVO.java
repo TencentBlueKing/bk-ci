@@ -93,9 +93,6 @@ public class ToolMetaDetailVO extends ToolMetaBaseVO
     @ApiModelProperty(value = "工具运行类型：docker,local")
     private String toolRunType;
 
-    @ApiModelProperty(value = "工具版本号")
-    private String toolVersion;
-
     @ApiModelProperty(value = "工具历史版本号列表")
     private List<String> toolHistoryVersion;
 

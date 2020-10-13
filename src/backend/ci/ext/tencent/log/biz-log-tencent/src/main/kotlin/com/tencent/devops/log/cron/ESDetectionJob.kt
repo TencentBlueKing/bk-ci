@@ -37,7 +37,6 @@ import com.tencent.devops.log.util.ESIndexUtils.getDocumentObject
 import com.tencent.devops.log.util.ESIndexUtils.getIndexSettings
 import com.tencent.devops.log.util.ESIndexUtils.getTypeMappings
 import com.tencent.devops.log.util.IndexNameUtils
-import com.tencent.devops.log.util.IndexNameUtils.getTypeByIndex
 import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.bulk.BulkRequest
 import org.elasticsearch.action.delete.DeleteRequest
@@ -45,7 +44,6 @@ import org.elasticsearch.action.index.IndexRequest
 import org.elasticsearch.client.RequestOptions
 import org.elasticsearch.client.indices.CreateIndexRequest
 import org.elasticsearch.common.unit.TimeValue
-import org.elasticsearch.common.xcontent.XContentType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -136,8 +134,7 @@ class ESDetectionJob @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             logger.info("[${esClient.name}|$index|$buildId] Start to add lines")
-            val type = getTypeByIndex(index)
-            val bulkRequest = BulkRequest(index, type)
+            val bulkRequest = BulkRequest()
             for (i in 1 until MULTI_LOG_LINES) {
                 val log = LogMessageWithLineNo(
                     tag = "test-tag-$i",
@@ -149,8 +146,7 @@ class ESDetectionJob @Autowired constructor(
                 val indexRequest = genIndexRequest(
                     buildId = buildId,
                     logMessage = log,
-                    index = index,
-                    type = type
+                    index = index
                 )
                 if (indexRequest != null) {
                     indexRequest.create(false)
@@ -178,12 +174,11 @@ class ESDetectionJob @Autowired constructor(
     private fun genIndexRequest(
         buildId: String,
         logMessage: LogMessageWithLineNo,
-        index: String,
-        type: String
+        index: String
     ): IndexRequest? {
         val builder = getDocumentObject(buildId, logMessage)
         return try {
-            IndexRequest(index, type).source(builder)
+            IndexRequest(index).source(builder)
         } catch (e: IOException) {
             logger.error("[$buildId] Convert logMessage to es document failure", e)
             null
@@ -229,10 +224,9 @@ class ESDetectionJob @Autowired constructor(
                     logger.info("Empty document ids")
                     return
                 }
-                val type = getTypeByIndex(index)
-                val bulkRequest = BulkRequest(index, type).timeout(TimeValue.timeValueSeconds(30))
+                val bulkRequest = BulkRequest().timeout(TimeValue.timeValueSeconds(30))
                 documentIds.forEach {
-                    bulkRequest.add(DeleteRequest(index, type, it))
+                    bulkRequest.add(DeleteRequest(index, it))
                 }
 
                 val bulkResponse = esClient.client.bulk(bulkRequest, RequestOptions.DEFAULT)

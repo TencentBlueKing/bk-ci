@@ -78,7 +78,6 @@
         ></create>
         <install
             :visiable.sync="dialogVisiable"
-            :language-list="languageList"
             :refresh-list="refreshList"
         ></install>
     </div>
@@ -125,9 +124,6 @@
             },
             queryOptStorage () {
                 return localStorage.getItem('checkerSetQueryObj') ? JSON.parse(localStorage.getItem('checkerSetQueryObj')) : {}
-            },
-            languageList () {
-                return (this.search.find(item => item.name === 'checkerSetLanguage') && this.search.find(item => item.name === 'checkerSetLanguage')['checkerCountList']) || []
             }
         },
         watch: {

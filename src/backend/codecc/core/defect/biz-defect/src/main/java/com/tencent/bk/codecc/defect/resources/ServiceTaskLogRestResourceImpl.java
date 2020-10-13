@@ -28,10 +28,12 @@ package com.tencent.bk.codecc.defect.resources;
 
 import com.tencent.bk.codecc.defect.api.ServiceTaskLogRestResource;
 import com.tencent.bk.codecc.defect.service.TaskLogService;
+import com.tencent.bk.codecc.defect.vo.TaskLogRepoInfoVO;
 import com.tencent.bk.codecc.defect.vo.TaskLogVO;
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.GetLastAnalysisResultsVO;
+import com.tencent.devops.common.api.analysisresult.BaseLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.service.BizServiceFactory;
@@ -80,6 +82,12 @@ public class ServiceTaskLogRestResourceImpl implements ServiceTaskLogRestResourc
     }
 
     @Override
+    public CodeCCResult<BaseLastAnalysisResultVO> getLastStatisticResult(ToolLastAnalysisResultVO toolLastAnalysisResultVO)
+    {
+        return new CodeCCResult<>(taskLogService.getLastAnalysisResult(toolLastAnalysisResultVO, toolLastAnalysisResultVO.getToolName()));
+    }
+
+    @Override
     public CodeCCResult<List<ToolLastAnalysisResultVO>> getBatchLatestTaskLog(long taskId, Set<String> toolSet)
     {
         return new CodeCCResult<>(taskLogService.getLastAnalysisResults(taskId, toolSet));
@@ -113,5 +121,10 @@ public class ServiceTaskLogRestResourceImpl implements ServiceTaskLogRestResourc
     public CodeCCResult<Boolean> refreshTaskLogByPipeline(Long taskId, Set<String> toolNames)
     {
         return new CodeCCResult<>(taskLogService.refreshTaskLogByPipeline(taskId, toolNames));
+    }
+
+    @Override
+    public CodeCCResult<Map<String, TaskLogRepoInfoVO>> getLastAnalyzeRepoInfo(Long taskId) {
+        return new CodeCCResult<>(taskLogService.getLastAnalyzeRepoInfo(taskId));
     }
 }

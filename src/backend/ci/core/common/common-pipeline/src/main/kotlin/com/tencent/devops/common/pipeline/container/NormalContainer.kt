@@ -69,7 +69,9 @@ data class NormalContainer(
     @ApiModelProperty("构建环境启动状态", required = false, hidden = true)
     override var startVMStatus: String? = null,
     @ApiModelProperty("容器运行次数", required = false, hidden = true)
-    override var executeCount: Int? = 0
+    override var executeCount: Int? = 0,
+    @ApiModelProperty("用户自定义ID", required = false, hidden = false)
+    override val jobId: String? = null
 ) : Container {
     companion object {
         const val classType = "normal"

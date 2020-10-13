@@ -32,8 +32,6 @@ import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.utils.SpringContextUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 
 /**
  * 多工具业务处理器的工厂类
@@ -43,12 +41,6 @@ import org.springframework.data.redis.core.RedisTemplate;
  */
 @Slf4j
 public class BizServiceFactory<T> {
-
-    private static final String PREFIX_TASK_INFO = "TASK_INFO:";
-    private static final String KEY_CREATE_FROM = "createFrom";
-
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
 
     /**
      * 为不同类型的工具创建相应的数据报表处理器
@@ -99,7 +91,8 @@ public class BizServiceFactory<T> {
         T processor = null;
         try {
             processor = SpringContextUtil.Companion.getBean(clz, beanName);
-        } catch (BeansException e) {
+        }
+        catch (BeansException e) {
             log.error("Bean Name [{}] Not Found:", beanName);
         }
 
@@ -114,27 +107,51 @@ public class BizServiceFactory<T> {
     /**
      * 为不同创建来源创建相应的处理器
      *
-     * @param taskId
+     * @param createFrom
      * @param businessType
      * @param clz
      * @return
      */
-    public T createBizService(Long taskId, String businessType, Class<T> clz) {
-        String createFrom = (String) redisTemplate.opsForHash().get(PREFIX_TASK_INFO + taskId, KEY_CREATE_FROM);
+    public T createBizServiceByCreateFrom(String createFrom, String businessType, Class<T> clz) {
+        // 先根据创建来源获取处理类
+        String beanName = String.format("%s%s%s", ComConstants.CreateFromBizInfix.valueOf(createFrom).code(), businessType, ComConstants.BIZ_SERVICE_POSTFIX);
+        T processor = getProcessor(clz, beanName);
 
-        T processor = null;
-
-        String createFromCommonBeanName = String.format("%s%s%s", ComConstants.COMMON_CREATE_FROM_BIZ_INFIX, businessType, ComConstants.BIZ_SERVICE_POSTFIX);
-        String createFromGongFengBeanName = String.format("%s%s%s", ComConstants.GONGFENG_CREATE_FROM_BIZ_INFIX, businessType, ComConstants.BIZ_SERVICE_POSTFIX);
-
-        // 获取创建来源是GongFeng名称开头的处理类
-        if (ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value().equalsIgnoreCase(createFrom)) {
-            processor = getProcessor(clz, createFromGongFengBeanName);
+        //如果根据创建来源获取不到处理类，则都采用通用的处理器
+        if (processor == null) {
+            beanName = String.format("%s%s%s", ComConstants.CreateFromBizInfix.COMMON.code(), businessType, ComConstants.BIZ_SERVICE_POSTFIX);
+            processor = getProcessor(clz, beanName);
         }
 
-        //如果不是来源工蜂，或者没有成功获取到GongFeng名称开头的，则都采用共同的处理器
-        if (processor == null){
-            processor = getProcessor(clz, createFromCommonBeanName);
+        if (processor == null) {
+            log.error("get bean name [{}, {}, {}] fail!", createFrom, businessType, beanName);
+            throw new CodeCCException(CommonMessageCode.NOT_FOUND_PROCESSOR);
+        }
+
+        return processor;
+    }
+
+    /**
+     * 为不同类型的业务创建相应的处理器
+     *
+     * @param businessType
+     * @param clz
+     * @return
+     */
+    public T createComponent(String createFrom, String businessType, Class<T> clz) {
+        // 先根据创建来源获取处理类
+        String beanName = String.format("%s%s%s", ComConstants.CreateFromBizInfix.valueOf(createFrom).code(), businessType, ComConstants.COMPONENT_POSTFIX);
+        T processor = getProcessor(clz, beanName);
+
+        //如果根据创建来源获取不到处理类，则都采用通用的处理器
+        if (processor == null) {
+            beanName = String.format("%s%s%s", ComConstants.CreateFromBizInfix.COMMON.code(), businessType, ComConstants.COMPONENT_POSTFIX);
+            processor = getProcessor(clz, beanName);
+        }
+
+        if (processor == null) {
+            log.error("get bean name [{}, {}, {}] fail!", createFrom, businessType, beanName);
+            throw new CodeCCException(CommonMessageCode.NOT_FOUND_PROCESSOR);
         }
 
         return processor;
@@ -144,7 +161,8 @@ public class BizServiceFactory<T> {
         T processor = null;
         try {
             processor = SpringContextUtil.Companion.getBean(clz, beanName);
-        } catch (BeansException e) {
+        }
+        catch (BeansException e) {
             //log.error("Bean Name [{}] Not Found:", beanName);
         }
         return processor;

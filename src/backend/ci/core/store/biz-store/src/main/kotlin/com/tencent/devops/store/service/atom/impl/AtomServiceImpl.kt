@@ -441,6 +441,17 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val atomRecord = atomDao.getPipelineAtom(dslContext, id)
         logger.info("the atomRecord is :$atomRecord")
         return if (null != atomRecord) {
+            val visibilityLevel = atomUpdateRequest.visibilityLevel
+            val dbVisibilityLevel = atomRecord.visibilityLevel
+            val updateRepoInfoResult = updateRepoInfo(
+                visibilityLevel = visibilityLevel,
+                dbVisibilityLevel = dbVisibilityLevel,
+                userId = userId,
+                repositoryHashId = atomRecord.repositoryHashId
+            )
+            if (updateRepoInfoResult.isNotOk()) {
+                return updateRepoInfoResult
+            }
             val htmlTemplateVersion = atomRecord.htmlTemplateVersion
             var classType = atomRecord.classType
             if ("1.0" != htmlTemplateVersion) {
@@ -685,8 +696,16 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             // 入库卸载原因
             unInstallReq.reasonList.forEach {
                 if (it?.reasonId != null) {
-                    val id = UUIDUtil.generate()
-                    reasonRelDao.add(context, id, userId, atomCode, it.reasonId, it.note, ReasonTypeEnum.UNINSTALLATOM.type)
+                    reasonRelDao.add(
+                        dslContext = context,
+                        id = UUIDUtil.generate(),
+                        userId = userId,
+                        storeCode = atomCode,
+                        storeType = StoreTypeEnum.ATOM.type.toByte(),
+                        reasonId = it.reasonId,
+                        note = it.note,
+                        type = ReasonTypeEnum.UNINSTALLATOM.type
+                    )
                 }
             }
         }

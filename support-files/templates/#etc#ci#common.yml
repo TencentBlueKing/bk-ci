@@ -6,21 +6,22 @@ spring:
 # consul config do not need to change
   cloud:
     consul:
-      port: __BKCI_CONSUL_PORT__
+      port: __BK_CI_CONSUL_HTTP_PORT__
       discovery:
-        tags: __BKCI_CONSUL_TAG__
+        tags: __BK_CI_CONSUL_DISCOVERY_TAG__
         instanceId: ${spring.application.name}-${server.port}-${spring.cloud.client.hostname}
 # redis config
   redis:
 #   # Redis sentinel 集群方式配置
 #    sentinel:
-#      master: __REDIS_MASTER_NAME__
-#      nodes: __REDIS_CLUSTER_HOST__:__REDIS_CLUSTER_PORT__
+#      master: __BK_CI_REDIS_SENTINEL_MASTER_NAME__
+# 逗号分隔, master_IP:port
+#      nodes: __BK_CI_REDIS_SENTINEL_ADDR__
 #   # Redis 单机配置方式
-    host: __REDIS_IP__
-    port: __REDIS_PORT__
-    password: __REDIS_PASS__
-    database: __REDIS_DB__
+    host: __BK_CI_REDIS_HOST__
+    port: __BK_CI_REDIS_PORT__
+    password: __BK_CI_REDIS_PASSWORD__
+    database: __BK_CI_REDIS_DB__
     pool:
       max-active: 16
       max-wait:  2000
@@ -28,18 +29,18 @@ spring:
   rabbitmq:
     # 引擎核心业务MQ
     core:
-      virtual-host: __RABBITMQ_VHOST__
-      username: __RABBITMQ_USERNAME__
-      password: __RABBITMQ_PASSWORD__
-      addresses: __RABBITMQ_HOST__:__RABBITMQ_PORT__
-    # 拓展功能模块MQ -- 可与core保持一致，也可分为两个不同实例
+      virtual-host: __BK_CI_RABBITMQ_VHOST__
+      username: __BK_CI_RABBITMQ_USER__
+      password: __BK_CI_RABBITMQ_PASSWORD__
+      addresses: __BK_CI_RABBITMQ_ADDR__
+    # 拓展功能模块MQ -- 如果主rabbitmq出现性能瓶颈, 可以考虑使用额外的实例
     extend:
-      virtual-host: __RABBITMQ_VHOST__
-      username: __RABBITMQ_USERNAME__
-      password: __RABBITMQ_PASSWORD__
-      addresses: __RABBITMQ_HOST__:__RABBITMQ_PORT__
+      virtual-host: __BK_CI_RABBITMQ_VHOST__
+      username: __BK_CI_RABBITMQ_USER__
+      password: __BK_CI_RABBITMQ_PASSWORD__
+      addresses: __BK_CI_RABBITMQ_ADDR__
 
-service-suffix: "-__BKCI_CONSUL_TAG__"
+service-suffix: "-__BK_CI_CONSUL_DISCOVERY_TAG__"
 # http concurrency
 server:
   undertow:
@@ -51,65 +52,65 @@ server:
 
 # gateway for system
 devopsGateway:
-  build: __HTTP_SCHEMA__://__BKCI_FQDN__        # for build agent like dev.devops.blueking.com:80
-  host: __HTTP_SCHEMA__://__BKCI_FQDN__         # for web many be same to buildGateWay
-  api: __HTTP_SCHEMA__://__BKCI_FQDN__          # for api many be same to host
-  idc: __HTTP_SCHEMA__://__BKCI_FQDN__          # for idc many be same to host
-  idcProxy: __HTTP_SCHEMA__://__BKCI_FQDN__     # for idc proxy many be same to host
-  devnetProxy: __HTTP_SCHEMA__://__BKCI_FQDN__  # for devnet proxy many be same to host
-  devnet: __HTTP_SCHEMA__://__BKCI_FQDN__       # for devnet many be same to host
-  oss: __HTTP_SCHEMA__://__BKCI_FQDN__          # for oss many be same to host
-  ossProxy: __HTTP_SCHEMA__://__BKCI_FQDN__     # for oss proxy many be same to host
-  outer: __HTTP_SCHEMA__://__BKCI_FQDN__        # for internet domain
-  outerApi: __HTTP_SCHEMA__://__BKCI_FQDN__     # for internet domain api
+  outer: __BK_CI_PUBLIC_URL__         # generic endpoint for public(internet or intranet) areas.
+  outerApi: __BK_CI_PUBLIC_URL__      # endpoint for api access in public areas.
+  host: __BK_CI_PRIVATE_URL__         # generic endpoint for private(inside bk-ci cluster) access.
+  api: __BK_CI_PRIVATE_URL__          # endpoint for api access which inside BlueKing platform.
+  build: __BK_CI_PRIVATE_URL__        # endpoint for build nodes, maybe use another dns server.
+  idc: __BK_CI_PRIVATE_URL__          # not used yet. keep it same as `host' property.
+  idcProxy: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  devnetProxy: __BK_CI_PRIVATE_URL__  # not used yet. keep it same as `host' property.
+  devnet: __BK_CI_PRIVATE_URL__       # not used yet. keep it same as `host' property.
+  oss: __BK_CI_PRIVATE_URL__          # not used yet. keep it same as `host' property.
+  ossProxy: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
   
 # certificate server 配置
 certificate:
-  server: https://__LICENSE_HOST__:__LICENSE_PORT__/certificate
+  server: __BK_LICENSE_PRIVATE_URL__/certificate
 
 
 #S3 Storage
 s3:
-  endpointUrl: __BKCI_S3_URL__
-  accessKey: __BKCI_S3_ACCESSKEY__
-  secretKey: __BKCI_S3_SECRETKEY__
-  bucketName: __BKCI_S3_BUCKET__
+  endpointUrl: __BK_CI_S3_ENDPOINT_URL__   # 应该包含完整的地区等信息.
+  accessKey: __BK_CI_S3_ACCESS_KEY__
+  secretKey: __BK_CI_S3_SECRET_KEY__
+  bucketName: __BK_CI_S3_BUCKET_NAME__
 
 auth:
   # idProvider为权限中心对接方式，sample(开源默认实现无鉴权)/ bk_login（蓝鲸登录) / client
   # 选择sample后以下配置无效
-  idProvider: __AUTH_PROVIDER__
+  idProvider: __BK_CI_AUTH_PROVIDER__
   grantType: rization_code
   principalType: user
   envName: prod
   #  开发时需要配置Host解析到iam.service.consul
-  url: http://__BK_IAM_PRIVATE_ADDR__
-  appCode: __APP_CODE__
-  appSecret: __APP_TOKEN__
-  bkloginUrl: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/login/api/v2
-  iamCallBackUser: __IAM_CALLBACK_USER__
+  url: __BK_IAM_PRIVATE_URL__
+  appCode: __BK_CI_APP_CODE__
+  appSecret: __BK_CI_APP_TOKEN__
+  bkloginUrl: __BK_PAAS_PRIVATE_URL__/login/api/v2
+  iamCallBackUser: __BK_CI_IAM_CALLBACK_USER__
 
 
 #bk esb config for cd plugin in pipeline
 esb:
-  code: __APP_CODE__
-  secret: __APP_TOKEN__
+  code: __BK_CI_APP_CODE__
+  secret: __BK_CI_APP_TOKEN__
   job:
-    url: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/api/c/compapi/v2/job/
+    url: __BK_PAAS_PRIVATE_URL__/api/c/compapi/v2/job/
   gcloud:
-    url: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/api/c/compapi/v2/sops/
+    url: __BK_PAAS_PRIVATE_URL__/api/c/compapi/v2/sops/
   cmdb:
-    searchhosturl: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/api/c/compapi/v2/
+    searchhosturl: __BK_PAAS_PRIVATE_URL__/api/c/compapi/v2/
   iam:
-    url: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__
+    url: __BK_PAAS_PRIVATE_URL__
 
 # codecc config
 codecc:
-  host: __CODECC_HOST__:__CODECC_HTTP_PORT__
+  host: __BK_CODECC_PRIVATE_URL__  # 
 
 codeccGateway:
-  gateway: __HTTP_SCHEMA__://__CODECC_HOST__:__CODECC_HTTP_PORT__
-  gatewayWeb: __HTTP_SCHEMA__://__CODECC_FQDN__:__CODECC_HTTPS_PORT__
+  gateway: __BK_CODECC_PRIVATE_URL__
+  gatewayWeb: __BK_CODECC_PRIVATE_URL__
   api:
    createTask: /ms/task/api/service/task/
    updateTask: /ms/task/api/service/task/
@@ -119,16 +120,16 @@ codeccGateway:
 alert:
   users: ''
 codeoa:
-  api-key: __CODEOA_API_KEY__
-  api-url: __CODEOA_API_URL__
-  git-url: __CODEOA_GIT_URL__
+  api-key: __BK_CI_CODEOA_API_KEY__
+  api-url: __BK_CI_CODEOA_API_URL__
+  git-url: __BK_CI_CODEOA_GIT_URL__
 
 bk:
   paas:
-    host: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__
+    host: __BK_PAAS_PRIVATE_URL__
 
 bkci:
   security:
-    public-key: "__BKCI_RSA_PUBLIC_KEY__"
-    private-key: "__BKCI_RSA_PRIVATE_KEY__"
+    public-key: "__BK_CI_JWT_RSA_PUBLIC_KEY__"
+    private-key: "__BK_CI_JWT_RSA_PRIVATE_KEY__"
     enable: false

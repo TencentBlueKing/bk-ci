@@ -37,10 +37,12 @@ object ScriptEnvUtils {
 
     fun cleanEnv(buildId: String, workspace: File) {
         cleanScriptEnv(workspace, getEnvFile(buildId))
+        cleanScriptEnv(workspace, "$buildId-$ENV_FILE")
     }
 
     fun getEnv(buildId: String, workspace: File): Map<String, String> {
-        return readScriptEnv(workspace, getEnvFile(buildId))
+        return readScriptEnv(workspace, "$buildId-$ENV_FILE")
+            .plus(readScriptEnv(workspace, getEnvFile(buildId)))
     }
 
     fun getEnvFile(buildId: String): String {
