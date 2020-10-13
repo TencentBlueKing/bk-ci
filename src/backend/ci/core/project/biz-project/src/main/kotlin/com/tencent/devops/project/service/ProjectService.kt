@@ -107,5 +107,7 @@ interface ProjectService {
 
     fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
 
+    fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO>
+
     fun hasCreatePermission(userId: String): Boolean
 }
