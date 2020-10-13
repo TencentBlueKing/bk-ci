@@ -40,4 +40,12 @@ class ServiceAuthCredentialResourceImpl @Autowired constructor(
     override fun getCertInfos(certIds: Set<String>): Result<List<Cert>?> {
         return Result(certService.getCertByIds(certIds))
     }
+
+    override fun searchCredentialById(projectId: String, offset: Int?, limit: Int?, credentialId: String): Result<Page<Credential>?> {
+        TODO("Not yet implemented")
+    }
+
+    override fun searchCertById(projectId: String, offset: Int?, limit: Int?, certId: String): Result<Page<Cert>?> {
+        TODO("Not yet implemented")
+    }
 }

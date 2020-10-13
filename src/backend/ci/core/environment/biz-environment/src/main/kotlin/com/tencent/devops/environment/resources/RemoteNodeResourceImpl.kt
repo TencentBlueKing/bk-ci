@@ -22,4 +22,13 @@ class RemoteNodeResourceImpl @Autowired constructor(
     override fun getNodeInfos(nodeHashIds: List<String>): Result<List<NodeBaseInfo>> {
         return Result(nodeService.listRawServerNodeByIds(nodeHashIds))
     }
+
+    override fun searchByName(projectId: String, offset: Int?, limit: Int?, displayName: String): Result<Page<NodeBaseInfo>> {
+        return Result(nodeService.searchByDisplayName(
+                projectId = projectId,
+                limit = limit,
+                offset = offset,
+                displayName = displayName
+        ))
+    }
 }

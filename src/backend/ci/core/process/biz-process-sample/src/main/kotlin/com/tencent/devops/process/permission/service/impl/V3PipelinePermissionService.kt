@@ -125,7 +125,7 @@ class V3PipelinePermissionService constructor(
         if (instances.contains("*")) {
             logger.info("getResourceByPermission pipelineImpl user[$userId] projectId[$projectId], instances[$instances]")
             val pipelineIds = mutableListOf<String>()
-            val pipelineInfos = pipelineInfoDao.listPipelineInfoByProject(dslContext, projectId)
+            val pipelineInfos = pipelineInfoDao.searchByPipelineName(dslContext, projectId)
             pipelineInfos?.map {
                 pipelineIds.add(it.pipelineId)
             }
