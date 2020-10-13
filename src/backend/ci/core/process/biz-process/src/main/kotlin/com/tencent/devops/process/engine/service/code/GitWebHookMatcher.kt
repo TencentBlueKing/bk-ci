@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 import java.util.regex.Pattern
 
-class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
+open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitWebHookMatcher::class.java)
@@ -368,7 +368,7 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         return matcher.match(branchName, eventBranch)
     }
 
-    private fun matchUrl(url: String): Boolean {
+    open fun matchUrl(url: String): Boolean {
         return when (event) {
             is GitPushEvent -> {
                 val repoHttpUrl = url.removePrefix("http://").removePrefix("https://")
