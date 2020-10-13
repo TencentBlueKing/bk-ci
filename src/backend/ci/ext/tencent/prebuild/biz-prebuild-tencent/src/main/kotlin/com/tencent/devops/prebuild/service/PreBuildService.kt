@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.NORMAL_JOB
 import com.tencent.devops.common.ci.VM_JOB
+import com.tencent.devops.common.ci.image.PoolType
 import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
 import com.tencent.devops.common.ci.task.SyncLocalCodeInput
 import com.tencent.devops.common.ci.task.SyncLocalCodeTask
@@ -56,7 +57,9 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
+import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
@@ -335,27 +338,39 @@ class PreBuildService @Autowired constructor(
 
             ResourceType.REMOTE -> {
                 with(job.job.pool) {
-                    when {
-                        this == null -> {
-                            logger.error("getDispatchType , remote , pool is null")
-                            throw OperationException("当 resourceType = REMOTE, pool参数不能为空")
-                        }
+                    if (this == null) {
+                        logger.error("getDispatchType , remote , pool is null")
+                        throw OperationException("当 resourceType = REMOTE, pool参数不能为空")
+                    }
 
-                        this.container != null -> DockerDispatchType(
-                            this.container
+                    if (null == this.type ||
+                        this.type == PoolType.DockerOnVm ||
+                        this.type == PoolType.DockerOnDevCloud ||
+                        this.type == PoolType.DockerOnPcg
+                    ) {
+                        if (null == this.container) {
+                            logger.error("getDispatchType , remote , pool.type:{} , container is null", this.type)
+                            throw OperationException("当 pool.type = ${this.type}, container参数不能为空")
+                        }
+                    }
+
+                    when (this.type) {
+                        null, PoolType.DockerOnVm -> DockerDispatchType(
+                            dockerBuildVersion = this.container,
+                            imageType = ImageType.THIRD,
+                            credentialId = this.credential?.credentialId
                         )
 
-                        this.macOS != null -> with(this.macOS!!) {
-                            MacOSDispatchType(
-                                macOSEvn = this.systemVersion!! + ":" + this.xcodeVersion!!,
-                                systemVersion = this.systemVersion!!,
-                                xcodeVersion = this.xcodeVersion!!
-                            )
-                        }
+                        PoolType.DockerOnDevCloud -> PublicDevCloudDispathcType(
+                            this.container!!,
+                            "0",
+                            imageType = ImageType.THIRD,
+                            credentialId = this.credential?.credentialId
+                        )
 
                         else -> {
-                            logger.error("getDispatchType , remote , yaml is illegal")
-                            throw OperationException("无法解析当前pool参数")
+                            logger.error("getDispatchType , remote , not support pool type")
+                            throw OperationException("该pool.type暂未支持")
                         }
                     }
                 }
