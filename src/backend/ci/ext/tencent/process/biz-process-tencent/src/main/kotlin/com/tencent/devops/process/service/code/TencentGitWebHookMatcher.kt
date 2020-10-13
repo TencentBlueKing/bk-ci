@@ -43,20 +43,33 @@ class TencentGitWebHookMatcher(
         private val logger = LoggerFactory.getLogger(TencentGitWebHookMatcher::class.java)
     }
     override fun matchUrl(url: String): Boolean {
-        if (isIncludeHost(url)) {
+        if (isCodeGitHook(url)) {
             logger.info("git match url by projectName, url:$url")
             return matchProjectName(url)
         }
         return super.matchUrl(url)
     }
 
-    private fun isIncludeHost(url: String): Boolean {
+    /**
+     * 判断是否是工蜂触发过来的事件,工蜂触发过来的事件通过对比项目名
+     */
+    private fun isCodeGitHook(url: String): Boolean {
         if (gitIncludeHost.isNullOrBlank()) {
             return false
         }
         val includeHosts = gitIncludeHost!!.split(",")
-        val urlHost = GitUtils.getDomainAndRepoName(url).first
-        return includeHosts.contains(urlHost)
+        val hookUrl = when (gitEvent) {
+            is GitPushEvent ->
+                gitEvent.repository.git_http_url
+            is GitTagPushEvent ->
+                gitEvent.repository.git_http_url
+            is GitMergeRequestEvent ->
+                gitEvent.object_attributes.target.http_url
+            else ->
+                return false
+        }
+        val hookUrlHost = GitUtils.getDomainAndRepoName(hookUrl).first
+        return includeHosts.contains(hookUrlHost)
     }
 
     private fun matchProjectName(url: String): Boolean {
