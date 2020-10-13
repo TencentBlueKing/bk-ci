@@ -1,6 +1,8 @@
 package com.tencent.devops.auth.service
 
-import com.tencent.bk.sdk.iam.dto.callback.response.*
+import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.auth.pojo.FetchInstanceInfo
 import com.tencent.devops.auth.pojo.ListInstanceInfo
 import com.tencent.devops.auth.pojo.SearchInstanceInfo
