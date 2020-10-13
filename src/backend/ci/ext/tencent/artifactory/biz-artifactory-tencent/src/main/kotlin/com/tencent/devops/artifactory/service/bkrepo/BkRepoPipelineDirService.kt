@@ -49,25 +49,21 @@ class BkRepoPipelineDirService @Autowired constructor(
     private val pipelineService: PipelineService,
     private val bkRepoClient: BkRepoClient
 ) : PipelineDirService {
-    override fun list(userId: String, projectId: String, path: String): List<FileInfo> {
-        return list(userId, projectId, path, AuthPermission.VIEW)
-    }
-
     override fun list(userId: String, projectId: String, path: String, authPermission: AuthPermission): List<FileInfo> {
-        logger.info("list, userId: $userId, projectId: $projectId, path: $path, authPermission: $authPermission")
+        logger.info("list, userId: $userId, projectId: $projectId, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val fileList = bkRepoClient.listFile(
-            userId,
-            projectId,
-            RepoUtils.PIPELINE_REPO,
-            normalizedPath,
+            userId = userId,
+            projectId = projectId,
+            repoName = RepoUtils.PIPELINE_REPO,
+            path = normalizedPath,
             includeFolders = true,
             deep = false
         )
 
         return when {
             pipelineService.isRootDir(normalizedPath) -> {
-                getRootPathFileList(userId, projectId, normalizedPath, fileList, authPermission)
+                getRootPathFileList(userId, projectId, normalizedPath, fileList)
             }
             pipelineService.isPipelineDir(normalizedPath) -> {
                 val pipelineId = pipelineService.getPipelineId(normalizedPath)
@@ -82,9 +78,9 @@ class BkRepoPipelineDirService @Autowired constructor(
         }
     }
 
-    fun getRootPathFileList(userId: String, projectId: String, path: String, fileList: List<com.tencent.bkrepo.generic.pojo.FileInfo>, authPermission: AuthPermission): List<FileInfo> {
-        logger.info("getRootPathFileList: userId: $userId, projectId: $projectId, path: $path, fileList: $fileList, authPermission: $authPermission")
-        val hasPermissionList = pipelineService.filterPipeline(userId, projectId, authPermission)
+    fun getRootPathFileList(userId: String, projectId: String, path: String, fileList: List<com.tencent.bkrepo.generic.pojo.FileInfo>): List<FileInfo> {
+        logger.info("getRootPathFileList: userId: $userId, projectId: $projectId, path: $path, fileList: $fileList")
+        val hasPermissionList = pipelineService.filterPipeline(userId, projectId)
         val pipelineIdToNameMap = pipelineService.getPipelineNames(projectId, hasPermissionList.toSet())
 
         val fileInfoList = mutableListOf<FileInfo>()

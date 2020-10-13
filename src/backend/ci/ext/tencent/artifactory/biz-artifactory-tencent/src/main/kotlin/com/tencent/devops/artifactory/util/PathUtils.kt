@@ -26,6 +26,7 @@
 
 package com.tencent.devops.artifactory.util
 
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import java.nio.file.Paths
 import javax.ws.rs.BadRequestException
 
@@ -40,5 +41,9 @@ object PathUtils {
 
     fun normalize(relativePath: String): String {
         return Paths.get(relativePath).normalize().toString()
+    }
+
+    fun buildArchiveLink(projectId: String, pipelineId: String, buildId: String): String {
+        return "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
     }
 }

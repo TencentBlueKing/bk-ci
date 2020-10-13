@@ -26,7 +26,6 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
-import com.tencent.devops.artifactory.pojo.DownloadUrl
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
@@ -39,14 +38,12 @@ import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RegionUtil
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
@@ -64,20 +61,13 @@ import javax.ws.rs.NotFoundException
 
 @Service
 class BkRepoDownloadService @Autowired constructor(
+    private val pipelineService: PipelineService,
     private val bkRepoService: BkRepoService,
     private val client: Client,
-    private val authProjectApi: BSAuthProjectApi,
-    private val artifactoryAuthServiceCode: BSRepoAuthServiceCode,
-    private val pipelineService: PipelineService,
     private val bkRepoClient: BkRepoClient,
     private val shortUrlApi: ShortUrlApi,
-    val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig
 ) : RepoDownloadService {
-    override fun getDownloadUrl(token: String): DownloadUrl {
-        // 不支持
-        throw OperationException("not support")
-    }
-
     override fun serviceGetExternalDownloadUrl(
         userId: String,
         projectId: String,
@@ -86,15 +76,14 @@ class BkRepoDownloadService @Autowired constructor(
         ttl: Int,
         directed: Boolean
     ): Url {
-        logger.info("serviceGetExternalDownloadUrl, userId: $userId, projectId: $projectId, " +
-            "artifactoryType: $artifactoryType, path: $path, ttl: $ttl, directed: $directed")
+        logger.info("serviceGetExternalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, ttl: $ttl, directed: $directed")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val url = bkRepoService.externalDownloadUrl(
-            userId,
-            projectId,
-            artifactoryType,
-            normalizedPath,
-            ttl
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            fullPath = normalizedPath,
+            ttl = ttl
         )
         return Url(StringUtil.chineseUrlEncode(url))
     }
@@ -107,8 +96,7 @@ class BkRepoDownloadService @Autowired constructor(
         ttl: Int,
         directed: Boolean
     ): Url {
-        logger.info("serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId, " +
-            "artifactoryType: $artifactoryType, path: $argPath, ttl: $ttl, directed: $directed")
+        logger.info("serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val url = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, normalizedPath, ttl)
         return Url(url)
@@ -122,26 +110,11 @@ class BkRepoDownloadService @Autowired constructor(
         channelCode: ChannelCode?
     ): Url {
         logger.info("getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath")
-        // 校验用户流水线权限？
+        pipelineService.validatePermission(userId, projectId)
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val repo = RepoUtils.getRepoByType(artifactoryType)
         val url = "${HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)}/bkrepo/api/user/generic/$projectId/$repo$normalizedPath"
         return Url(url, url)
-    }
-
-    // 可能已废弃，待检查
-    override fun getIoaUrl(
-        userId: String,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        argPath: String
-    ): Url {
-        logger.info("getIoaUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "argPath: $argPath")
-        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
-
-        // todo
-        throw OperationException("not implemented")
     }
 
     override fun getExternalUrl(
@@ -150,16 +123,14 @@ class BkRepoDownloadService @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Url {
-        logger.info("getExternalUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "path: $path")
+        logger.info("getExternalUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val fileInfo = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
             ?: throw NotFoundException("文件($path)不存在")
         val properties = fileInfo.metadata
         val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID] ?: throw RuntimeException("元数据(pipelineId)不存在")
         val buildId = properties[ARCHIVE_PROPS_BUILD_ID] ?: throw RuntimeException("元数据(buildId)不存在")
-        val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
-        val shortUrl = shortUrlApi.getShortUrl(url, 300)
+        val shortUrl = shortUrlApi.getShortUrl(PathUtils.buildArchiveLink(projectId, pipelineId, buildId), 300)
         return Url(shortUrl)
     }
 
@@ -171,19 +142,16 @@ class BkRepoDownloadService @Autowired constructor(
         ttl: Int,
         downloadUsers: String
     ) {
-        logger.info("shareUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "argPath: $argPath, ttl: $ttl, downloadUsers: $downloadUsers")
+        logger.info("shareUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, downloadUsers: $downloadUsers")
         val path = PathUtils.checkAndNormalizeAbsPath(argPath)
 
         when (artifactoryType) {
+            ArtifactoryType.CUSTOM_DIR -> {
+                pipelineService.validatePermission(userId, projectId, message = "用户（$userId) 没有项目（$projectId）下载权限)")
+            }
             ArtifactoryType.PIPELINE -> {
                 val pipelineId = pipelineService.getPipelineId(path)
-                pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.SHARE, "用户($userId)在工程($projectId)下没有流水线${pipelineId}分享权限")
-            }
-            ArtifactoryType.CUSTOM_DIR -> {
-                if (!authProjectApi.getProjectUsers(artifactoryAuthServiceCode, projectId).contains(userId)) {
-                    throw BadRequestException("用户（$userId) 没有项目（$projectId）下载权限")
-                }
+                pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.SHARE, "用户($userId)在项目($projectId)下没有流水线${pipelineId}分享权限")
             }
         }
         val downloadUrl = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, path, ttl)
@@ -260,19 +228,18 @@ class BkRepoDownloadService @Autowired constructor(
         }
         logger.info("accessUserId: $accessUserId, targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
 
-        // 校验用户权限
+        // 校验用户权限, auth权限优化实施后可以去掉
         if (accessUserId != null) {
-            if (artifactoryType == ArtifactoryType.CUSTOM_DIR &&
-                !authProjectApi.getProjectUsers(artifactoryAuthServiceCode, targetProjectId).contains(accessUserId)) {
-                throw BadRequestException("用户（$accessUserId) 没有项目（$targetProjectId）下载权限)")
+            if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(accessUserId, targetProjectId)) {
+                throw PermissionForbiddenException("用户（$accessUserId) 没有项目（$targetProjectId）下载权限)")
             }
             if (artifactoryType == ArtifactoryType.PIPELINE) {
                 pipelineService.validatePermission(
-                    accessUserId,
-                    targetProjectId,
-                    targetPipelineId,
-                    AuthPermission.DOWNLOAD,
-                    "用户($accessUserId)在项目($targetProjectId)下没有流水线($targetPipelineId)下载构件权限"
+                    userId = accessUserId,
+                    projectId = targetProjectId,
+                    pipelineId = targetPipelineId,
+                    permission = AuthPermission.DOWNLOAD,
+                    message = "用户($accessUserId)在项目($targetProjectId)下没有流水线($targetPipelineId)下载构件权限"
                 )
             }
         }

@@ -37,7 +37,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.api.cos.ServicePluginCosResource
 import com.tencent.devops.plugin.pojo.cos.CdnUploadFileInfo
 import com.tencent.devops.plugin.pojo.cos.SpmFile
@@ -50,7 +50,6 @@ import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import javax.ws.rs.core.Response
@@ -60,7 +59,7 @@ class ServicePluginCosResourceImpl @Autowired constructor(
     private val cosService: CosService,
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val repoGray: RepoGray,
     private val bkrepoClient: BkRepoClient
 ) : ServicePluginCosResource {
@@ -104,12 +103,24 @@ class ServicePluginCosResourceImpl @Autowired constructor(
         )
 
         val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", elementId, containerId, executeCount)
+        buildLogPrinter.addLine(
+            buildId = buildId,
+            message = "use bkrepo: $isRepoGray",
+            tag = elementId,
+            jobId = containerId,
+            executeCount = executeCount
+        )
 
         val uploadCosCdnThread =
-            UploadCosCdnThread(gatewayUrl!!, rabbitTemplate, cosService, redisOperation, uploadCosCdnParam, isRepoGray, bkrepoClient)
+            UploadCosCdnThread(gatewayUrl!!, buildLogPrinter, cosService, redisOperation, uploadCosCdnParam, isRepoGray, bkrepoClient)
         val uploadThread = Thread(uploadCosCdnThread, uploadTaskKey)
-        LogUtils.addLine(rabbitTemplate, buildId, "开始上传CDN...", elementId, containerId, executeCount)
+        buildLogPrinter.addLine(
+            buildId = buildId,
+            message = "开始上传CDN...",
+            tag = elementId,
+            jobId = containerId,
+            executeCount = executeCount
+        )
         uploadThread.start()
         cdnPath = cosAppInfo.domain + cdnPath
         val spmFile = SpmFile(uploadTaskKey, cdnPath)

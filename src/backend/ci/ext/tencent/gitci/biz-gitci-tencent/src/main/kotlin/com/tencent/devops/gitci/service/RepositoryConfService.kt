@@ -31,6 +31,7 @@ import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,9 +49,7 @@ class RepositoryConfService @Autowired constructor(
 
     fun initGitCISetting(userId: String, gitProjectId: Long): Boolean {
         if (gitCISettingDao.getSetting(dslContext, gitProjectId) == null) {
-            val serviceGitResource = client.getScm(ServiceGitResource::class)
-            val accessToken = serviceGitResource.getToken(gitProjectId).data?.accessToken ?: return false
-            val projectInfo = serviceGitResource.getProjectInfo(accessToken, gitProjectId).data ?: return false
+            val projectInfo = requestGitProjectInfo(gitProjectId) ?: return false
             return saveGitCIConf(
                 userId = userId,
                 repositoryConf = GitRepositoryConf(
@@ -71,6 +70,19 @@ class RepositoryConfService @Autowired constructor(
         } else {
             return true
         }
+    }
+
+    fun updateGitCISetting(gitProjectId: Long) {
+        val projectInfo = requestGitProjectInfo(gitProjectId)
+        if (projectInfo != null) gitCISettingDao.updateSetting(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            gitProjectName = projectInfo.name,
+            url = projectInfo.gitSshUrl ?: "",
+            homePage = projectInfo.homepage ?: "",
+            httpUrl = projectInfo.gitHttpsUrl ?: "",
+            sshUrl = projectInfo.gitSshUrl ?: ""
+        )
     }
 
     fun enableGitCI(gitProjectId: Long): Boolean {
@@ -110,5 +122,11 @@ class RepositoryConfService @Autowired constructor(
         }
         gitCISettingDao.saveSetting(dslContext, repositoryConf, projectCode!!)
         return true
+    }
+
+    private fun requestGitProjectInfo(gitProjectId: Long): GitCIProjectInfo? {
+        val serviceGitResource = client.getScm(ServiceGitResource::class)
+        val accessToken = serviceGitResource.getToken(gitProjectId).data?.accessToken ?: return null
+        return serviceGitResource.getProjectInfo(accessToken, gitProjectId).data
     }
 }

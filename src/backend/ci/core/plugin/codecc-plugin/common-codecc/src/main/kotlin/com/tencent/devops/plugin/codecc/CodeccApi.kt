@@ -227,15 +227,8 @@ open class CodeccApi constructor(
             MediaType.parse("application/json; charset=utf-8"), jsonBody
         )
 
-        val execUrl = if (codeccApiProxyUrl.isBlank()) {
-            codeccApiUrl + path
-        } else {
-            "$codeccApiProxyUrl?url=${URLEncoder.encode(codeccApiUrl + path, "UTF-8")}"
-        }
-        logger.info("taskExecution url: $execUrl")
-
         val builder = Request.Builder()
-            .url(codeccApiUrl + path)
+            .url(getExecUrl(path))
 
         when (method) {
             "GET" -> {
@@ -268,6 +261,16 @@ open class CodeccApi constructor(
             logger.info("Get the task response body - $responseBody")
             return responseBody
         }
+    }
+
+    fun getExecUrl(path: String): String {
+        val execUrl = if (codeccApiProxyUrl.isBlank()) {
+            codeccApiUrl + path
+        } else {
+            "$codeccApiProxyUrl?url=${URLEncoder.encode(codeccApiUrl + path, "UTF-8")}"
+        }
+        logger.info("taskExecution url: $execUrl")
+        return execUrl
     }
 
     private fun getCodeccResult(responseBody: String): CoverityResult {
@@ -392,6 +395,7 @@ open class CodeccApi constructor(
     )
 
     data class TaskDetailVO(
+        val scanType: Int,
         val notifyCustomInfo: NotifyCustomVO?,
         val newDefectJudge: NewDefectJudgeVO?
     )

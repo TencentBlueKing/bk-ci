@@ -46,7 +46,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ENV_ID_IS_NULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ENV_NAME_IS_NULL
@@ -65,7 +65,6 @@ import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.util.CommonUtils
 import okhttp3.Request
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.ConfigurableBeanFactory.SCOPE_PROTOTYPE
@@ -83,7 +82,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
     private val client: Client,
     private val jobClient: JobClient,
     private val pipelineUserService: PipelineUserService,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
     private val repoGray: RepoGray,
     private val bkRepoClient: BkRepoClient
@@ -186,13 +185,13 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         val executeCount = task.executeCount ?: 1
         val srcPath = parseVariable(param.srcPath, runVariables)
         val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
 
         // 下载所有文件
         var count = 0
         val destPath = Files.createTempDirectory("").toFile().absolutePath
         val localFileList = mutableListOf<String>()
-        LogUtils.addLine(rabbitTemplate, buildId, "准备匹配文件: $srcPath", taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "准备匹配文件: $srcPath", taskId, containerId, executeCount)
         srcPath.split(",").map {
             it.trim().removePrefix("/").removePrefix("./")
         }.forEach { path ->
@@ -200,7 +199,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                 val fileList = bkRepoClient.matchBkRepoFile(userId, path, projectId, pipelineId, buildId, isCustom)
                 val repoName = if (isCustom) "custom" else "pipeline"
                 fileList.forEach { bkrepoFile ->
-                    LogUtils.addLine(rabbitTemplate, buildId, "匹配到文件：(${bkrepoFile.displayPath})", taskId, containerId, executeCount)
+                    buildLogPrinter.addLine(buildId, "匹配到文件：(${bkrepoFile.displayPath})", taskId, containerId, executeCount)
                     count++
                     val destFile = File(destPath, File(bkrepoFile.displayPath).name)
                     bkRepoClient.downloadFile(userId, projectId, repoName, bkrepoFile.fullPath, destFile)
@@ -210,7 +209,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             } else {
                 val fileList = matchFile(path, projectId, pipelineId, buildId, isCustom)
                 fileList.forEach { jfrogFile ->
-                    LogUtils.addLine(rabbitTemplate, buildId, "匹配到文件：(${jfrogFile.uri})", taskId, containerId, executeCount)
+                    buildLogPrinter.addLine(buildId, "匹配到文件：(${jfrogFile.uri})", taskId, containerId, executeCount)
                     count++
                     val url = if (isCustom) "$gatewayUrl/jfrog/storage/service/custom/$projectId${jfrogFile.uri}"
                     else "$gatewayUrl/jfrog/storage/service/archive/$projectId/$pipelineId/$buildId${jfrogFile.uri}"
@@ -226,7 +225,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             errorType = ErrorType.USER,
             errorMsg = "没有匹配到需要分发的文件"
         )
-        LogUtils.addLine(rabbitTemplate, buildId, "$count 个文件将被分发", taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "$count 个文件将被分发", taskId, containerId, executeCount)
 
         val fileSource = FastPushFileRequest.FileSource(
             files = localFileList,
@@ -292,8 +291,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         if (null != lastModifyUser && operator != lastModifyUser) {
             // 以流水线的最后一次修改人身份执行；如果最后一次修改人也没有这个环境的操作权限，这种情况不考虑，有问题联系产品!
             logger.info("operator:$operator, lastModifyUser:$lastModifyUser")
-            LogUtils.addLine(
-                rabbitTemplate,
+            buildLogPrinter.addLine(
                 buildId,
                 "Will use $lastModifyUser to distribute file...",
                 taskId,
@@ -305,14 +303,14 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         }
         val projectId = task.projectId
         val targetPath = parseVariable(param.targetPath, runVariables)
-        LogUtils.addLine(rabbitTemplate, buildId, "distribute files to target path : $targetPath", taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "distribute files to target path : $targetPath", taskId, containerId, executeCount)
 
         val targetEnvType = parseVariable(param.targetEnvType, runVariables)
 
         val envSet = when (targetEnvType) {
             "NODE" -> {
                 if (param.targetNodeId == null || param.targetNodeId!!.isEmpty()) {
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "EnvId is not init", taskId, containerId, executeCount)
+                    buildLogPrinter.addRedLine(buildId, "EnvId is not init", taskId, containerId, executeCount)
                     throw BuildTaskException(
                         errorType = ErrorType.USER,
                         errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL.toInt(),
@@ -324,7 +322,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             }
             "ENV" -> {
                 if (param.targetEnvId == null || param.targetEnvId!!.isEmpty()) {
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "EnvId is not init", taskId, containerId, executeCount)
+                    buildLogPrinter.addRedLine(buildId, "EnvId is not init", taskId, containerId, executeCount)
                     throw BuildTaskException(
                         errorType = ErrorType.USER,
                         errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL.toInt(),
@@ -336,7 +334,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             }
             "ENV_NAME" -> {
                 if (param.targetEnvName == null || param.targetEnvName!!.isEmpty()) {
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "EnvName is not init", taskId, containerId, executeCount)
+                    buildLogPrinter.addRedLine(buildId, "EnvName is not init", taskId, containerId, executeCount)
                     throw BuildTaskException(
                         errorType = ErrorType.USER,
                         errorCode = ERROR_BUILD_TASK_ENV_NAME_IS_NULL.toInt(),
@@ -349,8 +347,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                 EnvSet(envIdList, listOf(), listOf())
             }
             else -> {
-                LogUtils.addRedLine(
-                    rabbitTemplate,
+                buildLogPrinter.addRedLine(
                     buildId,
                     "Unsupported targetEnvType: $targetEnvType ",
                     taskId,
@@ -373,7 +370,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             targetAccount, timeout
         )
         val taskInstanceId = jobClient.fastPushFileDevops(fastPushFileReq, projectId)
-        LogUtils.addLine(rabbitTemplate, buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkStatus(
@@ -395,7 +392,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         if (BuildStatus.isFinish(buildStatus)) {
             clearTempFile(task)
         } else {
-            LogUtils.addLine(rabbitTemplate, buildId, "Waiting for job:$taskInstanceId", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "Waiting for job:$taskInstanceId", taskId, containerId, executeCount)
         }
 
         return buildStatus
@@ -415,8 +412,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
 
         if (System.currentTimeMillis() - startTime > maxRunningMills) {
             logger.warn("job getTimeout. getTimeout minutes:${maxRunningMills / 60000}")
-            LogUtils.addRedLine(
-                rabbitTemplate,
+            buildLogPrinter.addRedLine(
                 buildId,
                 "Job getTimeout: ${maxRunningMills / 60000} Minutes",
                 taskId,
@@ -431,11 +427,11 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         return if (taskResult.isFinish) {
             if (taskResult.success) {
                 logger.info("[$buildId]|SUCCEED|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addLine(rabbitTemplate, buildId, taskResult.msg, taskId, containerId, executeCount)
+                buildLogPrinter.addLine(buildId, taskResult.msg, taskId, containerId, executeCount)
                 BuildStatus.SUCCEED
             } else {
                 logger.info("[$buildId]|FAIL|taskInstanceId=$taskId|${taskResult.msg}")
-                LogUtils.addRedLine(rabbitTemplate, buildId, taskResult.msg, taskId, containerId, executeCount)
+                buildLogPrinter.addRedLine(buildId, taskResult.msg, taskId, containerId, executeCount)
                 BuildStatus.FAILED
             }
         } else {
@@ -494,7 +490,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         val noExistsEnvNames = envNameList.subtract(envNameExistsList)
         if (noExistsEnvNames.isNotEmpty()) {
             logger.warn("The envNames not exists, name:$noExistsEnvNames")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames", taskId, containerId, executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS.toInt(),
@@ -512,7 +508,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         val noAuthEnvIds = envIdList.subtract(userEnvIdList)
         if (noAuthEnvIds.isNotEmpty()) {
             logger.warn("User does not permit to access the env: $noAuthEnvIds")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds", taskId, containerId, executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI.toInt(),
@@ -542,8 +538,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             val noExistsEnvIds = envSet.envHashIds.subtract(envIdList)
             if (noExistsEnvIds.isNotEmpty()) {
                 logger.warn("The envIds not exists, id:$noExistsEnvIds")
-                LogUtils.addRedLine(
-                    rabbitTemplate,
+                buildLogPrinter.addRedLine(
                     buildId,
                     "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds",
                     taskId,
@@ -567,8 +562,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             val noExistsNodeIds = envSet.nodeHashIds.subtract(nodeIdList)
             if (noExistsNodeIds.isNotEmpty()) {
                 logger.warn("The nodeIds not exists, id:$noExistsNodeIds")
-                LogUtils.addRedLine(
-                    rabbitTemplate,
+                buildLogPrinter.addRedLine(
                     buildId,
                     "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds",
                     taskId,

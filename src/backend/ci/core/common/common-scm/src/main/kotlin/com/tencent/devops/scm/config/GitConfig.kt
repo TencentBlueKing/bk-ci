@@ -100,4 +100,7 @@ class GitConfig {
 
     @Value("\${scm.git.frontendSampleProjectUrl:}")
     val frontendSampleProjectUrl: String = ""
+
+    @Value("\${scm.external.tGit.tGitHookUrl:}")
+    val tGitHookUrl: String = ""
 }

@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.api.ServiceMigCDNResource
 import com.tencent.devops.plugin.pojo.migcdn.MigCDNUploadParam
 import com.tencent.devops.common.pipeline.element.MigCDNPushFileElement
@@ -39,7 +39,6 @@ import com.tencent.devops.process.engine.atom.defaultSuccessAtomResponse
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -49,7 +48,7 @@ import org.springframework.stereotype.Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class MigCDNPushFileTaskAtom @Autowired constructor(
     private val client: Client,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<MigCDNPushFileElement> {
 
     override fun getParamElement(task: PipelineBuildTask): MigCDNPushFileElement {
@@ -94,12 +93,12 @@ class MigCDNPushFileTaskAtom @Autowired constructor(
             )
         )
 
-        LogUtils.addLine(rabbitTemplate, buildId, "开始上传对应文件到CDN...",
+        buildLogPrinter.addLine(buildId, "开始上传对应文件到CDN...",
             task.taskId, task.containerHashId, task.executeCount ?: 1)
-        LogUtils.addLine(rabbitTemplate, buildId, "匹配文件中: ${uploadParams.fileParams.regexPath}($fileSource)",
+        buildLogPrinter.addLine(buildId, "匹配文件中: ${uploadParams.fileParams.regexPath}($fileSource)",
             task.taskId, task.containerHashId, task.executeCount ?: 1)
         val pushFile = client.get(ServiceMigCDNResource::class).pushFile(uploadParams)
-        LogUtils.addLine(rabbitTemplate, buildId, "上传对应文件到CDN结束! result=$pushFile",
+        buildLogPrinter.addLine(buildId, "上传对应文件到CDN结束! result=$pushFile",
             task.taskId, task.containerHashId, task.executeCount ?: 1)
         return defaultSuccessAtomResponse
     }

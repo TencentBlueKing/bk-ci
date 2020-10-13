@@ -36,7 +36,7 @@ import com.tencent.devops.common.archive.client.JfrogService
 import com.tencent.devops.common.pipeline.zhiyun.ZhiyunConfig
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.model.plugin.tables.TPluginZhiyunProduct
 import com.tencent.devops.plugin.dao.ZhiyunProductDao
 import com.tencent.devops.plugin.pojo.zhiyun.ZhiyunProduct
@@ -47,7 +47,6 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -57,7 +56,7 @@ class ZhiyunService @Autowired constructor(
     private val jfrogService: JfrogService,
     private val zhiyunProductDao: ZhiyunProductDao,
     private val dslContext: DSLContext,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val zhiyunConfig: ZhiyunConfig,
     private val redisOperation: RedisOperation,
     private val repoGray: RepoGray,
@@ -75,7 +74,7 @@ class ZhiyunService @Autowired constructor(
         val tmpFolder = Files.createTempDir()
         try {
             val isRepoGray = repoGray.isGray(fileParams.projectId, redisOperation)
-            LogUtils.addLine(rabbitTemplate, fileParams.buildId, "use bkrepo: $isRepoGray", fileParams.elementId, fileParams.containerId, fileParams.executeCount)
+            buildLogPrinter.addLine(fileParams.buildId, "use bkrepo: $isRepoGray", fileParams.elementId, fileParams.containerId, fileParams.executeCount)
 
             val matchFiles = if (isRepoGray) {
                 bkRepoClient.downloadFileByPattern(
@@ -94,10 +93,10 @@ class ZhiyunService @Autowired constructor(
             val resultList = mutableListOf<String>()
             matchFiles.forEach { file ->
                 try {
-                    LogUtils.addLine(rabbitTemplate, fileParams.buildId, "start to upload file to zhi yun: ${file.canonicalPath}",
+                    buildLogPrinter.addLine(fileParams.buildId, "start to upload file to zhi yun: ${file.canonicalPath}",
                         fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                     val request = with(zhiyunUploadParam) {
-                        LogUtils.addLine(rabbitTemplate, fileParams.buildId, "zhi yun upload file params: $para",
+                        buildLogPrinter.addLine(fileParams.buildId, "zhi yun upload file params: $para",
                             fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                         val body = MultipartBody.Builder()
                             .setType(MultipartBody.FORM)
@@ -128,7 +127,7 @@ class ZhiyunService @Autowired constructor(
                         if (code != "0") {
                             throw OperationException("fail to upload \" ${file.canonicalPath} \":\n$msg")
                         }
-                        LogUtils.addLine(rabbitTemplate, fileParams.buildId, "successfully upload: ${file.name}:\n$msg",
+                        buildLogPrinter.addLine(fileParams.buildId, "successfully upload: ${file.name}:\n$msg",
                             fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                         resultList.add(msg.trim().removeSuffix(":succ"))
                     }

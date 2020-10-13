@@ -34,30 +34,36 @@ import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.NORMAL_JOB
 import com.tencent.devops.common.ci.VM_JOB
 import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
+import com.tencent.devops.common.ci.task.SyncLocalCodeInput
+import com.tencent.devops.common.ci.task.SyncLocalCodeTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.ci.yaml.Job
+import com.tencent.devops.common.ci.yaml.ResourceType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.pojo.LogLine
+import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
+import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.gitci.api.TriggerBuildResource
 import com.tencent.devops.gitci.pojo.GitYamlString
-import com.tencent.devops.log.api.UserLogResource
-import com.tencent.devops.log.model.pojo.LogLine
-import com.tencent.devops.log.model.pojo.QueryLogs
+import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.model.prebuild.tables.records.TPrebuildProjectRecord
 import com.tencent.devops.plugin.api.UserCodeccResource
 import com.tencent.devops.prebuild.dao.PrebuildPersonalMachineDao
@@ -114,21 +120,32 @@ class PreBuildService @Autowired constructor(
         val pipelineId = if (null == pipeline) {
             client.get(ServicePipelineResource::class).create(userId, userProject, model, channelCode).data!!.id
         } else {
-            client.get(ServicePipelineResource::class).edit(userId, userProject, pipeline.pipelineId, model, channelCode)
+            client.get(ServicePipelineResource::class)
+                .edit(userId, userProject, pipeline.pipelineId, model, channelCode)
             pipeline.pipelineId
         }
-        prebuildProjectDao.createOrUpdate(dslContext, preProjectId, userProject, userId, startUpReq.yaml.trim(), pipelineId, startUpReq.workspace)
+        prebuildProjectDao.createOrUpdate(
+            dslContext,
+            preProjectId,
+            userProject,
+            userId,
+            startUpReq.yaml.trim(),
+            pipelineId,
+            startUpReq.workspace
+        )
 
         logger.info("pipelineId: $pipelineId")
 
         // 启动构建
-        val buildId = client.get(ServiceBuildResource::class).manualStartup(userId, userProject, pipelineId, mapOf(), channelCode).data!!.id
+        val buildId = client.get(ServiceBuildResource::class)
+            .manualStartup(userId, userProject, pipelineId, mapOf(), channelCode).data!!.id
         return BuildId(buildId)
     }
 
     private fun getPipelineByName(userId: String, preProjectId: String): Pipeline? {
         try {
-            val pipelineList = client.get(ServicePipelineResource::class).list(userId, getUserProjectId(userId), 1, 1000).data!!.records
+            val pipelineList = client.get(ServicePipelineResource::class)
+                .list(userId, getUserProjectId(userId), 1, 1000).data!!.records
             pipelineList.forEach {
                 if (it.pipelineName == preProjectId) {
                     return it
@@ -152,10 +169,17 @@ class PreBuildService @Autowired constructor(
         val preProjectRecord = prebuildProjectDao.get(dslContext, preProjectId, userId)
             ?: throw OperationException("prebuild project not exist")
         logger.info("Manual shutdown the build, buildId: $buildId")
-        return client.get(ServiceBuildResource::class).manualShutdown(userId, projectId, preProjectRecord.pipelineId, buildId, channelCode).data!!
+        return client.get(ServiceBuildResource::class)
+            .manualShutdown(userId, projectId, preProjectRecord.pipelineId, buildId, channelCode).data!!
     }
 
-    private fun createPipelineModel(userId: String, preProjectId: String, startUpReq: StartUpReq, prebuild: CIBuildYaml, agentInfo: ThirdPartyAgentStaticInfo): Model {
+    private fun createPipelineModel(
+        userId: String,
+        preProjectId: String,
+        startUpReq: StartUpReq,
+        prebuild: CIBuildYaml,
+        agentInfo: ThirdPartyAgentStaticInfo
+    ): Model {
         val stageList = mutableListOf<Stage>()
 
         // 第一个stage，触发类
@@ -169,7 +193,7 @@ class PreBuildService @Autowired constructor(
             val containerList = mutableListOf<Container>()
             stage.stage.forEachIndexed { jobIndex, job ->
                 if (job.job.type == null || job.job.type == VM_JOB) {
-                    val vmContainer = createVMBuildContainer(job, startUpReq, agentInfo, jobIndex)
+                    val vmContainer = createVMBuildContainer(job, startUpReq, agentInfo, jobIndex, userId)
                     containerList.add(vmContainer)
                 } else if (job.job.type == NORMAL_JOB) {
                     val normalContainer = createNormalContainer(job, userId)
@@ -195,19 +219,19 @@ class PreBuildService @Autowired constructor(
         }
 
         return NormalContainer(
-                containerId = null,
-                id = null,
-                name = "无编译环境",
-                elements = elementList,
-                status = null,
-                startEpoch = null,
-                systemElapsed = null,
-                elementElapsed = null,
-                enableSkip = false,
-                conditions = null,
-                canRetry = false,
-                jobControlOption = null,
-                mutexGroup = null
+            containerId = null,
+            id = null,
+            name = "无编译环境",
+            elements = elementList,
+            status = null,
+            startEpoch = null,
+            systemElapsed = null,
+            elementElapsed = null,
+            enableSkip = false,
+            conditions = null,
+            canRetry = false,
+            jobControlOption = null,
+            mutexGroup = null
         )
     }
 
@@ -216,17 +240,25 @@ class PreBuildService @Autowired constructor(
         projectCodes.add(getUserProjectId(userId))
         try {
             client.get(ServiceMarketAtomResource::class).installAtom(
-                    userId,
-                    channelCode,
-                    InstallAtomReq(projectCodes, atomCode))
+                userId,
+                channelCode,
+                InstallAtomReq(projectCodes, atomCode)
+            )
         } catch (e: Throwable) {
             logger.error("install atom($atomCode) failed, exception:", e)
             // 可能之前安装过，继续执行不退出
         }
     }
 
-    private fun createVMBuildContainer(job: Job, startUpReq: StartUpReq, agentInfo: ThirdPartyAgentStaticInfo, jobIndex: Int): VMBuildContainer {
+    private fun createVMBuildContainer(
+        job: Job,
+        startUpReq: StartUpReq,
+        agentInfo: ThirdPartyAgentStaticInfo,
+        jobIndex: Int,
+        userId: String
+    ): VMBuildContainer {
         val elementList = mutableListOf<Element>()
+        val vmType = job.job.resourceType
         job.job.steps.forEach {
             if (it is CodeCCScanInContainerTask && startUpReq.extraParam != null) {
                 val whitePath = mutableListOf<String>()
@@ -238,62 +270,166 @@ class PreBuildService @Autowired constructor(
                 }
                 it.inputs.path = whitePath
             }
+
+            // 启动子流水线将代码拉到远程构建机
+            if (it is SyncLocalCodeTask) {
+                if (vmType != ResourceType.REMOTE) {
+                    return@forEach
+                }
+                it.inputs = SyncLocalCodeInput(
+                    agentInfo.agentId,
+                    startUpReq.workspace
+                )
+
+                installMarketAtom(userId, "syncCodeToRemote") // 确保同步代码插件安装
+            }
+
             val element = it.covertToElement(getCiBuildConf(preBuildConfig))
             elementList.add(element)
             if (element is MarketBuildAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
-//              installMarketAtom(getUserProjectId(userId), userId, element.getAtomCode())
+                installMarketAtom(userId, element.getAtomCode())
             }
         }
-        val dispatchType = ThirdPartyAgentIDDispatchType(
-                displayName = agentInfo.agentId,
-                workspace = startUpReq.workspace,
-                agentType = AgentType.ID
-        )
+
+        val dispatchType = getDispatchType(job, startUpReq, agentInfo)
+        val vmBaseOS = if (vmType == ResourceType.REMOTE) {
+            when (dispatchType) {
+                is MacOSDispatchType -> VMBaseOS.MACOS
+                else -> VMBaseOS.LINUX
+            }
+        } else VMBaseOS.valueOf(agentInfo.os)
 
         return VMBuildContainer(
-                id = null,
-                name = "Job_${jobIndex + 1} " + (job.job.name ?: ""),
-                elements = elementList,
-                status = null,
-                startEpoch = null,
-                systemElapsed = null,
-                elementElapsed = null,
-                baseOS = VMBaseOS.valueOf(agentInfo.os),
-                vmNames = setOf(),
-                maxQueueMinutes = 60,
-                maxRunningMinutes = 900,
-                buildEnv = null,
-                customBuildEnv = null,
-                thirdPartyAgentId = null,
-                thirdPartyAgentEnvId = null,
-                thirdPartyWorkspace = null,
-                dockerBuildVersion = null,
-                tstackAgentId = null,
-                dispatchType = dispatchType
+            id = null,
+            name = "Job_${jobIndex + 1} " + (job.job.name ?: ""),
+            elements = elementList,
+            status = null,
+            startEpoch = null,
+            systemElapsed = null,
+            elementElapsed = null,
+            baseOS = vmBaseOS,
+            vmNames = setOf(),
+            maxQueueMinutes = 60,
+            maxRunningMinutes = 900,
+            buildEnv = job.job.pool?.env,
+            customBuildEnv = null,
+            thirdPartyAgentId = null,
+            thirdPartyAgentEnvId = null,
+            thirdPartyWorkspace = null,
+            dockerBuildVersion = null,
+            tstackAgentId = null,
+            dispatchType = dispatchType
         )
+    }
+
+    fun getDispatchType(job: Job, startUpReq: StartUpReq, agentInfo: ThirdPartyAgentStaticInfo): DispatchType {
+        return when (job.job.resourceType) {
+            ResourceType.LOCAL, null -> {
+                ThirdPartyAgentIDDispatchType(
+                    displayName = agentInfo.agentId,
+                    workspace = startUpReq.workspace,
+                    agentType = AgentType.ID
+                )
+            }
+
+            ResourceType.REMOTE -> {
+                with(job.job.pool) {
+                    when {
+                        this == null -> {
+                            logger.error("getDispatchType , remote , pool is null")
+                            throw OperationException("当 resourceType = REMOTE, pool参数不能为空")
+                        }
+
+                        this.container != null -> DockerDispatchType(
+                            this.container
+                        )
+
+                        this.macOS != null -> with(this.macOS!!) {
+                            MacOSDispatchType(
+                                macOSEvn = this.systemVersion!! + ":" + this.xcodeVersion!!,
+                                systemVersion = this.systemVersion!!,
+                                xcodeVersion = this.xcodeVersion!!
+                            )
+                        }
+
+                        else -> {
+                            logger.error("getDispatchType , remote , yaml is illegal")
+                            throw OperationException("无法解析当前pool参数")
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun getBuildDetail(userId: String, preProjectId: String, buildId: String): Result<ModelDetail> {
         val preProjectRecord = getPreProjectInfo(preProjectId, userId)
-        return client.get(ServiceBuildResource::class).getBuildDetail(userId, preProjectRecord.projectId, preProjectRecord.pipelineId, buildId, channelCode)
+        return client.get(ServiceBuildResource::class)
+            .getBuildDetail(userId, preProjectRecord.projectId, preProjectRecord.pipelineId, buildId, channelCode)
     }
 
-    fun getInitLogs(userId: String, pipelineId: String, buildId: String): QueryLogs {
+    fun getInitLogs(userId: String, pipelineId: String, buildId: String, debugLog: Boolean?): QueryLogs {
         val projectId = getUserProjectId(userId)
-        val originLog = client.get(UserLogResource::class).getInitLogs(userId, projectId, pipelineId, buildId,
-            false, null, null, null, null).data!!
+        val originLog = client.get(ServiceLogResource::class).getInitLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            isAnalysis = false,
+            queryKeywords = null,
+            tag = null,
+            jobId = null,
+            executeCount = null
+        ).data!!
         val cleanLogs = mutableListOf<LogLine>()
-        cleanLogs.addAll(originLog.logs.filterNot { it.message.contains("soda_fold") })
-        return QueryLogs(originLog.buildId, originLog.finished, originLog.hasMore, cleanLogs, originLog.timeUsed, originLog.status)
+        cleanLogs.addAll(originLog.logs.filterNot {
+            it.message.contains("soda_fold")
+        }.run {
+            if (null == debugLog || debugLog) this else filterNot { it.tag.startsWith("startVM") }
+        })
+        return QueryLogs(
+            originLog.buildId,
+            originLog.finished,
+            originLog.hasMore,
+            cleanLogs,
+            originLog.timeUsed,
+            originLog.status
+        )
     }
 
-    fun getAfterLogs(userId: String, preProjectId: String, buildId: String, start: Long): QueryLogs {
+    fun getAfterLogs(
+        userId: String,
+        preProjectId: String,
+        buildId: String,
+        start: Long,
+        debugLog: Boolean?
+    ): QueryLogs {
         val prebuildProjRecord = getPreProjectInfo(preProjectId, userId)
-        val originLog = client.get(UserLogResource::class).getAfterLogs(userId, prebuildProjRecord.projectId, prebuildProjRecord.pipelineId, buildId, start, false, null, null, null, null).data!!
+        val originLog = client.get(ServiceLogResource::class).getAfterLogs(
+            projectId = prebuildProjRecord.projectId,
+            pipelineId = prebuildProjRecord.pipelineId,
+            buildId = buildId,
+            start = start,
+            isAnalysis = false,
+            queryKeywords = null,
+            tag = null,
+            jobId = null,
+            executeCount = null
+        ).data!!
         val cleanLogs = mutableListOf<LogLine>()
-        cleanLogs.addAll(originLog.logs.filterNot { it.message.contains("soda_fold") })
-        return QueryLogs(originLog.buildId, originLog.finished, originLog.hasMore, cleanLogs, originLog.timeUsed, originLog.status)
+        cleanLogs.addAll(originLog.logs.filterNot {
+            it.message.contains("soda_fold")
+        }.run {
+            if (null == debugLog || debugLog) this else filterNot { it.tag.startsWith("startVM") }
+        })
+        return QueryLogs(
+            originLog.buildId,
+            originLog.finished,
+            originLog.hasMore,
+            cleanLogs,
+            originLog.timeUsed,
+            originLog.status
+        )
     }
 
     private fun getPreProjectInfo(preProjectId: String, userId: String): TPrebuildProjectRecord {
@@ -305,7 +441,8 @@ class PreBuildService @Autowired constructor(
         return preProjectRecord
     }
 
-    fun getCodeccReport(userId: String, buildId: String) = client.get(UserCodeccResource::class).getCodeccReport(buildId)
+    fun getCodeccReport(userId: String, buildId: String) =
+        client.get(UserCodeccResource::class).getCodeccReport(buildId)
 
     fun getOrCreateUserProject(userId: String, accessToken: String): UserProject {
         val projectResult = client.get(ServiceTxProjectResource::class).getPreUserProject(userId, accessToken)
@@ -340,7 +477,14 @@ class PreBuildService @Autowired constructor(
 
     fun getHistory(userId: String, preProjectId: String, page: Int?, pageSize: Int?): List<HistoryResponse> {
         val preProjectRecord = prebuildProjectDao.get(dslContext, preProjectId, userId) ?: return emptyList()
-        val historyList = client.get(ServiceBuildResource::class).getHistoryBuild(userId, preProjectRecord.projectId, preProjectRecord.pipelineId, page, pageSize, channelCode).data!!.records
+        val historyList = client.get(ServiceBuildResource::class).getHistoryBuild(
+            userId,
+            preProjectRecord.projectId,
+            preProjectRecord.pipelineId,
+            page,
+            pageSize,
+            channelCode
+        ).data!!.records
 
         val result = mutableListOf<HistoryResponse>()
         historyList.forEach {

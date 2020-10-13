@@ -1,12 +1,20 @@
 <template>
     <div v-if="scenes === 'manage-edit' && ((taskDetail.atomCode && taskDetail.createFrom === 'bs_pipeline') || taskDetail.createFrom === 'gongfeng_scan')" :model="formData" ref="codeForm">
-        <div>
+        <div class="disf">
             <span class="pipeline-label">{{$t('代码仓库')}}</span>
-            <span class="fs14">{{ formData.aliasName || codeMessage.repoUrl || '--' }}</span>
+            <!-- <span class="fs14">{{ formData.aliasName || codeMessage.repoUrl || '--' }}</span> -->
+            <span v-if="!codeMessage.repoUrl || !codeMessage.repoUrl.length">--</span>
+            <ul v-else>
+                <li class="fs14 pb5" v-for="item in codeMessage.repoUrl" :key="item">{{item}}</li>
+            </ul>
         </div>
-        <div v-if="isGitRepo">
+        <div class="disf" v-if="isGitRepo || codeMessage.branch.length">
             <span class="pipeline-label">{{$t('分支')}}</span>
-            <span class="fs14">{{ formData.branch }}</span>
+            <!-- <span class="fs14">{{ codeMessage.branch || formData.branch }}</span> -->
+            <span v-if="!codeMessage.branch || !codeMessage.branch.length">--</span>
+            <ul v-else>
+                <li class="fs14 pb5" v-for="item in codeMessage.branch" :key="item">{{item}}</li>
+            </ul>
         </div>
         <div v-if="scenes !== 'manage-edit'">
             <tool-compile-form v-show="shownTool" ref="editData" :code-message="toolParams" :is-tool-manage="isToolManage" />
@@ -200,7 +208,7 @@
             shownTool () {
                 let shownTool = false
                 this.tools.forEach(toolName => {
-                    if (['COVERITY', 'KLOCWORK', 'PINPOINT', 'CODEQL'].includes(toolName) && this.hasScript) {
+                    if (['COVERITY', 'KLOCWORK', 'PINPOINT', 'CODEQL', 'CLANG', 'SPOTBUGS'].includes(toolName) && this.hasScript) {
                         shownTool = true
                     }
                 })
@@ -255,7 +263,7 @@
                         }
                     }
                     this.tools.forEach(toolName => {
-                        if (['COVERITY', 'KLOCWORK', 'PINPOINT', 'CODEQL'].includes(toolName) && this.hasScript) {
+                        if (['COVERITY', 'KLOCWORK', 'PINPOINT', 'CODEQL', 'CLANG', 'SPOTBUGS'].includes(toolName) && this.hasScript) {
                             this.shownTool = true
                         }
                     })
@@ -305,11 +313,12 @@
                         buildEnv[key] = value
                     }
                 }
+                const branch = Array.isArray(this.formData.branch) ? this.formData.branch.join() : this.formData.branch
                 const data = this.scenes !== 'manage-edit' ? {
                     taskId: this.taskId,
                     aliasName: this.formData.aliasName,
                     repoHashId: this.formData.repoHashId,
-                    branch: this.formData.branch,
+                    branch,
                     scmType: this.repoSelected.type,
                     osType: receiveData.compileEnv || '',
                     buildEnv: buildEnv || '',
@@ -319,7 +328,7 @@
                     taskId: this.$route.params.taskId,
                     aliasName: this.formData.aliasName,
                     repoHashId: this.formData.repoHashId,
-                    branch: this.formData.branch,
+                    branch,
                     scmType: this.repoSelected.type,
                     osType: receiveData.compileEnv || '',
                     buildEnv: buildEnv || '',

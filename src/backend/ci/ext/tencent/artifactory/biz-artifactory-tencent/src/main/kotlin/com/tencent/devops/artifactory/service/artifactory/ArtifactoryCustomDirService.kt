@@ -26,7 +26,6 @@
 
 package com.tencent.devops.artifactory.service.artifactory
 
-import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.pojo.CombinationPath
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
@@ -34,16 +33,14 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.PathList
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.CustomDirService
+import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,14 +53,13 @@ import javax.ws.rs.BadRequestException
 
 @Service
 class ArtifactoryCustomDirService @Autowired constructor(
-    private val authProjectApi: BSAuthProjectApi,
-    private val jFrogPropertiesApi: JFrogPropertiesApi,
     private val pipelineService: PipelineService,
-    private val jFrogService: JFrogService,
-    private val artifactoryAuthServiceCode: BSRepoAuthServiceCode
+    private val jFrogPropertiesApi: JFrogPropertiesApi,
+    private val jFrogService: JFrogService
 ) : CustomDirService {
     override fun list(userId: String, projectId: String, argPath: String): List<FileInfo> {
-        validatePermission(userId, projectId)
+        logger.info("list, userId: $userId, projectId: $projectId, argPath: $argPath")
+        pipelineService.validatePermission(userId, projectId)
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
@@ -91,7 +87,8 @@ class ArtifactoryCustomDirService @Autowired constructor(
     }
 
     override fun show(userId: String, projectId: String, argPath: String): FileDetail {
-        validatePermission(userId, projectId)
+        logger.info("show, userId: $userId, projectId: $projectId, argPath: $argPath")
+        pipelineService.validatePermission(userId, projectId)
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
@@ -147,8 +144,9 @@ class ArtifactoryCustomDirService @Autowired constructor(
         }
     }
 
-    override fun deploy(userId: String, projectId: String, argPath: String, inputStream: InputStream, disposition: FormDataContentDisposition) {
-        validatePermission(userId, projectId)
+    override fun deploy(userId: String, projectId: String, argPath: String, inputStream: InputStream, disposition: FormDataContentDisposition, fileSizeLimitInMB: Int) {
+        logger.info("deploy, userId: $userId, projectId: $projectId, argPath: $argPath, fileSizeLimitInMB: $fileSizeLimitInMB")
+        pipelineService.validatePermission(userId, projectId)
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
@@ -180,7 +178,8 @@ class ArtifactoryCustomDirService @Autowired constructor(
     }
 
     override fun mkdir(userId: String, projectId: String, argPath: String) {
-        validatePermission(userId, projectId)
+        logger.info("mkdir, userId: $userId, projectId: $projectId, argPath: $argPath")
+        pipelineService.validatePermission(userId, projectId)
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
@@ -204,7 +203,8 @@ class ArtifactoryCustomDirService @Autowired constructor(
     }
 
     override fun rename(userId: String, projectId: String, argSrcPath: String, argDestPath: String) {
-        validatePermission(userId, projectId)
+        logger.info("rename, userId: $userId, projectId: $projectId, argSrcPath: $argSrcPath, argDestPath: $argDestPath")
+        pipelineService.validatePermission(userId, projectId)
         val srcPath = JFrogUtil.normalize(argSrcPath)
         val destPath = JFrogUtil.normalize(argDestPath)
         if (!JFrogUtil.isValid(srcPath) || !JFrogUtil.isValid(destPath)) {
@@ -224,7 +224,8 @@ class ArtifactoryCustomDirService @Autowired constructor(
     }
 
     override fun copy(userId: String, projectId: String, combinationPath: CombinationPath) {
-        validatePermission(userId, projectId)
+        logger.info("copy, userId: $userId, projectId: $projectId, combinationPath: $combinationPath")
+        pipelineService.validatePermission(userId, projectId)
         val destPath = JFrogUtil.normalize(combinationPath.destPath)
         if (!JFrogUtil.isValid(destPath)) {
             logger.error("Path $destPath is not valid")
@@ -261,7 +262,8 @@ class ArtifactoryCustomDirService @Autowired constructor(
     }
 
     override fun move(userId: String, projectId: String, combinationPath: CombinationPath) {
-        validatePermission(userId, projectId)
+        logger.info("move, userId: $userId, projectId: $projectId, combinationPath: $combinationPath")
+        pipelineService.validatePermission(userId, projectId)
         val destPath = JFrogUtil.normalize(combinationPath.destPath)
         if (!JFrogUtil.isValid(destPath)) {
             logger.error("Path $destPath is not valid")
@@ -292,7 +294,8 @@ class ArtifactoryCustomDirService @Autowired constructor(
     }
 
     override fun delete(userId: String, projectId: String, pathList: PathList) {
-        validatePermission(userId, projectId)
+        logger.info("delete, userId: $userId, projectId: $projectId, pathList: $pathList")
+        pipelineService.validatePermission(userId, projectId)
         pathList.paths.map {
             val path = JFrogUtil.normalize(it)
             if (!JFrogUtil.isValid(path)) {
@@ -303,16 +306,6 @@ class ArtifactoryCustomDirService @Autowired constructor(
             val realPath = JFrogUtil.getCustomDirPath(projectId, path)
             jFrogService.delete(realPath)
         }
-    }
-
-    override fun validatePermission(userId: String, projectId: String) {
-        if (!isProjectUser(userId, projectId)) {
-            throw PermissionForbiddenException("用户($userId)不是工程($projectId)成员")
-        }
-    }
-
-    override fun isProjectUser(user: String, projectId: String): Boolean {
-        return authProjectApi.getProjectUsers(artifactoryAuthServiceCode, projectId).contains(user)
     }
 
     companion object {

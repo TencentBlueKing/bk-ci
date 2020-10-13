@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_D
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -47,6 +48,7 @@ import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.mq.EXCHANGE_PAASCC_PROJECT_CREATE
 import com.tencent.devops.common.web.mq.ROUTE_PAASCC_PROJECT_CREATE
@@ -110,9 +112,10 @@ class ProjectLocalService @Autowired constructor(
     private val projectPermissionService: ProjectPermissionService,
     private val projectPaasCCService: ProjectPaasCCService,
     private val gray: Gray,
-    private val jmxApi: ProjectJmxApi
+    private val repoGray: RepoGray,
+    private val jmxApi: ProjectJmxApi,
+    private val bkRepoClient: BkRepoClient
 ) {
-
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
     /**
@@ -135,6 +138,9 @@ class ProjectLocalService @Autowired constructor(
                 watch.start("saveLogo")
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
                 watch.stop()
+                watch.start("tof get")
+                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
+                watch.stop()
                 watch.start("create auth")
                 val projectId = projectPermissionService.createResources(
                     userId = userId,
@@ -142,12 +148,19 @@ class ProjectLocalService @Autowired constructor(
                     resourceRegisterInfo = ResourceRegisterInfo(
                         projectCreateInfo.englishName,
                         projectCreateInfo.projectName
-                    )
+                    ),
+                    userDeptDetail = userDeptDetail
                 )
                 watch.stop()
-                watch.start("tof get")
-                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
+                watch.start("create bkrepo")
+                val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
+                logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
+                if (createSuccess) {
+                    repoGray.addGrayProject(projectCreateInfo.englishName, redisOperation)
+                    logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
+                }
                 watch.stop()
+
                 try {
                     watch.start("create dao")
                     projectDao.create(
@@ -330,6 +343,14 @@ class ProjectLocalService @Autowired constructor(
                     }
                 }
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息                try {
+
+                val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
+                logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
+                if (createSuccess) {
+                    repoGray.addGrayProject(projectCreateInfo.englishName, redisOperation)
+                    logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
+                }
+
                 try {
                     projectDao.create(
                         dslContext = dslContext,
@@ -351,7 +372,8 @@ class ProjectLocalService @Autowired constructor(
 
                 rabbitTemplate.convertAndSend(
                     EXCHANGE_PAASCC_PROJECT_CREATE,
-                    ROUTE_PAASCC_PROJECT_CREATE, PaasCCCreateProject(
+                    ROUTE_PAASCC_PROJECT_CREATE,
+                    PaasCCCreateProject(
                         userId = userId,
                         accessToken = accessToken,
                         projectId = projectId,
@@ -779,6 +801,15 @@ class ProjectLocalService @Autowired constructor(
                 // 发送服务器
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户组织架构信息
+
+                val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
+                logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
+                if (createSuccess) {
+                    repoGray.addGrayProject(projectCreateInfo.englishName, redisOperation)
+                    logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
+                }
+
+                logger.info("add project ${projectCreateInfo.englishName} to repoGrey")
                 projectDao.create(
                     dslContext = dslContext,
                     userId = userId,
@@ -1052,6 +1083,7 @@ class ProjectLocalService @Autowired constructor(
         englishName: String,
         projectUpdateInfo: ProjectUpdateInfo
     ): Boolean {
+        logger.info("synAuthProject by update, $projectUpdateInfo")
         val projectInfo = bkAuthProjectApi.getProjectInfo(bsPipelineAuthServiceCode, englishName)
         if (projectInfo == null) {
             projectPermissionService.createResources(
@@ -1060,15 +1092,15 @@ class ProjectLocalService @Autowired constructor(
                 resourceRegisterInfo = ResourceRegisterInfo(
                     projectUpdateInfo.englishName,
                     projectUpdateInfo.projectName
-                )
-
+                ),
+                userDeptDetail = null
             )
         }
         return true
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(ProjectLocalService::class.java)
         const val PROJECT_LIST = "project_list"
         const val PROJECT_CREATE = "project_create"
         const val PROJECT_UPDATE = "project_update"

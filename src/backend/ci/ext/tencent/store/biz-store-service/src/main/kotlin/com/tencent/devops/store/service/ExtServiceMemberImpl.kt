@@ -50,7 +50,9 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
         storeMemberReq: StoreMemberReq,
         storeType: StoreTypeEnum,
         collaborationFlag: Boolean?,
-        sendNotify: Boolean
+        sendNotify: Boolean,
+        checkPermissionFlag: Boolean,
+        testProjectCode: String?
     ): Result<Boolean> {
         logger.info("addExtensionMember userId is:$userId,storeMemberReq is:$storeMemberReq,storeType is:$storeType")
         val serviceCode = storeMemberReq.storeCode
@@ -59,7 +61,13 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
         if (null == serviceRecord) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(serviceCode))
         }
-        if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, storeType.type.toByte())) {
+        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = serviceCode,
+                storeType = storeType.type.toByte()
+            )
+        ) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val repositoryHashId = serviceRecord.repositoryHashId
@@ -68,12 +76,26 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
         if (addRepoMemberResult.isNotOk()) {
             return Result(status = addRepoMemberResult.status, message = addRepoMemberResult.message, data = false)
         }
-        return super.add(userId, storeMemberReq, storeType, collaborationFlag, sendNotify)
+        return super.add(
+            userId = userId,
+            storeMemberReq = storeMemberReq,
+            storeType = storeType,
+            collaborationFlag = collaborationFlag,
+            sendNotify = sendNotify,
+            checkPermissionFlag = checkPermissionFlag,
+            testProjectCode = testProjectCode
+        )
     }
 
     abstract fun addRepoMember(storeMemberReq: StoreMemberReq, userId: String, repositoryHashId: String): Result<Boolean>
 
-    override fun delete(userId: String, id: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
+    override fun delete(
+        userId: String,
+        id: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        checkPermissionFlag: Boolean
+    ): Result<Boolean> {
         logger.info("deleteExtServiceMember userId is:$userId,id is:$id,storeCode is:$storeCode,storeType is:$storeType")
         val serviceRecord = extServiceFeatureDao.getServiceByCode(dslContext, storeCode)
         logger.info("deleteExtServiceMember serviceRecord is:$serviceRecord")
@@ -96,7 +118,13 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
         if (deleteRepoMemberResult.isNotOk()) {
             return Result(status = deleteRepoMemberResult.status, message = deleteRepoMemberResult.message, data = false)
         }
-        return super.delete(userId, id, storeCode, storeType)
+        return super.delete(
+            userId = userId,
+            id = id,
+            storeCode = storeCode,
+            storeType = storeType,
+            checkPermissionFlag = checkPermissionFlag
+        )
     }
 
     abstract fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean>
@@ -106,6 +134,6 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

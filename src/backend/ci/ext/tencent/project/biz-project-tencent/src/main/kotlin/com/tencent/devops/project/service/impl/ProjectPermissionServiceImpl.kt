@@ -30,15 +30,18 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import okhttp3.MediaType
 import okhttp3.Request
@@ -55,15 +58,22 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     private val authProjectApi: BSAuthProjectApi,
     private val authTokenApi: AuthTokenApi,
     private val bsProjectAuthServiceCode: BSProjectServiceCodec,
-    private val authResourceApi: AuthResourceApi
+    private val authResourceApi: AuthResourceApi,
+    private val authPermissionApi: AuthPermissionApi
 ) : ProjectPermissionService {
 
     private val authUrl = authProperties.url
 
-    override fun createResources(userId: String, accessToken: String?, projectCreateInfo: ResourceRegisterInfo): String {
+    override fun createResources(userId: String, accessToken: String?, projectCreateInfo: ResourceRegisterInfo, userDeptDetail: UserDeptDetail?): String {
         // 创建AUTH项目
         val authUrl = "$authUrl/projects?access_token=$accessToken"
         val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.resourceCode)
+        if (userDeptDetail != null) {
+            param["bg_id"] = userDeptDetail.bgId
+            param["dept_id"] = userDeptDetail.deptId
+            param["center_id"] = userDeptDetail.centerId
+            logger.info("createProjectResources add org info $param")
+        }
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val json = objectMapper.writeValueAsString(param)
         val requestBody = RequestBody.create(mediaType, json)
@@ -128,6 +138,16 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         val result = objectMapper.readValue<Result<Any?>>(responseContent)
         logger.info("the verifyUserProjectPermission result is:$result")
         return result.isOk()
+    }
+
+    override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String, permission: AuthPermission): Boolean {
+        return authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = bsProjectAuthServiceCode,
+                projectCode = projectCode,
+                permission = permission,
+                resourceType = AuthResourceType.PROJECT
+        )
     }
 
     companion object {

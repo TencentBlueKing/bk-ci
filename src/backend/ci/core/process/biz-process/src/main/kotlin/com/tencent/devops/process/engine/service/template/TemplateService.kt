@@ -463,7 +463,8 @@ class TemplateService @Autowired constructor(
                     labels = labels,
                     waitQueueTimeMinute = DateTimeUtil.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
                     maxQueueSize = it.get(MAX_QUEUE_SIZE),
-                    hasPermission = hasPermission
+                    hasPermission = hasPermission,
+                    maxConRunningQueueSize = it.get(MAX_CON_RUNNING_QUEUE_SIZE)
                 )
             }
         }
@@ -1413,7 +1414,9 @@ class TemplateService @Autowired constructor(
                 labels = labels,
                 waitQueueTimeMinute = waitQueueTimeMinute,
                 maxQueueSize = maxQueueSize,
-                hasPermission = hasPermission
+                hasPermission = hasPermission,
+                maxPipelineResNum = maxPipelineResNum,
+                maxConRunningQueueSize = maxConRunningQueueSize
             )
         }
     }

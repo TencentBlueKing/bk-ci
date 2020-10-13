@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.dao.PipelineTaskDao
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -46,7 +46,6 @@ import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -58,7 +57,7 @@ class PipelineTaskService @Autowired constructor(
     val objectMapper: ObjectMapper,
     val pipelineTaskDao: PipelineTaskDao,
     val pipelineModelTaskDao: PipelineModelTaskDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val pipelineVariableService: BuildVariableService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeService: PipelineRuntimeService
@@ -80,6 +79,27 @@ class PipelineTaskService @Autowired constructor(
                 taskParams = objectMapper.readValue(it.taskParams),
                 additionalOptions = if (it.additionalOptions.isNullOrBlank())
                     null
+                else objectMapper.readValue(it.additionalOptions, ElementAdditionalOptions::class.java),
+                os = it.os
+            )
+        }?.groupBy { it.pipelineId } ?: mapOf()
+    }
+
+    fun list(pipelineIds: Collection<String>): Map<String, List<PipelineModelTask>> {
+        return pipelineTaskDao.list(dslContext, pipelineIds)?.map {
+            PipelineModelTask(
+                projectId = it.projectId,
+                pipelineId = it.pipelineId,
+                stageId = it.stageId,
+                containerId = it.containerId,
+                taskId = it.taskId,
+                taskSeq = it.taskSeq,
+                taskName = it.taskName,
+                atomCode = it.atomCode,
+                classType = it.classType,
+                taskAtom = it.taskAtom,
+                taskParams = objectMapper.readValue(it.taskParams),
+                additionalOptions = if (it.additionalOptions.isNullOrBlank()) null
                 else objectMapper.readValue(it.additionalOptions, ElementAdditionalOptions::class.java),
                 os = it.os
             )
@@ -145,8 +165,7 @@ class PipelineTaskService @Autowired constructor(
             logger.info("retry task [$buildId]|stageId=${taskRecord.stageId}|container=${taskRecord.containerId}|taskId=$taskId|retryCount=$retryCount |vm atom will retry, even the task is failure")
             val nextCount = retryCount + 1
             redisOperation.set(getRedisKey(taskRecord!!.buildId, taskRecord.taskId), nextCount.toString())
-            LogUtils.addYellowLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addYellowLine(
                 buildId = buildId,
                 message = "插件${taskRecord.taskName}执行失败, 5s后开始执行第${nextCount}次重试",
                 tag = taskRecord.taskId,

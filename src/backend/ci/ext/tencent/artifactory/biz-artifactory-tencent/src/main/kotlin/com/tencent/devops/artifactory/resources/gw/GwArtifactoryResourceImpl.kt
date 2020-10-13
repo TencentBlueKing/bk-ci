@@ -27,24 +27,17 @@
 package com.tencent.devops.artifactory.resources.gw
 
 import com.tencent.devops.artifactory.api.gw.GwArtifactoryResource
-import com.tencent.devops.artifactory.pojo.DownloadUrl
-import com.tencent.devops.artifactory.service.artifactory.ArtifactoryDownloadService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactoryService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkAuthServiceCode
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class GwArtifactoryResourceImpl @Autowired constructor(
-    private val artifactoryService: ArtifactoryService,
-    private val artifactoryDownloadService: ArtifactoryDownloadService,
-    private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray
+    private val artifactoryService: ArtifactoryService
 ) : GwArtifactoryResource {
     override fun hasDownloadPermission(userId: String, projectId: String, serviceCode: String, resourceType: String, path: String): Result<Boolean> {
         if (userId.isBlank()) {
@@ -59,13 +52,5 @@ class GwArtifactoryResourceImpl @Autowired constructor(
         val bkAuthServiceCode = BkAuthServiceCode.get(serviceCode)
         val bkAuthResourceType = AuthResourceType.get(resourceType)
         return Result(artifactoryService.hasDownloadPermission(userId, projectId, bkAuthServiceCode, bkAuthResourceType, path))
-    }
-
-    override fun getDownloadUrl(token: String): Result<DownloadUrl> {
-        if (token.isBlank()) {
-            throw ParamBlankException("Invalid token")
-        }
-        // todo 这一层识别不出项目ID
-        return Result(artifactoryDownloadService.getDownloadUrl(token))
     }
 }

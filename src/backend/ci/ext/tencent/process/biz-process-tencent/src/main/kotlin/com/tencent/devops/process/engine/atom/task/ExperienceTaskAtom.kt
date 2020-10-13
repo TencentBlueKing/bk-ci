@@ -38,13 +38,12 @@ import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.pojo.NotifyType
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
 import com.tencent.devops.experience.pojo.enums.TimeType
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.ExperienceElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -56,7 +55,7 @@ import java.time.LocalDateTime
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class ExperienceTaskAtom @Autowired constructor(
     private val client: Client,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<ExperienceElement> {
 
     override fun getParamElement(task: PipelineBuildTask): ExperienceElement {
@@ -68,7 +67,7 @@ class ExperienceTaskAtom @Autowired constructor(
         val taskId = task.taskId
         val containerId = task.containerHashId
         if (param.path.isBlank()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "体验路径为空", taskId, containerId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId, "体验路径为空", taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -78,7 +77,7 @@ class ExperienceTaskAtom @Autowired constructor(
         }
 
         if (param.notifyTypes.isEmpty()) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "通知方式不正确", taskId, containerId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId, "通知方式不正确", taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -126,7 +125,7 @@ class ExperienceTaskAtom @Autowired constructor(
         val artifactoryType = if (customized) com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.CUSTOM_DIR
         else com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.PIPELINE
         if (!client.get(ServiceArtifactoryResource::class).check(projectId, artifactoryType, realPath).data!!) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "文件($path)不存在", taskId, containerId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId, "文件($path)不存在", taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -140,7 +139,7 @@ class ExperienceTaskAtom @Autowired constructor(
         val experience = ExperienceServiceCreate(realPath, expArtifactoryType, expireDate, experienceGroups, innerUsers, outerUsers, notifyTypeSet, enableGroupId, groupId)
         client.get(ServiceExperienceResource::class).create(userId, projectId, experience)
 
-        LogUtils.addLine(rabbitTemplate, buildId, "版本体验($fileName)创建成功", taskId, containerId, task.executeCount ?: 1)
+        buildLogPrinter.addLine(buildId, "版本体验($fileName)创建成功", taskId, containerId, task.executeCount ?: 1)
 
         return AtomResponse(BuildStatus.SUCCEED)
     }

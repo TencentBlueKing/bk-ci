@@ -28,7 +28,6 @@ package com.tencent.devops.worker.common.api.archive
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
-import com.tencent.devops.worker.common.api.pojo.BkRepoFileData
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.archive.pojo.JfrogFilesData
 
@@ -51,21 +50,6 @@ class JfrogResourceApi : AbstractBuildResourceApi() {
         } catch (e: Exception) {
             LoggerService.addNormalLine("get archive files fail :\n$responseContent")
             JfrogFilesData("", "", listOf())
-        }
-    }
-
-    fun getAllBkRepoFiles(userId: String, projectId: String, repoName: String, pipelineId: String, buildId: String): BkRepoFileData {
-        var listFilesUrl = if (repoName == "pipeline") {
-            "/bkrepo/api/build/generic/list/$projectId/$repoName/$pipelineId/$buildId?includeFolder=true&deep=true"
-        } else {
-            "/bkrepo/api/build/generic/list/$projectId/$repoName?includeFolder=true&deep=true"
-        }
-        val request = buildGet(listFilesUrl, mutableMapOf("X-BKREPO-UID" to userId))
-        val responseContent = request(request, "获取仓库文件失败")
-        try {
-            return JsonUtil.getObjectMapper().readValue(responseContent, BkRepoFileData::class.java)
-        } catch (e: Exception) {
-            throw RuntimeException("获取仓库文件异常")
         }
     }
 }

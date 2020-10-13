@@ -27,6 +27,7 @@
 package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -37,5 +38,7 @@ data class StoreMemberReq(
     @ApiModelProperty("成员类型")
     val type: StoreMemberTypeEnum,
     @ApiModelProperty("store组件标识")
-    val storeCode: String
+    val storeCode: String,
+    @ApiModelProperty("store组件类型")
+    val storeType: StoreTypeEnum
 )

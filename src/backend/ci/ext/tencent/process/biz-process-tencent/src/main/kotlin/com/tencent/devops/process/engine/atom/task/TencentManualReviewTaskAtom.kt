@@ -34,7 +34,7 @@ import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -47,7 +47,6 @@ import com.tencent.devops.process.utils.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPL
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -58,7 +57,7 @@ import java.util.Date
 class TencentManualReviewTaskAtom(
     private val commonConfig: CommonConfig,
     private val client: Client,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val shortUrlApi: ShortUrlApi
 ) : IAtomTask<ManualReviewUserTaskElement> {
 
@@ -81,8 +80,7 @@ class TencentManualReviewTaskAtom(
             val manualActionUserId = task.getTaskParam(BS_MANUAL_ACTION_USERID)
             return when (ManualReviewAction.valueOf(manualAction)) {
                 ManualReviewAction.PROCESS -> {
-                    LogUtils.addYellowLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addYellowLine(
                         buildId = buildId,
                         message = "步骤审核结束，审核结果：[继续]，审核人：$manualActionUserId",
                         tag = taskId,
@@ -92,8 +90,7 @@ class TencentManualReviewTaskAtom(
                     AtomResponse(BuildStatus.SUCCEED)
                 }
                 ManualReviewAction.ABORT -> {
-                    LogUtils.addYellowLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addYellowLine(
                         buildId = buildId,
                         message = "步骤审核结束，审核结果：[驳回]，审核人：$manualActionUserId",
                         tag = taskId,
@@ -124,16 +121,14 @@ class TencentManualReviewTaskAtom(
         }
 
         // 开始进入人工审核步骤，需要打印日志，并发送通知给审核人
-        LogUtils.addYellowLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addYellowLine(
             buildId = task.buildId,
             message = "步骤等待审核，审核人：$reviewUsers",
             tag = taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
         )
-        LogUtils.addYellowLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addYellowLine(
             buildId = task.buildId,
             message = "==============================",
             tag = taskId,

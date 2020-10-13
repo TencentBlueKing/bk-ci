@@ -30,4 +30,8 @@ dependencies {
     compile project(":core:process:api-process")
 
     compile project(":core:common:common-service")
+
+    compile project(":ext:tencent:monitoring:api-monitoring-tencent")
+
+    compile project(":core:common:common-client")
 }

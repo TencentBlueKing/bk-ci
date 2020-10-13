@@ -2,9 +2,9 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.callback.AuthCallBackResource
 import com.tencent.devops.auth.pojo.BkResult
-import org.springframework.web.bind.annotation.RestController
+import com.tencent.devops.common.web.RestResource
 
-@RestController
+@RestResource
 class AuthCallBackResourceImpl() : AuthCallBackResource {
 
     override fun healthz(): BkResult<Boolean> {

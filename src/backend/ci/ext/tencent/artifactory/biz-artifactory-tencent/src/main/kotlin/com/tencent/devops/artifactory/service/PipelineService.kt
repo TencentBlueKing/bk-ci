@@ -35,7 +35,9 @@ import com.tencent.devops.common.archive.pojo.JFrogFileInfo
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
+import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceJfrogResource
 import org.slf4j.LoggerFactory
@@ -48,16 +50,13 @@ import java.time.format.DateTimeFormatter
 class PipelineService @Autowired constructor(
     private val client: Client,
     private val pipelineAuthServiceCode: BSPipelineAuthServiceCode,
-    private val bkAuthPermissionApi: BSAuthPermissionApi
+    private val bkAuthPermissionApi: BSAuthPermissionApi,
+    private val authProjectApi: BSAuthProjectApi,
+    private val artifactoryAuthServiceCode: BSRepoAuthServiceCode
 ) {
     private val resourceType = AuthResourceType.PIPELINE_DEFAULT
-
-    fun hasPermission(userId: String, projectId: String, pipelineId: String, authPermission: AuthPermission): Boolean {
-        return validatePermission(userId, projectId, pipelineId, authPermission)
-    }
-
-    fun getRootPathFileList(userId: String, projectId: String, path: String, jFrogFileInfoList: List<JFrogFileInfo>, authPermission: AuthPermission): List<FileInfo> {
-        val hasPermissionList = filterPipeline(userId, projectId, authPermission)
+    fun getRootPathFileList(userId: String, projectId: String, path: String, jFrogFileInfoList: List<JFrogFileInfo>): List<FileInfo> {
+        val hasPermissionList = filterPipeline(userId, projectId)
         val pipelineIdToNameMap = getPipelineNames(projectId, hasPermissionList.toSet())
 
         val fileInfoList = mutableListOf<FileInfo>()
@@ -280,24 +279,28 @@ class PipelineService @Autowired constructor(
         }
     }
 
-    fun validatePermission(user: String, projectId: String, pipelineId: String, authPermission: AuthPermission, message: String) {
-        if (!validatePermission(user, projectId, pipelineId, authPermission)) {
-            throw PermissionForbiddenException(message)
+    fun validatePermission(userId: String, projectId: String, pipelineId: String? = null, permission: AuthPermission? = null, message: String? = null) {
+        if (!hasPermission(userId, projectId, pipelineId, permission)) {
+            throw PermissionForbiddenException(message ?: "permission denied")
         }
     }
 
-    fun validatePermission(user: String, projectId: String, pipelineId: String, authPermission: AuthPermission): Boolean {
-        return bkAuthPermissionApi.validateUserResourcePermission(
-            user,
-            pipelineAuthServiceCode,
-            AuthResourceType.PIPELINE_DEFAULT,
-            projectId,
-            pipelineId,
-            authPermission
-        )
+    fun hasPermission(userId: String, projectId: String, pipelineId: String? = null, permission: AuthPermission? = null): Boolean {
+        return if (pipelineId == null) {
+            authProjectApi.isProjectUser(userId, artifactoryAuthServiceCode, projectId, null)
+        } else {
+            bkAuthPermissionApi.validateUserResourcePermission(
+                userId,
+                pipelineAuthServiceCode,
+                AuthResourceType.PIPELINE_DEFAULT,
+                projectId,
+                pipelineId,
+                permission ?: AuthPermission.DOWNLOAD
+            )
+        }
     }
 
-    fun filterPipeline(user: String, projectId: String, authPermission: AuthPermission): List<String> {
+    fun filterPipeline(user: String, projectId: String): List<String> {
         val startTimestamp = System.currentTimeMillis()
         try {
             return bkAuthPermissionApi.getUserResourceByPermission(
@@ -305,7 +308,7 @@ class PipelineService @Autowired constructor(
                 pipelineAuthServiceCode,
                 resourceType,
                 projectId,
-                authPermission,
+                AuthPermission.LIST,
                 null
             )
         } finally {

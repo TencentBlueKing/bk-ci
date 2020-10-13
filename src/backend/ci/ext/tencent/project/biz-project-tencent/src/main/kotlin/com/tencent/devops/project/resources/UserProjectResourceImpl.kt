@@ -113,4 +113,8 @@ class UserProjectResourceImpl @Autowired constructor(
         projectLocalService.validate(validateType, name, projectId)
         return Result(true)
     }
+
+    override fun hasCreatePermission(userId: String): Result<Boolean> {
+        return Result(true)
+    }
 }

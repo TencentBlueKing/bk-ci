@@ -3,11 +3,13 @@
     "pipelineName": "Name",
     "labelManage": "Labels",
     "label": "Label",
+    "close": "Close",
     "viewManage": "Views",
     "templateManage": "Templates",
     "pluginManage": "Installed plugins",
     "err503": "Serve is being deployed, please wait",
     "err400": "An error occurred in internal service",
+    "err403": "Permission Deny",
     "nullDataErr": "Nothing returned from back-end port",
     "more": "More",
     "true": "True",
@@ -26,6 +28,8 @@
     "terminate": "Cancel",
     "userError": "USER",
     "systemError": "SYSTEM",
+    "thirdPartyError": "THIRD_PARTY",
+    "pluginError": "PLUGIN",
     "retry": "Retry",
     "resume": "Continue",
     "uninstall": "Uninstall",
@@ -98,6 +102,8 @@
     "pipelinesEdit": "Edit",
     "pipelinesPreview": "Preview",
     "pipelinesDetail": "Details",
+    "sizeLimit": "Maximum file size: {0}MB",
+    "fileUploadSuccess": "Upload Sucessful",
     "execDetail": {
         "log": "Log",
         "setting": "Configuration",
@@ -525,6 +531,7 @@
         }
     },
     "editPage": {
+        "atomHelpDoc": "Help documentation",
         "macSystemVersion": "MacOS系统版本",
         "xcodeVersion": "XCode版本",
         "notRecomendPlugin": "This plugin is not recommended",
@@ -597,8 +604,8 @@
         "imageTicket": "Docker image  ticket",
         "workspace": "workspace on",
         "workspaceTips": "If not filled, the it will be saved in [Agent installation directory]/workspace/[pipeline ID]/ by default",
-        "envDependency": "Dependency tools",
-        "envDependencyTips": "After selecting the dependence on tools above, the following will be executed:  ",
+        "envDependency": "Mount dependent software over NFS",
+        "envDependencyTips": "Not recommended. Given software might not be compatible with your desired build environment. It is recommended to create and use your docker image instead. After selecting the dependence on tools above, the following will be executed:  ",
         "abnormal": "Abnormal",
         "noPermToView": "No permission to view",
         "selectSlave": "Select agent",
@@ -613,6 +620,8 @@
         "paramsType": "Type",
         "descTips": " Enter a description of parameters, it will display in preview page",
         "showOnStarting": "settable at preview time",
+        "fileDefaultValueLabel": "Custom artifactory path",
+        "customFileLabelTips": "Custom artifactory path + File name",
         "defaultValue": "Default value",
         "defaultValueDesc": "If value is the version number, then it should not contain symbols, such as \"\" ; \n if the type of parameters can be selected in the check box, when selecting serval values, they will be sent to pipelines in a (a,b) way.",
         "defaultValueTips": " Please enter default values",
@@ -744,9 +753,10 @@
             "templateDownload": "Download",
             "otherChoice": "Other Choice"
         },
-        "stageOption": "Advance"
+        "stageOption": "Control option"
     },
     "storeMap": {
+        "textarea": "Textarea",
         "string": "String",
         "bool": "Boolean",
         "enum": "Radio",
@@ -757,6 +767,7 @@
         "buildResource": "Build resources",
         "artifactory": " Artifacts Filter",
         "subPipeline": "Sub-pipeline",
+        "custom_file": "File",
         "correctPipeline": " Please enter the correct pipeline",
         "oneCodecc": " Only one codecc plugin is allowed added to pipeline",
         "oneManualTrigger": " Only one manually-triggered plugin can exist in pipeline",
@@ -797,5 +808,8 @@
         "noEnv": "Agentless",
         "afterPreStageSuccess": "after Pre Stage done",
         "manualRunStage": "Manual"
-    }
+    },
+    "permissionRefreshtitle": "Permission Request form has been submitted",
+    "permissionRefreshSubtitle": "Please fill in the permission request form in the permission center and refresh the page after submission",
+    "permissionRefreshOkText": "Reload Page"
 }

@@ -47,6 +47,7 @@ interface IEnvService {
     fun listBuildEnvs(userId: String, projectId: String, os: OS): List<EnvWithNodeCount>
     fun getEnvironment(userId: String, projectId: String, envHashId: String): EnvWithPermission
     fun listRawEnvByHashIds(userId: String, projectId: String, envHashIds: List<String>): List<EnvWithPermission>
+    fun listRawEnvByHashIdsAllType(envHashIds: List<String>): List<EnvWithPermission>
     fun listRawEnvByEnvNames(userId: String, projectId: String, envNames: List<String>): List<EnvWithPermission>
     fun deleteEnvironment(userId: String, projectId: String, envHashId: String)
     fun listRawServerNodeByEnvHashIds(

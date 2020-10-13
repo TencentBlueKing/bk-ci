@@ -182,6 +182,12 @@ include ":core:notify:biz-notify-blueking"
 include ":core:notify:model-notify"
 include ":core:notify:boot-notify"
 
+include ":core:monitoring"
+include ":core:monitoring:api-monitoring"
+include ":core:monitoring:biz-monitoring"
+include ":core:monitoring:biz-monitoring-sample"
+include ":core:monitoring:boot-monitoring"
+
 include ":core:websocket"
 include ":core:websocket:biz-websocket"
 include ":core:websocket:biz-websocket-blueking"
@@ -201,6 +207,13 @@ include ":core:auth:biz-auth"
 include ":core:auth:biz-auth-blueking"
 include ":core:auth:boot-auth"
 include ":core:auth:model-auth"
+
+include ":core:sign"
+include ":core:sign:api-sign"
+include ":core:sign:biz-sign"
+include ":core:sign:biz-sign-sample"
+include ":core:sign:boot-sign"
+include ":core:sign:model-sign"
 
 //  ==================== tencent ============================================================
 include ":ext"
@@ -391,3 +404,11 @@ include ":ext:tencent:openapi:model-openapi"
 
 include ":ext:tencent:config-server"
 include ":ext:tencent:log:api-log-tencent"
+
+include ":ext:tencent:auth"
+include ":ext:tencent:auth:boot-auth-tencent"
+
+include ":ext:tencent:sign"
+include ":ext:tencent:sign:api-sign-tencent"
+include ":ext:tencent:sign:biz-sign-tencent"
+include ":ext:tencent:sign:boot-sign-tencent"

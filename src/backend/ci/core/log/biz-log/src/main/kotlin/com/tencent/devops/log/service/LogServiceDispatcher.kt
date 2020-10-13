@@ -27,18 +27,17 @@
 package com.tencent.devops.log.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.log.model.pojo.EndPageQueryLogs
-import com.tencent.devops.log.model.pojo.PageQueryLogs
-import com.tencent.devops.log.model.pojo.QueryLogs
-import com.tencent.devops.log.model.pojo.QueryLineNo
-import com.tencent.devops.log.service.v2.LogServiceV2
+import com.tencent.devops.common.log.pojo.EndPageQueryLogs
+import com.tencent.devops.common.log.pojo.PageQueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLineNo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 @Service
 class LogServiceDispatcher @Autowired constructor(
-    private val logServiceV2: LogServiceV2
+    private val logService: LogService
 ) {
 
     fun getInitLogs(
@@ -49,13 +48,15 @@ class LogServiceDispatcher @Autowired constructor(
         queryKeywords: String?,
         tag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        subTag: String? = null
     ): Result<QueryLogs> {
         return Result(
-            logServiceV2.queryInitLogs(
+            logService.queryInitLogs(
                 buildId = buildId,
                 isAnalysis = isAnalysis ?: false,
                 keywordsStr = queryKeywords,
+                subTag = subTag,
                 tag = tag,
                 jobId = jobId,
                 executeCount = executeCount
@@ -70,13 +71,15 @@ class LogServiceDispatcher @Autowired constructor(
         queryKeywords: String,
         tag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        subTag: String? = null
     ): Result<QueryLineNo> {
         return Result(
-            logServiceV2.queryLineNoByKeywords(
+            logService.queryLineNoByKeywords(
                 buildId = buildId,
                 keywordsStr = queryKeywords,
                 tag = tag,
+                subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount
             )
@@ -94,14 +97,16 @@ class LogServiceDispatcher @Autowired constructor(
         jobId: String?,
         executeCount: Int?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        subTag: String? = null
     ): Result<PageQueryLogs> {
             return Result(
-                logServiceV2.queryInitLogsPage(
+                logService.queryInitLogsPage(
                     buildId = buildId,
                     isAnalysis = isAnalysis ?: false,
                     keywordsStr = queryKeywords,
                     tag = tag,
+                    subTag = subTag,
                     jobId = jobId,
                     executeCount = executeCount,
                     page = page ?: -1,
@@ -120,16 +125,18 @@ class LogServiceDispatcher @Autowired constructor(
         end: Long,
         tag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        subTag: String? = null
     ): Result<QueryLogs> {
             return Result(
-                logServiceV2.queryMoreLogsBetweenLines(
+                logService.queryMoreLogsBetweenLines(
                     buildId = buildId,
                     num = num ?: 100,
                     fromStart = fromStart ?: true,
                     start = start,
                     end = end,
                     tag = tag,
+                    subTag = subTag,
                     jobId = jobId,
                     executeCount = executeCount
                 )
@@ -145,13 +152,15 @@ class LogServiceDispatcher @Autowired constructor(
         queryKeywords: String?,
         tag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        subTag: String? = null
     ): Result<QueryLogs> {
             return Result(
-                logServiceV2.queryMoreOriginLogsAfterLine(
+                logService.queryMoreOriginLogsAfterLine(
                     buildId = buildId,
                     start = start,
                     tag = tag,
+                    subTag = subTag,
                     jobId = jobId,
                     executeCount = executeCount
                 )
@@ -165,9 +174,18 @@ class LogServiceDispatcher @Autowired constructor(
         tag: String?,
         jobId: String?,
         executeCount: Int?,
-        fileName: String?
+        fileName: String?,
+        subTag: String? = null
     ): Response {
-        return logServiceV2.downloadLogs(pipelineId, buildId, tag, jobId, executeCount, fileName)
+        return logService.downloadLogs(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount,
+            fileName = fileName
+        )
     }
 
     fun getEndLogs(
@@ -178,8 +196,17 @@ class LogServiceDispatcher @Autowired constructor(
         size: Int,
         tag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        subTag: String? = null
     ): Result<EndPageQueryLogs> {
-        return Result(logServiceV2.getEndLogs(pipelineId, buildId, tag, jobId, executeCount, size))
+        return Result(logService.getEndLogs(
+            pipelineId,
+            buildId,
+            tag,
+            subTag,
+            jobId,
+            executeCount,
+            size
+        ))
     }
 }

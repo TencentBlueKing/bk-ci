@@ -82,4 +82,6 @@ interface CredentialService {
      * 修改凭证的服务接口
      */
     fun serviceEdit(projectId: String, credentialId: String, credential: CredentialUpdate)
+
+    fun getCredentialByIds(projectId: String?, credentialIds: Set<String>): List<Credential>?
 }

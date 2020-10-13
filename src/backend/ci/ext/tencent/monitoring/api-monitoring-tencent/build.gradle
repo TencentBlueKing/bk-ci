@@ -26,4 +26,6 @@
 
 dependencies {
     compile project(":ext:tencent:monitoring:api-monitoring")
+    compile project(":core:common:common-pipeline")
 }
+apply from: "$rootDir/task_deploy_to_maven.gradle"

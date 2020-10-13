@@ -26,12 +26,14 @@
 
 package com.tencent.devops.scm.services
 
+import com.tencent.devops.common.api.constant.HTTP_200
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.ScmFactory
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.CommitCheckRequest
@@ -44,7 +46,8 @@ import org.springframework.stereotype.Service
 @Service
 class ScmService @Autowired constructor(
     private val gitConfig: GitConfig,
-    private val svnConfig: SVNConfig
+    private val svnConfig: SVNConfig,
+    private val scmMonitorService: ScmMonitorService
 ) {
 
     fun getLatestRevision(
@@ -240,6 +243,13 @@ class ScmService @Autowired constructor(
                     }
                     svnConfig.svnHookUrl
                 }
+                ScmType.CODE_TGIT -> {
+                    if (gitConfig.tGitHookUrl.isBlank()) {
+                        logger.warn("The tgit webhook url is not settle")
+                        throw RuntimeException("The tgit webhook url is not settle")
+                    }
+                    gitConfig.tGitHookUrl
+                }
                 else -> {
                     logger.warn("Unknown repository type ($type) when add webhook")
                     throw RuntimeException("Unknown repository type ($type) when add webhook")
@@ -256,6 +266,10 @@ class ScmService @Autowired constructor(
         request: CommitCheckRequest
     ) {
         val startEpoch = System.currentTimeMillis()
+        var requestTime = System.currentTimeMillis()
+        var responseTime = System.currentTimeMillis()
+        var statusCode: Int = HTTP_200
+        var statusMessage: String? = null
         try {
             with(request) {
                 val scm = ScmFactory.getScm(
@@ -270,14 +284,31 @@ class ScmService @Autowired constructor(
                     userName = "",
                     event = CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
                 )
+                requestTime = System.currentTimeMillis()
                 scm.addCommitCheck(commitId, state, targetUrl, context, description, block)
+                responseTime = System.currentTimeMillis()
                 if (mrRequestId != null) {
                     if (reportData.second.isEmpty()) return
                     val comment = QualityUtils.getQualityReport(reportData.first, reportData.second)
                     scm.addMRComment(mrRequestId!!, comment)
                 }
             }
+        } catch (e: GitApiException) {
+            responseTime = System.currentTimeMillis()
+            statusCode = e.code
+            statusMessage = e.message
+            throw e
         } finally {
+            scmMonitorService.reportCommitCheck(
+                requestTime = requestTime,
+                responseTime = responseTime,
+                statusCode = statusCode,
+                statusMessage = statusMessage,
+                projectName = request.projectName,
+                commitId = request.commitId,
+                block = request.block,
+                targetUrl = request.targetUrl
+            )
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
         }
     }

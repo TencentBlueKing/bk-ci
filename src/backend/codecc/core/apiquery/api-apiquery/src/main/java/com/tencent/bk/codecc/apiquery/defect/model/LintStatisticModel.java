@@ -77,4 +77,7 @@ public class LintStatisticModel extends StatisticModel
 
     @JsonProperty("author_statistic")
     private List<NotRepairedAuthorModel> authorStatistic;
+
+    @JsonProperty("checker_statistic")
+    private List<CheckerStatisticModel> checkerStatistic;
 }

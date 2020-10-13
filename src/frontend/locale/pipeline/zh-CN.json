@@ -3,18 +3,22 @@
     "pipelineName": "流水线名称",
     "labelManage": "标签管理",
     "label": "标签",
+    "close": "关闭",
     "viewManage": "视图管理",
     "templateManage": "模板管理",
     "pluginManage": "插件管理",
     "err503": "服务正在部署中，请稍候...",
     "err400": "内部服务异常",
+    "err403": "无权限",
     "nullDataErr": "后端接口数据返回为空",
     "more": "更多",
     "true": "是",
     "false": "否",
     "cancel": "取消",
-    "userError": "用户问题",
-    "systemError": "系统问题",
+    "userError": "用户配置错误",
+    "systemError": "系统运行错误",
+    "thirdPartyError": "第三方系统错误",
+    "pluginError": "插件执行错误",
     "create": "创建",
     "add": "新建",
     "copy": "复制",
@@ -98,6 +102,8 @@
     "pipelinesEdit": "编辑",
     "pipelinesPreview": "预览",
     "pipelinesDetail": "执行详情",
+    "sizeLimit": "最大上传{0}MB的文件",
+    "fileUploadSuccess": "上传成功",
     "execDetail": {
         "log": "日志",
         "setting": "配置",
@@ -526,6 +532,7 @@
         }
     },
     "editPage": {
+        "atomHelpDoc": "帮助文档",
         "macSystemVersion": "MacOS system version",
         "xcodeVersion": "XCode version",
         "notRecomendPlugin": "该插件已不推荐使用",
@@ -598,8 +605,8 @@
         "imageTicket": "镜像对应凭证",
         "workspace": "指定工作空间",
         "workspaceTips": "不填默认为 [Agent安装目录]/workspace/[流水线ID]/",
-        "envDependency": "依赖编译环境",
-        "envDependencyTips": "在选择了上述依赖环境后，我们将执行如下操作",
+        "envDependency": "nfs方式挂载依赖环境",
+        "envDependencyTips": "不推荐使用，挂载的环境不一定能兼容所有构建场景，构建所依赖的环境建议打入镜像使用。在选择了上述依赖环境后，我们将执行如下操作",
         "abnormal": "异常",
         "noPermToView": "无权限查看",
         "selectSlave": "按节点选择",
@@ -615,6 +622,8 @@
         "descTips": "请输入参数描述",
         "showOnStarting": "执行时显示",
         "defaultValue": "默认值",
+        "fileDefaultValueLabel": "自定义仓库路径",
+        "customFileLabelTips": "自定义仓库路径+文件名",
         "defaultValueDesc": "若value为版本号,则不能包含“”\"\"等符号；\n如果参数类型为复选框，选择多个值时将以a,b的方式传递给流水线",
         "defaultValueTips": "请输入默认值",
         "selectOptions": "下拉选项",
@@ -745,9 +754,10 @@
             "templateDownload": "模板下载",
             "otherChoice": "其他选项"
         },
-        "stageOption": "高级流程控制"
+        "stageOption": "流程控制选项"
     },
     "storeMap": {
+        "textarea": "文本框",
         "string": "字符串",
         "bool": "布尔值",
         "enum": "单选框",
@@ -758,6 +768,7 @@
         "buildResource": "构建资源",
         "artifactory": "版本仓库过滤器",
         "subPipeline": "子流水线",
+        "custom_file": "文件",
         "correctPipeline": "请输入正确的流水线",
         "oneCodecc": "只允许一个代码扫描插件",
         "oneManualTrigger": "流水线不允许超过一个手动触发插件",
@@ -798,5 +809,8 @@
         "noEnv": "无编译环境",
         "afterPreStageSuccess": "前一个Stage成功时运行",
         "manualRunStage": "手动触发运行"       
-    }
+    },
+    "permissionRefreshtitle": "权限申请单已提交",
+    "permissionRefreshSubtitle": "请在权限中心填写权限申请单，提交完成后再刷新该页面",
+    "permissionRefreshOkText": "刷新页面"
 }

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -76,5 +77,23 @@ class CommonRepoFileService @Autowired constructor(
             authType = RepoAuthType.OAUTH,
             token = token,
             ref = ref ?: "master"))
+    }
+
+    fun getGitProjectMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
+        val token = AESUtil.decrypt(
+            key = aesKey,
+            content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
+                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
+        )
+        return Result(gitService.getRepoMembers(accessToken = token, userId = userId, repoName = GitUtils.getProjectName(repoUrl)))
+    }
+
+    fun getGitProjectAllMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
+        val token = AESUtil.decrypt(
+            key = aesKey,
+            content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
+                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
+        )
+        return Result(gitService.getRepoAllMembers(accessToken = token, userId = userId, repoName = GitUtils.getProjectName(repoUrl)))
     }
 }

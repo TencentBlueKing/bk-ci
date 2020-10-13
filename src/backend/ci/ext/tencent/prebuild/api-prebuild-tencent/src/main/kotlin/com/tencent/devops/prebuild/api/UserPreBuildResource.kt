@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.gitci.pojo.GitYamlString
-import com.tencent.devops.log.model.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.prebuild.pojo.HistoryResponse
 import com.tencent.devops.prebuild.pojo.UserProject
@@ -189,7 +189,10 @@ interface UserPreBuildResource {
         preProjectId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
-        buildId: String
+        buildId: String,
+        @ApiParam("是否拉取DEBUG日志", required = false)
+        @QueryParam("debugLog")
+        debugLog: Boolean?
     ): Result<QueryLogs>
 
     @ApiOperation("获取某行后的日志")
@@ -207,7 +210,10 @@ interface UserPreBuildResource {
         buildId: String,
         @ApiParam("起始行号", required = true)
         @QueryParam("start")
-        start: Long
+        start: Long,
+        @ApiParam("是否拉取DEBUG日志", required = false)
+        @QueryParam("debugLog")
+        debugLog: Boolean?
     ): Result<QueryLogs>
 
     @ApiOperation("获取报告")

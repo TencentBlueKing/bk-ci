@@ -26,26 +26,22 @@
 
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.dao.common.StoreDeptRelDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.DeptInfo
+import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
-import com.tencent.devops.project.pojo.enums.OrganizationType
-import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import kotlin.collections.HashMap
 
 /**
  * store组件可见范围逻辑类
@@ -55,8 +51,7 @@ import kotlin.collections.HashMap
 class StoreVisibleDeptServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeDeptRelDao: StoreDeptRelDao,
-    private val storeMemberDao: StoreMemberDao,
-    private val client: Client
+    private val storeMemberDao: StoreMemberDao
 ) : StoreVisibleDeptService {
 
     private val logger = LoggerFactory.getLogger(StoreVisibleDeptServiceImpl::class.java)
@@ -104,47 +99,20 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
      * 设置store组件可见范围
      */
     override fun addVisibleDept(userId: String, storeCode: String, deptInfos: List<DeptInfo>, storeType: StoreTypeEnum): Result<Boolean> {
-        logger.info("the userId is :$userId,storeCode is :$storeCode,deptInfos is :$deptInfos,storeType is :$storeType")
-        // 获取公司下各个BG的ID
-        val resourceClient = client.get(ServiceProjectOrganizationResource::class)
-        val result = resourceClient.getOrganizations(userId, OrganizationType.bg, 0)
-        val deptInfoList = result.data
-        val approveList = mutableListOf<Int>()
-        deptInfoList?.forEach {
-            approveList.add(Integer.parseInt(it.id))
-        }
-        approveList.add(0)
-        // 公司以及BG 范围的审核列表
-        val deptIdApprovedList = mutableListOf<DeptInfo>()
-        // 公司以及BG以下 范围的审核列表
-        val deptIdApprovingList = mutableListOf<DeptInfo>()
+        logger.info("addVisibleDept userId is :$userId,storeCode is :$storeCode,deptInfos is :$deptInfos,storeType is :$storeType")
         // 判断用户是否有权限设置可见范围
         if (!storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(messageCode = CommonMessageCode.PERMISSION_DENIED, data = false)
         }
-
+        val deptIdApprovedList = mutableListOf<DeptInfo>()
         deptInfos.forEach forEach@{
             val count = storeDeptRelDao.countByCodeAndDeptId(dslContext, storeCode, it.deptId, storeType.type.toByte())
             if (count>0) {
                 return@forEach
             }
-            if (!approveList.contains(it.deptId))
-                deptIdApprovedList.add(it)
-            else
-                deptIdApprovingList.add(it)
+            deptIdApprovedList.add(it)
         }
-
-        logger.info("approving depts: $deptIdApprovingList")
-        // 公司以及BG的范围需要等待审核
-        storeDeptRelDao.batchAdd(
-            dslContext = dslContext,
-            userId = userId,
-            storeCode = storeCode,
-            deptInfoList = deptIdApprovingList,
-            storeType = storeType.type.toByte()
-        )
-        logger.info("approved depts: $deptIdApprovedList")
-        // 公司以及BG一下的范围直接审核通过
+        // 可见范围默认审核通过
         storeDeptRelDao.batchAdd(
             dslContext = dslContext,
             userId = userId,

@@ -30,6 +30,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.constant.AUTH_HEADER_UID
 import com.tencent.bkrepo.common.api.pojo.Response
+import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
+import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
+import com.tencent.bkrepo.common.artifact.pojo.configuration.LocalConfiguration
 import com.tencent.bkrepo.common.query.enums.OperationType
 import com.tencent.bkrepo.common.query.model.PageLimit
 import com.tencent.bkrepo.common.query.model.QueryModel
@@ -42,29 +45,36 @@ import com.tencent.bkrepo.repository.pojo.node.NodeSizeInfo
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeCopyRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeMoveRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeRenameRequest
+import com.tencent.bkrepo.repository.pojo.project.UserProjectCreateRequest
+import com.tencent.bkrepo.repository.pojo.repo.UserRepoCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
-import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.config.BkRepoConfig
+import com.tencent.devops.common.archive.constant.REPO_CUSTOM
+import com.tencent.devops.common.archive.constant.REPO_PIPELINE
+import com.tencent.devops.common.archive.constant.REPO_REPORT
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
-import com.tencent.devops.common.archive.pojo.BkRepoData
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.QueryData
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
+import com.tencent.devops.common.archive.util.PathUtil
+import com.tencent.devops.common.archive.util.STREAM_BUFFER_SIZE
+import com.tencent.devops.common.archive.util.closeQuietly
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import okhttp3.Credentials
+import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import okio.BufferedSink
-import okio.Okio
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.InputStream
+import java.net.URLEncoder
 import java.nio.file.FileSystems
 import java.nio.file.Paths
 import javax.ws.rs.NotFoundException
@@ -74,8 +84,86 @@ class BkRepoClient constructor(
     private val commonConfig: CommonConfig,
     private val bkRepoConfig: BkRepoConfig
 ) {
+
     private fun getGatewaytUrl(): String {
         return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
+    }
+
+    fun createBkRepoResource(userId: String, projectId: String): Boolean {
+        return try {
+            createProject(userId, projectId)
+            createGenericRepo(userId, projectId, REPO_PIPELINE)
+            createGenericRepo(userId, projectId, REPO_CUSTOM)
+            createGenericRepo(userId, projectId, REPO_REPORT)
+            true
+        } catch (e: Exception) {
+            logger.error("create repo resource error", e)
+            false
+        }
+    }
+
+    fun createProject(userId: String, projectId: String) {
+        logger.info("createProject, userId: $userId, projectId: $projectId")
+        val requestData = UserProjectCreateRequest(
+            name = projectId,
+            displayName = projectId,
+            description = projectId
+        )
+        val request = Request.Builder()
+            .url("${getGatewaytUrl()}/bkrepo/api/service/repository/api/project")
+            // .header("Authorization", makeCredential())
+            .header(AUTH_HEADER_UID, userId)
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"),
+                    objectMapper.writeValueAsString(requestData)
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            val responseData = objectMapper.readValue<Response<Any>>(responseContent)
+            if (response.code() == 400 && responseData.code == 25102) {
+                logger.warn("project[$projectId] already exists")
+            } else if (!response.isSuccessful) {
+                logger.error("http request failed, response.code: ${response.code()}, responseContent: $responseContent")
+                throw RuntimeException("http request failed")
+            }
+        }
+    }
+
+    fun createGenericRepo(userId: String, projectId: String, repoName: String) {
+        logger.info("createRepo, userId: $userId, projectId: $projectId, repoName: $repoName")
+        val requestData = UserRepoCreateRequest(
+            category = RepositoryCategory.LOCAL,
+            name = repoName,
+            projectId = projectId,
+            configuration = LocalConfiguration(),
+            type = RepositoryType.GENERIC,
+            public = false,
+            description = "storage for devops ci $repoName"
+        )
+        val request = Request.Builder()
+            .url("${getGatewaytUrl()}/bkrepo/api/service/repository/api/repo")
+            // .header("Authorization", makeCredential())
+            .header(AUTH_HEADER_UID, userId)
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"),
+                    objectMapper.writeValueAsString(requestData)
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            val responseData = objectMapper.readValue<Response<Any>>(responseContent)
+            if (response.code() == 400 && responseData.code == 251004) {
+                logger.warn("repo $projectId|$repoName already exists")
+            } else if (!response.isSuccessful) {
+                logger.error("http request failed, response.code: ${response.code()}, responseContent: $responseContent")
+                throw RuntimeException("http request failed")
+            }
+        }
     }
 
     fun getFileSize(userId: String, projectId: String, repoName: String, path: String): NodeSizeInfo {
@@ -197,24 +285,60 @@ class BkRepoClient constructor(
         }
     }
 
-    fun uploadFile(userId: String, projectId: String, repoName: String, path: String, inputStream: InputStream) {
-        logger.info("uploadFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
-        val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/$projectId/$repoName/$path"
+    fun uploadFile(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        inputStream: InputStream,
+        properties: Map<String, String>? = null,
+        gatewayUrl: String? = null,
+        fileSizeLimitInMB: Int = 0
+    ) {
+        logger.info("uploadFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, fileSizeLimitInMB: $fileSizeLimitInMB")
+        if (PathUtil.isFolder(path)) {
+            throw ErrorCodeException(errorCode = INVALID_CUSTOM_ARTIFACTORY_PATH)
+        }
+        val gateway = gatewayUrl ?: getGatewaytUrl()
+        val url = "$gateway/bkrepo/api/service/generic/$projectId/$repoName/$path"
         val requestBody = object : RequestBody() {
             override fun writeTo(sink: BufferedSink?) {
-                val source = Okio.source(inputStream)
-                sink!!.writeAll(source)
+                val limit = if (fileSizeLimitInMB > 0) {
+                    fileSizeLimitInMB * 1024 * 1024L
+                } else {
+                    Long.MAX_VALUE
+                }
+                var bytesCopied: Long = 0
+                val buffer = ByteArray(STREAM_BUFFER_SIZE)
+                var bytes = inputStream.read(buffer)
+                while (bytes >= 0) {
+                    sink!!.write(buffer, 0, bytes)
+                    bytesCopied += bytes
+                    if (bytesCopied > limit) {
+                        sink!!.closeQuietly()
+                        throw ErrorCodeException(errorCode = FILE_SIZE_EXCEEDS_LIMIT, params = arrayOf("${fileSizeLimitInMB}MB"))
+                    }
+                    bytes = inputStream.read(buffer)
+                }
+                sink!!.flush()
             }
 
             override fun contentType(): MediaType? {
                 return MediaType.parse("application/octet-stream")
             }
         }
+
+        // 生成归档头部
+        val header = mutableMapOf<String, String>()
+        header.put(AUTH_HEADER_UID, userId)
+        header.put(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+        header.put(BK_REPO_OVERRIDE, "true")
+        properties?.forEach {
+            header.put("$METADATA_PREFIX${it.key}", it.value)
+        }
         val request = Request.Builder()
             .url(url)
-            // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .headers(Headers.of(header))
             .put(requestBody).build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
@@ -231,7 +355,8 @@ class BkRepoClient constructor(
             projectId = projectId,
             repoName = repoName,
             path = path,
-            file = file
+            file = file,
+            gatewayFlag = true
         )
     }
 
@@ -244,20 +369,29 @@ class BkRepoClient constructor(
         gatewayFlag: Boolean = true,
         bkrepoApiUrl: String? = null,
         userName: String? = null,
-        password: String? = null
+        password: String? = null,
+        properties: Map<String, String>? = null,
+        gatewayUrl: String? = null
     ) {
         logger.info("uploadLocalFile, projectId: $projectId, repoName: $repoName, path: $path, localFile: ${file.canonicalPath}")
         logger.info("uploadLocalFile, userName: $userName, password: $password")
-        val repoUrlPrefix = if (gatewayFlag) "${getGatewaytUrl()}/bkrepo/api/service/generic" else bkrepoApiUrl
+        val gateway = gatewayUrl ?: getGatewaytUrl()
+        val repoUrlPrefix = if (gatewayFlag) "$gateway/bkrepo/api/service/generic" else bkrepoApiUrl
         val url = "$repoUrlPrefix/$projectId/$repoName/${path.removePrefix("/")}"
         val requestBuilder = Request.Builder()
             .url(url)
+        // 生成归档头部
+        val header = mutableMapOf<String, String>()
         if (userName != null && password != null) {
-            requestBuilder.header("Authorization", Credentials.basic(userName, password))
+            header.put("Authorization", Credentials.basic(userName, password))
         }
-        requestBuilder.header(AUTH_HEADER_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .header(BK_REPO_OVERRIDE, "true")
+        header.put(AUTH_HEADER_UID, userId)
+        header.put(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+        header.put(BK_REPO_OVERRIDE, "true")
+        properties?.forEach {
+            header.put("$METADATA_PREFIX${it.key}", tryEncode(it.value))
+        }
+        requestBuilder.headers(Headers.of(header))
             .put(RequestBody.create(MediaType.parse("application/octet-stream"), file))
         val request = requestBuilder.build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -265,6 +399,14 @@ class BkRepoClient constructor(
                 logger.error("upload file failed, responseContent: ${response.body()!!.string()}")
                 throw RuntimeException("upload file failed")
             }
+        }
+    }
+
+    private fun tryEncode(str: String?): String {
+        return if (str.isNullOrBlank()) {
+            ""
+        } else {
+            URLEncoder.encode(str, "UTF-8")
         }
     }
 
@@ -461,68 +603,53 @@ class BkRepoClient constructor(
         isCustom: Boolean
     ): List<BkRepoFile> {
         logger.info("matchBkRepoFile, userId: $userId, srcPath: $srcPath, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, isCustom: $isCustom")
-        val result = mutableListOf<BkRepoFile>()
-        val bkRepoData = getAllBkRepoFiles(userId, projectId, pipelineId, buildId, isCustom)
-        val matcher = FileSystems.getDefault().getPathMatcher("glob:${srcPath.removePrefix("/")}")
-        val pipelinePathPrefix = "/$pipelineId/$buildId/"
-        bkRepoData.data?.forEach { bkrepoFile ->
-            val repoPath = if (isCustom) {
-                bkrepoFile.fullPath.removePrefix("/")
-            } else {
-                bkrepoFile.fullPath.removePrefix(pipelinePathPrefix)
-            }
-            if (matcher.matches(Paths.get(repoPath))) {
-                bkrepoFile.displayPath = repoPath
-                result.add(bkrepoFile)
-            }
+        var repoName: String
+        var filePath: String
+        var fileName: String
+        if (isCustom) {
+            val normalizedPath = "/${srcPath.removePrefix("./").removePrefix("/")}"
+            repoName = "custom"
+            filePath = PathUtil.getParentFolder(normalizedPath)
+            fileName = PathUtil.getFileName(normalizedPath)
+        } else {
+            repoName = "pipeline"
+            filePath = "/$pipelineId/$buildId/"
+            fileName = PathUtil.getFileName(srcPath)
         }
-        return result
+
+        return queryByPathEqOrNameMatchOrMetadataEqAnd(
+            userId = userId,
+            projectId = projectId,
+            repoNames = listOf(repoName),
+            filePaths = listOf(filePath),
+            fileNames = listOf(fileName),
+            metadata = mapOf(),
+            page = 0,
+            pageSize = 10000
+        ).map {
+            BkRepoFile(
+                fullPath = it.fullPath,
+                displayPath = it.fullPath,
+                size = it.size,
+                folder = it.folder
+            )
+        }
     }
 
     fun getFileDownloadUrl(param: ArtifactorySearchParam): List<String> {
         logger.info("getFileDownloadUrl, param: $param")
         val repoName = if (param.custom) "custom" else "pipeline"
         val files = matchBkRepoFile(
-            "",
-            param.regexPath,
-            param.projectId,
-            param.pipelineId,
-            param.buildId,
-            param.custom
+            userId = "",
+            srcPath = param.regexPath,
+            projectId = param.projectId,
+            pipelineId = param.pipelineId,
+            buildId = param.buildId,
+            isCustom = param.custom
         )
         logger.info("match files: $files")
         return files.map {
             "${getGatewaytUrl()}/bkrepo/api/service/generic/${param.projectId}/$repoName${it.fullPath}"
-        }
-    }
-
-    private fun getAllBkRepoFiles(userId: String, projectId: String, pipelineId: String, buildId: String, isCustom: Boolean): BkRepoData {
-        logger.info("getAllBkrepoFiles, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, isCustom: $isCustom")
-        var url = if (isCustom) {
-            "${getGatewaytUrl()}/bkrepo/api/service/generic/list/$projectId/custom?includeFolder=false&deep=true"
-        } else {
-            "${getGatewaytUrl()}/bkrepo/api/service/generic/list/$projectId/pipeline/$pipelineId/$buildId?includeFolder=false&deep=true"
-        }
-        val request = Request.Builder()
-            .url(url)
-            .header(AUTH_HEADER_UID, userId)
-            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
-            .get()
-            .build()
-
-        // 获取所有的文件和文件夹
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseBody = response.body()!!.string()
-            if (!response.isSuccessful) {
-                logger.error("get bkrepo files fail: $responseBody")
-                throw RuntimeException("获取文件失败")
-            }
-            try {
-                return JsonUtil.getObjectMapper().readValue(responseBody, BkRepoData::class.java)
-            } catch (e: Exception) {
-                logger.error("get bkrepo files fail: $responseBody")
-                throw RuntimeException("获取文件失败")
-            }
         }
     }
 
@@ -538,6 +665,7 @@ class BkRepoClient constructor(
         )
     }
 
+    @Deprecated(message = "do not use")
     fun listFileByRegex(
         userId: String,
         projectId: String,
@@ -836,5 +964,8 @@ class BkRepoClient constructor(
 
         // private const val BK_REPO_UID = "X-BKREPO-UID"
         private const val BK_REPO_OVERRIDE = "X-BKREPO-OVERWRITE"
+
+        const val FILE_SIZE_EXCEEDS_LIMIT = "2102003" // 文件大小不能超过{0}
+        const val INVALID_CUSTOM_ARTIFACTORY_PATH = "2102004" // 非法自定义仓库路径
     }
 }

@@ -26,11 +26,13 @@
 
 package com.tencent.devops.scm.services
 
+import com.tencent.devops.common.api.constant.HTTP_200
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.ScmOauthFactory
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.CommitCheckRequest
@@ -42,7 +44,8 @@ import org.springframework.stereotype.Service
 @Service
 class ScmOauthService @Autowired constructor(
     private val gitConfig: GitConfig,
-    private val svnConfig: SVNConfig
+    private val svnConfig: SVNConfig,
+    private val scmMonitorService: ScmMonitorService
 ) {
 
     fun getLatestRevision(
@@ -222,6 +225,10 @@ class ScmOauthService @Autowired constructor(
         request: CommitCheckRequest
     ) {
         val startEpoch = System.currentTimeMillis()
+        var requestTime = System.currentTimeMillis()
+        var responseTime = System.currentTimeMillis()
+        var statusCode: Int = HTTP_200
+        var statusMessage: String? = "OK"
         try {
             with(request) {
                 val scm = ScmOauthFactory.getScm(
@@ -236,6 +243,7 @@ class ScmOauthService @Autowired constructor(
                     userName = "",
                     event = ""
                 )
+                requestTime = System.currentTimeMillis()
                 scm.addCommitCheck(
                     commitId = commitId,
                     state = state,
@@ -244,13 +252,29 @@ class ScmOauthService @Autowired constructor(
                     description = description,
                     block = block
                 )
+                responseTime = System.currentTimeMillis()
                 if (mrRequestId != null) {
                     if (reportData.second.isEmpty()) return
                     val comment = QualityUtils.getQualityReport(reportData.first, reportData.second)
                     scm.addMRComment(mrRequestId!!, comment)
                 }
             }
+        } catch (e: GitApiException) {
+            responseTime = System.currentTimeMillis()
+            statusCode = e.code
+            statusMessage = e.message
+            throw e
         } finally {
+            scmMonitorService.reportCommitCheck(
+                requestTime = requestTime,
+                responseTime = responseTime,
+                statusCode = statusCode,
+                statusMessage = statusMessage,
+                projectName = request.projectName,
+                commitId = request.commitId,
+                block = request.block,
+                targetUrl = request.targetUrl
+            )
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
         }
     }

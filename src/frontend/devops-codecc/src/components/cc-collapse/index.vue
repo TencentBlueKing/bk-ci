@@ -9,6 +9,7 @@
                         :id="item.name"
                         :data="item.checkerCountList"
                         :max-length="item.maxLength"
+                        :red-point="hasRedPoint[item.name]"
                         :selected="selectedList[item.name]"
                         @handleSelect="handleSelect">
                     </cc-collapse-item>
@@ -46,7 +47,10 @@
         },
         data () {
             return {
-                selectedList: {}
+                selectedList: {},
+                hasRedPoint: {
+                    checkerCategory: window.localStorage.getItem('redtips-category-cloc-20200704') ? [] : ['CODE_STATISTIC']
+                }
             }
         },
         computed: {
@@ -115,6 +119,10 @@
                 return this.isCkeckerSet ? checkerSetMap[name] : checkerMap[name]
             },
             handleSelect (value, id) {
+                if (id === 'checkerCategory' && value === 'CODE_STATISTIC') {
+                    window.localStorage.setItem('redtips-category-cloc-20200704', '1')
+                    this.hasRedPoint = {}
+                }
                 let selected = this.selectedList[id] || []
                 if (selected.includes(value)) {
                     selected = selected.filter(item => item !== value)

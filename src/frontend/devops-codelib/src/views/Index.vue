@@ -24,7 +24,7 @@
         </empty-tips>
         <empty-tips v-else :title="$t('codelib.noCodelibPermission')" :desc="$t('codelib.noPermissionDesc')">
             <bk-button theme="primary" @click="switchProject">{{ $t('codelib.switchProject') }}</bk-button>
-            <bk-button theme="success" @click="goApplyPerm">{{ $t('codelib.applyPermission') }}</bk-button>
+            <bk-button theme="success" @click="toApplyPermission">{{ $t('codelib.applyPermission') }}</bk-button>
         </empty-tips>
         <code-lib-dialog :refresh-codelib-list="refreshCodelibList" @powersValidate="powerValidate"></code-lib-dialog>
     </div>
@@ -101,6 +101,9 @@
         },
 
         methods: {
+            ...mapActions([
+                'getPermRedirectUrl'
+            ]),
             ...mapActions('codelib', [
                 'requestList',
                 'updateCodelib',
@@ -159,24 +162,21 @@
                 this.iframeUtil.toggleProjectMenu(true)
             },
 
-            goApplyPerm () {
-                const url = `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
-                    this.projectId
-                }&service_code=code&role_creator=repertory`
-                window.open(url, '_blank')
+            async toApplyPermission () {
+                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.code, [{
+                    id: this.projectId,
+                    type: this.$permissionResourceTypeMap.PROJECT
+                }])
             },
 
             goCreatePermission () {
-                this.iframeUtil.showAskPermissionDialog({
-                    noPermissionList: [
-                        {
-                            resource: this.$t('codelib.codelib'),
-                            option: this.$t('codelib.create')
-                        }
-                    ],
-                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
-                        this.projectId
-                    }&service_code=code&role_creator=repertory`
+                this.$showAskPermissionDialog({
+                    noPermissionList: [{
+                        actionId: this.$permissionActionMap.create,
+                        resourceId: this.$permissionResourceMap.code,
+                        instanceId: [],
+                        projectId: this.projectId
+                    }]
                 })
             }
         }

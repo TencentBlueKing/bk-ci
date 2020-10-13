@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.tencent.devops.log.configuration.LogConfiguration
+com.tencent.devops.log.configuration.LogClientConfiguration

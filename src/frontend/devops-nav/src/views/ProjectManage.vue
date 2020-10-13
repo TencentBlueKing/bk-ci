@@ -19,7 +19,7 @@
                         <bk-button
                             theme="primary"
                             icon="icon-plus"
-                            @click="togglePMDialog(true)"
+                            @click="hasCreatePermission ? togglePMDialog(true) : applyCreatePermission()"
                         >
                             {{ $t('addProject') }}
                         </bk-button>
@@ -84,7 +84,6 @@
                                                 href="javascript:void(0)"
                                                 :class="['bk-text-button', { 'is-disabled': !props.row.enabled }]"
                                                 :title="props.row.projectName"
-                                                @click.stop.prevent="goProject(props.row)"
                                             >{{ props.row.projectName }}</a>
                                         </template>
                                     </p>
@@ -163,7 +162,6 @@
                                     v-if="props.row.enabled"
                                     href="javascript:void(0)"
                                     :class="['bk-text-button', { 'is-disabled': !props.row.enabled }]"
-                                    @click="goProject(props.row)"
                                 >{{ $t('userManage') }}</a>
                             </template>
                         </template>
@@ -191,6 +189,7 @@
             </template>
             <empty-tips
                 v-else
+                :show-lock="true"
                 :title="$t('notFindProject')"
                 :desc="$t('notFindProjectTips')"
             >
@@ -203,7 +202,8 @@
                 </bk-button>
                 <a
                     class="empty-btns-item"
-                    href="/console/perm/apply-join-project"
+                    href="javascript:;"
+                    @click="toApplyPermission"
                 >
                     <bk-button theme="success">{{ $t('applyProject') }}</bk-button>
                 </a>
@@ -240,6 +240,7 @@
         @Action getProjects
         @Action toggleProjectEnable
         @Action changeProjectLogo
+        @Action hasCreateProjectPermission
 
         isFilterByOffline: boolean = false
         showlogoDialog: boolean = false
@@ -260,6 +261,7 @@
             limitList: [10, 15, 20, 25, 30],
             count: 0
         }
+        hasCreatePermission: boolean = true
         matchColorList: string[] = [
             'green',
             'yellow',
@@ -291,6 +293,16 @@
 
         created () {
             this.fetchAllProjects()
+            this.checkCreatePermission()
+        }
+
+        async checkCreatePermission () {
+          try {
+            const hasCreatePermission = await this.hasCreateProjectPermission()
+            this.hasCreatePermission = hasCreatePermission
+          } catch (e) {
+            this.hasCreatePermission = false
+          }
         }
 
         async fetchAllProjects () {
@@ -368,10 +380,25 @@
             })
         }
 
-        goProject ({ projectCode, enabled }): void {
-            if (enabled) {
-                window.open(`/console/perm/my-project?project_code=${projectCode}`, '_blank')
-            }
+        // goProject ({ projectCode, enabled }): void {
+        //     if (enabled) {
+        //         window.open(`${PERM_URL_PREFIX}perm/my-project?project_code=${projectCode}`, '_blank')
+        //     }
+        // }
+
+        toApplyPermission () {
+            this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.project)
+        }
+
+        applyCreatePermission () {
+            // this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.project)
+            this.$showAskPermissionDialog({
+                noPermissionList: [{
+                    actionId: this.$permissionActionMap.create,
+                    resourceId: this.$permissionResourceMap.project,
+                    instanceId: []
+                }]
+            })
         }
 
         toggleProject (project: any): void {
@@ -396,10 +423,18 @@
                         await this.getProjects(true)
                         return true
                     } catch (error) {
-                        msg = error.message || ((enabled ? this.$t('disableLabel') : this.$t('enableLabel')) + projectName + this.$t('projectFail'))
+                        if (error.code === 403) {
+                          this.applyPermission(this.$permissionActionMap.edit, this.$permissionResourceMap.project, [{
+                            id: projectCode,
+                            type: this.$permissionResourceTypeMap.PROJECT
+                          }])
+                        } else {
+                            msg = error.message || ((enabled ? this.$t('disableLabel') : this.$t('enableLabel')) + projectName + this.$t('projectFail'))
+                        }
+                        
                         return true
                     } finally {
-                        this.$bkMessage({
+                        msg && this.$bkMessage({
                             theme,
                             message: msg
                         })

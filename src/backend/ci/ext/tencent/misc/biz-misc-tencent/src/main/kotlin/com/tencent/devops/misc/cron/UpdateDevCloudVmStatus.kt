@@ -33,8 +33,8 @@ import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.common.environment.agent.client.DevCloudClient
-import com.tencent.devops.misc.dao.NodeDao
-import com.tencent.devops.misc.dao.ThirdPartyAgentDao
+import com.tencent.devops.misc.dao.EnvironmentNodeDao
+import com.tencent.devops.misc.dao.EnvironmentThirdPartyAgentDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,10 +44,10 @@ import org.springframework.stereotype.Component
 @Component
 class UpdateDevCloudVmStatus @Autowired constructor(
     private val dslContext: DSLContext,
-    private val nodeDao: NodeDao,
+    private val nodeDao: EnvironmentNodeDao,
     private val devCloudClient: DevCloudClient,
     private val redisOperation: RedisOperation,
-    private val thirdPartyAgentDao: ThirdPartyAgentDao,
+    private val thirdPartyAgentDao: EnvironmentThirdPartyAgentDao,
     private val gray: Gray
 ) {
     companion object {
