@@ -36,7 +36,7 @@ import com.tencent.devops.common.pipeline.enums.StageRunCondition
 data class StageControlOption(
     val enable: Boolean, // 是否启用该阶段
     val runCondition: StageRunCondition, // 运行条件
-    val manualTrigger: Boolean? = false,
+    var manualTrigger: Boolean? = false,
     var triggerUsers: List<String>? = null, // 可触发用户，支持引用变量
     val timeout: Int? = null, // 等待审核的超时时间
     val customVariables: List<NameAndValue>? = null, // 自定义变量
