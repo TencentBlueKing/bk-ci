@@ -371,7 +371,7 @@
                         this.$showAskPermissionDialog({
                             noPermissionList: [{
                                 actionId: this.$permissionActionMap.use,
-                                resourceId: this.$permissionResourceMap.environment,
+                                resourceId: this.$permissionResourceMap.envNode,
                                 instanceId: [{
                                     id: node.nodeHashId,
                                     name: node.displayName
