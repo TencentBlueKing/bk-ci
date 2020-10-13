@@ -43,6 +43,7 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE
 import com.tencent.devops.process.utils.PIPELINE_NAME
@@ -56,7 +57,8 @@ import java.util.Date
 class ManualReviewTaskAtom(
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineUrlBean: PipelineUrlBean
+    private val pipelineUrlBean: PipelineUrlBean,
+    private val pipelineVariableService: BuildVariableService
 ) : IAtomTask<ManualReviewUserTaskElement> {
 
     override fun getParamElement(task: PipelineBuildTask): ManualReviewUserTaskElement {
@@ -194,7 +196,6 @@ class ManualReviewTaskAtom(
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
                     )
-
                     AtomResponse(BuildStatus.REVIEW_ABORT)
                 }
             }
@@ -238,5 +239,6 @@ class ManualReviewTaskAtom(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ManualReviewTaskAtom::class.java)
+        const val MANUAL_REVIEW_ATOM_REVIEWER = "MANUAL_REVIEWER"
     }
 }
