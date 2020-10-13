@@ -120,8 +120,8 @@ class StageControl @Autowired constructor(
             var buildStatus: BuildStatus = BuildStatus.SUCCEED
 
             // 只有在非手动触发该Stage的首次运行做审核暂停
-            val needPause = stage.controlOption?.stageControlOption?.manualTrigger == true
-                && source != BS_MANUAL_START_STAGE && stage.controlOption?.stageControlOption?.triggered == false
+            val needPause = stage.controlOption?.stageControlOption?.manualTrigger == true &&
+                source != BS_MANUAL_START_STAGE && stage.controlOption?.stageControlOption?.triggered == false
 
             val fastKill = stage.controlOption?.fastKill == true && source == "$BS_CONTAINER_END_SOURCE_PREIX${BuildStatus.FAILED}"
 
