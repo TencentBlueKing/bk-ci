@@ -82,12 +82,17 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         }
         val httpClient = builder.build()
         val retryFlag = try {
-            return httpClient.newCall(request).execute()
-        } catch (e: UnknownHostException) { // #2353 DNS问题导致请求未到达目标，可重试
+            val response = httpClient.newCall(request).execute()
+            if (retryCodes.contains(response.code())) { // 网关502,503，可重试
+                true
+            } else {
+                return response
+            }
+        } catch (e: UnknownHostException) { // DNS问题导致请求未到达目标，可重试
             logger.warn("UnknownHostException|request($request),error is :$e, try to retry $retryCount")
             true
         } catch (e: Exception) {
-            if (e is SocketTimeoutException && e.message == "timeout") { // #2353 请求没到达服务器而超时，可重试
+            if (e is SocketTimeoutException && e.message == "timeout") { // 请求没到达服务器而超时，可重试
                 logger.warn("SocketTimeoutException|request($request),error is :$e, try to retry $retryCount")
                 true
             } else {
