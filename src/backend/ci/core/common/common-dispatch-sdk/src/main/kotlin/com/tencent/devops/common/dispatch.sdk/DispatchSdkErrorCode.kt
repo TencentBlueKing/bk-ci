@@ -43,7 +43,7 @@ package com.tencent.devops.common.dispatch.sdk
  *
  */
 object DispatchSdkErrorCode {
-    const val SUCESSS = 0 // 成功
+    const val SUCCESS = 0 // 成功
     const val SDK_SYSTEM_ERROR = 2103001 // SDK系统错误
     const val PIPELINE_STATUS_ERROR = 2103002 // 无法获取流水线状态
     const val PIPELINE_NOT_RUNNING = 2103003 // 流水线已经不再运行
