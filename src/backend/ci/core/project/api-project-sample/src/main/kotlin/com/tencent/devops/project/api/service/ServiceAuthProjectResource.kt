@@ -44,14 +44,14 @@ interface ServiceAuthProjectResource {
     @Path("/search/byName")
     @ApiOperation("分页获取项目信息(根据项目名称)")
     fun searchByName(
-            @ApiParam("")
-            @QueryParam("projectName")
-            projectName: String,
-            @ApiParam("分页Limit")
-            @QueryParam("limit")
-            limit: Int,
-            @ApiParam("分页Offset")
-            @QueryParam("offset")
-            offset: Int
+        @ApiParam("")
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("分页Limit")
+        @QueryParam("limit")
+        limit: Int,
+        @ApiParam("分页Offset")
+        @QueryParam("offset")
+        offset: Int
     ): Result<Page<ProjectVO>>
 }
