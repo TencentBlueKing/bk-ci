@@ -24,4 +24,5 @@ object AuthMessageCode {
     const val GROUP_ACTION_EMPTY = "2122005" // 权限系统：用户组未绑定动作
 
     const val TOKEN_TICKET_FAIL = "2122106" // 权限系统：token校验失败
+    const val PARENT_TYPE_FAIL = "2122107" // 权限系统：父类资源必须为"项目"
 }
