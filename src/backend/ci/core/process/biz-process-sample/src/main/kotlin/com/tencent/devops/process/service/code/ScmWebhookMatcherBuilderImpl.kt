@@ -24,18 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:openapi:model-openapi")
-    compile project(":core:openapi:api-openapi")
-    compile project(":core:common:common-pipeline")
-    compile project(":core:process:biz-process")
-    compile project(":core:repository:api-repository")
-    compile project(":core:environment:api-environment")
-    compile project(":core:artifactory:api-artifactory-sample")
-    compile project (":core:common:common-client")
-    compile "io.jsonwebtoken:jjwt-api:0.10.8"
-    runtime "io.jsonwebtoken:jjwt-impl:0.10.8",
-            "io.jsonwebtoken:jjwt-jackson:0.10.8"
-    compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
-    compile "org.springframework.boot:spring-boot-starter-aop"
+package com.tencent.devops.process.service.code
+
+import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.engine.service.code.GitWebHookMatcher
+import com.tencent.devops.process.engine.service.code.GithubWebHookMatcher
+import com.tencent.devops.process.engine.service.code.GitlabWebHookMatcher
+import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
+import com.tencent.devops.process.engine.service.code.SvnWebHookMatcher
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.git.GitEvent
+import com.tencent.devops.process.pojo.code.github.GithubEvent
+import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
+import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
+import org.springframework.stereotype.Service
+
+@Service
+class ScmWebhookMatcherBuilderImpl : ScmWebhookMatcherBuilder {
+    override fun createGitWebHookMatcher(event: GitEvent): ScmWebhookMatcher = GitWebHookMatcher(event)
+
+    override fun createSvnWebHookMatcher(
+        event: SvnCommitEvent,
+        pipelineWebhookService: PipelineWebhookService
+    ): ScmWebhookMatcher = SvnWebHookMatcher(event, pipelineWebhookService)
+
+    override fun createGitlabWebHookMatcher(event: GitlabCommitEvent): ScmWebhookMatcher = GitlabWebHookMatcher(event)
+
+    override fun createGithubWebHookMatcher(event: GithubEvent): ScmWebhookMatcher = GithubWebHookMatcher(event)
 }
