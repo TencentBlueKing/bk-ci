@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
+import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,13 +21,15 @@ class PipelineBuildTurboExtService @Autowired constructor(
     private val consulClient: ConsulDiscoveryClient?
 ) : PipelineBuildExtService {
 
-    override fun buildExt(task: PipelineBuildTask): String {
+    override fun buildExt(task: PipelineBuildTask): Map<String, String> {
         val taskType = task.taskType
+        val extMap = mutableMapOf<String, String>()
         if (taskType.contains("linuxPaasCodeCCScript") || taskType.contains("linuxScript")) {
             logger.info("task need turbo, ${task.buildId}, ${task.taskName}, ${task.taskType}")
-            return getTurboTask(task.pipelineId, task.taskId)
+            val turboTaskId = getTurboTask(task.pipelineId, task.taskId)
+            extMap[PIPELINE_TURBO_TASK_ID] = turboTaskId
         }
-        return ""
+        return extMap
     }
 
     fun getTurboTask(pipelineId: String, elementId: String): String {
