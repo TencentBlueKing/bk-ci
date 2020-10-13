@@ -774,7 +774,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_AGENT_STATUS_EXCEPTION)
         }
 
-        if(!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)) {
+        if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)) {
             throw PermissionForbiddenException(message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_CREATE_PERMISSSION))
         }
 
