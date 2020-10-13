@@ -46,6 +46,7 @@ import org.springframework.core.Ordered
 import java.io.File
 import java.io.FileInputStream
 import java.security.KeyStore
+import javax.net.ssl.SSLContext
 
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
@@ -64,6 +65,8 @@ class ESAutoConfiguration : DisposableBean {
     private val username: String? = null
     @Value("\${elasticsearch.password:#{null}}")
     private val password: String? = null
+    @Value("\${elasticsearch.https:#{null}}")
+    private val https: String? = null
     @Value("\${elasticsearch.keystore.filePath:#{null}}")
     private val keystoreFilePath: String? = null
     @Value("\${elasticsearch.keystore.password:#{null}}")
@@ -91,6 +94,9 @@ class ESAutoConfiguration : DisposableBean {
             throw IllegalArgumentException("ES唯一名称尚未配置: elasticsearch.name")
         }
 
+        var httpHost = HttpHost(ip, port ?: 9200, "http")
+        var sslContext: SSLContext? = null
+
         // 基础鉴权 - 账号密码
         val credentialsProvider = if (!username.isNullOrBlank() || !password.isNullOrBlank()) {
             if (username.isNullOrBlank()) {
@@ -104,9 +110,8 @@ class ESAutoConfiguration : DisposableBean {
             provider
         } else null
 
-        // SearchGuard鉴权 - SSL证书
-        val sslContext = if (!keystoreFilePath.isNullOrBlank() || !truststoreFilePath.isNullOrBlank() ||
-            !keystorePassword.isNullOrBlank() || !truststorePassword.isNullOrBlank()) {
+        // HTTPS鉴权 - SSL证书
+        if (enableSSL(https)) {
             if (keystoreFilePath.isNullOrBlank()) {
                 throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.keystore.filePath")
             }
@@ -128,20 +133,23 @@ class ESAutoConfiguration : DisposableBean {
             if (!truststoreFile.exists()) {
                 throw IllegalArgumentException("未找到 truststore 文件，请检查路径是否正确: $truststoreFilePath")
             }
+
             val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
             val keystorePasswordCharArray = keystorePassword!!.toCharArray()
             keyStore.load(FileInputStream(keystoreFile), keystorePasswordCharArray)
             val truststore = KeyStore.getInstance(KeyStore.getDefaultType())
             val truststorePasswordCharArray = truststorePassword!!.toCharArray()
             truststore.load(FileInputStream(truststoreFile), truststorePasswordCharArray)
-            SSLContexts.custom()
+
+            httpHost = HttpHost(ip, port ?: 9200, "https")
+            sslContext = SSLContexts.custom()
                 .loadTrustMaterial(truststore, null)
                 .loadKeyMaterial(keyStore, keystorePasswordCharArray)
                 .build()
-        } else null
+        }
 
         // 初始化 RestClient 配置
-        val builder = RestClient.builder(HttpHost(ip, port ?: 9200, "http"))
+        val builder = RestClient.builder(httpHost)
         builder.setHttpClientConfigCallback { httpClientBuilder ->
             if (sslContext != null) httpClientBuilder.setSSLContext(sslContext)
             if (credentialsProvider != null) httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)
@@ -154,5 +162,13 @@ class ESAutoConfiguration : DisposableBean {
 
     override fun destroy() {
         client?.close()
+    }
+
+    private fun enableSSL(https: String?): Boolean {
+        return if (!https.isNullOrBlank()) {
+            https!!.toBoolean()
+        } else {
+            false
+        }
     }
 }
