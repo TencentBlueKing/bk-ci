@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.util.OwnerUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
@@ -60,7 +61,15 @@ class V3CertPermissionService @Autowired constructor(
         if (isProjectOwner(projectId, userId)) {
             return true
         }
-        return super.validatePermission(userId, projectId, authPermission)
+        return authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = ticketAuthServiceCode,
+                resourceType = AuthResourceType.TICKET_CERT,
+                projectCode = projectId,
+                resourceCode = projectId,
+                permission = AuthPermission.CREATE,
+                relationResourceType = AuthResourceType.PROJECT
+        )
     }
 
     override fun validatePermission(userId: String, projectId: String, resourceCode: String, authPermission: AuthPermission): Boolean {

@@ -35,8 +35,8 @@ import com.tencent.devops.common.auth.code.TicketAuthServiceCode
 
 abstract class AbstractCertPermissionService constructor(
     private val authResourceApi: AuthResourceApi,
-    private val authPermissionApi: AuthPermissionApi,
-    private val ticketAuthServiceCode: TicketAuthServiceCode
+    val authPermissionApi: AuthPermissionApi,
+    val ticketAuthServiceCode: TicketAuthServiceCode
 ) : CertPermissionService {
 
     private val resourceType = AuthResourceType.TICKET_CERT
