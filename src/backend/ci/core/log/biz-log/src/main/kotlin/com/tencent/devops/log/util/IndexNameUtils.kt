@@ -36,8 +36,6 @@ object IndexNameUtils {
         return LOG_PREFIX + formatter.format(LocalDateTime.now())
     }
 
-    fun getTypeByIndex(index: String) = index
-
     const val LOG_PREFIX = "log-"
     const val LOG_INDEX_DATE_FORMAT = "YYYY-MM-dd"
 }

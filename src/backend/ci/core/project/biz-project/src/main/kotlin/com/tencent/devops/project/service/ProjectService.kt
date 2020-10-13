@@ -94,4 +94,6 @@ interface ProjectService {
     fun grayProjectSet(): Set<String>
 
     fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
+
+    fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO>
 }
