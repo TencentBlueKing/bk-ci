@@ -1899,7 +1899,7 @@ class LogService @Autowired constructor(
         val index = indexService.getIndexName(buildId)
 
         var lines = 0
-        val bulkRequest = BulkRequest(index)
+        val bulkRequest = BulkRequest()
         for (i in logMessages.indices) {
             val logMessage = logMessages[i]
 
