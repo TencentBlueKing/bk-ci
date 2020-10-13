@@ -24,23 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:common:common-kafka-tencent")
-    compile project(":core:common:common-event")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-client")
-    compile project(":core:process:api-process")
-    compile project(":core:process:model-process")
-    compile project(":ext:tencent:lambda:model-lambda")
-    compile project(":core:project:api-project")
-    compile project(":ext:tencent:lambda:api-lambda-tencent")
-    testCompile project(":core:common:common-test")
+package com.tencent.devops.lambda.es
 
-    compile "org.elasticsearch:elasticsearch"
-    compile "org.elasticsearch.client:transport"
-    compile "org.elasticsearch.plugin:transport-netty4-client"
-    compile "com.floragunn:search-guard-ssl"
-}
+import org.springframework.boot.context.properties.ConfigurationProperties
+
+/**
+ *
+ * Powered By Tencent
+ */
+@ConfigurationProperties(prefix = "elasticsearch")
+data class ESProperties(
+    val ip: String? = null,
+    val port: Int? = 0,
+    val cluster: String? = null
+)
