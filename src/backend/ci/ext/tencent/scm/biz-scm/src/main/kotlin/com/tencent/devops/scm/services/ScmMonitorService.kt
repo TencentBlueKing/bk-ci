@@ -27,10 +27,26 @@
 package com.tencent.devops.scm.services
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.HTTP_200
+import com.tencent.devops.common.api.constant.HTTP_400
+import com.tencent.devops.common.api.constant.HTTP_401
+import com.tencent.devops.common.api.constant.HTTP_403
+import com.tencent.devops.common.api.constant.HTTP_404
+import com.tencent.devops.common.api.constant.HTTP_405
+import com.tencent.devops.common.api.constant.HTTP_422
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.pojo.enums.GatewayType
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.monitoring.api.service.StatusReportResource
 import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
+import com.tencent.devops.scm.constant.ScmMessageCode.ERROR_GIT_BAD_REQUEST
+import com.tencent.devops.scm.constant.ScmMessageCode.ERROR_GIT_FORBIDDEN
+import com.tencent.devops.scm.constant.ScmMessageCode.ERROR_GIT_METHOD_NOT_ALLOWED
+import com.tencent.devops.scm.constant.ScmMessageCode.ERROR_GIT_NOT_FOUND
+import com.tencent.devops.scm.constant.ScmMessageCode.ERROR_GIT_SERVER_ERROR
+import com.tencent.devops.scm.constant.ScmMessageCode.ERROR_GIT_UNAUTHORIZED
+import com.tencent.devops.scm.constant.ScmMessageCode.ERROR_GIT_UNPROCESSABLE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -48,58 +64,70 @@ class ScmMonitorService @Autowired constructor(
     fun reportCommitCheck(
         requestTime: Long,
         responseTime: Long,
-        statusCode: String?,
+        statusCode: Int,
         statusMessage: String?,
         projectName: String,
-        commitId: String
+        commitId: String,
+        block: Boolean,
+        targetUrl: String
     ) {
-        try {
-            executorService.execute {
-                sendReportCommitCheck(
-                    requestTime = requestTime,
-                    responseTime = responseTime,
-                    statusCode = statusCode,
-                    statusMessage = statusMessage,
-                    projectName = projectName,
-                    commitId = commitId
+        execute {
+            try {
+                val (errorType, errorCode) = getErrorCode(statusCode)
+                client.getGateway(StatusReportResource::class, GatewayType.DEVNET_PROXY)
+                    .scmCommitCheck(
+                        AddCommitCheckStatus(
+                            requestTime = requestTime,
+                            responseTime = responseTime,
+                            elapseTime = responseTime - requestTime,
+                            statusCode = statusCode.toString(),
+                            statusMessage = statusMessage,
+                            errorType = errorType,
+                            errorCode = errorCode,
+                            errorMsg = MessageCodeUtil.getCodeMessage(messageCode = errorCode, params = null) ?: statusMessage,
+                            projectName = projectName,
+                            commitId = commitId,
+                            block = block,
+                            targetUrl = targetUrl
+                        )
+                    )
+            } catch (e: Throwable) {
+                logger.error(
+                    "report git commit check error, " +
+                        "requestTime:$requestTime, " +
+                        "responseTime:$responseTime, " +
+                        "statusCode:$statusCode, " +
+                        "statusMessage:$statusMessage, " +
+                        "projectName:$projectName, " +
+                        "commitId:$commitId, " +
+                        "block:$block, " +
+                        "targetUrl:$targetUrl",
+                    e
                 )
             }
-        } catch (e: Throwable) {
-            logger.error(
-                "report git commit check error, requestTime:$requestTime, " +
-                    "responseTime:$responseTime, statusCode:$statusCode, statusMessage:$statusMessage", e
-            )
         }
     }
 
-    private fun sendReportCommitCheck(
-        requestTime: Long,
-        responseTime: Long,
-        statusCode: String?,
-        statusMessage: String?,
-        projectName: String,
-        commitId: String
-    ) {
+    private fun getErrorCode(statusCode: Int): Pair<String? /*errorType*/, String /*errorCode*/> {
+        return when (statusCode) {
+            HTTP_200 -> Pair(null, CommonMessageCode.SUCCESS)
+            HTTP_400 -> Pair(ErrorType.USER.name, ERROR_GIT_BAD_REQUEST)
+            HTTP_401 -> Pair(ErrorType.USER.name, ERROR_GIT_UNAUTHORIZED)
+            HTTP_403 -> Pair(ErrorType.USER.name, ERROR_GIT_FORBIDDEN)
+            HTTP_404 -> Pair(ErrorType.USER.name, ERROR_GIT_NOT_FOUND)
+            HTTP_405 -> Pair(ErrorType.USER.name, ERROR_GIT_METHOD_NOT_ALLOWED)
+            HTTP_422 -> Pair(ErrorType.USER.name, ERROR_GIT_UNPROCESSABLE)
+            else -> Pair(ErrorType.SYSTEM.name, ERROR_GIT_SERVER_ERROR)
+        }
+    }
+
+    private fun execute(action: () -> Unit) {
         try {
-            client.getGateway(StatusReportResource::class, GatewayType.DEVNET_PROXY)
-                .scmCommitCheck(
-                    AddCommitCheckStatus(
-                        requestTime = requestTime,
-                        responseTime = responseTime,
-                        elapseTime = responseTime - requestTime,
-                        statusCode = statusCode,
-                        statusMessage = statusMessage,
-                        errorCode = CommonMessageCode.SUCCESS,
-                        errorMsg = statusMessage,
-                        projectName = projectName,
-                        commitId = commitId
-                    )
-                )
+            executorService.execute {
+                action()
+            }
         } catch (e: Throwable) {
-            logger.error(
-                "report git commit check error, requestTime:$requestTime, " +
-                    "responseTime:$responseTime, statusCode:$statusCode, statusMessage:$statusMessage", e
-            )
+            logger.error("report scm monitor error", e)
         }
     }
 }

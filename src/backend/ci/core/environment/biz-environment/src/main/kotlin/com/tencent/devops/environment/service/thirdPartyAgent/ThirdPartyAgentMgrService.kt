@@ -48,6 +48,7 @@ import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.dispatch.api.ServiceAgentResource
 import com.tencent.devops.environment.client.InfluxdbClient
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
@@ -74,6 +75,7 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentLink
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStartInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStatusWithInfo
 import com.tencent.devops.environment.service.AgentUrlService
+import com.tencent.devops.environment.service.NodeWebsocketService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getAgentJarFile
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
@@ -106,7 +108,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val agentUrlService: AgentUrlService,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val upgradeService: UpgradeService,
-    private val gray: Gray
+    private val gray: Gray,
+    private val webSocketDispatcher: WebSocketDispatcher,
+    private val websocketService: NodeWebsocketService
 ) {
     fun getAgentDetail(userId: String, projectId: String, nodeHashId: String): ThirdPartyAgentDetail? {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
@@ -135,9 +139,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             osName = agentRecord.detectOs,
             ip = agentRecord.ip,
             createdUser = nodeRecord.createdUser,
-            createdTime = if (null == nodeRecord.createdTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(
-                nodeRecord.createdTime
-            ),
+            createdTime = if (null == nodeRecord.createdTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                .format(
+                    nodeRecord.createdTime
+                ),
             agentVersion = agentRecord.masterVersion ?: "",
             slaveVersion = agentRecord.version ?: "",
             agentInstallPath = agentRecord.agentInstallPath ?: "",
@@ -490,7 +495,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     fun listAgents(
         userId: String,
         projectId: String,
-        os: OS
+        os: OS?
     ): List<ThirdPartyAgentInfo> {
         val agents = thirdPartyAgentDao.listImportAgent(dslContext = dslContext, projectId = projectId, os = os)
         if (agents.isEmpty()) {
@@ -540,7 +545,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     status = NodeStatus.valueOf(node.nodeStatus!!).statusName,
                     hostname = agent.hostname,
                     ip = agent.ip,
-                    displayName = node.displayName
+                    displayName = node.displayName,
+                    detailName = "${node.displayName}/${agent.ip}/${agent.hostname}/${node.osName}"
                 )
             )
         }
@@ -729,6 +735,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (record.nodeId != null) {
                 environmentPermissionService.deleteNode(projectId = projectId, nodeId = record.nodeId)
             }
+            webSocketDispatcher.dispatch(
+                    websocketService.buildDetailMessage(projectId, userId)
+            )
         }
     }
 
@@ -779,6 +788,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     status = AgentStatus.IMPORT_OK
                 )
                 // 不用再写入auth了，因为已经存在了
+
+                webSocketDispatcher.dispatch(
+                        websocketService.buildDetailMessage(projectId, userId)
+                )
             }
             return
         }
@@ -838,6 +851,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 projectId = projectId,
                 nodeId = nodeId,
                 nodeName = "$nodeStringId(${agentRecord.ip})"
+            )
+            webSocketDispatcher.dispatch(
+                    websocketService.buildDetailMessage(projectId, userId)
             )
         }
     }
@@ -899,6 +915,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     nodeRecord.nodeStatus = NodeStatus.NORMAL.name
                     nodeRecord.nodeIp = startInfo.hostIp
                     nodeDao.saveNode(context, nodeRecord)
+                    webSocketDispatcher.dispatch(
+                            websocketService.buildDetailMessage(projectId, "")
+                    )
                 }
             }
         }
@@ -1059,6 +1078,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                             nodeRecord.nodeStatus = NodeStatus.NORMAL.name
                             nodeRecord.nodeIp = newHeartbeatInfo.agentIp
                             nodeDao.saveNode(dslContext = context, nodeRecord = nodeRecord)
+                            webSocketDispatcher.dispatch(
+                                    websocketService.buildDetailMessage(projectId, "")
+                            )
                         }
                     }
                     AgentStatus.IMPORT_OK
@@ -1153,6 +1175,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     thirdPartyAgentDao.addAgentAction(context, projectId, agentRecord.id, AgentAction.ONLINE.name)
                     if (agentRecord.nodeId != null) {
                         nodeDao.updateNodeStatus(context, agentRecord.nodeId, NodeStatus.NORMAL)
+                        webSocketDispatcher.dispatch(
+                                websocketService.buildDetailMessage(projectId, "")
+                        )
                     }
                     AgentStatus.IMPORT_OK
                 }
@@ -1172,6 +1197,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                                 hostname = agentRecord.hostname ?: "",
                                 createUser = agentRecord.createdUser ?: "",
                                 os = agentRecord.os ?: ""
+                            )
+                            webSocketDispatcher.dispatch(
+                                    websocketService.buildDetailMessage(projectId, "")
                             )
                             logger.info("Update the node status - $count of agent $agentId")
                         }
@@ -1195,6 +1223,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             thirdPartyAgentHeartbeatUtils.heartbeat(projectId, agentId)
             agentStatus
         }
+    }
+
+    fun getOs(userId: String, projectId: String, agentId: String): String {
+        return thirdPartyAgentDao.getAgent(dslContext, HashUtil.decodeIdToLong(agentId), projectId)?.os ?: "LINUX"
     }
 
     fun enableThirdPartyAgent(projectId: String, enable: Boolean) =

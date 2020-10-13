@@ -49,10 +49,8 @@ public class ToolDefectRspVO
     @ApiModelProperty("任务主键")
     private long taskId;
 
-
     @ApiModelProperty("任务英文名")
     private String nameEn;
-
 
     @ApiModelProperty("工具名")
     private String toolName;
@@ -60,38 +58,33 @@ public class ToolDefectRspVO
     @ApiModelProperty("严重规则数")
     private Integer seriousCheckerCount;
 
-
     @ApiModelProperty("正常规则数")
     private Integer normalCheckerCount;
-
 
     @ApiModelProperty("提示规则数")
     private Integer promptCheckerCount;
 
-
     @ApiModelProperty("新增文件数")
     private Integer newDefectCount;
-
 
     @ApiModelProperty("历史文件数")
     private Integer historyDefectCount;
 
-
     @ApiModelProperty("规则总数")
     private Integer totalCheckerCount;
-
 
     @ApiModelProperty("首次分析时间")
     private Long firstAnalysisSuccessTime;
 
+    @ApiModelProperty("lint类告警清单")
+    private Page<LintDefectVO> lintDefectList;
 
+    @Deprecated
     @ApiModelProperty("lint类文件清单")
     private Page<LintFileVO> lintFileList;
 
-
     @ApiModelProperty("Cov类文件清单")
     private Page<DefectDetailExtVO> defectList;
-
 
     /**
      * 风险系数极高的个数
@@ -99,39 +92,21 @@ public class ToolDefectRspVO
     @ApiModelProperty("风险系数极高的个数")
     private Integer superHighCount;
 
-    /**
-     * 风险系数高的个数
-     */
     @ApiModelProperty("风险系数高的个数")
     private Integer highCount;
 
-    /**
-     * 风险系数中的个数
-     */
     @ApiModelProperty("风险系数中的个数")
     private Integer mediumCount;
 
-    /**
-     * 风险系数低的个数
-     */
     @ApiModelProperty("风险系数低的个数")
     private Integer lowCount;
 
-    /**
-     * 告警总数
-     */
     @ApiModelProperty("告警总数")
     private Integer totalCount;
 
-    /**
-     * 圈复杂度缺陷列表
-     */
     @ApiModelProperty("缺陷列表")
     private Page<CCNDefectVO> ccnDefectList;
 
-    /**
-     * 新老告警判定时间
-     */
     @ApiModelProperty("新老告警判定时间")
     private Long newDefectJudgeTime;
 

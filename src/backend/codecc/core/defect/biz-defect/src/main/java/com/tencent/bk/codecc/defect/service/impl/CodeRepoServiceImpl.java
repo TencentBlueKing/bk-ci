@@ -44,7 +44,6 @@ public class CodeRepoServiceImpl implements CodeRepoService {
         Set<CodeRepoFromAnalyzeLogEntity.CodeRepo> codeRepoList = codeRepoFromAnalyzeLogEntity.getCodeRepoList();
 
         Iterator<CodeRepoFromAnalyzeLogEntity.CodeRepo> it = codeRepoList.iterator();
-        Set<CodeRepoVO> codeRepos;
         //取最后一个代码库地址
         if (CollectionUtils.isEmpty(codeRepoList)) {
             return new HashSet<>();
@@ -56,6 +55,7 @@ public class CodeRepoServiceImpl implements CodeRepoService {
         codeRepoVO.setBranch(codeRepo.getBranch());
         codeRepoVO.setVersion(codeRepo.getVersion());
         codeRepoVO.setToolNames(new HashSet<>());
+        Set<CodeRepoVO> codeRepos;
         codeRepos = new HashSet<CodeRepoVO>() {{
             add(codeRepoVO);
         }};

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.TxMarketAtomService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
@@ -88,11 +89,22 @@ class TxMarketAtomServiceImpl : TxMarketAtomService, MarketAtomServiceImpl() {
         return Result(repositoryInfo)
     }
 
-    override fun deleteAtomRepository(userId: String, projectCode: String?, repositoryHashId: String): Result<Boolean> {
+    override fun deleteAtomRepository(
+        userId: String,
+        projectCode: String?,
+        repositoryHashId: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
         // 删除代码库信息
         if (!projectCode.isNullOrEmpty() && repositoryHashId.isNotBlank()) {
             val delGitRepositoryResult =
-                client.get(ServiceGitRepositoryResource::class).delete(userId, projectCode!!, repositoryHashId)
+                client.get(ServiceGitRepositoryResource::class)
+                    .delete(
+                        userId = userId,
+                        projectId = projectCode!!,
+                        repositoryHashId = repositoryHashId,
+                        tokenType = tokenType
+                    )
             logger.info("the delGitRepositoryResult is :$delGitRepositoryResult")
             return delGitRepositoryResult
         }

@@ -104,6 +104,8 @@ class InitResponseCode @Autowired constructor(private val objectMapper: ObjectMa
                 getUUID(), "2301008", "01", "流水线执行定时时间为空", null, "Pipeline execution timing is empty")
         val taskCode9 = GlobalMessage(
                 getUUID(), "2301009", "01", "失效任务失败", null, "Close task failed")
+        val taskCode13 = GlobalMessage(
+                getUUID(), "2301013", "01", "{0}", null, "{0}")
         codeMap["2301001"] = objectMapper.writeValueAsString(taskCode1)
         codeMap["2301002"] = objectMapper.writeValueAsString(taskCode2)
         codeMap["2301003"] = objectMapper.writeValueAsString(taskCode3)
@@ -113,6 +115,7 @@ class InitResponseCode @Autowired constructor(private val objectMapper: ObjectMa
         codeMap["2301007"] = objectMapper.writeValueAsString(taskCode7)
         codeMap["2301008"] = objectMapper.writeValueAsString(taskCode8)
         codeMap["2301009"] = objectMapper.writeValueAsString(taskCode9)
+        codeMap["2301013"] = objectMapper.writeValueAsString(taskCode13)
 
         return codeMap
     }
@@ -155,9 +158,9 @@ class InitResponseCode @Autowired constructor(private val objectMapper: ObjectMa
         val commonCode15 = GlobalMessage(
                 getUUID(), "2300015", "00", "找不到任何有效的{0}服务提供者", null, "Failed to find valid {0} service provider")
         val commonCode18 = GlobalMessage(
-            getUUID(), "2300018", "00", "无法从工蜂获取你的代码片段信息。请检查你的代码库是否被删除或设为私有。", null, "Fail to get code content from gongfegn, please check if that your repository is deleted or switched to private")
+            getUUID(), "2300018", "00", "无法从工蜂获取你的代码片段信息。请检查你的代码库是否被删除或设为私有。", null, "Fail to get code content from git, please check if that your repository is deleted or switched to private")
         val commonCode19 = GlobalMessage(
-            getUUID(), "2300019", "00", "无法从工蜂获取该问题的代码片段。", null, "Fail to get code content from gongfegn, please check if that your repository is deleted or switched to private")
+            getUUID(), "2300019", "00", "无法从工蜂获取代码片段。请检查你是否对该仓库有权限。", null, "Fail to get code content from git, please check if that your repository is deleted or switched to private")
 
         // 公用响应码
         codeMap["0"] = objectMapper.writeValueAsString(commonCode)

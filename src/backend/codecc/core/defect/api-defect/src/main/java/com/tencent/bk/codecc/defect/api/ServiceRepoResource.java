@@ -40,7 +40,7 @@ public interface ServiceRepoResource
     @Path("/list")
     @GET
     CodeCCResult<Set<CodeRepoVO>> getCodeRepoByTaskIdAndBuildId(
-            @ApiParam(value = "工具名", required = true)
+            @ApiParam(value = "任务ID", required = true)
             @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
             Long taskId,
             @ApiParam(value = "构建id", required = true)

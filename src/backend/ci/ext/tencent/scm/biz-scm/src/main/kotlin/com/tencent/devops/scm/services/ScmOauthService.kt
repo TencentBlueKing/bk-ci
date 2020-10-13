@@ -268,10 +268,12 @@ class ScmOauthService @Autowired constructor(
             scmMonitorService.reportCommitCheck(
                 requestTime = requestTime,
                 responseTime = responseTime,
-                statusCode = statusCode.toString(),
+                statusCode = statusCode,
                 statusMessage = statusMessage,
                 projectName = request.projectName,
-                commitId = request.commitId
+                commitId = request.commitId,
+                block = request.block,
+                targetUrl = request.targetUrl
             )
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
         }

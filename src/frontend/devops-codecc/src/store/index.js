@@ -46,6 +46,8 @@ const store = new Vuex.Store({
     // 公共 store
     state: {
         mainContentLoading: false,
+        isBannerClose: Boolean(window.localStorage.getItem('codecc-banner-271')),
+        // isBannerClose: true,
         // 系统当前登录用户
         user: {},
         toolMeta: {
@@ -71,6 +73,7 @@ const store = new Vuex.Store({
     // 公共 getters
     getters: {
         mainContentLoading: state => state.mainContentLoading,
+        isBannerClose: state => state.isBannerClose,
         user: state => state.user
     },
     // 公共 mutations
@@ -92,6 +95,9 @@ const store = new Vuex.Store({
          */
         setMainContentLoading (state, loading) {
             state.mainContentLoading = loading
+        },
+        updateBannerStatus (state, status) {
+            state.isBannerClose = status
         },
 
         /**

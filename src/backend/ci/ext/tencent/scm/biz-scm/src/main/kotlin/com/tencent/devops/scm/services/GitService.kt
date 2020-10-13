@@ -721,6 +721,32 @@ class GitService @Autowired constructor(
         }
     }
 
+    fun deleteGitProject(repoName: String, token: String, tokenType: TokenTypeEnum): Result<Boolean> {
+        logger.info("deleteGitProject repoName is:$repoName,token is:$token,tokenType is:$tokenType")
+        val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName")
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .delete()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            logger.info("deleteGitProject token is:$token, response>> $data")
+            if (!StringUtils.isEmpty(data)) {
+                val dataMap = JsonUtil.toMap(data)
+                val message = dataMap["message"]
+                if (!StringUtils.isEmpty(message)) {
+                    val validateResult: Result<String?> =
+                        MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.USER_UPDATE_GIT_CODE_REPOSITORY_FAIL)
+                    // 把工蜂的错误提示抛出去
+                    return Result(validateResult.status, "${validateResult.message}（git error:$message）")
+                }
+            }
+            return Result(data = true)
+        }
+    }
+
     fun getGitUserInfo(userId: String, token: String, tokenType: TokenTypeEnum): Result<GitUserInfo?> {
         logger.info("getGitUserInfo token is:$token, userId is:$userId,tokenType is:$tokenType")
         val url = StringBuilder("${gitConfig.gitApiUrl}/users/$userId")
@@ -848,7 +874,7 @@ class GitService @Autowired constructor(
         token: String,
         repoUrl: String? = null
     ): GitMrInfo {
-        val url = StringBuilder("$${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId")
+        val url = StringBuilder("${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId")
         logger.info("get mr info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -873,7 +899,7 @@ class GitService @Autowired constructor(
         token: String,
         repoUrl: String? = null
     ): GitMrReviewInfo {
-        val url = StringBuilder("$${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/review")
+        val url = StringBuilder("${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/review")
         logger.info("get mr review info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -898,7 +924,7 @@ class GitService @Autowired constructor(
         token: String,
         repoUrl: String? = null
     ): GitMrChangeInfo {
-        val url = StringBuilder("$${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/changes")
+        val url = StringBuilder("${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/changes")
         logger.info("get mr changes info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -960,9 +986,9 @@ class GitService @Autowired constructor(
 
         val result = mutableListOf<GitMember>()
         // 限制最多50页
-        for (page in 1..50) {
+        for (page in 1..10) {
             val request = Request.Builder()
-                .url("$url&page=$page&per_page=100")
+                .url("$url&page=$page&per_page=1000")
                 .get()
                 .build()
             OkhttpUtils.doHttp(request).use {
@@ -973,7 +999,34 @@ class GitService @Autowired constructor(
                 logger.info("get repo member response body: $data")
                 val pageResult = JsonUtil.to(data, object : TypeReference<List<GitMember>>() {})
                 result.addAll(pageResult)
-                if (pageResult.size < 100) return result
+                if (pageResult.size < 1000) return result
+            }
+        }
+        return result
+    }
+
+    // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
+    fun getRepoAllMembers(repoName: String, tokenType: TokenTypeEnum, token: String): List<GitMember> {
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/members/all")
+        logger.info("get repo member url: $url")
+        setToken(tokenType, url, token)
+
+        val result = mutableListOf<GitMember>()
+        // 限制最多50页
+        for (page in 1..10) {
+            val request = Request.Builder()
+                .url("$url&page=$page&per_page=1000")
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                if (!it.isSuccessful) {
+                    throw RuntimeException("get repo member error for $repoName(${it.code()}): ${it.message()}")
+                }
+                val data = it.body()!!.string()
+                logger.info("get repo member response body: $data")
+                val pageResult = JsonUtil.to(data, object : TypeReference<List<GitMember>>() {})
+                result.addAll(pageResult)
+                if (pageResult.size < 1000) return result
             }
         }
         return result
