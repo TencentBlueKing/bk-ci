@@ -68,7 +68,7 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
                 logger.warn("Is not code repo for git web hook for repo and pipeline: $repository, $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)
             }
-            if (!matchUrl(repository.url)) {
+            if (!matchUrl(repository)) {
                 logger.warn("Is not match for event and pipeline: $event, $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)
             }
@@ -368,7 +368,8 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         return matcher.match(branchName, eventBranch)
     }
 
-    open fun matchUrl(url: String): Boolean {
+    open fun matchUrl(repository: Repository): Boolean {
+        val url = repository.url
         return when (event) {
             is GitPushEvent -> {
                 val repoHttpUrl = url.removePrefix("http://").removePrefix("https://")
