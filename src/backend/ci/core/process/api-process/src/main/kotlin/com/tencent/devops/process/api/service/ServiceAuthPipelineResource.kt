@@ -53,17 +53,17 @@ interface ServiceAuthPipelineResource {
     @GET
     @Path("/{projectId}/search")
     fun searchPipelineInstances(
-            @ApiParam("项目ID", required = true)
-            @PathParam("projectId")
-            projectId: String,
-            @ApiParam("起始位置", required = false)
-            @QueryParam("offset")
-            offset: Int? = null,
-            @ApiParam("步长", required = false)
-            @QueryParam("limit")
-            limit: Int? = null,
-            @ApiParam("流水线关键词", required = false)
-            @QueryParam("keyword")
-            keyword: String
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("起始位置", required = false)
+        @QueryParam("offset")
+        offset: Int? = null,
+        @ApiParam("步长", required = false)
+        @QueryParam("limit")
+        limit: Int? = null,
+        @ApiParam("流水线名", required = false)
+        @QueryParam("pipelineName")
+        pipelineName: String
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
 }

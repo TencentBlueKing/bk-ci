@@ -42,4 +42,22 @@ interface ServiceAuthRepositoryResource {
         @QueryParam("repositoryIds")
         repositoryIds: List<String>
     ): Result<List<RepositoryInfo>?>
+
+    @ApiOperation("获取项目代码库列表(别名模糊匹配)")
+    @GET
+    @Path("/projects/{projectIds}/searchByName")
+    fun searchByName(
+        @ApiParam("项目Id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("起始位置", required = true)
+        @QueryParam("offset")
+        offset: Int,
+        @ApiParam("步长", required = true)
+        @QueryParam("limit")
+        limit: Int,
+        @ApiParam("别名", required = true)
+        @QueryParam("aliasName")
+        aliasName: String
+    ): Result<Page<RepositoryInfo>>
 }

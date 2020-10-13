@@ -580,6 +580,43 @@ class EnvService @Autowired constructor(
         )
     }
 
+    override fun searchByName(projectId: String, envName: String, limit: Int, offset: Int): Page<EnvWithPermission> {
+        val envList = mutableListOf<EnvWithPermission>()
+        val envRecords = envDao.searchByName(
+                dslContext = dslContext,
+                offset = offset,
+                limit = limit,
+                projectId = projectId,
+                envName = envName
+        )
+        envRecords.map {
+            envList.add(
+                    EnvWithPermission(
+                            envHashId = HashUtil.encodeLongId(it.envId),
+                            name = it.envName,
+                            desc = it.envDesc,
+                            envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                            nodeCount = null,
+                            envVars = jacksonObjectMapper().readValue(it.envVars),
+                            createdUser = it.createdUser,
+                            createdTime = it.createdTime.timestamp(),
+                            updatedUser = it.updatedUser,
+                            updatedTime = it.updatedTime.timestamp(),
+                            canEdit = null,
+                            canDelete = null,
+                            canUse = null
+                    )
+            )
+        }
+        val count = envDao.countByName(dslContext, projectId, envName)
+        return Page(
+                count = count.toLong(),
+                records = envList,
+                pageSize = offset,
+                page = limit
+        )
+    }
+
     private fun format(records: List<TEnvRecord>): List<EnvWithPermission> {
         return records.map {
             EnvWithPermission(

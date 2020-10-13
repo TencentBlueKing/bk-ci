@@ -41,12 +41,12 @@ interface ServiceAuthProjectResource {
     ): Result<List<ProjectVO>>
 
     @GET
-    @Path("/list")
-    @ApiOperation("分页获取项目信息")
-    fun searchByKeyword(
+    @Path("/search/byName")
+    @ApiOperation("分页获取项目信息(根据项目名称)")
+    fun searchByName(
             @ApiParam("")
-            @QueryParam("keyword")
-            keyword: String,
+            @QueryParam("projectName")
+            projectName: String,
             @ApiParam("分页Limit")
             @QueryParam("limit")
             limit: Int,

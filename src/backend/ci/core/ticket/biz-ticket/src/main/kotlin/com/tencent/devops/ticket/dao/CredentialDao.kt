@@ -239,4 +239,28 @@ class CredentialDao {
             query.fetchOne(0, kotlin.Long::class.java)
         }
     }
+
+    fun searchByIdLike(dslContext: DSLContext, projectId: String, offset: Int, limit: Int, credentialId: String): List<TCredentialRecord> {
+        return with(TCredential.T_CREDENTIAL) {
+            dslContext.selectFrom(this)
+                    .where(PROJECT_ID.eq(projectId).and(CREDENTIAL_ID.like("%$credentialId%")))
+                    .orderBy(CREATED_TIME.desc())
+                    .limit(offset, limit)
+                    .fetch()
+        }
+    }
+
+    fun countByIdLike(
+        dslContext: DSLContext,
+        projectId: String,
+        credentialId: String
+    ): Long {
+        with(TCredential.T_CREDENTIAL) {
+            return dslContext.selectCount()
+                    .from(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(CREDENTIAL_ID.like("%$credentialId%"))
+                    .fetchOne(0, Long::class.java)
+        }
+    }
 }

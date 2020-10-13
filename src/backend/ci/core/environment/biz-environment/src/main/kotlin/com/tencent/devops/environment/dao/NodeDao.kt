@@ -493,7 +493,7 @@ class NodeDao {
                     .fetch()
             } else {
                 dslContext.selectFrom(this)
-                    .where(PROJECT_ID.like(projectId))
+                    .where(PROJECT_ID.eq(projectId))
                     .limit(limit).offset(offset)
                     .fetch()
             }
@@ -512,6 +512,25 @@ class NodeDao {
                     .where(PROJECT_ID.eq(project))
                     .fetchOne(0, Int::class.java)
             }
+        }
+    }
+
+    fun searchByDisplayName(dslContext: DSLContext, offset: Int, limit: Int, projectId: String?, displayName: String): List<TNodeRecord> {
+        with(TNode.T_NODE) {
+            return dslContext.selectFrom(this)
+                        .where(PROJECT_ID.eq(projectId).and(DISPLAY_NAME.like("$%$displayName%")))
+                    .orderBy(CREATED_TIME.desc())
+                    .limit(limit).offset(offset)
+                        .fetch()
+        }
+    }
+
+    fun countByDisplayName(dslContext: DSLContext, project: String?, displayName: String): Int {
+        with(TNode.T_NODE) {
+            return dslContext.selectCount()
+                        .from(TNode.T_NODE)
+                        .where(PROJECT_ID.eq(project).and(DISPLAY_NAME.like("%$displayName%")))
+                        .fetchOne(0, Int::class.java)
         }
     }
 

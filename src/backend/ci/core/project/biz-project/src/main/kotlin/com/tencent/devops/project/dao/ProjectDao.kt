@@ -796,4 +796,18 @@ class ProjectDao {
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)
         }
     }
+
+    fun searchByProjectName(dslContext: DSLContext, projectName: String, limit: Int, offset: Int): Result<TProjectRecord> {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this).where(PROJECT_NAME.like("%$projectName%")).limit(limit).offset(offset).fetch()
+        }
+    }
+
+    fun countByProjectName(dslContext: DSLContext, projectName: String): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectCount().from(this)
+                    .where(PROJECT_NAME.like("%$projectName%"))
+                    .fetchOne(0, Int::class.java)
+        }
+    }
 }
