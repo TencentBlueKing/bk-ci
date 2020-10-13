@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class PipelineBuildExtServiceImpl : PipelineBuildExtService {
-    override fun buildExt(task: PipelineBuildTask): String {
-        return ""
+    override fun buildExt(task: PipelineBuildTask): Map<String, String> {
+        return emptyMap()
     }
 }
