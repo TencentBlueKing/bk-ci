@@ -49,8 +49,7 @@ data class JobDetail(
  *             type: DockerOnVm | DockerOnDevCloud | DockerOnPcg | Windows | Macos | SelfHosted
  *             container: mirrors.tencent.com/tlinux2.2:latest
  *             credential:
- *               user: xxx
- *               password: xxx
+ *               credentialId: xxx
  *             systemVersion: 10.15.6 | win10
  *             xcodeVersion: xcode10
  *             visualStudioVersion: 2019 | 2020

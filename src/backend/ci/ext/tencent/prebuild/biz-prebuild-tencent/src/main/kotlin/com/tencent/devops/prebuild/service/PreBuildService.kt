@@ -368,10 +368,6 @@ class PreBuildService @Autowired constructor(
                                 credentialId = this.credential?.credentialId
                         )
 
-                        PoolType.DockerOnPcg -> PCGDispatchType(
-                                this.container!!
-                        )
-
                         else -> {
                             logger.error("getDispatchType , remote , not support pool type")
                             throw OperationException("该pool.type暂未支持")
