@@ -32,14 +32,19 @@ import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.pojo.code.git.GitPushEvent
 import com.tencent.devops.process.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import org.slf4j.LoggerFactory
 
 class TencentGitWebHookMatcher(
     private val gitEvent: GitEvent,
     private val gitIncludeHost: String?
 ) : GitWebHookMatcher(gitEvent) {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(TencentGitWebHookMatcher::class.java)
+    }
     override fun matchUrl(url: String): Boolean {
         if (isIncludeHost(url)) {
+            logger.info("git match url by projectName, url:$url")
             return matchProjectName(url)
         }
         return super.matchUrl(url)
