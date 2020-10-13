@@ -71,7 +71,7 @@ import {
     TOGGLE_STAGE_REVIEW_PANEL
 } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
-import { hashID } from '@/utils/util'
+import { hashID, randomString } from '@/utils/util'
 
 function rootCommit (commit,
     ACTION_CONST, payload) {
@@ -326,6 +326,7 @@ export default {
                     },
                     elements: [],
                     containerId: `c-${hashID(32)}`,
+                    jobId: `job_${randomString(3)}`,
                     nfsSwitch: false,
                     isError
                 }

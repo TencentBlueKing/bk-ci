@@ -60,6 +60,26 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
     DEPENDENT_WAITING("依赖等待", true), // 24 依赖等待
     UNKNOWN("未知状态", false); // 99
 
+    fun isFinish(): Boolean = isFinish(this)
+
+    fun isFailure(): Boolean = isFailure(this)
+
+    fun isSuccess(): Boolean = isSuccess(this)
+
+    fun isRunning(): Boolean = isRunning(this)
+
+    fun isCancel(): Boolean = isCancel(this)
+
+    fun isReview(): Boolean = isReview(this)
+
+    fun isReadyToRun(): Boolean = isReadyToRun(this)
+
+    fun isLoop(): Boolean = isLoop(this)
+
+    fun isRetry(): Boolean = isRetry(this)
+
+    fun isTimeout(): Boolean = isTimeout(this)
+
     companion object {
 
         fun parse(statusName: String?): BuildStatus {
@@ -86,6 +106,7 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
         fun isReview(status: BuildStatus) = status == REVIEW_ABORT || status == REVIEW_PROCESSED
 
         fun isReadyToRun(status: BuildStatus) = status == QUEUE || status == QUEUE_CACHE || isRetry(status)
+
         /**
          * 是否处于循环中： 正在运行中或循环等待都属于循环
          */
