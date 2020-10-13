@@ -23,14 +23,13 @@ class PipelineBuildTurboExtService @Autowired constructor(
 
     override fun buildExt(task: PipelineBuildTask): Map<String, String> {
         val taskType = task.taskType
+        val extMap = mutableMapOf<String, String>()
         if (taskType.contains("linuxPaasCodeCCScript") || taskType.contains("linuxScript")) {
             logger.info("task need turbo, ${task.buildId}, ${task.taskName}, ${task.taskType}")
-            val turboTask = getTurboTask(task.pipelineId, task.taskId)
-            return mutableMapOf(
-                    PIPELINE_TURBO_TASK_ID to turboTask
-            )
+            val turboTaskId = getTurboTask(task.pipelineId, task.taskId)
+            extMap[PIPELINE_TURBO_TASK_ID] = turboTaskId
         }
-        return emptyMap()
+        return extMap
     }
 
     fun getTurboTask(pipelineId: String, elementId: String): String {
@@ -50,6 +49,7 @@ class PipelineBuildTurboExtService @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body()?.string() ?: return ""
                 logger.info("Get turbo task info, response: $data")
+                LogUtils.costTime("call turbo ", startTime)
                 if (!response.isSuccessful) {
                     throw RemoteServiceException(data)
                 }
@@ -62,7 +62,6 @@ class PipelineBuildTurboExtService @Autowired constructor(
                     throw RemoteServiceException(data)
                 }
             }
-            LogUtils.costTime("call turbo cost", startTime)
         } catch (e: Throwable) {
             logger.warn("Get turbo task info failed, $e")
             return ""
