@@ -83,6 +83,11 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         val httpClient = builder.build()
         val retryFlag = try {
             val response = httpClient.newCall(request).execute()
+            val responseContent = response.body()?.string()
+            logger.warn(
+                "Request($request) with code ${response.code()} ," +
+                        " message ${response.message()} and response ($responseContent)"
+            )
             if (retryCodes.contains(response.code())) { // 网关502,503，可重试
                 true
             } else {
