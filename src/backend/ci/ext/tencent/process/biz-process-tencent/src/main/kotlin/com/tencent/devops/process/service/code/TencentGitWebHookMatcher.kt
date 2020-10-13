@@ -31,6 +31,8 @@ import com.tencent.devops.process.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.pojo.code.git.GitPushEvent
 import com.tencent.devops.process.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
@@ -42,12 +44,12 @@ class TencentGitWebHookMatcher(
     companion object {
         private val logger = LoggerFactory.getLogger(TencentGitWebHookMatcher::class.java)
     }
-    override fun matchUrl(url: String): Boolean {
-        if (isCodeGitHook()) {
-            logger.info("git match url by projectName, url:$url")
-            return matchProjectName(url)
+    override fun matchUrl(repository: Repository): Boolean {
+        if (repository is CodeGitRepository && isCodeGitHook()) {
+            logger.info("git match url by projectName, url:${repository.url}")
+            return matchProjectName(repository.url)
         }
-        return super.matchUrl(url)
+        return super.matchUrl(repository)
     }
 
     /**
