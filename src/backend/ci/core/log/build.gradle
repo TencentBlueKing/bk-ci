@@ -27,8 +27,8 @@
 subprojects {
     group "com.tencent.bk.devops.ci.log"
     dependencies {
-        // 解决依赖冲突：process要求lucene-8.6.0，es-rest-client要求lucene-7.7.0
-        compile "org.apache.lucene:lucene-core:7.7.0"
+        // 解决依赖冲突：process要求lucene-8.6.0，es-rest-client7.0.0要求lucene-8.0.0
+        compile "org.apache.lucene:lucene-core:8.0.0"
         compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
         compile "org.jetbrains.kotlin:kotlin-reflect"
         testCompile "junit:junit"
