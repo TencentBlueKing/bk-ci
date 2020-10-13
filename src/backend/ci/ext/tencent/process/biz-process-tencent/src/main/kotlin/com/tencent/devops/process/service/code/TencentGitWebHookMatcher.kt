@@ -43,7 +43,7 @@ class TencentGitWebHookMatcher(
         private val logger = LoggerFactory.getLogger(TencentGitWebHookMatcher::class.java)
     }
     override fun matchUrl(url: String): Boolean {
-        if (isCodeGitHook(url)) {
+        if (isCodeGitHook()) {
             logger.info("git match url by projectName, url:$url")
             return matchProjectName(url)
         }
@@ -53,7 +53,7 @@ class TencentGitWebHookMatcher(
     /**
      * 判断是否是工蜂触发过来的事件,工蜂触发过来的事件通过对比项目名
      */
-    private fun isCodeGitHook(url: String): Boolean {
+    private fun isCodeGitHook(): Boolean {
         if (gitIncludeHost.isNullOrBlank()) {
             return false
         }
