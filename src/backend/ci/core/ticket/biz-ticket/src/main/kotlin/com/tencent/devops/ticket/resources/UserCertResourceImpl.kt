@@ -45,7 +45,6 @@ import com.tencent.devops.ticket.pojo.CertWithPermission
 import com.tencent.devops.ticket.pojo.enums.Permission
 import com.tencent.devops.ticket.service.CertPermissionService
 import com.tencent.devops.ticket.service.CertService
-import com.tencent.devops.ticket.service.CredentialPermissionService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
