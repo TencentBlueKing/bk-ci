@@ -29,6 +29,7 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.Logo
+import com.tencent.devops.store.pojo.common.StoreLogoInfo
 import com.tencent.devops.store.pojo.common.enums.LogoTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -43,6 +44,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_STORE_LOGO"], description = "STORE-LOGO")
@@ -59,12 +61,18 @@ interface UserStoreLogoResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("contentLength", required = true)
+        @HeaderParam("content-length")
+        contentLength: Long,
+        @ApiParam("是否压缩", required = false)
+        @QueryParam("compressFlag")
+        compressFlag: Boolean? = false,
         @ApiParam("logo", required = true)
         @FormDataParam("logo")
         inputStream: InputStream,
         @FormDataParam("logo")
         disposition: FormDataContentDisposition
-    ): Result<String?>
+    ): Result<StoreLogoInfo?>
 
     @ApiOperation("获取logo列表")
     @GET
