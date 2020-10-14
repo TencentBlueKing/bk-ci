@@ -82,7 +82,8 @@ const routes = [
                     title: 'nodeList',
                     logo: 'environment',
                     header: 'environmentManage',
-                    to: 'envList'
+                    to: 'envList',
+                    webSocket: ['^\/console\/environment\/[^\/]+\/nodeList$']
                 }
             },
             {
