@@ -295,7 +295,10 @@
                         'type': id
                     }
                 })
+                this.$validator.reset()
                 this.newModel = this.getTicketByType(id)
+                this.localConfigc.credentialRemark = ''
+                this.localConfig.credentialId = ''
                 this.localConfig.credential = {
                     v1: '',
                     v2: '',
