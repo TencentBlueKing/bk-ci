@@ -47,8 +47,8 @@ data class SubmitDTO(
     val version: String,
     @ApiModelProperty("LOGO url")
     val logoUrl: String?,
-    @ApiModelProperty("ICON")
-    val icon: String?,
+    @ApiModelProperty("icon图标base64字符串", required = false)
+    val iconData: String?,
     @ApiModelProperty("扩展服务简介")
     val summary: String? = null,
     @ApiModelProperty("扩展服务描述")

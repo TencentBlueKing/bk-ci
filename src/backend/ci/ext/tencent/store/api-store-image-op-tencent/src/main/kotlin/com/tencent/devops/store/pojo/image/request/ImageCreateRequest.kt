@@ -43,6 +43,8 @@ data class ImageCreateRequest(
     val dockerFileContent: String?,
     @ApiModelProperty("logo地址", required = false)
     val logoUrl: String?,
+    @ApiModelProperty("icon图标base64字符串", required = false)
+    val iconData: String?,
     @ApiModelProperty("镜像简介", required = false)
     val summary: String?,
     @ApiModelProperty("镜像描述", required = false)

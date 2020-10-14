@@ -29,6 +29,7 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.Logo
+import com.tencent.devops.store.pojo.common.StoreLogoInfo
 import com.tencent.devops.store.pojo.common.StoreLogoReq
 import com.tencent.devops.store.pojo.common.enums.LogoTypeEnum
 import io.swagger.annotations.Api
@@ -62,12 +63,15 @@ interface OpStoreLogoResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("contentLength", required = true)
+        @HeaderParam("content-length")
+        contentLength: Long,
         @ApiParam("logo", required = true)
         @FormDataParam("logo")
         inputStream: InputStream,
         @FormDataParam("logo")
         disposition: FormDataContentDisposition
-    ): Result<String?>
+    ): Result<StoreLogoInfo?>
 
     @ApiOperation("新增一条logo记录")
     @POST

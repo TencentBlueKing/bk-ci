@@ -109,6 +109,7 @@ class UserExtServiceResourceImpl @Autowired constructor(
             itemIds = serviceBaseInfoUpdateRequest.extensionItemIdList,
             summary = serviceBaseInfoUpdateRequest.summary,
             logoUrl = serviceBaseInfoUpdateRequest.logoUrl,
+            iconData = serviceBaseInfoUpdateRequest.iconData,
             description = serviceBaseInfoUpdateRequest.description,
             descInputType = serviceBaseInfoUpdateRequest.descInputType
         )

@@ -43,8 +43,8 @@ data class ExtServiceCreateInfo(
     val statusMsg: String? = null,
     @ApiModelProperty("LOGO url")
     val logoUrl: String? = null,
-    @ApiModelProperty("ICON")
-    val icon: String? = null,
+    @ApiModelProperty("icon图标base64字符串")
+    val iconData: String? = null,
     @ApiModelProperty("扩展服务简介")
     val summary: String? = null,
     @ApiModelProperty("扩展服务描述")

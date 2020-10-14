@@ -370,6 +370,7 @@ class OpImageDataTransferService @Autowired constructor(
                     dockerFileType = null,
                     dockerFileContent = null,
                     logoUrl = "http://radosgw.open.oa.com/paas_backend/ieod/prod/file/png/random_15755397330026456632033301754111.png?v=1575539733",
+                    iconData = null,
                     summary = "旧版的构建镜像，通过拷贝为构建镜像入口生成。\n" +
                         "已自动转换为容器镜像商店数据，请项目管理员在研发商店工作台进行管理。",
                     description = "旧版的构建镜像，通过蓝盾版本仓库“拷贝为构建镜像”入口生成。\n" +
