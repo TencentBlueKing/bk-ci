@@ -57,7 +57,6 @@ import java.util.Date
  */
 class ManualReviewTaskAtom(
     private val client: Client,
-    private val dslContext: DSLContext,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineUrlBean: PipelineUrlBean,
     private val pipelineVariableService: BuildVariableService
