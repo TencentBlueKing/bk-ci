@@ -88,14 +88,13 @@ class DockerHostClient @Autowired constructor(
         poolNo: Int,
         driftIpInfo: String
     ) {
-        val secretKey = ApiUtil.randomSecretKey()
-        val id = pipelineDockerBuildDao.startBuild(
+        pipelineDockerBuildDao.startBuild(
             dslContext = dslContext,
             projectId = dispatchMessage.projectId,
             pipelineId = dispatchMessage.pipelineId,
             buildId = dispatchMessage.buildId,
             vmSeqId = dispatchMessage.vmSeqId.toInt(),
-            secretKey = secretKey,
+            secretKey = dispatchMessage.secretKey,
             status = PipelineTaskStatus.RUNNING,
             zone = if (null == dispatchMessage.zone) {
                 Zone.SHENZHEN.name
@@ -105,22 +104,9 @@ class DockerHostClient @Autowired constructor(
             dockerIp = dockerIp,
             poolNo = poolNo
         )
-        val agentId = HashUtil.encodeLongId(id)
-        redisUtils.setDockerBuild(
-            id, secretKey,
-            RedisBuild(
-                vmName = agentId,
-                projectId = dispatchMessage.projectId,
-                pipelineId = dispatchMessage.pipelineId,
-                buildId = dispatchMessage.buildId,
-                vmSeqId = dispatchMessage.vmSeqId,
-                channelCode = dispatchMessage.channelCode,
-                zone = dispatchMessage.zone,
-                atoms = dispatchMessage.atoms
-            )
-        )
-        logger.info("secretKey: $secretKey")
-        logger.info("agentId: $agentId")
+
+        logger.info("secretKey: ${dispatchMessage.secretKey}")
+        logger.info("agentId: ${dispatchMessage.id}")
         val dispatchType = dispatchMessage.dispatchType as DockerDispatchType
         logger.info("dockerHostBuild:(${dispatchMessage.userId},${dispatchMessage.projectId},${dispatchMessage.pipelineId},${dispatchMessage.buildId},${dispatchType.imageType?.name},${dispatchType.imageCode},${dispatchType.imageVersion},${dispatchType.credentialId},${dispatchType.credentialProject})")
 
@@ -163,11 +149,11 @@ class DockerHostClient @Autowired constructor(
 
         val requestBody = DockerHostBuildInfo(
             projectId = dispatchMessage.projectId,
-            agentId = agentId,
+            agentId = dispatchMessage.id,
             pipelineId = dispatchMessage.pipelineId,
             buildId = dispatchMessage.buildId,
             vmSeqId = Integer.valueOf(dispatchMessage.vmSeqId),
-            secretKey = secretKey,
+            secretKey = dispatchMessage.secretKey,
             status = PipelineTaskStatus.RUNNING.status,
             imageName = dockerImage!!,
             containerId = "",
