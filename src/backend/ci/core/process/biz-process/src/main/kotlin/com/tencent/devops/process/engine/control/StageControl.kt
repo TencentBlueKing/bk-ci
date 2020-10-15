@@ -27,12 +27,14 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.control.lock.StageIdLock
@@ -46,6 +48,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.util.NotifyTemplateUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -57,12 +60,14 @@ import java.time.LocalDateTime
  */
 @Service
 class StageControl @Autowired constructor(
+    private val client: Client,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val pipelineStageService: PipelineStageService
+    private val pipelineStageService: PipelineStageService,
+    private val pipelineUrlBean: PipelineUrlBean
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -114,7 +119,9 @@ class StageControl @Autowired constructor(
 
             var buildStatus: BuildStatus = BuildStatus.SUCCEED
 
-            val needPause = stage.controlOption?.stageControlOption?.manualTrigger == true && source != BS_MANUAL_START_STAGE
+            // 只有在非手动触发该Stage的首次运行做审核暂停
+            val needPause = stage.controlOption?.stageControlOption?.manualTrigger == true &&
+                source != BS_MANUAL_START_STAGE && stage.controlOption?.stageControlOption?.triggered == false
 
             val fastKill = stage.controlOption?.fastKill == true && source == "$BS_CONTAINER_END_SOURCE_PREIX${BuildStatus.FAILED}"
 
@@ -169,7 +176,16 @@ class StageControl @Autowired constructor(
                     logger.info("[$buildId]|[${buildInfo.status}]|STAGE_PAUSE|stage=$stageId|action=$actionType")
 
                     val triggerUsers = stage.controlOption?.stageControlOption?.triggerUsers?.joinToString(",") ?: ""
-                    stage.controlOption!!.stageControlOption.triggerUsers = EnvUtils.parseEnv(triggerUsers, variables).split(",").toList()
+                    val realUsers = EnvUtils.parseEnv(triggerUsers, variables).split(",").toList()
+                    stage.controlOption!!.stageControlOption.triggerUsers = realUsers
+                    NotifyTemplateUtils.sendReviewNotify(
+                        client = client,
+                        projectId = projectId,
+                        reviewUrl = pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId),
+                        reviewAppUrl = pipelineUrlBean.genAppBuildDetailUrl(projectId, pipelineId, buildId),
+                        receivers = realUsers,
+                        runVariables = variables
+                    )
                     pipelineStageService.pauseStage(
                         pipelineId = pipelineId,
                         buildId = buildId,

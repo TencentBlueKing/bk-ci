@@ -148,6 +148,7 @@
     import emptyNode from './empty_node'
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
     import { getQueryString } from '@/utils/util'
+    import webSocketMessage from '../utils/webSocketMessage.js'
 
     export default {
         components: {
@@ -156,7 +157,6 @@
         },
         data () {
             return {
-                timer: -1,
                 curEditNodeItem: '',
                 curEditNodeDisplayName: '',
                 nodeIp: '',
@@ -262,13 +262,11 @@
                 this.constructImportForm.model = urlParams
                 this.toImportNode('construct')
             }
+            webSocketMessage.installWsMessage(this.requestList)
+            this.$once('hook:beforeDestroy', webSocketMessage.unInstallWsMessage)
         },
         async mounted () {
             await this.init()
-        },
-        beforeDestroy () {
-            clearTimeout(this.timer)
-            this.timer = null
         },
         methods: {
             async init () {
@@ -296,8 +294,6 @@
              * 节点列表
              */
             async requestList () {
-                clearTimeout(this.timer)
-
                 try {
                     const res = await this.$store.dispatch('environment/requestNodeList', {
                         projectId: this.projectId
@@ -310,10 +306,6 @@
                         item.isMore = item.nodeHashId === this.lastCliCKNode.nodeHashId
                         this.nodeList.push(item)
                     })
-
-                    if (this.nodeList.length) {
-                        this.loopCheck()
-                    }
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -324,18 +316,6 @@
                     })
                 } finally {
                     this.showContent = true
-                }
-            },
-            /**
-             *  轮询整个列表状态
-             */
-            async loopCheck () {
-                clearTimeout(this.timer)
-
-                if (this.nodeList.length) {
-                    this.timer = setTimeout(async () => {
-                        await this.requestList()
-                    }, 8000)
                 }
             },
             changeProject () {

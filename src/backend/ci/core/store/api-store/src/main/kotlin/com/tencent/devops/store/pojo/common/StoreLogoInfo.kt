@@ -24,22 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.option
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.common.pipeline.NameAndValue
-import com.tencent.devops.common.pipeline.enums.StageRunCondition
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-/**
- * 阶段流程控制
- * @version 1.0
- */
-data class StageControlOption(
-    val enable: Boolean, // 是否启用该阶段
-    val runCondition: StageRunCondition, // 运行条件
-    val manualTrigger: Boolean? = false,
-    var triggerUsers: List<String>? = null, // 可触发用户，支持引用变量
-    var triggered: Boolean? = false, // 已通过审核
-    val timeout: Int? = null, // 等待审核的超时时间
-    val customVariables: List<NameAndValue>? = null, // 自定义变量
-    val customCondition: String? = null // 自定义条件
+@ApiModel("store组件logo信息")
+data class StoreLogoInfo(
+    @ApiModelProperty("logo地址", required = false)
+    val logoUrl: String?,
+    @ApiModelProperty("icon图标base64字符串", required = false)
+    val iconData: String?
 )

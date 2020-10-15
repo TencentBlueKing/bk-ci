@@ -704,7 +704,12 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.STAGE_SUCCESS)
     }
 
-    fun stageStart(pipelineId: String, buildId: String, stageId: String) {
+    fun stageStart(
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        controlOption: PipelineBuildStageControlOption
+    ) {
         logger.info("[$buildId]|stage_start|stageId=$stageId")
         update(buildId, object : ModelInterface {
             var update = false
@@ -714,6 +719,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                     stage.status = BuildStatus.QUEUE.name
                     stage.reviewStatus = BuildStatus.REVIEW_PROCESSED.name
+                    stage.stageControlOption?.triggered = controlOption.stageControlOption.triggered
                     pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.STAGE_SUCCESS, BuildStatus.RUNNING)
                     pipelineStageService.updatePipelineRunningCount(pipelineId, buildId, 1)
                     updateHistoryStage(buildId, model)
