@@ -78,25 +78,4 @@ public abstract class AbstractBatchDefectProcessBizService implements IBizServic
     protected abstract List getDefectsByQueryCond(long taskId, DefectQueryReqVO defectQueryReqVO);
 
     protected abstract List getEffectiveDefectByDefectKeySet(BatchDefectProcessReqVO batchDefectProcessReqVO);
-
-    /**
-     * 从前端传进来的defectKey，要检查是否存在,移除不存在的
-     *
-     * @param defectKeySet
-     * @param res
-     */
-    public void removeNotExistDefectKey(Set<String> defectKeySet, List<Object> res)
-    {
-        Iterator<String> it = defectKeySet.iterator();
-        int index = 0;
-        while (it.hasNext())
-        {
-            it.next();
-            if (res.get(index) == null)
-            {
-                it.remove();
-            }
-            index++;
-        }
-    }
 }

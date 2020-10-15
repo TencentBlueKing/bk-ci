@@ -27,6 +27,7 @@
 package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomLabelRel
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
@@ -65,6 +66,16 @@ class AtomLabelRelDao {
         with(TAtomLabelRel.T_ATOM_LABEL_REL) {
             dslContext.deleteFrom(this)
                 .where(ATOM_ID.eq(atomId))
+                .execute()
+        }
+    }
+
+    fun deleteByAtomCode(dslContext: DSLContext, atomCode: String) {
+        val ta = TAtom.T_ATOM
+        val atomIds = dslContext.select(ta.ID).from(ta).where(ta.ATOM_CODE.eq(atomCode)).fetch()
+        with(TAtomLabelRel.T_ATOM_LABEL_REL) {
+            dslContext.deleteFrom(this)
+                .where(ATOM_ID.`in`(atomIds))
                 .execute()
         }
     }

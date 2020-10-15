@@ -1,15 +1,15 @@
 <template>
     <div :class="isToolManage ? 'active' : ''">
         <div v-if="(taskDetail.atomCode && taskDetail.createFrom === 'bs_pipeline') || taskDetail.createFrom === 'gongfeng_scan'">
-            <div>
+            <div class="disf">
                 <span class="pipeline-label">{{$t('编译环境')}}</span>
                 <span class="fs14">{{ compile.compileEnv }}</span>
             </div>
-            <div>
+            <div class="disf">
                 <span class="pipeline-label">{{$t('编译工具')}}</span>
                 <span class="fs14">{{ formatBuildEnv(codeMessage.buildEnv) }}</span>
             </div>
-            <div>
+            <div class="disf">
                 <span class="pipeline-label">{{$t('脚本类型')}}</span>
                 <span class="fs14">{{ codeMessage.projectBuildType }}</span>
             </div>
@@ -44,7 +44,7 @@
                     </bk-option>
                 </bk-select>
             </bk-form-item>
-            <bk-form-item v-for="(item, index) in toolList" :key="index" class="compile-tool" :label="index === 0 ? $t('编译工具') : ''">
+            <bk-form-item v-for="(item, index) in toolList" :key="item" class="compile-tool" :label="index === 0 ? $t('编译工具') : ''">
                 <bk-select
                     @change="getVersionList"
                     :clearable="false"
@@ -76,7 +76,7 @@
                 </bk-select>
                 <div class="tool-icon">
                     <i class="bk-icon icon-plus" @click="addTool(index)" v-if="index === toolList.length - 1"></i>
-                    <i class="bk-icon icon-close" @click="deleteTool(index)" v-if="toolList.length > 1"></i>
+                    <i class="bk-icon icon-close" @click="deleteTool(index)" v-if="toolList.length > 1 || compile.compileTool[index]"></i>
                 </div>
             </bk-form-item>
             <bk-form-item :label="$t('脚本类型')">
@@ -151,11 +151,11 @@
                     {
                         id: 'LINUX',
                         name: 'LINUX'
-                    },
-                    {
-                        id: 'MACOS',
-                        name: 'MACOS'
                     }
+                    // {
+                    //     id: 'MACOS',
+                    //     name: 'MACOS'
+                    // }
                 ],
                 compileToolList: [],
                 compileToolVersionList: [],
@@ -214,7 +214,7 @@
                                 this.compile.compileToolVersion.push(this.codeMessage.buildEnv[key])
                                 this.compile.compileTool = Array.from(new Set(this.compile.compileTool))
                                 this.compile.compileToolVersion = Array.from(new Set(this.compile.compileToolVersion))
-                                this.toolList = this.compile.compileTool
+                                this.toolList = this.compile.compileTool.concat()
                                 this.isCreate = false
                             })
                         } else {
@@ -246,18 +246,23 @@
                 }
             },
             addTool (index) {
-                if (this.compile.compileTool[index] !== '') {
+                if (this.compile.compileTool[index]) {
                     this.toolList.push({})
                 }
             },
             deleteTool (index) {
                 if (this.toolList.length > 1) {
                     this.compile.compileTool.splice(index, 1)
-                    // this.toolList.splice(index, 1)
+                    this.toolList.splice(index, 1)
                     this.compileToolVersionList.splice(index, 1)
                     setTimeout(() => {
                         this.compile.compileToolVersion.splice(index, 1)
                     }, 0)
+                } else if (this.toolList.length === 1) {
+                    this.compile.compileTool = []
+                    this.toolList = [{}]
+                    this.compileToolVersionList = []
+                    this.compile.compileToolVersion = []
                 }
             },
             handleScriptInput (content) {
@@ -276,7 +281,7 @@
 
 <style lang="postcss" scoped>
     .compile-tool {
-        margin-bottom: -57px;
+        margin-bottom: -62px;
         div {
             div {
                 width: 49%;

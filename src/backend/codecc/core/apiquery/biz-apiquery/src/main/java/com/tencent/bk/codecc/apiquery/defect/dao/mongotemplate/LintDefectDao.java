@@ -9,14 +9,17 @@
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.tencent.bk.codecc.apiquery.defect.dao.mongotemplate;
 
+import com.tencent.bk.codecc.apiquery.defect.model.LintDefectV2Model;
 import com.tencent.bk.codecc.apiquery.defect.model.LintStatisticModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
@@ -34,8 +37,7 @@ import java.util.List;
  * @date 2019/5/10
  */
 @Repository
-public class LintDefectDao
-{
+public class LintDefectDao {
     @Autowired
     @Qualifier("defectMongoTemplate")
     private MongoTemplate mongoTemplate;
@@ -48,8 +50,7 @@ public class LintDefectDao
      * @param toolName  工具名
      * @return list
      */
-    public List<LintStatisticModel> findStatByTaskIdInAndToolIs(Collection<Long> taskIdSet, String toolName)
-    {
+    public List<LintStatisticModel> findStatByTaskIdInAndToolIs(Collection<Long> taskIdSet, String toolName) {
         // 以taskId tooName进行过滤
         MatchOperation match = Aggregation.match(Criteria.where("task_id").in(taskIdSet).and("tool_name").is(toolName));
         // 根据时间倒序排列
@@ -77,5 +78,35 @@ public class LintDefectDao
         return queryResult.getMappedResults();
     }
 
+
+    /**
+     * 以规则维度统计告警数
+     *
+     * @param taskIdSet 任务ID集合
+     * @param toolName  工具名
+     * @param status    告警状态
+     * @return list
+     */
+    public List<LintDefectV2Model> findDefectByGroupChecker(Collection<Long> taskIdSet, String toolName,
+            Integer status) {
+        MatchOperation match = Aggregation
+                .match(Criteria.where("task_id").in(taskIdSet).and("tool_name").is(toolName).and("status").is(status));
+
+        SortOperation sort = Aggregation.sort(Sort.Direction.ASC, "task_id");
+
+        // 以规则为维度统计告警数
+        GroupOperation group = Aggregation.group("task_id", "tool_name", "checker")
+                .first("task_id").as("task_id")
+                .first("tool_name").as("tool_name")
+                .first("checker").as("checker")
+                .first("severity").as("severity")
+                .count().as("line_num");
+
+        // 允许磁盘操作(支持较大数据集合的处理)
+        AggregationOptions options = new AggregationOptions.Builder().allowDiskUse(true).build();
+        Aggregation agg = Aggregation.newAggregation(match, group, sort).withOptions(options);
+
+        return mongoTemplate.aggregate(agg, "t_lint_defect_v2", LintDefectV2Model.class).getMappedResults();
+    }
 
 }
