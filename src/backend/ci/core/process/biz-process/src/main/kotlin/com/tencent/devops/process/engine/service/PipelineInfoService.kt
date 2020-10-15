@@ -22,12 +22,10 @@ import com.tencent.devops.process.service.PipelineSettingService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.io.File
 import java.net.URLEncoder
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
-
 
 @Service
 class PipelineInfoService @Autowired constructor(
