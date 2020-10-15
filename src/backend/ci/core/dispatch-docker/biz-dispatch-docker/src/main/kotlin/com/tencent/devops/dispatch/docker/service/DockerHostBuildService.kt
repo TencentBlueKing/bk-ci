@@ -338,7 +338,7 @@ class DockerHostBuildService @Autowired constructor(
                 record.buildId,
                 record.vmSeqId,
                 if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
-            redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
+            // redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
             redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString())
         } catch (e: Exception) {
             logger.error("Finish the docker build(${record.buildId}) error.", e)
