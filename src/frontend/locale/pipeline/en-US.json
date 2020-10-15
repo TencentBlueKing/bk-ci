@@ -532,6 +532,7 @@
         }
     },
     "editPage": {
+        "manualReviewNameSpaceTip": "The user who actually performed the review",
         "atomHelpDoc": "Help documentation",
         "macSystemVersion": "MacOS系统版本",
         "xcodeVersion": "XCode版本",

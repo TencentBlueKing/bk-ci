@@ -120,6 +120,7 @@
     import NormalAtomV2 from './NormalAtomV2'
     import CodeGitWebHookTrigger from './CodeGitWebHookTrigger'
     import SubPipelineCall from './SubPipelineCall'
+    import ManualReviewUserTask from './ManualReviewUserTask'
     import Logo from '@/components/Logo'
 
     export default {
@@ -329,7 +330,8 @@
                     GITHUB: PullGithub,
                     codeGithubWebHookTrigger: CodeGithubWebHookTrigger,
                     pushImageToThirdRepo: PushImageToThirdRepo,
-                    subPipelineCall: SubPipelineCall
+                    subPipelineCall: SubPipelineCall,
+                    manualReviewUserTask: ManualReviewUserTask
                 }
                 return atomMap[this.atomCode] || NormalAtom
             }
