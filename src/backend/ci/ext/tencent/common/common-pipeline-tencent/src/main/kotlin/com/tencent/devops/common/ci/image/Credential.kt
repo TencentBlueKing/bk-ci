@@ -27,6 +27,7 @@
 package com.tencent.devops.common.ci.image
 
 data class Credential(
-    val user: String,
-    val password: String
+    val user: String?,
+    val password: String?,
+    val credentialId: String? = null
 )
