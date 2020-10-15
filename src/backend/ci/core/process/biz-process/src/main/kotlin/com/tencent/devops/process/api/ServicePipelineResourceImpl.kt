@@ -36,6 +36,7 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.pojo.ModelWithSettings
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
@@ -87,12 +88,37 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun get(userId: String, projectId: String, pipelineId: String, channelCode: ChannelCode): Result<Model> {
+    override fun get(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode
+    ): Result<Model> {
         checkParams(userId, projectId, pipelineId)
-        return Result(pipelineService.getPipeline(userId, projectId, pipelineId, channelCode, false))
+        return Result(pipelineService.getPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = channelCode,
+            checkPermission = false
+        ))
     }
 
-    override fun getPipelineInfo(projectId: String, pipelineId: String, channelCode: ChannelCode?): Result<PipelineInfo?> {
+    override fun getBatch(
+        userId: String,
+        projectId: String,
+        pipelineIds: List<String>,
+        channelCode: ChannelCode
+    ): Result<List<ModelWithSettings>> {
+        checkParams(userId, projectId, pipelineIds)
+        return Result(pipelineService.getBatchPipelinesWithSettings(userId, projectId, pipelineIds, channelCode, false))
+    }
+
+    override fun getPipelineInfo(
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode?
+    ): Result<PipelineInfo?> {
         checkProjectId(projectId)
         checkPipelineId(pipelineId)
         return Result(pipelineRepositoryService.getPipelineInfo(projectId, pipelineId))
@@ -176,6 +202,12 @@ class ServicePipelineResourceImpl @Autowired constructor(
         checkPipelineId(pipelineId)
     }
 
+    private fun checkParams(userId: String, projectId: String, pipelineIds: List<String>) {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkProjectIds(pipelineIds)
+    }
+
     private fun checkUserId(userId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -185,6 +217,12 @@ class ServicePipelineResourceImpl @Autowired constructor(
     private fun checkProjectId(projectId: String) {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
+        }
+    }
+
+    private fun checkProjectIds(projectIds: List<String>) {
+        if (projectIds.isEmpty()) {
+            throw ParamBlankException("Invalid projectId list")
         }
     }
 
