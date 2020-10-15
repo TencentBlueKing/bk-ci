@@ -30,9 +30,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
@@ -52,18 +54,17 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostZoneDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerPoolDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskDao
-import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostType
-import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
-import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.dispatch.docker.utils.CommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostLock
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.utils.DockerUtils
+import com.tencent.devops.dispatch.pojo.ContainerInfo
+import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
+import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.VmInfo
@@ -324,7 +325,7 @@ class DockerHostBuildService @Autowired constructor(
         }
     }
 
-    private fun finishBuild(record: TDispatchPipelineDockerBuildRecord, success: Boolean) {
+    private fun finishBuild(record: TDispatchPipelineDockerBuildRecord, success: Boolean, buildLessFlag: Boolean = false) {
         logger.info("Finish the docker build(${record.buildId}) with result($success)")
         try {
             pipelineDockerBuildDao.updateStatus(dslContext,
@@ -337,8 +338,12 @@ class DockerHostBuildService @Autowired constructor(
                 record.buildId,
                 record.vmSeqId,
                 if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
-            // redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
             redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString())
+
+            // 无编译环境清除redisAuth
+            if (buildLessFlag) {
+                redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
+            }
         } catch (e: Exception) {
             logger.error("Finish the docker build(${record.buildId}) error.", e)
         }
@@ -918,13 +923,13 @@ class DockerHostBuildService @Autowired constructor(
             }
             records.forEach {
                 dispatchStopCmd(it, userId)
-                finishBuild(it, success)
+                finishBuild(it, success, true)
             }
         } else {
             val record = pipelineDockerBuildDao.getBuild(dslContext, buildId, vmSeqId!!.toInt())
             if (record != null) {
                 dispatchStopCmd(record, userId)
-                finishBuild(record, success)
+                finishBuild(record, success, true)
             }
         }
     }
