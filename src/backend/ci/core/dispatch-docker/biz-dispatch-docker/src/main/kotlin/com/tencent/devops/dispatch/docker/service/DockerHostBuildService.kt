@@ -30,7 +30,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
