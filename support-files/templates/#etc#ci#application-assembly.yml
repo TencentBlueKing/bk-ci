@@ -6,7 +6,7 @@ spring:
     password: __MYSQL_PASS__
 
 server:
-  port: 21900
+  port: __BK_CI_ASSEMBLY_API_PORT__
 
 #### Artifactory
 # 以下为构件存储目录，需要做分布式分享
