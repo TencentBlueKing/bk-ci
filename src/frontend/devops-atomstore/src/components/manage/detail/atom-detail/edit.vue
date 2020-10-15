@@ -48,7 +48,7 @@
             <bk-form-item :label="$t('store.发布者')" :rules="[requireRule($t('store.发布者'))]" :required="true" property="publisher" error-display-type="normal">
                 <bk-input v-model="formData.publisher" :placeholder="$t('store.请输入')"></bk-input>
             </bk-form-item>
-            <bk-form-item :rules="[requireRule('Logo')]" :required="true" property="logoUrl" error-display-type="normal" class="edit-logo">
+            <bk-form-item :required="true" property="logoUrl" error-display-type="normal" class="edit-logo">
                 <select-logo :form="formData" type="ATOM" :is-err="false" ref="logoUrlError"></select-logo>
             </bk-form-item>
             <bk-form-item>
@@ -131,11 +131,11 @@
             save () {
                 this.$refs.atomEdit.validate().then(() => {
                     this.isSaving = true
-                    const { name, classifyCode, summary, description, logoUrl, publisher, labelIdList, privateReason } = this.formData
+                    const { name, classifyCode, summary, description, logoUrl, iconData, publisher, labelIdList, privateReason } = this.formData
                     this.formData.labelList = this.labelList.filter((label) => (this.formData.labelIdList.includes(label.id)))
                     const putData = {
                         atomCode: this.detail.atomCode,
-                        data: { name, classifyCode, summary, description, logoUrl, publisher, labelIdList, privateReason }
+                        data: { name, classifyCode, summary, description, logoUrl, iconData, publisher, labelIdList, privateReason }
                     }
                     this.$store.dispatch('store/modifyAtomDetail', putData).then(() => {
                         this.$store.dispatch('store/clearDetail')
