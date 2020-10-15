@@ -1,8 +1,0 @@
-dependencies {
-    compile project(":core:quartz:biz-quartz")
-    compile project(":core:common:common-auth-mock")
-}
-
-version = null
-
-apply from: "$rootDir/task_spring_boot_package.gradle"

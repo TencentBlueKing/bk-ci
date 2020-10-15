@@ -1,0 +1,12 @@
+{
+    "_id" : ObjectId("5dc26ab7c875219394340fe2"),
+    "_class" : "com.tencent.bk.codecc.task.model.CovPlatformInfoEntity",
+    "ip" : "",
+    "port" : "8080",
+    "user_name" : "xxxx",
+    "passwd" : "xxxx",
+    "status" : 0,
+    "owner" : "xxxx",
+    "create_date" : NumberLong(1573022391585),
+    "created_by" : "xxxx"
+}

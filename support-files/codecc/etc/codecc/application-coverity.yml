@@ -1,0 +1,57 @@
+# 服务配置文件模板
+spring:
+  profiles: prod
+  application:
+    name: coverity
+    desc: Coverity Service
+    version: 4.0.0
+    packageName: com.tencent.bk.codecc.coverity
+  redis:
+    database: 1
+    host: __REDIS_IP__
+    password: __REDIS_PASS__
+    port: __REDIS_PORT__
+    pool:
+      maxActive: 64
+      maxWait: -1
+      maxIdle: 64
+      minIdle: 0
+  rabbitmq:
+    virtual-host: __RABBITMQ_CODECC_VHOST__
+    username: __RABBITMQ_USERNAME__
+    password: __RABBITMQ_PASSWORD__
+    addresses: __RABBITMQ_HOST__:__RABBITMQ__PORT__
+    listener:
+      simple:
+        concurrency: 10
+        acknowledge-mode: auto
+  cloud:
+    consul:
+      discovery:
+        tags: __DEVOPS_CONSUL_TAG__
+        health-check-path: /management/health
+        heartbeat:
+          enabled: true
+        query-passing: true
+        preferIpAddress: true
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+# 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同
+server:
+  port: __CODECC_COVERITY_PORT__ # 服务端口
+  servlet-path: /
+  undertow:
+    worker-threads: 100
+
+jasypt:
+  encryptor:
+    password: __JASYPT_ENCRYPTOR_PASS__
+
+coverity:
+  userName: __COVERITY_USERNAME__
+  password: __COVERITY_PASS__
+  platformRootUrl: __COVERITY_PLATFORM_ROOT_URL__
+  namespaceURI: __COVERITY_NAMESPACE_URL__

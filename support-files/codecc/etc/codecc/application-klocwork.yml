@@ -1,0 +1,61 @@
+# 服务配置文件模板
+spring:
+  application:
+    name: klocwork
+    desc: Klocwork Service
+    version: 4.0.0
+    packageName: com.tencent.bk.codecc.klocwork
+  redis:
+    database: 1
+    host: __REDIS_IP__
+    port: __REDIS_PORT__
+    password: __REDIS_PASS__
+    pool:
+      maxActive: 64
+      maxWait: -1
+      maxIdle: 64
+      minIdle: 0
+  rabbitmq:
+    virtual-host: __RABBITMQ_CODECC_VHOST__
+    username: __RABBITMQ_USERNAME__
+    password: __RABBITMQ_PASSWORD__
+    addresses: __RABBITMQ_HOST__:__RABBITMQ__PORT__
+    listener:
+      simple:
+        concurrency: 10
+        acknowledge-mode: auto
+  cloud:
+    consul:
+      discovery:
+        tags: __DEVOPS_CONSUL_TAG__
+        health-check-path: /management/health
+        heartbeat:
+          enabled: true
+        query-passing: true
+        preferIpAddress: true
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+# 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同
+server:
+  port: __CODECC_KLOCWORK_PORT__ # 服务端口
+
+platform:
+  server:
+    port: __PLATFOR_SERVER_PORT__
+  ltoken:
+    path: /data/bkee/.klocwork/ltoken
+
+security:
+  dataTransferKey: __SECURITY_DATA_TRANSFER_KEY__
+  dataTransferKeyIV: __SECURITY_DATA_TRANSFER_KEY_IV__
+
+default:
+  close:
+    checkers: CWARN.MEM.NONPOD;UNINIT.CTOR.MIGHT;MLK.MIGHT;NPD.FUNC.MIGHT;ABV.GENERAL;JD.VNU.NULL;JD.VNU
+
+jasypt:
+  encryptor:
+    password: __JASYPT_ENCRYPTOR_PASS__

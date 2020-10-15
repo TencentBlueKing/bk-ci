@@ -1,6 +1,0 @@
-apply plugin: "maven"
-
-dependencies {
-    compile project(":core:common:common-auth-api")
-    compile project(":core:common:common-redis")
-}
