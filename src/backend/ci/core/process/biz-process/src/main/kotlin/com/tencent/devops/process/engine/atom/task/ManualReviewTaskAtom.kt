@@ -174,7 +174,8 @@ class ManualReviewTaskAtom(
                 buildId = buildId,
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
-                varName = param.namespace + MANUAL_REVIEW_ATOM_REVIEWER,
+                varName = if (param.namespace.isNullOrBlank()) MANUAL_REVIEW_ATOM_REVIEWER
+                    else "${param.namespace}_$MANUAL_REVIEW_ATOM_REVIEWER",
                 varValue = manualActionUserId
             )
             return when (ManualReviewAction.valueOf(manualAction)) {
