@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.listener.pipeline
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
@@ -109,7 +110,9 @@ class MQPipelineCreateListener @Autowired constructor(
                 e.data.input.eventType
             )
             is CodeGitGenericWebHookTriggerElement -> {
-                val repositoryConfig = if (event.variables != null) {
+                val repositoryConfig = if (e.data.input.repositoryType == RepositoryTypeNew.URL &&
+                    event.variables != null
+                ) {
                     RepositoryConfigUtils.replaceCodeProp(
                         repositoryConfig = RepositoryConfigUtils.buildConfig(e),
                         variables = event.variables as Map<String, String>
@@ -129,7 +132,9 @@ class MQPipelineCreateListener @Autowired constructor(
         if (repositoryConfig != null && scmType != null) {
             logger.info("[${event.pipelineId}]| Trying to add the $scmType web hook for repo($repositoryConfig)")
             try {
-                if (e is CodeGitGenericWebHookTriggerElement) {
+                if (e is CodeGitGenericWebHookTriggerElement &&
+                    e.data.input.repositoryType == RepositoryTypeNew.URL
+                ) {
                     val repo = RepositoryUtils.buildRepository(
                         projectId = event.projectId,
                         userName = event.userId,

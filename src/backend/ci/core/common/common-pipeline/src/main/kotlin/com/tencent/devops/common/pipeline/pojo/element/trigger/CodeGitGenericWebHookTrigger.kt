@@ -26,6 +26,7 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.trigger
 
+import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -55,6 +56,12 @@ data class CodeGitGenericWebHookTriggerData(
 data class CodeGitGenericWebHookTriggerInput(
     @ApiModelProperty("代码库类型", required = true)
     val scmType: String,
+    @ApiModelProperty("代码库类型")
+    val repositoryType: RepositoryTypeNew? = null,
+    @ApiModelProperty("仓库ID", required = true)
+    val repositoryHashId: String?,
+    @ApiModelProperty("代码库名")
+    val repositoryName: String? = null,
     @ApiModelProperty("代码库链接", required = true)
     val repositoryUrl: String,
     @ApiModelProperty("凭证ID", required = false)

@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
@@ -314,7 +315,9 @@ class PipelineBuildWebhookService @Autowired constructor(
             }
 
             logger.info("Get the code trigger pipeline $pipelineId branch ${webHookParams.branchName}")
-            val repo = if (element is CodeGitGenericWebHookTriggerElement) {
+            val repo = if (element is CodeGitGenericWebHookTriggerElement &&
+                element.data.input.repositoryType == RepositoryTypeNew.URL
+            ) {
                 RepositoryUtils.buildRepository(
                     projectId = pipelineInfo.projectId,
                     userName = pipelineInfo.lastModifyUser,
