@@ -147,6 +147,7 @@
             PushImageToThirdRepo,
             CodeGitWebHookTrigger,
             SubPipelineCall,
+            ManualReviewUserTask,
             Logo
         },
         props: {
