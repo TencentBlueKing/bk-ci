@@ -68,7 +68,7 @@ buildscript {
 
 ext {
     // Open the Git repository in the current directory.
-    git = org.ajoberstar.grgit.Grgit.open(file('../../'))
+    git = org.ajoberstar.grgit.Grgit.open(file('../../../'))
 
     // Get commit id of HEAD.
     commit = git.head()
