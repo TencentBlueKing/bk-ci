@@ -69,6 +69,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
+import com.tencent.devops.process.pojo.ModelWithSettings
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
@@ -621,6 +622,16 @@ class PipelineRepositoryService constructor(
 
     fun getModel(pipelineId: String, version: Int? = null): Model? {
         val modelString = pipelineResDao.getVersionModelString(dslContext, pipelineId, version)
+        return try {
+            objectMapper.readValue(modelString, Model::class.java)
+        } catch (e: Exception) {
+            logger.error("get process($pipelineId) model fail", e)
+            null
+        }
+    }
+
+    fun getLastestModelsWithSettings(pipelineIds: List<String>): ModelWithSettings? {
+        val modelString = pipelineResDao.getLatestModels(dslContext, pipelineIds)
         return try {
             objectMapper.readValue(modelString, Model::class.java)
         } catch (e: Exception) {
