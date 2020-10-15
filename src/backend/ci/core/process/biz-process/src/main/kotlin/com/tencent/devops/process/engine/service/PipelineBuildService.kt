@@ -306,6 +306,12 @@ class PipelineBuildService(
                 )
             }
 
+            if(buildInfo.pipelineId != pipelineId) {
+                logger.warn("retry error: input|$pipelineId| buildId-pipeline| ${buildInfo.pipelineId}| $buildId")
+                throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
+                )
+            }
             val model = buildDetailService.getBuildModel(buildId) ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
@@ -709,12 +715,19 @@ class PipelineBuildService(
         checkPermission: Boolean = true
     ) {
 
-        pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                 defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId))
+
+        if(buildInfo.pipelineId != pipelineId) {
+            logger.warn("buildManualReview error: input|$pipelineId| buildId-pipeline| ${buildInfo.pipelineId}| $buildId")
+            throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
+            )
+        }
 
         val model = pipelineRepositoryService.getModel(pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -772,12 +785,20 @@ class PipelineBuildService(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 defaultMessage = "流水线不存在",
                 params = arrayOf(buildId))
-        pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                 defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId))
+
+        if(buildInfo.pipelineId != pipelineId) {
+            logger.warn("buildManualStartStage error: input|$pipelineId| buildId-pipeline| ${buildInfo.pipelineId}| $buildId")
+            throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
+            )
+        }
+
         val buildStage = pipelineStageService.getStage(buildId, stageId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -1476,6 +1497,13 @@ class PipelineBuildService(
             val modelDetail = buildDetailService.get(buildId)
                 ?: return
             val alreadyCancelUser = modelDetail.cancelUserId
+            
+            if (modelDetail.pipelineId != pipelineId) {
+                logger.warn("shutdown error: input|$pipelineId| buildId-pipeline| ${modelDetail.pipelineId}| $buildId")
+                throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
+                )
+            }
 
             if (!alreadyCancelUser.isNullOrBlank()) {
                 logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
