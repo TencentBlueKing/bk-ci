@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.process.pojo.ModelWithSettings
+import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
@@ -141,7 +141,7 @@ interface ApigwPipelineResourceV3 {
         projectId: String,
         @ApiParam("流水线ID列表", required = true)
         pipelineIds: List<String>
-    ): Result<List<ModelWithSettings>>
+    ): Result<List<PipelineWithModel>>
 
     @ApiOperation("删除流水线编排")
     @DELETE

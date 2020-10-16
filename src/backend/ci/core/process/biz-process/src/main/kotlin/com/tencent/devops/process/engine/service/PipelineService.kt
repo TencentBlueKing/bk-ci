@@ -65,7 +65,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.ModelWithSettings
+import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.app.PipelinePage
@@ -743,14 +743,13 @@ class PipelineService @Autowired constructor(
         }
     }
 
-    fun getBatchPipelinesWithSettings(
+    fun getBatchPipelinesWithModel(
         userId: String,
         projectId: String,
         pipelineIds: List<String>,
         channelCode: ChannelCode,
         checkPermission: Boolean = true
-    ): List<ModelWithSettings> {
-
+    ): List<PipelineWithModel> {
         if (checkPermission) {
             pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
@@ -758,73 +757,7 @@ class PipelineService @Autowired constructor(
                 permission = AuthPermission.VIEW
             )
         }
-
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在"
-            )
-
-        if (pipelineInfo.channelCode != channelCode) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                defaultMessage = "指定要复制的流水线渠道来源${pipelineInfo.channelCode}不符合$channelCode",
-                params = arrayOf(pipelineInfo.channelCode.name)
-            )
-        }
-
-        val model = pipelineRepositoryService.getModel(pipelineId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                defaultMessage = "指定要复制的流水线-模型不存在"
-            )
-
-        try {
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-            val buildNo = triggerContainer.buildNo
-            if (buildNo != null) {
-                buildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId)
-                    ?: buildNo.buildNo
-            }
-            // 兼容性处理
-            BuildPropertyCompatibilityTools.fix(triggerContainer.params)
-
-            // 获取流水线labels
-            val groups = pipelineGroupService.getGroups(userId = userId, projectId = projectId, pipelineId = pipelineId)
-            val labels = mutableListOf<String>()
-            groups.forEach {
-                labels.addAll(it.labels)
-            }
-            model.labels = labels
-            model.name = pipelineInfo.pipelineName
-            model.desc = pipelineInfo.pipelineDesc
-            model.pipelineCreator = pipelineInfo.creator
-
-            val defaultTagIds = listOf(pipelineStageService.getDefaultStageTagId())
-            model.stages.forEach {
-                if (it.name.isNullOrBlank()) it.name = it.id
-                if (it.tag == null) it.tag = defaultTagIds
-            }
-
-            // 部分老的模板实例没有templateId，需要手动加上
-            if (model.instanceFromTemplate == true && model.templateId.isNullOrBlank()) {
-                val record = templatePipelineDao.get(dslContext, pipelineId)
-                model.templateId = record?.templateId
-            }
-
-            return model
-        } catch (e: Exception) {
-            logger.warn("Fail to get the pipeline($pipelineId) definition of project($projectId)", e)
-            throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.OPERATE_PIPELINE_FAIL,
-                defaultMessage = "Fail to get the pipeline",
-                params = arrayOf(e.message ?: "unknown")
-            )
-        }
+        return pipelineRepositoryService.getPipelinesWithLastestModels(projectId, pipelineIds)
     }
 
     fun deletePipeline(

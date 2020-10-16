@@ -33,7 +33,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwPipelineResourceV3
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.pojo.ModelWithSettings
+import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
@@ -115,7 +115,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
         userId: String,
         projectId: String,
         pipelineIds: List<String>
-    ): Result<List<ModelWithSettings>> {
+    ): Result<List<PipelineWithModel>> {
         logger.info("Get batch pipelines at project:$projectId, pipelineIds:$pipelineIds")
         return client.get(ServicePipelineResource::class).getBatch(
             userId = userId,
