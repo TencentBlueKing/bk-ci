@@ -82,6 +82,7 @@ class PipelineWebhookDao {
         return with(pipelineWebhook) {
             with(T_PIPELINE_WEBHOOK) {
                 dslContext.update(this)
+                    .set(REPOSITORY_TYPE, repositoryType.name)
                     .set(REPO_TYPE, repoType?.name)
                     .set(REPO_HASH_ID, repoHashId)
                     .set(REPO_NAME, repoName)

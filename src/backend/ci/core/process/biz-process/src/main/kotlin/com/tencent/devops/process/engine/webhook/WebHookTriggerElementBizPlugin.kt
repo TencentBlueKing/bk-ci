@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.webhook
 
+import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
@@ -124,7 +125,10 @@ class CodeGitGenericWebHookTriggerElementBizPlugin constructor(
 
     override fun check(element: CodeGitGenericWebHookTriggerElement, appearedCnt: Int) {
         with(element.data.input) {
-            if (credentialId.isNullOrBlank() && token.isNullOrBlank()) {
+            if (repositoryType == RepositoryTypeNew.URL &&
+                credentialId.isNullOrBlank() &&
+                token.isNullOrBlank()
+            ) {
                 throw RuntimeException("凭证不能为空")
             }
         }
