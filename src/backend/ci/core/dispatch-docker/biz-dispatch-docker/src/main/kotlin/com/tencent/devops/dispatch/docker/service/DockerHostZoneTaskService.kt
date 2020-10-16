@@ -27,18 +27,27 @@
 package com.tencent.devops.dispatch.docker.service
 
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostZoneDao
 import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
+import com.tencent.devops.dispatch.docker.pojo.SpecialDockerHostVO
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerHostZoneRecord
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class DockerHostZoneTaskService @Autowired constructor(
     private val dockerHostZoneDao: PipelineDockerHostZoneDao,
+    private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val dslContext: DSLContext
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(DockerHostZoneTaskService::class.java)
+    }
+
     fun create(hostIp: String, zone: String, remark: String?) = dockerHostZoneDao.insertHostZone(dslContext, hostIp, zone, remark)
 
     fun delete(hostIp: String) = dockerHostZoneDao.delete(dslContext, hostIp)
@@ -54,6 +63,58 @@ class DockerHostZoneTaskService @Autowired constructor(
             }
         }
         return dockerHostZoneList
+    }
+
+    fun create(userId: String, specialDockerHostVOs: List<SpecialDockerHostVO>): Boolean {
+        logger.info("$userId create specialDockerHost: $specialDockerHostVOs")
+
+        try {
+            specialDockerHostVOs.forEach {
+                pipelineDockerHostDao.insertHost(
+                    dslContext = dslContext,
+                    projectId = it.projectId,
+                    hostIp = it.hostIp,
+                    remark = it.remark
+                )
+            }
+
+            return true
+        } catch (e: Exception) {
+            logger.error("OP create specialDockerHost error.", e)
+            throw RuntimeException("OP create specialDockerHost error.")
+        }
+    }
+
+    fun update(userId: String, specialDockerHostVO: SpecialDockerHostVO): Boolean {
+        logger.info("$userId update specialDockerhost specialDockerHostVO: $specialDockerHostVO")
+        try {
+            pipelineDockerHostDao.updateHost(
+                dslContext = dslContext,
+                projectId = specialDockerHostVO.projectId,
+                hostIp = specialDockerHostVO.hostIp,
+                remark = specialDockerHostVO.remark
+            )
+            return true
+        } catch (e: Exception) {
+            logger.error("OP update specialDockerhost error.", e)
+            throw RuntimeException("OP update specialDockerhost error.")
+        }
+    }
+
+    fun delete(userId: String, projectId: String): Boolean {
+        logger.info("$userId delete specialDockerhost: $projectId")
+
+        if (projectId.isEmpty()) {
+            throw RuntimeException("projectId is null or ''")
+        }
+
+        try {
+            pipelineDockerHostDao.delete(dslContext, projectId)
+            return true
+        } catch (e: Exception) {
+            logger.error("OP specialDockerhost delete error.", e)
+            throw RuntimeException("OP specialDockerhost delete error.")
+        }
     }
 
     fun enable(hostIp: String, enable: Boolean) = dockerHostZoneDao.enable(dslContext, hostIp, enable)

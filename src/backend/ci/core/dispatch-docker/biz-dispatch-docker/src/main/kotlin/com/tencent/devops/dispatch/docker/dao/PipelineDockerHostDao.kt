@@ -62,6 +62,32 @@ class PipelineDockerHostDao {
         }
     }
 
+    fun updateHost(
+        dslContext: DSLContext,
+        projectId: String,
+        hostIp: String,
+        remark: String?
+    ): Int {
+        with(TDispatchPipelineDockerHost.T_DISPATCH_PIPELINE_DOCKER_HOST) {
+            val now = LocalDateTime.now()
+            return dslContext.update(this)
+                .set(HOST_IP, hostIp)
+                .set(REMARK, remark)
+                .set(UPDATED_TIME, now)
+                .where(PROJECT_CODE.eq(projectId))
+                .execute()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        projectId: String
+    ): Int {
+        with(TDispatchPipelineDockerHost.T_DISPATCH_PIPELINE_DOCKER_HOST) {
+            return dslContext.delete(this).where(PROJECT_CODE.eq(projectId)).execute()
+        }
+    }
+
     fun getHost(
         dslContext: DSLContext,
         projectId: String,

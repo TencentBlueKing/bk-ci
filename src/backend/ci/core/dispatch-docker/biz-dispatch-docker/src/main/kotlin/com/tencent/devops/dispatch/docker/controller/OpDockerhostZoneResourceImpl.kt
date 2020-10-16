@@ -31,12 +31,14 @@ import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.op.OpDockerHostZoneResource
 import com.tencent.devops.dispatch.docker.pojo.DockerHostZoneWithPage
+import com.tencent.devops.dispatch.docker.pojo.SpecialDockerHostVO
 import com.tencent.devops.dispatch.docker.service.DockerHostZoneTaskService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpDockerhostZoneResourceImpl @Autowired constructor(private val dockerHostZoneTaskService: DockerHostZoneTaskService) :
-    OpDockerHostZoneResource {
+class OpDockerhostZoneResourceImpl @Autowired constructor(
+    private val dockerHostZoneTaskService: DockerHostZoneTaskService
+) : OpDockerHostZoneResource {
     override fun create(hostIp: String, zone: Zone, remark: String?): Result<Boolean> {
         dockerHostZoneTaskService.create(hostIp, zone.toString(), remark)
         return Result(true)
@@ -54,5 +56,20 @@ class OpDockerhostZoneResourceImpl @Autowired constructor(private val dockerHost
     override fun enable(hostIp: String, enable: Boolean): Result<Boolean> {
         dockerHostZoneTaskService.enable(hostIp, enable)
         return Result(true)
+    }
+
+    override fun createSpecialDockerHost(
+        userId: String,
+        specialDockerHostVOs: List<SpecialDockerHostVO>
+    ): Result<Boolean> {
+        return Result(dockerHostZoneTaskService.create(userId, specialDockerHostVOs))
+    }
+
+    override fun updateSpecialDockerHost(userId: String, specialDockerHostVO: SpecialDockerHostVO): Result<Boolean> {
+        return Result(dockerHostZoneTaskService.update(userId, specialDockerHostVO))
+    }
+
+    override fun deleteSpecialDockerHost(userId: String, projectId: String): Result<Boolean> {
+        return Result(dockerHostZoneTaskService.delete(userId, projectId))
     }
 }
