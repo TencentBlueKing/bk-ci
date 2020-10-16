@@ -80,13 +80,23 @@ class MarketAtomOfflineDao {
     /**
      * 设置状态
      */
-
     fun setStatus(dslContext: DSLContext, id: String, status: Byte, userId: String) {
         with(TAtomOffline.T_ATOM_OFFLINE) {
             dslContext.update(this)
                 .set(STATUS, status)
                 .set(MODIFIER, userId)
                 .where(ID.eq(id))
+                .execute()
+        }
+    }
+
+    /**
+     * 删除插件下线记录
+     */
+    fun deleteAtomOffline(dslContext: DSLContext, atomCode: String) {
+        with(TAtomOffline.T_ATOM_OFFLINE) {
+            dslContext.deleteFrom(this)
+                .where(ATOM_CODE.eq(atomCode))
                 .execute()
         }
     }

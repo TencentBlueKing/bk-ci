@@ -225,12 +225,20 @@ class TemplateDao {
     fun delete(
         dslContext: DSLContext,
         templateId: String,
-        versions: Set<Long>
+        versions: Set<Long>? = null,
+        versionName: String? = null
     ): Int {
         with(TTemplate.T_TEMPLATE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ID.eq(templateId))
+            if (null != versions) {
+                conditions.add(VERSION.`in`(versions))
+            }
+            if (null != versionName) {
+                conditions.add(VERSION_NAME.eq(versionName))
+            }
             return dslContext.deleteFrom(this)
-                .where(ID.eq(templateId))
-                .and(VERSION.`in`(versions))
+                .where(conditions)
                 .execute()
         }
     }

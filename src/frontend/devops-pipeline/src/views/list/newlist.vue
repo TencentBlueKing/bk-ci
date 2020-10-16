@@ -839,10 +839,15 @@
                         status: 'known_error'
                     }
                 } catch (err) {
-                    this.handleError(err, this.$permissionActionMap.execute, {
-                        id: pipelineId,
-                        name: feConfig.pipelineName
-                    }, projectId)
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.execute,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: pipelineId,
+                            name: feConfig.pipelineName
+                        }],
+                        projectId
+                    }])
                 } finally {
                     this.pipelineFeConfMap[pipelineId].buttonAllow.terminatePipeline = true
                 }
@@ -964,10 +969,15 @@
                                 message = this.$t('deleteSuc')
                                 theme = 'success'
                             } catch (err) {
-                                this.handleError(err, this.$permissionActionMap.delete, {
-                                    id: curPipeline.pipelineId,
-                                    name: curPipeline.pipelineName
-                                }, this.projectId)
+                                this.handleError(err, [{
+                                    actionId: this.$permissionActionMap.delete,
+                                    resourceId: this.$permissionResourceMap.pipeline,
+                                    instanceId: [{
+                                        id: curPipeline.pipelineId,
+                                        name: curPipeline.pipelineName
+                                    }],
+                                    projectId: this.projectId
+                                }])
                             } finally {
                                 message && this.$showTips({
                                     message,
@@ -1022,10 +1032,22 @@
 
                     this.$refs.infiniteScroll.queryList(1, this.pipelineList.length + 1)
                 } catch (err) {
-                    this.handleError(err, this.$permissionActionMap.edit, {
-                        id: prePipeline.pipelineId,
-                        name: prePipeline.pipelineName
-                    }, projectId)
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.create,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: prePipeline.pipelineId,
+                            name: prePipeline.pipelineName
+                        }]
+                    }, {
+                        actionId: this.$permissionActionMap.edit,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: prePipeline.pipelineId,
+                            name: prePipeline.pipelineName
+                        }],
+                        projectId
+                    }])
                 } finally {
                     setTimeout(() => {
                         copyConfig.loading = false

@@ -29,6 +29,7 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -133,33 +134,35 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 throw OperationException("${result.status}:${result.message}")
             }
             val logoAddress = result.data!!
-
+            val userDeptDetail = UserDeptDetail(
+                    bgName = "",
+                    bgId = "1",
+                    centerName = "",
+                    centerId = "1",
+                    deptName = "",
+                    deptId = "1",
+                    groupId = "0",
+                    groupName = ""
+            )
             try {
                 // 注册项目到权限中心
                 projectPermissionService.createResources(
                     userId = userId,
                     accessToken = "",
                     resourceRegisterInfo = ResourceRegisterInfo(
-                        projectCreateInfo.englishName,
-                        projectCreateInfo.projectName
-                    )
+                            resourceCode = projectCreateInfo.englishName,
+                            resourceName = projectCreateInfo.projectName
+                    ),
+                    userDeptDetail = userDeptDetail
                 )
+            } catch (e: PermissionForbiddenException) {
+                throw e
             } catch (e: Exception) {
                 logger.warn("权限中心创建项目信息： $projectCreateInfo", e)
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
             }
 
             val projectId = UUIDUtil.generate()
-            val userDeptDetail = UserDeptDetail(
-                bgName = "",
-                bgId = "1",
-                centerName = "",
-                centerId = "1",
-                deptName = "",
-                deptId = "1",
-                groupId = "0",
-                groupName = ""
-            )
             try {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
@@ -437,7 +440,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
         if (!validate) {
             logger.warn("$projectCode| $userId| ${permission.value} validatePermission fail")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
         }
         return true
     }
