@@ -94,7 +94,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_OPERATION
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_USERNAME
 import org.slf4j.LoggerFactory
 
-open class GitWebHookStartParam(
+class GitWebHookStartParam(
     private val projectId: String,
     private val repo: Repository,
     private val params: ScmWebhookMatcher.WebHookParams,
@@ -119,7 +119,7 @@ open class GitWebHookStartParam(
         return startParams
     }
 
-    open fun getEventTypeStartParams(startParams: MutableMap<String, Any>) {
+    fun getEventTypeStartParams(startParams: MutableMap<String, Any>) {
         when (params.eventType) {
             CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT ->
                 mergeRequestEventStartParams(startParams)

@@ -42,6 +42,8 @@ data class AtomBaseInfoUpdateRequest(
     val description: String? = null,
     @ApiModelProperty("插件logo", required = false)
     val logoUrl: String? = null,
+    @ApiModelProperty("icon图标base64字符串", required = false)
+    val iconData: String? = null,
     @ApiModelProperty("发布者", required = false)
     val publisher: String? = null,
     @ApiModelProperty("原子标签列表", required = false)

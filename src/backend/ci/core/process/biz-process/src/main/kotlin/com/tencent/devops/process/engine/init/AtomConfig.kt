@@ -37,6 +37,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.service.BuildVariableService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
@@ -54,12 +55,14 @@ class AtomConfig {
     fun manualReviewTaskAtom(
         @Autowired client: Client,
         @Autowired buildLogPrinter: BuildLogPrinter,
-        @Autowired pipelineUrlBean: PipelineUrlBean
+        @Autowired pipelineUrlBean: PipelineUrlBean,
+        @Autowired pipelineVariableService: BuildVariableService
     ) =
         ManualReviewTaskAtom(
             client = client,
             buildLogPrinter = buildLogPrinter,
-            pipelineUrlBean = pipelineUrlBean
+            pipelineUrlBean = pipelineUrlBean,
+            pipelineVariableService = pipelineVariableService
         )
 
     @Bean

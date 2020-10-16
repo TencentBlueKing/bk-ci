@@ -24,72 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.common.api.enums
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Logo
-import com.tencent.devops.store.pojo.common.StoreLogoInfo
-import com.tencent.devops.store.pojo.common.StoreLogoReq
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.InputStream
-
-/**
- * store商城logo逻辑类
- *
- * since: 2019-02-15
- */
-interface StoreLogoService {
-
-    /**
-     * 上传logo
-     */
-    fun uploadStoreLogo(
-        userId: String,
-        contentLength: Long,
-        compressFlag: Boolean? = false,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<StoreLogoInfo?>
-
-    /**
-     * 获取logo列表
-     */
-    fun list(
-        userId: String,
-        type: String
-    ): Result<List<Logo>?>
-
-    /**
-     * 获取logo
-     */
-    fun get(
-        userId: String,
-        id: String
-    ): Result<Logo?>
-
-    /**
-     * 新增logo
-     */
-    fun add(
-        userId: String,
-        type: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
-
-    /**
-     * 更新logo
-     */
-    fun update(
-        userId: String,
-        id: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
-
-    /**
-     * 删除logo
-     */
-    fun delete(
-        userId: String,
-        id: String
-    ): Result<Boolean>
+enum class RepositoryTypeNew {
+    ID,
+    NAME,
+    URL
 }
