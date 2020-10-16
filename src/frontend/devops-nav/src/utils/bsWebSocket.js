@@ -58,19 +58,19 @@ class BlueShieldWebSocket {
         const data = JSON.parse(res.body) || {}
         const type = data.webSocketType
         const page = data.page
-        if (!location.href.includes(page)) return
 
         switch (type) {
             case 'NAV':
                 this.handleNotify(data)
                 break
             case 'IFRAME':
+                if (!location.href.includes(page)) return
                 const iframe = document.getElementById('iframe-box')
                 const iframeWindow = iframe.contentWindow
                 iframeWindow.postMessage(data, '*')
                 break
             case 'AMD':
-                window.postMessage(data)
+                if (location.href.includes(page)) window.postMessage(data)
                 break
         }
     }
