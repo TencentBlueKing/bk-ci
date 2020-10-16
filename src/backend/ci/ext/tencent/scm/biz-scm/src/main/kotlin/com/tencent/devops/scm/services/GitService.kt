@@ -1051,14 +1051,12 @@ class GitService @Autowired constructor(
             val data = it.body()!!.string()
             logger.info("getRepoRecentCommitInfo token is:$token, response>> $data")
             if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-            if (!StringUtils.isEmpty(data)) {
-                val dataMap = JsonUtil.toMap(data)
-                val message = dataMap["message"]
-                if (StringUtils.isEmpty(message)) {
-                    return Result(JsonUtil.to(data, GitCommit::class.java))
-                }
+            return try {
+                Result(JsonUtil.to(data, GitCommit::class.java))
+            } catch (e: Exception) {
+                logger.warn("getRepoRecentCommitInfo error: ${e.message}", e)
+                MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             }
-            return Result(data = null)
         }
     }
 
