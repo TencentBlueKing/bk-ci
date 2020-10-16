@@ -71,7 +71,7 @@ import {
     TOGGLE_STAGE_REVIEW_PANEL
 } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
-import { hashID } from '@/utils/util'
+import { hashID, randomString } from '@/utils/util'
 
 function rootCommit (commit,
     ACTION_CONST, payload) {
@@ -307,7 +307,7 @@ export default {
             const defaultType = (typeList || []).find(type => type.type === defaultBuildType) || {}
             const defaultBuildResource = defaultType.defaultBuildResource || {}
             const baseOSObject = baseOS !== 'NONE' ? { baseOS } : {}
-            const isError = ['WINDOWS'].includes(baseOS)
+            const isError = ['WINDOWS', 'MACOS'].includes(baseOS)
             commit(ADD_CONTAINER, {
                 ...restPayload,
                 newContainer: {
@@ -326,6 +326,8 @@ export default {
                     },
                     elements: [],
                     containerId: `c-${hashID(32)}`,
+                    jobId: `job_${randomString(3)}`,
+                    nfsSwitch: false,
                     isError
                 }
             })

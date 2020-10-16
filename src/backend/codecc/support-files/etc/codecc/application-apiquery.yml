@@ -1,0 +1,141 @@
+spring:
+  profiles: prod
+  application:
+    name: apiquery
+    desc: Apiquery Service
+    version: 4.0.0
+    packageName: com.tencent.bk.codecc.apiquery
+  # consul config do not need to change
+  redis:
+    database: 1
+    host: __REDIS_IP__
+    port: __REDIS_PORT__
+    password: __REDIS_PASS__
+    pool:
+      maxActive: 64
+      maxWait: -1
+      maxIdle: 64
+      minIdle: 0
+  rabbitmq:
+    virtual-host: __RABBITMQ_CODECC_VHOST__
+    username: __RABBITMQ_USERNAME__
+    password: __RABBITMQ_PASSWORD__
+    addresses: __RABBITMQ_HOST__:__RABBITMQ__PORT__
+    listener:
+      simple:
+        concurrency: 10
+        acknowledge-mode: auto
+  cloud:
+    consul:
+      discovery:
+        tags: __DEVOPS_CONSUL_TAG__
+        health-check-path: /management/health
+        heartbeat:
+          enabled: true
+        query-passing: true
+        preferIpAddress: true
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  data:
+    mongodb:
+      taskdb:
+        uri: mongodb://__MONGODB_USER__:__MONGODB_PASS__@__MONGODB_IP__:__MONGODB_PORT__/db_task?maxPoolSize=200&readPreference=secondary
+      defectdb:
+        uri: mongodb://__MONGODB_USER__:__MONGODB_PASS__@__MONGODB_IP__:__MONGODB_PORT__/db_defect?maxPoolSize=200&readPreference=secondary
+      opdb:
+        uri: mongodb://__MONGODB_USER__:__MONGODB_PASS__@__MONGODB_IP__:__MONGODB_PORT__/db_op?maxPoolSize=200&readPreference=secondary
+
+# 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 23910
+server:
+  port: __CODECC_APIQUERY_PORT__ # 服务端口
+  servlet-path: /
+  undertow:
+    worker-threads: 200
+
+
+time:
+  analysis:
+    maxhour: 7
+
+devops:
+  retry:
+    attempt: 7
+    interval: 1000
+  imageName: __DEVOPS_IMAGE_NAME__
+
+# monitor path config
+management:
+  security:
+    enabled: false
+  context-path: /management
+
+auth:
+  envName: prod
+  url: __CODECC_AUTH_URL__
+  codeccCode: __APP_CODE__
+  codeccSecret: __APP_TOKEN__
+  systemId: __CODECC_SYSTEM_ID__
+  codeccResourceType: __CODECC_RESOURCE_TYPE__
+  pipelineResourceType: __PIPELINE_RESOURCE_TYPE__
+  codeccServiceCode: __CODECC_SERVICE_CODE__
+  pipelineServiceCode: __PIPELINE_SERVICE_CODE__
+
+bkAuth:
+  envName: prod
+  url: __CODECC_BK_AUTH_URL__
+  codeccCode: __APP_CODE__
+  codeccSecret: __APP_TOKEN__
+  systemId: __CODECC_SYSTEM_ID__
+  codeccResourceType: __CODECC_RESOURCE_TYPE__
+  pipelineResourceType: __PIPELINE_RESOURCE_TYPE__
+  codeccServiceCode: __CODECC_SERVICE_CODE__
+  pipelineServiceCode: __PIPELINE_SERVICE_CODE__
+
+devopsGateway:
+  host: __DEVOPS_GATEWAY_HOST__
+  idchost: __DEVOPS_GATEWAY_IDC_HOST__
+
+codecc:
+  encryptor:
+    password: __CODECC_ENCRYPTOR_PASS__
+  env: internal
+  privatetoken: __CODECC_PRIVATE_TOKEN
+  classurl: __CODECC_CLASS_URL__:__CODECC_CLASS_PORT__/downloadFile?fileName=
+  public:
+    account: __CODECC_PUBLIC_ACCOUNT__
+    password: __CODECC_PUBLIC_PASS__
+  gateway:
+    host: __CODECC_GATEWAY_HOST__
+  node:
+    host: __CODECC_NODE_IP__:__CODECC_NODE_PORT__
+  dockernizedTools: HORUSPY;WOODPECKER_SENSITIVE;ESLINT;RIPS;CPPLINT;OCCHECK;DETEKT;PHPCS;SENSITIVE;STYLECOP;PYLINT;CHECKSTYLE;GOML
+
+git:
+  path: __GIT_PATH_URL__
+
+tof:
+  rootpath: __TOF_ROOT_PATH_URL__
+  codecc:
+    appcode: __TOF_CODECC_APP_CODE__
+    appsecret: __TOF_CODECC_APP_SECRET__
+
+custom:
+  projectName:
+    svnName: __CUSTOM_SVN_NAME__
+    svnPassword: ENC(__CUSTOM_SVN_PASS__)
+    pcgName: __CUSTOM_PCG_NAME__
+    pcgPassword: ENC(__CUSTOM_PCG_PASS__)
+
+jasypt:
+  encryptor:
+    password: __JASYPT_ENCRYPTOR_PASS__
+
+api:
+  gateway:
+    pub:
+      file:
+        outer: /data1/work/devops_outer.pub
+        inner: /data1/work/devops_inner.pub

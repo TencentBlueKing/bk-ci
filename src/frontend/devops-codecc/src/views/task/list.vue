@@ -1,8 +1,20 @@
 <template>
     <div class="main-content-outer main-content-task">
-        <div v-if="projectId && (!isEmpty || isSearch)">
+        <div v-if="!isFetched">
             <tool-bar :task-count="renderList.length" :search-info="searchInfo" @changeOrder="changeOrder"></tool-bar>
             <div class="task-list-inuse" v-if="!isEmpty">
+                <div class="task-card-list">
+                    <div class="task-card-item"
+                        v-for="(task, taskIndex) in renderList"
+                        :key="taskIndex">
+                        <task-card :task="task" :get-task-link="getTaskLink" :handle-task="handleTask"></task-card>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div v-else-if="projectId && (!isEmpty || isSearch)">
+            <tool-bar :task-count="renderList.length" :search-info="searchInfo" @changeOrder="changeOrder"></tool-bar>
+            <div class="task-list-inuse" v-if="!isEmpty || isSearch">
                 <div class="task-card-list">
                     <div class="task-card-item"
                         v-for="(task, taskIndex) in renderList"
@@ -61,6 +73,7 @@
                 isShowDisused: false,
                 dialogVisible: false,
                 isSearch: false,
+                isFetched: false,
                 orderType: 'CREATE_DATE',
                 list: {
                     enableTasks: [],
@@ -110,6 +123,7 @@
             async fetchPageData (query = {}) {
                 const params = Object.assign({}, this.searchInfo, { orderType: this.orderType, showLoading: true })
                 const res = await this.$store.dispatch('task/list', params)
+                this.isFetched = true
                 const idList = []
                 this.list = res
                 this.list.enableTasks.map(task => {
@@ -157,7 +171,7 @@
                         console.error(e)
                     })
                 } else {
-                    window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${task.projectId}/${task.pipelineId}/edit#codecc`, '_blank')
+                    window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${task.projectId}/${task.pipelineId}/edit`, '_blank')
                 }
             },
             async analyse (task) {

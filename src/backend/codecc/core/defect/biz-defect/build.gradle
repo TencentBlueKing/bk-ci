@@ -13,8 +13,11 @@ dependencies {
     compile project(":core:schedule:api-schedule")
     compile "org.springframework.kafka:spring-kafka:1.3.10.RELEASE"
     compile group: "com.tencent.bk.devops.ci.common", name: "common-kafka-tencent", version: version, changing: true
+    compile(group: 'com.tencent.bk.devops.ci.process', name: 'api-process', version: version, changing: true) {
+        exclude group: 'com.tencent.bk.devops.ci', module: 'api-measure'
+        exclude group: 'com.tencent.bk.devops.ci', module: 'api-image'
+    }
 }
-
 version = null
 
 apply from: "$rootDir/task_spring_boot_package.gradle"

@@ -81,6 +81,14 @@ interface StoreCommonService {
     fun getStoreDetailUrl(storeType: StoreTypeEnum, storeCode: String): String
 
     /**
+     * 删除store组件信息
+     */
+    fun deleteStoreInfo(
+        storeCode: String,
+        storeType: Byte
+    ): Boolean
+
+    /**
      * 获取store组件代码库group名称
      */
     fun getStoreRepoNameSpaceName(storeType: StoreTypeEnum): String

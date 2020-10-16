@@ -32,15 +32,28 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
+import java.io.IOException
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
+import java.net.Socket
 
 object CommonUtils {
 
     private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
 
     private const val dockerHubUrl = "https://index.docker.io/v1/"
+
+    fun isPortUsing(host: String, port: Int): Boolean {
+        return try {
+            // 建立一个Socket连接
+            val address = InetAddress.getByName(host)
+            Socket(address, port)
+            true
+        } catch (e: IOException) {
+            false
+        }
+    }
 
     fun getInnerIP(): String {
         val ipMap = getMachineIP()

@@ -31,8 +31,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("下架插件请求报文")
 data class AtomOfflineReq(
-    @ApiModelProperty("下架缓冲期，单位：天")
-    val bufferDay: Byte,
     @ApiModelProperty("下架原因")
-    val reason: String?
+    val reason: String?,
+    @ApiModelProperty("版本号")
+    val version: String? = null
 )

@@ -107,4 +107,10 @@ public class CCNDefectQueryRspVO extends CommonDefectQueryRspVO
      */
     @ApiModelProperty("新老告警判定时间")
     private long newDefectJudgeTime;
+
+    /**
+     * 圈复杂度阀值
+     */
+    @ApiModelProperty(value = "圈复杂度阀值")
+    private int ccnThreshold;
 }

@@ -45,47 +45,6 @@ import org.springframework.stereotype.Service;
 @Service("DUPCAnalyzeTaskBizService")
 public class DUPCAnalyzeTaskBizServiceImpl extends AbstractAnalyzeTaskBizService
 {
-    @Autowired
-    private ScmFileInfoService scmFileInfoService;
-
-    @Override
-    protected void preHandleDefectsAndStatistic(UploadTaskLogStepVO uploadTaskLogStepVO, String analysisVersion)
-    {
-        // 重复率暂时不做处理
-    }
-
-    /**
-     * 分析成功时告警数据及告警统计数据后处理
-     *
-     * @param uploadTaskLogStepVO
-     */
-    @Override
-    protected void postHandleDefectsAndStatistic(UploadTaskLogStepVO uploadTaskLogStepVO, TaskDetailVO taskVO)
-    {
-        // 代码扫描步骤结束，则开始变更告警的状态并统计本次分析的告警信息
-        if (uploadTaskLogStepVO.getStepNum() == ComConstants.Step4MutliTool.SCAN.value()
-                && uploadTaskLogStepVO.getFlag() == ComConstants.StepFlag.SUCC.value())
-        {
-            log.info("begin commit defect.");
-            asyncCommitDefect(uploadTaskLogStepVO, taskVO);
-        }
-        else if (uploadTaskLogStepVO.getStepNum() == getSubmitStepNum()
-                && uploadTaskLogStepVO.getFlag() == ComConstants.StepFlag.SUCC.value())
-        {
-            // 保存首次分析成功时间
-            saveFirstSuccessAnalyszeTime(uploadTaskLogStepVO.getTaskId(), uploadTaskLogStepVO.getToolName());
-
-            // 清除强制全量扫描标志
-            clearForceFullScan(uploadTaskLogStepVO.getTaskId(), uploadTaskLogStepVO.getToolName());
-
-            // 处理md5.json
-            scmFileInfoService.parseFileInfo(uploadTaskLogStepVO.getTaskId(),
-                uploadTaskLogStepVO.getStreamName(),
-                uploadTaskLogStepVO.getToolName(),
-                uploadTaskLogStepVO.getPipelineBuildId());
-        }
-    }
-
     @Override
     public int getSubmitStepNum()
     {

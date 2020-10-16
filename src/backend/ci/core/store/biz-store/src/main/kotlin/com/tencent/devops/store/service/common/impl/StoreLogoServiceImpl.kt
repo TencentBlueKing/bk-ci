@@ -34,8 +34,11 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreLogoDao
 import com.tencent.devops.store.pojo.common.Logo
+import com.tencent.devops.store.pojo.common.StoreLogoInfo
 import com.tencent.devops.store.pojo.common.StoreLogoReq
 import com.tencent.devops.store.service.common.StoreLogoService
+import net.coobird.thumbnailator.Thumbnails
+import org.apache.commons.codec.binary.Base64
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -85,10 +88,12 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
      */
     override fun uploadStoreLogo(
         userId: String,
+        contentLength: Long,
+        compressFlag: Boolean?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): Result<String?> {
-        logger.info("uploadStoreLogo upload file info is:$disposition")
+    ): Result<StoreLogoInfo?> {
+        logger.info("uploadStoreLogo upload file info is:$disposition,contentLength is:$contentLength")
         val fileName = disposition.fileName
         val index = fileName.lastIndexOf(".")
         val fileType = fileName.substring(index + 1).toLowerCase()
@@ -101,15 +106,14 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
             )
         }
         // 校验上传文件大小是否超出限制
-        val fileSize = disposition.size
         val maxFileSize = maxUploadLogoSize.toLong()
-        if (fileSize > maxFileSize) {
+        if (contentLength > maxFileSize) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.UPLOAD_LOGO_IS_TOO_LARGE,
                 arrayOf((maxFileSize / 1048576).toString() + "M")
             )
         }
-        val file = Files.createTempFile("random_" + System.currentTimeMillis(), ".$fileType").toFile()
+        val file = Files.createTempFile(UUIDUtil.generate(), ".$fileType").toFile()
         val output = file.outputStream()
         // svg类型图片不做尺寸检查
         if ("svg" != fileType) {
@@ -144,9 +148,25 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
                 output.close()
             }
         }
-        val logoUrl = uploadStoreLogo(userId, file)
+        val logoUrl = uploadStoreLogo(userId, file).data
         logger.info("uploadStoreLogo logoUrl is:$logoUrl")
-        return logoUrl
+        var iconData: String? = null
+        if (compressFlag == true) {
+            // 生成压缩图标
+            val tmpFile = Files.createTempFile(UUIDUtil.generate(), ".png").toFile()
+            val bytes: ByteArray?
+            try {
+                Thumbnails.of(file)
+                    .size(18, 18)
+                    .outputFormat("png")
+                    .toFile(tmpFile)
+                bytes = Files.readAllBytes(tmpFile.toPath())
+                iconData = "data:image/png;base64," + Base64.encodeBase64String(bytes)
+            } finally {
+                tmpFile.delete()
+            }
+        }
+        return Result(StoreLogoInfo(logoUrl, iconData))
     }
 
     abstract fun uploadStoreLogo(userId: String, file: File): Result<String?>

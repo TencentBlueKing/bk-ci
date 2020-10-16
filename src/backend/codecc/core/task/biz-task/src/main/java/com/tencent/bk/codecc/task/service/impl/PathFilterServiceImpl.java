@@ -39,6 +39,7 @@ import com.tencent.bk.codecc.task.service.ToolService;
 import com.tencent.bk.codecc.task.vo.FilterPathInputVO;
 import com.tencent.bk.codecc.task.vo.FilterPathOutVO;
 import com.tencent.bk.codecc.task.vo.TreeNodeTaskVO;
+import com.tencent.bk.codecc.task.vo.path.CodeYmlFilterPathVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.client.Client;
@@ -184,6 +185,10 @@ public class PathFilterServiceImpl implements PathFilterService
 
             filterPath.addAll(customFilterPath);
             addPath.setFilterDir(filterPath);
+
+            addPath.setTestSourceFilterPath(filterPathInput.getTestSourceFilterPath());
+            addPath.setAutoGenFilterPath(filterPathInput.getAutoGenFilterPath());
+            addPath.setThirdPartyFilterPath(filterPathInput.getThirdPartyFilterPath());
 
             // 任务通知, 其他工具類也需要屏蔽此路徑
             if (CollectionUtils.isNotEmpty(filterPathInput.getEffectiveTools()))
@@ -341,6 +346,160 @@ public class PathFilterServiceImpl implements PathFilterService
         return treeNodeVO;
     }
 
+    @Override
+    public Boolean codeYmlFilterPath(Long taskId, String userName, CodeYmlFilterPathVO codeYmlFilterPathVO) {
+        log.info("==========codeYmlFilterPath==============taskId:{},userName:{}",taskId,userName);
+        CodeYmlFilterPathVO hisCodeYmlFilterPathVO = listCodeYmlFilterPath(taskId);
+
+        // 判断是否有变更
+        boolean isTestSourceEqual = isEqualCollection(codeYmlFilterPathVO.getTestSourceFilterPath(),
+            hisCodeYmlFilterPathVO.getTestSourceFilterPath());
+
+        boolean isGenFilterEqual = isEqualCollection(codeYmlFilterPathVO.getAutoGenFilterPath(),
+            hisCodeYmlFilterPathVO.getAutoGenFilterPath());
+
+        boolean isThirdPartyEqual = isEqualCollection(codeYmlFilterPathVO.getThirdPartyFilterPath(),
+            hisCodeYmlFilterPathVO.getThirdPartyFilterPath());
+
+        if (isTestSourceEqual && isGenFilterEqual && isThirdPartyEqual)
+        {
+            log.info("task is all empty in code.yml path, do not update...({})", taskId);
+            return true;
+        }
+
+        // 先进行删除操作
+        List<String> removeTestPathList = minus(hisCodeYmlFilterPathVO.getTestSourceFilterPath(), codeYmlFilterPathVO.getTestSourceFilterPath());
+        List<String> removeThirdPathList = minus(hisCodeYmlFilterPathVO.getThirdPartyFilterPath(), codeYmlFilterPathVO.getThirdPartyFilterPath());
+        List<String> removeAutoGenPathList = minus(hisCodeYmlFilterPathVO.getAutoGenFilterPath(), codeYmlFilterPathVO.getAutoGenFilterPath());
+        deleteCodeYmlFilterPath(removeTestPathList, removeThirdPathList, removeAutoGenPathList, taskId, userName);
+
+        // 再进行添加操作
+        FilterPathInputVO filterPathVo = new FilterPathInputVO();
+        filterPathVo.setTaskId(taskId);
+        filterPathVo.setPathType("CODE_YML");
+        filterPathVo.setTestSourceFilterPath(codeYmlFilterPathVO.getTestSourceFilterPath());
+        filterPathVo.setAutoGenFilterPath(codeYmlFilterPathVO.getAutoGenFilterPath());
+        filterPathVo.setThirdPartyFilterPath(codeYmlFilterPathVO.getThirdPartyFilterPath());
+
+        addFilterPaths(filterPathVo, userName);
+
+        return true;
+    }
+
+    private Boolean deleteCodeYmlFilterPath(List<String> testPathList,
+                                           List<String> thirdPathList,
+                                           List<String> autoGenPathList,
+                                           Long taskId,
+                                           String userName)
+    {
+        if (CollectionUtils.isEmpty(testPathList)
+            && CollectionUtils.isEmpty(thirdPathList)
+            && CollectionUtils.isEmpty(autoGenPathList))
+        {
+            log.info("code yml remove path is empty for task: {}", taskId);
+            return true;
+        }
+
+        TaskInfoEntity taskEntity = taskRepository.findByTaskId(taskId);
+        if (Objects.isNull(taskEntity))
+        {
+            log.error("taskInfo not exists! task id is: {}", taskId);
+            throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{String.valueOf(taskId)}, null);
+        }
+
+        // 删除code.yml过滤文件
+        FilterPathInputVO filterPathInput = new FilterPathInputVO();
+        filterPathInput.setTaskId(taskId);
+        filterPathInput.setPathType("CODE_YML");
+        filterPathInput.setUserName(userName);
+        filterPathInput.setTestSourceFilterPath(testPathList);
+        filterPathInput.setAutoGenFilterPath(autoGenPathList);
+        filterPathInput.setThirdPartyFilterPath(thirdPathList);
+
+        List<String> tools = toolService.getEffectiveToolList(taskEntity);
+        if (CollectionUtils.isNotEmpty(tools))
+        {
+            filterPathInput.setEffectiveTools(tools);
+            rabbitTemplate.convertAndSend(ConstantsKt.EXCHANGE_TASK_FILTER_PATH,
+                ConstantsKt.ROUTE_DEL_TASK_FILTER_PATH, filterPathInput);
+        }
+        // 设置强制全量扫描标志
+        taskService.setForceFullScan(taskEntity);
+
+        return true;
+    }
+
+    // 必须顺序、数量完全一样，不去重
+    private boolean isEqualCollection(List<String> c1, List<String> c2)
+    {
+        if (CollectionUtils.isEmpty(c1) && CollectionUtils.isEmpty(c2))
+        {
+            return true;
+        }
+
+        // 排除其中一个为空的情况
+        if (CollectionUtils.isEmpty(c1))
+        {
+            return false;
+        }
+        if (CollectionUtils.isEmpty(c2))
+        {
+            return false;
+        }
+
+        if (c1.size() != c2.size())
+        {
+            return false;
+        }
+
+        for (int i = 0; i < c1.size(); i++)
+        {
+            if (!c1.get(i).equals(c2.get(i)))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // 求集合c1 - c2
+    private List<String> minus(List<String> c1, List<String> c2)
+    {
+        List<String> result = new ArrayList<>();
+
+        if (CollectionUtils.isEmpty(c1))
+        {
+            return result;
+        }
+        if (CollectionUtils.isEmpty(c2))
+        {
+            return c1;
+        }
+
+        c1.forEach((item1) ->
+        {
+            if (!c2.contains(item1))
+            {
+                result.add(item1);
+            }
+        });
+        return result;
+    }
+
+    @Override
+    public CodeYmlFilterPathVO listCodeYmlFilterPath(Long taskId) {
+        TaskInfoEntity taskInfo = taskRepository.findByTaskId(taskId);
+        if (taskInfo == null)
+        {
+            log.error("task not exists! task id is: {}", taskId);
+            throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{"任务参数"}, null);
+        }
+        CodeYmlFilterPathVO codeYmlFilterPathVo = new CodeYmlFilterPathVO();
+        codeYmlFilterPathVo.setAutoGenFilterPath(taskInfo.getAutoGenFilterPath());
+        codeYmlFilterPathVo.setTestSourceFilterPath(taskInfo.getTestSourceFilterPath());
+        codeYmlFilterPathVo.setThirdPartyFilterPath(taskInfo.getThirdPartyFilterPath());
+        return codeYmlFilterPathVo;
+    }
 
     /**
      * 获取自定义路径
