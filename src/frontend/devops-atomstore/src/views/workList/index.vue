@@ -198,12 +198,12 @@
             margin: 30px 50px 20px 28px;
         }
         .bk-label {
-            width: 97px;
+            width: 100px;
             padding-right: 25px;
             font-weight: normal;
         }
         .bk-form-content {
-            margin-left: 97px;
+            margin-left: 100px;
             line-height: 30px;
         }
         .bk-selector {
@@ -240,7 +240,7 @@
         }
         .form-footer {
             margin-top: 26px;
-            margin-left: 97px;
+            margin-left: 100px;
             button {
                 height: 32px;
                 line-height: 30px;
@@ -262,7 +262,7 @@
             margin-top: 20px;
         }
         .prompt-offline {
-            margin-left: 97px;
+            margin-left: 100px;
             margin-top: 20px;
             i {
                 position: relative;
