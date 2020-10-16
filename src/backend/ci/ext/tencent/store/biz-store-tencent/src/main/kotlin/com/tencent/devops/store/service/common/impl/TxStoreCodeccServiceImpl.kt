@@ -125,7 +125,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
     }
 
     private fun validatePermission(userId: String, storeCode: String, storeType: String) {
-        if (storeMemberDao.isStoreMember(
+        if (!storeMemberDao.isStoreMember(
                 dslContext = dslContext,
                 userId = userId,
                 storeCode = storeCode,
