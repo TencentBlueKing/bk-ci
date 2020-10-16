@@ -24,10 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package com.tencent.devops.process.service.code
 
-const val AGENT_VERSION = 12.8
+import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.engine.service.code.GitWebHookMatcher
+import com.tencent.devops.process.engine.service.code.GithubWebHookMatcher
+import com.tencent.devops.process.engine.service.code.GitlabWebHookMatcher
+import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
+import com.tencent.devops.process.engine.service.code.SvnWebHookMatcher
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.git.GitEvent
+import com.tencent.devops.process.pojo.code.github.GithubEvent
+import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
+import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
+import org.springframework.stereotype.Service
 
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
+@Service
+class ScmWebhookMatcherBuilderImpl : ScmWebhookMatcherBuilder {
+    override fun createGitWebHookMatcher(event: GitEvent): ScmWebhookMatcher = GitWebHookMatcher(event)
+
+    override fun createSvnWebHookMatcher(
+        event: SvnCommitEvent,
+        pipelineWebhookService: PipelineWebhookService
+    ): ScmWebhookMatcher = SvnWebHookMatcher(event, pipelineWebhookService)
+
+    override fun createGitlabWebHookMatcher(event: GitlabCommitEvent): ScmWebhookMatcher = GitlabWebHookMatcher(event)
+
+    override fun createGithubWebHookMatcher(event: GithubEvent): ScmWebhookMatcher = GithubWebHookMatcher(event)
 }

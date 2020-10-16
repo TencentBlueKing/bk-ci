@@ -34,6 +34,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -67,7 +68,8 @@ class BuildEndControl @Autowired constructor(
     private val pipelineBuildService: PipelineBuildService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val pipelineRuntimeExtService: PipelineRuntimeExtService
+    private val pipelineRuntimeExtService: PipelineRuntimeExtService,
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -152,6 +154,9 @@ class BuildEndControl @Autowired constructor(
                 actionType = ActionType.END
             )
         )
+
+        // 记录日志
+        buildLogPrinter.stopLog(buildId = buildId, tag = "", jobId = null)
     }
 
     private fun PipelineBuildFinishEvent.fixTask(buildInfo: BuildInfo, buildStatus: BuildStatus) {

@@ -24,10 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package com.tencent.devops.process.engine.service.code
 
-const val AGENT_VERSION = 12.8
+import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.git.GitEvent
+import com.tencent.devops.process.pojo.code.github.GithubEvent
+import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
+import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
 
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
+interface ScmWebhookMatcherBuilder {
+
+    fun createGitWebHookMatcher(event: GitEvent): ScmWebhookMatcher
+
+    fun createSvnWebHookMatcher(
+        event: SvnCommitEvent,
+        pipelineWebhookService: PipelineWebhookService
+    ): ScmWebhookMatcher
+
+    fun createGitlabWebHookMatcher(event: GitlabCommitEvent): ScmWebhookMatcher
+
+    fun createGithubWebHookMatcher(event: GithubEvent): ScmWebhookMatcher
 }

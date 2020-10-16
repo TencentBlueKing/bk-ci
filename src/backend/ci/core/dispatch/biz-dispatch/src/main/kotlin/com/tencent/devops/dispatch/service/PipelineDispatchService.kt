@@ -131,7 +131,6 @@ class PipelineDispatchService @Autowired constructor(
     }
 
     fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
-        try {
             logger.info("Start to finish the pipeline build($pipelineAgentShutdownEvent)")
             getDispatchers().forEach {
                 try {
@@ -141,9 +140,6 @@ class PipelineDispatchService @Autowired constructor(
                     jobQuotaBusinessService.deleteRunningJob(pipelineAgentShutdownEvent.projectId, pipelineAgentShutdownEvent.buildId, pipelineAgentShutdownEvent.vmSeqId)
                 }
             }
-        } finally {
-            buildLogPrinter.stopLog(buildId = pipelineAgentShutdownEvent.buildId, tag = "", jobId = null)
-        }
     }
 
     fun reDispatch(pipelineAgentStartupEvent: PipelineAgentStartupEvent) {
