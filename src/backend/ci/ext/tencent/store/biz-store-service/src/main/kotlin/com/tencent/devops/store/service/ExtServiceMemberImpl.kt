@@ -51,7 +51,8 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
         storeType: StoreTypeEnum,
         collaborationFlag: Boolean?,
         sendNotify: Boolean,
-        checkPermissionFlag: Boolean
+        checkPermissionFlag: Boolean,
+        testProjectCode: String?
     ): Result<Boolean> {
         logger.info("addExtensionMember userId is:$userId,storeMemberReq is:$storeMemberReq,storeType is:$storeType")
         val serviceCode = storeMemberReq.storeCode
@@ -81,7 +82,8 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
             storeType = storeType,
             collaborationFlag = collaborationFlag,
             sendNotify = sendNotify,
-            checkPermissionFlag = checkPermissionFlag
+            checkPermissionFlag = checkPermissionFlag,
+            testProjectCode = testProjectCode
         )
     }
 
@@ -132,6 +134,6 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

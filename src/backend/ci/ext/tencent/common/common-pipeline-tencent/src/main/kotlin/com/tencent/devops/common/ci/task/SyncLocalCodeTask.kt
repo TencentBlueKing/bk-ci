@@ -23,37 +23,54 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.monitoring.pojo
 
-import com.tencent.devops.monitoring.pojo.annotions.InfluxTag
+package com.tencent.devops.common.ci.task
+
+import com.tencent.devops.common.ci.CiBuildConfig
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("scm调用工蜂addCommitCheckStatus接口的状态上报")
-data class AddCommitCheckStatus(
-    @ApiModelProperty("请求时间(时间戳，毫秒)", required = true)
-    val requestTime: Long,
-    @ApiModelProperty("响应时间(时间戳，毫秒)", required = true)
-    val responseTime: Long,
-    @ApiModelProperty("耗时(毫秒)", required = true)
-    val elapseTime: Long,
-    @ApiModelProperty("http状态码", required = false)
-    val statusCode: String?,
-    @ApiModelProperty("状态码对应的错误信息", required = false)
-    val statusMessage: String?,
-    @ApiModelProperty("错误类型", required = true)
-    val errorType: String? = null,
-    @ApiModelProperty("蓝盾错误码", required = true)
-    @InfluxTag
-    val errorCode: String,
-    @ApiModelProperty("错误信息", required = false)
-    val errorMsg: String?,
-    @ApiModelProperty("工蜂项目名", required = false)
-    val projectName: String,
-    @ApiModelProperty("commitId", required = false)
-    val commitId: String,
-    @ApiModelProperty("block", required = false)
-    val block: Boolean? = null,
-    @ApiModelProperty("详情url", required = false)
-    val targetUrl: String? = null
-)
+/**
+ * SyncLocalCodeTask
+ */
+@ApiModel("同步本地代码")
+data class SyncLocalCodeTask(
+    @ApiModelProperty("displayName", required = false)
+    override var displayName: String?,
+    @ApiModelProperty("入参", required = true)
+    override var inputs: SyncLocalCodeInput?,
+    @ApiModelProperty("执行条件", required = true)
+    override val condition: String?
+) : AbstractTask(displayName, inputs, condition) {
+    companion object {
+        const val taskType = "syncLocalCode"
+        const val taskVersion = "@latest"
+    }
+
+    override fun covertToElement(config: CiBuildConfig): MarketBuildAtomElement {
+        val data = mapOf(
+            "input" to mapOf(
+                "agentId" to inputs!!.agentId,
+                "workspace" to inputs!!.workspace
+            )
+        )
+
+        return MarketBuildAtomElement(
+            displayName ?: "同步本地代码",
+            null,
+            null,
+            "syncAgentCode",
+            "3.*",
+            data
+        )
+    }
+}
+
+@ApiModel("同步本地代码入参")
+data class SyncLocalCodeInput(
+    @ApiModelProperty("agentId", required = true)
+    var agentId: String?,
+    @ApiModelProperty("工作目录", required = true)
+    var workspace: String?
+) : AbstractInput()

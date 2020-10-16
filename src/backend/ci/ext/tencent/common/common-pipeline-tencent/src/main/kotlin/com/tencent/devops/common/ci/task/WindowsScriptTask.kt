@@ -24,10 +24,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package com.tencent.devops.common.ci.task
 
-const val AGENT_VERSION = 12.8
+import com.tencent.devops.common.ci.CiBuildConfig
+import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
+/**
+ * WindowsScriptTask
+ */
+@ApiModel("脚本任务（win环境）")
+data class WindowsScriptTask(
+    @ApiModelProperty("displayName", required = false)
+    override var displayName: String?,
+    @ApiModelProperty("入参", required = true)
+    override val inputs: WindowsScriptInput,
+    @ApiModelProperty("执行条件", required = true)
+    override val condition: String?
+) : AbstractTask(displayName, inputs, condition) {
+    companion object {
+        const val taskType = "windowsScript"
+        const val taskVersion = "@latest"
+    }
+
+    override fun covertToElement(config: CiBuildConfig): WindowsScriptElement {
+        return WindowsScriptElement(
+            displayName ?: "WindowsScript",
+            null,
+            null,
+            inputs.content,
+            inputs.scriptType ?: BuildScriptType.BAT
+        )
+    }
 }
+
+@ApiModel("脚本任务（win环境）")
+data class WindowsScriptInput(
+    @ApiModelProperty("脚本内容", required = true)
+    val content: String,
+    @ApiModelProperty("脚本类型", required = true)
+    val scriptType: BuildScriptType?
+) : AbstractInput()

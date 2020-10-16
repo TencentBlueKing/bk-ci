@@ -167,6 +167,14 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         )
     }
 
+    override fun deleteGitProject(repoName: String, token: String, tokenType: TokenTypeEnum): Result<Boolean> {
+        return client.getScm(ServiceGitResource::class).deleteGitProject(
+            repositorySpaceName = repoName,
+            token = token,
+            tokenType = tokenType
+        )
+    }
+
     override fun updateGitProjectInfo(
         projectName: String,
         updateGitProjectInfo: UpdateGitProjectInfo,
@@ -279,5 +287,13 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             token = token,
             tokenType = tokenType
         )
+    }
+
+    override fun getRepoAllMembers(accessToken: String, userId: String, repoName: String): List<GitMember> {
+        return client.getScm(ServiceGitResource::class).getRepoAllMembers(
+            repoName = repoName,
+            tokenType = TokenTypeEnum.OAUTH,
+            token = accessToken
+        ).data!!
     }
 }
