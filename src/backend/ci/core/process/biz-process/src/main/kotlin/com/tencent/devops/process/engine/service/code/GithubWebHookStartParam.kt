@@ -78,6 +78,11 @@ class GithubWebHookStartParam(
         startParams[BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS] = element.branchName ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS] = element.excludeBranchName ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS] = element.excludeUsers ?: ""
+        getEventTypeStartParams(startParams)
+        return startParams
+    }
+
+    fun getEventTypeStartParams(startParams: MutableMap<String, Any>) {
         when (params.eventType) {
             CodeEventType.PULL_REQUEST ->
                 pullRequestEventStartParam(startParams)
@@ -88,7 +93,6 @@ class GithubWebHookStartParam(
             else ->
                 logger.info("github webhook startparam eventType error, eventType:${params.eventType}, ignore")
         }
-        return startParams
     }
 
     private fun pullRequestEventStartParam(startParams: MutableMap<String, Any>) {

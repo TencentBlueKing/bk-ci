@@ -28,6 +28,7 @@ package com.tencent.devops.common.pipeline.utils
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -35,6 +36,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -90,6 +92,32 @@ object RepositoryConfigUtils {
                 element.data.input.repositoryName,
                 element.data.input.repositoryType ?: RepositoryType.ID
             )
+            is CodeGitGenericWebHookTriggerElement -> {
+                with(element.data.input) {
+                    when (repositoryType) {
+                        RepositoryTypeNew.URL ->
+                            RepositoryConfig(
+                                repositoryHashId = null,
+                                repositoryName = repositoryUrl,
+                                repositoryType = RepositoryType.NAME
+                            )
+                        RepositoryTypeNew.ID ->
+                            RepositoryConfig(
+                                repositoryHashId = repositoryHashId,
+                                repositoryName = repositoryName,
+                                repositoryType = RepositoryType.ID
+                            )
+                        RepositoryTypeNew.NAME ->
+                            RepositoryConfig(
+                                repositoryHashId = repositoryHashId,
+                                repositoryName = repositoryName,
+                                repositoryType = RepositoryType.NAME
+                            )
+                        else ->
+                            throw InvalidParamException("Unknown repositoryType -> $element")
+                    }
+                }
+            }
             else -> throw InvalidParamException("Unknown code element -> $element")
         }
     }
