@@ -393,7 +393,6 @@ class MarketAtomDao : AtomBaseDao() {
         atomStatus: AtomStatusEnum,
         classType: String,
         props: String,
-        iconData: String?,
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ) {
         val a = TClassify.T_CLASSIFY.`as`("a")
@@ -413,7 +412,7 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(CLASS_TYPE, classType)
                 .set(PROPS, props)
                 .set(LOGO_URL, marketAtomUpdateRequest.logoUrl)
-                .set(ICON, iconData)
+                .set(ICON, marketAtomUpdateRequest.iconData)
                 .set(HTML_TEMPLATE_VERSION, marketAtomUpdateRequest.frontendType.typeVersion)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
@@ -429,7 +428,6 @@ class MarketAtomDao : AtomBaseDao() {
         atomStatus: AtomStatusEnum,
         classType: String,
         props: String,
-        iconData: String?,
         atomRecord: TAtomRecord,
         atomRequest: MarketAtomUpdateRequest
     ) {
@@ -485,7 +483,7 @@ class MarketAtomDao : AtomBaseDao() {
                     atomRequest.description,
                     atomRequest.category.category.toByte(),
                     atomRequest.version,
-                    iconData,
+                    atomRequest.iconData,
                     atomRecord.defaultFlag,
                     false,
                     atomRecord.repositoryHashId,

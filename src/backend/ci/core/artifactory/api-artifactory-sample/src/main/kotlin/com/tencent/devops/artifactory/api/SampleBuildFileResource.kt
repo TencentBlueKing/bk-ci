@@ -24,72 +24,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.artifactory.api
 
+import com.tencent.devops.artifactory.pojo.Count
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Logo
-import com.tencent.devops.store.pojo.common.StoreLogoInfo
-import com.tencent.devops.store.pojo.common.StoreLogoReq
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.InputStream
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-/**
- * store商城logo逻辑类
- *
- * since: 2019-02-15
- */
-interface StoreLogoService {
+@Api(tags = ["BUILD_ARTIFACTORY"], description = "仓库-文件管理")
+@Path("/build/artifactories/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface SampleBuildFileResource {
 
-    /**
-     * 上传logo
-     */
-    fun uploadStoreLogo(
-        userId: String,
-        contentLength: Long,
-        compressFlag: Boolean? = false,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<StoreLogoInfo?>
-
-    /**
-     * 获取logo列表
-     */
-    fun list(
-        userId: String,
-        type: String
-    ): Result<List<Logo>?>
-
-    /**
-     * 获取logo
-     */
-    fun get(
-        userId: String,
-        id: String
-    ): Result<Logo?>
-
-    /**
-     * 新增logo
-     */
-    fun add(
-        userId: String,
-        type: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
-
-    /**
-     * 更新logo
-     */
-    fun update(
-        userId: String,
-        id: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
-
-    /**
-     * 删除logo
-     */
-    fun delete(
-        userId: String,
-        id: String
-    ): Result<Boolean>
+    @ApiOperation("跨项目拷贝文件")
+    @Path("/artifactoryType/{artifactoryType}/acrossProjectCopy")
+    @GET
+    fun acrossProjectCopy(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam("X-DEVOPS-PROJECT-ID")
+        projectId: String,
+        @ApiParam("版本仓库类型", required = true)
+        @PathParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @ApiParam("路径", required = true)
+        @QueryParam("path")
+        path: String,
+        @ApiParam("目标项目", required = true)
+        @QueryParam("targetProjectId")
+        targetProjectId: String,
+        @ApiParam("目标路径", required = true)
+        @QueryParam("targetPath")
+        targetPath: String
+    ): Result<Count>
 }

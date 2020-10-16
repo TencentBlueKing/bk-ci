@@ -110,20 +110,4 @@ class BuildFileResourceImpl @Autowired constructor(private val archiveFileServic
             fileChannelType = FileChannelTypeEnum.BUILD
         )
     }
-/*
-    override fun acrossProjectCopy(
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        path: String,
-        targetProjectId: String,
-        targetPath: String
-    ): Result<Count> {
-        return archiveFileService.acrossProjectCopy(
-            projectId = projectId,
-            artifactoryType = artifactoryType,
-            path = path,
-            targetPath = targetPath,
-            targetProjectId = targetProjectId
-        )
-    }*/
 }

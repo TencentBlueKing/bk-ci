@@ -134,7 +134,12 @@ class BlueShieldWebSocket {
     }
 
     closePageDisConnect () {
-        window.addEventListener('beforeunload', () => {
+        window.addEventListener('beforeunload', (event = {}) => {
+            const target = event.target || {}
+            const activeElement = target.activeElement || {}
+            const tagName = activeElement.tagName || ''
+            // a标签也会触发这个事件，需要屏蔽
+            if (tagName === 'A') return
             navigator.sendBeacon(`${WS_URL_PREFIX}websocket/api/user/websocket/sessions/${this.uuid}/userIds/${this.userName}/clear`)
             this.stompClient.disconnect()
             this.hasConnect = false
