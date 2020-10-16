@@ -29,13 +29,10 @@ package com.tencent.devops.process.engine.dao
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
-import com.tencent.devops.model.process.tables.TPipelineResource
-import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Field
 import org.jooq.impl.DSL.max
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -92,23 +89,6 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
             }
             where.fetchAny(0, String::class.java)
         } // if (record != null) objectMapper.readValue(record) else null
-    }
-
-    fun getLatestModels(
-        dslContext: DSLContext,
-        pipelineIds: List<String>
-    ): List<String> {
-        // TODO 批量查询
-        val resource = TPipelineResource.T_PIPELINE_RESOURCE.`as`("r")
-        val setting = TPipelineSetting.T_PIPELINE_SETTING.`as`("s")
-        with(T_PIPELINE_RESOURCE) {
-            val lastest = dslContext.selectFrom(this)
-                .union(
-                    dslContext.select(PIPELINE_ID, max(VERSION))
-                        .from(this)
-                        .groupBy(PIPELINE_ID)
-                )
-        }
     }
 
     fun listModelResource(
