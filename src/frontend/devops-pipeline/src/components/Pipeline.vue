@@ -300,12 +300,10 @@
 
     .scroll-container {
         position: relative;
-        overflow: auto;
         flex: 1;
         .scroll-wraper {
             padding: 20px 0 40px 30px;
             min-height: 100%;
-            overflow: auto;
         }
         &:before {
             position: absolute;
