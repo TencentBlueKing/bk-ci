@@ -51,7 +51,19 @@ data class WebHookWebsocketPush(
 ) : WebsocketPush(userId, pushType, redisOperation, objectMapper, page, notifyPost) {
 
     override fun findSession(page: String): List<String>? {
-        return super.findSession(page)
+        val sessions = RedisUtlis.getSessionIdByUserId(redisOperation, userId)
+        val sessionList = sessions?.split(",")
+        return if(sessionList?.size!! > 10) {
+            // 为防止sessionId 太多,消息爆炸。截取最后十个session推送消息
+            logger.warn("user open Page more 10, $userId | ${sessionList.size}| $sessionList")
+            val lastSessions = mutableListOf<String>()
+            for (index in sessionList.size downTo sessionList.size - 10) {
+                lastSessions.add(sessionList[index])
+            }
+            lastSessions
+        } else {
+            sessionList
+        }
     }
 
     override fun buildMqMessage(): SendMessage? {
