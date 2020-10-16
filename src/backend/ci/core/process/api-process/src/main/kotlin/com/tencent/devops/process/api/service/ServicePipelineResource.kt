@@ -120,7 +120,7 @@ interface ServicePipelineResource {
     @ApiOperation("批量获取流水线编排与配置")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
-    @Path("/{projectId}/{pipelineId}/")
+    @Path("/{projectId}/{pipelineId}/batch")
     fun getBatch(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
