@@ -24,72 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.process.engine.service.code
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Logo
-import com.tencent.devops.store.pojo.common.StoreLogoInfo
-import com.tencent.devops.store.pojo.common.StoreLogoReq
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.InputStream
+import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.git.GitEvent
+import com.tencent.devops.process.pojo.code.github.GithubEvent
+import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
+import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
 
-/**
- * store商城logo逻辑类
- *
- * since: 2019-02-15
- */
-interface StoreLogoService {
+interface ScmWebhookMatcherBuilder {
 
-    /**
-     * 上传logo
-     */
-    fun uploadStoreLogo(
-        userId: String,
-        contentLength: Long,
-        compressFlag: Boolean? = false,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<StoreLogoInfo?>
+    fun createGitWebHookMatcher(event: GitEvent): ScmWebhookMatcher
 
-    /**
-     * 获取logo列表
-     */
-    fun list(
-        userId: String,
-        type: String
-    ): Result<List<Logo>?>
+    fun createSvnWebHookMatcher(
+        event: SvnCommitEvent,
+        pipelineWebhookService: PipelineWebhookService
+    ): ScmWebhookMatcher
 
-    /**
-     * 获取logo
-     */
-    fun get(
-        userId: String,
-        id: String
-    ): Result<Logo?>
+    fun createGitlabWebHookMatcher(event: GitlabCommitEvent): ScmWebhookMatcher
 
-    /**
-     * 新增logo
-     */
-    fun add(
-        userId: String,
-        type: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
-
-    /**
-     * 更新logo
-     */
-    fun update(
-        userId: String,
-        id: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
-
-    /**
-     * 删除logo
-     */
-    fun delete(
-        userId: String,
-        id: String
-    ): Result<Boolean>
+    fun createGithubWebHookMatcher(event: GithubEvent): ScmWebhookMatcher
 }

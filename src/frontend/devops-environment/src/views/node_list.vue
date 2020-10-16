@@ -13,6 +13,7 @@
             <bk-table v-if="showContent && nodeList.length"
                 size="medium"
                 class="node-table-wrapper"
+                :row-class-name="getRowCls"
                 :data="nodeList">
                 <bk-table-column :label="$t('environment.nodeInfo.displayName')" prop="displayName">
                     <template slot-scope="props">
@@ -32,7 +33,7 @@
                         </div>
                         <div class="table-node-item node-item-id" v-else>
                             <span class="node-name"
-                                :class="{ 'pointer': canShowDetail(props.row) }"
+                                :class="{ 'pointer': canShowDetail(props.row), 'useless': !canShowDetail(props.row) || !props.row.canUse }"
                                 :title="props.row.displayName"
                                 @click="toNodeDetail(props.row)"
                             >{{ props.row.displayName || '-' }}</span>
@@ -110,14 +111,10 @@
                     <template slot-scope="props">
                         <div class="table-node-item node-item-handler"
                             :class="{ 'over-handler': isMultipleBtn }">
-                            <span class="node-handle delete-node-text"
+                            <span class="node-handle delete-node-text" :class="{ 'no-node-delete-permission': !props.row.canDelete }"
                                 v-if="props.row.canDelete && !['TSTACK'].includes(props.row.nodeType)"
                                 @click.stop="confirmDelete(props.row, index)"
                             >{{ $t('environment.delete') }}</span>
-                            <span class="node-handle delete-node-text"
-                                v-if="!props.row.canUse && props.row.nodeStatus !== 'CREATING'"
-                                @click.stop="toNodeApplyPerm(props.row)"
-                            >{{ $t('environment.applyPermission') }}</span>
                         </div>
                     </template>
                 </bk-table-column>
@@ -148,6 +145,7 @@
     import emptyNode from './empty_node'
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
     import { getQueryString } from '@/utils/util'
+    import webSocketMessage from '../utils/webSocketMessage.js'
 
     export default {
         components: {
@@ -156,7 +154,6 @@
         },
         data () {
             return {
-                timer: -1,
                 curEditNodeItem: '',
                 curEditNodeDisplayName: '',
                 nodeIp: '',
@@ -262,15 +259,16 @@
                 this.constructImportForm.model = urlParams
                 this.toImportNode('construct')
             }
+            webSocketMessage.installWsMessage(this.requestList)
+            this.$once('hook:beforeDestroy', webSocketMessage.unInstallWsMessage)
         },
         async mounted () {
             await this.init()
         },
-        beforeDestroy () {
-            clearTimeout(this.timer)
-            this.timer = null
-        },
         methods: {
+            getRowCls ({ row }) {
+                return `node-item-row ${row.canUse ? '' : 'node-row-useless'}`
+            },
             async init () {
                 const {
                     loading
@@ -296,8 +294,6 @@
              * 节点列表
              */
             async requestList () {
-                clearTimeout(this.timer)
-
                 try {
                     const res = await this.$store.dispatch('environment/requestNodeList', {
                         projectId: this.projectId
@@ -310,10 +306,6 @@
                         item.isMore = item.nodeHashId === this.lastCliCKNode.nodeHashId
                         this.nodeList.push(item)
                     })
-
-                    if (this.nodeList.length) {
-                        this.loopCheck()
-                    }
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -326,18 +318,6 @@
                     this.showContent = true
                 }
             },
-            /**
-             *  轮询整个列表状态
-             */
-            async loopCheck () {
-                clearTimeout(this.timer)
-
-                if (this.nodeList.length) {
-                    this.timer = setTimeout(async () => {
-                        await this.requestList()
-                    }, 8000)
-                }
-            },
             changeProject () {
                 this.$toggleProjectMenu(true)
             },
@@ -348,7 +328,7 @@
                 }])
             },
             toNodeApplyPerm (row) {
-                this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.envNode, [{
+                this.applyPermission(this.$permissionActionMap.use, this.$permissionResourceMap.envNode, [{
                     id: this.projectId,
                     type: this.$permissionResourceTypeMap.PROJECT
                 }, {
@@ -365,7 +345,21 @@
             },
             toNodeDetail (node) {
                 if (this.canShowDetail(node)) {
-                    this.$router.push({ name: 'nodeDetail', params: { nodeHashId: node.nodeHashId } })
+                    if (node.canUse) {
+                        this.$router.push({ name: 'nodeDetail', params: { nodeHashId: node.nodeHashId } })
+                    } else {
+                        this.$showAskPermissionDialog({
+                            noPermissionList: [{
+                                actionId: this.$permissionActionMap.use,
+                                resourceId: this.$permissionResourceMap.envNode,
+                                instanceId: [{
+                                    id: node.nodeHashId,
+                                    name: node.displayName
+                                }],
+                                projectId: this.projectId
+                            }]
+                        })
+                    }
                 }
             },
             /**
@@ -376,47 +370,61 @@
                 const id = row.nodeHashId
 
                 params.push(id)
-                this.$bkInfo({
-                    theme: 'warning',
-                    type: 'warning',
-                    title: this.$t('environment.delete'),
-                    subTitle: `${this.$t('environment.nodeInfo.deleteNodetips', [row.nodeId])}`,
-                    confirmFn: async () => {
-                        let message, theme
-                        try {
-                            await this.$store.dispatch('environment/toDeleteNode', {
-                                projectId: this.projectId,
-                                params: params
-                            })
-
-                            message = this.$t('environment.successfullyDeleted')
-                            theme = 'success'
-                        } catch (err) {
-                            if (err.code === 403) {
-                                this.$showAskPermissionDialog({
-                                    noPermissionList: [{
-                                        actionId: this.$permissionActionMap.delete,
-                                        resourceId: this.$permissionResourceMap.envNode,
-                                        instanceId: [{
-                                            id,
-                                            name: row.nodeId
-                                        }],
-                                        projectId: this.projectId
-                                    }]
+                if (!row.canDelete) {
+                    this.$showAskPermissionDialog({
+                        noPermissionList: [{
+                            actionId: this.$permissionActionMap.delete,
+                            resourceId: this.$permissionResourceMap.envNode,
+                            instanceId: [{
+                                id,
+                                name: row.nodeId
+                            }],
+                            projectId: this.projectId
+                        }]
+                    })
+                } else {
+                    this.$bkInfo({
+                        theme: 'warning',
+                        type: 'warning',
+                        title: this.$t('environment.delete'),
+                        subTitle: `${this.$t('environment.nodeInfo.deleteNodetips', [row.nodeId])}`,
+                        confirmFn: async () => {
+                            let message, theme
+                            try {
+                                await this.$store.dispatch('environment/toDeleteNode', {
+                                    projectId: this.projectId,
+                                    params: params
                                 })
-                            } else {
-                                message = err.data ? err.data.message : err
-                                theme = 'error'
+
+                                message = this.$t('environment.successfullyDeleted')
+                                theme = 'success'
+                            } catch (err) {
+                                if (err.code === 403) {
+                                    this.$showAskPermissionDialog({
+                                        noPermissionList: [{
+                                            actionId: this.$permissionActionMap.delete,
+                                            resourceId: this.$permissionResourceMap.envNode,
+                                            instanceId: [{
+                                                id,
+                                                name: row.nodeId
+                                            }],
+                                            projectId: this.projectId
+                                        }]
+                                    })
+                                } else {
+                                    message = err.data ? err.data.message : err
+                                    theme = 'error'
+                                }
+                            } finally {
+                                message && this.$bkMessage({
+                                    message,
+                                    theme
+                                })
+                                this.requestList()
                             }
-                        } finally {
-                            message && this.$bkMessage({
-                                message,
-                                theme
-                            })
-                            this.requestList()
                         }
-                    }
-                })
+                    })
+                }
             },
             /**
              * 构建机信息
@@ -879,6 +887,9 @@
                 .pointer {
                     cursor: pointer;
                 }
+                .useless {
+                  color: $fontLigtherColor;
+                }
                 .icon-edit {
                     position: relative;
                     left: 4px;
@@ -904,6 +915,19 @@
 
             .edit-node-item {
                 width: 24%;
+            }
+
+            .node-item-row {
+              &.node-row-useless {
+                cursor: url('../images/cursor-lock.png'), auto;
+                color: $fontLigtherColor;
+                .node-count-item {
+                  color: $fontLigtherColor;
+                }
+              }
+              .no-node-delete-permission {
+                cursor: url('../images/cursor-lock.png'), auto;
+              }
             }
 
             .install-agent {

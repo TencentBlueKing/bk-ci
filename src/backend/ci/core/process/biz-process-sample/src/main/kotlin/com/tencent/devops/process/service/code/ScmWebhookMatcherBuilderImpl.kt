@@ -24,72 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.process.service.code
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Logo
-import com.tencent.devops.store.pojo.common.StoreLogoInfo
-import com.tencent.devops.store.pojo.common.StoreLogoReq
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.InputStream
+import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.engine.service.code.GitWebHookMatcher
+import com.tencent.devops.process.engine.service.code.GithubWebHookMatcher
+import com.tencent.devops.process.engine.service.code.GitlabWebHookMatcher
+import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
+import com.tencent.devops.process.engine.service.code.SvnWebHookMatcher
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.git.GitEvent
+import com.tencent.devops.process.pojo.code.github.GithubEvent
+import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
+import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
+import org.springframework.stereotype.Service
 
-/**
- * store商城logo逻辑类
- *
- * since: 2019-02-15
- */
-interface StoreLogoService {
+@Service
+class ScmWebhookMatcherBuilderImpl : ScmWebhookMatcherBuilder {
+    override fun createGitWebHookMatcher(event: GitEvent): ScmWebhookMatcher = GitWebHookMatcher(event)
 
-    /**
-     * 上传logo
-     */
-    fun uploadStoreLogo(
-        userId: String,
-        contentLength: Long,
-        compressFlag: Boolean? = false,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<StoreLogoInfo?>
+    override fun createSvnWebHookMatcher(
+        event: SvnCommitEvent,
+        pipelineWebhookService: PipelineWebhookService
+    ): ScmWebhookMatcher = SvnWebHookMatcher(event, pipelineWebhookService)
 
-    /**
-     * 获取logo列表
-     */
-    fun list(
-        userId: String,
-        type: String
-    ): Result<List<Logo>?>
+    override fun createGitlabWebHookMatcher(event: GitlabCommitEvent): ScmWebhookMatcher = GitlabWebHookMatcher(event)
 
-    /**
-     * 获取logo
-     */
-    fun get(
-        userId: String,
-        id: String
-    ): Result<Logo?>
-
-    /**
-     * 新增logo
-     */
-    fun add(
-        userId: String,
-        type: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
-
-    /**
-     * 更新logo
-     */
-    fun update(
-        userId: String,
-        id: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
-
-    /**
-     * 删除logo
-     */
-    fun delete(
-        userId: String,
-        id: String
-    ): Result<Boolean>
+    override fun createGithubWebHookMatcher(event: GithubEvent): ScmWebhookMatcher = GithubWebHookMatcher(event)
 }

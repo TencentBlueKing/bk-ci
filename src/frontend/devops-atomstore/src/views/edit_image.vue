@@ -236,6 +236,7 @@
                     summary: '',
                     description: '',
                     logoUrl: '',
+                    iconData: '',
                     imageSourceType: 'THIRD',
                     dockerFileType: 'INPUT',
                     dockerFileContent: '',
@@ -333,7 +334,7 @@
             submitImage () {
                 if (this.form.dockerFileType === 'INPUT') this.form.dockerFileContent = this.$refs.codeEditor.getValue()
                 this.$refs.imageForm.validate().then(() => {
-                    if (!this.form.logoUrl) {
+                    if (!this.form.logoUrl && !this.form.iconData) {
                         this.logoErr = true
                         const err = { field: 'selectLogo' }
                         throw err
