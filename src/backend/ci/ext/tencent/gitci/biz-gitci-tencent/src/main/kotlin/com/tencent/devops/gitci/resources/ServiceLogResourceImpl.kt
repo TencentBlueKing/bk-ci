@@ -66,8 +66,5 @@ class ServiceLogResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        if (!repositoryConfService.initGitCISetting("", gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
-        }
     }
 }

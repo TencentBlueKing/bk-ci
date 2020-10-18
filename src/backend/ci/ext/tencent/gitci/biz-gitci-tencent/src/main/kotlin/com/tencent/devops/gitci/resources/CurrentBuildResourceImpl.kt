@@ -90,9 +90,5 @@ class CurrentBuildResourceImpl @Autowired constructor(
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
-
-        if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
-        }
     }
 }
