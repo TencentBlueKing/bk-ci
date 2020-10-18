@@ -757,7 +757,7 @@ class PipelineService @Autowired constructor(
                 permission = AuthPermission.VIEW
             )
         }
-        return pipelineRepositoryService.getPipelinesWithLastestModels(projectId, pipelineIds)
+        return pipelineRepositoryService.getPipelinesWithLastestModels(projectId, pipelineIds, channelCode)
     }
 
     fun deletePipeline(
