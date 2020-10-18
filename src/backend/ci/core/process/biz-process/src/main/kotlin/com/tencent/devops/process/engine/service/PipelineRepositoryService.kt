@@ -634,10 +634,17 @@ class PipelineRepositoryService constructor(
         }
     }
 
-    fun getPipelinesWithLastestModels(projectId: String, pipelineIds: List<String>): List<PipelineWithModel> {
+    fun getPipelinesWithLastestModels(projectId: String, pipelineIds: List<String>, channelCode: ChannelCode): List<PipelineWithModel> {
         val pipelines = mutableListOf<PipelineWithModel>()
         val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList())
-        val pipelineBuildSummaries = pipelineBuildSummaryDao.getSummaries(dslContext, pipelineIds.toSet())
+        val pipelineBuildSummaries = pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = channelCode,
+            sortType = null,
+            pipelineIds = pipelineIds
+        )
+
         pipelineBuildSummaries.forEach {
             val pipelineId = it["PIPELINE_ID"] as String
             val projectId = it["PROJECT_ID"] as String
@@ -649,8 +656,10 @@ class PipelineRepositoryService constructor(
             val creator = it["CREATOR"] as String
             val createTime = (it["CREATE_TIME"] as java.time.LocalDateTime?)?.timestampmilli() ?: 0
             val updateTime = (it["UPDATE_TIME"] as java.time.LocalDateTime?)?.timestampmilli() ?: 0
+
             val pipelineDesc = it["DESC"] as String?
             val runLockType = it["RUN_LOCK_TYPE"] as Int?
+
             val finishCount = it["FINISH_COUNT"] as Int? ?: 0
             val runningCount = it["RUNNING_COUNT"] as Int? ?: 0
             val buildId = it["LATEST_BUILD_ID"] as String?
