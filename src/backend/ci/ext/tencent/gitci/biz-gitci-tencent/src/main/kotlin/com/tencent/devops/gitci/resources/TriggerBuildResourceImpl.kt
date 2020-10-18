@@ -26,7 +26,6 @@
 
 package com.tencent.devops.gitci.resources
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.ci.CiYamlUtils
@@ -35,15 +34,12 @@ import com.tencent.devops.gitci.api.TriggerBuildResource
 import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
 import com.tencent.devops.gitci.service.GitCIRequestService
-import com.tencent.devops.gitci.service.RepositoryConfService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @RestResource
 class TriggerBuildResourceImpl @Autowired constructor(
-    private val gitCIRequestService: GitCIRequestService,
-    private val repositoryConfService: RepositoryConfService
+    private val gitCIRequestService: GitCIRequestService
 ) : TriggerBuildResource {
     companion object {
         private val logger = LoggerFactory.getLogger(TriggerBuildResourceImpl::class.java)

@@ -26,7 +26,6 @@
 
 package com.tencent.devops.gitci.resources
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -35,12 +34,10 @@ import com.tencent.devops.gitci.service.BuildService
 import com.tencent.devops.gitci.service.RepositoryConfService
 import com.tencent.devops.process.pojo.BuildId
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @RestResource
 class ServiceBuildResourceImpl @Autowired constructor(
-    private val buildService: BuildService,
-    private val repositoryConfService: RepositoryConfService
+    private val buildService: BuildService
 ) : ServiceBuildResource {
 
     override fun retry(userId: String, gitProjectId: Long, buildId: String, taskId: String?): Result<BuildId> {

@@ -26,7 +26,6 @@
 
 package com.tencent.devops.gitci.resources
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -39,8 +38,7 @@ import javax.ws.rs.core.Response
 
 @RestResource
 class ServiceLogResourceImpl @Autowired constructor(
-    private val logService: LogService,
-    private val repositoryConfService: RepositoryConfService
+    private val logService: LogService
 ) : ServiceLogResource {
     override fun getInitLogs(gitProjectId: Long, buildId: String, isAnalysis: Boolean?, queryKeywords: String?, tag: String?, jobId: String?, executeCount: Int?): Result<QueryLogs> {
         checkParam(buildId, gitProjectId)
