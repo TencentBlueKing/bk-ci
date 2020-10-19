@@ -30,7 +30,6 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.ServiceLogResource
-import com.tencent.devops.gitci.service.RepositoryConfService
 import com.tencent.devops.gitci.service.LogService
 import com.tencent.devops.common.log.pojo.QueryLogs
 import org.springframework.beans.factory.annotation.Autowired

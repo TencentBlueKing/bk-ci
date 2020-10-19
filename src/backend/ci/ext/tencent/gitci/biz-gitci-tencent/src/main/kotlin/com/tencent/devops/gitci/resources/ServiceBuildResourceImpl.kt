@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.ServiceBuildResource
 import com.tencent.devops.gitci.service.BuildService
-import com.tencent.devops.gitci.service.RepositoryConfService
 import com.tencent.devops.process.pojo.BuildId
 import org.springframework.beans.factory.annotation.Autowired
 
