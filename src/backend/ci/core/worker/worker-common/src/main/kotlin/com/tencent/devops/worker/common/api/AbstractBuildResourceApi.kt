@@ -81,30 +81,39 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             builder.writeTimeout(writeTimeoutInSec, TimeUnit.SECONDS)
         }
         val httpClient = builder.build()
-        val response = try {
-            httpClient.newCall(request).execute()
-        } catch (e: UnknownHostException) { // #2353 DNS问题导致请求未到达目标，可重试
+        val retryFlag = try {
+            val response = httpClient.newCall(request).execute()
+            logger.warn(
+                "Request($request) with code ${response.code()}"
+            )
+            if (retryCodes.contains(response.code())) { // 网关502,503，可重试
+                true
+            } else {
+                return response
+            }
+        } catch (e: UnknownHostException) { // DNS问题导致请求未到达目标，可重试
             logger.warn("UnknownHostException|request($request),error is :$e, try to retry $retryCount")
-            Response.Builder().code(504).build()
+            true
         } catch (e: Exception) {
-            if (e is SocketTimeoutException && e.message == "timeout") { // #2353 请求没到达服务器而超时，可重试
+            if (e is SocketTimeoutException && e.message == "timeout") { // 请求没到达服务器而超时，可重试
                 logger.warn("SocketTimeoutException|request($request),error is :$e, try to retry $retryCount")
-                Response.Builder().code(504).build()
+                true
             } else {
                 logger.error("Fail to request($request),error is :$e", e)
                 throw ClientException("Fail to request($request),error is:${e.message}")
             }
         }
 
-        if (retryCodes.contains(response.code()) && retryCount > 0) {
+        if (retryFlag && retryCount > 0) {
             logger.warn(
-                "Fail to request($request) with code ${response.code()} ," +
-                    " message ${response.message()} and response (${response.body()?.string()}), retry after 3 seconds"
+                "Fail to request($request), retry after $sleepTimeMills ms"
             )
             Thread.sleep(sleepTimeMills)
             return requestForResponse(request, connectTimeoutInSec, readTimeoutInSec, writeTimeoutInSec, retryCount - 1)
+        } else {
+            logger.error("Fail to request($request), try to retry $DEFAULT_RETRY_TIME")
+            throw ClientException("Fail to request($request), try to retry $DEFAULT_RETRY_TIME")
         }
-        return response
     }
 
     protected fun request(

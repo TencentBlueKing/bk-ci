@@ -659,17 +659,11 @@ abstract class ImageReleaseService {
         releaseType: Byte,
         marketImageUpdateRequest: MarketImageUpdateRequest
     ) {
-        val logoUrl = marketImageUpdateRequest.logoUrl
-        var iconData: String? = null
-        if (!logoUrl.isNullOrBlank()) {
-            iconData = supportService.getIconDataByLogoUrl(logoUrl!!)
-        }
         marketImageDao.updateMarketImage(
             dslContext = context,
             userId = userId,
             imageId = imageId,
             imageSize = imageSize,
-            iconData = iconData,
             marketImageUpdateRequest = marketImageUpdateRequest
         )
         imageCategoryRelDao.updateCategory(
@@ -695,17 +689,11 @@ abstract class ImageReleaseService {
         imageRecord: TImageRecord,
         marketImageUpdateRequest: MarketImageUpdateRequest
     ) {
-        val logoUrl = marketImageUpdateRequest.logoUrl
-        var iconData: String? = null
-        if (!logoUrl.isNullOrBlank()) {
-            iconData = supportService.getIconDataByLogoUrl(logoUrl!!)
-        }
         marketImageDao.upgradeMarketImage(
             dslContext = context,
             userId = userId,
             imageId = imageId,
             imageSize = imageSize,
-            iconData = iconData,
             imageRecord = imageRecord,
             marketImageUpdateRequest = marketImageUpdateRequest
         )

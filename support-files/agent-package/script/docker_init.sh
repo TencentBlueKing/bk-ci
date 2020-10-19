@@ -2,7 +2,7 @@
 ## Download the docker.jar
 export LANG="zh_CN.UTF-8"
 
-URL=${devops_gateway}/ms/dispatch/api/build/dockers
+URL=${devops_gateway}/ms/dispatch-docker/api/build/dockers
 cd /data/devops
 echo "start to download the docker.jar..." > /data/devops/logs/docker.log
 

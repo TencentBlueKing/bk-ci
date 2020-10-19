@@ -66,7 +66,7 @@ buildscript {
         awsS3Version = "1.11.461"
         asyncHttpClientVersion = "2.1.0"
         poiVersion = "3.17"
-        sigarVersion = "1.6.4"
+        sigarVersion = "1.7.0.0"
         poiVersion = "3.17"
         commonCodecVersion = "1.15"
         luceneVersion = "8.6.0"
@@ -321,7 +321,7 @@ subprojects {
                 entry "poi"
                 entry "poi-ooxml"
             }
-            dependencySet(group: 'org.fusesource', version: "$sigarVersion") {
+            dependencySet(group: 'com.tencent.devops.ci-plugins', version: "$sigarVersion") {
                 entry "sigar"
             }
             dependencySet(group: 'org.apache.poi', version: "$poiVersion") {

@@ -1,0 +1,21 @@
+server.port: 25905
+
+spring.boot.admin:
+  discovery:
+    ignored-services: consul, monitor
+  ui:
+    title: "BK Repo Monitor"
+    brand: "<img src=\"assets/img/icon-spring-boot-admin.svg\"><span>BK Repo Monitor</span>"
+monitor:
+  interval: 10s
+  metrics:
+    artifact.uploading.count: "generic"
+    artifact.downloading.count: "generic"
+    async.task.active.count: "generic,repository"
+    async.task.queue.size: "generic,repository"
+  health:
+    mongo: "repository"
+    hystrix: "generic"
+  export:
+    influx:
+      enabled: false

@@ -66,7 +66,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
 
@@ -616,7 +615,7 @@ class DockerHostDebugService @Autowired constructor(
         }
     }
 
-    @Scheduled(initialDelay = 45 * 1000, fixedDelay = 600 * 1000)
+    // @Scheduled(initialDelay = 45 * 1000, fixedDelay = 600 * 1000)
     fun clearTimeoutDebugTask() {
         val stopWatch = StopWatch()
         var message = ""
@@ -651,7 +650,7 @@ class DockerHostDebugService @Autowired constructor(
     }
 
     // FIXME 需要记录如果是从某个构建ID启动的调试必须不允许漂移，另起issue处理
-    @Scheduled(initialDelay = 90 * 1000, fixedDelay = 60 * 1000)
+    // @Scheduled(initialDelay = 90 * 1000, fixedDelay = 60 * 1000)
     fun resetHostTag() {
         val stopWatch = StopWatch()
         var message = ""
@@ -684,7 +683,7 @@ class DockerHostDebugService @Autowired constructor(
         }
     }
 
-    @Scheduled(initialDelay = 90 * 1000, fixedDelay = 100 * 1000)
+    // @Scheduled(initialDelay = 90 * 1000, fixedDelay = 100 * 1000)
     fun resetZone() {
         val stopWatch = StopWatch()
         var message = ""
