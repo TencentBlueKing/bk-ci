@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -216,7 +217,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
     private fun checkParams(userId: String, projectId: String, pipelineIds: List<String>) {
         checkUserId(userId)
         checkProjectId(projectId)
-        checkProjectIds(pipelineIds)
+        checkPipelineIds(pipelineIds)
     }
 
     private fun checkUserId(userId: String) {
@@ -231,9 +232,12 @@ class ServicePipelineResourceImpl @Autowired constructor(
         }
     }
 
-    private fun checkProjectIds(projectIds: List<String>) {
-        if (projectIds.isEmpty()) {
+    private fun checkPipelineIds(pipelineIds: List<String>) {
+        if (pipelineIds.isEmpty()) {
             throw ParamBlankException("Invalid projectId list")
+        }
+        if (pipelineIds.size > 100) {
+            throw InvalidParamException("Number of pipelines is too large, size:${pipelineIds.size}")
         }
     }
 
