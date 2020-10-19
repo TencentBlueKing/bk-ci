@@ -10,7 +10,6 @@ import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerI
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
@@ -28,7 +27,7 @@ class VmStatusScheduler @Autowired constructor(
     /**
      * 每隔2分钟check母机状态
      */
-    @Scheduled(cron = "0 0/2 * * * ?")
+    // @Scheduled(cron = "0 0/2 * * * ?")
     fun checkVMStatus() {
         val redisLock = RedisLock(redisOperation, failJobLockKey, 3600L)
         try {
