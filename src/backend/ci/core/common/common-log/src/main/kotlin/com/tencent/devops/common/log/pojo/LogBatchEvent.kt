@@ -39,6 +39,5 @@ data class LogBatchEvent(
     override val buildId: String,
     val logs: List<LogMessageWithLineNo>,
     override val retryTime: Int = 2,
-    override val delayMills: Int = 0,
-    override var esName: String? = null
-) : ILogEvent(buildId, retryTime, delayMills, esName)
+    override val delayMills: Int = 0
+) : ILogEvent(buildId, retryTime, delayMills)

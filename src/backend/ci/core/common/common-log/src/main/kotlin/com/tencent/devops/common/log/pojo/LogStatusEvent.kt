@@ -43,4 +43,4 @@ data class LogStatusEvent(
     val executeCount: Int?,
     override val retryTime: Int = 2,
     override val delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills, null)
+) : ILogEvent(buildId, retryTime, delayMills)
