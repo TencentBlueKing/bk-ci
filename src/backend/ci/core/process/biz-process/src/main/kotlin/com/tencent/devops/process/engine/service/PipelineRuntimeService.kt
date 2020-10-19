@@ -1563,7 +1563,7 @@ class PipelineRuntimeService @Autowired constructor(
             logger.info("[$pipelineId]|getExecuteTime-$buildId executeTime: $executeTime")
 
             val buildParameters: List<BuildParameters> = try {
-                getBuildParameters(buildId)
+                getBuildParametersFromHistory(buildId)
             } catch (e: Throwable) {
                 logger.error("[$pipelineId]|getBuildParameters-$buildId exception:", e)
                 mutableListOf()
@@ -1636,20 +1636,43 @@ class PipelineRuntimeService @Autowired constructor(
 
         return "$majorVersion.$minorVersion.$fixVersion.$buildNo"
     }
+    
+    fun initBuildParameters(buildId: String) {
+        val buildParameters: List<BuildParameters> = try {
+            getBuildParametersFromStartup(buildId)
+        } catch (e: Throwable) {
+            logger.error("getBuildParameters-$buildId exception:", e)
+            mutableListOf()
+        }
+        pipelineBuildDao.updateBuildParameters(dslContext, buildId, JsonUtil.toJson(buildParameters))
+    }
 
-    private fun getBuildParameters(buildId: String): List<BuildParameters> {
+    private fun getBuildParametersFromStartup(buildId: String): List<BuildParameters> {
         return try {
             val startupParam = buildStartupParamService.getParam(buildId)
-            if (startupParam == null || startupParam.isEmpty()) {
-                emptyList()
-            } else {
-                val map: Map<String, Any> = JsonUtil.toMap(startupParam)
-                map.map { transform ->
-                    BuildParameters(transform.key, transform.value)
-                }.toList().filter { !it.key.startsWith(SkipElementUtils.prefix) }
-            }
+            return getBuildParameters(startupParam)
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    private fun getBuildParametersFromHistory(buildId: String): List<BuildParameters> {
+        return try {
+            val buildParam = pipelineBuildDao.getBuildParameters(dslContext, buildId)
+            return getBuildParameters(buildParam)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun getBuildParameters(buildParam: String?): List<BuildParameters> {
+        return if (buildParam == null || buildParam.isEmpty()) {
+            emptyList()
+        } else {
+            val map: Map<String, Any> = JsonUtil.toMap(buildParam)
+            map.map { transform ->
+                BuildParameters(transform.key, transform.value)
+            }.toList().filter { !it.key.startsWith(SkipElementUtils.prefix) }
         }
     }
 

@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
+import com.tencent.devops.model.process.tables.TBuildStartupParam
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.BuildStageStatus
@@ -779,6 +780,24 @@ class PipelineBuildDao {
                 .set(STAGE_STATUS, JsonUtil.toJson(stageStatus))
                 .where(BUILD_ID.eq(buildId))
                 .execute()
+        }
+    }
+
+    fun updateBuildParameters(dslContext: DSLContext, buildId: String, buildParameters: String) {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.update(this)
+                    .set(BUILD_PARAMETERS, buildParameters)
+                    .where(BUILD_ID.eq(buildId))
+                    .execute()
+        }
+    }
+
+    fun getBuildParameters(dslContext: DSLContext, buildId: String) : String? {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            val record = dslContext.selectFrom(this)
+                    .where(BUILD_ID.eq(buildId))
+                    .fetchOne()
+            return record?.buildParameters
         }
     }
 }
