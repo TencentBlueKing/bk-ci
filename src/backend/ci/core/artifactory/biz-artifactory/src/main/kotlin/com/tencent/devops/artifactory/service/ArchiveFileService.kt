@@ -207,4 +207,11 @@ interface ArchiveFileService {
         targetProjectId: String,
         targetPath: String
     ): Result<Count>
+
+    /**
+     * 删除文件
+     */
+    fun deleteFile(
+        filePath: String
+    ): Result<Boolean>
 }

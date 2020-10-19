@@ -109,7 +109,7 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
     ): DockerRunResponse {
         logger.info("Start dockerRun projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, dockerRunParam: $dockerRunParam.")
 
-        val (containerId, timeStamp) = dockerHostBuildService.dockerRun(
+        val (containerId, timeStamp, portBindingList) = dockerHostBuildService.dockerRun(
             projectId = projectId,
             pipelineId = pipelineId,
             vmSeqId = vmSeqId,
@@ -117,7 +117,7 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
             dockerRunParam = dockerRunParam
         )
         logger.info("End dockerRun projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, dockerRunParam: $dockerRunParam")
-        return DockerRunResponse(containerId, timeStamp)
+        return DockerRunResponse(containerId, timeStamp, portBindingList)
     }
 
     fun dockerStop(projectId: String, pipelineId: String, vmSeqId: String, buildId: String, containerId: String) {

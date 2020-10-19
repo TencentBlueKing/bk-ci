@@ -1,8 +1,8 @@
 <template>
     <section v-if="container" :class="{ &quot;readonly&quot;: !editable }" class="container-property-panel bk-form bk-form-vertical">
-        <form-field :required="true" :label="$t('name')" :is-error="errors.has(&quot;name&quot;)" :error-msg="errors.first(&quot;name&quot;)">
+        <form-field label="Job ID" :is-error="errors.has(&quot;jobId&quot;)" :error-msg="errors.first(&quot;jobId&quot;)" :desc="$t('jobIdTips')">
             <div class="container-resource-name">
-                <vuex-input :disabled="!editable" input-type="text" :placeholder="$t('nameInputTips')" name="name" v-validate.initial="&quot;required&quot;" :value="container.name" :handle-change="handleContainerChange" />
+                <vuex-input :disabled="!editable" input-type="text" :placeholder="$t('jobIdTips')" name="jobId" v-validate.initial="`paramsRule|unique:${allJobId}`" :value="container.jobId" :handle-change="handleContainerChange" />
                 <atom-checkbox
                     v-if="isVmContainer(container)"
                     class="show-build-resource"
@@ -115,23 +115,33 @@
             <form-field :label="$t('editPage.workspace')" v-if="isThirdParty">
                 <vuex-input :disabled="!editable" name="workspace" :value="container.dispatchType.workspace" :handle-change="changeBuildResource" :placeholder="$t('editPage.workspaceTips')" />
             </form-field>
-            <form-field class="container-app-field" v-if="showDependencies" :label="$t('editPage.envDependency')">
-                <container-app-selector :disabled="!editable" class="app-selector-item" v-if="!hasBuildEnv" app="" version=""
-                    :handle-change="handleContainerAppChange"
-                    :apps="apps"
-                    :remove-container-app="removeContainerApp"
-                    :add-container-app="containerAppList.length > 0 ? addContainerApp : null"
-                ></container-app-selector>
-                <container-app-selector :disabled="!editable" v-else class="app-selector-item" v-for="(version, app) in container.buildEnv"
-                    :key="app"
-                    :app="app"
-                    :version="version"
-                    :handle-change="handleContainerAppChange"
-                    :envs="container.buildEnv"
-                    :apps="apps"
-                    :remove-container-app="removeContainerApp"
-                    :add-container-app="containerAppList.length > 0 ? addContainerApp : null"
-                ></container-app-selector>
+            <form-field class="container-app-field" v-if="isShowNFSDependencies">
+                <atom-checkbox
+                    :value="nfsSwitch"
+                    :text="$t('editPage.envDependency')"
+                    name="nfsSwitch"
+                    :handle-change="handleNfsSwitchChange"
+                    :disabled="!editable"
+                >
+                </atom-checkbox>
+                <template v-if="nfsSwitch && apps">
+                    <container-app-selector :disabled="!editable" class="app-selector-item" v-if="!hasBuildEnv" app="" version=""
+                        :handle-change="handleContainerAppChange"
+                        :apps="apps"
+                        :remove-container-app="removeContainerApp"
+                        :add-container-app="containerAppList.length > 0 ? addContainerApp : null"
+                    ></container-app-selector>
+                    <container-app-selector :disabled="!editable" v-else class="app-selector-item" v-for="(version, app) in container.buildEnv"
+                        :key="app"
+                        :app="app"
+                        :version="version"
+                        :handle-change="handleContainerAppChange"
+                        :envs="container.buildEnv"
+                        :apps="apps"
+                        :remove-container-app="removeContainerApp"
+                        :add-container-app="containerAppList.length > 0 ? addContainerApp : null"
+                    ></container-app-selector>
+                </template>
             </form-field>
 
             <div class="build-path-tips" v-if="hasBuildEnv">
@@ -164,6 +174,9 @@
                     :set-parent-validate="setContainerValidate"
                     @setKeyValueValidate="setContainerValidate"
                     :disabled="!editable"
+                    :stage="stage"
+                    :stage-index="stageIndex"
+                    :container-index="containerIndex"
                 >
                 </job-option>
             </div>
@@ -347,10 +360,13 @@
                 const { container: { baseOS }, getContainerApps } = this
                 return getContainerApps(baseOS)
             },
-            showDependencies () {
+            nfsSwitch () {
+                return !this.container.hasOwnProperty('nfsSwitch') || this.container['nfsSwitch']
+            },
+            isShowNFSDependencies () {
                 if (this.buildResourceType === 'MACOS') return false
                 const buildType = this.buildResourceTypeList.find(bt => bt.type === this.buildResourceType)
-                return this.apps && buildType && buildType.enableApp
+                return buildType && buildType.enableApp
             },
             buildResourceTypeList () {
                 const { container: { baseOS }, getBuildResourceTypeList } = this
@@ -372,6 +388,17 @@
                         itemTargetUrl: `/ticket/${this.projectId}/createCredential/USERNAME_PASSWORD/true`
                     }
                 }
+            },
+            allJobId () {
+                const jobIdList = []
+                this.stages.forEach(stage => {
+                    stage.containers.forEach(container => {
+                        if (container.jobId) {
+                            jobIdList.push(container.jobId)
+                        }
+                    })
+                })
+                return jobIdList
             }
         },
         watch: {
@@ -397,6 +424,9 @@
             }
             if (!this.isTriggerContainer(container) && this.container.mutexGroup === undefined) {
                 Vue.set(container, 'mutexGroup', {})
+            }
+            if (!this.isTriggerContainer(container) && this.container.jobId === undefined) {
+                Vue.set(container, 'jobId', '')
             }
             if (this.buildResourceType === 'THIRD_PARTY_AGENT_ID' && !this.container.dispatchType.agentType) {
                 this.handleContainerChange('dispatchType', Object.assign({
@@ -502,14 +532,14 @@
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
                     systemVersion: item,
-                    value: `${this.systemVersion}:${this.xcodeVersion}`
+                    value: `${item}:${this.xcodeVersion}`
                 }))
             },
             chooseXcode (item) {
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
                     xcodeVersion: item,
-                    value: `${this.systemVersion}:${this.xcodeVersion}`
+                    value: `${this.systemVersion}:${item}`
                 }))
             },
             setContainerValidate (addErrors, removeErrors) {
@@ -549,11 +579,11 @@
                 })
             },
             addContainerApp () {
-                const { container, containerAppList } = this
+                const { container, containerAppList, getAppDefaultVersion } = this
                 const newAppName = containerAppList[0]
                 this.handleContainerChange('buildEnv', {
                     ...container.buildEnv,
-                    [newAppName]: ''
+                    [newAppName]: getAppDefaultVersion(newAppName)
                 })
             },
             removeContainerApp (app) {
@@ -564,14 +594,26 @@
                 })
             },
             handleContainerAppChange (preApp, curApp, version = '') {
-                const { container: { buildEnv }, apps } = this
+                const { container: { buildEnv }, getAppDefaultVersion } = this
                 if (preApp !== curApp && buildEnv.hasOwnProperty(preApp)) {
                     delete buildEnv[preApp]
                 }
-                buildEnv[curApp] = version || apps[curApp][0]
+                const defaultAppVer = getAppDefaultVersion(curApp)
+                buildEnv[curApp] = version || defaultAppVer
                 this.handleContainerChange('buildEnv', {
                     ...buildEnv
                 })
+            },
+            handleNfsSwitchChange (name, value) {
+                if (!value) {
+                    console.log(name, typeof value, value)
+                    this.handleContainerChange('buildEnv', {})
+                }
+                this.handleContainerChange(name, value)
+            },
+            getAppDefaultVersion (app) {
+                const { apps } = this
+                return apps && apps[app] && Array.isArray(apps[app].versions) && apps[app].versions.length > 0 ? apps[app].versions[0] : ''
             },
             appBinPath (value, key) {
                 const { container: { baseOS }, apps } = this

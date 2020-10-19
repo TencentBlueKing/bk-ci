@@ -1,6 +1,5 @@
 package com.tencent.bk.codecc.defect.model.incremental;
 
-import com.tencent.codecc.common.db.CommonEntity;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -11,7 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
  * @date 2019/11/17
  */
 @Data
-public class CodeRepoEntity extends CommonEntity
+public class CodeRepoEntity
 {
     /**
      * 仓库ID
@@ -20,14 +19,23 @@ public class CodeRepoEntity extends CommonEntity
     private String repoId;
 
     /**
+     * 仓库url
+     */
+    private String url;
+
+    /**
      * 仓库版本
      */
-    @Field("revision")
     private String revision;
 
     /**
      * 仓库分支
      */
-    @Field("branch")
     private String branch;
+
+    /**
+     * 仓库别名
+     */
+    @Field("alias_name")
+    private String aliasName;
 }

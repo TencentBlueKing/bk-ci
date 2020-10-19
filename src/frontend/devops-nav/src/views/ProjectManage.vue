@@ -19,7 +19,7 @@
                         <bk-button
                             theme="primary"
                             icon="icon-plus"
-                            @click="togglePMDialog(true)"
+                            @click="hasCreatePermission ? togglePMDialog(true) : applyCreatePermission()"
                         >
                             {{ $t('addProject') }}
                         </bk-button>
@@ -119,11 +119,6 @@
                                     class="bk-text-button is-disabled"
                                     :title="$t('accessDeny.noOperateAccess')"
                                 >{{ $t('enableLabel') }}</a>
-                                <a
-                                    v-bk-tooltips="{ content: $t('waitforReview') }"
-                                    class="bk-text-button is-disabled"
-                                    :title="$t('accessDeny.noOperateAccess')"
-                                >{{ $t('userManage') }}</a>
                             </template>
                             <!-- 状态为已驳回 -->
                             <template v-else-if="props.row.approvalStatus === 3">
@@ -138,12 +133,7 @@
                                     class="bk-text-button is-disabled"
                                     :title="$t('accessDeny.noOperateAccess')"
                                 >{{ $t("enableLabel") }}</a>
-                                <a
-                                    v-bk-tooltips="{ content: $t('accessDeny.noOperateAccessTip') }"
-                                    href="javascript:void(0)"
-                                    class="bk-text-button is-disabled"
-                                    :title="$t('accessDeny.noOperateAccess')"
-                                >{{ $t('userManage') }}</a>
+                                
                             </template>
 
                             <!-- 否则正常显示 -->
@@ -158,11 +148,7 @@
                                     class="bk-text-button"
                                     @click.stop.prevent="toggleProject(props.row)"
                                 >{{ props.row.enabled ? $t('disableLabel') : $t('enableLabel') }}</a>
-                                <a
-                                    v-if="props.row.enabled"
-                                    href="javascript:void(0)"
-                                    :class="['bk-text-button', { 'is-disabled': !props.row.enabled }]"
-                                >{{ $t('userManage') }}</a>
+                                
                             </template>
                         </template>
                     </bk-table-column>
@@ -240,7 +226,7 @@
         @Action getProjects
         @Action toggleProjectEnable
         @Action changeProjectLogo
-        @Action getPermRedirectUrl
+        @Action hasCreateProjectPermission
 
         isFilterByOffline: boolean = false
         showlogoDialog: boolean = false
@@ -261,6 +247,7 @@
             limitList: [10, 15, 20, 25, 30],
             count: 0
         }
+        hasCreatePermission: boolean = true
         matchColorList: string[] = [
             'green',
             'yellow',
@@ -292,6 +279,16 @@
 
         created () {
             this.fetchAllProjects()
+            this.checkCreatePermission()
+        }
+
+        async checkCreatePermission () {
+          try {
+            const hasCreatePermission = await this.hasCreateProjectPermission()
+            this.hasCreatePermission = hasCreatePermission
+          } catch (e) {
+            this.hasCreatePermission = false
+          }
         }
 
         async fetchAllProjects () {
@@ -379,6 +376,17 @@
             this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.project)
         }
 
+        applyCreatePermission () {
+            // this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.project)
+            this.$showAskPermissionDialog({
+                noPermissionList: [{
+                    actionId: this.$permissionActionMap.create,
+                    resourceId: this.$permissionResourceMap.project,
+                    instanceId: []
+                }]
+            })
+        }
+
         toggleProject (project: any): void {
             const { enabled, projectCode, projectName = '' } = project
             this.curProjectData = JSON.parse(JSON.stringify(project))
@@ -401,10 +409,18 @@
                         await this.getProjects(true)
                         return true
                     } catch (error) {
-                        msg = error.message || ((enabled ? this.$t('disableLabel') : this.$t('enableLabel')) + projectName + this.$t('projectFail'))
+                        if (error.code === 403) {
+                          this.applyPermission(this.$permissionActionMap.edit, this.$permissionResourceMap.project, [{
+                            id: projectCode,
+                            type: this.$permissionResourceTypeMap.PROJECT
+                          }])
+                        } else {
+                            msg = error.message || ((enabled ? this.$t('disableLabel') : this.$t('enableLabel')) + projectName + this.$t('projectFail'))
+                        }
+                        
                         return true
                     } finally {
-                        this.$bkMessage({
+                        msg && this.$bkMessage({
                             theme,
                             message: msg
                         })

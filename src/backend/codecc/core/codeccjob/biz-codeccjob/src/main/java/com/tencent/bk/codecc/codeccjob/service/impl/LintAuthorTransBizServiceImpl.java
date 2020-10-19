@@ -12,21 +12,19 @@
 
 package com.tencent.bk.codecc.codeccjob.service.impl;
 
-import com.tencent.bk.codecc.defect.model.LintDefectEntity;
-import com.tencent.bk.codecc.defect.model.LintFileEntity;
-import com.tencent.bk.codecc.defect.vo.common.AuthorTransferVO;
-import com.tencent.bk.codecc.codeccjob.dao.mongorepository.LintFileQueryRepository;
+import com.tencent.bk.codecc.codeccjob.dao.mongorepository.LintDefectV2Repository;
+import com.tencent.bk.codecc.codeccjob.dao.mongotemplate.LintDefectV2Dao;
 import com.tencent.bk.codecc.codeccjob.service.AbstractAuthorTransBizService;
+import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;
+import com.tencent.bk.codecc.defect.vo.common.AuthorTransferVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -42,58 +40,27 @@ import java.util.stream.Collectors;
 public class LintAuthorTransBizServiceImpl extends AbstractAuthorTransBizService
 {
     @Autowired
-    private LintFileQueryRepository lintFileQueryRepository;
+    private LintDefectV2Repository lintDefectV2Repository;
+    @Autowired
+    private LintDefectV2Dao lintDefectV2Dao;
 
     @Override
     public CodeCCResult processBiz(AuthorTransferVO authorTransferVO)
     {
-        List<LintFileEntity> lintFileEntityList = lintFileQueryRepository.findByTaskIdAndToolNameAndStatus(authorTransferVO.getTaskId(),
-                authorTransferVO.getToolName(), ComConstants.TaskFileStatus.NEW.value());
+        Set<String> sourceAuthorSet = authorTransferVO.getTransferAuthorList().stream().map(AuthorTransferVO.TransferAuthorPair::getSourceAuthor).collect(Collectors.toSet());
+        List<LintDefectV2Entity> lintDefectEntityList = lintDefectV2Repository.findDefectsNeedTransferAuthor(authorTransferVO.getTaskId(),
+                authorTransferVO.getToolName(), ComConstants.TaskFileStatus.NEW.value(), sourceAuthorSet);
 
-        if (CollectionUtils.isNotEmpty(lintFileEntityList))
+        if (CollectionUtils.isNotEmpty(lintDefectEntityList))
         {
-            List<LintFileEntity> needRefreshFileList = new ArrayList<>();
-            lintFileEntityList.forEach(
-                    lintFileEntity ->
-                    {
-                        boolean needRefresh = refreshDefectAuthor(authorTransferVO,
-                                lintFileEntity);
-                        if (needRefresh)
-                        {
-                            needRefreshFileList.add(lintFileEntity);
-                        }
-                    }
-            );
-            lintFileQueryRepository.save(lintFileEntityList);
+            lintDefectEntityList.forEach(defect ->
+            {
+                String newAuthor = transferAuthor(authorTransferVO.getTransferAuthorList(), defect.getAuthor());
+                defect.setAuthor(newAuthor);
+            });
+            lintDefectV2Dao.batchUpdateDefectAuthor(authorTransferVO.getTaskId(), lintDefectEntityList);
         }
         return new CodeCCResult(CommonMessageCode.SUCCESS);
-    }
-
-
-    private boolean refreshDefectAuthor(AuthorTransferVO authorTransferVO, LintFileEntity lintFileEntity)
-    {
-        boolean needRefresh = false;
-        //1.设置lint文件中的作者清单
-        Set<String> authorList = lintFileEntity.getAuthorList();
-        lintFileEntity.setAuthorList(authorList.stream()
-                .map(author -> transferAuthor(authorTransferVO.getTransferAuthorList(), author))
-                .collect(Collectors.toSet()));
-        //2.设置告警清单中的作者
-        List<LintDefectEntity> lintDefectEntityList = lintFileEntity.getDefectList();
-        for(LintDefectEntity lintDefectEntity: lintDefectEntityList)
-        {
-            String author = lintDefectEntity.getAuthor();
-            if (StringUtils.isNotEmpty(author))
-            {
-                String newAuthor = transferAuthor(authorTransferVO.getTransferAuthorList(), author);
-                if (!newAuthor.equals(author))
-                {
-                    lintDefectEntity.setAuthor(newAuthor);
-                    needRefresh = true;
-                }
-            }
-        }
-        return needRefresh;
     }
 
 }

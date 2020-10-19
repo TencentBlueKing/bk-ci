@@ -454,6 +454,16 @@ export const hashID = () => {
     return uuid
 }
 
+export const randomString = (len) => {
+    const chars = 'ABCDEFGHJKLMNPQRSTWXYZabcdefhijklmnprstwxyz012345678'
+    const tempLen = chars.length
+    let tempStr = ''
+    for (let i = 0; i < len; ++i) {
+        tempStr += chars.charAt(Math.floor(Math.random() * tempLen))
+    }
+    return tempStr
+}
+
 export function getServiceLogoByPath (link) {
     return link.replace(/\/?(devops\/)?(\w+)\S*$/, '$2')
 }
@@ -641,5 +651,12 @@ export function rely (fieldProps, values) {
         }
     } catch (e) {
         return true
+    }
+}
+
+export class HttpError extends Error {
+    constructor (code = 500, message = 'http request error message') {
+        super(message)
+        this.code = code
     }
 }

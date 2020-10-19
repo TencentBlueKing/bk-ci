@@ -26,6 +26,8 @@
 
 package com.tencent.devops.dispatch.service
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
@@ -36,7 +38,6 @@ import com.tencent.devops.common.service.Profile
 import com.tencent.devops.dispatch.dao.RunningJobsDao
 import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.process.engine.common.VMUtils
@@ -72,6 +73,7 @@ class JobQuotaBusinessService @Autowired constructor(
      */
     fun insertRunningJob(projectId: String, vmType: JobQuotaVmType, buildId: String, vmSeqId: String) {
         runningJobsDao.insert(dslContext, projectId, vmType, buildId, vmSeqId)
+        redisOperation.sadd(QUOTA_PROJECT_ALL_KEY, projectId) // 所有项目集合
         checkWarning(projectId, vmType)
     }
 
@@ -92,6 +94,7 @@ class JobQuotaBusinessService @Autowired constructor(
                 runningJobs.filter { it?.agentStartTime != null && it.vmType != null }.forEach {
                     val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
                     incProjectJobRunningTime(projectId, JobQuotaVmType.parse(it.vmType), duration.toMillis())
+                    logger.info("<<<Finish time: $projectId|$buildId|$vmSeqId|${JobQuotaVmType.parse(it.vmType)} increase ${duration.toHours()} hours. >>>")
                 }
             } else {
                 logger.info("<<< DeleteRunningJob get lock failed, not run>>>")
@@ -155,6 +158,7 @@ class JobQuotaBusinessService @Autowired constructor(
                 runningJobs.filter { it?.agentStartTime != null }.forEach {
                     val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
                     runningTotalTime += duration.toMillis()
+                    logger.info("<<<Running time: $projectId|${it.buildId}|${it.vmSeqId}|${JobQuotaVmType.parse(it.vmType)} increase ${duration.toHours()} hours. >>>")
                 }
             }
 
@@ -170,6 +174,7 @@ class JobQuotaBusinessService @Autowired constructor(
             runningJobs.filter { it?.agentStartTime != null }.forEach {
                 val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
                 runningTotalTime += duration.toMillis()
+                logger.info("<<<Running time: $projectId|${it.buildId}|${it.vmSeqId}|${vmType.name} increase ${duration.toHours()} hours. >>>")
             }
 
             // 所有已经结束的耗时
@@ -190,7 +195,7 @@ class JobQuotaBusinessService @Autowired constructor(
             jobQuota.runningJobMax,
             runningJobCount,
             threshold.projectRunningJobThreshold,
-            jobQuota.runningTimeProjectMax,
+            jobQuota.runningTimeProjectMax.toLong(),
             runningJobTime,
             threshold.projectRunningTimeThreshold
         )
@@ -324,7 +329,7 @@ class JobQuotaBusinessService @Autowired constructor(
             }
         } else {
             if ((runningJobTime * 100) / (timeQuota * 60 * 60 * 1000) >= timeThreshold) {
-                redisOperation.set(WARN_TIME_PROJECT_TIME_THRESHOLD_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 3600)
+                redisOperation.set(WARN_TIME_PROJECT_TIME_THRESHOLD_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 86400)
                 logger.warn("Running job total time:$runningJobTime(s), quota: $timeQuota(h), timeThreshold: $timeThreshold, warning to project master.")
                 val msg = "当前项目【$projectId】【${vmType.displayName}】类型的Job当月总执行时长：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时，" +
                     "已达到阈值(${timeQuota}小时)的${normalizePercentage((runningJobTime * 100.0) / (timeQuota * 60 * 60 * 1000))}%，请调整流水线，合理控制Job执行时间!"
@@ -340,9 +345,10 @@ class JobQuotaBusinessService @Autowired constructor(
             if (runningJobCount < jobQuota) {
                 redisOperation.delete(WARN_TIME_PROJECT_TIME_MAX_LOCK_KEY_PREFIX + projectId)
             }
+            return false
         } else {
             if (runningJobTime >= timeQuota * 60 * 60 * 1000) {
-                redisOperation.set(WARN_TIME_PROJECT_TIME_MAX_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 3600)
+                redisOperation.set(WARN_TIME_PROJECT_TIME_MAX_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 86400)
                 logger.warn("Running job total time:$runningJobTime(s), quota: $timeQuota(h), warning to project master.")
                 val msg = "当前项目【$projectId】【${vmType.displayName}】类型的Job当月总执行时长：${String.format("%.2f", runningJobTime / 1000.0 / 60 / 60)}小时，已达到阈值(${timeQuota}小时)的100%，请调整流水线，合理控制Job执行时间!"
                 sendAlert(msg, userList.toSet())
@@ -361,7 +367,7 @@ class JobQuotaBusinessService @Autowired constructor(
             }
         } else {
             if (runningJobCount * 100 / jobQuota >= jobThreshold) {
-                redisOperation.set(WARN_TIME_PROJECT_JOB_THRESHOLD_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 3600)
+                redisOperation.set(WARN_TIME_PROJECT_JOB_THRESHOLD_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 86400)
                 logger.warn("Running job count:$runningJobCount, quota: $jobQuota, threshold: $jobThreshold, warning to project master.")
                 val msg = "当前项目【$projectId】【${vmType.displayName}】类型的Job最大并发数$runningJobCount，已达到阈值($jobQuota)的${normalizePercentage(runningJobCount * 100.0 / jobQuota)}%，请调整流水线，合理控制Job并发数!"
                 sendAlert(msg, userList.toSet())
@@ -379,7 +385,7 @@ class JobQuotaBusinessService @Autowired constructor(
             return false
         } else {
             if (runningJobCount >= jobQuota) {
-                redisOperation.set(WARN_TIME_PROJECT_JOB_MAX_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 3600)
+                redisOperation.set(WARN_TIME_PROJECT_JOB_MAX_LOCK_KEY_PREFIX + projectId, WARN_TIME_LOCK_VALUE, 86400)
                 logger.warn("Running job count:$runningJobCount, quota: $jobQuota, warning to project master.")
                 val msg = "当前项目【$projectId】【${vmType.displayName}】类型的Job最大并发数$runningJobCount，已达到阈值($jobQuota)的100%，请调整流水线，合理控制Job并发数!"
                 sendAlert(msg, userList.toSet())
@@ -408,7 +414,7 @@ class JobQuotaBusinessService @Autowired constructor(
             return true
         } else {
             if (runningJobCount >= runningJobMaxSystem) {
-                redisOperation.set(WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY, WARN_TIME_LOCK_VALUE, 3600)
+                redisOperation.set(WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY, WARN_TIME_LOCK_VALUE, 86400)
                 logger.warn("System running job count reach max, running jobs: $runningJobCount, " +
                     "quota: $runningJobMaxSystem")
                 val msg = "蓝盾当前【${vmType.displayName}】Job并发数为$runningJobCount，已达到100%，请关注。"
@@ -426,7 +432,7 @@ class JobQuotaBusinessService @Autowired constructor(
             return true
         } else {
             if (runningJobCount * 100 / runningJobMaxSystem >= systemRunningJobThreshold) {
-                redisOperation.set(WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY, WARN_TIME_LOCK_VALUE, 3600)
+                redisOperation.set(WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY, WARN_TIME_LOCK_VALUE, 86400)
                 logger.warn("System running job count reach threshold: $runningJobCount, " +
                     "quota: $runningJobMaxSystem, threshold: $systemRunningJobThreshold send alert.")
                 val msg = "蓝盾当前【${vmType.displayName}】Job并发数为$runningJobCount，已达到$systemRunningJobThreshold%，请关注！详情：正在执行JOB数量：$runningJobCount, 阈值：$runningJobMaxSystem, " +
@@ -458,9 +464,9 @@ class JobQuotaBusinessService @Autowired constructor(
             body = "[$envStr]$msg"
         }
 
-        val notifyCli = client.get(ServiceNotifyResource::class)
-        notifyCli.sendRtxNotify(rtxMessage)
-        notifyCli.sendEmailNotify(emailMessage)
+//        val notifyCli = client.get(ServiceNotifyResource::class)
+//        notifyCli.sendRtxNotify(rtxMessage)
+//        notifyCli.sendEmailNotify(emailMessage)
         logger.info("alert send: ${rtxMessage.body}")
     }
 
@@ -506,20 +512,30 @@ class JobQuotaBusinessService @Autowired constructor(
             return
         }
         if (projectId == null && vmType != JobQuotaVmType.ALL) { // restore all project with vmType
-            val projectList = runningJobsDao.getProject(dslContext)?.map { it.value1() }
-            if (null != projectList && projectList.isNotEmpty()) {
-                projectList.forEach { project ->
-                    redisOperation.set(getProjectVmTypeRunningTimeKey(project, vmType), "0")
-                    redisOperation.set(getProjectRunningTimeKey(project), "0")
+            val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
+            if (null != projectSet && projectSet.isNotEmpty()) {
+                projectSet.forEach { project ->
+                    restoreWithVmType(project, vmType)
                 }
             }
             return
         }
         if (projectId != null && vmType != JobQuotaVmType.ALL) { // restore project with vmType
-            redisOperation.set(getProjectVmTypeRunningTimeKey(projectId, vmType), "0")
-            redisOperation.set(getProjectRunningTimeKey(projectId), "0")
+            restoreWithVmType(projectId, vmType)
             return
         }
+    }
+
+    private fun restoreWithVmType(project: String, vmType: JobQuotaVmType) {
+        val time = redisOperation.get(getProjectVmTypeRunningTimeKey(project, vmType)) ?: "0"
+        val totalTime = redisOperation.get(getProjectRunningTimeKey(project)) ?: "0"
+        val reduiceTime = (totalTime.toLong() - time.toLong())
+        redisOperation.set(getProjectRunningTimeKey(project), if (reduiceTime < 0) {
+            "0"
+        } else {
+            reduiceTime.toString()
+        })
+        redisOperation.set(getProjectVmTypeRunningTimeKey(project, vmType), "0")
     }
 
     /**
@@ -545,10 +561,10 @@ class JobQuotaBusinessService @Autowired constructor(
     }
 
     private fun doRestore() {
-        val projectList = runningJobsDao.getProject(dslContext)?.map { it.value1() }
-        if (null != projectList && projectList.isNotEmpty()) {
+        val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
+        if (null != projectSet && projectSet.isNotEmpty()) {
             JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
-                projectList.forEach { project ->
+                projectSet.forEach { project ->
                     redisOperation.set(getProjectVmTypeRunningTimeKey(project, type), "0")
                     redisOperation.set(getProjectRunningTimeKey(project), "0")
                 }
@@ -584,19 +600,65 @@ class JobQuotaBusinessService @Autowired constructor(
         return "$PROJECT_RUNNING_TIME_KEY_PREFIX$projectId"
     }
 
+    fun statistics(): Map<String, Any> {
+        // 项目所有类型构建机当月最大时长top10
+        val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
+        val result = mutableMapOf<String, List<ProjectVmTypeTime>>()
+        if (null != projectSet && projectSet.isNotEmpty()) {
+            JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
+                val projectTimeList = mutableListOf<ProjectVmTypeTime>()
+                projectSet.forEach { project ->
+                    projectTimeList.add(ProjectVmTypeTime(
+                        project,
+                        type,
+                        (redisOperation.get(getProjectVmTypeRunningTimeKey(project, type)) ?: "0").toLong()
+                    ))
+                    projectTimeList.sort()
+                    result[type.displayName] = if (projectTimeList.size > 10) { projectTimeList.subList(0, 10) } else { projectTimeList }
+                }
+            }
+
+            val projectTotalTimeList = mutableListOf<ProjectVmTypeTime>()
+            projectSet.forEach { project ->
+                projectTotalTimeList.add(ProjectVmTypeTime(
+                    project,
+                    null,
+                    (redisOperation.get(getProjectRunningTimeKey(project)) ?: "0").toLong()
+                ))
+                projectTotalTimeList.sort()
+                result[JobQuotaVmType.ALL.displayName] = if (projectTotalTimeList.size > 10) { projectTotalTimeList.subList(0, 10) } else { projectTotalTimeList }
+            }
+        }
+
+        return result
+    }
+
     companion object {
         private const val TIMER_OUT_LOCK_KEY = "job_quota_business_time_out_lock"
         private const val TIMER_RESTORE_LOCK_KEY = "job_quota_business_time_restore_lock"
         private const val JOB_END_LOCK_KEY = "job_quota_business_redis_job_end_lock_"
         private const val PROJECT_RUNNING_TIME_KEY_PREFIX = "project_running_time_key_" // 项目当月已运行时间前缀
-        private const val WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY = "job_quota_warning_system_max_lock_key" // 系统当月已运行JOB数量告警前缀
-        private const val WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY = "job_quota_warning_system_threshold_lock_key" // 系统当月已运行JOB数量阈值告警前缀
+        private const val WARN_TIME_SYSTEM_JOB_MAX_LOCK_KEY = "job_quota_warning_system_max_lock_key" // 系统当月已运行JOB数量KEY, 告警使用
+        private const val WARN_TIME_SYSTEM_THRESHOLD_LOCK_KEY = "job_quota_warning_system_threshold_lock_key" // 系统当月已运行JOB数量阈值KEY，告警使用
         private const val WARN_TIME_PROJECT_JOB_MAX_LOCK_KEY_PREFIX = "job_quota_warning_project_max_lock_key_" // 项目当月已运行JOB数量告警前缀
         private const val WARN_TIME_PROJECT_JOB_THRESHOLD_LOCK_KEY_PREFIX = "job_quota_warning_project_threshold_lock_key_" // 项目当月已运行JOB数量阈值告警前缀
         private const val WARN_TIME_PROJECT_TIME_MAX_LOCK_KEY_PREFIX = "time_quota_warning_project_max_lock_key_" // 项目当月已运行时间告警前缀
         private const val WARN_TIME_PROJECT_TIME_THRESHOLD_LOCK_KEY_PREFIX = "time_quota_warning_project_threshold_lock_key_" // 项目当月已运行时间阈值告警前缀
-        private const val WARN_TIME_LOCK_VALUE = "job_quota_warning_lock_value" // 项目当月已运行时间前缀
+        private const val WARN_TIME_LOCK_VALUE = "job_quota_warning_lock_value" // VALUE值，标志位
         private const val TIMEOUT_DAYS = 7L
+        private const val QUOTA_PROJECT_ALL_KEY = "project_time_quota_all_key"
         private val logger = LoggerFactory.getLogger(JobQuotaBusinessService::class.java)
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    data class ProjectVmTypeTime(
+        val projectId: String,
+        val vmType: JobQuotaVmType?,
+        val runningTime: Long
+    ) : Comparable<ProjectVmTypeTime> {
+        override fun compareTo(other: ProjectVmTypeTime): Int {
+            return other.runningTime.compareTo(this.runningTime)
+        }
     }
 }

@@ -37,13 +37,14 @@ import com.tencent.devops.process.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.process.service.scm.GitScmService
 import com.tencent.devops.process.utils.GIT_MR_NUMBER
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 import java.util.regex.Pattern
 
-class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
+open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitWebHookMatcher::class.java)
@@ -63,11 +64,11 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         with(webHookParams) {
             logger.info("do git match for pipeline($pipelineId): ${repository.aliasName}, $branchName, $eventType")
 
-            if (repository !is CodeGitRepository) {
+            if (repository !is CodeGitRepository && repository !is CodeTGitRepository) {
                 logger.warn("Is not code repo for git web hook for repo and pipeline: $repository, $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)
             }
-            if (!matchUrl(repository.url)) {
+            if (!matchUrl(repository)) {
                 logger.warn("Is not match for event and pipeline: $event, $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)
             }
@@ -367,7 +368,8 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         return matcher.match(branchName, eventBranch)
     }
 
-    private fun matchUrl(url: String): Boolean {
+    open fun matchUrl(repository: Repository): Boolean {
+        val url = repository.url
         return when (event) {
             is GitPushEvent -> {
                 val repoHttpUrl = url.removePrefix("http://").removePrefix("https://")

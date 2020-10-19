@@ -8,13 +8,26 @@ import http from '@/api'
 export default {
     namespaced: true,
     state: {
+        categoryList: [],
+        codeLangs: [],
+        checkerSetLanguage: []
     },
     mutations: {
+        updateCategoryList (state, categoryList) {
+            state.categoryList = categoryList
+        },
+        updateCodeLangs (state, codeLangs) {
+            state.codeLangs = codeLangs
+        },
+        updateCheckerSetLanguage (state, checkerSetLanguage) {
+            state.checkerSetLanguage = checkerSetLanguage
+        }
     },
     actions: {
         count ({ commit, rootState }, data) {
             return http.post(`${window.AJAX_URL_PREFIX}/defect/api/user/checkerSet/count`, data).then(res => {
                 const data = res.data || {}
+                commit('updateCheckerSetLanguage', data)
                 return data
             }).catch(e => {
                 console.error(e)
@@ -39,6 +52,10 @@ export default {
         params ({ commit, rootState }) {
             return http.get(`${window.AJAX_URL_PREFIX}/defect/api/user/checkerSet/params`).then(res => {
                 const data = res.data || {}
+                const categoryList = res.data.catatories || []
+                const codeLangs = res.data.codeLangs || []
+                commit('updateCategoryList', categoryList)
+                commit('updateCodeLangs', codeLangs)
                 return data
             }).catch(e => {
                 console.error(e)

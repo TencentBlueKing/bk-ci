@@ -151,7 +151,7 @@
                     atoms.forEach(atom => {
                         if (this.curMatchRules.some(rule => rule.taskId === atom.atomCode
                             && (rule.ruleList.every(val => !val.gatewayId)
-                                || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
+                            || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
                             atom.isQualityCheck = true
                         } else {
                             atom.isQualityCheck = false
@@ -342,10 +342,15 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    this.handleError(err, this.$permissionActionMap.execute, {
-                        id: this.routerParams.pipelineId,
-                        name: this.routerParams.pipelineId
-                    }, this.routerParams.projectId)
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.execute,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.routerParams.pipelineId,
+                            name: this.routerParams.pipelineId
+                        }],
+                        projectId: this.routerParams.projectId
+                    }])
                 } finally {
                     message && this.$showTips({
                         message,

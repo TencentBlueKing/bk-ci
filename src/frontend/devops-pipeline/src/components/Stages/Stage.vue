@@ -70,7 +70,7 @@
     import Vue from 'vue'
     import { mapActions, mapState, mapGetters } from 'vuex'
     import StageContainer from './StageContainer'
-    import { getOuterHeight, hashID } from '@/utils/util'
+    import { getOuterHeight, hashID, randomString } from '@/utils/util'
     import Logo from '@/components/Logo'
     import CruveLine from '@/components/Stages/CruveLine'
 
@@ -308,10 +308,15 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    this.handleError(err, this.$permissionActionMap.execute, {
-                        id: this.$route.params.pipelineId,
-                        name: this.$route.params.pipelineId
-                    }, this.$route.params.projectId)
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.execute,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.$route.params.pipelineId,
+                            name: this.$route.params.pipelineId
+                        }],
+                        projectId: this.$route.params.projectId
+                    }])
                 } finally {
                     message && this.$showTips({
                         message,
@@ -409,11 +414,17 @@
                         id: `s-${hashID(32)}`,
                         containers: copyStage.containers.map(container => ({
                             ...container,
+                            jobId: `job_${randomString(3)}`,
                             containerId: `c-${hashID(32)}`,
                             elements: container.elements.map(element => ({
                                 ...element,
                                 id: `e-${hashID(32)}`
-                            }))
+                            })),
+                            jobControlOption: container.jobControlOption ? {
+                                ...container.jobControlOption,
+                                dependOnType: 'ID',
+                                dependOnId: []
+                            } : undefined
                         }))
 
                     }

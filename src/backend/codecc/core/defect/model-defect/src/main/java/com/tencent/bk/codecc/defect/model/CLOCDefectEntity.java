@@ -29,7 +29,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Data
 @Document(collection = "t_cloc_defect")
 @CompoundIndexes({
-        @CompoundIndex(name = "task_id_1_file_name_1", def = "{'task_id': 1, 'file_name': 1}")
+        @CompoundIndex(name = "task_id_1_file_name_1", def = "{'task_id': 1, 'file_name': 1}"),
+        @CompoundIndex(name = "task_id_1_status_1", def = "{'task_id': 1, 'status': 1}", background = true)
 })
 public class CLOCDefectEntity extends CommonEntity
 {
@@ -57,5 +58,8 @@ public class CLOCDefectEntity extends CommonEntity
 
     @Field("language")
     private String language;
+
+    @Field("status")
+    private String status;
 
 }

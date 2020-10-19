@@ -78,4 +78,13 @@ class StoreStatisticTotalDao {
             }
         }
     }
+
+    fun deleteStoreStatisticTotal(dslContext: DSLContext, storeCode: String, storeType: Byte) {
+        with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
+            dslContext.deleteFrom(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType))
+                .execute()
+        }
+    }
 }

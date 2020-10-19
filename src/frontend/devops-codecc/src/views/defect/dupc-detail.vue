@@ -212,20 +212,40 @@
                     const { entityId, filePath, editorSource } = this
                     const params = { ...this.params, entityId, filePath }
                     const res = await this.$store.dispatch('defect/lintDetail', params)
-                    res.fileContent = res.fileContent || this.$t('文件内容为空')
-                    this.sourceData = res
-                    editorSource.setValue('')
-                    editorSource.refresh()
+                    if (res.code === '2300005') {
+                        this.defectDetailDialogVisiable = false
+                        setTimeout(() => {
+                            this.$bkInfo({
+                                subHeader: this.$createElement('p', {
+                                    style: {
+                                        fontSize: '20px',
+                                        lineHeight: '40px'
+                                    }
+                                }, this.$t('无法获取问题的代码片段。请先将工蜂OAuth授权给蓝盾。')),
+                                confirmFn: () => {
+                                    this.$store.dispatch('defect/oauthUrl', { toolName: this.toolId }).then(res => {
+                                        window.open(res, '_blank')
+                                    })
+                                }
+                            })
+                        }, 500)
+                    } else {
+                        res.fileContent = res.fileContent || this.$t('文件内容为空')
+                        this.sourceData = res
+                        editorSource.setValue('')
+                        editorSource.refresh()
 
-                    // 更新代码展示组件内容等
-                    setTimeout(() => {
-                        this.updateEditor()
+                        // 更新代码展示组件内容等
+                        setTimeout(() => {
+                            this.updateEditor()
 
-                        this.drawGutterLine()
-                    }, 1)
-                    // this.updateEditor()
+                            this.drawGutterLine()
+                        }, 1)
+                        // this.updateEditor()
 
-                    // this.drawGutterLine()
+                        // this.drawGutterLine()
+                    }
+                   
                 } catch (e) {
                     console.error(e)
                 }
@@ -280,8 +300,9 @@
                 editorTarget.setValue(fileContent)
                 const i = index || 0
                 const targetStartLine = this.targetData.blockInfoList[i].startLines
-                this.scrollIntoView(this.editorTarget, targetStartLine)
+                this.scrollIntoView(this.editorTarget, targetStartLine - trimBeginLine)
                 this.chunkAddClass(this.editorTarget, this.targetData.blockInfoList[i])
+                editorTarget.refresh()
             },
             getTargetChunksBySourceChunk (chunk) {
                 const targetChunks = this.sourceData.targetBlockMap || {}
