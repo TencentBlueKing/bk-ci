@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("Git通用事件触发", description = CodeGitGenericWebHookTriggerElement.classType)
-data class CodeGitGenericWebHookTriggerElement (
+data class CodeGitGenericWebHookTriggerElement(
     @ApiModelProperty("任务名称", required = true)
     override val name: String = "TGit变更触发",
     @ApiModelProperty("id", required = false)

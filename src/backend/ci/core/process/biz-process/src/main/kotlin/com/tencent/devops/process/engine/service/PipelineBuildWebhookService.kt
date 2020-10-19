@@ -50,7 +50,6 @@ import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
 import com.tencent.devops.process.engine.service.code.ScmWebhookParamsFactory
-import com.tencent.devops.process.engine.service.code.SvnWebHookMatcher
 import com.tencent.devops.process.engine.utils.RepositoryUtils
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.WebhookCommit
@@ -202,7 +201,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                  * 验证流水线参数构建启动参数
                  */
                 val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-                var canWebhookStartup = canWebhookStartup(triggerContainer, codeRepositoryType)
+                val canWebhookStartup = canWebhookStartup(triggerContainer, codeRepositoryType)
 
                 if (!canWebhookStartup) {
                     logger.info("can not start by $codeRepositoryType, ignore")
