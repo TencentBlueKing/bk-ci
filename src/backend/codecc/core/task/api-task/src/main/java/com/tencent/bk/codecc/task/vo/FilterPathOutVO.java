@@ -55,6 +55,15 @@ public class FilterPathOutVO
     @ApiModelProperty(value = "自定义屏蔽路径列表")
     private List<String> filterPaths;
 
+    @ApiModelProperty(value = "code.yml屏蔽路径列表")
+    private List<String> testSourceFilterPath;
+
+    @ApiModelProperty(value = "code.yml屏蔽路径列表")
+    private List<String> autoGenFilterPath;
+
+    @ApiModelProperty(value = "code.yml屏蔽路径列表")
+    private List<String> thirdPartyFilterPath;
+
     @ApiModelProperty(value = "过滤路径类型")
     private String pathType;
 

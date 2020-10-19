@@ -197,4 +197,13 @@ class StoreEnvVarDao {
             return baseStep.fetch()
         }
     }
+
+    fun deleteEnvVar(dslContext: DSLContext, storeCode: String, storeType: Byte) {
+        with(TStoreEnvVar.T_STORE_ENV_VAR) {
+            dslContext.deleteFrom(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType))
+                .execute()
+        }
+    }
 }

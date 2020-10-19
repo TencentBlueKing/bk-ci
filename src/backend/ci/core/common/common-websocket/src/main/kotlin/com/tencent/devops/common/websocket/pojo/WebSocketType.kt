@@ -31,7 +31,7 @@ enum class WebSocketType {
     WEBHOOK, // webhook错误推送
     STATUS, // 状态，首页
     HISTORY, // 历史页
-    STORE, // 研发商店
+    AMD, // 其他页面推送
     DETAIL; // 详情页
 
     companion object {
@@ -44,7 +44,7 @@ enum class WebSocketType {
                 return "IFRAME"
             }
 
-            if (webSocketType == STORE) {
+            if (webSocketType == AMD) {
                 return "AMD"
             }
 

@@ -40,23 +40,27 @@ class OpJobQuotaProjectResourceImpl @Autowired constructor(
     private val jobQuotaManagerService: JobQuotaManagerService,
     private val jobQuotaBusinessService: JobQuotaBusinessService
 ) : OpJobQuotaProjectResource {
-    override fun get(projectId: String, jobQuotaVmType: JobQuotaVmType): Result<JobQuotaProject> {
-        return Result(jobQuotaManagerService.getProjectQuota(projectId, jobQuotaVmType))
+    override fun list(projectId: String?): Result<List<JobQuotaProject>> {
+        return Result(jobQuotaManagerService.listProjectQuota(projectId))
+    }
+
+    override fun get(projectId: String, vmType: JobQuotaVmType): Result<JobQuotaProject> {
+        return Result(jobQuotaManagerService.getProjectQuota(projectId, vmType))
     }
 
     override fun add(projectId: String, jobQuota: JobQuotaProject): Result<Boolean> {
         return Result(jobQuotaManagerService.addProjectQuota(projectId, jobQuota))
     }
 
-    override fun delete(projectId: String, jobQuotaVmType: JobQuotaVmType): Result<Boolean> {
-        return Result(jobQuotaManagerService.deleteProjectQuota(projectId, jobQuotaVmType))
+    override fun delete(projectId: String, vmType: JobQuotaVmType): Result<Boolean> {
+        return Result(jobQuotaManagerService.deleteProjectQuota(projectId, vmType))
     }
 
-    override fun update(projectId: String, jobQuotaVmType: JobQuotaVmType, jobQuota: JobQuotaProject): Result<Boolean> {
-        return Result(jobQuotaManagerService.updateProjectQuota(projectId, jobQuotaVmType, jobQuota))
+    override fun update(projectId: String, vmType: JobQuotaVmType, jobQuota: JobQuotaProject): Result<Boolean> {
+        return Result(jobQuotaManagerService.updateProjectQuota(projectId, vmType, jobQuota))
     }
 
-    override fun restore(projectId: String?, vmType: JobQuotaVmType): Result<Boolean> {
+    override fun restore(projectId: String, vmType: JobQuotaVmType): Result<Boolean> {
         jobQuotaBusinessService.restoreProjectJobTime(projectId, vmType)
         return Result(true)
     }

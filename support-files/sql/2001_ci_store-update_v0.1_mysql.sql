@@ -186,6 +186,30 @@ BEGIN
                     AND INDEX_NAME = 'inx_taf_yml_flag') THEN
         ALTER TABLE T_ATOM_FEATURE ADD INDEX inx_taf_yml_flag (YAML_FLAG); 
     END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_REASON_REL'
+                    AND COLUMN_NAME = 'STORE_TYPE') THEN
+        ALTER TABLE T_REASON_REL ADD COLUMN `STORE_TYPE` TINYINT(4) NOT NULL DEFAULT '0' COMMENT 'STORE组件类型';
+    ELSEIF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_REASON_REL'
+                        AND COLUMN_NAME = 'STORE_TYPE'
+                        AND COLUMN_TYPE = 'TINYINT(4)') THEN
+        ALTER TABLE T_REASON_REL
+            CHANGE `STORE_TYPE` `STORE_TYPE` TINYINT(4) NOT NULL DEFAULT '0' COMMENT 'STORE组件类型';
+    END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_REASON_REL'
+                    AND INDEX_NAME = 'inx_trr_store_type') THEN
+        ALTER TABLE T_REASON_REL ADD INDEX inx_trr_store_type (STORE_TYPE); 
+    END IF;
 
     COMMIT;
 END <CI_UBF>

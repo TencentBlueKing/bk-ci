@@ -69,4 +69,13 @@ class StorePipelineRelDao {
                 .fetchOne()
         }
     }
+
+    fun deleteStorePipelineRel(dslContext: DSLContext, storeCode: String, storeType: Byte) {
+        with(TStorePipelineRel.T_STORE_PIPELINE_REL) {
+            dslContext.deleteFrom(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType))
+                .execute()
+        }
+    }
 }

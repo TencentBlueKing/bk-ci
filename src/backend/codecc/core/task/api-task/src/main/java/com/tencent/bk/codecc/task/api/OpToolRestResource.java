@@ -21,7 +21,6 @@ import io.swagger.annotations.ApiParam;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
 
 import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_TASK_ID;
 import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_USER_ID;
@@ -38,45 +37,6 @@ import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEAD
 @Consumes(MediaType.APPLICATION_JSON)
 public interface OpToolRestResource
 {
-
-    @ApiOperation("获取工具platform信息列表")
-    @Path("/toolConfig/list")
-    @GET
-    CodeCCResult<List<ToolConfigPlatformVO>> getPlatformInfo(
-            @ApiParam(value = "任务ID")
-            @QueryParam("taskId")
-                    Long taskId,
-            @ApiParam(value = "工具名称")
-            @QueryParam("toolName")
-                    String toolName,
-            @ApiParam(value = "platform ip")
-            @QueryParam("platformIp")
-                    String platformIp,
-            @ApiParam(value = "页数")
-            @QueryParam(value = "pageNum")
-                    Integer pageNum,
-            @ApiParam(value = "每页多少条")
-            @QueryParam(value = "pageSize")
-                    Integer pageSize,
-            @ApiParam(value = "排序类型")
-            @QueryParam(value = "sortType")
-                    String sortType
-    );
-
-
-    @ApiOperation("获取工具platform信息列表")
-    @Path("/toolConfig/info")
-    @GET
-    CodeCCResult<ToolConfigPlatformVO> getToolConfigInfo(
-            @ApiParam(value = "任务ID", required = true)
-            @QueryParam("taskId")
-                    Long taskId,
-            @ApiParam(value = "工具名称", required = true)
-            @QueryParam("toolName")
-                    String toolName
-    );
-
-
     @ApiOperation("修改工具特殊配置")
     @Path("/toolConfig/update")
     @PUT
@@ -91,6 +51,7 @@ public interface OpToolRestResource
                     ToolConfigPlatformVO toolConfigPlatformVO
     );
 
+
     @ApiOperation("更新任务组织架构(临时)")
     @Path("/taskOrg/refresh")
     @POST
@@ -99,5 +60,13 @@ public interface OpToolRestResource
             @ApiParam(value = "请求体", required = true) TaskDetailVO reqVO
     );
 
+
+    @ApiOperation("批量更新工具跟进状态")
+    @Path("/followstatus/refresh")
+    @GET
+    CodeCCResult<Boolean> refreshToolFollowStatus(
+            @ApiParam(value = "当前用户", required = true) @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID) String userName,
+            @ApiParam(value = "工具名称") @QueryParam("pageSize") Integer pageSize
+    );
 
 }

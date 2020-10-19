@@ -1,18 +1,18 @@
 # 服务配置文件模板
 spring:
   datasource:
-    url: jdbc:mysql://__MYSQL_IP0__:__MYSQL_PORT__/devops_ci_log?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
-    username: __MYSQL_USER__
-    password: __MYSQL_PASS__
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_log?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: __BK_CI_MYSQL_USER__
+    password: __BK_CI_MYSQL_PASSWORD__
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21914
 server:
-  port: __BKCI_LOG_API_PORT__
+  port: __BK_CI_LOG_API_PORT__
 
 elasticsearch:
-  ip: __BKCI_ES_IP__
-  port: __BKCI_ES_PORT__
-  cluster: __BKCI_ES_CLUSTER__
+  ip: __BK_CI_ES_REST_ADDR__   # 今后只使用REST client.
+  port: __BK_CI_ES_REST_PORT__
+  cluster: __BK_CI_ES_CLUSTER_NAME__
   name: DEVOPS
 #  ES集群如果要求证书验证的场景，需要需要打开以下4个配置项， 设置keystore文件和truststore文件以及密码
 #  keystore:
