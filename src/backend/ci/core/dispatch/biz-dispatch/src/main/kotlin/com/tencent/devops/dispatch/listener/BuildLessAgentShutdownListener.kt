@@ -26,15 +26,9 @@
 
 package com.tencent.devops.dispatch.listener
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.dispatch.service.PipelineBuildLessDispatchService
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.core.ExchangeTypes
-import org.springframework.amqp.rabbit.annotation.Exchange
-import org.springframework.amqp.rabbit.annotation.Queue
-import org.springframework.amqp.rabbit.annotation.QueueBinding
-import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -42,7 +36,7 @@ import org.springframework.stereotype.Service
 class BuildLessAgentShutdownListener @Autowired
 constructor(private val pipelineDispatchService: PipelineBuildLessDispatchService) {
 
-    @RabbitListener(
+/*    @RabbitListener(
         bindings = [(QueueBinding(
             key = MQ.ROUTE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH, value = Queue(
                 value = MQ.QUEUE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH, durable = "true"
@@ -54,7 +48,7 @@ constructor(private val pipelineDispatchService: PipelineBuildLessDispatchServic
                 type = ExchangeTypes.DIRECT
             )
         ))]
-    )
+    )*/
     fun listenAgentStartUpEvent(pipelineBuildLessDockerAgentShutdownEvent: PipelineBuildLessShutdownDispatchEvent) {
         try {
             pipelineDispatchService.shutdown(pipelineBuildLessDockerAgentShutdownEvent)
