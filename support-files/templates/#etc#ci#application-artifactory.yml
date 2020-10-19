@@ -16,7 +16,6 @@ server:
 # 可配置文件暂存目录、临时文件过期时间、数据库记录清理策略
 artifactory:
   archiveLocalBasePath: __BK_CI_DATA_DIR__/artifactory  # 如果多节点部署, 需要使用共享存储.
-  #archiveJFrogBasePath: /tmp
   fileTask:
     savedir: __BK_CI_DATA_DIR__/artifactory-filetask/  # 不一定共享, 但是建议准备较大容量.
     file:
@@ -25,13 +24,4 @@ artifactory:
       clear:
         enable: false
         expireTimeDays: 7
-
-# 自已有部署Jfrog的可以对接
-#jfrog:
-#  url: __BK_CI_JFROG_URL__
-#  docker_url: __BK_CI_DOCKER_URL__
-#  docker_port: __BK_CI_DOCKER_PORT__
-#  username: __BK_CI_JFROG_USER__
-#  password: __BK_CI_JFROG_PASSWORD__
-  
   
