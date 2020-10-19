@@ -68,6 +68,7 @@ const val NODEJS = "nodejs" // nodejs
 const val GOLANG = "golang" // golang
 const val PATTERN_STYLE = "patternStyle" // 正则表达式规则
 const val MESSAGE = "message" // 提示信息
+const val STATIC = "static" // 静态资源
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"

@@ -27,9 +27,8 @@
 package com.tencent.devops.common.api.enums
 
 enum class FrontendTypeEnum(val typeVersion: String) {
-    NORMAL("1.1"),  // 官方提供典型的插件UI配置方式
-    SPECIAL("1.2");  // 定制插件UI方式
-
+    NORMAL("1.1"), // 官方提供典型的插件UI配置方式
+    SPECIAL("1.2"); // 定制插件UI方式
 
     companion object {
 
