@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
@@ -115,6 +116,24 @@ interface ServicePipelineResource {
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Model>
+
+    @ApiOperation("批量获取流水线编排与配置")
+    @GET
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
+    @Path("/{projectId}/{pipelineId}/batch")
+    fun getBatch(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID列表", required = true)
+        pipelineIds: List<String>,
+        @ApiParam("渠道号，默认为DS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
+    ): Result<List<PipelineWithModel>>
 
     @ApiOperation("获取流水线基本信息")
     @GET
