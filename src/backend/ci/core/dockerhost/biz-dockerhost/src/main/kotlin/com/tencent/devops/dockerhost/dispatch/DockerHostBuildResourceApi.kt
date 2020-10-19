@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
+import com.tencent.devops.dockerhost.common.Constants
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.SigarUtil
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
@@ -44,7 +45,7 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 
 class DockerHostBuildResourceApi constructor(
-    private val urlPrefix: String = "ms/dispatch"
+    private val urlPrefix: String = Constants.DISPATCH_DOCKER_PREFIX
 ) : AbstractBuildResourceApi() {
     private val logger = LoggerFactory.getLogger(DockerHostBuildResourceApi::class.java)
 

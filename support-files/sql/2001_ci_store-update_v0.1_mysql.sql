@@ -192,7 +192,15 @@ BEGIN
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_REASON_REL'
                     AND COLUMN_NAME = 'STORE_TYPE') THEN
-        ALTER TABLE T_REASON_REL ADD COLUMN `STORE_TYPE` bit(1) DEFAULT b'0';
+        ALTER TABLE T_REASON_REL ADD COLUMN `STORE_TYPE` TINYINT(4) NOT NULL DEFAULT '0' COMMENT 'STORE组件类型';
+    ELSEIF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_REASON_REL'
+                        AND COLUMN_NAME = 'STORE_TYPE'
+                        AND COLUMN_TYPE = 'TINYINT(4)') THEN
+        ALTER TABLE T_REASON_REL
+            CHANGE `STORE_TYPE` `STORE_TYPE` TINYINT(4) NOT NULL DEFAULT '0' COMMENT 'STORE组件类型';
     END IF;
 	
 	IF NOT EXISTS(SELECT 1
