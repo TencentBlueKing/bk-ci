@@ -52,6 +52,7 @@ data class WebHookWebsocketPush(
 
     override fun findSession(page: String): List<String>? {
         val sessions = RedisUtlis.getSessionIdByUserId(redisOperation, userId)
+        logger.warn("webhook push $userId| $page| $sessions")
         val sessionList = sessions?.split(",")
         return if(sessionList?.size!! > 10) {
             // 为防止sessionId 太多,消息爆炸。截取最后十个session推送消息
@@ -67,11 +68,7 @@ data class WebHookWebsocketPush(
     }
 
     override fun buildMqMessage(): SendMessage? {
-        val sessionId = RedisUtlis.getSessionIdByUserId(redisOperation, userId)
-        val sessionList = mutableListOf<String>()
-        if (sessionId != null) {
-            sessionList.add(sessionId!!)
-        }
+        val sessionList = findSession("") ?: emptyList()
         return NotifyMessage(
                 buildId = buildId,
                 projectId = projectId,
