@@ -731,7 +731,7 @@ class DockerHostBuildService(
         logger.info("<--------------------- resetContainer $containerId --------------------->")
         httpDockerCli.pauseContainerCmd(containerId)
         logger.info("<--------------------- pauseContainer $containerId --------------------->")
-        httpDockerCli.updateContainerCmd(containerId).withMemory(32768 * 1024).withCpuShares(1)
+        httpDockerCli.updateContainerCmd(containerId).withMemory(32768 * 1024).withMemorySwap(-1).withCpuPeriod(10000).withCpuQuota(10000)
         logger.info("<--------------------- updateContainer $containerId --------------------->")
         httpDockerCli.unpauseContainerCmd(containerId)
         logger.info("<--------------------- unpauseContainer $containerId --------------------->")
