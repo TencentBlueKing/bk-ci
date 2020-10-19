@@ -33,6 +33,7 @@ import com.tencent.devops.artifactory.pojo.ArchiveAtomRequest
 import com.tencent.devops.artifactory.pojo.ArchiveAtomResponse
 import com.tencent.devops.artifactory.pojo.ReArchiveAtomRequest
 import com.tencent.devops.artifactory.service.ArchiveAtomService
+import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -175,7 +176,13 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         return archiveAtomResult
     }
 
-    protected fun unzipFile(disposition: FormDataContentDisposition, inputStream: InputStream, projectCode: String, atomCode: String, version: String) {
+    protected fun unzipFile(
+        disposition: FormDataContentDisposition,
+        inputStream: InputStream,
+        projectCode: String,
+        atomCode: String,
+        version: String
+    ) {
         val fileName = disposition.fileName
         val index = fileName.lastIndexOf(".")
         val fileType = fileName.substring(index + 1)
@@ -189,9 +196,12 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             ZipUtil.unZipFile(file, atomArchivePath, false)
             // 判断解压目录下面是否有自定义UI前端文件
             val frontendFileDir = File(atomArchivePath, FRONTEND_PATH)
-            if (frontendFileDir.exists()){
+            if (frontendFileDir.exists()) {
                 // 把前端文件拷贝到指定目录
-                FileUtils.copyDirectory(frontendFileDir, File("${getAtomArchiveBasePath()}/$BK_CI_PLUGIN_FE_DIR/$atomCode/$version"))
+                FileUtils.copyDirectory(
+                    frontendFileDir,
+                    File("${getAtomArchiveBasePath()}/$STATIC/$BK_CI_PLUGIN_FE_DIR/$atomCode/$version")
+                )
                 FileSystemUtils.deleteRecursively(frontendFileDir)
             }
         } finally {
