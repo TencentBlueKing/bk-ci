@@ -698,6 +698,7 @@ class DockerHostBuildService(
     }
 
     fun monitorSystemLoad() {
+        logger.info("Monitor systemLoad cpu: ${SigarUtil.getAverageLongCpuLoad()}, mem: ${SigarUtil.getAverageLongMemLoad()}")
         if (SigarUtil.getAverageLongCpuLoad() > 60) {
             checkContainerStats()
         }
