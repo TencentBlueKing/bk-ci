@@ -1636,7 +1636,7 @@ class PipelineRuntimeService @Autowired constructor(
 
         return "$majorVersion.$minorVersion.$fixVersion.$buildNo"
     }
-    
+
     fun initBuildParameters(buildId: String) {
         val buildParameters: List<BuildParameters> = try {
             getBuildParametersFromStartup(buildId)
