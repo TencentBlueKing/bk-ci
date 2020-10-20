@@ -83,19 +83,19 @@ class ServiceCodeccResourceImpl @Autowired constructor(
         return codeccApi.installCheckerSet(projectId, userId, type, checkerSetId)
     }
 
-    override fun getCodeccMeasureInfo(repoProjectName: String, commitId: String?): Result<CodeccMeasureInfo?> {
-        return codeccApi.getCodeccMeasureInfo(repoProjectName, commitId)
+    override fun getCodeccMeasureInfo(repoId: String, commitId: String?): Result<CodeccMeasureInfo?> {
+        return codeccApi.getCodeccMeasureInfo(repoId, commitId)
     }
 
-    override fun getCodeccTaskStatusInfo(repoProjectName: String, commitId: String?): Result<Int> {
-        return codeccApi.getCodeccTaskStatusInfo(repoProjectName, commitId)
+    override fun getCodeccTaskStatusInfo(repoId: String, commitId: String?): Result<Int> {
+        return codeccApi.getCodeccTaskStatusInfo(repoId, commitId)
     }
 
-    override fun startCodeccTask(repoProjectName: String, commitId: String?): Result<String> {
-        return codeccApi.startCodeccTask(repoProjectName, commitId)
+    override fun startCodeccTask(repoId: String, commitId: String?): Result<String> {
+        return codeccApi.startCodeccTask(repoId, commitId)
     }
 
-    override fun createCodeccPipeline(repoProjectName: String): Result<Boolean> {
-        return codeccApi.createCodeccPipeline(repoProjectName)
+    override fun createCodeccPipeline(repoId: String): Result<Boolean> {
+        return codeccApi.createCodeccPipeline(repoId)
     }
 }
