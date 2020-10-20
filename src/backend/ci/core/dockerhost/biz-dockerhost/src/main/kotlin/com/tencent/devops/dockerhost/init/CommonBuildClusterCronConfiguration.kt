@@ -64,7 +64,7 @@ class CommonBuildClusterCronConfiguration @Autowired constructor(
         ) {
             scheduledTaskRegistrar.addFixedRateTask(
                 IntervalTask(
-                    Runnable { runner.clearExitedContainer() }, 3600 * 1000, 3600 * 1000
+                    Runnable { runner.clearExitedContainer() }, 1200 * 1000, 3600 * 1000
                 )
             )
 
@@ -80,7 +80,7 @@ class CommonBuildClusterCronConfiguration @Autowired constructor(
 
             scheduledTaskRegistrar.addFixedRateTask(
                 IntervalTask(
-                    Runnable { runner.monitorSystemLoad() }, 200 * random.toLong(), random.toLong()
+                    Runnable { runner.monitorSystemLoad() }, 5 * random.toLong(), random.toLong()
                 )
             )
 
