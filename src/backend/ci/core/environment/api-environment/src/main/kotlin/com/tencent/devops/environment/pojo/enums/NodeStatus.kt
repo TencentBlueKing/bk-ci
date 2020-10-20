@@ -50,7 +50,6 @@ enum class NodeStatus(val statusName: String) {
                 ABNORMAL.name -> ABNORMAL.statusName
                 DELETED.name -> DELETED.statusName
                 LOST.name -> LOST.statusName
-                STARTING.name -> STARTING.statusName
                 CREATING.name -> CREATING.statusName
                 RUNNING.name -> RUNNING.statusName
                 STARTING.name -> STARTING.statusName
@@ -71,7 +70,6 @@ enum class NodeStatus(val statusName: String) {
                 ABNORMAL.name -> ABNORMAL
                 DELETED.name -> DELETED
                 LOST.name -> LOST
-                STARTING.name -> STARTING
                 CREATING.name -> CREATING
                 RUNNING.name -> RUNNING
                 STARTING.name -> STARTING
@@ -91,7 +89,6 @@ enum class NodeStatus(val statusName: String) {
                 NORMAL.statusName -> NORMAL
                 ABNORMAL.statusName -> ABNORMAL
                 DELETED.statusName -> DELETED
-                STARTING.statusName -> STARTING
                 LOST.statusName -> LOST
                 CREATING.statusName -> CREATING
                 RUNNING.statusName -> RUNNING
