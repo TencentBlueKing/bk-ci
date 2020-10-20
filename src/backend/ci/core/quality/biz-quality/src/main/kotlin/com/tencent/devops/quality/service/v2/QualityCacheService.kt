@@ -50,7 +50,11 @@ class QualityCacheService @Autowired constructor(
         if (ruleTasks == null || ruleTasks.isEmpty()) {
             redisOperation.set(buildPipelineRedisKey(projectId, pipelineId), "", REDIS_TIMEOUT, true)
         } else {
-            redisOperation.set(buildPipelineRedisKey(projectId, pipelineId), JsonUtil.toJson(ruleTasks), REDIS_TIMEOUT, true)
+            val redisData = JsonUtil.toJson(ruleTasks)
+            if (redisData.length > 50000) {
+                logger.warn("ruleData too long $projectId| $pipelineId| ${redisData.length}")
+            }
+            redisOperation.set(buildPipelineRedisKey(projectId, pipelineId), redisData, REDIS_TIMEOUT, true)
         }
     }
 
@@ -58,16 +62,22 @@ class QualityCacheService @Autowired constructor(
         if (ruleTasks == null || ruleTasks.isEmpty()) {
             redisOperation.set(buildTemplateRedisKey(projectId, templateId), "", REDIS_TIMEOUT, true)
         } else {
-            redisOperation.set(buildTemplateRedisKey(projectId, templateId), JsonUtil.toJson(ruleTasks), REDIS_TIMEOUT, true)
+            val redisData = JsonUtil.toJson(ruleTasks)
+            if (redisData.length > 50000) {
+                logger.warn("ruleData too long $projectId| $templateId| ${redisData.length}")
+            }
+            redisOperation.set(buildTemplateRedisKey(projectId, templateId), redisData, REDIS_TIMEOUT, true)
         }
     }
 
     fun refreshCache(projectId: String, pipelineId: String?, templateId: String?, ruleTasks: List<QualityRuleMatchTask>?) {
+
         val redisLock = RedisLock(
                 redisOperation = redisOperation,
                 lockKey = "quality:rule:lock:$projectId",
                 expiredTimeInSeconds = 60
         )
+
         try {
             redisLock.lock()
             val refreshTask = RefreshTask(
@@ -100,19 +110,34 @@ class QualityCacheService @Autowired constructor(
     }
 
     class RefreshTask constructor(
-            val projectId: String,
-            val pipelineId: String?,
-            val templateId: String?,
-            val ruleTasks: List<QualityRuleMatchTask>?,
-            val cacheService: QualityCacheService
-    ): Runnable {
+        val projectId: String,
+        val pipelineId: String?,
+        val templateId: String?,
+        val ruleTasks: List<QualityRuleMatchTask>?,
+        val cacheService: QualityCacheService
+    ) : Runnable {
         override fun run() {
+
+            var redisRuleTasks = mutableListOf<QualityRuleMatchTask>()
+
+                ruleTasks?.forEach {
+                    val ruleMatchTask = QualityRuleMatchTask(
+                            taskId = it.taskId,
+                            taskName = it.taskName,
+                            controlStage = it.controlStage,
+                            ruleList = it.ruleList,
+                            auditUserList = null,
+                            thresholdList = null
+                    )
+                    redisRuleTasks.add(ruleMatchTask)
+                }
+
             if (!pipelineId.isNullOrEmpty()) {
-                cacheService.setCacheRuleListByPipeline(projectId, pipelineId!!, ruleTasks)
+                cacheService.setCacheRuleListByPipeline(projectId, pipelineId!!, redisRuleTasks)
                 logger.info("refreshRedis pipeline $projectId|$pipelineId| $ruleTasks success")
             }
             if (!templateId.isNullOrEmpty()) {
-                cacheService.setCacheRuleListByTemplateId(projectId, templateId!!, ruleTasks)
+                cacheService.setCacheRuleListByTemplateId(projectId, templateId!!, redisRuleTasks)
                 logger.info("refreshRedis template $projectId|$templateId| $ruleTasks success")
             }
         }
