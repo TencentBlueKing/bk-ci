@@ -280,8 +280,8 @@ class PreBuildService @Autowired constructor(
                     return@forEach
                 }
                 it.inputs = SyncLocalCodeInput(
-                    agentInfo.agentId,
-                    startUpReq.workspace
+                    it.inputs?.agentId ?: agentInfo.agentId,
+                    it.inputs?.workspace ?: startUpReq.workspace
                 )
 
                 installMarketAtom(userId, "syncCodeToRemote") // 确保同步代码插件安装
