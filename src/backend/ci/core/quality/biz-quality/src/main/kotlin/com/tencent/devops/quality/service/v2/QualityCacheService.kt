@@ -59,16 +59,26 @@ class QualityCacheService @Autowired constructor(
     }
 
     fun refreshCache(projectId: String, pipelineId: String?, templateId: String?, ruleTasks: List<QualityRuleMatchTask>?) {
-        val qualityTask = QualityTask(
+        val redisLock = RedisLock(
                 redisOperation = redisOperation,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                templateId = templateId,
-                cacheService = this,
-                ruleTasks = ruleTasks
-
+                lockKey = "quality:rule:lock:$projectId",
+                expiredTimeInSeconds = 60
         )
-        executors.execute(qualityTask)
+        try {
+            redisLock.lock()
+            val refreshTask = RefreshTask(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    templateId = templateId,
+                    ruleTasks = ruleTasks,
+                    cacheService = this
+            )
+            executors.execute(refreshTask)
+        } catch (e: Exception) {
+            logger.warn("refreshRedis  fail: $projectId| $pipelineId| $templateId| $ruleTasks| $e")
+        } finally {
+            redisLock.unlock()
+        }
     }
 
     private fun buildPipelineRedisKey(projectId: String, pipelineId: String): String {
@@ -85,8 +95,7 @@ class QualityCacheService @Autowired constructor(
         val TEMPLATEID_RULE_KEY = "rlue:templateId:key:"
     }
 
-    class QualityTask constructor(
-            val redisOperation: RedisOperation,
+    class RefreshTask constructor(
             val projectId: String,
             val pipelineId: String?,
             val templateId: String?,
@@ -94,25 +103,14 @@ class QualityCacheService @Autowired constructor(
             val cacheService: QualityCacheService
     ): Runnable {
         override fun run() {
-            val redisLock = RedisLock(
-                    redisOperation = redisOperation,
-                    lockKey = "quality:rule:lock:$projectId",
-                    expiredTimeInSeconds = 60
-            )
-            try {
-                redisLock.lock()
-                if (pipelineId.isNullOrEmpty()) {
-                    cacheService.setCacheRuleListByPipeline(projectId, pipelineId!!, ruleTasks)
-                    logger.info("refreshRedis pipeline $projectId|$pipelineId| $ruleTasks success")
-                }
-                if (templateId.isNullOrEmpty()) {
-                    cacheService.setCacheRuleListByTemplateId(projectId, templateId!!, ruleTasks)
-                    logger.info("refreshRedis template $projectId|$templateId| $ruleTasks success")
-                }
-            } catch (e: Exception) {
-                logger.warn("refreshCache  fail: $projectId| $pipelineId| $templateId| $ruleTasks| $e")
-            } finally {
-                redisLock.unlock()
+            logger.info("input RefreshTask | $projectId| $templateId| $pipelineId| $cacheService")
+            if (pipelineId.isNullOrEmpty()) {
+                cacheService.setCacheRuleListByPipeline(projectId, pipelineId!!, ruleTasks)
+                logger.info("refreshRedis pipeline $projectId|$pipelineId| $ruleTasks success")
+            }
+            if (templateId.isNullOrEmpty()) {
+                cacheService.setCacheRuleListByTemplateId(projectId, templateId!!, ruleTasks)
+                logger.info("refreshRedis template $projectId|$templateId| $ruleTasks success")
             }
         }
     }
