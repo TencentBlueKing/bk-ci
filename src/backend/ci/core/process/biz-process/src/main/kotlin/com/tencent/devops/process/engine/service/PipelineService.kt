@@ -65,6 +65,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.app.PipelinePage
@@ -740,6 +741,23 @@ class PipelineService @Autowired constructor(
                 params = arrayOf(e.message ?: "unknown")
             )
         }
+    }
+
+    fun getBatchPipelinesWithModel(
+        userId: String,
+        projectId: String,
+        pipelineIds: List<String>,
+        channelCode: ChannelCode,
+        checkPermission: Boolean = true
+    ): List<PipelineWithModel> {
+        if (checkPermission) {
+            pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                permission = AuthPermission.VIEW
+            )
+        }
+        return pipelineRepositoryService.getPipelinesWithLastestModels(projectId, pipelineIds, channelCode)
     }
 
     fun deletePipeline(

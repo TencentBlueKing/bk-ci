@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.notify.enums.NotifyType
@@ -40,6 +41,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -69,9 +71,11 @@ import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
+import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
@@ -101,6 +105,7 @@ class PipelineRepositoryService constructor(
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineJobMutexGroupService: PipelineJobMutexGroupService,
+    private val pipelineGroupService: PipelineGroupService,
     private val modelCheckPlugin: ModelCheckPlugin,
     private val templatePipelineDao: TemplatePipelineDao
 ) {
@@ -627,6 +632,89 @@ class PipelineRepositoryService constructor(
             logger.error("get process($pipelineId) model fail", e)
             null
         }
+    }
+
+    fun getPipelinesWithLastestModels(projectId: String, pipelineIds: List<String>, channelCode: ChannelCode): List<PipelineWithModel> {
+        val pipelines = mutableListOf<PipelineWithModel>()
+        val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList())
+        val pipelineBuildSummaries = pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = channelCode,
+            sortType = null,
+            pipelineIds = pipelineIds
+        )
+
+        pipelineBuildSummaries.forEach {
+            val pipelineId = it["PIPELINE_ID"] as String
+            val projectId = it["PROJECT_ID"] as String
+            val pipelineName = it["PIPELINE_NAME"] as String
+            val canManualStartup = it["MANUAL_STARTUP"] as Int == 1
+            val buildNum = it["BUILD_NUM"] as Int
+            val version = it["VERSION"] as Int
+            val taskCount = it["TASK_COUNT"] as Int
+            val creator = it["CREATOR"] as String
+            val createTime = (it["CREATE_TIME"] as java.time.LocalDateTime?)?.timestampmilli() ?: 0
+            val updateTime = (it["UPDATE_TIME"] as java.time.LocalDateTime?)?.timestampmilli() ?: 0
+
+            val pipelineDesc = it["DESC"] as String?
+            val runLockType = it["RUN_LOCK_TYPE"] as Int?
+
+            val finishCount = it["FINISH_COUNT"] as Int? ?: 0
+            val runningCount = it["RUNNING_COUNT"] as Int? ?: 0
+            val buildId = it["LATEST_BUILD_ID"] as String?
+            val startTime = (it["LATEST_START_TIME"] as java.time.LocalDateTime?)?.timestampmilli() ?: 0
+            val endTime = (it["LATEST_END_TIME"] as java.time.LocalDateTime?)?.timestampmilli() ?: 0
+            val starter = it["LATEST_START_USER"] as String? ?: ""
+            val taskName = it["LATEST_TASK_NAME"] as String?
+            val buildStatus = it["LATEST_STATUS"] as Int?
+            val latestBuildStatus =
+                if (buildStatus != null) {
+                    if (buildStatus == BuildStatus.QUALITY_CHECK_FAIL.ordinal) {
+                        BuildStatus.FAILED
+                    } else {
+                        BuildStatus.values()[buildStatus]
+                    }
+                } else {
+                    null
+                }
+            val buildCount = finishCount + runningCount + 0L
+            val modelString = pipelineResDao.getLatestVersionModelString(dslContext, pipelineId)
+
+            // 如果有记录为空的情况，直接跳过
+            if (modelString.isNullOrBlank()) return@forEach
+            val model = objectMapper.readValue(modelString, Model::class.java)
+
+            pipelines.add(
+                PipelineWithModel(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    pipelineName = pipelineName,
+                    pipelineDesc = pipelineDesc,
+                    taskCount = taskCount,
+                    buildCount = buildCount,
+                    lock = if (runLockType == null) {
+                        false
+                    } else PipelineRunLockType.valueOf(runLockType) == PipelineRunLockType.LOCK,
+                    canManualStartup = canManualStartup,
+                    latestBuildStartTime = startTime,
+                    latestBuildEndTime = endTime,
+                    latestBuildStatus = latestBuildStatus,
+                    latestBuildNum = buildNum,
+                    latestBuildTaskName = taskName,
+                    latestBuildId = buildId,
+                    updateTime = updateTime,
+                    createTime = createTime,
+                    pipelineVersion = version,
+                    runningBuildCount = runningCount,
+                    latestBuildUserId = starter,
+                    creator = creator,
+                    groupLabel = pipelineGroupLabel[pipelineId],
+                    model = model
+                )
+            )
+        }
+        return pipelines
     }
 
     fun deletePipeline(
