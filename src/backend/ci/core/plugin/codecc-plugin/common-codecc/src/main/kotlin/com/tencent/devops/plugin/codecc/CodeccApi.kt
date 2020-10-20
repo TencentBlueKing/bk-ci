@@ -44,7 +44,6 @@ import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityResult
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
-import org.apache.commons.compress.utils.Charsets
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 import javax.ws.rs.HttpMethod
@@ -332,43 +331,50 @@ open class CodeccApi constructor(
         return objectMapper.readValue(result)
     }
 
-    fun getCodeccMeasureInfo(repoProjectName: String, commitId: String? = null): Result<CodeccMeasureInfo?> {
-        val headers = if (null != commitId) mapOf(COMMIT_ID to commitId) else null
+    private fun generateCodeccHeaders(
+        repoId: String,
+        commitId: String?
+    ): MutableMap<String, String> {
+        val headers = mutableMapOf("repoId" to repoId)
+        if (null != commitId) headers[COMMIT_ID] = commitId
+        return headers
+    }
+
+    fun getCodeccMeasureInfo(repoId: String, commitId: String? = null): Result<CodeccMeasureInfo?> {
         val result = taskExecution(
             body = mapOf(),
-            headers = headers,
-            path = "/ms/defect/api/service/defect/repo/$repoProjectName/measurement",
+            headers = generateCodeccHeaders(repoId, commitId),
+            path = "/ms/defect/api/service/defect/repo/measurement",
             method = HttpMethod.GET
         )
         return objectMapper.readValue(result)
     }
 
-    fun getCodeccTaskStatusInfo(repoProjectName: String, commitId: String? = null): Result<Int> {
-        val headers = if (null != commitId) mapOf(COMMIT_ID to commitId) else null
+    fun getCodeccTaskStatusInfo(repoId: String, commitId: String? = null): Result<Int> {
         val result = taskExecution(
             body = mapOf(),
-            headers = headers,
-            path = "/ms/task/api/service/task/repo/$repoProjectName/status",
+            headers = generateCodeccHeaders(repoId, commitId),
+            path = "/ms/task/api/service/task/repo/status",
             method = HttpMethod.GET
         )
         return objectMapper.readValue(result)
     }
 
-    fun startCodeccTask(repoProjectName: String, commitId: String? = null): Result<String> {
-        val headers = if (null != commitId) mapOf(COMMIT_ID to commitId) else null
+    fun startCodeccTask(repoId: String, commitId: String? = null): Result<String> {
         val result = taskExecution(
             body = mapOf(),
-            path = "/ms/task/api/service/openScan/trigger/repo/$repoProjectName",
-            headers = headers,
+            path = "/ms/task/api/service/openScan/trigger/repo",
+            headers = generateCodeccHeaders(repoId, commitId),
             method = HttpMethod.POST
         )
         return objectMapper.readValue(result)
     }
 
-    fun createCodeccPipeline(repoProjectName: String): Result<Boolean> {
+    fun createCodeccPipeline(repoId: String): Result<Boolean> {
         val result = taskExecution(
             body = mapOf(),
-            path = "/ms/task/api/service/task/repo/$repoProjectName/create",
+            path = "/ms/task/api/service/task/repo/create",
+            headers = generateCodeccHeaders(repoId, null),
             method = HttpMethod.POST
         )
         return objectMapper.readValue(result)
