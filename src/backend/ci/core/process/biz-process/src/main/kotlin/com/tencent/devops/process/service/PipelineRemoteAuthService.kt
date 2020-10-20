@@ -101,7 +101,7 @@ class PipelineRemoteAuthService @Autowired constructor(
                 checkPermission = true,
                 isMobile = false,
                 startByMessage = "m-$auth",
-                frequencyLimit = false
+                frequencyLimit = true
             )
         )
     }

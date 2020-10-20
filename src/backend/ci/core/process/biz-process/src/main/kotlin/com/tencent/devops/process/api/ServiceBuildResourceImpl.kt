@@ -139,7 +139,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
                     channelCode = channelCode,
                     buildNo = buildNo,
                     checkPermission = ChannelCode.isNeedAuth(channelCode),
-                    frequencyLimit = false
+                    frequencyLimit = true
                 )
             )
         )
