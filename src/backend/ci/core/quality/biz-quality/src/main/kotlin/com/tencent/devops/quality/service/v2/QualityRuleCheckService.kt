@@ -81,14 +81,24 @@ class QualityRuleCheckService @Autowired constructor(
     private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
     fun userGetMatchRuleList(projectId: String, pipelineId: String): List<QualityRuleMatchTask> {
+        // 取出项目下包含该流水线的所有红线，再按控制点分组
+        val filterRuleList = ruleService.getProjectRuleList(projectId, pipelineId, null)
+        return ruleService.listMatchTask(filterRuleList)
+    }
+
+    fun userGetMatchTemplateList(projectId: String, templateId: String?): List<QualityRuleMatchTask> {
+        val ruleList = ruleService.getProjectRuleList(projectId, null, templateId)
+        return ruleService.listMatchTask(ruleList)
+    }
+
+    fun getMatchRuleListByCache(projectId: String, pipelineId: String): List<QualityRuleMatchTask> {
         val cacheData = qualityCacheService.getCacheRuleListByPipelineId(projectId, pipelineId)
         if (cacheData != null) {
             return cacheData
         }
         logger.info("userGetMatchRuleList redis is empty, $projectId| $pipelineId")
         // 取出项目下包含该流水线的所有红线，再按控制点分组
-        val filterRuleList = ruleService.getProjectRuleList(projectId, pipelineId, null)
-        val qualityTasks = ruleService.listMatchTask(filterRuleList)
+        val qualityTasks = userGetMatchRuleList(projectId, pipelineId)
         qualityCacheService.refreshCache(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -98,15 +108,14 @@ class QualityRuleCheckService @Autowired constructor(
         return qualityTasks
     }
 
-    fun userGetMatchTemplateList(projectId: String, templateId: String?): List<QualityRuleMatchTask> {
+    fun getMatchTemplateListByCache(projectId: String, templateId: String?): List<QualityRuleMatchTask> {
         if (templateId.isNullOrBlank()) return listOf()
         val cacheData = qualityCacheService.getCacheRuleListByTemplateId(projectId, templateId!!)
         if (cacheData != null) {
             return cacheData
         }
         logger.info("userGetMatchTemplateList redis is empty, $projectId| $templateId")
-        val ruleList = ruleService.getProjectRuleList(projectId, null, templateId)
-        val qualityTasks = ruleService.listMatchTask(ruleList)
+        val qualityTasks = userGetMatchTemplateList(projectId, templateId)
         qualityCacheService.refreshCache(
                 projectId = projectId,
                 pipelineId = null,
