@@ -699,7 +699,7 @@ class DockerHostBuildService(
 
     fun monitorSystemLoad() {
         logger.info("Monitor systemLoad cpu: ${SigarUtil.getAverageLongCpuLoad()}, mem: ${SigarUtil.getAverageLongMemLoad()}")
-        if (SigarUtil.getAverageLongCpuLoad() > 60) {
+        if (SigarUtil.getAverageLongCpuLoad() > 90 || SigarUtil.getAverageLongMemLoad() > 80) {
             checkContainerStats()
         }
     }
@@ -718,7 +718,7 @@ class DockerHostBuildService(
                 if (statistics.memoryStats != null && statistics.memoryStats.usage != null && statistics.memoryStats.limit != null) {
                     val memUsage = statistics.memoryStats.usage!! * 100 / statistics.memoryStats.limit!!
                     logger.info("containerId: ${container.id} | checkContainerStats cpuUsagePer: $cpuUsagePer, memUsage: $memUsage")
-                    if (memUsage > 50 || cpuUsagePer > 50) {
+                    if (memUsage > 80 || cpuUsagePer > 85) {
                         resetContainer(container.id)
                     }
                 }
@@ -740,15 +740,8 @@ class DockerHostBuildService(
     }
 
     fun resetContainer(containerId: String) {
-        logger.info("<--------------------- resetContainer $containerId --------------------->")
-        httpDockerCli.pauseContainerCmd(containerId).exec()
-        logger.info("<--------------------- pauseContainer $containerId --------------------->")
-        val containerInfo = httpDockerCli.inspectContainerCmd(containerId).exec()
-        logger.info("<--------------------- inspectContainer $containerId ${containerInfo.state.status} --------------------->")
-        httpDockerCli.updateContainerCmd(containerId).withMemoryReservation(1024 * 1024 * 1024).withCpuPeriod(10000).withCpuQuota(60000).exec()
+        httpDockerCli.updateContainerCmd(containerId).withMemoryReservation(10 * 1024 * 1024 * 1024L).withCpuPeriod(10000).withCpuQuota(80000).exec()
         logger.info("<--------------------- updateContainer $containerId --------------------->")
-        httpDockerCli.unpauseContainerCmd(containerId).exec()
-        logger.info("<--------------------- unpauseContainer $containerId --------------------->")
     }
 
     fun clearContainers() {
