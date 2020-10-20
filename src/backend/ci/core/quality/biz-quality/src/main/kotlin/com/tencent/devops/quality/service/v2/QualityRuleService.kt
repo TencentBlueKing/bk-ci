@@ -54,6 +54,7 @@ import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
 import com.tencent.devops.quality.api.v2.pojo.request.CopyRuleRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
+import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleSummaryWithPermission
 import com.tencent.devops.quality.api.v2.pojo.response.UserQualityRule
 import com.tencent.devops.quality.constant.QualityMessageCode
@@ -81,6 +82,7 @@ class QualityRuleService @Autowired constructor(
     private val qualityControlPointService: QualityControlPointService,
     private val dslContext: DSLContext,
     private val client: Client,
+    private val qualityCacheService: QualityCacheService,
     private val bkAuthPermissionApi: AuthPermissionApi,
     private val bkAuthResourceApi: AuthResourceApi,
     private val serviceCode: QualityAuthServiceCode
@@ -130,6 +132,7 @@ class QualityRuleService @Autowired constructor(
                 )
             }
             createResource(userId = userId, projectId = projectId, ruleId = ruleId, ruleName = ruleRequest.name)
+            refreshRedis(projectId, ruleId)
             HashUtil.encodeLongId(ruleId)
         }
     }
@@ -155,6 +158,7 @@ class QualityRuleService @Autowired constructor(
                 )
             }
             modifyResource(projectId = projectId, ruleId = ruleId, ruleName = ruleRequest.name)
+            refreshRedis(projectId, ruleId)
         }
         return true
     }
@@ -170,6 +174,7 @@ class QualityRuleService @Autowired constructor(
             message = "用户没拦截规则的停用/启用权限"
         )
         qualityRuleDao.updateEnable(dslContext = dslContext, ruleId = ruleId, enable = enable)
+        refreshRedis(projectId, ruleId)
     }
 
     fun userDelete(userId: String, projectId: String, ruleHashId: String) {
@@ -184,6 +189,7 @@ class QualityRuleService @Autowired constructor(
         )
         qualityRuleDao.delete(dslContext, ruleId)
         deleteResource(projectId, ruleId)
+        refreshRedis(projectId, ruleId)
     }
 
     fun serviceGet(ruleHashId: String): TQualityRuleRecord {
@@ -587,6 +593,86 @@ class QualityRuleService @Autowired constructor(
                 gatewayId = ruleData.gatewayId
             )
             serviceCreate(request.userId, request.targetProjectId, createRequest)
+        }
+    }
+
+    fun listMatchTask(ruleList: List<QualityRule>): List<QualityRuleMatchTask> {
+        val matchTaskList = mutableListOf<QualityRuleMatchTask>()
+        ruleList.groupBy { it.controlPoint.position.name }.forEach { controlPointPosName, rules ->
+
+            // 按照控制点拦截位置再分组
+            rules.groupBy { it.controlPoint.position }.forEach { position, positionRules ->
+                val controlPoint = positionRules.first().controlPoint
+                val taskRuleList = mutableListOf<QualityRuleMatchTask.RuleMatchRule>()
+                val taskThresholdList = mutableListOf<QualityRuleMatchTask.RuleThreshold>()
+                val taskAuditUserList = mutableSetOf<String>()
+
+                positionRules.forEach {
+                    // 获取规则列表
+                    taskRuleList.add(QualityRuleMatchTask.RuleMatchRule(it.hashId, it.name, it.gatewayId))
+
+                    // 获取阈值列表
+                    taskThresholdList.addAll(it.indicators.map { indicator ->
+                        QualityRuleMatchTask.RuleThreshold(
+                                indicator.hashId,
+                                indicator.cnName,
+                                indicator.metadataList.map { it.name },
+                                indicator.operation,
+                                indicator.threshold
+                        )
+                    })
+
+                    // 获取审核用户列表
+                    taskAuditUserList.addAll(if (it.operation == RuleOperation.AUDIT) {
+                        it.auditUserList?.toSet() ?: setOf()
+                    } else {
+                        setOf()
+                    })
+                }
+                // 生成结果
+                matchTaskList.add(QualityRuleMatchTask(controlPoint.name, controlPoint.cnName, position,
+                        taskRuleList, taskThresholdList, taskAuditUserList))
+            }
+        }
+        return matchTaskList
+    }
+
+    fun getProjectRuleList(projectId: String, pipelineId: String?, templateId: String?): List<QualityRule> {
+        val ruleList = serviceListRules(projectId)
+        logger.info("get project rule list for $projectId, $pipelineId, $templateId: ${ruleList.map { it.name }}")
+        return ruleList.filter {
+            var result = false
+            if (!pipelineId.isNullOrBlank()) result = (result || it.range.contains(pipelineId))
+            if (!templateId.isNullOrBlank()) result = (result || it.templateRange.contains(templateId))
+            return@filter result
+        }
+    }
+
+    private fun refreshRedis(projectId: String, ruleId: Long?) {
+        if (ruleId == null) {
+            return
+        }
+        val ruleRecord = qualityRuleDao.getById(dslContext, ruleId) ?: return
+        val pipelineStr = ruleRecord.indicatorRange
+        val templateStr = ruleRecord.pipelineTemplateRange
+        logger.info("refreshRedis $projectId| $ruleId| $pipelineStr| $templateStr")
+        if (pipelineStr != null) {
+            val pipelineList = pipelineStr.split(",")
+            pipelineList.forEach { pipelineId ->
+                val filterRuleList = getProjectRuleList(projectId, pipelineId, null)
+                val ruleList = listMatchTask(filterRuleList)
+                qualityCacheService.refreshCache(projectId, pipelineId, null, ruleList)
+                logger.info("refreshRedis pipeline $projectId|$pipelineId| $ruleId | $ruleList")
+            }
+        }
+        if (templateStr != null) {
+            val templateList = templateStr.split(",")
+            templateList.forEach { templateId ->
+                val filterRuleList = getProjectRuleList(projectId, null, templateId)
+                val ruleList = listMatchTask(filterRuleList)
+                qualityCacheService.refreshCache(projectId, null, templateId, ruleList)
+                logger.info("refreshRedis template $projectId|$templateId| $ruleId| $ruleList")
+            }
         }
     }
 }

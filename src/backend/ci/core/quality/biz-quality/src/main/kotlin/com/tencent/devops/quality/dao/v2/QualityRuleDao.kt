@@ -142,6 +142,14 @@ class QualityRuleDao {
         }
     }
 
+    fun getById(dslContext: DSLContext, ruleId: Long): TQualityRuleRecord? {
+        with(TQualityRule.T_QUALITY_RULE) {
+            return dslContext.selectFrom(this)
+                    .where(ID.eq(ruleId).and(ENABLE.eq(true)))
+                    .fetchOne() ?: throw NotFoundException("RuleId: $ruleId not found")
+        }
+    }
+
     fun count(dslContext: DSLContext, projectId: String): Long {
         with(TQualityRule.T_QUALITY_RULE) {
             return dslContext.selectCount()
