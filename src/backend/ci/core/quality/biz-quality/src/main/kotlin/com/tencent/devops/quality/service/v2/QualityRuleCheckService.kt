@@ -85,6 +85,7 @@ class QualityRuleCheckService @Autowired constructor(
         if (cacheData != null) {
             return cacheData
         }
+        logger.info("userGetMatchRuleList redis is empty, $projectId| $pipelineId")
         // 取出项目下包含该流水线的所有红线，再按控制点分组
         val filterRuleList = ruleService.getProjectRuleList(projectId, pipelineId, null)
         val qualityTasks = ruleService.listMatchTask(filterRuleList)
@@ -103,6 +104,7 @@ class QualityRuleCheckService @Autowired constructor(
         if (cacheData != null) {
             return cacheData
         }
+        logger.info("userGetMatchTemplateList redis is empty, $projectId| $templateId")
         val ruleList = ruleService.getProjectRuleList(projectId, null, templateId)
         val qualityTasks = ruleService.listMatchTask(ruleList)
         qualityCacheService.refreshCache(
