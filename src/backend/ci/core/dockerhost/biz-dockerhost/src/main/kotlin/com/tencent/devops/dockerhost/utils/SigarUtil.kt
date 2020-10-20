@@ -52,6 +52,16 @@ object SigarUtil {
     private var queueDiskValueSum = 0
     private var queueDiskIOValueSum = 0
 
+    private val longMemQueue = ArrayDeque<Int>()
+    private val longCpuQueue = ArrayDeque<Int>()
+    private val longDiskIOQueue = ArrayDeque<Int>()
+
+    private const val longQueueMaxSize = 40
+
+    private var longQueueMemValueSum = 0
+    private var longQueueCpuValueSum = 0
+    private var longQueueDiskIOValueSum = 0
+
     fun loadEnable(): Boolean {
         return try {
             val averageMemLoad = queueMemValueSum / memQueue.size
@@ -94,6 +104,22 @@ object SigarUtil {
         }
     }
 
+    fun getAverageLongMemLoad(): Int {
+        return try {
+            longQueueMemValueSum / longMemQueue.size
+        } catch (e: Exception) {
+            0
+        }
+    }
+
+    fun getAverageLongCpuLoad(): Int {
+        return try {
+            longQueueCpuValueSum / longCpuQueue.size
+        } catch (e: Exception) {
+            0
+        }
+    }
+
     fun pushMem() {
         try {
             val element = getMemUsedPercent()
@@ -103,6 +129,13 @@ object SigarUtil {
 
             memQueue.push(element)
             queueMemValueSum += element
+
+            if (longMemQueue.size >= longQueueMaxSize) {
+                longQueueMemValueSum -= longMemQueue.pollLast()
+            }
+
+            longMemQueue.push(element)
+            longQueueMemValueSum += element
         } catch (e: Exception) {
             logger.error("push mem error.", e)
         }
@@ -117,6 +150,13 @@ object SigarUtil {
 
             cpuQueue.push(element)
             queueCpuValueSum += element
+
+            if (longCpuQueue.size >= longQueueMaxSize) {
+                longQueueCpuValueSum -= longCpuQueue.pollLast()
+            }
+
+            longCpuQueue.push(element)
+            longQueueCpuValueSum += element
         } catch (e: Exception) {
             logger.error("push cpu error.", e)
         }

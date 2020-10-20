@@ -74,6 +74,7 @@ import com.tencent.devops.dockerhost.pojo.DockerRunPortBinding
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
 import com.tencent.devops.dockerhost.utils.RandomUtil
+import com.tencent.devops.dockerhost.utils.SigarUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.apache.commons.lang3.StringUtils
@@ -696,6 +697,12 @@ class DockerHostBuildService(
         }
     }
 
+    fun monitorSystemLoad() {
+        if (SigarUtil.getAverageLongCpuLoad() > 60) {
+            checkContainerStats()
+        }
+    }
+
     fun checkContainerStats() {
         val containerInfo = httpLongDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
         for (container in containerInfo) {
@@ -706,9 +713,13 @@ class DockerHostBuildService(
                 val preSystemCpuUsage = statistics.preCpuStats.systemCpuUsage ?: 0
                 val preCpuUsage = statistics.preCpuStats.cpuUsage!!.totalUsage ?: 0
                 val cpuUsagePer = ((cpuUsage - preCpuUsage) * 100) / (systemCpuUsage - preSystemCpuUsage)
-                logger.info("containerId: ${container.id} | checkContainerStats cpuUsagePer: $cpuUsagePer")
-                if (cpuUsagePer > 20) {
-                    resetContainer(container.id)
+
+                if (statistics.memoryStats != null && statistics.memoryStats.usage != null && statistics.memoryStats.limit != null) {
+                    val memUsage = statistics.memoryStats.usage!! * 100 / statistics.memoryStats.limit!!
+                    logger.info("containerId: ${container.id} | checkContainerStats cpuUsagePer: $cpuUsagePer, memUsage: $memUsage")
+                    if (memUsage > 50 || cpuUsagePer > 50) {
+                        resetContainer(container.id)
+                    }
                 }
             }
         }
@@ -729,11 +740,13 @@ class DockerHostBuildService(
 
     fun resetContainer(containerId: String) {
         logger.info("<--------------------- resetContainer $containerId --------------------->")
-        httpDockerCli.pauseContainerCmd(containerId)
+        httpDockerCli.pauseContainerCmd(containerId).exec()
         logger.info("<--------------------- pauseContainer $containerId --------------------->")
-        httpDockerCli.updateContainerCmd(containerId).withMemory(32768 * 1024).withMemorySwap(-1).withCpuPeriod(10000).withCpuQuota(10000)
+        val containerInfo = httpDockerCli.inspectContainerCmd(containerId).exec()
+        logger.info("<--------------------- inspectContainer $containerId ${containerInfo.state.status} --------------------->")
+        httpDockerCli.updateContainerCmd(containerId).withMemoryReservation(1024 * 1024 * 1024).withCpuPeriod(10000).withCpuQuota(60000).exec()
         logger.info("<--------------------- updateContainer $containerId --------------------->")
-        httpDockerCli.unpauseContainerCmd(containerId)
+        httpDockerCli.unpauseContainerCmd(containerId).exec()
         logger.info("<--------------------- unpauseContainer $containerId --------------------->")
     }
 

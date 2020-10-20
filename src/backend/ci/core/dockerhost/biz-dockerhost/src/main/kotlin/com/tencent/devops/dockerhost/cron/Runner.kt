@@ -67,9 +67,9 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
         }
     }
 
-    fun checkDockerStats() {
+    fun monitorSystemLoad() {
         try {
-            dockerHostBuildService.checkContainerStats()
+            dockerHostBuildService.monitorSystemLoad()
         } catch (t: Throwable) {
             logger.error("check docker stats error.", t)
         }
