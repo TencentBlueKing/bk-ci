@@ -43,7 +43,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
 
 @Service
 class TxStoreCodeccServiceImpl @Autowired constructor(
@@ -73,7 +72,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
         logger.info("getCodeccMeasureInfo commitId:$commitId")
         val mameSpaceName = storeCommonService.getStoreRepoNameSpaceName(StoreTypeEnum.valueOf(storeType))
         val codeccMeasureInfoResult = client.get(ServiceCodeccResource::class).getCodeccMeasureInfo(
-            repoProjectName = URLEncoder.encode("$mameSpaceName/$storeCode", Charsets.UTF_8.name()),
+            repoId = "$mameSpaceName/$storeCode",
             commitId = commitId
         )
         val codeccMeasureInfo = codeccMeasureInfoResult.data
@@ -110,7 +109,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
         logger.info("startCodeccTask commitId:$commitId")
         val mameSpaceName = storeCommonService.getStoreRepoNameSpaceName(StoreTypeEnum.valueOf(storeType))
         return client.get(ServiceCodeccResource::class).startCodeccTask(
-            repoProjectName = URLEncoder.encode("$mameSpaceName/$storeCode", Charsets.UTF_8.name()),
+            repoId = "$mameSpaceName/$storeCode",
             commitId = commitId
         )
     }
