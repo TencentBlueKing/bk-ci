@@ -7,6 +7,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
@@ -15,6 +16,9 @@ class QualityCacheService @Autowired constructor(
     val redisOperation: RedisOperation
 ) {
     private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+
+    @Value("\${quality.cache.timeout:300}")
+    val REDIS_TIMEOUT = 300L
 
     fun getCacheRuleListByPipelineId(projectId: String, pipelineId: String): List<QualityRuleMatchTask>? {
         val redisData = redisOperation.get(buildPipelineRedisKey(projectId, pipelineId))
@@ -44,17 +48,17 @@ class QualityCacheService @Autowired constructor(
 
     private fun setCacheRuleListByPipeline(projectId: String, pipelineId: String, ruleTasks: List<QualityRuleMatchTask>?) {
         if (ruleTasks == null || ruleTasks.isEmpty()) {
-            redisOperation.set(buildPipelineRedisKey(projectId, pipelineId), "", 60, true)
+            redisOperation.set(buildPipelineRedisKey(projectId, pipelineId), "", REDIS_TIMEOUT, true)
         } else {
-            redisOperation.set(buildPipelineRedisKey(projectId, pipelineId), JsonUtil.toJson(ruleTasks), 60, true)
+            redisOperation.set(buildPipelineRedisKey(projectId, pipelineId), JsonUtil.toJson(ruleTasks), REDIS_TIMEOUT, true)
         }
     }
 
     private fun setCacheRuleListByTemplateId(projectId: String, templateId: String, ruleTasks: List<QualityRuleMatchTask>?) {
         if (ruleTasks == null || ruleTasks.isEmpty()) {
-            redisOperation.set(buildTemplateRedisKey(projectId, templateId), "", 60, true)
+            redisOperation.set(buildTemplateRedisKey(projectId, templateId), "", REDIS_TIMEOUT, true)
         } else {
-            redisOperation.set(buildTemplateRedisKey(projectId, templateId), JsonUtil.toJson(ruleTasks), 60, true)
+            redisOperation.set(buildTemplateRedisKey(projectId, templateId), JsonUtil.toJson(ruleTasks), REDIS_TIMEOUT, true)
         }
     }
 
@@ -103,12 +107,11 @@ class QualityCacheService @Autowired constructor(
             val cacheService: QualityCacheService
     ): Runnable {
         override fun run() {
-            logger.info("input RefreshTask | $projectId| $templateId| $pipelineId| $cacheService")
-            if (pipelineId.isNullOrEmpty()) {
+            if (!pipelineId.isNullOrEmpty()) {
                 cacheService.setCacheRuleListByPipeline(projectId, pipelineId!!, ruleTasks)
                 logger.info("refreshRedis pipeline $projectId|$pipelineId| $ruleTasks success")
             }
-            if (templateId.isNullOrEmpty()) {
+            if (!templateId.isNullOrEmpty()) {
                 cacheService.setCacheRuleListByTemplateId(projectId, templateId!!, ruleTasks)
                 logger.info("refreshRedis template $projectId|$templateId| $ruleTasks success")
             }
