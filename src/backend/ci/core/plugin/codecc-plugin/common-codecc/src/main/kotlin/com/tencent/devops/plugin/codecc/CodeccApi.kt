@@ -364,6 +364,7 @@ open class CodeccApi constructor(
         commitId: String?
     ): MutableMap<String, String> {
         val headers = mutableMapOf("repoId" to repoId)
+        headers[CONTENT_TYPE] = CONTENT_TYPE_JSON
         if (null != commitId) headers[COMMIT_ID] = commitId
         return headers
     }
