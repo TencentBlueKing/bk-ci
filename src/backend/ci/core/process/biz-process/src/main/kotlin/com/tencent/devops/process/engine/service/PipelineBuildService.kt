@@ -1637,7 +1637,7 @@ class PipelineBuildService(
 
             return buildId
         } finally {
-            if (readyToBuildPipelineInfo.channelCode !in NO_LIMIT_CHANNEL) runLock.unlock()
+            runLock.unlock()
         }
     }
 

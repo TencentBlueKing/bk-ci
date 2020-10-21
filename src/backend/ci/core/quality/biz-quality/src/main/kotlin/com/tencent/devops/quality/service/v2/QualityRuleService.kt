@@ -60,6 +60,7 @@ import com.tencent.devops.quality.api.v2.pojo.response.UserQualityRule
 import com.tencent.devops.quality.constant.QualityMessageCode
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.dao.v2.QualityRuleMapDao
+import com.tencent.devops.quality.pojo.RefreshType
 import com.tencent.devops.quality.pojo.RulePermission
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.pojo.enum.RuleRange
@@ -661,7 +662,13 @@ class QualityRuleService @Autowired constructor(
             pipelineList.forEach { pipelineId ->
                 val filterRuleList = getProjectRuleList(projectId, pipelineId, null)
                 val ruleList = listMatchTask(filterRuleList)
-                qualityCacheService.refreshCache(projectId, pipelineId, null, ruleList)
+                qualityCacheService.refreshCache(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        templateId = null,
+                        ruleTasks = ruleList,
+                        type = RefreshType.OPERATE
+                )
                 logger.info("refreshRedis pipeline $projectId|$pipelineId| $ruleId | $ruleList")
             }
         }
@@ -670,7 +677,13 @@ class QualityRuleService @Autowired constructor(
             templateList.forEach { templateId ->
                 val filterRuleList = getProjectRuleList(projectId, null, templateId)
                 val ruleList = listMatchTask(filterRuleList)
-                qualityCacheService.refreshCache(projectId, null, templateId, ruleList)
+                qualityCacheService.refreshCache(
+                        projectId = projectId,
+                        pipelineId = null,
+                        templateId = templateId,
+                        ruleTasks = ruleList,
+                        type = RefreshType.OPERATE
+                )
                 logger.info("refreshRedis template $projectId|$templateId| $ruleId| $ruleList")
             }
         }
