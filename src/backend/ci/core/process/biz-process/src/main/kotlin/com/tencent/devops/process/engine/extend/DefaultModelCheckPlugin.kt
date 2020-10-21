@@ -130,7 +130,7 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
     }
 
     private fun checkoutAtomExist(e: Element) {
-        if(e is MarketBuildLessAtomElement || e is MarketBuildAtomElement) {
+        if (e is MarketBuildLessAtomElement || e is MarketBuildAtomElement) {
             if (!AtomUtils.isAtomExist(e.getAtomCode(), client)) {
                 logger.warn("save model atom is notExist  ${e.getAtomCode()}")
                 throw ErrorCodeException(
@@ -138,22 +138,11 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
                         errorCode = ProcessMessageCode.MODEL_ATOMCODE_NOT_EXSIT
                 )
             }
-        } else {
-            val classType = e.getClassType()
-            if(classType != e.getAtomCode()) {
-                logger.warn("save model atom is notExist  ${e.getAtomCode()}")
-                throw ErrorCodeException(
-                        defaultMessage = "Model内包含不存在的内置插件${e.getAtomCode()}",
-                        errorCode = ProcessMessageCode.MODEL_ATOMCODE_NOT_EXSIT
-                )
-            }
         }
-
     }
 
     private fun isStoreAtom(element: Element): Boolean {
-        val classType = element.getClassType()
-        if (classType == "marketBuildLess" || classType == "marketBuild") {
+        if (element is MarketBuildLessAtomElement || element is MarketBuildAtomElement) {
             return true
         }
         return false
