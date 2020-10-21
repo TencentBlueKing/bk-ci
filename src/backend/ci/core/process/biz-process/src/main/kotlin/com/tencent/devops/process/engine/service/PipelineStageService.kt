@@ -124,11 +124,23 @@ class PipelineStageService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        stageId: String
+        stageId: String,
+        controlOption: PipelineBuildStageControlOption
     ) {
-        updateStageStatus(buildId, stageId, BuildStatus.QUEUE)
-        SpringContextUtil.getBean(PipelineBuildDetailService::class.java)
-            .stageStart(pipelineId, buildId, stageId)
+        controlOption.stageControlOption.triggered = true
+        pipelineBuildStageDao.updateStatus(
+            dslContext = dslContext,
+            buildId = buildId,
+            stageId = stageId,
+            buildStatus = BuildStatus.QUEUE,
+            controlOption = controlOption
+        )
+        SpringContextUtil.getBean(PipelineBuildDetailService::class.java).stageStart(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            controlOption = controlOption
+        )
         pipelineEventDispatcher.dispatch(
             PipelineBuildStageEvent(
                 source = BS_MANUAL_START_STAGE,

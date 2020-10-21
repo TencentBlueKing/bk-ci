@@ -120,7 +120,8 @@
         "noCreateEnvPermissionTips": "You do not have the [create] access ，please switch project or apply for access",
         "clearText": "Plain text",
         "cipherText": "Secret",
-        "existingNode": "Existing Agent"
+        "existingNode": "Existing Agent",
+        "deleteEnvTips": "Confirm to delete {0} ?"
     },
     "nodeInfo": {
         "importNode": "Import agent",

@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.type.BuildType
@@ -46,6 +47,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PARAM_IN_
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PUBLIC_WINDOWS_BUILDER
 import com.tencent.devops.process.constant.ProcessMessageCode.MODEL_ATOMCODE_PROJECT_NOT_INSTALL
 import com.tencent.devops.process.engine.atom.AtomUtils
+import com.tencent.devops.process.engine.control.DependOnUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ContainerBizRegistrar
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
@@ -103,6 +105,7 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
                     }
                 }
             }
+            DependOnUtils.checkRepeatedJobId(stage)
         }
 
         if (storeAtomList.isNotEmpty() && !projectId.isNullOrEmpty()) {
@@ -172,24 +175,27 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
     }
 
     override fun beforeDeleteElementInExistsModel(
-        userId: String,
         existModel: Model,
         sourceModel: Model?,
-        pipelineId: String?
+        param: BeforeDeleteParam
     ) {
+        logger.info("before delete element source model: $sourceModel")
+
         existModel.stages.forEach { s ->
             s.containers.forEach { c ->
                 c.elements.forEach { e ->
-                    deletePrepare(sourceModel, e, userId, pipelineId)
+                    deletePrepare(sourceModel, e, param)
                 }
             }
         }
     }
 
-    private fun deletePrepare(sourceModel: Model?, e: Element, userId: String, pipelineId: String?) {
+    private fun deletePrepare(sourceModel: Model?, e: Element, param: BeforeDeleteParam) {
         if (sourceModel == null || !sourceModel.elementExist(e.id)) {
             logger.info("The element(${e.name}/${e.id}) is delete")
-            ElementBizRegistrar.getPlugin(e)?.beforeDelete(e, userId, pipelineId)
+            ElementBizRegistrar.getPlugin(e)?.beforeDelete(e, param)
+        } else {
+            logger.info("The element(${e.name}/${e.id}) is not delete")
         }
     }
 

@@ -70,6 +70,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import javax.ws.rs.core.Response
 
 @Service
 class QualityRuleService @Autowired constructor(
@@ -511,6 +512,7 @@ class QualityRuleService @Autowired constructor(
                 defaultMessage = authPermission.alias
             )
             throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = QualityMessageCode.NEED_QUALITY_INDICATOR_X_PERMISSION,
                 defaultMessage = message,
                 params = arrayOf(permissionMsg)
@@ -526,6 +528,7 @@ class QualityRuleService @Autowired constructor(
                 defaultMessage = authPermission.alias
             )
             throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = QualityMessageCode.NEED_QUALITY_INDICATOR_X_PERMISSION,
                 defaultMessage = message,
                 params = arrayOf(permissionMsg)

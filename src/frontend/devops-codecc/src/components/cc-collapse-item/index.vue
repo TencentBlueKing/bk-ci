@@ -16,7 +16,7 @@
                     'is-selected': selected.includes(item.key)
                 }"
                 @click="handleClick(item.key, id)">
-                <span :class="['severity-label', `severity-${item.key}`]" :title="item.name || item.key">{{item.name || item.key}}</span>
+                <span :class="['severity-label', `severity-${item.key}`]" :title="item.name || item.key">{{item.name || item.key}}<i v-if="redPoint.includes(item.key)" class="red-point"></i></span>
                 <span>{{item.count}}</span>
             </li>
             <template v-if="hasMore">
@@ -48,6 +48,10 @@
                 default: 7
             },
             selected: {
+                type: Array,
+                default: []
+            },
+            redPoint: {
                 type: Array,
                 default: []
             }

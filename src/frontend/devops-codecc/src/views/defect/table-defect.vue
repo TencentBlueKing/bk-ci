@@ -33,7 +33,7 @@
                     v-if="props.row.status === 1"
                     @mouseenter="handleAuthorIndex(props.$index)"
                     @mouseleave="handleAuthorIndex(-1)"
-                    @click.stop="handleAuthor(1, props.row.entityId, props.row.author, props.row.defectId)">
+                    @click.stop="handleAuthor(1, props.row.entityId, props.row.author)">
                     <span>{{props.row.author || '--'}}</span>
                     <span v-if="hoverAuthorIndex === props.$index" class="bk-icon icon-edit2 fs18"></span>
                 </div>
@@ -50,7 +50,7 @@
             </template>
         </bk-table-column>
         <bk-table-column
-            prop="createTime"
+            prop="lineUpdateTime"
             sortable="custom"
             width="110"
             :label="$t('提交日期')">
@@ -77,18 +77,18 @@
                         <div slot="content" class="handle-menu-tips">
                             <!-- 待修复问题的操作 -->
                             <template v-if="props.row.status === 1">
-                                <p v-if="props.row.mark" class="entry-link" @click.stop="handleMark(0, false, props.row.entityId, props.row.defectId)">
+                                <p v-if="props.row.mark" class="entry-link" @click.stop="handleMark(0, false, props.row.entityId)">
                                     {{$t('取消标记')}}
                                 </p>
-                                <p v-else class="entry-link" @click.stop="handleMark(1, false, props.row.entityId, props.row.defectId)">
+                                <p v-else class="entry-link" @click.stop="handleMark(1, false, props.row.entityId)">
                                     {{$t('标记处理')}}
                                 </p>
                             </template>
                             <!-- 已忽略问题的操作 -->
-                            <p v-if="props.row.status & 4" class="entry-link" @click.stop="handleIgnore('RevertIgnore', false, props.row.entityId, props.row.defectId)">
+                            <p v-if="props.row.status & 4" class="entry-link" @click.stop="handleIgnore('RevertIgnore', false, props.row.entityId)">
                                 {{$t('恢复忽略')}}
                             </p>
-                            <p v-else class="entry-link" @click.stop="handleIgnore('IgnoreDefect', false, props.row.entityId, props.row.defectId)">
+                            <p v-else class="entry-link" @click.stop="handleIgnore('IgnoreDefect', false, props.row.entityId)">
                                 {{$t('忽略问题')}}
                             </p>
                         </div>

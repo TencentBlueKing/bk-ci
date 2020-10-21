@@ -428,7 +428,12 @@
                         })
                     }
                 } catch (e) {
-                    this.handleError(e, this.$permissionActionMap.create, null, this.$route.params.projectId)
+                    this.handleError(e, [{
+                        actionId: this.$permissionActionMap.create,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [],
+                        projectId: this.this.$route.params.projectId
+                    }])
                 } finally {
                     this.isDisabled = false
                 }

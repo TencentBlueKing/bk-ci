@@ -36,4 +36,5 @@ dependencies {
     compile project(":core:artifactory:api-artifactory-store")
     compile project(":core:store:model-store")
     testCompile project(":core:common:common-test")
+    compile "net.coobird:thumbnailator:0.4.8"
 }

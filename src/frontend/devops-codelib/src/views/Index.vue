@@ -163,7 +163,7 @@
             },
 
             async toApplyPermission () {
-                this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.code, [{
+                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.code, [{
                     id: this.projectId,
                     type: this.$permissionResourceTypeMap.PROJECT
                 }])

@@ -4,16 +4,8 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
--- Table structure for T_LOG_INDICES
+-- Table structure for T_LOG_INDICES_V2
 -- ----------------------------
-
-CREATE TABLE IF NOT EXISTS `T_LOG_INDICES` (
-  `ID` varchar(64) NOT NULL,
-  `INDEX_NAME` varchar(20) NOT NULL,
-  `LAST_LINE_NUM` bigint(20) NOT NULL DEFAULT '1',
-  `CREATE_TYPE_MAPPING` bit(1) NOT NULL DEFAULT b'0',
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `T_LOG_INDICES_V2`
 (
@@ -30,6 +22,10 @@ CREATE TABLE IF NOT EXISTS `T_LOG_INDICES_V2`
     UNIQUE KEY `BUILD_ID` (`BUILD_ID`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
+-- ----------------------------
+-- Table structure for T_LOG_STATUS
+-- ----------------------------
+
 CREATE TABLE IF NOT EXISTS `T_LOG_STATUS`
 (
     `ID`            bigint(20)  NOT NULL AUTO_INCREMENT,
@@ -43,6 +39,10 @@ CREATE TABLE IF NOT EXISTS `T_LOG_STATUS`
     PRIMARY KEY (`ID`),
     UNIQUE KEY `BUILD_ID_2` (`BUILD_ID`, `TAG`, `SUB_TAG`, `EXECUTE_COUNT`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_LOG_SUBTAGS
+-- ----------------------------
 
 CREATE TABLE IF NOT EXISTS `T_LOG_SUBTAGS`
 (

@@ -40,7 +40,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_STATU
 import com.tencent.devops.common.web.mq.EXTEND_CONNECTION_FACTORY_NAME
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_ADMIN_NAME
 import com.tencent.devops.log.mq.LogListener
-import com.tencent.devops.log.service.v2.LogServiceV2
+import com.tencent.devops.log.service.LogService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -231,7 +231,7 @@ class LogMQConfiguration @Autowired constructor() {
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired pipelineBuildFinishQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired logServiceV2: LogServiceV2,
+        @Autowired logService: LogService,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
@@ -240,7 +240,7 @@ class LogMQConfiguration @Autowired constructor() {
         container.setMaxConcurrentConsumers(1)
         container.setRabbitAdmin(rabbitAdmin)
 
-        val adapter = MessageListenerAdapter(logServiceV2, logServiceV2::pipelineFinish.name)
+        val adapter = MessageListenerAdapter(logService, logService::pipelineFinish.name)
         adapter.setMessageConverter(messageConverter)
         container.messageListener = adapter
         return container

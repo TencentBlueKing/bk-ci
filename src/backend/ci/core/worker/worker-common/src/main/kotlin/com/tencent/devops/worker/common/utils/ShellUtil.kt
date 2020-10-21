@@ -88,13 +88,15 @@ object ShellUtil {
         continueNoneZero: Boolean = false,
         systemEnvVariables: Map<String, String>? = null,
         prefix: String = "",
-        errorMessage: String? = null
+        errorMessage: String? = null,
+        workspace: File = dir
     ): String {
         return executeUnixCommand(
             command = getCommandFile(
                 buildId = buildId,
                 script = script,
                 dir = dir,
+                workspace = workspace,
                 buildEnvs = buildEnvs,
                 runtimeVariables = runtimeVariables,
                 continueNoneZero = continueNoneZero,
@@ -113,7 +115,8 @@ object ShellUtil {
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
-        systemEnvVariables: Map<String, String>? = null
+        systemEnvVariables: Map<String, String>? = null,
+        workspace: File = dir
     ): File {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
         file.deleteOnExit()
@@ -124,7 +127,7 @@ object ShellUtil {
             command.append(bashStr).append("\n")
         }
 
-        command.append("export $WORKSPACE_ENV=${dir.absolutePath}\n")
+        command.append("export $WORKSPACE_ENV=${workspace.absolutePath}\n")
             .append("export DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\n")
 
         // 设置系统环境变量

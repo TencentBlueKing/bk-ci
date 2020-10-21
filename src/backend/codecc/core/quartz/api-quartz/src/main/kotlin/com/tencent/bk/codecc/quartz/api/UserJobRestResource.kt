@@ -10,6 +10,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -43,6 +44,17 @@ interface UserJobRestResource {
     @Path("/all/jobs")
     @POST
     fun initAllJobs() : CodeCCResult<Boolean>
+
+    @ApiOperation("刷新所有开源扫描的cron表达式")
+    @Path("/openSource/cron/period/{period}/startTime/{startTime}")
+    @PUT
+    fun refreshOpenSourceCronExpression(
+        @ApiParam("开源扫描时间周期")
+        @PathParam("period")
+        period : Int,
+        @ApiParam("开源扫描时间起点")
+        @PathParam("startTime")
+        startTime : Int) : CodeCCResult<Boolean>
 
     @ApiOperation("获取分片信息")
     @Path("/shardingResult")

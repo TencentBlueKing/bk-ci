@@ -418,7 +418,11 @@ class PipelineBuildDao {
                 parentBuildId = t.parentBuildId,
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
-                errorInfoList = if (t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo) as List<ErrorInfo> else null
+                errorInfoList = try {
+                    if (t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo) as List<ErrorInfo> else null
+                } catch (e: Exception) {
+                    null
+                }
             )
         }
     }

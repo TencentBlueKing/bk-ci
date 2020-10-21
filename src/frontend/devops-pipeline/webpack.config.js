@@ -59,7 +59,7 @@ module.exports = (env, argv) => {
         }),
         new CopyWebpackPlugin([{ from: path.join(__dirname, './dist'), to: dist }]),
         ...(isProd ? [] : [new ReplacePlugin({
-            '__HTTP_SCHEMA__://__BKCI_FQDN__': urlPrefix
+            '__BK_CI_PUBLIC_URL__': urlPrefix
         })])
     ]
     config.devServer.historyApiFallback = {

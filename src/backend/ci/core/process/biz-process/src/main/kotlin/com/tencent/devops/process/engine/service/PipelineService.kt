@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.common.VMUtils
@@ -64,6 +65,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.app.PipelinePage
@@ -274,7 +276,8 @@ class PipelineService @Autowired constructor(
                 throw ignored
             } finally {
                 if (!success) {
-                    modelCheckPlugin.beforeDeleteElementInExistsModel(userId, model, null, pipelineId)
+                    val param = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId ?: "", channelCode = channelCode)
+                    modelCheckPlugin.beforeDeleteElementInExistsModel(model, null, param)
                 }
             }
         } finally {
@@ -547,7 +550,8 @@ class PipelineService @Autowired constructor(
                     defaultMessage = "指定要复制的流水线-模型不存在"
                 )
             // 对已经存在的模型做处理
-            modelCheckPlugin.beforeDeleteElementInExistsModel(userId, existModel, model, pipelineId)
+            val param = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId, channelCode = channelCode)
+            modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
 
             pipelineRepositoryService.deployPipeline(model, projectId, pipelineId, userId, channelCode, false)
             if (checkPermission) {
@@ -693,6 +697,7 @@ class PipelineService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
                 defaultMessage = "指定要复制的流水线-模型不存在"
             )
+
         try {
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             val buildNo = triggerContainer.buildNo
@@ -736,6 +741,23 @@ class PipelineService @Autowired constructor(
                 params = arrayOf(e.message ?: "unknown")
             )
         }
+    }
+
+    fun getBatchPipelinesWithModel(
+        userId: String,
+        projectId: String,
+        pipelineIds: List<String>,
+        channelCode: ChannelCode,
+        checkPermission: Boolean = true
+    ): List<PipelineWithModel> {
+        if (checkPermission) {
+            pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                permission = AuthPermission.VIEW
+            )
+        }
+        return pipelineRepositoryService.getPipelinesWithLastestModels(projectId, pipelineIds, channelCode)
     }
 
     fun deletePipeline(

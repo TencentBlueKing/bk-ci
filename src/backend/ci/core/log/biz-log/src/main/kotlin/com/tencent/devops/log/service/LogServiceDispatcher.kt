@@ -31,14 +31,13 @@ import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.QueryLineNo
-import com.tencent.devops.log.service.v2.LogServiceV2
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 @Service
 class LogServiceDispatcher @Autowired constructor(
-    private val logServiceV2: LogServiceV2
+    private val logService: LogService
 ) {
 
     fun getInitLogs(
@@ -53,7 +52,7 @@ class LogServiceDispatcher @Autowired constructor(
         subTag: String? = null
     ): Result<QueryLogs> {
         return Result(
-            logServiceV2.queryInitLogs(
+            logService.queryInitLogs(
                 buildId = buildId,
                 isAnalysis = isAnalysis ?: false,
                 keywordsStr = queryKeywords,
@@ -76,7 +75,7 @@ class LogServiceDispatcher @Autowired constructor(
         subTag: String? = null
     ): Result<QueryLineNo> {
         return Result(
-            logServiceV2.queryLineNoByKeywords(
+            logService.queryLineNoByKeywords(
                 buildId = buildId,
                 keywordsStr = queryKeywords,
                 tag = tag,
@@ -102,7 +101,7 @@ class LogServiceDispatcher @Autowired constructor(
         subTag: String? = null
     ): Result<PageQueryLogs> {
             return Result(
-                logServiceV2.queryInitLogsPage(
+                logService.queryInitLogsPage(
                     buildId = buildId,
                     isAnalysis = isAnalysis ?: false,
                     keywordsStr = queryKeywords,
@@ -130,7 +129,7 @@ class LogServiceDispatcher @Autowired constructor(
         subTag: String? = null
     ): Result<QueryLogs> {
             return Result(
-                logServiceV2.queryMoreLogsBetweenLines(
+                logService.queryMoreLogsBetweenLines(
                     buildId = buildId,
                     num = num ?: 100,
                     fromStart = fromStart ?: true,
@@ -157,7 +156,7 @@ class LogServiceDispatcher @Autowired constructor(
         subTag: String? = null
     ): Result<QueryLogs> {
             return Result(
-                logServiceV2.queryMoreOriginLogsAfterLine(
+                logService.queryMoreOriginLogsAfterLine(
                     buildId = buildId,
                     start = start,
                     tag = tag,
@@ -178,7 +177,7 @@ class LogServiceDispatcher @Autowired constructor(
         fileName: String?,
         subTag: String? = null
     ): Response {
-        return logServiceV2.downloadLogs(
+        return logService.downloadLogs(
             pipelineId = pipelineId,
             buildId = buildId,
             tag = tag,
@@ -200,7 +199,7 @@ class LogServiceDispatcher @Autowired constructor(
         executeCount: Int?,
         subTag: String? = null
     ): Result<EndPageQueryLogs> {
-        return Result(logServiceV2.getEndLogs(
+        return Result(logService.getEndLogs(
             pipelineId,
             buildId,
             tag,

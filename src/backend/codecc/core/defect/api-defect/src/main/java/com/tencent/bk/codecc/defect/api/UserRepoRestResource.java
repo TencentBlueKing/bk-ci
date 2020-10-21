@@ -12,7 +12,7 @@
 
 package com.tencent.bk.codecc.defect.api;
 
-import com.tencent.bk.codecc.defect.vo.coderepository.CodeRepoVO;
+import com.tencent.devops.common.api.CodeRepoVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -23,7 +23,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.Map;
 import java.util.Set;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID;
+import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.*;
 
 /**
  * 代码库前端接口
@@ -46,4 +46,21 @@ public interface UserRepoRestResource
             @ApiParam("项目id清单")
             @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID)
                     String projectId);
+
+    @ApiOperation("获取oauth跳转链接")
+    @Path("/oauth/url")
+    @GET
+    CodeCCResult<String> getOauthUrl(
+        @ApiParam("用户Id")
+        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            String userId,
+        @ApiParam("项目Id")
+        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID)
+            String projectId,
+        @ApiParam("任务Id")
+        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
+            long taskId,
+        @ApiParam("工具英文名")
+        @QueryParam("toolName")
+            String toolName);
 }

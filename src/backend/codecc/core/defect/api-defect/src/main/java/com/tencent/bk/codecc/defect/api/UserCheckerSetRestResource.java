@@ -102,6 +102,14 @@ public interface UserCheckerSetRestResource
                     CheckerSetListQueryReq queryCheckerSetReq
     );
 
+    @ApiOperation("查询规则集列表")
+    @Path("/listPageable")
+    @POST
+    CodeCCResult<Page<CheckerSetVO>> getCheckerSetsPageable(
+        @ApiParam(value = "配置规则包参数", required = true)
+            CheckerSetListQueryReq queryCheckerSetReq
+    );
+
     @ApiOperation("查询其他规则集列表")
     @Path("/otherList")
     @POST

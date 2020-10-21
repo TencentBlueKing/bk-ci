@@ -4,25 +4,10 @@
             isLoading: loading.isLoading,
             title: loading.title
         }">
-        <div class="info-header">
-            <div class="sub_header_left">
-                <div class="title first-level" @click="toAtomStore()">
-                    <logo :name="&quot;store&quot;" size="30" class="nav-icon" />
-                    <div class="title first-level"> {{ $t('store.研发商店') }} </div>
-                </div>
-                <i class="right-arrow"></i>
-                <div class="title secondary" @click="toAtomList()"> {{ $t('store.工作台') }} </div>
-                <i class="right-arrow"></i>
-                <div class="title secondary" @click="toAtomDetail"> {{ versionDetail.atomCode }} </div>
-                <i class="right-arrow"></i>
-                <div class="title third-level">
-                    <span class="">{{ curTitle }}</span>
-                </div>
-            </div>
-            <div class="sub_header_right">
-                <a class="develop-guide-link" target="_blank" :href="docsLink"> {{ $t('store.插件指引') }} </a>
-            </div>
-        </div>
+        <bread-crumbs :bread-crumbs="navList" type="atom">
+            <a class="g-title-work" target="_blank" :href="docsLink"> {{ $t('store.插件指引') }} </a>
+        </bread-crumbs>
+
         <div class="release-progress-content" v-show="showContent">
             <div class="atom-release-msg">
                 <div class="detail-title release-progress-title">
@@ -171,10 +156,15 @@
 <script>
     import * as cookie from 'js-cookie'
     import webSocketMessage from '@/utils/webSocketMessage'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
 
     const CSRFToken = cookie.get('backend_csrftoken')
 
     export default {
+        components: {
+            breadCrumbs
+        },
+
         data () {
             return {
                 permission: true,
@@ -214,6 +204,7 @@
                     'COMPATIBILITY_FIX': this.$t('store.兼容式问题修正')
                 },
                 versionDetail: {
+                    atomCode: '',
                     description: '',
                     visibilityLevel: ''
                 }
@@ -236,6 +227,14 @@
             },
             postUrl () {
                 return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.versionDetail.projectCode}/ids/${this.versionDetail.atomId}/codes/${this.versionDetail.atomCode}/versions/${this.versionDetail.version}/re/archive`
+            },
+            navList () {
+                return [
+                    { name: this.$t('store.工作台') },
+                    { name: this.$t('store.流水线插件'), to: { name: 'atomWork' } },
+                    { name: this.versionDetail.atomCode, to: { name: 'overView', params: { code: this.versionDetail.atomCode, type: 'atom' } } },
+                    { name: this.curTitle }
+                ]
             }
         },
 
@@ -249,21 +248,9 @@
             webSocketMessage.unInstallWsMessage()
         },
         methods: {
-            toAtomDetail () {
-                this.$router.push({
-                    name: 'overview',
-                    params: {
-                        atomCode: this.versionDetail.atomCode
-                    }
-                })
-            },
-
             toAtomList () {
                 this.$router.push({
-                    name: 'workList',
-                    params: {
-                        type: 'atom'
-                    }
+                    name: 'atomWork'
                 })
             },
             toAtomStore () {
@@ -499,67 +486,9 @@
 
     .release-progress-wrapper {
         height: 100%;
-        .info-header {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            height: 50px;
-            border-bottom: 1px solid #DDE4EB;
-            background-color: #fff;
-            box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
-            .sub_header_left {
-                display: flex;
-                padding: 14px 24px;
-                .title {
-                    display: flex;
-                    align-items: center;
-                }
-                .first-level,
-                .secondary {
-                    color: $primaryColor;
-                    cursor: pointer;
-                }
-                .third-leve {
-                    color: $fontWeightColor;
-                }
-                .nav-icon {
-                    width: 24px;
-                    height: 24px;
-                    margin-right: 10px;
-                }
-                .right-arrow {
-                    display :inline-block;
-                    position: relative;
-                    width: 19px;
-                    height: 36px;
-                    margin-right: 4px;
-                }
-                .right-arrow::after {
-                    display: inline-block;
-                    content: " ";
-                    height: 4px;
-                    width: 4px;
-                    border-width: 1px 1px 0 0;
-                    border-color: $lineColor;
-                    border-style: solid;
-                    transform: matrix(0.71, 0.71, -0.71, 0.71, 0, 0);
-                    position: absolute;
-                    top: 50%;
-                    right: 6px;
-                    margin-top: -9px;
-                }
-            }
-            .develop-guide-link {
-                position: absolute;
-                right: 36px;
-                margin-top: 14px;
-                color: $primaryColor;
-                cursor: pointer;
-            }
-        }
         .release-progress-content {
             padding: 20px 0 40px;
-            height: calc(100% - 50px);
+            height: calc(100% - 5.6vh);
             overflow: auto;
         }
         .atom-release-msg {

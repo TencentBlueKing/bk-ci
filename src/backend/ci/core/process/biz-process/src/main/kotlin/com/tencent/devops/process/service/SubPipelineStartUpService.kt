@@ -87,6 +87,7 @@ class SubPipelineStartUpService(
         atomCode: String,
         taskId: String,
         runMode: String,
+        channelCode: ChannelCode? = null,
         values: Map<String, String>
     ): Result<ProjectBuildId> {
         val project = if (callProjectId.isNotBlank()) {
@@ -107,7 +108,7 @@ class SubPipelineStartUpService(
             ?: userId
 
         logger.info("[$buildId]|callPipelineStartup|$userId|$triggerUser|$project|$callProjectId|$projectId|$parentPipelineId|$callPipelineId|$taskId")
-        val channelCode = ChannelCode.valueOf(
+        val callChannelCode = channelCode ?: ChannelCode.valueOf(
             runVariables[PIPELINE_START_CHANNEL]
                 ?: return MessageCodeUtil.generateResponseDataObject(
                     messageCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -136,7 +137,7 @@ class SubPipelineStartUpService(
             parentBuildId = buildId,
             parentTaskId = taskId,
             pipelineId = callPipelineId,
-            channelCode = channelCode,
+            channelCode = callChannelCode,
             parameters = startParams,
             checkPermission = false,
             isMobile = false,

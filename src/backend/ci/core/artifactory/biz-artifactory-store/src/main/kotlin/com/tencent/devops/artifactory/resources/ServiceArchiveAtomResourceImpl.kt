@@ -27,16 +27,24 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
+import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.service.ArchiveAtomService
+import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceArchiveAtomResourceImpl @Autowired constructor(private val archiveAtomService: ArchiveAtomService) :
-    ServiceArchiveAtomResource {
+class ServiceArchiveAtomResourceImpl @Autowired constructor(
+    private val archiveFileService: ArchiveFileService,
+    private val archiveAtomService: ArchiveAtomService
+) : ServiceArchiveAtomResource {
 
     override fun getAtomFileContent(filePath: String): Result<String> {
         return archiveAtomService.getAtomFileContent(filePath)
+    }
+
+    override fun deleteAtomFile(projectCode: String, atomCode: String): Result<Boolean> {
+        return archiveFileService.deleteFile("$BK_CI_ATOM_DIR/$projectCode/$atomCode")
     }
 }

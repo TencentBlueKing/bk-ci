@@ -165,9 +165,18 @@ class ServiceGitResourceImpl @Autowired constructor(
         repoName: String,
         mrId: Long,
         tokenType: TokenTypeEnum,
-        token: String
+        token: String,
+        repoUrl: String?
     ): Result<GitMrInfo> {
-        return Result(gitService.getMrInfo(repoName, mrId, tokenType, token))
+        return Result(
+            gitService.getMrInfo(
+                repoName = repoName,
+                mrId = mrId,
+                tokenType = tokenType,
+                token = token,
+                repoUrl = repoUrl
+            )
+        )
     }
 
     override fun downloadGitRepoFile(
@@ -184,17 +193,35 @@ class ServiceGitResourceImpl @Autowired constructor(
         repoName: String,
         mrId: Long,
         tokenType: TokenTypeEnum,
-        token: String
+        token: String,
+        repoUrl: String?
     ): Result<GitMrReviewInfo> {
-        return Result(gitService.getMrReviewInfo(repoName, mrId, tokenType, token))
+        return Result(
+            gitService.getMrReviewInfo(
+                repoName = repoName,
+                mrId = mrId,
+                tokenType = tokenType,
+                token = token,
+                repoUrl = repoUrl
+            )
+        )
     }
 
     override fun getMergeRequestChangeInfo(
         repoName: String,
         mrId: Long,
         tokenType: TokenTypeEnum,
-        token: String
+        token: String,
+        repoUrl: String?
     ): Result<GitMrChangeInfo> {
-        return Result(gitService.getMrChangeInfo(repoName, mrId, tokenType, token))
+        return Result(
+            gitService.getMrChangeInfo(
+                repoName = repoName,
+                mrId = mrId,
+                tokenType = tokenType,
+                token = token,
+                repoUrl = repoUrl
+            )
+        )
     }
 }

@@ -52,6 +52,9 @@ class GitUtilsTest {
         assertEquals(repoApiUrl, actual)
         actual = GitUtils.getGitApiUrl(apiUrl, "http://aaa.com/Tencent/bk-ci.git")
         assertEquals(apiUrl, actual)
+        val errorApiUrl = "api/v3"
+        actual = GitUtils.getGitApiUrl(errorApiUrl, "http://aaa.com/Tencent/bk-ci.git")
+        assertEquals(apiUrl, actual)
     }
 
     @Test

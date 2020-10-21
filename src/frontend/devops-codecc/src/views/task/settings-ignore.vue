@@ -37,6 +37,19 @@
                 </div>
             </div>
             <!-- /系统默认组件 -->
+            <!-- yml -->
+            <div class="mt10" v-if="ymlExist">
+                <span class="yaml-desc">{{$t('在代码仓库根目录下的codeyml设置屏蔽路径后')}}</span>
+                <Ace
+                    lang="yaml"
+                    theme="idle_fingers"
+                    :read-only="true"
+                    v-model="ymlContent"
+                    height="300"
+                    width="100%">
+                </Ace>
+            </div>
+            <!-- /yml -->
             <div class="no-path" v-if="customNone">
                 <empty size="small" title="" :desc="$t('添加后的代码路径将被屏蔽，不再有问题等产生')">
                     <template v-slot:action>
@@ -62,7 +75,7 @@
             :title="$t('确认')">
             {{$t('确认要删除吗', { pathName })}}
         </bk-dialog>
-        <SettingsIgnoreNew :visible="isCreateShow" @visibleChange="updateCreateVisible" />
+        <SettingsIgnoreNew v-if="isEditable" :visible="isCreateShow" @visibleChange="updateCreateVisible" />
         <SettingsIgnoreInput :selected="defaultSelectList" :list="defaultList" :visible="isInputShow" @visibleChange="updateInputVisible" />
     </div>
 </template>
@@ -72,25 +85,29 @@
     import SettingsIgnoreNew from '@/components/settings-ignore-new/index'
     import SettingsIgnoreInput from '@/components/settings-ignore-new/input'
     import Empty from '@/components/empty'
+    import Ace from '@/components/ace-editor'
 
     export default {
         components: {
             SettingsIgnoreNew,
             SettingsIgnoreInput,
-            Empty
+            Empty,
+            Ace
         },
         data () {
             return {
                 options: [
                     { name: 'custom', label: this.$t('自定义') },
-                    { name: 'default', label: this.$t('系统默认') }
+                    { name: 'default', label: this.$t('系统默认') },
+                    { name: 'yml', label: 'YAML' }
                 ],
                 select: 'custom',
                 tabSelect: 'custom',
                 isCreateShow: false,
                 isInputShow: false,
                 delVisiable: false,
-                pathName: ''
+                pathName: '',
+                ymlContent: ''
             }
         },
         computed: {
@@ -116,6 +133,9 @@
             defaultExist () {
                 return this.tabSelect === 'default' && this.defaultSelectList.length !== 0
             },
+            ymlExist () {
+                return this.tabSelect === 'yml'
+            },
             customList () {
                 const customList = []
                 if (this.taskIgnore) {
@@ -140,6 +160,24 @@
         },
         created () {
             this.$store.dispatch('task/ignore', this.taskId)
+            this.$store.dispatch('task/getYml', this.taskId).then(res => {
+                this.ymlContent = `source:
+        # 文件或目录使用绝对路径，绝对路径按代码库根目录计算，以/开头。
+        # 提供产品代码库中编写的测试代码存放目录或文件名格式，以便代码检查时进行排除处理
+        # 不要使用.*/等正则表达式屏蔽掉所有代码，会使得代码存在风险，还会导致Coverity扫不到任何代码而失败
+        test_source:
+            #用于匹配文件; 匹配方式为正则表达式，例如[".*/java/test/.*", ".*/test.java"]
+            filepath_regex: ${this.formate(res.testSourceFilterPath)} 
+        # 提供产品代码库中工具或框架自动生成的且在代码库中的代码，没有可为空。以便代码检查时进行排除处理。
+        auto_generate_source:
+            # 自动生成代码文件的正则表达式，若无统一标识格式，可以指定具体目录，样例可参考test_source举例
+            filepath_regex: ${this.formate(res.autoGenFilterPath)}
+        # 提供产品代码库中直接以源码形式存在的第三方代码目录或代码文件名的正则表达。
+        # 此处备注的第三方代码将在代码检查时进行排除，若代码库中不存在需要排除的第三方代码，该项配置标识可为空
+        third_party_source:
+            #第三方代码文件的正则表达式，若无统一标识格式，可以指定具体目录，样例可参考test_source举例
+            filepath_regex: ${this.formate(res.thirdPartyFilterPath)}`
+            })
         },
         methods: {
             // 切换tab页面
@@ -197,7 +235,19 @@
                 this.delVisiable = false
             },
             hanldeToPipeline () {
-                window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${this.taskDetail.projectId}/${this.taskDetail.pipelineId}/edit`, '_blank')
+                window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${this.taskDetail.projectId}/${this.taskDetail.pipelineId}/edit#${this.taskDetail.atomCode}`, '_blank')
+            },
+            formate (arr = []) {
+                let str = ''
+                if (arr.length > 0 && arr[0]) {
+                    for (let index = 0; index < arr.length; index++) {
+                        const e = arr[index]
+                        const beginStr = index === 0 ? '[\"' : '\"'
+                        const endStr = index === arr.length - 1 ? '\"]' : '\", '
+                        str = str + `${beginStr}${e}${endStr}`
+                    }
+                }
+                return str
             }
         }
     }
@@ -311,5 +361,10 @@
         a {
             margin-left: 12px;
         }
+    }
+    .yaml-desc {
+        display: inline-block;
+        font-size: 12px;
+        padding: 10px 0;
     }
 </style>
