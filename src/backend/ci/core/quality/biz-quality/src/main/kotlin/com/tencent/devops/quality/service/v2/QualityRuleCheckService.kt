@@ -49,6 +49,7 @@ import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.response.AtomRuleResponse
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
+import com.tencent.devops.quality.pojo.RefreshType
 import com.tencent.devops.quality.pojo.RuleCheckResult
 import com.tencent.devops.quality.pojo.RuleCheckSingleResult
 import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
@@ -103,7 +104,8 @@ class QualityRuleCheckService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 templateId = null,
-                ruleTasks = qualityTasks
+                ruleTasks = qualityTasks,
+                type = RefreshType.GET
         )
         return qualityTasks
     }
@@ -120,7 +122,8 @@ class QualityRuleCheckService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = null,
                 templateId = templateId,
-                ruleTasks = qualityTasks
+                ruleTasks = qualityTasks,
+                type = RefreshType.GET
         )
         return qualityTasks
     }

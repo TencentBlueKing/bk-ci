@@ -5,17 +5,20 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
+import com.tencent.devops.quality.pojo.RefreshType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 @Service
 class QualityCacheService @Autowired constructor(
     val redisOperation: RedisOperation
 ) {
-    private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+    private val executors = ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, ArrayBlockingQueue(5000))
 
     @Value("\${quality.cache.timeout:300}")
     val REDIS_TIMEOUT = 300L
@@ -70,28 +73,20 @@ class QualityCacheService @Autowired constructor(
         }
     }
 
-    fun refreshCache(projectId: String, pipelineId: String?, templateId: String?, ruleTasks: List<QualityRuleMatchTask>?) {
-
-        val redisLock = RedisLock(
-                redisOperation = redisOperation,
-                lockKey = "quality:rule:lock:$projectId",
-                expiredTimeInSeconds = 60
-        )
-
+    fun refreshCache(projectId: String, pipelineId: String?, templateId: String?, ruleTasks: List<QualityRuleMatchTask>?, type: RefreshType) {
         try {
-            redisLock.lock()
             val refreshTask = RefreshTask(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     templateId = templateId,
                     ruleTasks = ruleTasks,
-                    cacheService = this
+                    cacheService = this,
+                    redisOperation = redisOperation,
+                    refreshType = type
             )
             executors.execute(refreshTask)
         } catch (e: Exception) {
             logger.warn("refreshRedis  fail: $projectId| $pipelineId| $templateId| $ruleTasks| $e")
-        } finally {
-            redisLock.unlock()
         }
     }
 
@@ -114,11 +109,21 @@ class QualityCacheService @Autowired constructor(
         val pipelineId: String?,
         val templateId: String?,
         val ruleTasks: List<QualityRuleMatchTask>?,
-        val cacheService: QualityCacheService
+        val cacheService: QualityCacheService,
+        val redisOperation: RedisOperation,
+        val refreshType: RefreshType
     ) : Runnable {
         override fun run() {
 
-            var redisRuleTasks = mutableListOf<QualityRuleMatchTask>()
+            val redisLock = RedisLock(
+                    redisOperation = redisOperation,
+                    lockKey = "quality:rule:lock:$projectId",
+                    expiredTimeInSeconds = 60
+            )
+
+            try {
+                var redisRuleTasks = mutableListOf<QualityRuleMatchTask>()
+                redisLock.lock()
 
                 ruleTasks?.forEach {
                     val ruleMatchTask = QualityRuleMatchTask(
@@ -132,13 +137,37 @@ class QualityCacheService @Autowired constructor(
                     redisRuleTasks.add(ruleMatchTask)
                 }
 
-            if (!pipelineId.isNullOrEmpty()) {
-                cacheService.setCacheRuleListByPipeline(projectId, pipelineId!!, redisRuleTasks)
-                logger.info("refreshRedis pipeline $projectId|$pipelineId| $ruleTasks success")
-            }
-            if (!templateId.isNullOrEmpty()) {
-                cacheService.setCacheRuleListByTemplateId(projectId, templateId!!, redisRuleTasks)
-                logger.info("refreshRedis template $projectId|$templateId| $ruleTasks success")
+                if (!pipelineId.isNullOrEmpty()) {
+                    var pipelineRefresh = true
+                    if (refreshType == RefreshType.GET) { // 防止多实例间 修改和查询的并发场景，以免查询的旧数据覆盖掉修改后的新数据
+                        val redisPipelineData = cacheService.getCacheRuleListByPipelineId(projectId, pipelineId!!)
+                        if (redisPipelineData != null) {
+                            pipelineRefresh = false
+                        }
+                    }
+                    if (pipelineRefresh) {
+                        cacheService.setCacheRuleListByPipeline(projectId, pipelineId!!, redisRuleTasks)
+                        logger.info("refreshRedis pipeline $projectId|$pipelineId| $ruleTasks success")
+                    }
+                }
+                if (!templateId.isNullOrEmpty()) {
+                    var templateRefresh = true
+
+                    if (refreshType == RefreshType.GET) { // 防止多实例间 修改和查询的并发场景，以免查询的旧数据覆盖掉修改后的新数据
+                        val redisTemplateData = cacheService.getCacheRuleListByTemplateId(projectId, templateId!!)
+                        if (redisTemplateData != null) {
+                            templateRefresh = false
+                        }
+                    }
+                    if (templateRefresh) {
+                        cacheService.setCacheRuleListByTemplateId(projectId, templateId!!, redisRuleTasks)
+                        logger.info("refreshRedis template $projectId|$templateId| $ruleTasks success")
+                    }
+                }
+            } catch (e: Exception) {
+                logger.warn("refreshTask fail : $e")
+            } finally {
+                redisLock.unlock()
             }
         }
     }
