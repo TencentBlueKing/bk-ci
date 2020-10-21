@@ -33,7 +33,7 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 
 data class CodeCCDispatchType(
     val codeccTaskId: Long,
-    val extraInfo: Map<String, Any>
+    val extraInfo: Map<String, Any>? = emptyMap()
 ) : DispatchType("", DispatchRouteKeySuffix.CODECC) {
     override fun cleanDataBeforeSave() {
     }
@@ -45,7 +45,9 @@ data class CodeCCDispatchType(
     override fun replaceField(variables: Map<String, String>) {
         val valueMap = mutableMapOf<String, Any?>()
         valueMap["codeccTaskId"] = codeccTaskId
-        valueMap.putAll(extraInfo)
+        if (extraInfo != null && extraInfo.isNotEmpty()) {
+            valueMap.putAll(extraInfo)
+        }
         value = JsonUtil.toJson(valueMap)
     }
 }
