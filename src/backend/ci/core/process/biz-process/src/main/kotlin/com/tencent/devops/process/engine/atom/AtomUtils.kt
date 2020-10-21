@@ -95,12 +95,12 @@ object AtomUtils {
         return atoms
     }
 
-    fun isAtomExist(atomCode: String, client: Client) : Boolean {
-        if(atomCache.getIfPresent(atomCode) != null) {
+    fun isAtomExist(atomCode: String, client: Client): Boolean {
+        if (atomCache.getIfPresent(atomCode) != null) {
             return true
         }
         val atomResult = client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode, "") ?: return false
-        if(atomResult.isNotOk()) {
+        if (atomResult.isNotOk()) {
             return false
         }
         val atomInfo = atomResult.data ?: return false
@@ -108,12 +108,12 @@ object AtomUtils {
         return true
     }
 
-    fun isProjectInstallAtom(atomCodes: List<String>, projectCode: String, client: Client) : List<String> {
+    fun isProjectInstallAtom(atomCodes: List<String>, projectCode: String, client: Client): List<String> {
         val atomInfos = client.get(ServiceAtomResource::class).getInstalledAtoms(projectCode).data ?: return atomCodes
         val projectInstallAtoms = atomInfos.map { it.atomCode }
         val unInstallAtom = mutableListOf<String>()
         atomCodes.forEach {
-            if(!projectInstallAtoms.contains(it)) {
+            if (!projectInstallAtoms.contains(it)) {
                 unInstallAtom.add(it)
             }
         }
