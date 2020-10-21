@@ -38,7 +38,8 @@ import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PARAM_IN_JOB_CONDITION
@@ -98,13 +99,7 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
                     ElementBizRegistrar.getPlugin(e)?.check(e, eCnt)
                     if (isStoreAtom(e)) {
                         storeAtomList.add(e.getAtomCode())
-                        if (!AtomUtils.isAtomExist(e.getAtomCode(), client)) {
-                            logger.warn("save model atom is notExist ${model.name} ${e.getAtomCode()}")
-                            throw ErrorCodeException(
-                                    defaultMessage = "Model内包含商店不存在插件",
-                                    errorCode = ProcessMessageCode.MODEL_ATOMCODE_NOT_EXSIT
-                            )
-                        }
+                        checkoutAtomExist(e)
                     }
                 }
             }
@@ -132,6 +127,28 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
 
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultModelCheckPlugin::class.java)
+    }
+
+    private fun checkoutAtomExist(e: Element) {
+        if(e is MarketBuildLessAtomElement || e is MarketBuildAtomElement) {
+            if (!AtomUtils.isAtomExist(e.getAtomCode(), client)) {
+                logger.warn("save model atom is notExist  ${e.getAtomCode()}")
+                throw ErrorCodeException(
+                        defaultMessage = "Model内包含商店不存在插件${e.getAtomCode()}",
+                        errorCode = ProcessMessageCode.MODEL_ATOMCODE_NOT_EXSIT
+                )
+            }
+        } else {
+            val classType = e.getClassType()
+            if(classType != e.getAtomCode()) {
+                logger.warn("save model atom is notExist  ${e.getAtomCode()}")
+                throw ErrorCodeException(
+                        defaultMessage = "Model内包含不存在的内置插件${e.getAtomCode()}",
+                        errorCode = ProcessMessageCode.MODEL_ATOMCODE_NOT_EXSIT
+                )
+            }
+        }
+
     }
 
     private fun isStoreAtom(element: Element): Boolean {
