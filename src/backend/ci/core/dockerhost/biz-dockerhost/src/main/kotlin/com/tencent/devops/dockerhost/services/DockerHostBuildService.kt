@@ -699,7 +699,6 @@ class DockerHostBuildService(
 
     fun monitorSystemLoad() {
         logger.info("Monitor systemLoad cpu: ${SigarUtil.getAverageLongCpuLoad()}, mem: ${SigarUtil.getAverageLongMemLoad()}")
-        Thread.sleep(10000)
         if (SigarUtil.getAverageLongCpuLoad() > 90 || SigarUtil.getAverageLongMemLoad() > 80) {
             checkContainerStats()
         }
@@ -741,7 +740,7 @@ class DockerHostBuildService(
     }
 
     fun resetContainer(containerId: String) {
-        httpDockerCli.updateContainerCmd(containerId).withMemoryReservation(10 * 1024 * 1024 * 1024L).withCpuPeriod(10000).withCpuQuota(80000).exec()
+        httpDockerCli.updateContainerCmd(containerId).withMemoryReservation(32 * 1024 * 1024 * 1024L).withCpuPeriod(10000).withCpuQuota(80000).exec()
         logger.info("<<<< Trigger container reset, containerId: $containerId")
     }
 

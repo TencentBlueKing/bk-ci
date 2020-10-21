@@ -80,7 +80,7 @@ class CommonBuildClusterCronConfiguration @Autowired constructor(
 
             scheduledTaskRegistrar.addFixedRateTask(
                 IntervalTask(
-                    Runnable { runner.monitorSystemLoad() }, 5 * random.toLong(), random.toLong()
+                    Runnable { runner.monitorSystemLoad() }, 180 * random.toLong(), random.toLong()
                 )
             )
 
