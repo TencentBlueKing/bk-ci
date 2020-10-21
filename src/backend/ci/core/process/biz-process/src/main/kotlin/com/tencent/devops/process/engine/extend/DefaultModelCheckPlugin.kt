@@ -39,7 +39,6 @@ import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PARAM_IN_JOB_CONDITION
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PUBLIC_WINDOWS_BUILDER
@@ -49,7 +48,6 @@ import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ContainerBizRegistrar
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import org.slf4j.LoggerFactory
-import sun.misc.MessageUtils
 
 open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelCheckPlugin {
 
@@ -97,7 +95,7 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
                     val eCnt = elementCnt.computeIfPresent(e.getAtomCode()) { _, oldValue -> oldValue + 1 }
                         ?: elementCnt.computeIfAbsent(e.getAtomCode()) { 1 } // 第一次时出现1次
                     ElementBizRegistrar.getPlugin(e)?.check(e, eCnt)
-                    if(isStoreAtom(e)) {
+                    if (isStoreAtom(e)) {
                         storeAtomList.add(e.getAtomCode())
                         if (!AtomUtils.isAtomExist(e.getAtomCode(), client)) {
                             logger.warn("save model atom is notExist ${model.name} ${e.getAtomCode()}")
@@ -111,9 +109,9 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
             }
         }
 
-        if(storeAtomList.isNotEmpty() && !projectId.isNullOrEmpty()) {
+        if (storeAtomList.isNotEmpty() && !projectId.isNullOrEmpty()) {
             val projectInstallCheck = AtomUtils.isProjectInstallAtom(storeAtomList, projectId!!, client)
-            if(projectInstallCheck.isNotEmpty() ) {
+            if (projectInstallCheck.isNotEmpty()) {
                 logger.warn("save model project not install atom  $projectId| ${model.name}| $storeAtomList")
                 throw ErrorCodeException(
                         defaultMessage = "Model内包含项目未安装插件${projectInstallCheck[0]}",
@@ -135,9 +133,9 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
         private val logger = LoggerFactory.getLogger(DefaultModelCheckPlugin::class.java)
     }
 
-    private fun isStoreAtom(element: Element) : Boolean {
+    private fun isStoreAtom(element: Element): Boolean {
         val classType = element.getClassType()
-        if(classType == "marketBuildLess" || classType == "marketBuild") {
+        if (classType == "marketBuildLess" || classType == "marketBuild") {
             return true
         }
         return false
