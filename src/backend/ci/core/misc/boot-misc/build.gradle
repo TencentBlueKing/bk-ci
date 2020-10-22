@@ -30,6 +30,7 @@ dependencies {
     compile project(":core:common:common-auth:common-auth-mock")
     // 对接蓝鲸的权限中心实现, 根据common.yml配置项auth.idProvider=bk_login值来决定加载
     compile project(":core:common:common-auth:common-auth-blueking")
+    compile project(":core:common:common-auth:common-auth-v3")
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"

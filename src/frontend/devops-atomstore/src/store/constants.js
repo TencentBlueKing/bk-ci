@@ -24,6 +24,7 @@ export const UPDATE_CURRENT_LIST = 'UPDATE_CURRENT_LIST'
 export const UPDATE_MARKET_QUERY = 'UPDATE_MARKET_QUERY'
 export const UPDATE_MARKET_DETAIL = 'UPDATE_MARKET_DETAIL'
 export const CLEAR_MARKET_DETAIL = 'CLEAR_MARKET_DETAIL'
+export const UPDATE_USER_INFO = 'UPDATE_USER_INFO'
 
 export const atomStatusMap = {
     'INIT': 'store.初始化',

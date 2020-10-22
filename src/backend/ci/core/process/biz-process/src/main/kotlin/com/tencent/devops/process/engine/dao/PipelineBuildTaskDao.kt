@@ -36,7 +36,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.DSLContext
 import org.jooq.InsertSetMoreStep
 import org.jooq.Query
@@ -76,7 +76,8 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                     START_TIME,
                     END_TIME,
                     APPROVER,
-                    ADDITIONAL_OPTIONS
+                    ADDITIONAL_OPTIONS,
+                    ATOM_CODE
                 )
                     .values(
                         buildTask.pipelineId,
@@ -96,7 +97,8 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         buildTask.startTime,
                         buildTask.endTime,
                         buildTask.approver,
-                        objectMapper.writeValueAsString(buildTask.additionalOptions)
+                        objectMapper.writeValueAsString(buildTask.additionalOptions),
+                        buildTask.atomCode
                     )
                     .execute()
             }
@@ -135,8 +137,9 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         } else null)
                         .set(ERROR_TYPE, it.errorType?.ordinal)
                         .set(ERROR_CODE, it.errorCode)
-                        .set(ERROR_MSG, CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX))
+                        .set(ERROR_MSG, CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
                         .set(CONTAINER_HASH_ID, it.containerHashId)
+                        .set(ATOM_CODE, it.atomCode)
                 )
             }
             dslContext.batch(records).execute()
@@ -172,6 +175,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         .set(ERROR_CODE, it.errorCode)
                         .set(ERROR_MSG, it.errorMsg)
                         .set(CONTAINER_HASH_ID, it.containerHashId)
+                        .set(ATOM_CODE, it.atomCode)
                         .where(BUILD_ID.eq(it.buildId).and(TASK_ID.eq(it.taskId)))
                 )
             }
@@ -260,7 +264,8 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                 endTime = endTime,
                 errorType = if (errorType == null) null else ErrorType.values()[errorType],
                 errorCode = errorCode,
-                errorMsg = errorMsg
+                errorMsg = errorMsg,
+                atomCode = atomCode
             )
         }
     }
@@ -299,9 +304,9 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                     update.set(STARTER, userId)
             }
             if (errorType != null) {
-                update.set(ERROR_TYPE, errorType.ordinal)
+                update.set(ERROR_TYPE, errorType.num)
                 update.set(ERROR_CODE, errorCode)
-                update.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX))
+                update.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
             }
             update.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
 
@@ -316,6 +321,24 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                     .set(TOTAL_TIME, (record.totalTime ?: 0) + totalTime)
                     .where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
             }
+        }
+    }
+
+    fun setTaskErrorInfo(
+        dslContext: DSLContext,
+        buildId: String,
+        taskId: String,
+        errorType: ErrorType,
+        errorCode: Int,
+        errorMsg: String
+    ) {
+        with(T_PIPELINE_BUILD_TASK) {
+            dslContext.update(this)
+                .set(ERROR_TYPE, errorType.num)
+                .set(ERROR_CODE, errorCode)
+                .set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
+                .where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId))
+                .execute()
         }
     }
 

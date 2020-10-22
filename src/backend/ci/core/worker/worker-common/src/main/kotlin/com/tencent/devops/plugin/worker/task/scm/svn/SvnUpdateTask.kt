@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.SVNVersion
+import com.tencent.devops.plugin.worker.task.scm.util.DirectoryUtil
 import com.tencent.devops.plugin.worker.task.scm.util.RepoCommitUtil
 import com.tencent.devops.plugin.worker.task.scm.util.SvnUtil
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
@@ -57,6 +58,7 @@ import org.tmatesoft.svn.core.wc.SVNStatusType
 import org.tmatesoft.svn.core.wc.SVNUpdateClient
 import org.tmatesoft.svn.core.wc2.SvnTarget
 import java.io.File
+import java.nio.file.Files
 import java.util.LinkedList
 import java.util.Queue
 
@@ -107,7 +109,9 @@ open class SvnUpdateTask constructor(
     protected open fun cleanupWorkspace(workspace: File) {
         if (workspace.exists()) {
             LoggerService.addNormalLine("Clean up the workspace(${workspace.path})")
-            workspace.deleteRecursively()
+            Files.list(workspace.toPath()).forEach(DirectoryUtil::deleteRecursively)
+            val deleteSuccess = true
+            LoggerService.addNormalLine("delete the file: ${workspace.canonicalPath} ($deleteSuccess)")
         }
     }
 

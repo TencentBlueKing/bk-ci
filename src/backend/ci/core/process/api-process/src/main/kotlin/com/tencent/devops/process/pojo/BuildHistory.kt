@@ -27,6 +27,7 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import io.swagger.annotations.ApiModel
@@ -80,12 +81,8 @@ data class BuildHistory(
     val startType: String?,
     @ApiModelProperty("推荐版本号", required = false)
     val recommendVersion: String?,
-    @ApiModelProperty("任务执行错误类型", required = false)
-    val errorType: String?,
-    @ApiModelProperty("任务执行错误码", required = false)
-    val errorCode: Int?,
-    @ApiModelProperty("任务执行错误描述", required = false)
-    val errorMsg: String?,
     @ApiModelProperty("是否重试", required = false)
-    val retry: Boolean = false
+    val retry: Boolean = false,
+    @ApiModelProperty("流水线任务执行错误", required = false)
+    var errorInfoList: List<ErrorInfo>?
 )

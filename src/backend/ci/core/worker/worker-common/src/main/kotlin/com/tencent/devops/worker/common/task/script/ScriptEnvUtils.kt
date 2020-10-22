@@ -26,6 +26,7 @@
 
 package com.tencent.devops.worker.common.task.script
 
+import com.tencent.devops.worker.common.utils.ExecutorUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -36,14 +37,17 @@ object ScriptEnvUtils {
 
     fun cleanEnv(buildId: String, workspace: File) {
         cleanScriptEnv(workspace, getEnvFile(buildId))
+        cleanScriptEnv(workspace, "$buildId-$ENV_FILE")
     }
 
     fun getEnv(buildId: String, workspace: File): Map<String, String> {
-        return readScriptEnv(workspace, getEnvFile(buildId))
+        return readScriptEnv(workspace, "$buildId-$ENV_FILE")
+            .plus(readScriptEnv(workspace, getEnvFile(buildId)))
     }
 
     fun getEnvFile(buildId: String): String {
-        return "$buildId-$ENV_FILE"
+        val randomNum = ExecutorUtil.getThreadLocal()
+        return "$buildId-$randomNum-$ENV_FILE"
     }
 
     fun getQualityGatewayEnvFile() = QUALITY_GATEWAY_FILE

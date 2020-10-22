@@ -144,7 +144,7 @@
                     this.scrollEle = document.querySelector(this.scrollClass)
                     document.addEventListener('mousemove', this.mapMove)
                     document.addEventListener('mouseup', this.moveEnd)
-                    this.scrollEle.addEventListener('scroll', this.eleScroll, { passive: true })
+                    this.scrollEle && this.scrollEle.addEventListener('scroll', this.eleScroll, { passive: true })
                     const dpr = window.devicePixelRatio || 1
                     this.$refs.minMapCanvas.width = 200 * dpr
                     this.$refs.minMapCanvas.height = 134 * dpr

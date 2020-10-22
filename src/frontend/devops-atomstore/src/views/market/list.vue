@@ -1,6 +1,6 @@
 <template>
     <article v-bkloading="{ isLoading, opacity: 1 }">
-        <h3 class="list-type" v-clickoutside="closeOrderList">
+        <h3 class="list-type" v-bk-clickoutside="closeOrderList">
             <span class="list-count"> {{ $t('store.总数 :') }} <strong>{{count}}</strong></span>
             <span class="list-sort"> {{ $t('store.排序：') }} </span>
             <span :class="[{ 'show-type': showOrderList }, 'list-order']" @click.stop="showOrderList = !showOrderList">{{ orderType.name }}</span>
@@ -18,15 +18,10 @@
 
 <script>
     import card from '@/components/common/card'
-    import clickoutside from '@/directives/clickoutside'
 
     export default {
         components: {
             card
-        },
-
-        directives: {
-            clickoutside
         },
 
         data () {

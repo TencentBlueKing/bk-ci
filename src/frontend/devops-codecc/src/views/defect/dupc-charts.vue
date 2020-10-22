@@ -8,8 +8,8 @@
                         v-bind="panel"
                         :key="index">
                     </bk-tab-panel>
-                    
                 </bk-tab>
+                <span class="codecc-icon icon-export-excel excel-download" @click="downloadExcel" v-bk-tooltips="$t('导出Excel')"></span>
             </div>
         </div>
         <div class="main-container">
@@ -70,6 +70,8 @@
     import chart from '@/mixins/chart'
     import echarts from 'echarts/lib/echarts'
     import { format } from 'date-fns'
+    // eslint-disable-next-line
+    import { export_json_to_excel } from 'vendor/export2Excel'
 
     export default {
         components: {
@@ -276,6 +278,40 @@
             },
             handleHref (query) {
                 this.resolveHref('defect-dupc-list', query)
+            },
+            downloadExcel () {
+                const data = [
+                    {
+                        riskLevel: this.$t('极高风险(>=20%)'),
+                        fileNum: this.dupcData[0]
+                    },
+                    {
+                        riskLevel: this.$t('高风险11%20%'),
+                        fileNum: this.dupcData[1]
+                    },
+                    {
+                        riskLevel: this.$t('中风险5%11%'),
+                        fileNum: this.dupcData[2]
+                    },
+                    {
+                        riskLevel: this.$t('Total'),
+                        fileNum: this.dupcData[3]
+                    }
+                ]
+                const excelData1 = this.getExcelData([this.$t('风险级别'), this.$t('文件个数')], ['riskLevel', 'fileNum'], data, '重复文件分布')
+                const excelData = [excelData1]
+                const title = `${this.taskDetail.nameCn}-${this.taskDetail.taskId}-${this.toolId}-${this.$t('数据报表')}-${new Date().toISOString()}`
+                const sheets = ['重复文件分布']
+                export_json_to_excel('', excelData, title, sheets)
+            },
+            getExcelData (tHeader, filterVal, list, sheetName) {
+                const data = this.formatJson(filterVal, list)
+                return { tHeader, data, sheetName }
+            },
+            formatJson (filterVal, list) {
+                return list.map(item => filterVal.map(j => {
+                    return item[j]
+                }))
             }
         }
     }
@@ -374,5 +410,15 @@
 
     .tips {
         font-size: 12px;
+    }
+    .excel-download {
+        position: absolute;
+        right: 20px;
+        top: 29px;
+        cursor: pointer;
+        padding-right: 10px;
+        &:hover {
+            color: #3a84ff;
+        }
     }
 </style>

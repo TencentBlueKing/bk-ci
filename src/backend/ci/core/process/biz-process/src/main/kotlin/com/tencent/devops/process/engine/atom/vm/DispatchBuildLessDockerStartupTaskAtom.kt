@@ -39,7 +39,7 @@ import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
@@ -58,7 +58,6 @@ import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -75,7 +74,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
     private val client: Client,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<NormalContainer> {
     override fun getParamElement(task: PipelineBuildTask): NormalContainer {
         return JsonUtil.mapTo(task.taskParams, NormalContainer::class.java)
@@ -88,44 +87,45 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         param: NormalContainer,
         runVariables: Map<String, String>
     ): AtomResponse {
-        var status: BuildStatus = BuildStatus.FAILED
+        var atomResponse: AtomResponse
         try {
-            status = startUpDocker(task, param)
-        } catch (t: BuildTaskException) {
-            LogUtils.addRedLine(
-                rabbitTemplate,
-                task.buildId,
-                "Build container init failed: ${t.message}",
-                task.taskId,
-                task.containerHashId,
-                task.executeCount ?: 1
+            atomResponse = startUpDocker(task, param)
+        } catch (e: BuildTaskException) {
+            buildLogPrinter.addRedLine(
+                buildId = task.buildId,
+                message = "Build container init failed: ${e.message}",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
             )
-            logger.warn("Build container init failed", t)
-            AtomResponse(
+            logger.warn("Build container init failed", e)
+            atomResponse = AtomResponse(
                 buildStatus = BuildStatus.FAILED,
-                errorType = t.errorType,
-                errorCode = t.errorCode,
-                errorMsg = t.message
+                errorType = e.errorType,
+                errorCode = e.errorCode,
+                errorMsg = e.message
             )
         } catch (t: Throwable) {
-            LogUtils.addRedLine(
-                rabbitTemplate, task.buildId,
-                "Build container init failed: ${t.message}", task.taskId, task.containerHashId, task.executeCount ?: 1
+            buildLogPrinter.addRedLine(
+                buildId = task.buildId,
+                message = "Build container init failed: ${t.message}",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
             )
             logger.warn("Build container init failed", t)
-            AtomResponse(
+            atomResponse = AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                 errorMsg = t.message
             )
-        } finally {
-            return AtomResponse(status)
         }
+        return atomResponse
     }
 
     // TODO Exception中的错误码对应提示信息修改提取
-    fun startUpDocker(task: PipelineBuildTask, param: NormalContainer): BuildStatus {
+    fun startUpDocker(task: PipelineBuildTask, param: NormalContainer): AtomResponse {
         val projectId = task.projectId
         val pipelineId = task.pipelineId
         val buildId = task.buildId
@@ -168,7 +168,12 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             buildStatus = BuildStatus.RUNNING
         )
         // 读取原子市场中的原子信息，写入待构建处理
-        val atoms = AtomUtils.parseContainerMarketAtom(container, task, client, rabbitTemplate)
+        val atoms = AtomUtils.parseContainerMarketAtom(
+            container = container,
+            task = task,
+            client = client,
+            buildLogPrinter = buildLogPrinter
+        )
 
         val source = "dockerStartupTaskAtom"
         val dispatchType =
@@ -182,6 +187,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 userId = task.starter,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
+                containerId = task.containerId,
                 containerHashId = task.containerHashId,
                 os = osType.name,
                 startTime = System.currentTimeMillis(),
@@ -201,13 +207,18 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             )
         )
         logger.info("[$buildId]|STARTUP_DOCKER|($vmSeqId)|Dispatch startup")
-        return BuildStatus.CALL_WAITING
+        return AtomResponse(BuildStatus.CALL_WAITING)
     }
 
     override fun tryFinish(task: PipelineBuildTask, param: NormalContainer, runVariables: Map<String, String>, force: Boolean): AtomResponse {
         return if (force) {
             if (BuildStatus.isFinish(task.status)) {
-                AtomResponse(task.status)
+                AtomResponse(
+                    buildStatus = task.status,
+                    errorType = task.errorType,
+                    errorCode = task.errorCode,
+                    errorMsg = task.errorMsg
+                )
             } else { // 强制终止的设置为失败
                 logger.warn("[${task.buildId}]|[FORCE_STOP_BUILD_LESS_IN_START_TASK]")
                 pipelineEventDispatcher.dispatch(
@@ -224,7 +235,12 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 defaultFailAtomResponse
             }
         } else {
-            AtomResponse(task.status)
+            AtomResponse(
+                buildStatus = task.status,
+                errorType = task.errorType,
+                errorCode = task.errorCode,
+                errorMsg = task.errorMsg
+            )
         }
     }
 
@@ -261,6 +277,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             // 防止
             val taskParams = container.genTaskParams()
             taskParams["elements"] = emptyList<Element>() // elements可能过多导致存储问题
+            val taskAtom = AtomUtils.parseAtomBeanName(DispatchBuildLessDockerStartupTaskAtom::class.java)
             return PipelineBuildTask(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -273,14 +290,15 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 taskId = VMUtils.genStartVMTaskId(container.id!!),
                 taskName = "Prepare_Job#${container.id!!}(N)",
                 taskType = EnvControlTaskType.NORMAL.name,
-                taskAtom = AtomUtils.parseAtomBeanName(DispatchBuildLessDockerStartupTaskAtom::class.java),
+                taskAtom = taskAtom,
                 status = BuildStatus.QUEUE,
                 taskParams = taskParams,
                 executeCount = 1,
                 starter = userId,
                 approver = null,
                 subBuildId = null,
-                additionalOptions = null
+                additionalOptions = null,
+                atomCode = taskAtom
             )
         }
     }

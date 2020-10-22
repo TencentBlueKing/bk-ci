@@ -72,7 +72,7 @@ import {
     SET_IMPORTED_JSON
 } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
-import { hashID } from '@/utils/util'
+import { hashID, randomString } from '@/utils/util'
 
 function rootCommit (commit,
     ACTION_CONST, payload) {
@@ -308,7 +308,7 @@ export default {
             const defaultType = (typeList || []).find(type => type.type === defaultBuildType) || {}
             const defaultBuildResource = defaultType.defaultBuildResource || {}
             const baseOSObject = baseOS !== 'NONE' ? { baseOS } : {}
-            const isError = ['WINDOWS'].includes(baseOS)
+            const isError = ['WINDOWS', 'MACOS'].includes(baseOS)
             commit(ADD_CONTAINER, {
                 ...restPayload,
                 newContainer: {
@@ -327,6 +327,8 @@ export default {
                     },
                     elements: [],
                     containerId: `c-${hashID(32)}`,
+                    jobId: `job_${randomString(3)}`,
+                    nfsSwitch: false,
                     isError
                 }
             })
@@ -449,18 +451,26 @@ export default {
     },
 
     // 第一次拉取日志
-    getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe }) {
-        let url = `${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`
-        if (tag || currentExe) url += '?'
-        if (tag) url += `tag=${tag}`
-        if (tag && currentExe) url += '&'
-        if (currentExe) url += `executeCount=${currentExe}`
-        return request.get(url)
+    getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, subTag }) {
+        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
+            params: {
+                tag,
+                executeCount: currentExe,
+                subTag
+            }
+        })
     },
 
-    // 第一次拉取日志
-    getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, lineNo }) {
-        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after?start=${lineNo}${currentExe ? '&executeCount=' + currentExe : ''}${tag ? '&tag=' + tag : ''}`)
+    // 后续拉取日志
+    getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, lineNo, subTag }) {
+        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
+            params: {
+                start: lineNo,
+                executeCount: currentExe,
+                tag,
+                subTag
+            }
+        })
     },
 
     getMacSysVersion () {

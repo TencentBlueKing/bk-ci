@@ -36,35 +36,35 @@ import com.tencent.bk.codecc.defect.model.DefectEntity;
 import com.tencent.bk.codecc.defect.model.StatisticEntity;
 import com.tencent.bk.codecc.defect.utils.ConvertUtil;
 import com.tencent.bk.codecc.defect.vo.*;
-import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectExtReqVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectReqVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectRspVO;
 import com.tencent.bk.codecc.defect.vo.common.CommonDefectDetailQueryRspVO;
 import com.tencent.bk.codecc.defect.vo.common.CommonDefectQueryRspVO;
 import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO;
-import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectRespVO;
+import com.tencent.bk.codecc.defect.vo.common.QueryWarningPageInitRspVO;
 import com.tencent.bk.codecc.defect.vo.openapi.PkgDefectDetailVO;
 import com.tencent.bk.codecc.defect.vo.openapi.TaskDefectVO;
-import com.tencent.bk.codecc.task.api.ServiceBaseDataResource;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.api.UserMetaRestResource;
 import com.tencent.bk.codecc.task.vo.GongfengPublicProjVO;
 import com.tencent.bk.codecc.task.vo.MetadataVO;
-import com.tencent.bk.codecc.task.vo.RepoInfoVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.bk.codecc.task.vo.gongfeng.ForkProjVO;
 import com.tencent.bk.codecc.task.vo.gongfeng.ProjectStatVO;
 import com.tencent.devops.common.api.QueryTaskListReqVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Page;
+import com.tencent.devops.common.auth.api.pojo.external.AuthExConstantsKt;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
-import com.tencent.devops.common.service.BizComponentFactory;
+import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.util.DateTimeUtils;
+import com.tencent.devops.common.util.GitUtil;
 import com.tencent.devops.common.util.ListSortUtil;
 import com.tencent.devops.common.util.MD5Utils;
+import lombok.val;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -72,10 +72,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.Collection;
 import java.util.List;
@@ -83,21 +85,28 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.tencent.devops.common.auth.api.pojo.external.AuthExConstantsKt.KEY_CREATE_FROM;
+
 /**
  * 告警管理抽象类
  *
  * @version V1.0
  * @date 2019/5/28
  */
-public abstract class AbstractQueryWarningBizService implements IQueryWarningBizService
-{
+public abstract class AbstractQueryWarningBizService implements IQueryWarningBizService {
     private static Logger logger = LoggerFactory.getLogger(AbstractQueryWarningBizService.class);
 
+    protected static String EMPTY_FILE_CONTENT_TIPS = "无法获取代码片段。请确保你对代码库拥有权限，且该文件未从代码库中删除。";
+    @Value("${git.domain:#{null}}")
+    private String gitDomain;
     @Autowired
     protected RabbitTemplate rabbitTemplate;
 
     @Autowired
-    private Client client;
+    protected RedisTemplate<String, String> redisTemplate;
+
+    @Autowired
+    protected Client client;
 
     @Autowired
     private TaskLogService taskLogService;
@@ -106,11 +115,13 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
     private CLOCStatisticsDao clocStatisticsDao;
 
     @Autowired
-    private BizComponentFactory<IFilterPathComponent> filterPathBizComponentFactory;
+    private BizServiceFactory<IFilterPathComponent> filterPathBizComponentFactory;
+
+    @Autowired
+    protected PipelineScmService pipelineScmService;
 
     @Override
-    public CommonDefectDetailQueryRspVO processGetFileContentSegmentRequest(long taskId, GetFileContentSegmentReqVO reqModel)
-    {
+    public CommonDefectDetailQueryRspVO processGetFileContentSegmentRequest(long taskId, String userId, GetFileContentSegmentReqVO reqModel) {
         return new CommonDefectDetailQueryRspVO();
     }
 
@@ -123,16 +134,13 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
      * @param defectQueryRspVO
      * @return
      */
-    protected String trimCodeSegment(String fileContent, int beginLine, int endLine, CommonDefectDetailQueryRspVO defectQueryRspVO)
-    {
-        if (fileContent == null)
-        {
-            return "";
+    protected String trimCodeSegment(String fileContent, int beginLine, int endLine, CommonDefectDetailQueryRspVO defectQueryRspVO) {
+        if (StringUtils.isBlank(fileContent)) {
+            return EMPTY_FILE_CONTENT_TIPS;
         }
 
         String[] lines = fileContent.split("\n");
-        if (lines.length <= 2000)
-        {
+        if (lines.length <= 2000) {
             defectQueryRspVO.setTrimBeginLine(1);
             return fileContent;
         }
@@ -140,19 +148,16 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
         int trimBeginLine = 1;
         int trimEndLine = lines.length;
         int limitLines = 500;
-        if (beginLine - limitLines > 0)
-        {
+        if (beginLine - limitLines > 0) {
             trimBeginLine = beginLine - limitLines;
         }
 
-        if (endLine + limitLines < lines.length)
-        {
+        if (endLine + limitLines < lines.length) {
             trimEndLine = endLine + limitLines;
         }
 
         StringBuilder builder = new StringBuilder();
-        for (int i = trimBeginLine - 1; i < trimEndLine - 1; i++)
-        {
+        for (int i = trimBeginLine - 1; i < trimEndLine - 1; i++) {
             builder.append(lines[i] + "\n");
         }
         defectQueryRspVO.setTrimBeginLine(trimBeginLine);
@@ -161,8 +166,7 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
 
 
     @Override
-    public DeptTaskDefectRspVO processDeptTaskDefectReq(DeptTaskDefectReqVO deptTaskDefectReqVO)
-    {
+    public DeptTaskDefectRspVO processDeptTaskDefectReq(DeptTaskDefectReqVO deptTaskDefectReqVO) {
         return null;
     }
 
@@ -174,49 +178,35 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
 
     @Override
     public ToolDefectRspVO processDeptDefectList(DeptTaskDefectReqVO defectQueryReq, Integer pageNum, Integer pageSize,
-            String sortField, Sort.Direction sortType)
-    {
+                                                 String sortField, Sort.Direction sortType) {
         return null;
     }
 
     @Override
-    public CheckerPkgDefectRespVO processOverallDefectRequest(String toolName, DeptTaskDefectExtReqVO reqVO, Integer pageNum, Integer pageSize, Sort.Direction sortType)
-    {
+    public QueryWarningPageInitRspVO pageInit(long taskId, DefectQueryReqVO defectQueryReqVO) {
         return null;
     }
 
-    protected List<MetadataVO> getCodeLangMetadataVoList()
-    {
+    protected List<MetadataVO> getCodeLangMetadataVoList() {
         CodeCCResult<Map<String, List<MetadataVO>>> metaDataCodeCCResult =
                 client.get(UserMetaRestResource.class).metadatas(ComConstants.KEY_CODE_LANG);
-        if (metaDataCodeCCResult.isNotOk() || metaDataCodeCCResult.getData() == null)
-        {
+        if (metaDataCodeCCResult.isNotOk() || metaDataCodeCCResult.getData() == null) {
             logger.error("meta data result is empty! meta data type {}", ComConstants.KEY_CODE_LANG);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
         return metaDataCodeCCResult.getData().get(ComConstants.KEY_CODE_LANG);
     }
 
-
-    protected Map<String, RepoInfoVO> getRepoInfoVoMap(Set<String> bkProjectIds)
-    {
-        CodeCCResult<Map<String, RepoInfoVO>> repoUrlByProjectsCodeCCResult =
-                client.get(ServiceBaseDataResource.class).getRepoUrlByProjects(bkProjectIds);
-        if (repoUrlByProjectsCodeCCResult.isNotOk() || repoUrlByProjectsCodeCCResult.getData() == null)
-        {
-            logger.error("bkProjectId repo url result is empty! {}", bkProjectIds.toString());
-            throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
-        }
-        return repoUrlByProjectsCodeCCResult.getData();
+    @Override
+    public ToolDefectRspVO processToolWarningRequest(Long taskId, DefectQueryReqVO queryWarningReq, Integer pageNum,
+                                                     Integer pageSize, String sortField, Sort.Direction sortType) {
+        return null;
     }
 
-
-    protected Map<Integer, GongfengPublicProjVO> getGongfengPublicProjVoMap(Set<Integer> gfProjectIds)
-    {
+    protected Map<Integer, GongfengPublicProjVO> getGongfengPublicProjVoMap(Set<Integer> gfProjectIds) {
         CodeCCResult<Map<Integer, GongfengPublicProjVO>> gongfengProjCodeCCResult =
                 client.get(ServiceTaskRestResource.class).getGongfengProjInfo(gfProjectIds);
-        if (gongfengProjCodeCCResult.isNotOk() || gongfengProjCodeCCResult.getData() == null)
-        {
+        if (gongfengProjCodeCCResult.isNotOk() || gongfengProjCodeCCResult.getData() == null) {
             logger.error("gong feng project result is empty! gong feng id: {}", gfProjectIds.toString());
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{"gongfengProj empty"}, null);
         }
@@ -225,21 +215,18 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
 
 
     protected void setGongfengInfo(Map<Integer, GongfengPublicProjVO> gongfengPublicProjVoMap,
-            Map<Integer, ProjectStatVO> gongfengStatProjVoMap, TaskDetailVO taskDetailVO, TaskDefectVO taskDefectVO)
-    {
+                                   Map<Integer, ProjectStatVO> gongfengStatProjVoMap, TaskDetailVO taskDetailVO, TaskDefectVO taskDefectVO) {
         int forkedFromId = 0;
         String repoUrl = "";
         Integer gongfengProjectId = taskDetailVO.getGongfengProjectId();
         GongfengPublicProjVO publicProjVO = gongfengPublicProjVoMap.get(gongfengProjectId);
-        if (publicProjVO != null)
-        {
+        if (publicProjVO != null) {
             repoUrl = publicProjVO.getHttpUrlToRepo();
 
             // 当工蜂ID与forked来源ID不一致时表示该代码库为fork 需赋值给forkedFromId
             ForkProjVO forkedFromProject = publicProjVO.getForkedFromProject();
             Integer forkedFromProjectId = forkedFromProject.getId();
-            if (forkedFromProjectId != 0 && !gongfengProjectId.equals(forkedFromProjectId))
-            {
+            if (forkedFromProjectId != 0 && !gongfengProjectId.equals(forkedFromProjectId)) {
                 forkedFromId = forkedFromProjectId;
             }
         }
@@ -251,8 +238,7 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
         String owners = "";
         Integer repoVisibilityLevel = null;
         ProjectStatVO projectStatVO = gongfengStatProjVoMap.get(gongfengProjectId);
-        if (projectStatVO != null)
-        {
+        if (projectStatVO != null) {
             repoBelong = projectStatVO.getBelong();
             repoVisibilityLevel = projectStatVO.getVisibilityLevel();
             owners = projectStatVO.getOwners();
@@ -263,12 +249,10 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
     }
 
 
-    protected Map<Integer, ProjectStatVO> getGongfengStatProjVoMap(Integer bgId, Set<Integer> gfProjectIds)
-    {
+    protected Map<Integer, ProjectStatVO> getGongfengStatProjVoMap(Integer bgId, Set<Integer> gfProjectIds) {
         CodeCCResult<Map<Integer, ProjectStatVO>> gongfengStatCodeCCResult =
                 client.get(ServiceTaskRestResource.class).getGongfengStatProjInfo(bgId, gfProjectIds);
-        if (gongfengStatCodeCCResult.isNotOk() || gongfengStatCodeCCResult.getData() == null)
-        {
+        if (gongfengStatCodeCCResult.isNotOk() || gongfengStatCodeCCResult.getData() == null) {
             logger.error("gong feng project result is empty! gong feng id: {}", gfProjectIds.toString());
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{"gongfengStat empty"}, null);
         }
@@ -277,15 +261,13 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
 
 
     protected QueryTaskListReqVO getQueryTaskListReqVO(String toolName, Integer bgId, Integer deptId, int taskStatus,
-            Integer pageNum, Integer pageSize, Sort.Direction sortType)
-    {
+                                                       Integer pageNum, Integer pageSize, Sort.Direction sortType) {
         QueryTaskListReqVO queryTaskListReqVO = new QueryTaskListReqVO();
         queryTaskListReqVO.setBgId(bgId);
         queryTaskListReqVO.setStatus(taskStatus);
         queryTaskListReqVO.setToolName(toolName);
 
-        if (deptId != null)
-        {
+        if (deptId != null) {
             queryTaskListReqVO.setDeptIds(Lists.newArrayList(deptId));
         }
 
@@ -304,30 +286,25 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
      * @param statisticsTask 任务列表
      * @return page obj
      */
-    protected Page<TaskDefectVO> getTaskDefectVoPage(Integer pageNum, Integer pageSize, List<TaskDefectVO> statisticsTask)
-    {
-        if (CollectionUtils.isNotEmpty(statisticsTask))
-        {
+    protected Page<TaskDefectVO> getTaskDefectVoPage(Integer pageNum, Integer pageSize, List<TaskDefectVO> statisticsTask) {
+        if (CollectionUtils.isNotEmpty(statisticsTask)) {
             statisticsTask.sort((o1, o2) -> Long.compare(o2.getTaskId(), o1.getTaskId()));
         }
 
         int totalSize = statisticsTask.size();
         int pageSizeNum = 10;
         int totalPageNum = 0;
-        if (pageSize != null && pageSize >= 0)
-        {
+        if (pageSize != null && pageSize >= 0) {
             pageSizeNum = pageSize;
         }
-        if (totalSize > 0)
-        {
+        if (totalSize > 0) {
             totalPageNum = (totalSize + pageSizeNum - 1) / pageSizeNum;
         }
 
         pageNum = pageNum == null || pageNum - 1 < 0 ? 0 : pageNum - 1;
         int subListBeginIdx = pageNum * pageSizeNum;
         int subListEndIdx = subListBeginIdx + pageSizeNum;
-        if (subListBeginIdx > totalSize)
-        {
+        if (subListBeginIdx > totalSize) {
             subListBeginIdx = 0;
         }
         List<TaskDefectVO> taskDefectVoList =
@@ -344,19 +321,15 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
      * @param taskIdSet         符合条件的任务集合
      */
     protected void statisticsCheckerTaskCount(Map<String, PkgDefectDetailVO> statisticsChecker,
-            Map<Long, List<String>> taskCheckersMap, Collection<Long> taskIdSet)
-    {
-        for (Map.Entry<Long, List<String>> entry : taskCheckersMap.entrySet())
-        {
+                                              Map<Long, List<String>> taskCheckersMap, Collection<Long> taskIdSet) {
+        for (Map.Entry<Long, List<String>> entry : taskCheckersMap.entrySet()) {
             // 过滤不符合条件的任务ID
-            if (!taskIdSet.contains(entry.getKey()))
-            {
+            if (!taskIdSet.contains(entry.getKey())) {
                 continue;
             }
 
             List<String> taskCheckers = entry.getValue();
-            for (String checker : taskCheckers)
-            {
+            for (String checker : taskCheckers) {
                 statisticsChecker.get(checker).addTaskCount();
             }
         }
@@ -374,26 +347,20 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
      * @return
      */
     protected <T> org.springframework.data.domain.Page<T> sortAndPage(int pageNum, int pageSize, String sortField,
-                                                                      Sort.Direction sortType, List<T> defectVOs)
-    {
-        if (StringUtils.isEmpty(sortField))
-        {
+                                                                      Sort.Direction sortType, List<T> defectVOs) {
+        if (StringUtils.isEmpty(sortField)) {
             sortField = "severity";
         }
-        if (null == sortType)
-        {
+        if (null == sortType) {
             sortType = Sort.Direction.ASC;
         }
 
         // 严重程度要跟前端传入的排序类型相反
-        if ("severity".equals(sortField))
-        {
-            if (sortType.isAscending())
-            {
+        if ("severity".equals(sortField)) {
+            if (sortType.isAscending()) {
                 sortType = Sort.Direction.DESC;
             }
-            else
-            {
+            else {
                 sortType = Sort.Direction.ASC;
             }
         }
@@ -403,8 +370,7 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
         pageSize = pageSize <= 0 ? 10 : pageSize;
         int subListBeginIdx = pageNum * pageSize;
         int subListEndIdx = subListBeginIdx + pageSize;
-        if (subListBeginIdx > total)
-        {
+        if (subListBeginIdx > total) {
             subListBeginIdx = 0;
         }
         defectVOs = defectVOs.subList(subListBeginIdx, subListEndIdx > total ? total : subListEndIdx);
@@ -421,20 +387,16 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
      * @param status
      * @return
      */
-    protected boolean isNotMatchStatus(Set<String> condStatusList, int status)
-    {
+    protected boolean isNotMatchStatus(Set<String> condStatusList, int status) {
         boolean notMatchStatus = true;
-        for (String condStatus : condStatusList)
-        {
+        for (String condStatus : condStatusList) {
             // 查询条件是待修复，且告警状态是NEW
-            if (ComConstants.DefectStatus.NEW.value() == Integer.valueOf(condStatus) && ComConstants.DefectStatus.NEW.value() == status)
-            {
+            if (ComConstants.DefectStatus.NEW.value() == Integer.valueOf(condStatus) && ComConstants.DefectStatus.NEW.value() == status) {
                 notMatchStatus = false;
                 break;
             }
             // 查询条件是已修复或已忽略，且告警状态是匹配
-            else if (ComConstants.DefectStatus.NEW.value() < Integer.valueOf(condStatus) && (Integer.valueOf(condStatus) & status) > 0)
-            {
+            else if (ComConstants.DefectStatus.NEW.value() < Integer.valueOf(condStatus) && (Integer.valueOf(condStatus) & status) > 0) {
                 notMatchStatus = false;
                 break;
             }
@@ -443,26 +405,20 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
         return notMatchStatus;
     }
 
-    protected DefectDetailVO getDefectDetailVO(long taskId, DefectEntity defectEntity)
-    {
+    protected DefectDetailVO getDefectDetailVO(long taskId, DefectEntity defectEntity) {
         DefectDetailVO defectDetailVO = new DefectDetailVO();
         BeanUtils.copyProperties(defectEntity, defectDetailVO);
         List<DefectEntity.DefectInstance> defectInstanceList = defectEntity.getDefectInstances();
-        if (CollectionUtils.isNotEmpty(defectInstanceList))
-        {
-            for (DefectEntity.DefectInstance defectInstance : defectInstanceList)
-            {
+        if (CollectionUtils.isNotEmpty(defectInstanceList)) {
+            for (DefectEntity.DefectInstance defectInstance : defectInstanceList) {
                 List<DefectEntity.Trace> traces = defectInstance.getTraces();
-                for (DefectEntity.Trace trace : traces)
-                {
+                for (DefectEntity.Trace trace : traces) {
                     parseTrace(defectDetailVO, trace);
                 }
             }
-            if (defectDetailVO.getFileInfoMap().size() < 1)
-            {
+            if (defectDetailVO.getFileInfoMap().size() < 1) {
                 String md5 = defectDetailVO.getFileMD5();
-                if (StringUtils.isEmpty(md5))
-                {
+                if (StringUtils.isEmpty(md5)) {
                     md5 = MD5Utils.getMD5(defectDetailVO.getFilePathname());
                 }
                 DefectDetailVO.FileInfo fileInfo = new DefectDetailVO.FileInfo();
@@ -477,8 +433,7 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
         return defectDetailVO;
     }
 
-    protected DefectDetailVO getFilesContent(DefectDetailVO defectDetailVO)
-    {
+    protected DefectDetailVO getFilesContent(DefectDetailVO defectDetailVO) {
         return defectDetailVO;
     }
 
@@ -488,12 +443,9 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
      * @param defectDetailVO
      * @param trace
      */
-    private void parseTrace(DefectDetailVO defectDetailVO, DefectEntity.Trace trace)
-    {
-        if (trace.getLinkTrace() != null)
-        {
-            for (DefectEntity.Trace linkTrace : trace.getLinkTrace())
-            {
+    private void parseTrace(DefectDetailVO defectDetailVO, DefectEntity.Trace trace) {
+        if (trace.getLinkTrace() != null) {
+            for (DefectEntity.Trace linkTrace : trace.getLinkTrace()) {
                 parseTrace(defectDetailVO, linkTrace);
             }
         }
@@ -502,15 +454,13 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
         int lineNumber = trace.getLineNumber();
 
         String md5 = trace.getFileMD5();
-        if (StringUtils.isEmpty(md5))
-        {
+        if (StringUtils.isEmpty(md5)) {
             md5 = MD5Utils.getMD5(fileName);
             trace.setFileMD5(md5);
         }
 
         DefectDetailVO.FileInfo fileInfo = defectDetailVO.getFileInfoMap().get(md5);
-        if (fileInfo == null)
-        {
+        if (fileInfo == null) {
             fileInfo = new DefectDetailVO.FileInfo();
             fileInfo.setFilePathname(fileName);
             fileInfo.setFileMD5(md5);
@@ -518,29 +468,22 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
             fileInfo.setMaxDefectLineNum(lineNumber);
             defectDetailVO.getFileInfoMap().put(md5, fileInfo);
         }
-        else
-        {
-            if (lineNumber < fileInfo.getMinDefectLineNum())
-            {
+        else {
+            if (lineNumber < fileInfo.getMinDefectLineNum()) {
                 fileInfo.setMinDefectLineNum(lineNumber);
             }
-            else if (lineNumber > fileInfo.getMaxDefectLineNum())
-            {
+            else if (lineNumber > fileInfo.getMaxDefectLineNum()) {
                 fileInfo.setMaxDefectLineNum(lineNumber);
             }
         }
     }
 
-    public boolean defectCommitSuccess(long taskId, String toolName, String buildId)
-    {
+    public boolean defectCommitSuccess(long taskId, String toolName, String buildId) {
         boolean result = false;
         TaskLogVO taskLogVO = taskLogService.getBuildTaskLog(taskId, toolName, buildId);
-        if (taskLogVO != null && CollectionUtils.isNotEmpty(taskLogVO.getStepArray()))
-        {
-            for (TaskLogVO.TaskUnit taskUnit : taskLogVO.getStepArray())
-            {
-                if (ComConstants.Step4MutliTool.COMMIT.value() == taskUnit.getStepNum() && ComConstants.StepFlag.SUCC.value() == taskUnit.getFlag())
-                {
+        if (taskLogVO != null && CollectionUtils.isNotEmpty(taskLogVO.getStepArray())) {
+            for (TaskLogVO.TaskUnit taskUnit : taskLogVO.getStepArray()) {
+                if (ComConstants.Step4MutliTool.COMMIT.value() == taskUnit.getStepNum() && ComConstants.StepFlag.SUCC.value() == taskUnit.getFlag()) {
                     result = true;
                     break;
                 }
@@ -549,16 +492,12 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
         return result;
     }
 
-    public boolean defectSynsSuccess(long taskId, String toolName, String buildId)
-    {
+    public boolean defectSynsSuccess(long taskId, String toolName, String buildId) {
         boolean result = false;
         TaskLogVO taskLogVO = taskLogService.getBuildTaskLog(taskId, toolName, buildId);
-        if (taskLogVO != null && CollectionUtils.isNotEmpty(taskLogVO.getStepArray()))
-        {
-            for (TaskLogVO.TaskUnit taskUnit : taskLogVO.getStepArray())
-            {
-                if (getSubmitStepNum() == taskUnit.getStepNum() && ComConstants.StepFlag.SUCC.value() == taskUnit.getFlag())
-                {
+        if (taskLogVO != null && CollectionUtils.isNotEmpty(taskLogVO.getStepArray())) {
+            for (TaskLogVO.TaskUnit taskUnit : taskLogVO.getStepArray()) {
+                if (getSubmitStepNum() == taskUnit.getStepNum() && ComConstants.StepFlag.SUCC.value() == taskUnit.getFlag()) {
                     result = true;
                     break;
                 }
@@ -577,8 +516,7 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
     public abstract int getSubmitStepNum();
 
 
-    protected CodeCommentVO convertCodeComment(CodeCommentEntity codeCommentEntity)
-    {
+    protected CodeCommentVO convertCodeComment(CodeCommentEntity codeCommentEntity) {
         //设置告警评论
         CodeCommentVO codeCommentVO = new CodeCommentVO();
         BeanUtils.copyProperties(codeCommentEntity, codeCommentVO);
@@ -600,17 +538,13 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
      * @param statisticEntity
      * @return
      */
-    public Integer convertMarkStatus(Integer mark, Long markTime, StatisticEntity statisticEntity)
-    {
+    public Integer convertMarkStatus(Integer mark, Long markTime, StatisticEntity statisticEntity) {
         long lastAnalyzeTime = 0L;
-        if (statisticEntity != null)
-        {
+        if (statisticEntity != null) {
             lastAnalyzeTime = statisticEntity.getTime();
         }
-        if (mark != null && mark == ComConstants.MarkStatus.MARKED.value() && markTime != null)
-        {
-            if (markTime < lastAnalyzeTime)
-            {
+        if (mark != null && mark == ComConstants.MarkStatus.MARKED.value() && markTime != null) {
+            if (markTime < lastAnalyzeTime) {
                 mark = ComConstants.MarkStatus.NOT_FIXED.value();
             }
         }
@@ -618,23 +552,20 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
     }
 
     /**
-     *  批量获取最近分析日志
+     * 批量获取最近分析日志
      *
      * @param taskIdSet 任务ID集合
      * @param toolName  指定工具名
      * @return map
      */
-    protected Map<Long, TaskLogVO> getTaskLogVoMap(Set<Long> taskIdSet, String toolName)
-    {
+    protected Map<Long, TaskLogVO> getTaskLogVoMap(Set<Long> taskIdSet, String toolName) {
         Map<Long, TaskLogVO> taskLogVoMap = Maps.newHashMap();
-        if (CollectionUtils.isEmpty(taskIdSet))
-        {
+        if (CollectionUtils.isEmpty(taskIdSet)) {
             return taskLogVoMap;
         }
 
         List<TaskLogVO> taskLogVoList = taskLogService.batchTaskLogList(taskIdSet, toolName);
-        if (CollectionUtils.isNotEmpty(taskLogVoList))
-        {
+        if (CollectionUtils.isNotEmpty(taskLogVoList)) {
             taskLogVoList.forEach(taskLogVO -> taskLogVoMap.put(taskLogVO.getTaskId(), taskLogVO));
         }
 
@@ -644,16 +575,14 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
     /**
      * 赋值任务最近分析状态
      *
-     * @param taskId 任务ID
+     * @param taskId       任务ID
      * @param taskLogVoMap 最新分析日志
      * @param taskDefectVO 告警统计对象
      */
-    protected void setAnalyzeDateStatus(long taskId, Map<Long, TaskLogVO> taskLogVoMap, TaskDefectVO taskDefectVO)
-    {
+    protected void setAnalyzeDateStatus(long taskId, Map<Long, TaskLogVO> taskLogVoMap, TaskDefectVO taskDefectVO) {
         TaskLogVO taskLogVO = taskLogVoMap.get(taskId);
         String analyzeDateStr = "";
-        if (taskLogVO != null)
-        {
+        if (taskLogVO != null) {
             int currStep = taskLogVO.getCurrStep();
             int flag = taskLogVO.getFlag();
             long analyzeStartTime = taskLogVO.getStartTime();
@@ -671,8 +600,7 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
      * @param deptTaskDefectReqVO reqObj
      * @return list
      */
-    protected List<TaskDetailVO> getTaskDetailVoList(DeptTaskDefectReqVO deptTaskDefectReqVO)
-    {
+    protected List<TaskDetailVO> getTaskDetailVoList(DeptTaskDefectReqVO deptTaskDefectReqVO) {
         QueryTaskListReqVO queryTaskListReqVO = new QueryTaskListReqVO();
         queryTaskListReqVO.setTaskIds(deptTaskDefectReqVO.getTaskIds());
         queryTaskListReqVO.setBgId(deptTaskDefectReqVO.getBgId());
@@ -692,10 +620,8 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
      * @param languages  语言类型列表
      * @return map
      */
-    protected Map<Long, Long> getCodeLineNumMap(List<Long> taskIdList, List<String> languages)
-    {
-        if (CollectionUtils.isEmpty(languages))
-        {
+    protected Map<Long, Long> getCodeLineNumMap(List<Long> taskIdList, List<String> languages) {
+        if (CollectionUtils.isEmpty(languages)) {
             languages = Lists.newArrayList("C#", "C++", "C/C++ Header", "Java", "PHP", "Objective C", "Objective C++",
                     "Python", "JavaScript", "Ruby", "Go", "Swift", "TypeScript");
         }
@@ -703,8 +629,7 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
         List<CLOCStatisticEntity> entityList = clocStatisticsDao.batchQueryCodeLineSum(taskIdList, languages);
 
         Map<Long, Long> codeLineCountMap = Maps.newHashMap();
-        if (CollectionUtils.isNotEmpty(entityList))
-        {
+        if (CollectionUtils.isNotEmpty(entityList)) {
             codeLineCountMap = entityList.stream()
                     .collect(Collectors.toMap(CLOCStatisticEntity::getTaskId, CLOCStatisticEntity::getSumCode));
         }
@@ -713,13 +638,65 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
 
     /**
      * 过滤文件路径
+     *
      * @param filePathName 文件路径名
-     * @param createFrom 创建来源
+     * @param createFrom   创建来源
      * @return Boolean
      */
-    public Boolean judgeFilter(String createFrom,String filePathName){
+    public Boolean judgeFilter(String createFrom, String filePathName) {
         //工厂创建不同filterPath的component，区分工蜂项目
-        IFilterPathComponent filterPathComponent = filterPathBizComponentFactory.createComponent(createFrom,ComConstants.BusinessType.FILTER_PATH.value(),IFilterPathComponent.class);
+        IFilterPathComponent filterPathComponent = filterPathBizComponentFactory.createComponent(
+                createFrom, ComConstants.BusinessType.FILTER_PATH.value(), IFilterPathComponent.class);
         return filterPathComponent.judgeFilter(filePathName);
     }
+
+    /**
+     * 获取文件内容
+     *
+     * @param taskId
+     * @param userId
+     * @param url
+     * @param repoId
+     * @param relPath
+     * @param revision
+     * @param branch
+     * @param subModule
+     * @return
+     */
+    protected String getFileContent(long taskId, String userId, String url, String repoId, String relPath,
+                                    String revision, String branch, String subModule) {
+        // check if is oauth
+        boolean isOauth = false;
+        if (StringUtils.isNotBlank(url) && url.contains(gitDomain) && !branch.equals("devops-virtual-branch")) {
+            String createFrom = "";
+
+            // get from redis first
+            Object value = redisTemplate.opsForHash().get(AuthExConstantsKt.PREFIX_TASK_INFO + taskId, KEY_CREATE_FROM);
+            if (value instanceof String) {
+                createFrom = (String) value;
+            }
+
+            // get from remote
+            if (StringUtils.isBlank(createFrom)) {
+                createFrom = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId).getData().getCreateFrom();
+            }
+
+            if (!ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value().equalsIgnoreCase(createFrom)) {
+                isOauth = true;
+            }
+        }
+
+        // get file content
+        String content;
+        if (isOauth) {
+            content = pipelineScmService.getFileContentOauth(userId, GitUtil.INSTANCE.getProjectName(url),
+                    relPath, branch);
+        }
+        else {
+            content = pipelineScmService.getFileContent(taskId, repoId, relPath, revision, branch, subModule);
+        }
+
+        return content;
+    }
+
 }

@@ -30,10 +30,8 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.pipeline.Model
@@ -43,6 +41,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -53,8 +52,8 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.pojo.PipelineSortType
-import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.process.pojo.PipelineStageTag
+import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -77,7 +76,8 @@ class UserPipelineResourceImpl @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineRemoteAuthService: PipelineRemoteAuthService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val stageTagService: StageTagService
+    private val stageTagService: StageTagService,
+    private val pipelineInfoService: PipelineInfoService
 ) : UserPipelineResource {
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
@@ -113,21 +113,15 @@ class UserPipelineResourceImpl @Autowired constructor(
             Permission.CREATE -> AuthPermission.CREATE
             Permission.LIST -> AuthPermission.LIST
         }
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: -1
-        val limit = if (pageSizeNotNull == -1) SQLLimit(0, -1) else PageUtil.convertPageSizeToSQLLimit(
-            pageNotNull,
-            pageSizeNotNull
-        )
         val result = pipelineService.hasPermissionList(
             userId,
             projectId,
             bkAuthPermission,
             excludePipelineId,
-            limit.offset,
-            limit.limit
+            page,
+            pageSize
         )
-        return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
+        return Result(Page(page ?: 0, pageSize ?: -1, result.count, result.records))
     }
 
     override fun create(userId: String, projectId: String, pipeline: Model): Result<PipelineId> {
@@ -399,6 +393,18 @@ class UserPipelineResourceImpl @Autowired constructor(
 
     override fun favor(userId: String, projectId: String, pipelineId: String, favor: Boolean): Result<Boolean> {
         return Result(pipelineGroupService.favorPipeline(userId, projectId, pipelineId, favor))
+    }
+
+    override fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
+        return pipelineInfoService.exportPipeline(userId, projectId, pipelineId)
+    }
+
+    override fun uploadPipeline(userId: String, pipelineInfo: PipelineModelAndSetting, projectId: String): Result<String?> {
+        return Result(pipelineInfoService.uploadPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineModelAndSetting = pipelineInfo
+        ))
     }
 
     private fun checkParam(userId: String, projectId: String) {

@@ -26,12 +26,14 @@
 
 package com.tencent.devops.dispatch.service.dispatcher.docker
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.client.DockerHostClient
+import com.tencent.devops.dispatch.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
@@ -41,13 +43,12 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
 import com.tencent.devops.dispatch.utils.DockerHostUtils
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -55,7 +56,7 @@ import org.springframework.stereotype.Component
 class DockerDispatcher @Autowired constructor(
     private val client: Client,
     private val gray: Gray,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostClient: DockerHostClient,
     private val dockerHostUtils: DockerHostUtils,
@@ -75,14 +76,17 @@ class DockerDispatcher @Autowired constructor(
 
     override fun startUp(pipelineAgentStartupEvent: PipelineAgentStartupEvent) {
         val dockerDispatch = pipelineAgentStartupEvent.dispatchType as DockerDispatchType
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = pipelineAgentStartupEvent.buildId,
             message = "Start docker ${dockerDispatch.dockerBuildVersion} for the build",
             tag = VMUtils.genStartVMTaskId(pipelineAgentStartupEvent.vmSeqId),
             jobId = pipelineAgentStartupEvent.containerHashId,
             executeCount = pipelineAgentStartupEvent.executeCount ?: 1
         )
+
+        var errorCode = "0"
+        var errorMessage = ""
+        val startTime = System.currentTimeMillis()
 
         var poolNo = 0
         try {
@@ -155,16 +159,19 @@ class DockerDispatcher @Autowired constructor(
                 driftIpInfo = driftIpInfo
             )
         } catch (e: Exception) {
-            val errMsg = if (e is DockerServiceException) {
+            val errMsgTriple = if (e is DockerServiceException) {
                 logger.warn("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed. ${e.message}")
-                e.message!!
+                Triple(e.errorType, e.errorCode, e.message!!)
             } else {
                 logger.error(
                     "[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed.",
                     e
                 )
-                "Start build Docker VM failed."
+                Triple(ErrorType.SYSTEM, ErrorCodeEnum.SYSTEM_ERROR.errorCode, "Start build Docker VM failed.")
             }
+
+            errorCode = errMsgTriple.second.toString()
+            errorMessage = errMsgTriple.third
 
             // 更新构建记录状态
             val result = pipelineDockerBuildDao.updateStatus(
@@ -193,12 +200,60 @@ class DockerDispatcher @Autowired constructor(
                 )
             }
 
-            onFailBuild(client, rabbitTemplate, pipelineAgentStartupEvent, errMsg)
+            onFailBuild(
+                client = client,
+                buildLogPrinter = buildLogPrinter,
+                event = pipelineAgentStartupEvent,
+                errorType = errMsgTriple.first,
+                errorCode = errMsgTriple.second,
+                errorMsg = errMsgTriple.third,
+                third = false
+            )
+        } finally {
+            try {
+                sendDispatchMonitoring(
+                    client = client,
+                    projectId = pipelineAgentStartupEvent.projectId,
+                    pipelineId = pipelineAgentStartupEvent.pipelineId,
+                    buildId = pipelineAgentStartupEvent.buildId,
+                    vmSeqId = pipelineAgentStartupEvent.vmSeqId,
+                    actionType = pipelineAgentStartupEvent.actionType.name,
+                    retryTime = pipelineAgentStartupEvent.retryTime,
+                    routeKeySuffix = pipelineAgentStartupEvent.routeKeySuffix ?: "dockerOnVM",
+                    startTime = startTime,
+                    stopTime = 0L,
+                    errorCode = errorCode,
+                    errorMessage = errorMessage
+                )
+            } catch (e: Exception) {
+                logger.error("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] startup sendDispatchMonitoring error.")
+            }
         }
     }
 
     override fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
         logger.info("On shutdown - ($pipelineAgentShutdownEvent|$)")
-        dockerHostBuildService.finishDockerBuild(pipelineAgentShutdownEvent)
+        try {
+            dockerHostBuildService.finishDockerBuild(pipelineAgentShutdownEvent)
+        } finally {
+            try {
+                sendDispatchMonitoring(
+                    client = client,
+                    projectId = pipelineAgentShutdownEvent.projectId,
+                    pipelineId = pipelineAgentShutdownEvent.pipelineId,
+                    buildId = pipelineAgentShutdownEvent.buildId,
+                    vmSeqId = pipelineAgentShutdownEvent.vmSeqId ?: "",
+                    actionType = pipelineAgentShutdownEvent.actionType.name,
+                    retryTime = pipelineAgentShutdownEvent.retryTime,
+                    routeKeySuffix = pipelineAgentShutdownEvent.routeKeySuffix ?: "dockerOnVM",
+                    startTime = 0L,
+                    stopTime = System.currentTimeMillis(),
+                    errorCode = "0",
+                    errorMessage = ""
+                )
+            } catch (e: Exception) {
+                logger.error("[${pipelineAgentShutdownEvent.projectId}|${pipelineAgentShutdownEvent.pipelineId}|${pipelineAgentShutdownEvent.buildId}] shutdown sendDispatchMonitoring error.")
+            }
+        }
     }
 }

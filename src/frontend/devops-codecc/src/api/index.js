@@ -171,7 +171,7 @@ async function getPromise (method, url, data, userConfig = {}) {
  */
 function handleResponse ({ config, response, resolve, reject }) {
     if (String(response.code) !== '0' && config.globalError) {
-        reject({ message: response.message })
+        reject({ message: response.message, code: response.code })
     } else {
         resolve(config.originalResponse ? response : response.data, config)
     }

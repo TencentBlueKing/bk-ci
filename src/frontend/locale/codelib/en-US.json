@@ -20,7 +20,7 @@
     "operation": "Operation",
     "edit": "edit",
     "delete": "delete",
-    "deleteCodelib": "delete repository",
+    "deleteCodelib": "delete repository ( {0} ) ?",
     "confirm": "confirm",
     "successfullyDeleted": "successfully deleted",
     "codelibMode": "Mode",
@@ -48,5 +48,8 @@
     "httpsRule": "start by http:// and end with .git",
     "paramBeString": "parameter must be string",
     "tgitHttpRule": "start by https://git.tencent.com and end with .git",
-    "tgitRule": "start by git@git.tencent.com and end with .git"
+    "tgitRule": "start by git@git.tencent.com and end with .git",
+    "SVN": "SVN",
+    "Github": "Github",
+    "Gitlab": "Gitlab"
 }

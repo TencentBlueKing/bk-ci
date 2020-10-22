@@ -32,12 +32,11 @@ import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -52,7 +51,7 @@ class PipelineBuildHeartbeatListener @Autowired constructor(
     private val buildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter
 ) : BaseListener<PipelineContainerAgentHeartBeatEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineContainerAgentHeartBeatEvent) {
@@ -68,7 +67,13 @@ class PipelineBuildHeartbeatListener @Autowired constructor(
             val elapse = System.currentTimeMillis() - lastUpdate.toLong()
             if (elapse > TIMEOUT_IN_MS) {
                 logger.error("The build($buildId) is timeout for ${elapse}ms, terminate it")
-                LogUtils.addRedLine(rabbitTemplate, buildId, "构建任务对应的Agent的心跳超时，请检查Agent的状态", "", containerId, 1)
+                buildLogPrinter.addRedLine(
+                    buildId = buildId,
+                    message = "构建任务对应的Agent的心跳超时，请检查Agent的状态",
+                    tag = "",
+                    jobId = containerId,
+                    executeCount = 1
+                )
                 var stageId: String? = null
                 var containerType = "vmBuild"
                 val modelDetail = buildDetailService.get(buildId) ?: return

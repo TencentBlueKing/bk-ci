@@ -84,6 +84,7 @@ function uninstallAgentService()
 
 function writeSSHConfig()
 {
+  echo "writeSSHConfig"
 }
 
 # if [[ "${workspace}" = ~ ]]; then

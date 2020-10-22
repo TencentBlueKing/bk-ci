@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div v-if="(taskDetail.atomCode && taskDetail.createFrom === 'bs_pipeline') || taskDetail.createFrom === 'gongfeng_scan'">
+        <div class="disf" v-if="(taskDetail.atomCode && taskDetail.createFrom === 'bs_pipeline') || taskDetail.createFrom === 'gongfeng_scan'">
             <span class="pipeline-label">{{ param.labelName }}</span>
             <span class="fs14">{{ param.varDefault }}</span>
         </div>

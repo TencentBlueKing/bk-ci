@@ -29,7 +29,17 @@ package com.tencent.bk.codecc.task.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tencent.bk.codecc.task.enums.TaskSortType;
 import com.tencent.bk.codecc.task.model.TaskInfoEntity;
-import com.tencent.bk.codecc.task.vo.*;
+import com.tencent.bk.codecc.task.vo.NotifyCustomVO;
+import com.tencent.bk.codecc.task.vo.TaskBaseVO;
+import com.tencent.bk.codecc.task.vo.TaskCodeLibraryVO;
+import com.tencent.bk.codecc.task.vo.TaskDetailVO;
+import com.tencent.bk.codecc.task.vo.TaskListReqVO;
+import com.tencent.bk.codecc.task.vo.TaskListVO;
+import com.tencent.bk.codecc.task.vo.TaskMemberVO;
+import com.tencent.bk.codecc.task.vo.TaskOverviewVO;
+import com.tencent.bk.codecc.task.vo.TaskOwnerAndMemberVO;
+import com.tencent.bk.codecc.task.vo.TaskStatusVO;
+import com.tencent.bk.codecc.task.vo.TaskUpdateVO;
 import com.tencent.bk.codecc.task.vo.pipeline.PipelineTaskVO;
 import com.tencent.bk.codecc.task.vo.scanconfiguration.ScanConfigurationVO;
 import com.tencent.bk.codecc.task.vo.tianyi.QueryMyTasksReqVO;
@@ -37,7 +47,6 @@ import com.tencent.bk.codecc.task.vo.tianyi.TaskInfoVO;
 import com.tencent.devops.common.api.QueryTaskListReqVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.pojo.Page;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -153,6 +162,15 @@ public interface TaskService
      */
     Boolean stopTask(Long taskId, String disabledReason, String userName);
 
+
+    /**
+     * 停用任务
+     *
+     * @param pipelineId
+     * @param userName
+     * @return
+     */
+    Boolean stopTask(String pipelineId, String disabledReason, String userName);
 
     /**
      * 获取代码库配置信息
@@ -357,7 +375,6 @@ public interface TaskService
     /**
      * 刷新组织架构
      *
-     * @param taskId 任务ID
      * @return boolean
      */
     Boolean refreshTaskOrgInfo(Long taskId);
@@ -369,5 +386,15 @@ public interface TaskService
      */
     void updateTaskOwnerAndMember(TaskOwnerAndMemberVO taskOwnerAndMemberVO, Long taskId);
 
+    /**
+     * 获取蓝盾插件开源扫描任务信息
+     *
+     */
+    List<Long> getBkPluginTaskIds();
 
+    /**
+     * 触发蓝盾插件打分任务
+     *
+     */
+    Boolean triggerBkPluginScoring();
 }

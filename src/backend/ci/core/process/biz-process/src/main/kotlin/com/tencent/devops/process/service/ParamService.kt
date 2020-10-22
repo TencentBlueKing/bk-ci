@@ -85,7 +85,12 @@ class ParamService @Autowired constructor(
     }
 
     private fun addGitRefs(projectId: String, formProperty: BuildFormProperty): BuildFormProperty {
-        val refs = codeService.getGitRefs(projectId, formProperty.repoHashId)
+        val refs = try {
+            codeService.getGitRefs(projectId, formProperty.repoHashId)
+        } catch (e: Exception) {
+            logger.error("projectId:$projectId,repoHashId:${formProperty.repoHashId} add git refs error", e)
+            listOf<String>()
+        }
         val options = refs.map {
             BuildFormValue(it, it)
         }
@@ -96,7 +101,12 @@ class ParamService @Autowired constructor(
      * SVN_TAG类型参数添加SVN目录作为复选参数
      */
     private fun addSvnTagDirectories(projectId: String, svnTagBuildFormProperty: BuildFormProperty): BuildFormProperty {
-        val directories = codeService.getSvnDirectories(projectId, svnTagBuildFormProperty.repoHashId, svnTagBuildFormProperty.relativePath)
+        val directories = try {
+            codeService.getSvnDirectories(projectId, svnTagBuildFormProperty.repoHashId, svnTagBuildFormProperty.relativePath)
+        } catch (e: Exception) {
+            logger.error("projectId:$projectId,repoHashId:${svnTagBuildFormProperty.repoHashId} add svn tag error", e)
+            listOf<String>()
+        }
         val options = directories.map {
             BuildFormValue(it, it)
         }

@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
@@ -73,7 +74,8 @@ import com.tencent.devops.common.pipeline.utils.SkipElementUtils
     JsonSubTypes.Type(value = MarketBuildLessAtomElement::class, name = MarketBuildLessAtomElement.classType),
     JsonSubTypes.Type(value = MarketCheckImageElement::class, name = MarketCheckImageElement.classType),
     JsonSubTypes.Type(value = QualityGateInElement::class, name = QualityGateInElement.classType),
-    JsonSubTypes.Type(value = QualityGateOutElement::class, name = QualityGateOutElement.classType)
+    JsonSubTypes.Type(value = QualityGateOutElement::class, name = QualityGateOutElement.classType),
+    JsonSubTypes.Type(value = CodeTGitWebHookTriggerElement::class, name = CodeTGitWebHookTriggerElement.classType)
 )
 abstract class Element(
     open val name: String,

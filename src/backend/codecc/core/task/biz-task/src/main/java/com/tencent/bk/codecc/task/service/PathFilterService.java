@@ -30,6 +30,9 @@ import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.vo.FilterPathInputVO;
 import com.tencent.bk.codecc.task.vo.FilterPathOutVO;
 import com.tencent.bk.codecc.task.vo.TreeNodeTaskVO;
+import com.tencent.bk.codecc.task.vo.path.CodeYmlFilterPathVO;
+
+import java.util.List;
 
 /**
  * 路径忽略服务类
@@ -86,4 +89,7 @@ public interface PathFilterService
     TreeNodeTaskVO filterPathTree(Long taskId);
 
 
+    Boolean codeYmlFilterPath(Long taskId, String userName, CodeYmlFilterPathVO codeYmlFilterPathVO);
+
+    CodeYmlFilterPathVO listCodeYmlFilterPath(Long taskId);
 }

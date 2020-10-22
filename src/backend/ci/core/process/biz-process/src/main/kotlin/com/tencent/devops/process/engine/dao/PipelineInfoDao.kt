@@ -358,6 +358,19 @@ class PipelineInfoDao {
         }
     }
 
+    fun listInfoByPipelineIds(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>,
+        filterDelete: Boolean = true
+    ): Result<TPipelineInfoRecord> {
+        return with(T_PIPELINE_INFO) {
+            val query = dslContext.selectFrom(this)
+                    .where(PIPELINE_ID.`in`(pipelineIds))
+            if (filterDelete) query.and(DELETE.eq(false))
+            query.fetch()
+        }
+    }
+
     fun getPipelineInfo(
         dslContext: DSLContext,
         pipelineId: String,

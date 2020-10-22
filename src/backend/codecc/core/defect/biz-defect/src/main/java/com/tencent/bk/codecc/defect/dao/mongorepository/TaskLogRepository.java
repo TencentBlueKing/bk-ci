@@ -88,4 +88,28 @@ public interface TaskLogRepository extends MongoRepository<TaskLogEntity, String
      * @return
      */
     List<TaskLogEntity> findByTaskId(long taskId);
+
+    /**
+     * 通过任务id查询最近一次分析记录信息，不分工具
+     *
+     * @param taskId
+     * @return
+     */
+    TaskLogEntity findFirstByTaskIdAndFlagOrderByStartTimeDesc(long taskId, int flag);
+
+    /**
+     * 通过任务id查询最近一次分析记录信息，不分工具
+     *
+     * @param taskId
+     * @return
+     */
+    TaskLogEntity findFirstByTaskIdAndToolNameAndFlagOrderByStartTimeDesc(long taskId, String toolName, int flag);
+
+    /**
+     * 通过任务id查询最近一次分析记录信息，不分工具
+     *
+     * @param taskId
+     * @return
+     */
+    List<TaskLogEntity> findByTaskIdAndBuildId(long taskId, String buildId);
 }

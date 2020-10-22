@@ -326,6 +326,36 @@ class RepositoryService @Autowired constructor(
         return Result(true)
     }
 
+    fun deleteGitProject(
+        userId: String,
+        repositoryConfig: RepositoryConfig,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        logger.info("deleteGitProject userId is:$userId,repositoryConfig is:$repositoryConfig,tokenType is:$tokenType")
+        val repo: CodeGitRepository = serviceGet("", repositoryConfig) as CodeGitRepository
+        logger.info("the repo is:$repo")
+        val finalTokenType = generateFinalTokenType(tokenType, repo.projectName)
+        val getGitTokenResult = getGitToken(finalTokenType, userId)
+        if (getGitTokenResult.isNotOk()) {
+            return Result(status = getGitTokenResult.status, message = getGitTokenResult.message, data = false)
+        }
+        val token = getGitTokenResult.data!!
+        val deleteGitProjectResult = gitService.deleteGitProject(
+            repoName = repo.projectName,
+            token = token,
+            tokenType = finalTokenType
+        )
+        logger.info("deleteGitProjectResult is :$deleteGitProjectResult")
+        if (deleteGitProjectResult.isNotOk()) {
+            return Result(
+                status = deleteGitProjectResult.status,
+                message = deleteGitProjectResult.message,
+                data = false
+            )
+        }
+        return Result(true)
+    }
+
     fun moveGitProjectToGroup(
         userId: String,
         groupCode: String?,
@@ -1075,6 +1105,28 @@ class RepositoryService @Autowired constructor(
             region = CodeSvnRegion.getRegion(record.url),
             userName = record.userId
         )
+    }
+
+    fun getInfoByHashIds(hashIds: List<String>): List<RepositoryInfo> {
+        val repositoryIds = hashIds.map { HashUtil.decodeOtherIdToLong(it) }
+        val repositoryInfos = repositoryDao.getRepoByIds(
+                dslContext = dslContext,
+                repositoryIds = repositoryIds,
+                checkDelete = true
+        )
+        val result = mutableListOf<RepositoryInfo>()
+        repositoryInfos?.map {
+            result.add(
+                    RepositoryInfo(
+                            repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
+                            aliasName = it.aliasName,
+                            url = it.url,
+                            type = ScmType.valueOf(it.type),
+                            updatedTime = it.updatedTime.timestampmilli()
+                    )
+            )
+        }
+        return result
     }
 
     private fun validatePermission(user: String, projectId: String, authPermission: AuthPermission): Boolean {

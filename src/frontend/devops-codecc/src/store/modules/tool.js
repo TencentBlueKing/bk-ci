@@ -132,6 +132,7 @@ export default {
                 return data
             }).catch(e => e)
         },
+        // deprecated
         updateParamsAndCheckerSets ({ commit, state, rootState }, params) {
             return http.put(`${window.AJAX_URL_PREFIX}/task/api/user/tool/tasks/${params.taskId}/tools/paramJsonAndCheckerSets`, params).then(res => {
                 const data = res.data || {}

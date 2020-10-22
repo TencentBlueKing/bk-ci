@@ -5,16 +5,10 @@
                 <div :class="{ 'form-field': true, 'bk-form-inline-item': true, 'is-danger': errors.has('@type') }">
                     <label :title="$t('atom')" class="bk-label">
                         {{ $t('atom') }}：
-                        <bk-popover placement="right" theme="light" class="form-field-icon atom-name-field" v-if="atom && (atom.summary || atom.docsLink)">
-                            <i class="bk-icon icon-info-circle"></i>
-                            <div slot="content" style="font-size: 12px; width: 350px; min-height: 100px;">
-                                <div class="atom-desc-content">
-                                    <p v-if="atom.summary">{{ $t('desc') }}：{{ atom.summary }}</p>
-                                    <p v-else>{{ $t('editPage.noDesc') }}</p>
-                                    <a v-if="atom.docsLink" target="_blank" class="atom-link" :href="atom.docsLink">{{ $t('atom') }}</a>
-                                </div>
-                            </div>
-                        </bk-popover>
+                        <a v-if="atom && atom.docsLink" :href="atom.docsLink" class="atom-link" target="_blank">
+                            {{ $t('editPage.atomHelpDoc') }}
+                            <logo name="tiaozhuan" size="14" style="fill:#3c96ff;position:relative;top:2px;" />
+                        </a>
                     </label>
                     <div class="bk-form-content">
                         <div class="atom-select-entry">
@@ -316,45 +310,28 @@
                 if (this.isNewAtomTemplate(this.atom.htmlTemplateVersion)) {
                     return NormalAtomV2
                 }
-                switch (this.atomCode) {
-                    case 'timerTrigger':
-                        return TimerTrigger
-                    case 'linuxScript':
-                    case 'windowsScript':
-                        return BuildScript
-                    case 'unity3dBuild':
-                        return Unity3dBuild
-                    case 'buildArchiveGet':
-                        return BuildArchiveGet
-                    case 'CODE_GIT':
-                    case 'CODE_GITLAB':
-                        return CodePullGitX
-                    case 'CODE_SVN':
-                        return CodePullSvn
-                    case 'iosCertInstall':
-                        return IosCertInstall
-                    case 'acrossProjectDistribution':
-                        return CrossDistribute
-                    case 'sendRTXNotify':
-                        return SendWechatNotify
-                    case 'reportArchive':
-                    case 'reportArchiveService':
-                        return ReportArchive
-                    case 'codeGitWebHookTrigger':
-                        return CodeGitWebHookTrigger
-                    case 'codeSVNWebHookTrigger':
-                        return CodeSvnWebHookTrigger
-                    case 'GITHUB':
-                        return PullGithub
-                    case 'codeGithubWebHookTrigger':
-                        return CodeGithubWebHookTrigger
-                    case 'pushImageToThirdRepo':
-                        return PushImageToThirdRepo
-                    case 'subPipelineCall':
-                        return SubPipelineCall
-                    default:
-                        return NormalAtom
+                const atomMap = {
+                    timerTrigger: TimerTrigger,
+                    linuxScript: BuildScript,
+                    windowsScript: BuildScript,
+                    unity3dBuild: Unity3dBuild,
+                    buildArchiveGet: BuildArchiveGet,
+                    CODE_GIT: CodePullGitX,
+                    CODE_GITLAB: CodePullGitX,
+                    CODE_SVN: CodePullSvn,
+                    iosCertInstall: IosCertInstall,
+                    acrossProjectDistribution: CrossDistribute,
+                    sendRTXNotify: SendWechatNotify,
+                    reportArchive: ReportArchive,
+                    reportArchiveService: ReportArchive,
+                    codeGitWebHookTrigger: CodeGitWebHookTrigger,
+                    codeSVNWebHookTrigger: CodeSvnWebHookTrigger,
+                    GITHUB: PullGithub,
+                    codeGithubWebHookTrigger: CodeGithubWebHookTrigger,
+                    pushImageToThirdRepo: PushImageToThirdRepo,
+                    subPipelineCall: SubPipelineCall
                 }
+                return atomMap[this.atomCode] || NormalAtom
             }
         },
         watch: {
@@ -506,7 +483,7 @@
                 const hasVaildRule = ruleList.some(item =>
                     item.taskId === this.element.atomCode
                     && (item.ruleList.every(rule => !rule.gatewayId)
-                    || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
+                        || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
                 )
                 return hasVaildRule
             },
@@ -594,6 +571,9 @@
     }
     .atom-main-content {
         font-size: 12px;
+        .atom-link {
+            color: $primaryColor;
+        }
     }
     .atom-desc-content {
         padding: 12px;

@@ -23,5 +23,5 @@ object AuthMessageCode {
     const val GROUP_USER_ALREADY_EXIST = "2122004" // 权限系统：用户已在该用户组
     const val GROUP_ACTION_EMPTY = "2122005" // 权限系统：用户组未绑定动作
 
-    const val TOKEN_TICKET_FAIL = "2122105" // 权限系统：token校验失败
+    const val TOKEN_TICKET_FAIL = "2122106" // 权限系统：token校验失败
 }
