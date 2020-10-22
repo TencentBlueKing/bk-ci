@@ -56,7 +56,7 @@ object SigarUtil {
     private val longCpuQueue = ArrayDeque<Int>()
     private val longDiskIOQueue = ArrayDeque<Int>()
 
-    private const val longQueueMaxSize = 40
+    private const val longQueueMaxSize = 30
 
     private var longQueueMemValueSum = 0
     private var longQueueCpuValueSum = 0
