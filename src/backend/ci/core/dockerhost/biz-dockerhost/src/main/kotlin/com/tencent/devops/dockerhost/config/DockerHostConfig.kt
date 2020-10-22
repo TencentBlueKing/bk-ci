@@ -212,7 +212,7 @@ class DockerHostConfig {
     /**
      * DockerHost容器负载弹性扩缩，容器内存配置
      */
-    @Value("\${dockerhost.elasticity.memReservation}")
+    @Value("\${dockerhost.elasticity.memReservation:34359738368}")
     var elasticityMemReservation: Long? = 32 * 1024 * 1024 * 1024L
 
     /**
