@@ -34,7 +34,7 @@ public class CommonBatchAssignDefectBizServiceImpl extends AbstractCommonBatchDe
             log.error("parameter [newAuthor] can't be empty");
             throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{newAuthor.toString()}, null);
         }
-        defectDao.batchUpdateDefectAuthor(defectList, newAuthor);
+        defectDao.batchUpdateDefectAuthor(batchDefectProcessReqVO.getTaskId(), defectList, newAuthor);
 
         // 2.异步批量更新tapd告警状态
 //        asynBatchUpdateTapdDefects(taskId, defectKeySet);

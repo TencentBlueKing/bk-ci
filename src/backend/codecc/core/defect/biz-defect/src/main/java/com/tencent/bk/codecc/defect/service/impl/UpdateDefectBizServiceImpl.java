@@ -21,17 +21,21 @@ import com.tencent.bk.codecc.defect.model.DefectEntity;
 import com.tencent.bk.codecc.defect.model.TaskLogEntity;
 import com.tencent.bk.codecc.defect.service.IUpdateDefectBizService;
 import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
+import com.tencent.bk.codecc.defect.vo.DefectBaseVO;
+import com.tencent.bk.codecc.defect.vo.DefectDetailVO;
 import com.tencent.bk.codecc.defect.vo.UpdateDefectStatusVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.util.PathUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.ws.rs.HEAD;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.tencent.devops.common.constant.ComConstants.StaticticItem;
 /**
@@ -73,14 +77,15 @@ public class UpdateDefectBizServiceImpl implements IUpdateDefectBizService
         log.info("updateDefectStatus req: {}", updateDefectStatusVO);
         Long taskId = updateDefectStatusVO.getTaskId();
         String toolName = updateDefectStatusVO.getToolName();
-        Map<String, Integer> defectStatusMap = updateDefectStatusVO.getDefectStatusMap();
+        List<DefectDetailVO> defectList = updateDefectStatusVO.getDefectList();
         String buildId = updateDefectStatusVO.getBuildId();
-        if (defectStatusMap != null && defectStatusMap.size() > 0)
+        if (CollectionUtils.isNotEmpty(defectList))
         {
             TaskLogEntity taskLogEntity = taskLogRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
             String buildNum = taskLogEntity.getBuildNum();
 
-            List<DefectEntity> defectEntityList = defectRepository.findStatusAndAuthorAndSeverityByTaskIdAndToolNameAndIdIn(taskId, toolName, defectStatusMap.keySet());
+            Map<String, DefectDetailVO> defectDetailVOMap = defectList.stream().collect(Collectors.toMap(DefectBaseVO::getId, Function.identity(), (k, v) -> v));
+            List<DefectEntity> defectEntityList = defectRepository.findStatusAndAuthorAndSeverityByTaskIdAndToolNameAndIdIn(taskId, toolName, defectDetailVOMap.keySet());
 
             TaskDetailVO taskDetailVO = thirdPartySystemCaller.getTaskInfoWithoutToolsByTaskId(taskId);
             Set<String> filterPathSet = getFilterPaths(taskDetailVO);
@@ -102,7 +107,8 @@ public class UpdateDefectBizServiceImpl implements IUpdateDefectBizService
                 int status = defectEntity.getStatus();
 
                 int codeccStatus = status;
-                Integer platformStatus = defectStatusMap.get(id);
+                DefectDetailVO platformDefect = defectDetailVOMap.get(id);
+                Integer platformStatus = platformDefect.getStatus();
 
                 // 1.在codecc上new（即不被忽略、不被路径或规则屏蔽），在platform上已修复的告警，要标志为已修复
                 if (codeccStatus == ComConstants.DefectStatus.NEW.value() && platformStatus == ComConstants.DefectStatus.FIXED.value())
@@ -141,9 +147,11 @@ public class UpdateDefectBizServiceImpl implements IUpdateDefectBizService
                 }
 
 
-                if (status != codeccStatus)
+                if (status != codeccStatus ||
+                        (StringUtils.isNotEmpty(platformDefect.getFilePathname()) && !platformDefect.getFilePathname().equals(defectEntity.getFilePathname())))
                 {
                     defectEntity.setStatus(status);
+                    defectEntity.setFilePathname(platformDefect.getFilePathname());
                     needUpdateDefectList.add(defectEntity);
                 }
 
@@ -174,7 +182,7 @@ public class UpdateDefectBizServiceImpl implements IUpdateDefectBizService
             statisticDao.increaseDefectCountByStatus(taskId, toolName, buildNum, StaticticItem.EXIST_SERIOUS, existSeriousCount);
             statisticDao.addNewAndExistAuthors(taskId, toolName, buildNum, Sets.newHashSet(), existAuthors);
 
-            defectDao.batchUpdateDefectStatusFixedBit(needUpdateDefectList);
+            defectDao.batchUpdateDefectStatusFixedBit(taskId, needUpdateDefectList);
         }
 
         log.info("update defectStatus success.");
@@ -182,19 +190,6 @@ public class UpdateDefectBizServiceImpl implements IUpdateDefectBizService
 
     private Set<String> getFilterPaths(TaskDetailVO taskDetailVO)
     {
-        Set<String> filterPathSet = new HashSet<>();
-        List<String> defaultFilterPathList = taskDetailVO.getDefaultFilterPath();
-        List<String> filterPath = taskDetailVO.getFilterPath();
-
-        if (defaultFilterPathList != null)
-        {
-            filterPathSet.addAll(defaultFilterPathList);
-        }
-
-        if (filterPath != null)
-        {
-            filterPathSet.addAll(filterPath);
-        }
-        return filterPathSet;
+        return new HashSet<>(taskDetailVO.getAllFilterPaths());
     }
 }

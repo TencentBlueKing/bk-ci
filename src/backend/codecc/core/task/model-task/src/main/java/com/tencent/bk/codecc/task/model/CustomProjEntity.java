@@ -98,4 +98,10 @@ public class CustomProjEntity extends CommonEntity
     @Field("gongfeng_project_id")
     private Integer gongfengProjectId;
 
+    /**
+     * 逻辑仓标识
+     */
+    @Field("logic_repo")
+    private String logicRepo;
+
 }

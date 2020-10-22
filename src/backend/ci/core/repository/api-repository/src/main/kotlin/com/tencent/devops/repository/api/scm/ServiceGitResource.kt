@@ -333,7 +333,10 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum,
         @ApiParam(value = "token", required = true)
         @QueryParam("token")
-        token: String
+        token: String,
+        @ApiParam(value = "仓库url", required = true)
+        @QueryParam("repoUrl")
+        repoUrl: String? = null
     ): Result<GitMrInfo>
 
     @ApiOperation("下载git仓库")
@@ -371,7 +374,10 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum,
         @ApiParam(value = "token", required = true)
         @QueryParam("token")
-        token: String
+        token: String,
+        @ApiParam(value = "仓库url", required = true)
+        @QueryParam("repoUrl")
+        repoUrl: String? = null
     ): Result<GitMrReviewInfo>
 
     @ApiOperation("获取mr信息")
@@ -389,6 +395,9 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum,
         @ApiParam(value = "token", required = true)
         @QueryParam("token")
-        token: String
+        token: String,
+        @ApiParam(value = "仓库url", required = true)
+        @QueryParam("repoUrl")
+        repoUrl: String? = null
     ): Result<GitMrChangeInfo>
 }

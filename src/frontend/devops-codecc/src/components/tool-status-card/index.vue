@@ -104,22 +104,47 @@
                 </bk-row>
             </bk-container>
 
+            <bk-container class="card-content" :col="4" v-else-if="data.toolName === 'CLOC'">
+                <bk-row class="card-num">
+                    <bk-col><a @click="toList">{{data.lastAnalysisResult.totalLines === undefined ? '--' : data.lastAnalysisResult.totalLines}}</a></bk-col>
+                    <bk-col>
+                        <a @click="toList">{{data.lastAnalysisResult.linesChange === undefined ? '--' : Math.abs(data.lastAnalysisResult.linesChange)}}</a>
+                        <i class="bk-icon"
+                            :class="{ 'icon-arrows-up up': data.lastAnalysisResult.linesChange > 0,
+                                      'icon-arrows-down down': data.lastAnalysisResult.linesChange < 0 }">
+                        </i>
+                    </bk-col>
+                    <bk-col><a @click="toList">{{data.lastAnalysisResult.fileNum === undefined ? '--' : data.lastAnalysisResult.fileNum}}</a></bk-col>
+                    <bk-col>
+                        <a @click="toList">{{data.lastAnalysisResult.fileNumChange === undefined ? '--' : Math.abs(data.lastAnalysisResult.fileNumChange)}}</a>
+                        <i class="bk-icon"
+                            :class="{ 'icon-arrows-up up': data.lastAnalysisResult.fileNumChange > 0,
+                                      'icon-arrows-down down': data.lastAnalysisResult.fileNumChange < 0 }">
+                        </i>
+                    </bk-col>
+                </bk-row>
+                <bk-row class="card-txt">
+                    <bk-col><i class="codecc-icon icon-task-line"></i>{{$t('总行数')}}</bk-col>
+                    <bk-col><i class="codecc-icon icon-trend"></i>{{$t('行数趋势')}}</bk-col>
+                    <bk-col><i class="codecc-icon icon-risky-file"></i>{{$t('文件数')}}</bk-col>
+                    <bk-col><i class="codecc-icon icon-trend"></i>{{$t('文件数趋势')}}</bk-col>
+                </bk-row>
+            </bk-container>
+
             <bk-container class="card-content" :col="4" v-else>
                 <bk-row class="card-num">
                     <bk-col><a @click="toList">{{data.lastAnalysisResult.defectCount === undefined ? '--' : data.lastAnalysisResult.defectCount}}</a></bk-col>
                     <bk-col><a @click="toList">{{data.lastAnalysisResult.defectChange === undefined ? '--' : Math.abs(data.lastAnalysisResult.defectChange)}}</a>
                         <i class="bk-icon"
                             :class="{ 'icon-arrows-up up': data.lastAnalysisResult.defectChange > 0,
-                                      'icon-arrows-down down': data.lastAnalysisResult.defectChange < 0 }"
-                        >
+                                      'icon-arrows-down down': data.lastAnalysisResult.defectChange < 0 }">
                         </i>
                     </bk-col>
                     <bk-col><a @click="toList">{{data.lastAnalysisResult.fileCount === undefined ? '--' : data.lastAnalysisResult.fileCount}}</a></bk-col>
                     <bk-col><a @click="toList">{{data.lastAnalysisResult.fileChange === undefined ? '--' : Math.abs(data.lastAnalysisResult.fileChange)}}</a>
                         <i class="bk-icon"
                             :class="{ 'icon-arrows-up up': data.lastAnalysisResult.fileChange > 0,
-                                      'icon-arrows-down down': data.lastAnalysisResult.fileChange < 0 }"
-                        >
+                                      'icon-arrows-down down': data.lastAnalysisResult.fileChange < 0 }">
                         </i>
                     </bk-col>
                 </bk-row>
@@ -232,6 +257,11 @@
                     params
                 })
             },
+            toClocList () {
+                this.$router.push({
+                    name: 'defect-cloc-list'
+                })
+            },
             toCovList (query) {
                 const params = this.$route.params
                 params.toolId = this.data.toolName
@@ -246,6 +276,8 @@
                     return this.toCCNList()
                 } else if (this.data.toolName === 'DUPC') {
                     return this.toDupcList()
+                } else if (this.data.toolName === 'CLOC') {
+                    return this.toClocList()
                 } else if (this.data.toolName === 'COVERITY' || this.data.toolName === 'KLOCWORK' || this.data.toolName === 'PINPOINT') {
                     return this.toCovList()
                 } else {

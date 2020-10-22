@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.task.vo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.tencent.bk.codecc.task.vo.pipeline.CodeRepoInfoVO;
+import com.tencent.devops.common.api.CodeRepoVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -120,7 +120,10 @@ public class AnalyzeConfigInfoVO
     private String covPWCheckers;
 
     @ApiModelProperty(value = "上次扫描的代码仓库列表")
-    private List<CodeRepoInfoVO> lastCodeRepos;
+    private List<CodeRepoVO> lastCodeRepos;
+
+    @ApiModelProperty(value = "本次扫描的代码仓库列表")
+    private List<CodeRepoVO> codeRepos;
 
     @ApiModelProperty(value = "任务语言")
     private Long language;
@@ -154,6 +157,8 @@ public class AnalyzeConfigInfoVO
     private List<String> repoWhiteList;
 
     private boolean pipelineTask;
+
+    private String atomCode;
 
     // ==============================用于调用getBuildInfo时传递参数，无其他作用 end===================================
     @Data

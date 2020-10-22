@@ -1,5 +1,6 @@
 package com.tencent.bk.codecc.defect.vo.coderepository;
 
+import com.tencent.devops.common.api.CodeRepoVO;
 import com.tencent.devops.common.api.CommonVO;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;

@@ -44,6 +44,8 @@ data class ImageBaseInfoUpdateRequest(
     val description: String? = null,
     @ApiModelProperty("镜像logo", required = false)
     val logoUrl: String? = null,
+    @ApiModelProperty("icon图标base64字符串", required = false)
+    val iconData: String? = null,
     @ApiModelProperty("发布者", required = false)
     val publisher: String? = null,
     @ApiModelProperty(value = "镜像大小", required = false)

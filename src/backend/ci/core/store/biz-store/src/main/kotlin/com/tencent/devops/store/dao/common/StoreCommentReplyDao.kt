@@ -26,6 +26,7 @@
 
 package com.tencent.devops.store.dao.common
 
+import com.tencent.devops.model.store.tables.TStoreComment
 import com.tencent.devops.model.store.tables.TStoreCommentReply
 import com.tencent.devops.model.store.tables.records.TStoreCommentReplyRecord
 import com.tencent.devops.store.pojo.common.StoreCommentReplyRequest
@@ -90,6 +91,18 @@ class StoreCommentReplyDao {
                 userId,
                 userId
             ).execute()
+        }
+    }
+
+    fun deleteStoreCommentReply(dslContext: DSLContext, storeCode: String, storeType: Byte) {
+        val tsc = TStoreComment.T_STORE_COMMENT
+        val commentIds =
+            dslContext.select(tsc.ID).from(tsc).where(tsc.STORE_CODE.eq(storeCode).and(tsc.STORE_TYPE.eq(storeType)))
+                .fetch()
+        with(TStoreCommentReply.T_STORE_COMMENT_REPLY) {
+            dslContext.deleteFrom(this)
+                .where(COMMENT_ID.`in`(commentIds))
+                .execute()
         }
     }
 }

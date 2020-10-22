@@ -43,7 +43,7 @@ export function parsePathAlias (type, path, authType, svnType) {
             msg = `${codelibLocaleObj.httpRule}${type}${codelibLocaleObj.address}`
             break
         case isGitLab(type):
-            reg = /^http\:\/\/([\-\.a-z0-9A-Z]+)\/([\w\W\.\-\_\/\+]+)\.git$/i
+            reg = /^https?\:\/\/([\-\.a-z0-9A-Z]+)\/([\w\W\.\-\_\/\+]+)\.git$/i
             msg = `${codelibLocaleObj.httpsRule}${type}${codelibLocaleObj.address}`
             break
     }

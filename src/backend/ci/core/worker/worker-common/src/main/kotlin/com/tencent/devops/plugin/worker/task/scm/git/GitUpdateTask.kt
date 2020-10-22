@@ -636,6 +636,17 @@ open class GitUpdateTask constructor(
                  * 2. convert ssh url to http url
                  */
                 val subHost = getUrlHost(url)
+                // 相对路径的 Submodule, 直接使用相对路径
+                if (subHost == "") {
+                    result.add(
+                        Submodule(
+                            path,
+                            url,
+                            url
+                        )
+                    )
+                    continue
+                }
                 if (rootHost != subHost) continue
 
                 if (convertSubmoduleUrl) {
@@ -701,8 +712,11 @@ open class GitUpdateTask constructor(
     private fun getUrlHost(url: String): String {
         try {
             val actualUrl = url.trim()
-            if (actualUrl.startsWith("http")) return URL(actualUrl).host
-            return actualUrl.substring("git@".length, actualUrl.indexOf(":"))
+            return when {
+                actualUrl.startsWith("http") -> return URL(actualUrl).host
+                actualUrl.startsWith("git@") -> actualUrl.substring("git@".length, actualUrl.indexOf(":"))
+                else -> ""
+            }
         } catch (e: Exception) {
             logger.warn("Fail to get the url host - ($url)", e)
             throw TaskExecuteException(

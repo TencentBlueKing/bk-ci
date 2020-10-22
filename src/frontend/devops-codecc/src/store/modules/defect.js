@@ -20,7 +20,92 @@ export default {
         dupcDetail: {
             blockInfoList: [{}]
         },
-        records: {}
+        records: {},
+        defaultCheckset: {
+            1: {
+                name: 'C#',
+                ccn: 'codecc_default_ccn_csharp',
+                dupc: 'codecc_default_dupc_csharp',
+                cloc: 'cloc_csharp'
+            },
+            2: {
+                name: 'C/C++',
+                ccn: 'codecc_default_ccn_cpp',
+                dupc: 'codecc_default_dupc_cpp',
+                cloc: 'cloc_cpp'
+            },
+            4: {
+                name: 'JAVA',
+                ccn: 'codecc_default_ccn_java',
+                dupc: 'codecc_default_dupc_java',
+                cloc: 'cloc_java'
+            },
+            8: {
+                name: 'PHP',
+                ccn: 'codecc_default_ccn_php',
+                cloc: 'cloc_php'
+            },
+            16: {
+                name: 'OC/OC++',
+                ccn: 'codecc_default_ccn_oc',
+                dupc: 'codecc_default_dupc_oc',
+                cloc: 'cloc_oc'
+            },
+            32: {
+                name: 'Python',
+                ccn: 'codecc_default_ccn_python',
+                dupc: 'codecc_default_dupc_python',
+                cloc: 'cloc_python'
+            },
+            64: {
+                name: 'JS',
+                ccn: 'codecc_default_ccn_js',
+                dupc: 'codecc_default_dupc_js',
+                cloc: 'cloc_js'
+            },
+            128: {
+                name: 'Ruby',
+                ccn: 'codecc_default_ccn_ruby',
+                cloc: 'cloc_ruby'
+            },
+            256: {
+                name: 'LUA',
+                ccn: 'codecc_default_ccn_lua',
+                cloc: 'cloc_lua'
+            },
+            512: {
+                name: 'Golang',
+                ccn: 'codecc_default_ccn_go',
+                dupc: 'codecc_default_dupc_go',
+                cloc: 'cloc_go'
+            },
+            1024: {
+                name: 'Swift',
+                ccn: 'codecc_default_ccn_swift',
+                cloc: 'cloc_swift'
+            },
+            2048: {
+                name: 'TS',
+                cloc: 'cloc_ts'
+            },
+            4096: {
+                name: 'Kotlin',
+                dupc: 'codecc_default_dupc_kotlin',
+                cloc: 'cloc_kotlin'
+            },
+            8192: {
+                name: 'Dart',
+                cloc: 'cloc_dart'
+            },
+            16384: {
+                name: 'Solidity',
+                cloc: 'cloc_solidity'
+            },
+            1073741824: {
+                name: '其他',
+                cloc: 'standard_cloc'
+            }
+        }
     },
     mutations: {
         updateLintList (state, list) {
@@ -78,11 +163,24 @@ export default {
                 }
             })
         },
-        lintParams ({ commit }, params) {
-            // return http.get('/defect/index?invoke=lintparams').then(res => {
-            return http.get(`${window.AJAX_URL_PREFIX}/defect/api/user/warn/checker/authors/toolName/${params.toolId}`).then(res => {
+        lintParams ({ commit }, data) {
+            return http.get(`${window.AJAX_URL_PREFIX}/defect/api/user/warn/checker/authors/toolName/${data.toolId}`).then(res => {
                 const params = res.data || {}
                 return params
+            })
+        },
+        lintOtherParams ({ commit }, data) {
+            return http.get(`${window.AJAX_URL_PREFIX}/defect/api/user/warn/checker/authors/toolName/${data.toolId}?status=${data.status}`).then(res => {
+                const params = res.data || {}
+                return params
+            })
+        },
+        lintSearchParams ({ commit }, data) {
+            return http.post(`${window.AJAX_URL_PREFIX}/defect/api/user/warn/initpage`, data, { cancelPrevious: false }).then(res => {
+                const list = res.data || {}
+                return list
+            }).catch(e => {
+                console.error(e)
             })
         },
         batchEdit ({ commit }, data) {
@@ -210,6 +308,19 @@ export default {
         gatherFile ({ commit, state, dispatch }, params) {
             const { taskId, toolName } = params
             return http.get(`${window.AJAX_URL_PREFIX}/defect/api/user/warn/gather/taskId/${taskId}/toolName/${toolName}`).then(res => {
+                return res.data || {}
+            }).catch(e => {
+                console.error(e)
+            })
+        },
+        lintListCloc ({ commit }, params) {
+            return http.get(`${window.AJAX_URL_PREFIX}/defect/api/user/warn/list/toolName/${params.toolId}/orderBy/${params.type}`).then(res => {
+                const params = res.data || {}
+                return params
+            })
+        },
+        oauthUrl ({ commit, state, dispatch }, params) {
+            return http.get(`${window.AJAX_URL_PREFIX}/ms/defect/api/user/repo/oauth/url?toolName=${params.toolName}`).then(res => {
                 return res.data || {}
             }).catch(e => {
                 console.error(e)

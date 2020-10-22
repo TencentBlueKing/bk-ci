@@ -47,8 +47,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @date 2019/7/21
  */
 @RestResource
-public class BuildTaskLogRestResourceImpl implements BuildTaskLogRestResource
-{
+public class BuildTaskLogRestResourceImpl implements BuildTaskLogRestResource {
     private static Logger logger = LoggerFactory.getLogger(BuildTaskLogRestResourceImpl.class);
 
     @Autowired
@@ -60,12 +59,12 @@ public class BuildTaskLogRestResourceImpl implements BuildTaskLogRestResource
     @Override
     public CodeCCResult uploadTaskLog(UploadTaskLogStepVO uploadTaskLogStepVO)
     {
-        if (StringUtils.isNotEmpty(uploadTaskLogStepVO.getToolName()))
-        {
+        if (StringUtils.isNotEmpty(uploadTaskLogStepVO.getToolName())) {
             uploadTaskLogStepVO.setToolName(uploadTaskLogStepVO.getToolName().toUpperCase());
         }
         logger.info("recv task: {}, step: {}, flag: {}, start: {}, end: {}", uploadTaskLogStepVO.getStreamName(),
-                uploadTaskLogStepVO.getStepNum(), uploadTaskLogStepVO.getFlag(), uploadTaskLogStepVO.getStartTime(), uploadTaskLogStepVO.getEndTime());
+                uploadTaskLogStepVO.getStepNum(), uploadTaskLogStepVO.getFlag(),
+            uploadTaskLogStepVO.getStartTime(), uploadTaskLogStepVO.getEndTime());
         IBizService taskLogService = bizServiceFactory.createBizService(uploadTaskLogStepVO.getToolName(),
                 ComConstants.BusinessType.ANALYZE_TASK.value(), IBizService.class);
         return taskLogService.processBiz(uploadTaskLogStepVO);

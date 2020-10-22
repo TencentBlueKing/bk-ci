@@ -34,114 +34,157 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import java.io.File
+import java.io.IOException
+import java.nio.file.FileSystems
+import java.nio.file.FileVisitResult
+import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.regex.Pattern
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
 
 object ArchiveUtils {
 
     private val api = ApiFactory.create(ArchiveSDKApi::class)
-    private val FIlTER_FILE = listOf(".md5", ".sha1", ".sha256", ".ds_store")
-    private const val maxFileCount = 50
+    private const val MAX_FILE_COUNT = 100
 
     fun archiveCustomFiles(filePath: String, destPath: String, workspace: File, buildVariables: BuildVariables): Int {
-        checkFileCount(filePath, workspace)
-
-        var count = 0
-        filePath.split(",").forEach { f -> matchFiles(workspace, f.trim()).forEach {
-            count++
-            if (!isFileLegal(it.name)) throw TaskExecuteException(
-                errorCode = ErrorCode.USER_INPUT_INVAILD,
-                errorType = ErrorType.USER,
-                errorMsg = "不允许归档以 $FIlTER_FILE 后缀结尾的文件: ${it.name}"
-            )
-            api.uploadCustomize(it, destPath, buildVariables) }
+        var fileList = mutableSetOf<String>()
+        filePath.split(",").map { it.removePrefix("./") }.filterNot { it.isBlank() }.forEach { path ->
+            fileList.addAll(matchFiles(workspace, path).map { it.absolutePath })
         }
-        LoggerService.addNormalLine("共成功自定义归档了 $count 个文件")
-        return count
-    }
-
-    private fun checkFileCount(filePath: String, workspace: File) {
-        var fileNum = 0
-        filePath.split(",").forEach { f ->
-            fileNum += matchFiles(workspace, f.trim()).size
-        }
-        if (fileNum > maxFileCount) {
+        if (fileList.size > MAX_FILE_COUNT) {
             throw TaskExecuteException(
                 errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorType = ErrorType.USER,
                 errorMsg = "单次归档文件数太多，请打包后再归档！"
             )
         }
+        LoggerService.addNormalLine("${fileList.size} file match: ")
+        fileList.forEach {
+            LoggerService.addNormalLine("  $it")
+        }
+        fileList.forEach {
+            api.uploadCustomize(File(it), destPath, buildVariables)
+        }
+        return fileList.size
     }
 
     fun archivePipelineFiles(filePath: String, workspace: File, buildVariables: BuildVariables): Int {
-        checkFileCount(filePath, workspace)
-
-        var count = 0
-        filePath.split(",").forEach { f -> matchFiles(workspace, f.trim()).forEach {
-            count++
-            if (!isFileLegal(it.name)) throw TaskExecuteException(
+        var fileList = mutableSetOf<String>()
+        filePath.split(",").map { it.removePrefix("./") }.filterNot { it.isBlank() }.forEach { path ->
+            fileList.addAll(matchFiles(workspace, path).map { it.absolutePath })
+        }
+        if (fileList.size > MAX_FILE_COUNT) {
+            throw TaskExecuteException(
                 errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorType = ErrorType.USER,
-                errorMsg = "不允许归档以 $FIlTER_FILE 后缀结尾的文件: ${it.name}"
+                errorMsg = "单次归档文件数太多，请打包后再归档！"
             )
-            api.uploadPipeline(it, buildVariables) }
         }
-        LoggerService.addNormalLine("共成功归档了 $count 个文件")
-        return count
+        LoggerService.addNormalLine("${fileList.size} file match:")
+        fileList.forEach {
+            LoggerService.addNormalLine("  $it")
+        }
+        fileList.forEach {
+            api.uploadPipeline(File(it), buildVariables)
+        }
+        return fileList.size
     }
 
-    fun matchFiles(workspace: File, filePath: String): List<File> {
-        LoggerService.addNormalLine("start to search files in $filePath")
-
-        // 斜杠开头的，绝对路径
-        val absPath = filePath.startsWith("/") || (filePath[0].isLetter() && filePath[1] == ':')
-
-        val fileList: List<File>
-        // 文件夹返回所有文件
-        if (filePath.endsWith("/")) {
-            // 绝对路径
-            fileList = if (absPath) File(filePath).listFiles().filter { return@filter it.isFile }.toList()
-            else File(workspace, filePath).listFiles().filter { return@filter it.isFile }.toList()
+    fun matchFiles(workspace: File, path: String): List<File> {
+        val isAbsPath = isAbsPath(path)
+        var fullFile = if (!isAbsPath) File(workspace.absolutePath + File.separator + path) else File(path)
+        if (fullFile.isDirectory) throw RuntimeException("invalid path, path is a directory(${fullFile.absolutePath})")
+        val fullPath = fullFile.absolutePath.replace("\\", "/")
+        val fileList = if (fullPath.contains("**")) {
+            val startPath = File("${fullPath.substring(0, fullPath.indexOf("**"))}a").parent.toString()
+            globMatch("glob:$fullPath", startPath)
         } else {
-            // 相对路径
-            // get start path
-            val file = File(filePath)
-            val startPath = if (file.parent.isNullOrBlank()) "." else file.parent
-            val regexPath = file.name
-
-            // return result
-            val pattern = Pattern.compile(transfer(regexPath))
-            val startFile = if (absPath) File(startPath) else File(workspace, startPath)
-            val path = Paths.get(startFile.canonicalPath)
-            fileList = startFile.listFiles()?.filter {
-                val rePath = path.relativize(Paths.get(it.canonicalPath)).toString()
-                it.isFile && pattern.matcher(rePath).matches()
-            }?.toList() ?: listOf()
+            fileMatch(fullPath)
         }
-        val resultList = mutableListOf<File>()
-        fileList.forEach { f ->
-            // 文件名称不允许带有空格
-            if (!f.name.contains(" ")) {
-                resultList.add(f)
+        return fileList.filter {
+            if (it.name.endsWith(".DS_STORE", ignoreCase = true)) {
+                LoggerService.addYellowLine("${it.canonicalPath} will not upload")
+                false
             } else {
-                LoggerService.addNormalLine("文件名称带有空格, 将不被上传! >>> ${f.name}")
+                true
+            }
+        }
+    }
+
+    private fun fileMatch(fullPath: String): List<File> {
+        var resultList = ArrayList<File>()
+        val dirPath = fullPath.substring(0, fullPath.lastIndexOf("/") + 1)
+        val glob = "glob:$fullPath"
+        if (!dirPath.contains("*")) {
+            val pathMatcher = FileSystems.getDefault().getPathMatcher(glob)
+            val regex = Regex(pattern = "\\]|\\[|\\}|\\{|\\?")
+            if (!fullPath.contains(regex) && File(fullPath).exists() && !File(fullPath).isDirectory) {
+                resultList.add(File(fullPath))
+                return resultList
+            }
+            val parentFile = File(fullPath).parentFile
+            parentFile.listFiles()?.forEach { f ->
+                if (pathMatcher.matches(f.toPath()) && !f.isDirectory) {
+                    resultList.add(f)
+                }
+            }
+        } else {
+            val location = File("${fullPath.substring(0, fullPath.indexOf("*"))}a").parent.toString()
+            if (dirPath.indexOf("*") != dirPath.lastIndexOf("*")) {
+                return globMatch(glob, location.replace("\\", "/"))
+            } else {
+                val secondIndex = dirPath.indexOf("/", dirPath.indexOf("*"))
+                val secondPath = dirPath.substring(0, secondIndex)
+                val thirdPath = dirPath.substring(secondIndex)
+                val globSecond = "glob:$secondPath"
+                var pathMatcher = FileSystems.getDefault().getPathMatcher(globSecond)
+                val dirMatchFile = mutableListOf<File>()
+                File(secondPath.substring(0, secondPath.lastIndexOf("/") + 1)).listFiles()?.forEach { f ->
+                    if (pathMatcher.matches(f.toPath())) {
+                        dirMatchFile.add(File(f, thirdPath))
+                    }
+                }
+                dirMatchFile.forEach { f ->
+                    pathMatcher = FileSystems.getDefault().getPathMatcher(glob)
+                    f.listFiles()?.forEach { file ->
+                        if (pathMatcher.matches(file.toPath()) && !file.isDirectory) {
+                            resultList.add(file)
+                        }
+                    }
+                }
             }
         }
         return resultList
     }
 
-    private fun transfer(regexPath: String): String {
-        var resultPath = regexPath
-        resultPath = resultPath.replace(".", "\\.")
-        resultPath = resultPath.replace("*", ".*")
-        return resultPath
+    private fun globMatch(glob: String, location: String): List<File> {
+        val resultList = mutableListOf<File>()
+        val pathMatcher = FileSystems.getDefault().getPathMatcher(glob)
+        Files.walkFileTree(
+            Paths.get(location),
+            object : SimpleFileVisitor<Path>() {
+                override fun visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult {
+                    if (pathMatcher.matches(path) && !File(path.toString()).isDirectory) {
+                        resultList.add(File(path.toString()))
+                    }
+                    return FileVisitResult.CONTINUE
+                }
+
+                override fun visitFileFailed(file: Path, exc: IOException): FileVisitResult {
+                    return FileVisitResult.CONTINUE
+                }
+            })
+        return resultList
     }
 
-    fun isFileLegal(name: String): Boolean {
-        FIlTER_FILE.forEach {
-            if (name.toLowerCase().endsWith(it)) return false
+    private fun isAbsPath(path: String): Boolean {
+        val isWindows = System.getProperty("os.name").contains("Windows", ignoreCase = true)
+        return if (isWindows) {
+            path.length >= 2 && path[0].isLetter() && path[1] == ':'
+        } else {
+            path.startsWith("/")
         }
-        return true
     }
 }

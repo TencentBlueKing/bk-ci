@@ -104,5 +104,7 @@ data class AtomVersion(
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
     @ApiModelProperty("yaml可用标识 true：是，false：否")
-    val yamlFlag: Boolean? = null
+    val yamlFlag: Boolean? = null,
+    @ApiModelProperty("是否可编辑")
+    val editFlag: Boolean? = null
 )

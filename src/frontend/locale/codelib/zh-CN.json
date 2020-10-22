@@ -20,7 +20,7 @@
     "operation": "操作",
     "edit": "编辑",
     "delete": "删除",
-    "deleteCodelib": "删除代码库",
+    "deleteCodelib": "删除代码库（{0}）？",
     "confirm": "确认",
     "successfullyDeleted": "删除成功",
     "codelibMode": "源代码方式",
@@ -49,5 +49,8 @@
     "paramBeString": "参数必须为字符串",
     "gitCodeInternalRule": "请输入以git@开头，以.git结尾的",
     "tgitHttpRule": "请输入以https://git.tencent.com开头，以.git结尾的",
-    "tgitRule": "请输入以git@git.tencent.com开头，以.git结尾的"
+    "tgitRule": "请输入以git@git.tencent.com开头，以.git结尾的",
+    "SVN": "SVN",
+    "Github": "Github",
+    "Gitlab": "Gitlab"
 }

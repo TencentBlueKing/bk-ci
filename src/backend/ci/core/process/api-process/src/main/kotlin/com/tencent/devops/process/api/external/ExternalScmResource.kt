@@ -57,4 +57,11 @@ interface ExternalScmResource {
     @POST
     @Path("/gitlab/commit")
     fun webHookGitlabCommit(event: String): Result<Boolean>
+
+    @ApiOperation("Code平台tGit仓库提交")
+    @POST
+    @Path("/codetgit/commit")
+    fun webHookCodeTGitCommit(
+        event: String
+    ): Result<Boolean>
 }

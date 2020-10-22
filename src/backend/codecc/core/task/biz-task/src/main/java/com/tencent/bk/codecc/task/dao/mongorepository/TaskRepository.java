@@ -223,4 +223,15 @@ public interface TaskRepository extends MongoRepository<TaskInfoEntity, String>
     @Query(fields = "{'execute_time':0, 'execute_date':0, 'timer_expression':0, 'last_disable_task_info':0, 'default_filter_path':0, 'tool_config_info_list':0, 'custom_proj_info':0}")
     Page<TaskInfoEntity> findByStatusAndBgIdAndDeptIdInAndCreateFromIn(Integer status, Integer bgId,
             Collection<Integer> deptIds, List<String> createFrom, Pageable pageable);
+
+
+    /**
+     * 按创建来源 任务状态查询
+     * @param status     任务状态
+     * @param createFrom 创建来源
+     * @return list
+     */
+    @Query(fields = "{'task_id': 1}")
+    List<TaskInfoEntity> findByStatusAndCreateFromIn(Integer status, Collection<String> createFrom);
+
 }

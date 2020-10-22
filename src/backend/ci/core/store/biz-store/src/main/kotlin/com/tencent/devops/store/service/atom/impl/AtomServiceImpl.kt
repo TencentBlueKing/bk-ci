@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.atom.impl
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -73,6 +74,7 @@ import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomService
+import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreProjectService
 import org.jooq.DSLContext
@@ -108,6 +110,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     lateinit var storeProjectService: StoreProjectService
     @Autowired
     lateinit var classifyService: ClassifyService
+    @Autowired
+    lateinit var marketAtomCommonService: MarketAtomCommonService
     @Autowired
     lateinit var client: Client
 
@@ -437,6 +441,17 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val atomRecord = atomDao.getPipelineAtom(dslContext, id)
         logger.info("the atomRecord is :$atomRecord")
         return if (null != atomRecord) {
+            val visibilityLevel = atomUpdateRequest.visibilityLevel
+            val dbVisibilityLevel = atomRecord.visibilityLevel
+            val updateRepoInfoResult = updateRepoInfo(
+                visibilityLevel = visibilityLevel,
+                dbVisibilityLevel = dbVisibilityLevel,
+                userId = userId,
+                repositoryHashId = atomRecord.repositoryHashId
+            )
+            if (updateRepoInfoResult.isNotOk()) {
+                return updateRepoInfoResult
+            }
             val htmlTemplateVersion = atomRecord.htmlTemplateVersion
             var classType = atomRecord.classType
             if ("1.0" != htmlTemplateVersion) {
@@ -681,8 +696,16 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             // 入库卸载原因
             unInstallReq.reasonList.forEach {
                 if (it?.reasonId != null) {
-                    val id = UUIDUtil.generate()
-                    reasonRelDao.add(context, id, userId, atomCode, it.reasonId, it.note, ReasonTypeEnum.UNINSTALLATOM.type)
+                    reasonRelDao.add(
+                        dslContext = context,
+                        id = UUIDUtil.generate(),
+                        userId = userId,
+                        storeCode = atomCode,
+                        storeType = StoreTypeEnum.ATOM.type.toByte(),
+                        reasonId = it.reasonId,
+                        note = it.note,
+                        type = ReasonTypeEnum.UNINSTALLATOM.type
+                    )
                 }
             }
         }
@@ -698,19 +721,13 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         }
         // 查询插件的最新记录
         val newestAtomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)
-        logger.info("updateAtomBaseInfo newestAtomRecord is :$newestAtomRecord")
-        if (null == newestAtomRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode), false)
-        }
-        val atomFinalStatusList = listOf(
-            AtomStatusEnum.AUDIT_REJECT.status.toByte(),
-            AtomStatusEnum.RELEASED.status.toByte(),
-            AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-            AtomStatusEnum.UNDERCARRIAGED.status.toByte()
-        )
-        // 判断最近一个插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息
-        if (!atomFinalStatusList.contains(newestAtomRecord.atomStatus)) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH, arrayOf(newestAtomRecord.name, newestAtomRecord.version))
+            ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(atomCode))
+        val editFlag = marketAtomCommonService.checkEditCondition(atomCode)
+        if (!editFlag) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
+                params = arrayOf(newestAtomRecord.name, newestAtomRecord.version)
+            )
         }
         val visibilityLevel = atomBaseInfoUpdateRequest.visibilityLevel
         val dbVisibilityLevel = newestAtomRecord.visibilityLevel

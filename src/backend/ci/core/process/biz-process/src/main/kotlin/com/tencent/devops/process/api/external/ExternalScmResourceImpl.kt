@@ -31,6 +31,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.pojo.event.commit.GitWebhookEvent
 import com.tencent.devops.process.engine.pojo.event.commit.GitlabWebhookEvent
 import com.tencent.devops.process.engine.pojo.event.commit.SvnWebhookEvent
+import com.tencent.devops.process.engine.pojo.event.commit.TGitWebhookEvent
 import com.tencent.devops.process.engine.webhook.CodeWebhookEventDispatcher
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,4 +49,7 @@ class ExternalScmResourceImpl @Autowired constructor(
 
     override fun webHookGitlabCommit(event: String) =
         Result(CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate, GitlabWebhookEvent(requestContent = event)))
+
+    override fun webHookCodeTGitCommit(event: String): Result<Boolean> =
+        Result(CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate, TGitWebhookEvent(requestContent = event)))
 }

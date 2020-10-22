@@ -2,4 +2,4 @@
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21911
 server:
-  port: __BKCI_MONITORING_API_PORT__
+  port: __BK_CI_MONITORING_API_PORT__

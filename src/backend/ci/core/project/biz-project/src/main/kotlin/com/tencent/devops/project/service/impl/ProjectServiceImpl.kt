@@ -26,7 +26,7 @@
 
 package com.tencent.devops.project.service.impl
 
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
@@ -63,7 +63,7 @@ class ProjectServiceImpl @Autowired constructor(
         )
         if (!verify) {
             logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
         }
         val projectInfo = projectDao.getByEnglishName(dslContext, englishName) ?: return
         logger.info("updateUsableStatus userId[$userId], projectInfo[${projectInfo.projectId}]")

@@ -66,7 +66,7 @@
         },
         data () {
             return {
-                isFilter: false,
+                isFilter: true,
                 showOrderType: false,
                 statusList: [
                     { id: 'SUCCESS', name: '成功' },
