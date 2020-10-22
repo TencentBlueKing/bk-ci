@@ -72,7 +72,7 @@ interface LogService {
         executeCount: Int?
     ): QueryLogs
 
-    fun queryMoreOriginLogsAfterLine(
+    fun queryLogsAfterLine(
         buildId: String,
         start: Long,
         tag: String? = null,

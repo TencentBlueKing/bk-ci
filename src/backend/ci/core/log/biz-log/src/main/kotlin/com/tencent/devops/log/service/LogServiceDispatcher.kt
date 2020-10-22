@@ -133,7 +133,7 @@ class LogServiceDispatcher @Autowired constructor(
         subTag: String? = null
     ): Result<QueryLogs> {
             return Result(
-                logService.queryMoreOriginLogsAfterLine(
+                logService.queryLogsAfterLine(
                     buildId = buildId,
                     start = start,
                     tag = tag,

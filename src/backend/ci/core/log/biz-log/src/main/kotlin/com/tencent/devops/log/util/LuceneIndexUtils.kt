@@ -24,30 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo
+package com.tencent.devops.log.util
 
-import com.tencent.devops.common.log.pojo.enums.LogStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
+import org.apache.lucene.document.Document
+import org.apache.lucene.document.Field
+import org.apache.lucene.document.IntPoint
+import org.apache.lucene.document.NumericDocValuesField
+import org.apache.lucene.document.StoredField
+import org.apache.lucene.document.StringField
 
-/**
- *
- * Powered By Tencent
- */
-@ApiModel("日志查询模型")
-data class QueryLogs(
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("是否结束", required = true)
-    var finished: Boolean,
-    @ApiModelProperty("是否有后续日志", required = false)
-    var hasMore: Boolean? = false,
-    @ApiModelProperty("日志列表", required = true)
-    var logs: MutableList<LogLine> = mutableListOf(),
-    @ApiModelProperty("所用时间", required = false)
-    var timeUsed: Long = 0,
-    @ApiModelProperty("日志查询状态", required = false)
-    var status: LogStatus = LogStatus.SUCCEED,
-    @ApiModelProperty("日志子tag列表", required = true)
-    var subTags: List<String>? = null
-)
+object LuceneIndexUtils {
+
+    fun getDocumentObject(
+        buildId: String,
+        logMessage: LogMessageWithLineNo
+    ): Document {
+        val doc = Document()
+        doc.add(StringField("buildId", buildId, Field.Store.YES))
+        doc.add(StringField("message", logMessage.message, Field.Store.YES))
+        doc.add(StringField("timestamp", logMessage.timestamp.toString(), Field.Store.YES))
+        doc.add(StringField("tag", logMessage.tag, Field.Store.YES))
+        doc.add(StringField("subTag", logMessage.subTag, Field.Store.YES))
+        doc.add(StringField("jobId", logMessage.jobId, Field.Store.YES))
+        doc.add(StringField("logType", logMessage.logType.name, Field.Store.YES))
+        doc.add(IntPoint("executeCount", logMessage.executeCount ?: 1))
+        doc.add(StoredField("executeCount", logMessage.executeCount ?: 1))
+        doc.add(NumericDocValuesField("lineNo", logMessage.lineNo))
+        doc.add(StoredField("lineNo", logMessage.lineNo))
+        return doc
+    }
+}
