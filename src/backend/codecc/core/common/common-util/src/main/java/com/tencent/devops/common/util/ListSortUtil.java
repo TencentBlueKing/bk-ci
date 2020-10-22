@@ -114,8 +114,8 @@ public class ListSortUtil
             int ret = 0;
             try
             {
-                Method method1 = o1.getClass().getDeclaredMethod(getMethodName(field), null);
-                Method method2 = o2.getClass().getDeclaredMethod(getMethodName(field), null);
+                Method method1 = o1.getClass().getDeclaredMethod(getMethodName(field), (Class<?>) null);
+                Method method2 = o2.getClass().getDeclaredMethod(getMethodName(field), (Class<?>) null);
                 Field field1 = o1.getClass().getDeclaredField(field);
                 field1.setAccessible(true);
                 Class<?> type = field1.getType();

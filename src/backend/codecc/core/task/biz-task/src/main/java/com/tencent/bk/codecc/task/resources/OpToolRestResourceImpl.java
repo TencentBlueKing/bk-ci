@@ -24,8 +24,6 @@ import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.List;
-
 /**
  * op工具接口实现
  * 
@@ -65,6 +63,7 @@ public class OpToolRestResourceImpl implements OpToolRestResource
         return new CodeCCResult<>(taskService.refreshTaskOrgInfo(reqVO.getTaskId()));
     }
 
+
     @Override
     public CodeCCResult<Boolean> refreshToolFollowStatus(String userName, Integer pageSize)
     {
@@ -73,7 +72,7 @@ public class OpToolRestResourceImpl implements OpToolRestResource
         {
             throw new CodeCCException(CommonMessageCode.IS_NOT_ADMIN_MEMBER, new String[]{"admin member"});
         }
-        pageSize = pageSize == null ? 500 : pageSize;
+        pageSize = pageSize == null ? Integer.valueOf(500) : pageSize;
         return new CodeCCResult<>(toolService.batchUpdateToolFollowStatus(pageSize));
     }
 

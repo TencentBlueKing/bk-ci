@@ -9,17 +9,40 @@ import com.tencent.bk.codecc.defect.dao.mongorepository.CheckerSetTaskRelationsh
 import com.tencent.bk.codecc.defect.dao.mongotemplate.CheckerDetailDao;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.CheckerSetDao;
 import com.tencent.bk.codecc.defect.model.CheckerDetailEntity;
-import com.tencent.bk.codecc.defect.model.checkerset.*;
+import com.tencent.bk.codecc.defect.model.checkerset.CheckerPropsEntity;
+import com.tencent.bk.codecc.defect.model.checkerset.CheckerSetCatagoryEntity;
+import com.tencent.bk.codecc.defect.model.checkerset.CheckerSetEntity;
+import com.tencent.bk.codecc.defect.model.checkerset.CheckerSetProjectRelationshipEntity;
+import com.tencent.bk.codecc.defect.model.checkerset.CheckerSetTaskRelationshipEntity;
 import com.tencent.bk.codecc.defect.service.IV3CheckerSetBizService;
 import com.tencent.bk.codecc.defect.service.ToolBuildInfoService;
-import com.tencent.bk.codecc.defect.vo.*;
+import com.tencent.bk.codecc.defect.vo.CheckerCommonCountVO;
+import com.tencent.bk.codecc.defect.vo.CheckerCountListVO;
+import com.tencent.bk.codecc.defect.vo.CheckerListQueryReq;
+import com.tencent.bk.codecc.defect.vo.CheckerSetListQueryReq;
+import com.tencent.bk.codecc.defect.vo.ConfigCheckersPkgReqVO;
+import com.tencent.bk.codecc.defect.vo.OtherCheckerSetListQueryReq;
+import com.tencent.bk.codecc.defect.vo.UpdateAllCheckerReq;
 import com.tencent.bk.codecc.defect.vo.enums.CheckerSetCategory;
 import com.tencent.bk.codecc.defect.vo.enums.CheckerSetSource;
 import com.tencent.bk.codecc.task.api.ServiceBaseDataResource;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.api.ServiceToolRestResource;
-import com.tencent.bk.codecc.task.vo.*;
-import com.tencent.devops.common.api.checkerset.*;
+import com.tencent.bk.codecc.task.vo.BaseDataVO;
+import com.tencent.bk.codecc.task.vo.BatchRegisterVO;
+import com.tencent.bk.codecc.task.vo.TaskBaseVO;
+import com.tencent.bk.codecc.task.vo.TaskDetailVO;
+import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
+import com.tencent.devops.common.api.checkerset.CheckerPropVO;
+import com.tencent.devops.common.api.checkerset.CheckerSetCategoryVO;
+import com.tencent.devops.common.api.checkerset.CheckerSetCodeLangVO;
+import com.tencent.devops.common.api.checkerset.CheckerSetManagementReqVO;
+import com.tencent.devops.common.api.checkerset.CheckerSetParamsVO;
+import com.tencent.devops.common.api.checkerset.CheckerSetRelationshipVO;
+import com.tencent.devops.common.api.checkerset.CheckerSetVO;
+import com.tencent.devops.common.api.checkerset.CheckerSetVersionVO;
+import com.tencent.devops.common.api.checkerset.CreateCheckerSetReqVO;
+import com.tencent.devops.common.api.checkerset.V3UpdateCheckerSetReqVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.auth.api.external.AuthExPermissionApi;
@@ -43,11 +66,25 @@ import org.json.JSONArray;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -141,13 +178,13 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
         checkerSetEntity.setOfficial(CheckerConstants.CheckerSetOfficial.NOT_OFFICIAL.code());
 
         // 查询语言参数列表
-        CodeCCResult<List<BaseDataVO>> paramsCodeCCResult = client.get(ServiceBaseDataResource.class).getParamsByType(ComConstants.KEY_CODE_LANG);
-        if (paramsCodeCCResult.isNotOk() || CollectionUtils.isEmpty(paramsCodeCCResult.getData()))
+        CodeCCResult<List<BaseDataVO>> paramsResult = client.get(ServiceBaseDataResource.class).getParamsByType(ComConstants.KEY_CODE_LANG);
+        if (paramsResult.isNotOk() || CollectionUtils.isEmpty(paramsResult.getData()))
         {
             log.error("param list is empty! param type: {}", ComConstants.KEY_CODE_LANG);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        List<BaseDataVO> codeLangParams = paramsCodeCCResult.getData();
+        List<BaseDataVO> codeLangParams = paramsResult.getData();
         checkerSetEntity.setCheckerSetLang(List2StrUtil.toString(getCodelangs(createCheckerSetReqVO.getCodeLang(), codeLangParams), ","));
 
         // 加入规则集类型中英文名称
@@ -622,13 +659,13 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
                 CollectionUtils.isNotEmpty(checkerSetEntity.getCheckerProps())
                         && (StringUtils.isEmpty(checkerSetEntity.getCheckerSetLang()) || !checkerSetEntity.getCheckerSetLang().contains(ComConstants.STRING_SPLIT))).collect(Collectors.toList());
         // 查询语言参数列表
-        CodeCCResult<List<BaseDataVO>> paramsCodeCCResult = client.get(ServiceBaseDataResource.class).getParamsByType(ComConstants.KEY_CODE_LANG);
-        if (paramsCodeCCResult.isNotOk() || CollectionUtils.isEmpty(paramsCodeCCResult.getData()))
+        CodeCCResult<List<BaseDataVO>> paramsResult = client.get(ServiceBaseDataResource.class).getParamsByType(ComConstants.KEY_CODE_LANG);
+        if (paramsResult.isNotOk() || CollectionUtils.isEmpty(paramsResult.getData()))
         {
             log.error("param list is empty! param type: {}", ComConstants.KEY_CODE_LANG);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        List<BaseDataVO> codeLangParams = paramsCodeCCResult.getData();
+        List<BaseDataVO> codeLangParams = paramsResult.getData();
 
         //按使用量排序
         List<CheckerSetTaskRelationshipEntity> checkerSetTaskRelationshipEntityList = checkerSetTaskRelationshipRepository.findByProjectId(projectId);
@@ -828,16 +865,16 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
 
         //查出任务维度的id集合
         List<CheckerSetTaskRelationshipEntity> checkerSetTaskRelationshipEntityList = checkerSetTaskRelationshipRepository.findByTaskId(taskId);
-        CodeCCResult<TaskDetailVO> taskDetailVOCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoWithoutToolsByTaskId(taskId);
+        CodeCCResult<TaskDetailVO> taskDetailVOResult = client.get(ServiceTaskRestResource.class).getTaskInfoWithoutToolsByTaskId(taskId);
         Long codeLang;
-        if (taskDetailVOCodeCCResult.isNotOk() || taskDetailVOCodeCCResult.getData() == null)
+        if (taskDetailVOResult.isNotOk() || taskDetailVOResult.getData() == null)
         {
             log.error("task info empty! task id: {}", taskId);
             codeLang = 0L;
         }
         else
         {
-            codeLang = taskDetailVOCodeCCResult.getData().getCodeLang();
+            codeLang = taskDetailVOResult.getData().getCodeLang();
         }
         Set<String> taskCheckerSetIds = checkerSetTaskRelationshipEntityList.stream().
                 map(CheckerSetTaskRelationshipEntity::getCheckerSetId).
@@ -870,37 +907,15 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
         {
             for (CheckerSetEntity checkerSetEntity : checkerSetEntityList)
             {
-                //对应版本号
-                if (null != checkerSetVersionMap.get(checkerSetEntity.getCheckerSetId()) && !checkerSetEntity.getVersion().equals(checkerSetVersionMap.get(checkerSetEntity.getCheckerSetId())))
-                {
-                    continue;
-                }
-                else if (null != officialMap.get(checkerSetEntity.getCheckerSetId()) && !checkerSetEntity.getVersion().equals(officialMap.get(checkerSetEntity.getCheckerSetId())))
+                if (!checkCheckerSetEntity(checkerSetEntity, officialMap, checkerSetVersionMap, taskCheckerSetIds))
                 {
                     continue;
                 }
 
-                //如果是老规则集，且没有被该任务使用，且是多语言规则集，那么就不展示
-                if (checkerSetEntity.getLegacy() != null && checkerSetEntity.getLegacy()
-                        && !taskCheckerSetIds.contains(checkerSetEntity.getCheckerSetId())
-                        && StringUtils.isNotEmpty(checkerSetEntity.getCheckerSetLang()) && checkerSetEntity.getCheckerSetLang().contains(ComConstants.STRING_SPLIT))
-                {
-                    continue;
-                }
-//                if(!isLegacyTask && isLegacyCheckerSet)
-//                {
-//                    continue;
-//                }
-
-                //规则数为空的不显示
-                if (CollectionUtils.isEmpty(checkerSetEntity.getCheckerProps()))
-                {
-                    continue;
-                }
                 CheckerSetVO checkerSetVO = new CheckerSetVO();
                 BeanUtils.copyProperties(checkerSetEntity, checkerSetVO);
                 checkerSetVO.setToolList(Sets.newHashSet());
-                if ((codeLang & checkerSetEntity.getCodeLang()) > 0L)
+                if (checkerSetEntity.getCodeLang() != null && (codeLang & checkerSetEntity.getCodeLang()) > 0L)
                 {
                     if (taskCheckerSetIds.contains(checkerSetVO.getCheckerSetId()))
                     {
@@ -929,8 +944,10 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
 
                 //设置默认标签
                 checkerSetVO.setDefaultCheckerSet((CheckerSetSource.DEFAULT.name().
-                        equals(checkerSetVO.getCheckerSetSource()) && null == defaultCheckerSetMap.get(checkerSetVO.getCheckerSetId()) ||
-                        (null != defaultCheckerSetMap.get(checkerSetVO.getCheckerSetId()) && defaultCheckerSetMap.get(checkerSetVO.getCheckerSetId()))));
+                    equals(checkerSetVO.getCheckerSetSource())
+                    && null == defaultCheckerSetMap.get(checkerSetVO.getCheckerSetId())
+                    || (null != defaultCheckerSetMap.get(checkerSetVO.getCheckerSetId())
+                            && defaultCheckerSetMap.get(checkerSetVO.getCheckerSetId()))));
             }
 
             // 任务使用的规则在前，未使用的规则在后，然后再按创建时间倒序
@@ -950,15 +967,84 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
     }
 
     @Override
+    public List<CheckerSetVO> getTaskCheckerSets(String projectId, long taskId, String toolName) {
+        //查出项目纬度的id集合
+        List<CheckerSetProjectRelationshipEntity> projectRelationships =
+                checkerSetProjectRelationshipRepository.findByProjectId(projectId);
+        if (CollectionUtils.isEmpty(projectRelationships)) {
+            return new ArrayList<>();
+        }
+
+        Map<String, CheckerSetProjectRelationshipEntity> projCheckerSetMap = projectRelationships.stream()
+                .collect(Collectors.toMap(it -> it.getCheckerSetId(), Function.identity(), (k, v) -> v));
+
+        //查出任务维度的id集合
+        List<CheckerSetTaskRelationshipEntity> taskRelationships =
+                checkerSetTaskRelationshipRepository.findByTaskId(taskId);
+
+        Set<String> taskCheckerSetIds = taskRelationships.stream()
+                .map(it -> it.getCheckerSetId()).collect(Collectors.toSet());
+
+        //查出任务纬度下的包含指定工具的规则集
+        Set<String> queryToolParam = new HashSet<>();
+        queryToolParam.add(toolName);
+        List<CheckerSetEntity> checkerSetEntityList = checkerSetDao.findByComplexCheckerSetCondition(null,
+                taskCheckerSetIds, null, null, queryToolParam, null,
+                null, false, null, true);
+
+        // 按照版本过滤规则集
+        List<CheckerSetVO> result = checkerSetEntityList.stream()
+                .filter(it -> it.getVersion() != null
+                        && projCheckerSetMap.get(it.getCheckerSetId()) != null
+                        && it.getVersion().equals(projCheckerSetMap.get(it.getCheckerSetId()).getVersion()))
+                .map(it -> {
+                    CheckerSetVO checkerSetVO = new CheckerSetVO();
+                    checkerSetVO.setCheckerSetId(it.getCheckerSetId());
+                    checkerSetVO.setCheckerSetName(it.getCheckerSetName());
+                    checkerSetVO.setVersion(it.getVersion());
+                    checkerSetVO.setTaskUsing(true);
+                    return checkerSetVO;
+                }).sorted(Comparator.comparing(CheckerSetVO::getCheckerSetName)).collect(Collectors.toList());
+
+        return result;
+    }
+
+    private boolean checkCheckerSetEntity(CheckerSetEntity checkerSetEntity, Map<String, Integer> officialMap,
+                                          Map<String, Integer> checkerSetVersionMap, Set<String> taskCheckerSetIds) {
+        //对应版本号
+        if (null != checkerSetVersionMap.get(checkerSetEntity.getCheckerSetId())
+            && !checkerSetEntity.getVersion().equals(checkerSetVersionMap.get(checkerSetEntity.getCheckerSetId()))) {
+            return false;
+        } else if (null != officialMap.get(checkerSetEntity.getCheckerSetId())
+            && !checkerSetEntity.getVersion().equals(officialMap.get(checkerSetEntity.getCheckerSetId()))) {
+            return false;
+        }
+
+        //如果是老规则集，且没有被该任务使用，且是多语言规则集，那么就不展示
+        if (checkerSetEntity.getLegacy() != null
+            && checkerSetEntity.getLegacy()
+            && !taskCheckerSetIds.contains(checkerSetEntity.getCheckerSetId())
+            && StringUtils.isNotEmpty(checkerSetEntity.getCheckerSetLang())
+            && checkerSetEntity.getCheckerSetLang().contains(ComConstants.STRING_SPLIT)) {
+            return false;
+        }
+
+        //规则数为空的不显示
+        if (CollectionUtils.isEmpty(checkerSetEntity.getCheckerProps())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
     public Page<CheckerSetVO> getCheckerSetsOfTaskPage(CheckerSetListQueryReq queryCheckerSetReq)
     {
-        if (null == queryCheckerSetReq.getSortType())
-        {
+        if (null == queryCheckerSetReq.getSortType()) {
             queryCheckerSetReq.setSortType(Sort.Direction.DESC.name());
         }
 
-        if (StringUtils.isEmpty(queryCheckerSetReq.getSortField()))
-        {
+        if (StringUtils.isEmpty(queryCheckerSetReq.getSortField())) {
             queryCheckerSetReq.setSortField("task_usage");
         }
 
@@ -968,7 +1054,8 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
         //封装分页类
         int pageNum = Math.max(queryCheckerSetReq.getPageNum() - 1, 0);
         int pageSize = queryCheckerSetReq.getPageSize() <= 0 ? 10 : queryCheckerSetReq.getPageSize();
-        Pageable pageable = new PageRequest(pageNum, pageSize, new Sort(queryCheckerSetReq.getSortType(), queryCheckerSetReq.getSortField()));
+        Pageable pageable = new PageRequest(pageNum, pageSize,
+            new Sort(queryCheckerSetReq.getSortType(), queryCheckerSetReq.getSortField()));
         long total = pageNum * pageSize + result.size() + 1;
         return new PageImpl<>(result, pageable, total);
     }
@@ -980,13 +1067,11 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
      * @return
      */
     @Override
-    public CheckerSetParamsVO getParams(String projectId)
-    {
+    public CheckerSetParamsVO getParams(String projectId) {
         // 查询规则集类型列表
         CheckerSetParamsVO checkerSetParams = new CheckerSetParamsVO();
         checkerSetParams.setCatatories(Lists.newArrayList());
-        for (CheckerSetCategory checkerSetCategory : CheckerSetCategory.values())
-        {
+        for (CheckerSetCategory checkerSetCategory : CheckerSetCategory.values()) {
             CheckerSetCategoryVO categoryVO = new CheckerSetCategoryVO();
             categoryVO.setCnName(checkerSetCategory.getName());
             categoryVO.setEnName(checkerSetCategory.name());
@@ -994,15 +1079,14 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
         }
 
         // 查询规则集语言列表
-        CodeCCResult<List<BaseDataVO>> langsParamsCodeCCResult = client.get(ServiceBaseDataResource.class).getParamsByType(KEY_LANG);
-        if (langsParamsCodeCCResult.isNotOk() || CollectionUtils.isEmpty(langsParamsCodeCCResult.getData()))
-        {
+        CodeCCResult<List<BaseDataVO>> langsParamsResult =
+            client.get(ServiceBaseDataResource.class).getParamsByType(KEY_LANG);
+        if (langsParamsResult.isNotOk() || CollectionUtils.isEmpty(langsParamsResult.getData())) {
             log.error("checker set langs is empty!");
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
         checkerSetParams.setCodeLangs(Lists.newArrayList());
-        for (BaseDataVO baseDataVO : langsParamsCodeCCResult.getData())
-        {
+        for (BaseDataVO baseDataVO : langsParamsResult.getData()) {
             CheckerSetCodeLangVO checkerSetCodeLangVO = new CheckerSetCodeLangVO();
             checkerSetCodeLangVO.setCodeLang(Integer.valueOf(baseDataVO.getParamCode()));
             checkerSetCodeLangVO.setDisplayName(baseDataVO.getParamName());
@@ -1240,27 +1324,24 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
 
             // 设置强制全量扫描标志并刷新告警状态
             Map<Long, Map<String, Integer>> updatedTaskCheckerSetMap;
-            try
-            {
+            try {
                 updatedTaskCheckerSetMap = Maps.newHashMap();
                 updatedTaskCheckerSetMap.put(taskId, CloneUtils.cloneObject(currentTaskCheckerSetMap.get(taskId)));
-                if (null != updatedTaskCheckerSetMap.get(taskId))
-                {
+                if (null != updatedTaskCheckerSetMap.get(taskId)) {
                     updatedTaskCheckerSetMap.get(taskId).put(checkerSetId, checkerSetVersionMap.get(checkerSetId));
                 }
 
                 // 对各任务设置强制全量扫描标志，并修改告警状态
                 Map<Long, Map<String, Integer>> finalUpdatedTaskCheckerSetMap = updatedTaskCheckerSetMap;
-                ThreadPoolUtil.addRunnableTask(() -> setForceFullScanAndUpdateDefectAndToolStatus(currentTaskCheckerSetMap, finalUpdatedTaskCheckerSetMap, user));
-            }
-            catch (CloneNotSupportedException e)
-            {
+                ThreadPoolUtil.addRunnableTask(() ->
+                    setForceFullScanAndUpdateDefectAndToolStatus(currentTaskCheckerSetMap,
+                        finalUpdatedTaskCheckerSetMap,
+                        user));
+            } catch (CloneNotSupportedException e) {
                 log.error("copy currentTaskCheckerSetMap fail!");
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
             }
-        }
-        else
-        {
+        } else {
             String errMsg = "关联类型非法！";
             log.error(errMsg);
             throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{errMsg}, null);
@@ -1278,30 +1359,39 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
      * @return
      */
     @Override
-    public Boolean batchRelateTaskAndCheckerSet(String projectId, Long taskId, List<CheckerSetVO> checkerSetList, String user, Boolean isOpenSource) {
-        List<CheckerSetProjectRelationshipEntity> projectRelationshipEntityList = checkerSetProjectRelationshipRepository.findByProjectId(projectId);
+    public Boolean batchRelateTaskAndCheckerSet(String projectId,
+                                                Long taskId,
+                                                List<CheckerSetVO> checkerSetList,
+                                                String user,
+                                                Boolean isOpenSource) {
+        List<CheckerSetProjectRelationshipEntity> projectRelationshipEntityList =
+            checkerSetProjectRelationshipRepository.findByProjectId(projectId);
         Map<String, CheckerSetProjectRelationshipEntity> projInstallCheckerSetMap;
         if (CollectionUtils.isEmpty(projectRelationshipEntityList)) {
             projInstallCheckerSetMap = new HashMap<>();
-        }
-        else {
-            projInstallCheckerSetMap = projectRelationshipEntityList.stream().collect(Collectors.toMap(it -> it.getCheckerSetId(), Function.identity(), (k, v) -> k));
+        } else {
+            projInstallCheckerSetMap = projectRelationshipEntityList.stream()
+                .collect(Collectors.toMap(it -> it.getCheckerSetId(), Function.identity(), (k, v) -> k));
         }
 
-        List<CheckerSetTaskRelationshipEntity> existTaskRelationshipEntityList = checkerSetTaskRelationshipRepository.findByTaskId(taskId);
+        List<CheckerSetTaskRelationshipEntity> existTaskRelationshipEntityList =
+            checkerSetTaskRelationshipRepository.findByTaskId(taskId);
         Map<String, CheckerSetTaskRelationshipEntity> existTaskRelatedCheckerMap = null;
         if (CollectionUtils.isNotEmpty(existTaskRelationshipEntityList)) {
             existTaskRelatedCheckerMap = existTaskRelationshipEntityList.stream()
-                    .collect(Collectors.toMap(CheckerSetTaskRelationshipEntity::getCheckerSetId, Function.identity(), (k, v) -> v));
+                    .collect(Collectors.toMap(
+                        CheckerSetTaskRelationshipEntity::getCheckerSetId, Function.identity(), (k, v) -> v));
         }
-        Set<String> checkerSetIds = checkerSetList.stream().map(CheckerSetVO::getCheckerSetId).collect(Collectors.toSet());
+        Set<String> checkerSetIds =
+            checkerSetList.stream().map(CheckerSetVO::getCheckerSetId).collect(Collectors.toSet());
         List<CheckerSetEntity> checkerSetEntityList = checkerSetRepository.findByCheckerSetIdIn(checkerSetIds);
 
         // 找到每个规则集中版本号最大的一个规则集
         Map<String, CheckerSetEntity> maxCheckerSetEntityMap = checkerSetEntityList.stream()
                 .collect(Collectors.groupingBy(CheckerSetEntity::getCheckerSetId))
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> entry.getValue().stream().max(Comparator.comparingInt(CheckerSetEntity::getVersion)).orElse(new CheckerSetEntity())));
+                        entry -> entry.getValue().stream().max(
+                            Comparator.comparingInt(CheckerSetEntity::getVersion)).orElse(new CheckerSetEntity())));
 
         // 项目还没安装的规则集是非法规则集
         List<String> invalidCheckerSet = new ArrayList<>();
@@ -1317,27 +1407,31 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
             CheckerSetEntity maxVersionCheckerSet = maxCheckerSetEntityMap.get(checkerSetId);
             if (!projInstallCheckerSetMap.containsKey(checkerSetId)) {
                 //如果是官方的话 需要关联
+                boolean matchCheckerSetSource = StringUtils.isNotBlank(maxVersionCheckerSet.getCheckerSetSource())
+                    && Arrays.asList(CheckerSetSource.DEFAULT.name(), CheckerSetSource.RECOMMEND.name())
+                        .contains(maxVersionCheckerSet.getCheckerSetSource());
                 if ((null != isOpenSource && isOpenSource)
-                        || Arrays.asList(CheckerSetSource.DEFAULT.name(), CheckerSetSource.RECOMMEND.name()).contains(maxVersionCheckerSet.getCheckerSetSource())
+                        || matchCheckerSetSource
                         || (maxVersionCheckerSet.getLegacy() != null && maxVersionCheckerSet.getLegacy()
                         && CheckerConstants.CheckerSetOfficial.OFFICIAL.code() == maxVersionCheckerSet.getOfficial())) {
                     //关联项目关联表
-                    CheckerSetProjectRelationshipEntity checkerSetProjectRelationshipEntity = new CheckerSetProjectRelationshipEntity();
+                    CheckerSetProjectRelationshipEntity checkerSetProjectRelationshipEntity =
+                        new CheckerSetProjectRelationshipEntity();
                     checkerSetProjectRelationshipEntity.setProjectId(projectId);
                     checkerSetProjectRelationshipEntity.setCheckerSetId(checkerSetVO.getCheckerSetId());
                     //如果是开源扫描，并且版本不为空，则设置版本
-                    if ((null != isOpenSource && isOpenSource) && null != checkerSetVO.getVersion() && Integer.MAX_VALUE != checkerSetVO.getVersion()) {
+                    if ((null != isOpenSource && isOpenSource)
+                        && null != checkerSetVO.getVersion()
+                        && Integer.MAX_VALUE != checkerSetVO.getVersion()) {
                         checkerSetProjectRelationshipEntity.setVersion(checkerSetVO.getVersion());
                         checkerSetProjectRelationshipEntity.setUselatestVersion(false);
-                    }
-                    else {
+                    } else {
                         checkerSetProjectRelationshipEntity.setVersion(maxVersionCheckerSet.getVersion());
                         checkerSetProjectRelationshipEntity.setUselatestVersion(true);
                     }
                     if (CheckerSetSource.DEFAULT.name().equals(checkerSetVO.getCheckerSetSource())) {
                         checkerSetProjectRelationshipEntity.setDefaultCheckerSet(true);
-                    }
-                    else {
+                    } else {
                         checkerSetProjectRelationshipEntity.setDefaultCheckerSet(false);
                     }
                     projectRelationshipEntities.add(checkerSetProjectRelationshipEntity);
@@ -1353,17 +1447,17 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
                     if (CollectionUtils.isNotEmpty(checkerSetVO.getToolList())) {
                         toolSet.addAll(checkerSetVO.getToolList());
                     }
-                }
-                else {
+                } else {
                     invalidCheckerSet.add(checkerSetId);
                 }
-            }
-            else {
+            } else {
                 //如果是开源的，并且版本号与原来不一致，则需要更新版本号
                 if ((null != isOpenSource && isOpenSource) && null != checkerSetVO.getVersion()) {
-                    CheckerSetProjectRelationshipEntity checkerSetProjectRelationshipEntity = projInstallCheckerSetMap.get(checkerSetId);
+                    CheckerSetProjectRelationshipEntity checkerSetProjectRelationshipEntity =
+                        projInstallCheckerSetMap.get(checkerSetId);
 
-                    if (checkerSetProjectRelationshipEntity != null && !checkerSetVO.getVersion().equals(checkerSetProjectRelationshipEntity.getVersion())) {
+                    if (checkerSetProjectRelationshipEntity != null
+                        && !checkerSetVO.getVersion().equals(checkerSetProjectRelationshipEntity.getVersion())) {
                         if (Integer.MAX_VALUE != checkerSetVO.getVersion()) {
                             checkerSetProjectRelationshipEntity.setVersion(checkerSetVO.getVersion());
                             checkerSetProjectRelationshipEntity.setUselatestVersion(false);
@@ -1377,7 +1471,8 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
                     }
                 }
                 // 还没有被任务关联的规则集则创建关联
-                if (MapUtils.isEmpty(existTaskRelatedCheckerMap) || !existTaskRelatedCheckerMap.containsKey(checkerSetId)) {
+                if (MapUtils.isEmpty(existTaskRelatedCheckerMap)
+                    || !existTaskRelatedCheckerMap.containsKey(checkerSetId)) {
                     CheckerSetTaskRelationshipEntity newRelationshipEntity = new CheckerSetTaskRelationshipEntity();
                     newRelationshipEntity.setCheckerSetId(checkerSetId);
                     newRelationshipEntity.setProjectId(projectId);
@@ -1413,27 +1508,34 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
 
         // 解除规则集关联
         if (MapUtils.isNotEmpty(existTaskRelatedCheckerMap)) {
-            Collection<CheckerSetTaskRelationshipEntity> needDeleteTaskRelationshens = existTaskRelatedCheckerMap.values();
+            Collection<CheckerSetTaskRelationshipEntity> needDeleteTaskRelationshens =
+                existTaskRelatedCheckerMap.values();
             checkerSetTaskRelationshipRepository.delete(needDeleteTaskRelationshens);
 
             // 解除关联的规则集涉及的工具也需要强制全量扫描
-            Set<String> needDeleteCheckerSeIds = needDeleteTaskRelationshens.stream().map(it -> it.getCheckerSetId()).collect(Collectors.toSet());
-            List<CheckerSetEntity> needDeleteCheckerSets = checkerSetRepository.findByCheckerSetIdIn(needDeleteCheckerSeIds);
-            Map<String, List<CheckerSetEntity>> checkerSetMap = needDeleteCheckerSets.stream().collect(Collectors.groupingBy(CheckerSetEntity::getCheckerSetId));
+            Set<String> needDeleteCheckerSeIds = needDeleteTaskRelationshens.stream()
+                .map(it -> it.getCheckerSetId()).collect(Collectors.toSet());
+            List<CheckerSetEntity> needDeleteCheckerSets =
+                checkerSetRepository.findByCheckerSetIdIn(needDeleteCheckerSeIds);
+            Map<String, List<CheckerSetEntity>> checkerSetMap =
+                needDeleteCheckerSets.stream().collect(Collectors.groupingBy(CheckerSetEntity::getCheckerSetId));
             checkerSetMap.forEach((checkerSetId, checkerSetEntities) -> {
                 CheckerSetEntity selectCheckerSet = null;
                 if (projInstallCheckerSetMap.get(checkerSetId).getUselatestVersion()){
-                    selectCheckerSet = checkerSetEntities.stream().max(Comparator.comparing(CheckerSetEntity::getVersion)).orElse(new CheckerSetEntity());
+                    selectCheckerSet = checkerSetEntities.stream()
+                        .max(Comparator.comparing(CheckerSetEntity::getVersion)).orElse(new CheckerSetEntity());
                 }
                 else {
                     for (CheckerSetEntity checkerSetEntity : checkerSetEntities) {
-                        if (checkerSetEntity.getVersion().equals(projInstallCheckerSetMap.get(checkerSetId).getVersion())) {
+                        if (checkerSetEntity.getVersion()
+                            .equals(projInstallCheckerSetMap.get(checkerSetId).getVersion())) {
                             selectCheckerSet = checkerSetEntity;
                         }
                     }
                 }
                 if (selectCheckerSet != null && CollectionUtils.isNotEmpty(selectCheckerSet.getCheckerProps())) {
-                    Set<String> tools = selectCheckerSet.getCheckerProps().stream().map(CheckerPropsEntity::getToolName).collect(Collectors.toSet());
+                    Set<String> tools = selectCheckerSet.getCheckerProps().stream()
+                        .map(CheckerPropsEntity::getToolName).collect(Collectors.toSet());
                     toolSet.addAll(tools);
                 }
             });
@@ -1446,14 +1548,12 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
     }
 
     @Override
-    public void management(String user, String checkerSetId, CheckerSetManagementReqVO checkerSetManagementReqVO)
-    {
+    public void management(String user, String checkerSetId, CheckerSetManagementReqVO checkerSetManagementReqVO) {
         //兼容官方推荐官方优选
         CheckerSetProjectRelationshipEntity sourceProjectRelationEntity = null;
         // 校验规则集是否存在
         List<CheckerSetEntity> checkerSetEntities = checkerSetRepository.findByCheckerSetId(checkerSetId);
-        if (CollectionUtils.isEmpty(checkerSetEntities))
-        {
+        if (CollectionUtils.isEmpty(checkerSetEntities)) {
             String errMsg = "规则集不存在";
             log.error(errMsg);
             throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{errMsg}, null);
@@ -1461,10 +1561,9 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
 
         CheckerSetEntity firstCheckerSetEntity = checkerSetEntities.get(0);
         if (CheckerSetSource.DEFAULT.name().equals(firstCheckerSetEntity.getCheckerSetSource())
-                || CheckerSetSource.RECOMMEND.name().equals(firstCheckerSetEntity.getCheckerSetSource()))
-        {
-            if (checkerSetManagementReqVO.getUninstallCheckerSet() != null && checkerSetManagementReqVO.getUninstallCheckerSet())
-            {
+                || CheckerSetSource.RECOMMEND.name().equals(firstCheckerSetEntity.getCheckerSetSource())) {
+            if (checkerSetManagementReqVO.getUninstallCheckerSet() != null
+                && checkerSetManagementReqVO.getUninstallCheckerSet()) {
                 String errMsg = "官方推荐和官方优选规则集不能进行此项操作";
                 log.error(errMsg);
                 throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{errMsg}, null);
@@ -1472,8 +1571,8 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
         }
 
         // 校验设置为公开的规则集名称是否与公共规则集重复
-        if (checkerSetManagementReqVO.getScope() != null && checkerSetManagementReqVO.getScope() == CheckerConstants.CheckerSetScope.PUBLIC.code())
-        {
+        if (checkerSetManagementReqVO.getScope() != null
+            && checkerSetManagementReqVO.getScope() == CheckerConstants.CheckerSetScope.PUBLIC.code()) {
             checkNameExistInPublic(firstCheckerSetEntity.getCheckerSetName());
         }
 
@@ -1481,7 +1580,8 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
         boolean havePermission;
         if (checkerSetManagementReqVO.getDiscardFromTask() == null)
         {
-            log.info("management checkerSet version auth user {} | project {}", user, checkerSetManagementReqVO.getProjectId());
+            log.info("management checkerSet version auth user {} | project {}",
+                user, checkerSetManagementReqVO.getProjectId());
             havePermission = authExPermissionApi.authProjectManager(checkerSetManagementReqVO.getProjectId(), user);
         }
         else
@@ -1489,7 +1589,8 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
             Set<String> tasks = authExPermissionApi.queryTaskListForUser(user, checkerSetManagementReqVO.getProjectId(),
                     Sets.newHashSet(CodeCCAuthAction.TASK_MANAGE.getActionName()));
             havePermission = tasks.contains(String.valueOf(checkerSetManagementReqVO.getDiscardFromTask()));
-            log.info("management checkSet auth user {} | task {} | set {}", user, checkerSetManagementReqVO.getDiscardFromTask(), tasks);
+            log.info("management checkSet auth user {} | task {} | set {}",
+                user, checkerSetManagementReqVO.getDiscardFromTask(), tasks);
         }
         if (!havePermission && !firstCheckerSetEntity.getCreator().equals(user))
         {
@@ -1499,7 +1600,8 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
         }
 
         // 查询任务关联规则集记录
-        List<CheckerSetTaskRelationshipEntity> taskRelationshipEntities = checkerSetTaskRelationshipRepository.findByProjectId(checkerSetManagementReqVO.getProjectId());
+        List<CheckerSetTaskRelationshipEntity> taskRelationshipEntities =
+            checkerSetTaskRelationshipRepository.findByProjectId(checkerSetManagementReqVO.getProjectId());
         //过滤限制当前规则集id的规则集
         List<CheckerSetTaskRelationshipEntity> selectCheckerSetEntities = new ArrayList<>();
         Map<Long, CheckerSetTaskRelationshipEntity> taskRelationshipEntityMap = Maps.newHashMap();
@@ -1536,7 +1638,8 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
                 throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{errMsg}, null);
             }
         }
-        if (checkerSetManagementReqVO.getUninstallCheckerSet() != null && checkerSetManagementReqVO.getUninstallCheckerSet())
+        if (checkerSetManagementReqVO.getUninstallCheckerSet() != null
+            && checkerSetManagementReqVO.getUninstallCheckerSet())
         {
             if (checkerSetEntities.get(0).getProjectId().equals(checkerSetManagementReqVO.getProjectId()))
             {
@@ -1553,7 +1656,8 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
         }
 
         // 查询当前项目关联规则集的列表
-        List<CheckerSetProjectRelationshipEntity> projectRelationshipEntities = checkerSetProjectRelationshipRepository.findByProjectId(checkerSetManagementReqVO.getProjectId());
+        List<CheckerSetProjectRelationshipEntity> projectRelationshipEntities =
+            checkerSetProjectRelationshipRepository.findByProjectId(checkerSetManagementReqVO.getProjectId());
         Map<String, CheckerSetProjectRelationshipEntity> projectRelationshipEntityMap = Maps.newHashMap();
         if (CollectionUtils.isNotEmpty(projectRelationshipEntities))
         {
@@ -2130,17 +2234,47 @@ public class V3CheckerSetBizServiceImpl implements IV3CheckerSetBizService
                 checkerSetIds, null, null, null, null, null, true,
                 null, true);
 
-        return checkerSetEntityList.stream()
-                .filter(
-                        checkerSetEntity ->
-                                ((null != checkerSetEntity.getVersion() && null != checkerSetVersionMap.get(checkerSetEntity.getCheckerSetId()) &&
-                                        checkerSetEntity.getVersion().equals(checkerSetVersionMap.get(checkerSetEntity.getCheckerSetId()))) ||
-                                        Arrays.asList(CheckerSetSource.DEFAULT.name(), CheckerSetSource.RECOMMEND.name()).contains(checkerSetEntity.getCheckerSetSource()))
-                                        // checkerSetEntity.getLegacy() == legacy 或者 legacy == false时checkerSetEntity.getLegacy() == null
-                                        && (legacy.contains(checkerSetEntity.getLegacy())
-                                        || (CollectionUtils.isNotEmpty(legacy) && legacy.contains(false) && checkerSetEntity.getLegacy() == null))
-                                        && CollectionUtils.isNotEmpty(checkerSetEntity.getCheckerProps())
-                ).collect(Collectors.toList());
+        Map<String, CheckerSetEntity> checkerSetEntityMap = new HashMap<>();
+        List<String> commonProps = Arrays.asList(CheckerSetSource.DEFAULT.name(), CheckerSetSource.RECOMMEND.name());
+        for (CheckerSetEntity checkerSetEntity : checkerSetEntityList) {
+            if (CollectionUtils.isEmpty(checkerSetEntity.getCheckerProps())) {
+                continue;
+            }
+
+            // checkerSetEntity.getLegacy() == legacy 或者 legacy == false时checkerSetEntity.getLegacy() == null
+            boolean legacyCond = legacy.contains(checkerSetEntity.getLegacy())
+                || (CollectionUtils.isNotEmpty(legacy) && legacy.contains(false) && checkerSetEntity.getLegacy() == null);
+            if (!legacyCond) {
+                continue;
+            }
+
+            // 匹配规则
+            String checkerSetId = checkerSetEntity.getCheckerSetId();
+            CheckerSetEntity item = checkerSetEntityMap.get(checkerSetId);
+            boolean matchVersion = (null != checkerSetEntity.getVersion()
+                && null != checkerSetVersionMap.get(checkerSetEntity.getCheckerSetId())
+                && checkerSetEntity.getVersion().equals(checkerSetVersionMap.get(checkerSetEntity.getCheckerSetId())));
+            boolean matchCommonProp = commonProps.contains(checkerSetEntity.getCheckerSetSource());
+
+            // 优先用版本匹配上的
+            if (item != null) {
+                if (matchVersion) {
+                    checkerSetEntityMap.put(checkerSetId, checkerSetEntity);
+                } else {
+                    if (item.getVersion() < checkerSetEntity.getVersion()) {
+                        checkerSetEntityMap.put(checkerSetId, checkerSetEntity);
+                    }
+                }
+                continue;
+            }
+
+            if (matchVersion || matchCommonProp) {
+                checkerSetEntityMap.put(checkerSetId, checkerSetEntity);
+            }
+
+        }
+
+        return new ArrayList<>(checkerSetEntityMap.values());
     }
 
     @Override

@@ -87,12 +87,14 @@ public class DUPCFastIncrementConsumer extends AbstractFastIncrementConsumer
             baseBuildId = StringUtils.isNotEmpty(toolBuildStackEntity.getBaseBuildId()) ? toolBuildStackEntity.getBaseBuildId() : "";
         }
         DUPCStatisticEntity statisticEntity = dupcStatisticRepository.findByTaskIdAndBuildId(taskId, baseBuildId);
-        statisticEntity.setEntityId(null);
-        statisticEntity.setBuildId(buildId);
-        statisticEntity.setDefectChange(0);
-        statisticEntity.setDupRateChange(0F);
-        statisticEntity.setTime(System.currentTimeMillis());
-        dupcStatisticRepository.save(statisticEntity);
+        if (statisticEntity != null) {
+            statisticEntity.setEntityId(null);
+            statisticEntity.setBuildId(buildId);
+            statisticEntity.setDefectChange(0);
+            statisticEntity.setDupRateChange(0F);
+            statisticEntity.setTime(System.currentTimeMillis());
+            dupcStatisticRepository.save(statisticEntity);
+        }
 
         // 获取最近5天重复率趋势
         List<DupcChartTrendEntity> dupcChart = Lists.newArrayList();

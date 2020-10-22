@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.CodeRepoVO;
 import com.tencent.devops.common.api.CommonVO;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
@@ -13,6 +14,7 @@ import java.util.List;
  * @version V1.0
  * @date 2019/11/15
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("代码仓库信息视图")
 public class UploadRepositoriesVO extends CommonVO

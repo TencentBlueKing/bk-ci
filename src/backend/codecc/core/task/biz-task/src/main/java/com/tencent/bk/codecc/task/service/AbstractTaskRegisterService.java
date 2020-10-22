@@ -55,7 +55,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.*;
@@ -337,17 +336,17 @@ public abstract class AbstractTaskRegisterService implements TaskRegisterService
     {
         // 初始化规则集列表
         Set<String> checkerSetIdList = taskDetailVO.getCheckerSetList().stream().map(CheckerSetVO::getCheckerSetId).collect(Collectors.toSet());
-        CodeCCResult<List<CheckerSetVO>> codeCCResult = client.get(ServiceCheckerSetRestResource.class).queryCheckerSets(checkerSetIdList, taskDetailVO.getProjectId());
-        if (codeCCResult.isNotOk() || CollectionUtils.isEmpty(codeCCResult.getData()))
+        CodeCCResult<List<CheckerSetVO>> result = client.get(ServiceCheckerSetRestResource.class).queryCheckerSets(checkerSetIdList, taskDetailVO.getProjectId());
+        if (result.isNotOk() || CollectionUtils.isEmpty(result.getData()))
         {
-            String errorLog = "query checker sets fail, result: " + codeCCResult;
+            String errorLog = "query checker sets fail, result: " + result;
             log.error(errorLog);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{errorLog});
         }
-        log.info("adapt v3 atom checker set result for task: " + taskDetailVO.getTaskId() + ", " + codeCCResult);
+        log.info("adapt v3 atom checker set result for task: " + taskDetailVO.getTaskId() + ", " + result);
 
         //要对语言进行过滤
-        List<CheckerSetVO> resultCheckerSetList = codeCCResult.getData();
+        List<CheckerSetVO> resultCheckerSetList = result.getData();
         List<CheckerSetVO> finalCheckerSetList = resultCheckerSetList.stream().filter(checkerSetVO ->
             (checkerSetVO.getCodeLang() & taskDetailVO.getCodeLang()) > 0L
         ).collect(Collectors.toList());

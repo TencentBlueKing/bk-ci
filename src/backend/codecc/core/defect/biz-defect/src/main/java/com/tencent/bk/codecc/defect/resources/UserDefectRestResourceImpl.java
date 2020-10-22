@@ -111,11 +111,11 @@ public class UserDefectRestResourceImpl implements UserDefectRestResource
 
     @Override
     public CodeCCResult<CommonDefectQueryRspVO> queryDefectList(long taskId,
-                                                          DefectQueryReqVO defectQueryReqVO,
-                                                          int pageNum,
-                                                          int pageSize,
-                                                          String sortField,
-                                                          Sort.Direction sortType)
+                                                                DefectQueryReqVO defectQueryReqVO,
+                                                                int pageNum,
+                                                                int pageSize,
+                                                                String sortField,
+                                                                Sort.Direction sortType)
     {
         IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(defectQueryReqVO.getToolName(),
                 ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
@@ -124,10 +124,10 @@ public class UserDefectRestResourceImpl implements UserDefectRestResource
 
     @Override
     public CodeCCResult<CommonDefectDetailQueryRspVO> queryDefectDetail(long taskId,
-                                                                  String userId,
-                                                                  CommonDefectDetailQueryReqVO commonDefectDetailQueryReqVO,
-                                                                  String sortField,
-                                                                  Sort.Direction sortType)
+                                                                        String userId,
+                                                                        CommonDefectDetailQueryReqVO commonDefectDetailQueryReqVO,
+                                                                        String sortField,
+                                                                        Sort.Direction sortType)
     {
         IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(commonDefectDetailQueryReqVO.getToolName(),
                 ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
@@ -174,7 +174,7 @@ public class UserDefectRestResourceImpl implements UserDefectRestResource
 
     @Override
     public CodeCCResult<Boolean> addCodeComment(String defectId, String toolName, String commentId,
-                                          String userName, SingleCommentVO singleCommentVO)
+                                                String userName, SingleCommentVO singleCommentVO)
     {
         IDefectOperateBizService defectOperateBizService = defectOperateBizServiceFactory.createBizService(toolName,
                 ComConstants.BusinessType.DEFECT_OPERATE.value(), IDefectOperateBizService.class);
@@ -216,7 +216,8 @@ public class UserDefectRestResourceImpl implements UserDefectRestResource
         defectQueryReqVO.setOrder(orderBy);
         if (!checkParam(defectQueryReqVO))
             return new CodeCCResult<>(CommonMessageCode.PARAMETER_IS_INVALID, null);
-        return new CodeCCResult<>(clocQueryWarningBizService.processQueryWarningRequest(taskId, defectQueryReqVO, 0, 0, null, null));
+        return new CodeCCResult<>(clocQueryWarningBizService.processQueryWarningRequest(taskId, defectQueryReqVO,
+            0, 0, null, null));
     }
 
     private boolean checkParam(DefectQueryReqVO defectQueryReqVO) {
@@ -226,6 +227,7 @@ public class UserDefectRestResourceImpl implements UserDefectRestResource
 
         return defectQueryReqVO.getToolName().equalsIgnoreCase(ComConstants.Tool.CLOC.name());
     }
+
     @Override
     public CodeCCResult<QueryWarningPageInitRspVO> pageInit(long taskId, DefectQueryReqVO defectQueryReqVO)
     {

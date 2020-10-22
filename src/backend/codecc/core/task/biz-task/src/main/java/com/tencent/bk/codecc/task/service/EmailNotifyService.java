@@ -16,6 +16,7 @@ import com.tencent.bk.codecc.quartz.pojo.OperationType;
 import com.tencent.bk.codecc.task.pojo.EmailMessageModel;
 import com.tencent.bk.codecc.task.pojo.EmailNotifyModel;
 import com.tencent.bk.codecc.task.pojo.RtxNotifyModel;
+import com.tencent.bk.codecc.task.pojo.WeChatMessageModel;
 
 import java.util.Set;
 
@@ -54,5 +55,11 @@ public interface EmailNotifyService
      * @param emailMessageModel 邮件参数
      */
     void sendEmail(EmailMessageModel emailMessageModel);
+
+    /**
+     * 从指定微信模版发送微信
+     * @param weChatMessageModel 邮件参数
+     */
+    void sendWeChat(WeChatMessageModel weChatMessageModel);
 
 }

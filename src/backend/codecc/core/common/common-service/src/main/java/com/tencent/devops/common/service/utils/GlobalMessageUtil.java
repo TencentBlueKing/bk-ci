@@ -124,6 +124,9 @@ public class GlobalMessageUtil
      */
     public Map<String, GlobalMessage> getGlobalByList(List<String> keyList)
     {
+        logger.info("get redis template current db:");
+        logger.info(redisTemplate.opsForValue().get("db_num").toString());
+
         Map<String, GlobalMessage> message = new HashMap<>();
         if (CollectionUtils.isNotEmpty(keyList))
         {
@@ -136,9 +139,9 @@ public class GlobalMessageUtil
                     operMsgDetail = objectMapper.readValue(operMsgStr, GlobalMessage.class);
                     message.put(key, operMsgDetail);
                 }
-                catch (IOException e)
+                catch (Exception e)
                 {
-                    logger.error("operation history message deserialize fail!");
+                    logger.error("operation history message deserialize fail!: {}", key);
                     throw new CodeCCException(CommonMessageCode.UTIL_EXECUTE_FAIL);
                 }
             }

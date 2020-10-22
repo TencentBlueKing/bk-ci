@@ -33,6 +33,7 @@ import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -87,4 +88,7 @@ public class CommonStatisticEntity extends StatisticEntity
 
     @Field("exist_authors")
     private Set<String> existAuthors;
+
+    @Field("checker_statistic")
+    private List<CheckerStatisticEntity> checkerStatistic;
 }

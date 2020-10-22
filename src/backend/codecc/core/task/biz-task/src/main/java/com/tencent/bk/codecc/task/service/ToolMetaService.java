@@ -29,7 +29,6 @@ package com.tencent.bk.codecc.task.service;
 import com.tencent.devops.common.api.RefreshToolImageRevisionReqVO;
 import com.tencent.devops.common.api.ToolMetaDetailVO;
 
-
 import java.util.List;
 
 /**

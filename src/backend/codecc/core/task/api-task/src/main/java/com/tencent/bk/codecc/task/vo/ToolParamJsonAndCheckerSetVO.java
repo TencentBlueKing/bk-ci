@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.CommonVO;
 import com.tencent.devops.common.api.checkerset.CheckerSetVO;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 工具特殊参数和规则集视图
@@ -12,6 +13,7 @@ import lombok.Data;
  * @date 2019/11/25
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @ApiModel("工具特殊参数和规则集视图")
 public class ToolParamJsonAndCheckerSetVO extends CommonVO
 {

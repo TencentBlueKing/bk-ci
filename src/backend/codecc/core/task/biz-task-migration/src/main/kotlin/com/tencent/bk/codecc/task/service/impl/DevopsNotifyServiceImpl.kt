@@ -5,9 +5,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
+import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
+import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -60,5 +62,23 @@ class DevopsNotifyServiceImpl @Autowired constructor(
             addAllReceivers(receivers)
         }
         client.getDevopsService(ServiceNotifyResource::class.java).sendRtxNotify(rtxNotifyMessage)
+    }
+
+    override fun sendWeChat(
+            body: String,
+            priority: String,
+            receivers: Set<String>,
+            sender: String,
+            source: Int
+    ) {
+        val weChatNotifyMessage = WechatNotifyMessage()
+        with(weChatNotifyMessage) {
+            this.body = body
+            this.priority = EnumNotifyPriority.parse(priority)
+            this.addAllReceivers(receivers)
+            this.sender = sender
+            this.source = EnumNotifySource.parse(source)!!
+            client.getDevopsService(ServiceNotifyResource::class.java).sendWechatNotify(this)
+        }
     }
 }

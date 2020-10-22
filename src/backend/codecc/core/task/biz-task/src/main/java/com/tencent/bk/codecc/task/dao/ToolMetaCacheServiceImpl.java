@@ -368,11 +368,9 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
      *
      * @param toolName
      */
-    public void cacheToolBaseMeta(String toolName)
-    {
+    public void cacheToolBaseMeta(String toolName) {
         ToolMetaEntity toolMetaEntity = toolMetaRepository.findByName(toolName);
-        if (toolMetaEntity != null)
-        {
+        if (toolMetaEntity != null) {
             ToolMetaBaseVO newToolMetaBaseVO = new ToolMetaBaseVO();
             BeanUtils.copyProperties(toolMetaEntity, newToolMetaBaseVO);
             toolMetaBasicMap.put(newToolMetaBaseVO.getName(), newToolMetaBaseVO);

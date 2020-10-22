@@ -306,14 +306,14 @@ public class CheckerSetBizServiceImpl implements ICheckerSetBizService
         // 更新项目内其他任务的规则集
         if (ComConstants.CommonJudge.COMMON_Y.value().equals(updateCheckerSetReqVO.getUpgradeMyOtherTasks()))
         {
-            CodeCCResult<TaskListVO> taskCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskList(projectId, user);
-            if (taskCodeCCResult.isNotOk() || null == taskCodeCCResult.getData() || CollectionUtils.isEmpty(taskCodeCCResult.getData().getEnableTasks()))
+            CodeCCResult<TaskListVO> taskResult = client.get(ServiceTaskRestResource.class).getTaskList(projectId, user);
+            if (taskResult.isNotOk() || null == taskResult.getData() || CollectionUtils.isEmpty(taskResult.getData().getEnableTasks()))
             {
                 log.error("task list is empty! project id: {}, user: {}", projectId, user);
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
             }
 
-            for (TaskDetailVO taskDetailVO : taskCodeCCResult.getData().getEnableTasks())
+            for (TaskDetailVO taskDetailVO : taskResult.getData().getEnableTasks())
             {
                 if (taskDetailVO.getTaskId() == taskId || CollectionUtils.isEmpty(taskDetailVO.getToolConfigInfoList()))
                 {
@@ -344,13 +344,13 @@ public class CheckerSetBizServiceImpl implements ICheckerSetBizService
     @Override
     public boolean addCheckerSet2Task(String user, Long taskId, AddCheckerSet2TaskReqVO addCheckerSet2TaskReqVO)
     {
-        CodeCCResult<TaskDetailVO> taskCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
-        if (taskCodeCCResult.isNotOk() || null == taskCodeCCResult.getData())
+        CodeCCResult<TaskDetailVO> taskResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        if (taskResult.isNotOk() || null == taskResult.getData())
         {
             log.error("task information is empty! task id: {}", taskId);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        TaskDetailVO taskDetailVO = taskCodeCCResult.getData();
+        TaskDetailVO taskDetailVO = taskResult.getData();
         Map<String, ToolConfigInfoVO> toolConfigMap = Maps.newHashMap();
         if (CollectionUtils.isNotEmpty(taskDetailVO.getToolConfigInfoList()))
         {
@@ -494,14 +494,14 @@ public class CheckerSetBizServiceImpl implements ICheckerSetBizService
                 {
                     // 查询用户可见的任务列表
                     Set<Long> userTasks = Sets.newHashSet();
-                    CodeCCResult<TaskListVO> taskListCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskList(taskDetailVO.getProjectId(), user);
-                    if (taskListCodeCCResult.isNotOk() || null == taskListCodeCCResult.getData() || CollectionUtils.isEmpty(taskListCodeCCResult.getData().getEnableTasks()))
+                    CodeCCResult<TaskListVO> taskListResult = client.get(ServiceTaskRestResource.class).getTaskList(taskDetailVO.getProjectId(), user);
+                    if (taskListResult.isNotOk() || null == taskListResult.getData() || CollectionUtils.isEmpty(taskListResult.getData().getEnableTasks()))
                     {
                         log.error("task list is empty! project id: {}, user: {}", taskDetailVO.getProjectId(), user);
                         throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
                     }
                     addCheckerSet2TaskReqVO.setUpgradeCheckerSetOfUserTasks(ComConstants.CommonJudge.COMMON_N.value());
-                    for (TaskDetailVO userTaskDetailVO : taskListCodeCCResult.getData().getEnableTasks())
+                    for (TaskDetailVO userTaskDetailVO : taskListResult.getData().getEnableTasks())
                     {
                         userTasks.add(taskDetailVO.getTaskId());
                         if (userTaskDetailVO.getTaskId() != taskId)
@@ -550,13 +550,13 @@ public class CheckerSetBizServiceImpl implements ICheckerSetBizService
 
             // 查询用户可见的项目列表使用规则集的数量
             Map<String, Integer> checkerSetUsageMap = Maps.newHashMap();
-            CodeCCResult<TaskListVO> taskCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskList(projectId, user);
-            if (taskCodeCCResult.isNotOk() || null == taskCodeCCResult.getData() || CollectionUtils.isEmpty(taskCodeCCResult.getData().getEnableTasks()))
+            CodeCCResult<TaskListVO> taskResult = client.get(ServiceTaskRestResource.class).getTaskList(projectId, user);
+            if (taskResult.isNotOk() || null == taskResult.getData() || CollectionUtils.isEmpty(taskResult.getData().getEnableTasks()))
             {
                 log.error("task list is empty! project id: {}, user: {}", projectId, user);
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
             }
-            for (TaskDetailVO taskDetailVO : taskCodeCCResult.getData().getEnableTasks())
+            for (TaskDetailVO taskDetailVO : taskResult.getData().getEnableTasks())
             {
                 if (CollectionUtils.isEmpty(taskDetailVO.getToolConfigInfoList()))
                 {
@@ -634,13 +634,13 @@ public class CheckerSetBizServiceImpl implements ICheckerSetBizService
         {
             // 查询用户可见的任务列表
             Set<Long> userTasks = Sets.newHashSet();
-            CodeCCResult<TaskListVO> taskCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskList(projectId, user);
-            if (taskCodeCCResult.isNotOk() || null == taskCodeCCResult.getData() || CollectionUtils.isEmpty(taskCodeCCResult.getData().getEnableTasks()))
+            CodeCCResult<TaskListVO> taskResult = client.get(ServiceTaskRestResource.class).getTaskList(projectId, user);
+            if (taskResult.isNotOk() || null == taskResult.getData() || CollectionUtils.isEmpty(taskResult.getData().getEnableTasks()))
             {
                 log.error("task list is empty! project id: {}, user: {}", projectId, user);
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
             }
-            for (TaskDetailVO taskDetailVO : taskCodeCCResult.getData().getEnableTasks())
+            for (TaskDetailVO taskDetailVO : taskResult.getData().getEnableTasks())
             {
                 userTasks.add(taskDetailVO.getTaskId());
             }
@@ -715,13 +715,13 @@ public class CheckerSetBizServiceImpl implements ICheckerSetBizService
     {
         if (CollectionUtils.isNotEmpty(toolNames))
         {
-            CodeCCResult<TaskDetailVO> taskCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
-            if (taskCodeCCResult.isNotOk() || null == taskCodeCCResult.getData())
+            CodeCCResult<TaskDetailVO> taskResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+            if (taskResult.isNotOk() || null == taskResult.getData())
             {
                 log.error("task information is empty! task id: {}", taskId);
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
             }
-            TaskDetailVO taskDetailVO = taskCodeCCResult.getData();
+            TaskDetailVO taskDetailVO = taskResult.getData();
             clearTaskCheckerSets(taskDetailVO, toolNames, user, needUpdatePipeline);
         }
         return true;
@@ -839,13 +839,13 @@ public class CheckerSetBizServiceImpl implements ICheckerSetBizService
      */
     private ToolConfigInfoWithMetadataVO getToolConfigInfoWithMetadata(long taskId, String toolName)
     {
-        CodeCCResult<ToolConfigInfoWithMetadataVO> toolCodeCCResult = client.get(ServiceToolRestResource.class).getToolWithMetadataByTaskIdAndName(taskId, toolName);
-        if (toolCodeCCResult.isNotOk() || null == toolCodeCCResult.getData())
+        CodeCCResult<ToolConfigInfoWithMetadataVO> toolResult = client.get(ServiceToolRestResource.class).getToolWithMetadataByTaskIdAndName(taskId, toolName);
+        if (toolResult.isNotOk() || null == toolResult.getData())
         {
             log.error("tool info is empty! task id: {}, tool name: {}", taskId, toolName);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        ToolConfigInfoWithMetadataVO toolConfig = toolCodeCCResult.getData();
+        ToolConfigInfoWithMetadataVO toolConfig = toolResult.getData();
         return toolConfig;
     }
 
@@ -941,18 +941,18 @@ public class CheckerSetBizServiceImpl implements ICheckerSetBizService
         if (ComConstants.BsTaskCreateFrom.BS_PIPELINE.value().equals(authExPermissionApi.getTaskCreateFrom(taskId)))
         {
             // 查询任务详情
-            CodeCCResult<TaskDetailVO> taskDetailVOCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
-            if (taskDetailVOCodeCCResult.isNotOk() || null == taskDetailVOCodeCCResult.getData())
+            CodeCCResult<TaskDetailVO> taskDetailVOResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+            if (taskDetailVOResult.isNotOk() || null == taskDetailVOResult.getData())
             {
                 log.error("task info is empty! task id: {}", taskId);
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
             }
-            TaskDetailVO taskDetailVO = taskDetailVOCodeCCResult.getData();
+            TaskDetailVO taskDetailVO = taskDetailVOResult.getData();
 
             // 更新流水线规则集
-            CodeCCResult<Boolean> updateCodeCCResult = client.get(ServiceTaskRestResource.class).updatePipelineTaskCheckerSets(user, taskDetailVO.getProjectId(), taskDetailVO.getPipelineId(),
+            CodeCCResult<Boolean> updateResult = client.get(ServiceTaskRestResource.class).updatePipelineTaskCheckerSets(user, taskDetailVO.getProjectId(), taskDetailVO.getPipelineId(),
                     taskId, new UpdateCheckerSet2TaskReqVO(toolCheckerSets));
-            if (updateCodeCCResult.isNotOk() || false == updateCodeCCResult.getData())
+            if (updateResult.isNotOk() || false == updateResult.getData())
             {
                 log.error("update pipeline checker set failed!! task id: {}", taskId);
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
@@ -1100,13 +1100,13 @@ public class CheckerSetBizServiceImpl implements ICheckerSetBizService
     private PipelineCheckerSetRecordVO getGroup(String id, String name, List<CheckerSetVO> checkerSetVOS)
     {
         // 查询语言参数列表
-        CodeCCResult<List<BaseDataVO>> paramsCodeCCResult = client.get(ServiceBaseDataResource.class).getParamsByType(ComConstants.KEY_CODE_LANG);
-        if (paramsCodeCCResult.isNotOk() || CollectionUtils.isEmpty(paramsCodeCCResult.getData()))
+        CodeCCResult<List<BaseDataVO>> paramsResult = client.get(ServiceBaseDataResource.class).getParamsByType(ComConstants.KEY_CODE_LANG);
+        if (paramsResult.isNotOk() || CollectionUtils.isEmpty(paramsResult.getData()))
         {
             log.error("param list is empty! param type: {}", ComConstants.KEY_CODE_LANG);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        List<BaseDataVO> codeLangParams = paramsCodeCCResult.getData();
+        List<BaseDataVO> codeLangParams = paramsResult.getData();
 
         PipelineCheckerSetRecordVO pipelineCheckerSetRecordVO = new PipelineCheckerSetRecordVO();
         pipelineCheckerSetRecordVO.setId(id);

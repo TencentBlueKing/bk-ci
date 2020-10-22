@@ -1,0 +1,7 @@
+dependencies {
+    compile project(":core:common:common-util")
+    compile project(":core:common:common-auth-api")
+    compile project(":ext:tencent:common:common-auth-tencent-api")
+    compile project(":ext:tencent:common:common-auth-gongfeng")
+    compile group: 'com.tencent.bk.devops.ci.repository', name: 'api-repository', version: version, changing: true
+}

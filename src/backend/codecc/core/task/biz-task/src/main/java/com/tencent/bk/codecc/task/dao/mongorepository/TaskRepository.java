@@ -199,7 +199,15 @@ public interface TaskRepository extends MongoRepository<TaskInfoEntity, String>
      * @param gongfengProjectId
      * @return
      */
-    TaskInfoEntity findByGongfengProjectId(Integer gongfengProjectId);
+    TaskInfoEntity findFirstByGongfengProjectId(Integer gongfengProjectId);
+
+    /**
+     *
+     * @param createFrom
+     * @param gongfengProjectId
+     * @return
+     */
+    List<TaskInfoEntity> findByGongfengProjectIdIsAndCreateFromIs(Integer gongfengProjectId, String createFrom);
 
 
     /**

@@ -48,7 +48,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_ACCESS_TOKEN;
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * 用户管理逻辑处理实现类

@@ -30,6 +30,7 @@ import com.tencent.devops.common.constant.ComConstants;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 数据报表作者列表
@@ -37,6 +38,7 @@ import lombok.Data;
  * @version V1.0
  * @date 2019/5/28
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("数据报表作者列表")
 public class CommonChartAuthorVO extends ChartAuthorBaseVO

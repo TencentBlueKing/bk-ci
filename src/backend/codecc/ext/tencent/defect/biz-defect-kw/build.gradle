@@ -1,0 +1,7 @@
+dependencies {
+    compile project(":core:common:common-db")
+    compile project(":core:common:common-web")
+    compile project(":core:defect:biz-defect")
+    compile project(":ext:tencent:klocwork:api-klocwork")
+    compile project(":ext:tencent:common:common-web-tencent")
+}

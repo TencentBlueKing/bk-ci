@@ -1,0 +1,7 @@
+dependencies {
+    compile project(":core:defect:biz-defect")
+    compile project(":core:common:common-db")
+    compile project(":core:common:common-web")
+    compile project(":ext:tencent:common:common-web-tencent")
+    compile "commons-httpclient:commons-httpclient"
+}

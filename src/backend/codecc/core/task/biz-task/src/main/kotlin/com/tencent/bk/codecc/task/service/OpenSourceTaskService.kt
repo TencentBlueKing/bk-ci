@@ -16,4 +16,5 @@ interface OpenSourceTaskService {
      * 更新映射表的commitid字段
      */
     fun updateBuildCommitId(buildId : String, commitId : String)
+
 }

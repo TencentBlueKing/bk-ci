@@ -41,24 +41,29 @@ import com.tencent.devops.common.service.ToolMetaCacheService
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.util.GsonUtils
 import com.tencent.devops.common.util.ThreadPoolUtil
+import lombok.extern.slf4j.Slf4j
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.CommandLineRunner
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
+import kotlin.math.log
 
 @Component
 class InitializationRunner @Autowired constructor(
-        private val initResponseCode: InitResponseCode,
-        private val taskRepository: TaskRepository,
-        private val baseDataRepository: BaseDataRepository,
-        private val toolMetaCacheService: ToolMetaCacheService,
-        private val commonDao: CommonDao
+    private val initResponseCode: InitResponseCode,
+    private val taskRepository: TaskRepository,
+    private val baseDataRepository: BaseDataRepository,
+    private val toolMetaCacheService: ToolMetaCacheService,
+    private val redisTemplate: RedisTemplate<String, String>,
+    private val commonDao: CommonDao
 ) : CommandLineRunner {
 
     @Value("\${auth.url:#{null}}")
@@ -69,7 +74,6 @@ class InitializationRunner @Autowired constructor(
     }
 
     override fun run(vararg arg: String?) {
-        val redisTemplate: RedisTemplate<String, String> = SpringContextUtil.getBean(RedisTemplate::class.java, "redisTemplate") as RedisTemplate<String, String>
         val currentVal = redisTemplate.opsForValue().get(RedisKeyConstants.CODECC_TASK_ID)
         if (null == currentVal || currentVal.toLong() < ComConstants.COMMON_NUM_10000L) {
             logger.info("start to initialize redis key!")
@@ -105,6 +109,7 @@ class InitializationRunner @Autowired constructor(
      * 国际化处理
      */
     fun globalMessage(redisTemplate: RedisTemplate<String, String>) {
+        logger.info("start to global message init")
         // 响应码、操作记录国际化
         val responseCodeMap = initResponseCode.getGlobalMessageMap()
         for (key in responseCodeMap.keys) {
@@ -138,6 +143,7 @@ class InitializationRunner @Autowired constructor(
         val checkDescMap = initResponseCode.getCheckerDescMap()
         redisTemplate.opsForHash<String, String>().putAll(RedisKeyConstants.GLOBAL_CHECKER_DESC, checkDescMap)
 
+        logger.info("finish to global message init")
     }
 
     /**
@@ -239,7 +245,6 @@ class InitializationRunner @Autowired constructor(
 
     private fun setToolOrder()
     {
-        val redisTemplate: RedisTemplate<String, String> = SpringContextUtil.getBean(RedisTemplate::class.java, "redisTemplate") as RedisTemplate<String, String>
         val toolOrder = commonDao.toolOrder
         val langOrder = commonDao.langOrder
         redisTemplate.opsForValue().set(RedisKeyConstants.KEY_TOOL_ORDER, toolOrder)

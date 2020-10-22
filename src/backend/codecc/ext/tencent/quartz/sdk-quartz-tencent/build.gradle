@@ -1,0 +1,5 @@
+dependencies {
+    compile project(":core:quartz:sdk-quartz")
+    compile project(":ext:tencent:common:common-web-tencent")
+    compile project(":ext:tencent:task:api-task-tencent")
+}

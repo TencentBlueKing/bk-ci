@@ -1,0 +1,9 @@
+dependencies {
+    compile project(":core:codeccjob:biz-codeccjob")
+    compile project(":ext:tencent:common:common-auth-tencent")
+    compile "org.springframework.kafka:spring-kafka:1.3.10.RELEASE"
+}
+
+version = null
+
+apply from: "$rootDir/task_spring_boot_package.gradle"

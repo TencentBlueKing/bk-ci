@@ -1,0 +1,13 @@
+dependencies {
+    compile project(":core:common:common-service")
+    compile project(":core:common:common-event")
+    compile project(":core:common:common-web")
+    compile project(":core:common:common-client")
+    compile project(":core:common:common-redis")
+    compile project(":core:common:common-util")
+    compile project(":ext:tencent:common:common-auth-tencent")
+    compile project(":core:task:model-task")
+    compile "io.jsonwebtoken:jjwt"
+    compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
+    compile group: 'com.tencent.bk.devops', name: 'common-pipeline-tencent', version: '2.2.3', changing: true
+}

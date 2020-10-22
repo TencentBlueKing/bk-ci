@@ -57,6 +57,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -222,7 +223,7 @@ public class LintDefectV2Dao
         }
         if (CollectionUtils.isNotEmpty(pkgChecker))
         {
-            andCriteria.and("checker").in(checker);
+            andCriteria.and("checker").in(pkgChecker);
         }
 
         // 6.路径过滤

@@ -15,6 +15,7 @@ package com.tencent.bk.codecc.defect.vo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.jboss.logging.Field;
 
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import java.util.Map;
  * @version V1.0
  * @date 2019/10/18
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("告警基础信息视图")
 public class DefectDetailVO extends DefectBaseVO

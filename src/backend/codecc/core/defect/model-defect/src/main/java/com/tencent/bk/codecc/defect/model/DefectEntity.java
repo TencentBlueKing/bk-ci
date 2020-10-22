@@ -210,6 +210,12 @@ public class DefectEntity
     private List<DefectInstance> defectInstances;
 
     /**
+     * 版本号
+     */
+    @Field("revision")
+    private String revision;
+
+    /**
      * 告警实例的数据
      */
     @Data

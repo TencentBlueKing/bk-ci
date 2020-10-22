@@ -3,9 +3,11 @@ package com.tencent.bk.codecc.defect.vo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("CLOC工具文件树")
 public class CLOCTreeNodeVO extends TreeNodeVO {

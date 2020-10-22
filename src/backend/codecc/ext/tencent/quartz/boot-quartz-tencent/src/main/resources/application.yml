@@ -1,0 +1,68 @@
+spring:
+  profiles: prod
+  application:
+    version: 4.0.0
+    name: quartz
+    desc: Quartz Service
+    packageName: com.tencent.bk.codecc.quartz
+  # consul config do not need to change
+  redis:
+    database: 1
+    host: __REDIS_IP__
+    password: __REDIS_PASS__
+    port:
+    pool:
+      maxActive: 16
+      maxWait: -1
+      maxIdle: 16
+      minIdle: 0
+  rabbitmq:
+    virtual-host: __RABBITMQ_CODECC_VHOST__
+    username: __RABBITMQ_USERNAME__
+    password: __RABBITMQ_PASSWORD__
+    addresses: __RABBITMQ_HOST__:__RABBITMQ__PORT__
+  cloud:
+    consul:
+      discovery:
+        tags: shard_1
+        health-check-path: /management/health
+        heartbeat:
+          enabled: true
+        query-passing: true
+        preferIpAddress: true
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  data:
+    mongodb:
+      uri: mongodb://__MONGODB_USER__:__MONGODB_PASS__@__MONGODB_IP__:__MONGODB_PRT__/db_quartz
+
+
+# http concurrency
+server:
+  port:  # 服务端口
+  servlet-path: /
+  undertow:
+    worker-threads: 100
+
+
+# monitor path config
+management:
+  security:
+    enabled: false
+  context-path: /management
+
+devopsGateway:
+  host: __DEVOPS_GATEWAY_HOST__
+
+codecc:
+  encryptor:
+    password: __CODECC_ENCRYPTOR_PASS__
+  quartz:
+    tag: __CODECC_QUARTZ_TAG__
+
+
+
+

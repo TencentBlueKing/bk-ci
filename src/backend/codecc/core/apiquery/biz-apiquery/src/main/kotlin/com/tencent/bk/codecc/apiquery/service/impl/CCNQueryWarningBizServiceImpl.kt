@@ -8,6 +8,8 @@ import com.tencent.bk.codecc.apiquery.defect.model.CCNStatisticModel
 import com.tencent.bk.codecc.apiquery.pojo.DefectQueryParam
 import com.tencent.bk.codecc.apiquery.service.IDefectQueryWarningService
 import com.tencent.bk.codecc.apiquery.utils.PageUtils
+import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO
+import com.tencent.bk.codecc.apiquery.vo.op.TaskDefectVO
 import com.tencent.devops.common.api.pojo.Page
 import org.bson.types.ObjectId
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,5 +55,11 @@ class CCNQueryWarningBizServiceImpl @Autowired constructor(
         val ccnStatisticList = statisticDao.findCCNByTaskIdInAndToolName(taskIdList, startTime, endTime, filterFields,
                 buildId, pageable)
         return Page(pageable.pageNumber + 1, pageable.pageSize, ccnStatisticList.size.toLong(), ccnStatisticList)
+    }
+
+
+    override fun queryDeptTaskDefect(reqVO: TaskToolInfoReqVO, pageNum: Int?, pageSize: Int?, sortField: String?,
+                                     sortType: String?): Page<TaskDefectVO> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

@@ -1,0 +1,5 @@
+dependencies {
+    compile project(":core:task:biz-task")
+    compile project(":core:common:common-db")
+    compile project(":core:common:common-web")
+}

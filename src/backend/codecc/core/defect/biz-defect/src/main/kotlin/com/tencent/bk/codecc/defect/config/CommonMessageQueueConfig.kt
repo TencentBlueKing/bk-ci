@@ -15,28 +15,28 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class CommonMessageQueueConfig {
+open class CommonMessageQueueConfig {
 
     @Bean
-    fun rabbitAdmin(@Autowired connectionFactory: ConnectionFactory): RabbitAdmin {
+    open fun rabbitAdmin(@Autowired connectionFactory: ConnectionFactory): RabbitAdmin {
         return RabbitAdmin(connectionFactory)
     }
 
 
     @Bean
-    fun expiredTaskExchange(): CustomExchange {
+    open fun expiredTaskExchange(): CustomExchange {
         return CustomExchange(EXCHANGE_EXPIRED_TASK_STATUS, "x-delayed-message", true, false, mapOf("x-delayed-type" to "direct"))
     }
 
     @Bean
-    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
+    open fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
 
 
     @Bean
-    fun expiredTaskQueue() = Queue(QUEUE_EXPIRED_TASK_STATUS)
+    open fun expiredTaskQueue() = Queue(QUEUE_EXPIRED_TASK_STATUS)
 
     @Bean
-    fun expiredTaskQueueBind(
+    open fun expiredTaskQueueBind(
             @Autowired expiredTaskQueue: Queue,
             @Autowired expiredTaskExchange: CustomExchange
     ): Binding {
@@ -46,7 +46,7 @@ class CommonMessageQueueConfig {
 
 
     @Bean
-    fun expiredTaskListenerContainer(
+    open fun expiredTaskListenerContainer(
             @Autowired connectionFactory: ConnectionFactory,
             @Autowired expiredTaskQueue: Queue,
             @Autowired rabbitAdmin: RabbitAdmin,

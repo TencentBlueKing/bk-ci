@@ -226,7 +226,7 @@ public class LintDefectStatisticService
         lintStatisticEntity.setTotalSerious(totalSerious);
         lintStatisticEntity.setTotalDefectCount(totalDefectCount);
         lintStatisticEntity.setAuthorStatistic(authorDefects);
-        lintStatisticEntity.setCheckerStatistic(getCheckerStatistic(allDefectEntityList));
+        lintStatisticEntity.setCheckerStatistic(getCheckerStatistic(toolName, allDefectEntityList));
 
         long currentTime = System.currentTimeMillis();
         lintStatisticEntity.setTime(currentTime);
@@ -236,18 +236,18 @@ public class LintDefectStatisticService
         commonKafkaClient.pushLintStatisticToKafka(lintStatisticEntity);
     }
 
-    private List<CheckerStatisticEntity> getCheckerStatistic(List<LintDefectV2Entity> allDefectEntityList)
-    {
+    private List<CheckerStatisticEntity> getCheckerStatistic(String toolName,
+                                                             List<LintDefectV2Entity> allDefectEntityList) {
         // get checker map
         Set<String> checkerIds = allDefectEntityList.stream()
             .map(LintDefectV2Entity::getChecker).collect(Collectors.toSet());
         Map<String, CheckerDetailEntity> checkerDetailMap = new HashMap<>();
-        checkerRepository.findByCheckerKeyIn(checkerIds).forEach(it -> checkerDetailMap.put(it.getCheckerKey(), it));
+        checkerRepository.findByToolNameAndCheckerKeyIn(toolName, checkerIds)
+            .forEach(it -> checkerDetailMap.put(it.getCheckerKey(), it));
 
         // get lint checker statistic data
         Map<String, CheckerStatisticEntity> checkerStatisticEntityMap = new HashMap<>();
-        for (LintDefectV2Entity entity: allDefectEntityList)
-        {
+        for (LintDefectV2Entity entity: allDefectEntityList) {
             CheckerStatisticEntity item = checkerStatisticEntityMap.get(entity.getChecker());
             if (item == null)
             {
@@ -255,10 +255,12 @@ public class LintDefectStatisticService
                 item.setName(entity.getChecker());
 
                 CheckerDetailEntity checker = checkerDetailMap.get(entity.getChecker());
-                if (checker != null)
-                {
+                if (checker != null) {
                     item.setId(checker.getEntityId());
                     item.setName(checker.getCheckerName());
+                    item.setSeverity(checker.getSeverity());
+                } else {
+                    log.warn("not found checker for tool: {}, {}", toolName, entity.getChecker());
                 }
             }
             item.setDefectCount(item.getDefectCount() + 1);

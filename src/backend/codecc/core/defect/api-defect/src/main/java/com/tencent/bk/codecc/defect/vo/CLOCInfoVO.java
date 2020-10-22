@@ -14,6 +14,7 @@ package com.tencent.bk.codecc.defect.vo;
 
 import com.tencent.devops.common.api.CommonVO;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * cloc信息视图
@@ -22,6 +23,7 @@ import lombok.Data;
  * @date 2019/9/29
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class CLOCInfoVO extends CommonVO
 {
     private Long blank;

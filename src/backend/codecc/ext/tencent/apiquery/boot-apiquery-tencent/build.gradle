@@ -1,0 +1,8 @@
+dependencies {
+    compile project(":core:apiquery:biz-apiquery")
+    compile project(":ext:tencent:common:common-auth-tencent")
+}
+
+version = null
+
+apply from: "$rootDir/task_spring_boot_package.gradle"

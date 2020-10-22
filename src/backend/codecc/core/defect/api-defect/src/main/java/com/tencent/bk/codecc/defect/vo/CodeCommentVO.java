@@ -16,6 +16,7 @@ import com.tencent.devops.common.api.CommonVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
@@ -26,6 +27,7 @@ import java.util.List;
  * @version V1.0
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @ApiModel("代码评论视图")
 public class CodeCommentVO extends CommonVO
 {

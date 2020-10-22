@@ -1,0 +1,6 @@
+dependencies {
+    compile project(":core:codeccjob:biz-codeccjob")
+    compile project(":ext:tencent:task:api-task-tencent")
+    compile project(":ext:tencent:common:common-web-tencent")
+    compile project(":ext:tencent:common:common-auth-tencent-api")
+}

@@ -13,7 +13,6 @@
 package com.tencent.bk.codecc.defect.consumer;
 
 import com.google.common.collect.Lists;
-import com.tencent.bk.codecc.defect.api.ServiceReportTaskLogRestResource;
 import com.tencent.bk.codecc.defect.component.ScmJsonComponent;
 import com.tencent.bk.codecc.defect.dao.mongorepository.CodeRepoInfoRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildInfoRepository;
@@ -29,10 +28,8 @@ import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
 import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO;
 import com.tencent.devops.common.api.CodeRepoVO;
-import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.auth.api.external.AuthTaskService;
 import com.tencent.devops.common.constant.ComConstants;
-import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.IConsumer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;

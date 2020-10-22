@@ -90,7 +90,7 @@ public interface DefectRepository extends MongoRepository<DefectEntity, String>
      * @param toolName
      * @return
      */
-    @Query(fields = "{'id':1, 'status':1, 'author_list':1, 'severity':1, 'file_path_name':1, 'exclude_time':1}", value = "{'task_id': ?0, 'tool_name': ?1, 'id': {'$in': ?2}}")
+    @Query(fields = "{'id':1, 'status':1, 'author_list':1, 'severity':1, 'file_path_name':1, 'exclude_time':1, 'checker_name':1}", value = "{'task_id': ?0, 'tool_name': ?1, 'id': {'$in': ?2}}")
     List<DefectEntity> findStatusAndAuthorAndSeverityByTaskIdAndToolNameAndIdIn(long taskId, String toolName, Set<String> idSet);
 
     /**

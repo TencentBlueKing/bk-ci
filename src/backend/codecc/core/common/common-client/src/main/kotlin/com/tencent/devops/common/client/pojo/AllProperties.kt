@@ -33,4 +33,10 @@ import org.springframework.stereotype.Component
 class AllProperties {
     @Value("\${devopsGateway.host:#{null}}")
     val devopsDevUrl: String? = null
+
+    @Value("\${git.path:#{null}}")
+    val gitCodePath: String? = null
+
+    @Value("\${codeccGateway.host:#{null}}")
+    val codeccGateWay: String? = null
 }

@@ -15,6 +15,7 @@ package com.tencent.bk.codecc.defect.vo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 通用告警视图
@@ -22,6 +23,7 @@ import lombok.Data;
  * @date 2019/12/3
  * @version V1.0
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @ApiModel("通用告警视图")
 public class CommonStatisticVO extends StatisticVO

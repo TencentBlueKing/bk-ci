@@ -46,8 +46,7 @@ import java.util.Objects;
  * @date 2019/6/17
  */
 @Service
-public class OperationHistoryServiceImpl implements OperationHistoryService
-{
+public class OperationHistoryServiceImpl implements OperationHistoryService {
     @Autowired
     private OperationHistoryRepository operationHistoryRepository;
 
@@ -55,11 +54,9 @@ public class OperationHistoryServiceImpl implements OperationHistoryService
     private Client client;
 
     @Override
-    public void saveOperationHistory(OperationHistoryDTO operationHistoryDTO)
-    {
+    public void saveOperationHistory(OperationHistoryDTO operationHistoryDTO) {
         Long taskId = operationHistoryDTO.getTaskId();
-        if (taskId == 0 && StringUtils.isNotBlank(operationHistoryDTO.getPipelineId()))
-        {
+        if (taskId == 0 && StringUtils.isNotBlank(operationHistoryDTO.getPipelineId())) {
             taskId = Objects.requireNonNull(
                 client.get(ServiceTaskRestResource.class).getPipelineTask(
                     operationHistoryDTO.getPipelineId(),

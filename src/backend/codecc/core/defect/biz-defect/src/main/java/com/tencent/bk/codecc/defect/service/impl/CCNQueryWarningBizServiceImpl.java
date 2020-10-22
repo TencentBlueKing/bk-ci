@@ -36,7 +36,6 @@ import com.tencent.bk.codecc.defect.model.CCNDefectEntity;
 import com.tencent.bk.codecc.defect.model.StatisticEntity;
 import com.tencent.bk.codecc.defect.service.AbstractQueryWarningBizService;
 import com.tencent.bk.codecc.defect.service.CheckerService;
-import com.tencent.bk.codecc.defect.service.PipelineService;
 import com.tencent.bk.codecc.defect.service.TreeService;
 import com.tencent.bk.codecc.defect.service.newdefectjudge.NewDefectJudgeService;
 import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
@@ -61,7 +60,6 @@ import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.util.DateTimeUtils;
-import com.tencent.devops.common.util.GitUtil;
 import com.tencent.devops.common.util.PathUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -150,9 +148,11 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         ccnFileQueryRspVO.setCcnThreshold(ccnThreshold);
 
         // 根据根据前端传入的条件过滤告警，并分类统计
-        Set<String> defectPaths = filterDefectByCondition(taskId, originalCCNDefectList, queryWarningReq, ccnFileQueryRspVO);
+        Set<String> defectPaths =
+            filterDefectByCondition(taskId, originalCCNDefectList, null, queryWarningReq, ccnFileQueryRspVO);
 
-        StatisticEntity statisticEntity = ccnStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, ComConstants.Tool.CCN.name());
+        StatisticEntity statisticEntity =
+            ccnStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, ComConstants.Tool.CCN.name());
         List<CCNDefectVO> ccnDefectVOS = originalCCNDefectList.stream().map(ccnDefectEntity ->
         {
             CCNDefectVO ccnDefectVO = new CCNDefectVO();
@@ -185,7 +185,7 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         verifyFilePathIsValid(queryWarningDetailReq.getFilePath(), ccnDefectEntity.getFilePath());
 
         //根据文件路径从分析集群获取文件内容
-        String content = getFileContent(taskId, userId, ccnDefectEntity.getUrl(), ccnDefectEntity.getRepoId(),
+        String content = getFileContent(taskId, null, userId, ccnDefectEntity.getUrl(), ccnDefectEntity.getRepoId(),
             ccnDefectEntity.getRelPath(), ccnDefectEntity.getRevision(), ccnDefectEntity.getBranch(), ccnDefectEntity.getSubModule());
         content = trimCodeSegment(content, ccnDefectEntity.getStartLines(), ccnDefectEntity.getEndLines(), ccnDefectQueryRspVO);
 
@@ -214,6 +214,8 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         }
         ccnDefectQueryRspVO.setFileName(filePath.substring(fileNameIndex + 1));
         ccnDefectQueryRspVO.setFileContent(content);
+
+        ccnDefectQueryRspVO.setRevision(ccnDefectEntity.getRevision());
 
         return ccnDefectQueryRspVO;
     }
@@ -290,8 +292,10 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
 
 
     @Override
-    public Set<String> filterDefectByCondition(long taskId, List<?> defectList, DefectQueryReqVO queryWarningReq, CommonDefectQueryRspVO defectQueryRspVO)
-    {
+    public Set<String> filterDefectByCondition(long taskId, List<?> defectList,
+                                               Set<String> allChecker,
+                                               DefectQueryReqVO queryWarningReq,
+                                               CommonDefectQueryRspVO defectQueryRspVO) {
         Set<String> severity = queryWarningReq.getSeverity();
         Set<String> conditionDefectType = queryWarningReq.getDefectType();
         String buildId = queryWarningReq.getBuildId();

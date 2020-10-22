@@ -16,6 +16,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.Set;
+
 /**
  * 运行失败记录视图
  * 
@@ -49,4 +51,7 @@ public class TaskFailRecordVO
 
     @ApiModelProperty("任务耗时")
     private Long timeCost;
+
+    @ApiModelProperty("失败原子环节")
+    private String failAtomName;
 }

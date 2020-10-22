@@ -348,7 +348,6 @@ public class PathFilterServiceImpl implements PathFilterService
 
     @Override
     public Boolean codeYmlFilterPath(Long taskId, String userName, CodeYmlFilterPathVO codeYmlFilterPathVO) {
-        log.info("==========codeYmlFilterPath==============taskId:{},userName:{}",taskId,userName);
         CodeYmlFilterPathVO hisCodeYmlFilterPathVO = listCodeYmlFilterPath(taskId);
 
         // 判断是否有变更
@@ -432,32 +431,17 @@ public class PathFilterServiceImpl implements PathFilterService
     // 必须顺序、数量完全一样，不去重
     private boolean isEqualCollection(List<String> c1, List<String> c2)
     {
-        if (CollectionUtils.isEmpty(c1) && CollectionUtils.isEmpty(c2))
-        {
-            return true;
-        }
+        if (CollectionUtils.isEmpty(c1) && CollectionUtils.isEmpty(c2)) return true;
 
         // 排除其中一个为空的情况
-        if (CollectionUtils.isEmpty(c1))
-        {
-            return false;
-        }
-        if (CollectionUtils.isEmpty(c2))
-        {
-            return false;
-        }
+        if (CollectionUtils.isEmpty(c1)) return false;
+        if (CollectionUtils.isEmpty(c2)) return false;
 
-        if (c1.size() != c2.size())
-        {
-            return false;
-        }
+        if (c1.size() != c2.size()) return false;
 
-        for (int i = 0; i < c1.size(); i++)
+        for (int i=0; i < c1.size(); i++)
         {
-            if (!c1.get(i).equals(c2.get(i)))
-            {
-                return false;
-            }
+            if (!c1.get(i).equals(c2.get(i))) return false;
         }
         return true;
     }

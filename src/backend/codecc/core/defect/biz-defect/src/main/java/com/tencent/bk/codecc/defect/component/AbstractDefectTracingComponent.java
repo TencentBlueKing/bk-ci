@@ -19,14 +19,13 @@ import com.tencent.bk.codecc.defect.pojo.AggregateDefectInputModel;
 import com.tencent.bk.codecc.defect.pojo.AggregateDispatchFileName;
 import com.tencent.bk.codecc.defect.pojo.FileMD5SingleModel;
 import com.tencent.bk.codecc.defect.pojo.FileMD5TotalModel;
-import com.tencent.bk.codecc.defect.service.IMessageQueueBizService;
 import com.tencent.bk.codecc.defect.vo.CommitDefectVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.util.JsonUtil;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
-import com.tencent.devops.common.service.BizServiceFactory;
+import com.tencent.devops.common.service.utils.SpringContextUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
@@ -41,6 +40,10 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+import static com.tencent.devops.common.web.mq.ConstantsKt.EXCHANGE_CLUSTER_ALLOCATION;
+import static com.tencent.devops.common.web.mq.ConstantsKt.EXCHANGE_CLUSTER_ALLOCATION_OPENSOURCE;
+import static com.tencent.devops.common.web.mq.ConstantsKt.ROUTE_CLUSTER_ALLOCATION;
+import static com.tencent.devops.common.web.mq.ConstantsKt.ROUTE_CLUSTER_ALLOCATION_OPENSOURCE;
 
 /**
  * 新版告警跟踪抽象类
@@ -53,9 +56,6 @@ public abstract class AbstractDefectTracingComponent<T>
 {
     @Autowired
     public ScmJsonComponent scmJsonComponent;
-
-    @Autowired
-    protected BizServiceFactory<IMessageQueueBizService> messageBizServiceFactory;
 
     /**
      * 抽象告警跟踪方法
@@ -113,14 +113,18 @@ public abstract class AbstractDefectTracingComponent<T>
             AggregateDispatchFileName aggregateFileName = new AggregateDispatchFileName(inputFilePath, outputFilePath);
 
             AsyncRabbitTemplate.RabbitConverterFuture<Boolean> asyncMsgFuture;
+            if (ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value().equalsIgnoreCase(taskVO.getCreateFrom()))
+            {
+                AsyncRabbitTemplate asyncRabbitTemplate = SpringContextUtil.Companion.getBean(AsyncRabbitTemplate.class, "opensourceAsyncRabbitTemplate");
+                asyncMsgFuture = asyncRabbitTemplate.convertSendAndReceive(EXCHANGE_CLUSTER_ALLOCATION_OPENSOURCE, ROUTE_CLUSTER_ALLOCATION_OPENSOURCE, aggregateFileName);
+            }
+            else
+            {
+                AsyncRabbitTemplate asyncRabbitTemplate = SpringContextUtil.Companion.getBean(AsyncRabbitTemplate.class, "clusterAsyncRabbitTemplate");
+                asyncMsgFuture = asyncRabbitTemplate.convertSendAndReceive(EXCHANGE_CLUSTER_ALLOCATION, ROUTE_CLUSTER_ALLOCATION, aggregateFileName);
+            }
 
-            // 区分创建来源为工蜂项目，创建对应处理器
-            IMessageQueueBizService messageQueueBizService = messageBizServiceFactory.createBizService(
-                    taskVO.getCreateFrom(),ComConstants.BusinessType.MESSAGE_QUEUE.value(),IMessageQueueBizService.class);
-            asyncMsgFuture = messageQueueBizService.messageAsyncMsgFuture(aggregateFileName);
-
-            Pair<String, AsyncRabbitTemplate.RabbitConverterFuture<Boolean>> asyncResult = Pair.of(outputFilePath, asyncMsgFuture);
-            return asyncResult;
+            return Pair.of(outputFilePath, asyncMsgFuture);
         }
         catch (Exception e)
         {
@@ -151,7 +155,7 @@ public abstract class AbstractDefectTracingComponent<T>
     {
         File file = new File(outputFile);
         int i = 0;
-        while (!file.exists() && i < 10)
+        while (!file.exists() && i < 15)
         {
             Thread.sleep(3000L);
             i++;

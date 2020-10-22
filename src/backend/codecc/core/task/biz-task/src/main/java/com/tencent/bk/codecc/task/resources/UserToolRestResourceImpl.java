@@ -92,7 +92,7 @@ public class UserToolRestResourceImpl implements UserToolRestResource
     @Override
     @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
     public CodeCCResult<Boolean> updateToolStatus(ToolStatusUpdateReqVO toolStatusUpdateReqVO,
-                                            String userName, long taskId)
+                                                  String userName, long taskId)
     {
         checkToolUpdateParam(toolStatusUpdateReqVO, taskId);
         return new CodeCCResult<>(toolService.toolStatusManage(toolStatusUpdateReqVO.getToolNameList(),
@@ -117,7 +117,7 @@ public class UserToolRestResourceImpl implements UserToolRestResource
 
     @Override
     public CodeCCResult<Boolean> updateToolPlatformInfo(Long taskId, String userName,
-            ToolConfigPlatformVO toolConfigPlatformVO)
+                                                        ToolConfigPlatformVO toolConfigPlatformVO)
     {
         return new CodeCCResult<>(toolService.updateToolPlatformInfo(taskId, userName, toolConfigPlatformVO));
     }

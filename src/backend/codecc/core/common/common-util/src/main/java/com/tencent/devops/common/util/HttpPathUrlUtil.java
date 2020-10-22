@@ -74,4 +74,15 @@ public class HttpPathUrlUtil {
         return sb.toString();
     }
 
+    public static String getCodeccTargetUrl(String codeccHost, String projectId, long taskId) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("http://")
+                .append(codeccHost)
+                .append("/codecc/")
+                .append(projectId)
+                .append("/task/")
+                .append(taskId)
+                .append("/settings/code");
+        return sb.toString();
+    }
 }

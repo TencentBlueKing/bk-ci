@@ -12,7 +12,7 @@
 
 package com.tencent.bk.codecc.defect.service;
 
-import com.tencent.bk.codecc.defect.vo.UpdateDefectStatusVO;
+import com.tencent.bk.codecc.defect.vo.UpdateDefectVO;
 
 /**
  * 更新告警服务
@@ -22,6 +22,7 @@ import com.tencent.bk.codecc.defect.vo.UpdateDefectStatusVO;
  */
 public interface IUpdateDefectBizService 
 {
-    void updateDefectStatus(UpdateDefectStatusVO updateDefectStatusVO);
+    void updateDefectStatus(UpdateDefectVO updateDefectVO);
 
+    void updateDefects(UpdateDefectVO updateDefectVO);
 }

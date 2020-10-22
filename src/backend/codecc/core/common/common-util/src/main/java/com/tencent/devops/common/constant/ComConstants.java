@@ -60,11 +60,6 @@ public interface ComConstants
     String BIZ_SERVICE_POSTFIX = "BizService";
 
     /**
-     * Component的bean名（CommonFilterPathComponet）的后缀名,比如：CommonFilterPathComponet
-     */
-    String COMPONENT_POSTFIX = "Component";
-
-    /**
      * 通用Processor类名（CommonBatchBizTypeProcessorImpl）的前缀名,比如：COVERITYBatchMarkDefectProcessorImpl
      */
     String BATCH_PROCESSOR_INFIX = "Batch";
@@ -73,7 +68,6 @@ public interface ComConstants
      * 通用BizService类名（CommonBizTypeBizServiceImpl）的前缀名
      */
     String COMMON_BIZ_SERVICE_PREFIX = "Common";
-
     /**
      * 项目已接入工具的名称之间的分隔符
      */
@@ -238,9 +232,19 @@ public interface ComConstants
     String KEY_OPENSOURCE_ROUTE = "OPENSOURCE_ROUTE";
 
     /**
+     * 开源扫描下发频率配置
+     */
+    String KEY_OPENSOURCE_FREQUENCY = "OPENSOURCE_FREQUENCY";
+
+    /**
      * 灰度测试的bg
      */
     String KEY_TOOL_NAMES_GRAY_TEST_BG = "TOOL_NAMES_GRAY_TEST_BG";
+
+    /**
+     * 屏蔽用户成员名单
+     */
+    String KEY_EXCLUDE_USER_LIST = "EXCLUDE_USER_MEMBER";
 
     /**
      * 分号
@@ -271,16 +275,6 @@ public interface ComConstants
          * 分析记录上报
          */
         ANALYZE_TASK("AnalyzeTask"),
-
-        /**
-         * 消息队列，区分工蜂使用
-         */
-        MESSAGE_QUEUE("MessageQueue"),
-
-        /**
-         * 分析流程后处理，区分工蜂使用
-         */
-        CREATE_FROM("CreateFrom"),
 
         /**
          * 获取分析记录
@@ -1428,7 +1422,9 @@ public interface ComConstants
         //全量规则集
         FULL,
         //简化规则集
-        SIMPLIFIED
+        SIMPLIFIED,
+        //两者规则集都配置
+        BOTH
     }
 
     /**
@@ -1518,6 +1514,20 @@ public interface ComConstants
         }
     }
 
+    enum WeChatNotifyTemplate {
+        BK_PLUGIN_FAILED_TEMPLATE("BK_PLUGIN_FAILED_TEMPLATE");
+
+        private String templateCode;
+
+        WeChatNotifyTemplate(String templateCode) {
+            this.templateCode = templateCode;
+        }
+
+        public String value() {
+            return this.templateCode;
+        }
+    }
+
 
     enum ScanStatus
     {
@@ -1535,29 +1545,6 @@ public interface ComConstants
 
         public Integer getCode(){
             return this.code;
-        }
-    }
-
-    enum CreateFromBizInfix
-    {
-        /**
-         * 创建来源是GongFeng项目的类名前缀名：
-         */
-        GongFeng("gongfeng_scan"),
-
-        /**
-         * 创建来源是除GongFeng，其他的类名前缀名：
-         */
-        COMMON("Common");
-
-        private String code;
-
-        public String code(){
-            return this.code;
-        }
-
-        CreateFromBizInfix(String code){
-            this.code = code;
         }
     }
 }

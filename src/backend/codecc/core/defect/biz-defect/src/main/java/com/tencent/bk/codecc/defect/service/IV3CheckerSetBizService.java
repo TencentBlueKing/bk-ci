@@ -87,6 +87,12 @@ public interface IV3CheckerSetBizService
     List<CheckerSetVO> getCheckerSetsOfTask(CheckerSetListQueryReq queryCheckerSetReq);
 
     /**
+     * 查询规则集列表
+     *
+     */
+    List<CheckerSetVO> getTaskCheckerSets(String projectId, long taskId, String toolName);
+
+    /**
      * 分页查询规则集列表
      *
      * @param queryCheckerSetReq

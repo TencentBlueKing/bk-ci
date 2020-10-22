@@ -29,6 +29,7 @@ package com.tencent.bk.codecc.apiquery.defect.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.jboss.logging.Field;
 
 import java.util.List;
 
@@ -102,4 +103,5 @@ public class CCNStatisticModel extends StatisticModel
      */
     @JsonProperty("average_list")
     private List<ChartAverageModel> averageList;
+
 }

@@ -52,7 +52,7 @@ import static com.tencent.devops.common.web.mq.ConstantsKt.*;
  */
 @Configuration
 @Slf4j
-@ConditionalOnProperty(prefix = "spring.application", name = "name", havingValue = "asyncreport")
+@ConditionalOnProperty(prefix = "spring.application", name = "name", havingValue = "asyncreport-ci")
 public class NormalProjRabbitMQListenerConfig extends RabbitMQListenerConfig
 {
     /**
