@@ -24,26 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.util
+package com.tencent.devops.artifactory
 
-import org.springframework.boot.context.embedded.MimeMappings
+import com.tencent.devops.common.api.constant.STATIC
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Configuration
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 
-object MimeUtil {
-    const val YAML_MIME_TYPE = "application/x-yaml"
-    const val TGZ_MIME_TYPE = "application/x-tar"
-    const val ICO_MIME_TYPE = "image/x-icon"
-    const val STREAM_MIME_TYPE = "application/octet-stream"
-    private const val HTML_MIME_TYPE = "text/html"
+@Configuration
+class WebMvcConfig : WebMvcConfigurerAdapter() {
 
-    private val mimeMappings = MimeMappings(MimeMappings.DEFAULT).apply {
-        add("yaml", YAML_MIME_TYPE)
-        add("tgz", TGZ_MIME_TYPE)
-        add("ico", ICO_MIME_TYPE)
-        add("html", HTML_MIME_TYPE)
-    }
+    @Value("\${artifactory.archiveLocalBasePath:/data/bkce/public/ci/artifactory}")
+    private lateinit var archiveLocalBasePath: String
 
-    fun mediaType(fileName: String): String {
-        val ext = fileName.trim().substring(fileName.lastIndexOf(".") + 1)
-        return mimeMappings.get(ext) ?: STREAM_MIME_TYPE
+    override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
+        // 把自定义插件UI文件目录映射成服务器静态资源
+        val bkPluginFeDir = "$archiveLocalBasePath/$STATIC/"
+        registry.addResourceHandler("/resource/**").addResourceLocations("file:$bkPluginFeDir")
     }
 }

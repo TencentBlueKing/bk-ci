@@ -24,26 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.util
+package com.tencent.devops.scm.pojo
 
-import org.springframework.boot.context.embedded.MimeMappings
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-object MimeUtil {
-    const val YAML_MIME_TYPE = "application/x-yaml"
-    const val TGZ_MIME_TYPE = "application/x-tar"
-    const val ICO_MIME_TYPE = "image/x-icon"
-    const val STREAM_MIME_TYPE = "application/octet-stream"
-    private const val HTML_MIME_TYPE = "text/html"
-
-    private val mimeMappings = MimeMappings(MimeMappings.DEFAULT).apply {
-        add("yaml", YAML_MIME_TYPE)
-        add("tgz", TGZ_MIME_TYPE)
-        add("ico", ICO_MIME_TYPE)
-        add("html", HTML_MIME_TYPE)
-    }
-
-    fun mediaType(fileName: String): String {
-        val ext = fileName.trim().substring(fileName.lastIndexOf(".") + 1)
-        return mimeMappings.get(ext) ?: STREAM_MIME_TYPE
-    }
-}
+@ApiModel("git仓库文件和目录列表")
+class GitRepositoryDirItem(
+    @ApiModelProperty("ID", required = true)
+    val id: String,
+    @ApiModelProperty("文件或目录名称", required = true)
+    val name: String,
+    @ApiModelProperty("类型", required = true)
+    val type: String,
+    @ApiModelProperty("模式", required = true)
+    val mode: String
+)

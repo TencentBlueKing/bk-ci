@@ -24,11 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.api
+package com.tencent.devops.artifactory.api.builds
 
-import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
@@ -74,15 +72,15 @@ interface BuildFileResource {
     @Path("/file/archive")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun archiveFile(
-        @ApiParam("projectCode", required = true)
+        @ApiParam("projectCode", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectCode: String,
-        @ApiParam("pipelineId", required = true)
+        projectCode: String?,
+        @ApiParam("pipelineId", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
-        pipelineId: String,
-        @ApiParam("buildId", required = true)
+        pipelineId: String?,
+        @ApiParam("buildId", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
+        buildId: String?,
         @ApiParam("文件类型", required = true)
         @QueryParam("fileType")
         fileType: FileTypeEnum,
@@ -139,25 +137,4 @@ interface BuildFileResource {
         @QueryParam("customFilePath")
         customFilePath: String?
     ): Result<GetFileDownloadUrlsResponse?>
-
-    @ApiOperation("跨项目拷贝文件")
-    @Path("/artifactoryType/{artifactoryType}/acrossProjectCopy")
-    @GET
-    fun acrossProjectCopy(
-        @ApiParam("项目ID", required = true)
-        @HeaderParam("X-DEVOPS-PROJECT-ID")
-        projectId: String,
-        @ApiParam("版本仓库类型", required = true)
-        @PathParam("artifactoryType")
-        artifactoryType: ArtifactoryType,
-        @ApiParam("路径", required = true)
-        @QueryParam("path")
-        path: String,
-        @ApiParam("目标项目", required = true)
-        @QueryParam("targetProjectId")
-        targetProjectId: String,
-        @ApiParam("目标路径", required = true)
-        @QueryParam("targetPath")
-        targetPath: String
-    ): Result<Count>
 }

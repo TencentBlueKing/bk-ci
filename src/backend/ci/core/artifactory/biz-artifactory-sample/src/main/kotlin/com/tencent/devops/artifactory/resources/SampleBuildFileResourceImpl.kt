@@ -24,46 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.atom
+package com.tencent.devops.artifactory.resources
 
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.artifactory.api.SampleBuildFileResource
+import com.tencent.devops.artifactory.pojo.Count
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
-import com.tencent.devops.store.pojo.atom.AtomEnv
-import com.tencent.devops.store.pojo.atom.AtomEnvRequest
-import com.tencent.devops.store.pojo.common.SensitiveConfResp
-import com.tencent.devops.worker.common.api.WorkerRestApiSDK
-import java.io.File
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-interface AtomArchiveSDKApi : WorkerRestApiSDK {
-    /**
-     * 获取插件信息
-     */
-    fun getAtomEnv(projectCode: String, atomCode: String, atomVersion: String): Result<AtomEnv>
+@RestResource
+class SampleBuildFileResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService) :
+    SampleBuildFileResource {
 
-    /**
-     * 更新插件执行环境信息
-     */
-    fun updateAtomEnv(
-        projectCode: String,
-        atomCode: String,
-        atomVersion: String,
-        atomEnvRequest: AtomEnvRequest
-    ): Result<Boolean>
-
-    /**
-     * 获取插件插件敏感信息
-     */
-    fun getAtomSensitiveConf(atomCode: String): Result<List<SensitiveConfResp>?>
-
-    fun archiveAtom(filePath: String, destPath: String, workspace: File, buildVariables: BuildVariables): String?
-
-    fun uploadAtom(file: File, destPath: String, buildVariables: BuildVariables)
-
-    fun uploadAtomFile(file: File, fileType: FileTypeEnum, destPath: String)
-
-    fun downloadAtom(atomFilePath: String, file: File)
-
-    fun getAtomDevLanguageEnvVars(language: String, buildHostType: String, buildHostOs: String): Result<List<AtomDevLanguageEnvVar>?>
+    override fun acrossProjectCopy(
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String,
+        targetProjectId: String,
+        targetPath: String
+    ): Result<Count> {
+        return archiveFileService.acrossProjectCopy(
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            path = path,
+            targetPath = targetPath,
+            targetProjectId = targetProjectId
+        )
+    }
 }

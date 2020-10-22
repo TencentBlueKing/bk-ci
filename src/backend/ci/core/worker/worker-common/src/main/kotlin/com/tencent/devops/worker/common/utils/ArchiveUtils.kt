@@ -187,4 +187,21 @@ object ArchiveUtils {
             path.startsWith("/")
         }
     }
+
+    fun recursiveGetFiles(file: File): List<File> {
+        val fileList = mutableListOf<File>()
+        file.listFiles()?.forEach {
+            // 排除掉源文件已被删除的软链接
+            if (it.isDirectory && it.exists()) {
+                val subFileList = recursiveGetFiles(it)
+                fileList.addAll(subFileList)
+            } else {
+                if (!it.isHidden && it.exists()) {
+                    // 过滤掉隐藏文件
+                    fileList.add(it)
+                }
+            }
+        }
+        return fileList
+    }
 }
