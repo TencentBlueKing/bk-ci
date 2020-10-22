@@ -73,7 +73,8 @@ data class DetailWebsocketPush(
                 notifyPost = notifyPost,
                 userId = userId,
                 page = page,
-                sessionList = findSession(page ?: "")
+                sessionList = findSession(page ?: ""),
+                startTime = System.currentTimeMillis()
         )
     }
 

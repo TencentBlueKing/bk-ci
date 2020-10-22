@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityResult
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
@@ -190,20 +191,23 @@ class LinuxPaasCodeCCScriptElementBizPluginTest {
 
     @Test
     fun beforeDeleteFail() {
-        plugin.beforeDelete(element = element, userId = userId, pipelineId = pipelineId)
+        val param = BeforeDeleteParam(userId, projectId, pipelineId)
+        plugin.beforeDelete(element = element, param = param)
     }
 
     @Test
     fun beforeDeleteWhenIDNull() {
+        val param = BeforeDeleteParam(userId, projectId, pipelineId)
         element.codeCCTaskId = null
-        plugin.beforeDelete(element = element, userId = userId, pipelineId = pipelineId)
+        plugin.beforeDelete(element = element, param = param)
         element.codeCCTaskId = ""
-        plugin.beforeDelete(element = element, userId = userId, pipelineId = pipelineId)
+        plugin.beforeDelete(element = element, param = param)
     }
 
     @Test
     fun beforeDeleteWhenSuccess() {
-        plugin.beforeDelete(element = element, userId = userId, pipelineId = pipelineId)
+        val param = BeforeDeleteParam(userId, projectId, pipelineId)
+        plugin.beforeDelete(element = element, param = param)
         assertEquals(element.codeCCTaskId, null)
     }
 }

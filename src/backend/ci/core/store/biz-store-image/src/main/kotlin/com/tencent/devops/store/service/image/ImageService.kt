@@ -955,6 +955,7 @@ abstract class ImageService @Autowired constructor() {
             version = imageRecord.version ?: "",
             releaseType = ReleaseTypeEnum.getReleaseType(imageVersionLog?.releaseType?.toInt() ?: 0),
             versionContent = imageVersionLog?.content ?: "",
+            editFlag = imageCommonService.checkEditCondition(imageCode),
             creator = imageVersionLog?.creator,
             modifier = imageVersionLog?.modifier,
             createTime = (imageVersionLog?.createTime ?: imageRecord.createTime).timestampmilli(),
@@ -1112,25 +1113,12 @@ abstract class ImageService @Autowired constructor() {
         }
         // 查询镜像的最新记录
         val newestImageRecord = marketImageDao.getNewestImageByCode(dslContext, imageCode)
-        logger.info("$interfaceName:updateImageBaseInfo:Inner:newestImageRecord=(${newestImageRecord?.id},${newestImageRecord?.imageName},${newestImageRecord?.version},${newestImageRecord?.imageStatus})")
-        if (null == newestImageRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(imageCode),
-                false
-            )
-        }
-        val imageFinalStatusList = listOf(
-            ImageStatusEnum.AUDIT_REJECT.status.toByte(),
-            ImageStatusEnum.RELEASED.status.toByte(),
-            ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-            ImageStatusEnum.UNDERCARRIAGED.status.toByte()
-        )
-        // 判断最近一个镜像版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息
-        if (!imageFinalStatusList.contains(newestImageRecord.imageStatus)) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
-                arrayOf(newestImageRecord.imageName, newestImageRecord.version)
+            ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(imageCode))
+        val editFlag = imageCommonService.checkEditCondition(imageCode)
+        if (!editFlag) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
+                params = arrayOf(newestImageRecord.imageName, newestImageRecord.version)
             )
         }
         val imageIdList = mutableListOf(newestImageRecord.id)

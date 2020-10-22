@@ -27,10 +27,8 @@
 package com.tencent.devops.websocket.configuration
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
-import com.tencent.devops.websocket.handler.ConnectChannelInterceptor
 import com.tencent.devops.websocket.listener.CacheSessionListener
 import com.tencent.devops.websocket.listener.WebSocketListener
 import com.tencent.devops.websocket.utils.HostUtils
@@ -167,13 +165,6 @@ class WebsocketConfiguration {
         adapter.setMessageConverter(messageConverter)
         container.messageListener = adapter
         return container
-    }
-
-    @Bean
-    fun connectChannelInterceptor(
-        redisOperation: RedisOperation
-    ): ConnectChannelInterceptor {
-        return ConnectChannelInterceptor(redisOperation)
     }
 
     @Bean

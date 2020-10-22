@@ -27,6 +27,10 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.user.UserProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -41,7 +45,9 @@ import java.io.InputStream
 
 @RestResource
 class UserProjectResourceImpl @Autowired constructor(
-    private val projectService: ProjectService
+    private val projectService: ProjectService,
+    private val authPermissionApi: AuthPermissionApi,
+    private val projectAuthServiceCode: ProjectAuthServiceCode
 ) : UserProjectResource {
 
     override fun list(userId: String, accessToken: String?): Result<List<ProjectVO>> {
@@ -95,5 +101,15 @@ class UserProjectResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         projectService.validate(validateType, name, projectId)
         return Result(true)
+    }
+
+    override fun hasCreatePermission(userId: String): Result<Boolean> {
+        return Result(authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = projectAuthServiceCode,
+                resourceType = AuthResourceType.PROJECT,
+                projectCode = "",
+                permission = AuthPermission.CREATE
+        ))
     }
 }

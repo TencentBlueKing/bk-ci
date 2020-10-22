@@ -43,19 +43,22 @@ package com.tencent.devops.common.api.pojo
  */
 object ErrorCode {
     // 蓝盾系统错误
-    const val SUCESSS = "0" // 成功
-    const val SYSTEM_DAEMON_INTERRUPTED = 16015000 // 守护进程中断
-    const val SYSTEM_SERVICE_ERROR = 16015001 // 系统内部服务调用出错
-    const val SYSTEM_OUTTIME_ERROR = 16015002 // 执行请求超时
-    const val SYSTEM_WORKER_LOADING_ERROR = 16015003 // worker插件加载出错
-    const val SYSTEM_WORKER_INITIALIZATION_ERROR = 16015004 // 构建机拉起出错
-    const val SYSTEM_INNER_TASK_ERROR = 16015005 // 系统任务执行出错
+    const val SYSTEM_DAEMON_INTERRUPTED = 2189500 // 守护进程中断
+    const val SYSTEM_SERVICE_ERROR = 2189501 // 系统内部服务调用出错
+    const val SYSTEM_OUTTIME_ERROR = 2189502 // 执行请求超时
+    const val SYSTEM_WORKER_LOADING_ERROR = 2189503 // worker插件加载出错
+    const val SYSTEM_WORKER_INITIALIZATION_ERROR = 2189504 // 构建机拉起出错
+    const val SYSTEM_INNER_TASK_ERROR = 2189505 // 系统任务执行出错
+
+    // 第三方接入平台错误
 
     // 插件执行错误
-    const val USER_DEFAULT_ERROR = 16015100 // 默认错误
-    const val USER_INPUT_INVAILD = 16015101 // 用户输入数据有误
-    const val USER_TASK_OPERATE_FAIL = 16015102 // 插件执行过程出错
-    const val USER_RESOURCE_NOT_FOUND = 16015103 // 找不到对应系统资源
-    const val USER_JOB_OUTTIME_LIMIT = 16015104 // 用户Job排队超时（自行限制）
+    const val PLUGIN_DEFAULT_ERROR = 2199001 // 插件异常默认
+
+    // 用户使用错误
+    const val USER_INPUT_INVAILD = 2199002 // 用户输入数据有误
+    const val USER_RESOURCE_NOT_FOUND = 2199003 // 找不到对应系统资源
+    const val USER_TASK_OPERATE_FAIL = 2199004 // 插件执行过程出错
+    const val USER_JOB_OUTTIME_LIMIT = 2199005 // 用户Job排队超时（自行限制）
     const val USER_QUALITY_CHECK_FAIL = 2199007 // 质量红线检查失败
 }

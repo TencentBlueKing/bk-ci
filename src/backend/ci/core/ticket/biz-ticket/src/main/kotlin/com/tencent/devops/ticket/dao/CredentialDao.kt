@@ -148,7 +148,7 @@ class CredentialDao {
 
     fun listByProject(
         dslContext: DSLContext,
-        projectId: String,
+        projectId: String?,
         credentialTypes: Set<CredentialType>?,
         credentialIds: Set<String>,
         offset: Int?,
@@ -161,8 +161,10 @@ class CredentialDao {
 
         with(TCredential.T_CREDENTIAL) {
             val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(CREDENTIAL_ID.`in`(credentialIds))
+            if (projectId != null) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
             if (keyword != null) {
                 conditions.add(
                     CREDENTIAL_ID.like(
@@ -235,6 +237,30 @@ class CredentialDao {
                 query.and(CREDENTIAL_ID.`in`(credentialIds))
             }
             query.fetchOne(0, kotlin.Long::class.java)
+        }
+    }
+
+    fun searchByIdLike(dslContext: DSLContext, projectId: String, offset: Int, limit: Int, credentialId: String): List<TCredentialRecord> {
+        return with(TCredential.T_CREDENTIAL) {
+            dslContext.selectFrom(this)
+                    .where(PROJECT_ID.eq(projectId).and(CREDENTIAL_ID.like("%$credentialId%")))
+                    .orderBy(CREATED_TIME.desc())
+                    .limit(offset, limit)
+                    .fetch()
+        }
+    }
+
+    fun countByIdLike(
+        dslContext: DSLContext,
+        projectId: String,
+        credentialId: String
+    ): Long {
+        with(TCredential.T_CREDENTIAL) {
+            return dslContext.selectCount()
+                    .from(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(CREDENTIAL_ID.like("%$credentialId%"))
+                    .fetchOne(0, Long::class.java)
         }
     }
 }

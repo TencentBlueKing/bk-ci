@@ -186,6 +186,22 @@ BEGIN
                     AND INDEX_NAME = 'inx_taf_yml_flag') THEN
         ALTER TABLE T_ATOM_FEATURE ADD INDEX inx_taf_yml_flag (YAML_FLAG); 
     END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_REASON_REL'
+                    AND COLUMN_NAME = 'STORE_TYPE') THEN
+        ALTER TABLE T_REASON_REL ADD COLUMN `STORE_TYPE` bit(1) DEFAULT b'0';
+    END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_REASON_REL'
+                    AND INDEX_NAME = 'inx_trr_store_type') THEN
+        ALTER TABLE T_REASON_REL ADD INDEX inx_trr_store_type (STORE_TYPE); 
+    END IF;
 
     COMMIT;
 END <CI_UBF>

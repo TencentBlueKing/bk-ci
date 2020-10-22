@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.common.VMUtils
@@ -274,7 +275,8 @@ class PipelineService @Autowired constructor(
                 throw ignored
             } finally {
                 if (!success) {
-                    modelCheckPlugin.beforeDeleteElementInExistsModel(userId, model, null, pipelineId)
+                    val param = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId ?: "", channelCode = channelCode)
+                    modelCheckPlugin.beforeDeleteElementInExistsModel(model, null, param)
                 }
             }
         } finally {
@@ -547,7 +549,8 @@ class PipelineService @Autowired constructor(
                     defaultMessage = "指定要复制的流水线-模型不存在"
                 )
             // 对已经存在的模型做处理
-            modelCheckPlugin.beforeDeleteElementInExistsModel(userId, existModel, model, pipelineId)
+            val param = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId, channelCode = channelCode)
+            modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
 
             pipelineRepositoryService.deployPipeline(model, projectId, pipelineId, userId, channelCode, false)
             if (checkPermission) {
@@ -693,6 +696,7 @@ class PipelineService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
                 defaultMessage = "指定要复制的流水线-模型不存在"
             )
+
         try {
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             val buildNo = triggerContainer.buildNo
@@ -945,8 +949,8 @@ class PipelineService @Autowired constructor(
         projectId: String,
         authPermission: AuthPermission,
         excludePipelineId: String?,
-        offset: Int,
-        limit: Int
+        page: Int?,
+        pageSize: Int?
     ): SQLPage<Pipeline> {
 
         val watch = StopWatch()
@@ -954,26 +958,36 @@ class PipelineService @Autowired constructor(
             watch.start("perm_r_perm")
             val hasPermissionList = pipelinePermissionService.getResourceByPermission(
                 userId = userId, projectId = projectId, permission = authPermission
-            )
+            ).toMutableList()
             watch.stop()
             watch.start("s_r_summary")
+            if (excludePipelineId != null) {
+                // 移除需排除的流水线ID
+                hasPermissionList.remove(excludePipelineId)
+            }
             val pipelineBuildSummary =
-                pipelineRuntimeService.getBuildSummaryRecords(projectId, ChannelCode.BS, hasPermissionList)
+                pipelineRuntimeService.getBuildSummaryRecords(
+                    projectId = projectId,
+                    channelCode = ChannelCode.BS,
+                    pipelineIds = hasPermissionList,
+                    page = page,
+                    pageSize = pageSize
+                )
             watch.stop()
 
             watch.start("s_r_fav")
             val count = pipelineBuildSummary.size + 0L
-            val allPipelines =
+            val pagePipelines =
                 if (count > 0) {
                     val favorPipelines = pipelineGroupService.getFavorPipelines(userId, projectId)
-                    buildPipelines(pipelineBuildSummary, favorPipelines, emptyList(), excludePipelineId)
+                    buildPipelines(
+                        pipelineBuildSummary = pipelineBuildSummary,
+                        favorPipelines = favorPipelines,
+                        authPipelines = emptyList()
+                    )
                 } else {
                     mutableListOf()
                 }
-
-            val toIndex =
-                if (limit == -1 || allPipelines.size <= (offset + limit)) allPipelines.size else offset + limit
-            val pagePipelines = allPipelines.subList(offset, toIndex)
 
             watch.stop()
             return SQLPage(count, pagePipelines)
@@ -1594,13 +1608,34 @@ class PipelineService @Autowired constructor(
         logger.info("getPipelineByIds|[$projectId]|watch=$watch")
         return pipelines.map {
             SimplePipeline(
-                it.projectId,
-                it.pipelineId,
-                it.pipelineName,
-                it.pipelineDesc,
-                it.taskCount,
-                it.delete,
-                templatePipelineIds.contains(it.pipelineId)
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    pipelineName = it.pipelineName,
+                    pipelineDesc = it.pipelineDesc,
+                    taskCount = it.taskCount,
+                    isDelete = it.delete,
+                    instanceFromTemplate = templatePipelineIds.contains(it.pipelineId)
+            )
+        }
+    }
+
+    fun getPipelineByIds(pipelineIds: Set<String>): List<SimplePipeline> {
+        if (pipelineIds.isEmpty()) return listOf()
+
+        val watch = StopWatch()
+        watch.start("s_r_list_b_ps")
+        val pipelines = pipelineInfoDao.listInfoByPipelineIds(dslContext, pipelineIds)
+        watch.stop()
+        logger.info("getPipelineByIds|[$pipelineIds]|watch=$watch")
+        return pipelines.map {
+            SimplePipeline(
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    pipelineName = it.pipelineName,
+                    pipelineDesc = it.pipelineDesc,
+                    taskCount = it.taskCount,
+                    isDelete = it.delete,
+                    instanceFromTemplate = true
             )
         }
     }
@@ -1881,7 +1916,7 @@ class PipelineService @Autowired constructor(
         model.stages.forEachIndexed { index, stage ->
             stage.id = stage.id ?: VMUtils.genStageId(index + 1)
             if (index == 0) {
-                stages.add(Stage(listOf(fixedTriggerContainer), stage.id))
+                stages.add(stage.copy(containers = listOf(fixedTriggerContainer)))
             } else {
                 model.stages.forEach {
                     if (it.name.isNullOrBlank()) it.name = it.id
@@ -1893,18 +1928,15 @@ class PipelineService @Autowired constructor(
         return stages
     }
 
-    fun getPipeline(projectId: String, page: Int?, pageSize: Int?): PipelineViewPipelinePage<PipelineInfo> {
-        logger.info("getPipeline |$projectId| $page| $pageSize")
-        var offset = pageSize
-        // 最多一次拉取50条数据, 后续可以改为配置
-        if (pageSize!! > 50) {
-            offset = 50
-        }
-        val pageNotNull = page ?: 1
-        val pageSizeNotNull = offset ?: 20
-        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+    fun getPipeline(projectId: String, limit: Int?, offset: Int?): PipelineViewPipelinePage<PipelineInfo> {
+        logger.info("getPipeline |$projectId| $limit| $offset")
         val pipelineRecords =
-            pipelineInfoDao.listPipelineInfoByProject(dslContext, projectId, sqlLimit.limit, sqlLimit.offset)
+            pipelineInfoDao.searchByPipelineName(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    limit = limit!!,
+                    offset = offset!!
+            )
         val pipelineInfos = mutableListOf<PipelineInfo>()
         pipelineRecords?.map {
             pipelineInfoDao.convert(it, null)?.let { it1 -> pipelineInfos.add(it1) }
@@ -1915,10 +1947,37 @@ class PipelineService @Autowired constructor(
             channelCode = null
         )
         return PipelineViewPipelinePage(
-            page = pageNotNull,
+            page = limit!!,
             pageSize = offset!!,
             records = pipelineInfos,
             count = count.toLong()
+        )
+    }
+
+    fun searchByPipelineName(projectId: String, pipelineName: String, limit: Int?, offset: Int?): PipelineViewPipelinePage<PipelineInfo> {
+        logger.info("searchByPipelineName |$projectId|$pipelineName| $limit| $offset")
+        val pipelineRecords =
+                pipelineInfoDao.searchByPipelineName(
+                        dslContext = dslContext,
+                        pipelineName = pipelineName,
+                        projectId = projectId,
+                        limit = limit!!,
+                        offset = offset!!
+                )
+        val pipelineInfos = mutableListOf<PipelineInfo>()
+        pipelineRecords?.map {
+            pipelineInfoDao.convert(it, null)?.let { it1 -> pipelineInfos.add(it1) }
+        }
+        val count = pipelineInfoDao.countPipelineInfoByProject(
+                dslContext = dslContext,
+                pipelineName = pipelineName,
+                projectId = projectId
+        )
+        return PipelineViewPipelinePage(
+                page = limit!!,
+                pageSize = offset!!,
+                records = pipelineInfos,
+                count = count.toLong()
         )
     }
 

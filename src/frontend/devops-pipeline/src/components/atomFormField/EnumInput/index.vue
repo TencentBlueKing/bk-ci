@@ -57,12 +57,7 @@
             display: inline-block;
         }
     }
-    .enum-input-main {
-        /deep/ .bk-tooltip {
-            margin-right: 10px;
-        }
-        /deep/ .bk-tooltip-ref {
-            width: 100%;
-        }
+    .bkdevops-running-lock-setting-tab .bkdevops-radio {
+        margin-right: 20px;
     }
 </style>

@@ -1,231 +1,227 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
-import com.tencent.bk.sdk.iam.dto.PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.SearchInstanceResponseDTO
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.pojo.AuthConstants.KEYWORD_MIN_SIZE
+import com.tencent.devops.auth.pojo.AuthConstants.KEYWORD_SHORT
+import com.tencent.devops.auth.pojo.AuthConstants.KEYWORD_SHORT_MESSAGE
+import com.tencent.devops.auth.pojo.AuthConstants.MAX_LIMIT
+import com.tencent.devops.auth.pojo.SearchInstanceInfo
+import com.tencent.devops.auth.utils.ActionUtils
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.lang.RuntimeException
-import com.tencent.bk.sdk.iam.dto.callback.response.BaseDataResponseDTO
-import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
-import com.tencent.devops.auth.utils.ActionUtils
-import com.tencent.devops.environment.api.RemoteEnvResource
-import com.tencent.devops.environment.api.RemoteNodeResource
-import com.tencent.devops.process.api.service.ServiceAuthPipelineResource
-import com.tencent.devops.project.api.service.ServiceAuthResource
-import com.tencent.devops.repository.api.ServiceAuthRepositoryResource
-import com.tencent.devops.ticket.api.ServiceAuthCredentialResource
 
 @Service
 class ResourceService @Autowired constructor(
-    val client: Client,
-    val remoteAuthService: RemoteAuthService
+    val remoteAuthService: RemoteAuthService,
+    val pipelineService: PipelineService,
+    val projectService: ProjectService,
+    val nodeService: NodeService,
+    val repositoryService: RepositoryService,
+    val envService: EnvService,
+    val certService: CertService,
+    val credentialService: CredentialService
 ) {
 
-    fun getProjectList(page: PageInfoDTO, method: CallbackMethodEnum, token: String): ListInstanceResponseDTO {
-        logger.info("getProjectList method $method, page $page token $token")
+    fun getProjectInfo(callBackInfo: CallbackRequestDTO, method: CallbackMethodEnum, token: String): CallbackBaseResponseDTO {
         checkToken(token)
-        val projectRecords =
-            client.get(ServiceAuthResource::class).list(page.offset!!.toInt(), page.limit!!.toInt()).data
-        logger.info("projectRecords $projectRecords")
-        val count = projectRecords?.count ?: 0L
-        val projectInfo = mutableListOf<InstanceInfoDTO>()
-        projectRecords?.records?.map {
-            val entity = InstanceInfoDTO()
-            entity.id = it.englishName
-            entity.displayName = it.englishName
-            projectInfo.add(entity)
+        if (method == CallbackMethodEnum.LIST_INSTANCE) {
+            return projectService.getProjectList(callBackInfo.page, method, token)
+        } else if (method == CallbackMethodEnum.FETCH_INSTANCE_INFO) {
+            val ids = callBackInfo.filter.idList.map { it.toString() }
+            return projectService.getProjectInfo(ids, callBackInfo.filter.attributeList)
+        } else if (method == CallbackMethodEnum.SEARCH_INSTANCE) {
+            if (!checkKeyword(callBackInfo.filter.keyword)) {
+                logger.warn("search keyword too short ${callBackInfo.filter.keyword}")
+                val result = SearchInstanceResponseDTO()
+                result.code = KEYWORD_SHORT
+                result.message = KEYWORD_SHORT_MESSAGE
+                return result
+            }
+            return projectService.searchProjectInstances(callBackInfo.filter.keyword, callBackInfo.page)
         }
-        logger.info("projectInfo $projectInfo")
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        data.count = count
-        data.result = projectInfo
-        result.code = 0L
-        result.message = ""
-        result.data = data
-        logger.info("result $result")
-        return result
+        return projectService.getProjectList(callBackInfo.page, method, token)
     }
 
-    fun getResourceList(
-        projectId: String,
-        actionType: String,
-        method: CallbackMethodEnum,
-        page: PageInfoDTO,
+    fun getResource(
+        input: CallbackRequestDTO,
         token: String
-    ): ListInstanceResponseDTO? {
-        logger.info("getResourceList project[$projectId] method[$method], page[$page],token[$token],actionType[$actionType]")
+    ): CallbackBaseResponseDTO? {
+        logger.info("getResourceList input[$input] ,token[$token]")
+        val actionType = input.type
+        val method = input.method
         checkToken(token)
         val resourceType = if (actionType.contains("env_node")) {
             AuthResourceType.ENVIRONMENT_ENV_NODE.value
         } else {
             ActionUtils.actionType(actionType)
         }
+
         if (AuthResourceType.get(resourceType) == null) {
             logger.warn("getResourceList actionType is not exits,actionType $actionType, resourceType $resourceType")
             throw RuntimeException("资源类型不存在")
         }
-        var result: ListInstanceResponseDTO? = null
+
+        if (method == CallbackMethodEnum.LIST_INSTANCE) {
+            return getResourceList(input, resourceType)
+        } else if (method == CallbackMethodEnum.FETCH_INSTANCE_INFO) {
+            return getResourceInfos(input, resourceType)
+        } else if (method == CallbackMethodEnum.SEARCH_INSTANCE) {
+            return searchResouceInstances(input, resourceType)
+        }
+        return getResourceList(input, resourceType)
+    }
+
+    fun getResourceInfos(
+        input: CallbackRequestDTO,
+        resourceType: String
+    ): FetchInstanceInfoResponseDTO? {
+        val ids = input.filter.idList
+        val actionType = input.type
+        if (ids == null || ids.isEmpty()) {
+            logger.warn("getResourceInfos ids is empty|$input| $actionType")
+            throw RuntimeException("资源类型不存在")
+        }
+        var result: FetchInstanceInfoResponseDTO? = null
         when (resourceType) {
-            AuthResourceType.PIPELINE_DEFAULT.value -> result = getPipeline(projectId, page)
-            AuthResourceType.CODE_REPERTORY.value -> result = getRepository(projectId, page)
-            AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> result = getEnv(projectId, page)
-            AuthResourceType.ENVIRONMENT_ENV_NODE.value -> result = getNode(projectId, page)
-            AuthResourceType.TICKET_CREDENTIAL.value -> result = getCredential(projectId, page)
+            AuthResourceType.PIPELINE_DEFAULT.value -> result = pipelineService.getPipelineInfo(ids)
+            AuthResourceType.CODE_REPERTORY.value -> result = repositoryService.getRepositoryInfo(ids)
+            AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> result = envService.getEnvInfo(ids)
+            AuthResourceType.ENVIRONMENT_ENV_NODE.value -> result = nodeService.getNodeInfo(ids)
+            AuthResourceType.TICKET_CREDENTIAL.value -> result = credentialService.getCredentialInfo(ids)
+            AuthResourceType.TICKET_CERT.value -> result = certService.getCertInfo(ids)
             else -> null
         }
         return result
     }
 
-    private fun getPipeline(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
-        val pipelineInfos =
-            client.get(ServiceAuthPipelineResource::class)
-                .pipelineList(projectId, page.offset.toInt(), page.limit.toInt()).data
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        if (pipelineInfos?.records == null) {
-            logger.info("$projectId 项目下无流水线")
-            result.code = 0
-            result.message = "无数据"
-            result.data = data
-            return result
+    fun getResourceList(
+        input: CallbackRequestDTO,
+        resourceType: String
+    ): ListInstanceResponseDTO? {
+        checkoutParentType(input.filter.parent.type)
+        val projectId = input.filter.parent.id
+        val page = input.page
+
+        var offset = 0
+        var limit = MAX_LIMIT
+        if (page != null) {
+            offset = page.offset.toInt()
+            limit = page.limit.toInt()
         }
-        val entityInfo = mutableListOf<InstanceInfoDTO>()
-        pipelineInfos?.records?.map {
-            val entity = InstanceInfoDTO()
-            entity.id = it.pipelineId
-            entity.displayName = it.pipelineName
-            entityInfo.add(entity)
+        var result: ListInstanceResponseDTO? = null
+        when (resourceType) {
+            AuthResourceType.PIPELINE_DEFAULT.value -> result = pipelineService.getPipeline(
+                    projectId = projectId,
+                    offset = offset,
+                    limit = limit
+            )
+            AuthResourceType.CODE_REPERTORY.value -> result = repositoryService.getRepository(
+                    projectId = projectId,
+                    offset = offset,
+                    limit = limit
+            )
+            AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> result = envService.getEnv(
+                    projectId = projectId,
+                    offset = offset,
+                    limit = limit
+            )
+            AuthResourceType.ENVIRONMENT_ENV_NODE.value -> result = nodeService.getNode(
+                    projectId = projectId,
+                    offset = offset,
+                    limit = limit
+            )
+            AuthResourceType.TICKET_CREDENTIAL.value -> result = credentialService.getCredential(
+                    projectId = projectId,
+                    offset = offset,
+                    limit = limit
+            )
+            AuthResourceType.TICKET_CERT.value -> result = certService.getCert(
+                    projectId = projectId,
+                    offset = offset,
+                    limit = limit
+            )
+            else -> null
         }
-        logger.info("entityInfo $entityInfo, count ${pipelineInfos?.count}")
-        data.count = pipelineInfos?.count
-        data.result = entityInfo
-        result.code = 0L
-        result.message = ""
-        result.data = data
         return result
     }
 
-    private fun getRepository(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
-        val repositoryInfos =
-            client.get(ServiceAuthRepositoryResource::class)
-                .listByProjects(setOf(projectId), page.offset.toInt(), page.limit.toInt()).data
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        if (repositoryInfos?.records == null) {
-            logger.info("$projectId 项目下无代码库")
-            result.code = 0
-            result.message = "无数据"
-            result.data = data
-            return result
-        }
-        val entityInfo = mutableListOf<InstanceInfoDTO>()
-        repositoryInfos?.records?.map {
-            val entity = InstanceInfoDTO()
-            entity.id = it.repositoryHashId
-            entity.displayName = it.aliasName
-            entityInfo.add(entity)
-        }
-        logger.info("entityInfo $entityInfo, count ${repositoryInfos?.count}")
-        data.count = repositoryInfos?.count
-        data.result = entityInfo
-        result.code = 0L
-        result.message = ""
-        result.data = data
-        return result
-    }
+    fun searchResouceInstances(
+        input: CallbackRequestDTO,
+        resourceType: String
+    ): SearchInstanceResponseDTO? {
+        checkoutParentType(input.filter.parent.type)
+        val projectId = input.filter.parent.id
+        val page = input.page
 
-    private fun getCredential(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
-        val credentialInfos =
-            client.get(ServiceAuthCredentialResource::class)
-                .list(projectId, page.offset.toInt(), page.limit.toInt()).data
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        if (credentialInfos?.records == null) {
-            logger.info("$projectId 项目下无凭证")
-            result.code = 0
-            result.message = "无数据"
-            result.data = data
-            return result
+        var offset = 0
+        var limit = MAX_LIMIT
+        if (page != null) {
+            offset = page.offset.toInt()
+            limit = page.limit.toInt()
         }
-        val entityInfo = mutableListOf<InstanceInfoDTO>()
-        credentialInfos?.records?.map {
-            val entity = InstanceInfoDTO()
-            entity.id = it.credentialId
-            entity.displayName = it.credentialRemark
-            entityInfo.add(entity)
-        }
-        logger.info("entityInfo $entityInfo, count ${credentialInfos?.count}")
-        data.count = credentialInfos?.count
-        data.result = entityInfo
-        result.code = 0L
-        result.message = ""
-        result.data = data
-        return result
-    }
+        var result: SearchInstanceInfo = SearchInstanceInfo()
 
-    private fun getNode(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
-        val nodeInfos =
-            client.get(RemoteNodeResource::class)
-                .listNodeByPage(projectId, page.offset.toInt(), page.limit.toInt()).data
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        if (nodeInfos?.records == null) {
-            logger.info("$projectId 项目下无节点")
-            result.code = 0
-            result.message = "无数据"
-            result.data = data
-            return result
+        if (!checkKeyword(input.filter.keyword)) {
+            return result.buildSearchInstanceKeywordFailResult()
         }
-        val entityInfo = mutableListOf<InstanceInfoDTO>()
-        nodeInfos?.records?.map {
-            val entity = InstanceInfoDTO()
-            entity.id = it.nodeHashId
-            entity.displayName = it.name
-            entityInfo.add(entity)
-        }
-        logger.info("entityInfo $entityInfo, count ${nodeInfos?.count}")
-        data.count = nodeInfos?.count
-        data.result = entityInfo
-        result.code = 0L
-        result.message = ""
-        result.data = data
-        return result
-    }
 
-    private fun getEnv(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
-        val envInfos =
-            client.get(RemoteEnvResource::class)
-                .listEnvByPage(projectId, page.offset.toInt(), page.limit.toInt()).data
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        if (envInfos?.records == null) {
-            logger.info("$projectId 项目下无环境")
-            result.code = 0
-            result.message = "无数据"
-            result.data = data
-            return result
+        val keyword = input.filter.keyword
+
+        when (resourceType) {
+            AuthResourceType.PIPELINE_DEFAULT.value -> result = pipelineService.searchPipeline(
+                    projectId = projectId,
+                    keyword = keyword,
+                    limit = limit,
+                    offset = offset
+            )
+            AuthResourceType.CODE_REPERTORY.value -> result = repositoryService.searchRepositoryInstances(
+                    projectId = projectId,
+                    keyword = keyword,
+                    limit = limit,
+                    offset = offset
+            )
+            AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> result = envService.searchEnv(
+                    projectId = projectId,
+                    keyword = keyword,
+                    limit = limit,
+                    offset = offset
+            )
+            AuthResourceType.ENVIRONMENT_ENV_NODE.value -> result = nodeService.searchNode(
+                    projectId = projectId,
+                    keyword = keyword,
+                    limit = limit,
+                    offset = offset
+            )
+            AuthResourceType.TICKET_CERT.value -> result = certService.searchCert(
+                    projectId = projectId,
+                    keyword = keyword,
+                    limit = limit,
+                    offset = offset
+            )
+            AuthResourceType.TICKET_CREDENTIAL.value -> result = credentialService.searchCredential(
+                    projectId = projectId,
+                    keyword = keyword,
+                    limit = limit,
+                    offset = offset
+            )
+            else -> null
         }
-        val entityInfo = mutableListOf<InstanceInfoDTO>()
-        envInfos?.records?.map {
-            val entity = InstanceInfoDTO()
-            entity.id = it.envHashId
-            entity.displayName = it.name
-            entityInfo.add(entity)
+
+        if (result?.data?.count!! > 100L) {
+            return result.buildSearchInstanceResultFailResult()
         }
-        logger.info("entityInfo $entityInfo, count ${envInfos?.count}")
-        data.count = envInfos?.count
-        data.result = entityInfo
-        result.code = 0L
-        result.message = ""
-        result.data = data
+
         return result
     }
 
@@ -234,6 +230,20 @@ class ResourceService @Autowired constructor(
             logger.warn("auth callBack checkToken is fail $token")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.TOKEN_TICKET_FAIL))
         }
+    }
+
+    private fun checkoutParentType(type: String): Boolean {
+        if (type != AuthResourceType.PROJECT.value) {
+            throw ParamBlankException(AuthMessageCode.PARENT_TYPE_FAIL)
+        }
+        return true
+    }
+
+    private fun checkKeyword(keyword: String): Boolean {
+        if (keyword.length < KEYWORD_MIN_SIZE) {
+            return false
+        }
+        return true
     }
 
     companion object {

@@ -35,7 +35,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NULL
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -51,10 +51,9 @@ import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 class SubPipelineCallAtom constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildService: PipelineBuildService,
     private val pipelineRepositoryService: PipelineRepositoryService,
@@ -84,8 +83,7 @@ class SubPipelineCallAtom constructor(
             val subBuildId = task.subBuildId!!
             val subBuildInfo = pipelineRuntimeService.getBuildInfo(subBuildId)
             return if (subBuildInfo == null) {
-                LogUtils.addRedLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addRedLine(
                     buildId = task.buildId,
                     message = "Can not found sub pipeline build record(${task.subBuildId})",
                     tag = task.taskId,
@@ -108,8 +106,7 @@ class SubPipelineCallAtom constructor(
                     else -> subBuildInfo.status
                 }
 
-                LogUtils.addYellowLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addYellowLine(
                     buildId = task.buildId,
                     message = "sub pipeline status: ${status.name}",
                     tag = task.taskId,
@@ -119,9 +116,9 @@ class SubPipelineCallAtom constructor(
 
                 AtomResponse(
                     buildStatus = status,
-                    errorType = subBuildInfo.errorType,
-                    errorCode = subBuildInfo.errorCode,
-                    errorMsg = subBuildInfo.errorMsg
+                    errorType = ErrorType.getErrorType(subBuildInfo.errorInfoList?.last()?.errorType),
+                    errorCode = subBuildInfo.errorInfoList?.last()?.errorCode,
+                    errorMsg = subBuildInfo.errorInfoList?.last()?.errorMsg
                 )
             }
         }
@@ -201,16 +198,14 @@ class SubPipelineCallAtom constructor(
             checkPermission = false,
             isMobile = false
         )
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "SubPipeline - ${pipelineInfo.pipelineName}",
             tag = taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
         )
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$subPipelineId/detail/$subBuildId'>Click Link</a>",
             tag = taskId,

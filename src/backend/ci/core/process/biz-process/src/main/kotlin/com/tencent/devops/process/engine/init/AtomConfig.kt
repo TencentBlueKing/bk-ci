@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.init
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.atom.task.ManualReviewTaskAtom
 import com.tencent.devops.process.engine.atom.task.SubPipelineCallAtom
 import com.tencent.devops.process.engine.bean.DefaultPipelineUrlBeanImpl
@@ -36,7 +37,6 @@ import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
@@ -51,19 +51,27 @@ class AtomConfig {
 
     @Bean
     @ConditionalOnMissingBean(ManualReviewTaskAtom::class)
-    fun manualReviewTaskAtom(@Autowired client: Client, @Autowired rabbitTemplate: RabbitTemplate, @Autowired pipelineUrlBean: PipelineUrlBean) =
-        ManualReviewTaskAtom(client = client, rabbitTemplate = rabbitTemplate, pipelineUrlBean = pipelineUrlBean)
+    fun manualReviewTaskAtom(
+        @Autowired client: Client,
+        @Autowired buildLogPrinter: BuildLogPrinter,
+        @Autowired pipelineUrlBean: PipelineUrlBean
+    ) =
+        ManualReviewTaskAtom(
+            client = client,
+            buildLogPrinter = buildLogPrinter,
+            pipelineUrlBean = pipelineUrlBean
+        )
 
     @Bean
     @ConditionalOnMissingBean(SubPipelineCallAtom::class)
     fun subPipelineCallAtom(
-        @Autowired rabbitTemplate: RabbitTemplate,
+        @Autowired buildLogPrinter: BuildLogPrinter,
         @Autowired pipelineRuntimeService: PipelineRuntimeService,
         @Autowired pipelineBuildService: PipelineBuildService,
         @Autowired pipelineRepositoryService: PipelineRepositoryService,
         @Autowired pipelineService: PipelineService
     ) = SubPipelineCallAtom(
-        rabbitTemplate = rabbitTemplate,
+        buildLogPrinter = buildLogPrinter,
         pipelineRuntimeService = pipelineRuntimeService,
         pipelineBuildService = pipelineBuildService,
         pipelineRepositoryService = pipelineRepositoryService,

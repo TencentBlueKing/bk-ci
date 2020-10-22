@@ -570,6 +570,9 @@ class AtomDao : AtomBaseDao() {
             if (null != atomUpdateRequest.logoUrl) {
                 baseStep.set(LOGO_URL, atomUpdateRequest.logoUrl)
             }
+            if (null != atomUpdateRequest.iconData) {
+                baseStep.set(ICON, atomUpdateRequest.iconData)
+            }
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .where(ID.eq(id))
@@ -726,6 +729,10 @@ class AtomDao : AtomBaseDao() {
             val logoUrl = atomBaseInfoUpdateRequest.logoUrl
             if (null != logoUrl) {
                 baseStep.set(LOGO_URL, logoUrl)
+            }
+            val iconData = atomBaseInfoUpdateRequest.iconData
+            if (null != iconData) {
+                baseStep.set(ICON, iconData)
             }
             val publisher = atomBaseInfoUpdateRequest.publisher
             if (null != publisher) {

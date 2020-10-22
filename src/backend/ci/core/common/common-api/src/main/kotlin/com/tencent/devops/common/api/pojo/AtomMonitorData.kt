@@ -59,6 +59,8 @@ data class AtomMonitorData(
     val channel: String? = null,
     @ApiModelProperty("执行人", required = true)
     val starter: String,
+    @ApiModelProperty("组织架构详细信息", required = true)
+    val organizationDetailInfo: OrganizationDetailInfo,
     @ApiModelProperty("扩展数据", required = false)
     val extData: Map<String, Any>? = null
 )

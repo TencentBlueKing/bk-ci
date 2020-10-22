@@ -33,8 +33,8 @@ import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL
 import com.tencent.devops.environment.pojo.enums.NodeStatus
-import com.tencent.devops.misc.dao.NodeDao
-import com.tencent.devops.misc.dao.ThirdPartyAgentDao
+import com.tencent.devops.misc.dao.EnvironmentNodeDao
+import com.tencent.devops.misc.dao.EnvironmentThirdPartyAgentDao
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -45,8 +45,8 @@ import org.springframework.stereotype.Component
 @Component
 class ThirdPartyAgentHeartBeat @Autowired constructor(
     private val dslContext: DSLContext,
-    private val thirdPartyAgentDao: ThirdPartyAgentDao,
-    private val nodeDao: NodeDao,
+    private val environmentThirdPartyAgentDao: EnvironmentThirdPartyAgentDao,
+    private val environmentNodeDao: EnvironmentNodeDao,
     private val thirdPartyAgentHeartbeatUtils: ThirdPartyAgentHeartbeatUtils,
     private val redisOperation: RedisOperation
 ) {
@@ -76,7 +76,7 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
     }
 
     private fun checkOKAgent() {
-        val nodeRecords = thirdPartyAgentDao.listByStatus(dslContext,
+        val nodeRecords = environmentThirdPartyAgentDao.listByStatus(dslContext,
             setOf(AgentStatus.IMPORT_OK))
         if (nodeRecords.isEmpty()) {
             return
@@ -89,24 +89,24 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
                 logger.warn("The agent(${HashUtil.encodeLongId(record.id)}) has not receive the heart for $escape ms, mark it as exception")
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    thirdPartyAgentDao.updateStatus(context, record.id, null, record.projectId, AgentStatus.IMPORT_EXCEPTION)
-                    thirdPartyAgentDao.addAgentAction(context, record.projectId, record.id, AgentAction.OFFLINE.name)
+                    environmentThirdPartyAgentDao.updateStatus(context, record.id, null, record.projectId, AgentStatus.IMPORT_EXCEPTION)
+                    environmentThirdPartyAgentDao.addAgentAction(context, record.projectId, record.id, AgentAction.OFFLINE.name)
                     if (record.nodeId == null) {
                         logger.info("[${record.projectId}|${record.id}|${record.ip}] The node id is null")
                         return@transaction
                     }
-                    val nodeRecord = nodeDao.get(context, record.projectId, record.nodeId)
+                    val nodeRecord = environmentNodeDao.get(context, record.projectId, record.nodeId)
                     if (nodeRecord == null || nodeRecord.nodeStatus == NodeStatus.DELETED.name) {
                         deleteAgent(context, record.projectId, record.id)
                     }
-                    nodeDao.updateNodeStatus(context, record.nodeId, NodeStatus.ABNORMAL)
+                    environmentNodeDao.updateNodeStatus(context, record.nodeId, NodeStatus.ABNORMAL)
                 }
             }
         }
     }
 
     private fun checkUnimportAgent() {
-        val nodeRecords = thirdPartyAgentDao.listByStatus(dslContext,
+        val nodeRecords = environmentThirdPartyAgentDao.listByStatus(dslContext,
             setOf(AgentStatus.UN_IMPORT_OK))
         if (nodeRecords.isEmpty()) {
             return
@@ -118,7 +118,7 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
                 logger.warn("The un-import agent(${HashUtil.encodeLongId(record.id)}) has not receive the heart for $escape ms, mark it as exception")
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    thirdPartyAgentDao.updateStatus(context, record.id, null, record.projectId, AgentStatus.UN_IMPORT, AgentStatus.UN_IMPORT_OK)
+                    environmentThirdPartyAgentDao.updateStatus(context, record.id, null, record.projectId, AgentStatus.UN_IMPORT, AgentStatus.UN_IMPORT_OK)
                 }
             }
         }
@@ -126,7 +126,7 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
 
     private fun checkExceptionAgent() {
         // Trying to delete the third party agents
-        val exceptionRecord = thirdPartyAgentDao.listByStatus(dslContext,
+        val exceptionRecord = environmentThirdPartyAgentDao.listByStatus(dslContext,
             setOf(AgentStatus.IMPORT_EXCEPTION))
         if (exceptionRecord.isEmpty()) {
             return
@@ -136,7 +136,7 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
             if (record.nodeId == null) {
                 return@forEach
             }
-            val nodeRecord = nodeDao.get(dslContext, record.projectId, record.nodeId)
+            val nodeRecord = environmentNodeDao.get(dslContext, record.projectId, record.nodeId)
             if (nodeRecord == null || nodeRecord.nodeStatus == NodeStatus.DELETED.name) {
                 deleteAgent(dslContext, record.projectId, record.id)
             }
@@ -145,7 +145,7 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
 
     private fun deleteAgent(dslContext: DSLContext, projectId: String, agentId: Long) {
         logger.info("Trying to delete the agent($agentId) of project($projectId)")
-        thirdPartyAgentDao.delete(dslContext, agentId, projectId)
+        environmentThirdPartyAgentDao.delete(dslContext, agentId, projectId)
     }
 
     companion object {

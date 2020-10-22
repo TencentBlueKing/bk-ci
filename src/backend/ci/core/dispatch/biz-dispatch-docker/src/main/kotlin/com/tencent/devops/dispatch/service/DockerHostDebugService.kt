@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -40,6 +41,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
+import com.tencent.devops.dispatch.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.config.DefaultImageConfig
 import com.tencent.devops.dispatch.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.dao.PipelineDockerEnableDao
@@ -332,7 +334,7 @@ class DockerHostDebugService @Autowired constructor(
             } else {
                 val msg = response["message"] as String
                 logger.error("[$projectId|$pipelineId|$vmSeqId] Get container status $dockerIp $containerId failed, msg: $msg")
-                throw DockerServiceException("Get container status $dockerIp $containerId failed, msg: $msg")
+                throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.GET_VM_STATUS_FAIL.errorCode, "Get container status $dockerIp $containerId failed, msg: $msg")
             }
         }
     }

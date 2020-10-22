@@ -28,6 +28,7 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -60,13 +61,25 @@ class ServiceBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         vmSeqId: String,
-        status: BuildStatus
+        status: BuildStatus,
+        errorType: ErrorType?,
+        errorCode: Int?,
+        errorMsg: String?
     ): Result<Boolean> {
         checkParam(projectId, pipelineId)
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(vmBuildService.setStartUpVMStatus(projectId, pipelineId, buildId, vmSeqId, status))
+        return Result(vmBuildService.setStartUpVMStatus(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            buildStatus = status,
+            errorType = errorType,
+            errorCode = errorCode,
+            errorMsg = errorMsg
+        ))
     }
 
     override fun vmStarted(
@@ -80,7 +93,13 @@ class ServiceBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(vmBuildService.vmStartedByDispatch(projectId, pipelineId, buildId, vmSeqId, vmName))
+        return Result(vmBuildService.vmStartedByDispatch(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            vmName = vmName
+        ))
     }
 
     override fun manualStartupInfo(

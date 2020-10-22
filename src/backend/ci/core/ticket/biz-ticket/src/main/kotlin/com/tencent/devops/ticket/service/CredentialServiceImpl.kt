@@ -422,6 +422,54 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
+    override fun getCredentialByIds(projectId: String?, credentialIds: Set<String>): List<Credential>? {
+        val records = credentialDao.listByProject(
+                dslContext = dslContext,
+                credentialIds = credentialIds,
+                credentialTypes = null,
+                projectId = projectId,
+                limit = null,
+                offset = null,
+                keyword = null
+        )
+        return records.map {
+            Credential(
+                    credentialId = it.credentialId,
+                    credentialType = CredentialType.valueOf(it.credentialType),
+                    credentialRemark = it.credentialRemark,
+                    updatedTime = it.createdTime.timestamp(),
+                    v1 = credentialHelper.credentialMixer,
+                    v2 = credentialHelper.credentialMixer,
+                    v3 = credentialHelper.credentialMixer,
+                    v4 = credentialHelper.credentialMixer
+            )
+        }
+    }
+
+    override fun searchByCredentialId(projectId: String, offset: Int, limit: Int, credentialId: String): SQLPage<Credential> {
+        val count = credentialDao.countByIdLike(dslContext, projectId, credentialId)
+        val credentialRecords = credentialDao.searchByIdLike(
+                dslContext = dslContext,
+                projectId = projectId,
+                offset = offset,
+                limit = limit,
+                credentialId = credentialId
+        )
+        val result = credentialRecords.map {
+            Credential(
+                    credentialId = it.credentialId,
+                    credentialType = CredentialType.valueOf(it.credentialType),
+                    credentialRemark = it.credentialRemark,
+                    updatedTime = it.createdTime.timestamp(),
+                    v1 = credentialHelper.credentialMixer,
+                    v2 = credentialHelper.credentialMixer,
+                    v3 = credentialHelper.credentialMixer,
+                    v4 = credentialHelper.credentialMixer
+            )
+        }
+        return SQLPage(count, result)
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }

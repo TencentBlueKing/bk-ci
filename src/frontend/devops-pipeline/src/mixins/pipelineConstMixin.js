@@ -99,7 +99,7 @@ const pipelineConstMixin = {
                 },
                 errorCode: {
                     index: 13,
-                    width: 300,
+                    width: 260,
                     prop: 'errorCode',
                     label: this.$t('history.errorCode')
                 }

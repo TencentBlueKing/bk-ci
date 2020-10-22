@@ -28,9 +28,13 @@ package com.tencent.devops.websocket.cron
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.websocket.dispatch.TransferDispatch
+import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 import com.tencent.devops.common.websocket.utils.RedisUtlis.cleanPageSessionByPage
-import com.tencent.devops.websocket.keys.WebsocketKeys
+import com.tencent.devops.websocket.event.ClearSessionEvent
+import com.tencent.devops.websocket.lock.WebsocketCronLock
 import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -40,7 +44,8 @@ import org.springframework.stereotype.Component
 class ClearTimeoutCron(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
-    private val websocketService: WebsocketService
+    private val websocketService: WebsocketService,
+    private val transferDispatch: TransferDispatch
 ) {
 
     companion object {
@@ -50,10 +55,19 @@ class ClearTimeoutCron(
     /**
      * 每分钟一次，计算session是否已经超时，若超时，剔除该session关联的所有websocket redis信息。
      */
-    @Scheduled(cron = "0 */1 * * * ?")
+    @Scheduled(cron = "0 */30 * * * ?")
     fun newClearTimeoutCache() {
         longSessionLog()
-        clearTimeoutSession()
+        logger.info("websocket cron get redis lock")
+        val websocketCronLock = WebsocketCronLock(redisOperation)
+        try {
+            websocketCronLock.lock()
+            logger.info("websocket cron get redis lock")
+            clearTimeoutSession()
+        } finally {
+            websocketCronLock.unlock()
+            logger.info("websocket cron unlock")
+        }
     }
 
     private fun longSessionLog() {
@@ -68,36 +82,42 @@ class ClearTimeoutCron(
 
     private fun clearTimeoutSession() {
         val nowTime = System.currentTimeMillis()
+        logger.info("start clear Session by Timer")
         for (bucket in 0..WebsocketKeys.REDIS_MO) {
             val redisData = redisOperation.get(WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket)
             if (redisData != null) {
+                logger.info("websocket timer $bucket, data:$redisData")
                 var newSessionList: String? = null
                 val sessionList = redisData.split(",")
-                if (sessionList == null || sessionList.isEmpty()) {
+                if (sessionList.isEmpty()) {
                     logger.info("this bucket is empty,redisKey[${WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket}]")
                     continue
                 }
                 sessionList.forEach {
                     try {
-                        if (it != null) {
-                            val timeout: Long = it.substringAfter("&").toLong()
-                            val userId = it.substringAfter("#").substringBefore("&")
-                            val sessionId = it.substringBefore("#")
-                            if (nowTime > timeout) {
-                                val sessionPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
-                                RedisUtlis.cleanSessionPageBySessionId(redisOperation, sessionId)
-                                if (sessionPage != null) {
-                                    RedisUtlis.cleanPageSessionBySessionId(redisOperation, sessionPage, sessionId)
-                                    RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
-                                    logger.info("[clearTimeOutSession] sessionId:$sessionId,loadPage:$sessionPage,userId:$userId")
-                                }
+                        val timeout: Long = it.substringAfter("&").toLong()
+                        val userId = it.substringAfter("#").substringBefore("&")
+                        val sessionId = it.substringBefore("#")
+                        if (nowTime > timeout) {
+                            logger.info("websocket timer timeout $bucket|$it|$userId|$sessionId")
+                            val sessionPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
+                            RedisUtlis.cleanSessionPageBySessionId(redisOperation, sessionId)
+                            if (sessionPage != null) {
+                                RedisUtlis.cleanPageSessionBySessionId(redisOperation, sessionPage, sessionId)
+                                RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
+                                logger.info("[clearTimeOutSession] sessionId:$sessionId,loadPage:$sessionPage,userId:$userId")
+                            }
+                            // 如果不在本实例，下发到mq,供其他实例删除对应实例维持的session
+                            if (websocketService.isCacheSession(sessionId)) {
                                 websocketService.removeCacheSession(sessionId)
                             } else {
-                                newSessionList = if (newSessionList == null) {
-                                    it
-                                } else {
-                                    "$newSessionList,$it"
-                                }
+                                clearSessionByMq(userId, sessionId)
+                            }
+                        } else {
+                            newSessionList = if (newSessionList == null) {
+                                it
+                            } else {
+                                "$newSessionList,$it"
                             }
                         }
                     } catch (e: Exception) {
@@ -105,14 +125,30 @@ class ClearTimeoutCron(
                     }
                 }
                 if (newSessionList != null) {
+                    logger.info("websocket timer reset $bucket, data: $newSessionList")
                     redisOperation.set(
                         WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket,
                         newSessionList!!,
                         null,
                         true
                     )
+                } else {
+                    logger.info("websocket timer empty bucket $bucket, delete it")
+                    redisOperation.delete(WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket)
                 }
             }
         }
+        LogUtils.costTime("websocket cron", nowTime)
     }
+
+    fun clearSessionByMq(userId: String, sessionId: String) {
+            transferDispatch.dispatch(
+                    ClearSessionEvent(
+                            userId = userId,
+                            sessionId = sessionId,
+                            page = null,
+                            transferData = mutableMapOf()
+                    )
+            )
+        }
 }

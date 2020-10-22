@@ -1,16 +1,8 @@
 <template>
     <article class="detail-home" v-bkloading="{ isLoading }">
-        <h3 class="market-home-title">
-            <icon class="title-icon" name="color-logo-store" size="25" />
-            <p class="title-name">
-                <router-link :to="{ name: 'atomHome' }" class="back-home"> {{ $t('store.研发商店') }} </router-link>
-                <i class="right-arrow banner-arrow"></i>
-                <span class="back-home" @click="backToStore">{{type|typeFilter}}</span>
-                <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des">{{detail.name}}</span>
-            </p>
-            <router-link :to="{ name: 'workList' }" class="title-work"> {{ $t('store.工作台') }} </router-link>
-        </h3>
+        <bread-crumbs :bread-crumbs="navList" :type="type">
+            <router-link :to="{ name: 'atomWork' }" class="g-title-work"> {{ $t('store.工作台') }} </router-link>
+        </bread-crumbs>
 
         <main class="store-main" v-if="!isLoading">
             <component :is="`${type}Info`" :detail="detail" class="detail-info" :current-tab.sync="currentTab"></component>
@@ -25,6 +17,7 @@
 
 <script>
     import { mapActions, mapGetters } from 'vuex'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
     import atomInfo from '../../components/common/detail-info/atom'
     import templateInfo from '../../components/common/detail-info/template'
     import imageInfo from '../../components/common/detail-info/image'
@@ -37,26 +30,8 @@
             templateInfo,
             imageInfo,
             detailScore,
-            codeSection
-        },
-
-        filters: {
-            typeFilter (val) {
-                const bkLocale = window.devops || {}
-                let res = ''
-                switch (val) {
-                    case 'template':
-                        res = bkLocale.$t('store.流水线模板')
-                        break
-                    case 'image':
-                        res = bkLocale.$t('store.容器镜像')
-                        break
-                    default:
-                        res = bkLocale.$t('store.流水线插件')
-                        break
-                }
-                return res
-            }
+            codeSection,
+            breadCrumbs
         },
 
         data () {
@@ -91,6 +66,26 @@
                         { componentName: 'codeSection', label: 'Dockerfile', name: 'Dockerfile', bindData: { code: this.detail.codeSection, limitHeight: false } }
                     ]
                 }
+            },
+
+            navList () {
+                let name
+                switch (this.type) {
+                    case 'template':
+                        name = this.$t('store.流水线模板')
+                        break
+                    case 'image':
+                        name = this.$t('store.容器镜像')
+                        break
+                    default:
+                        name = this.$t('store.流水线插件')
+                        break
+                }
+                Object.assign(this.markerQuey, { pipeType: this.type })
+                return [
+                    { name, to: { name: 'atomHome', query: this.markerQuey } },
+                    { name: this.detail.name }
+                ]
             }
         },
 
@@ -133,7 +128,7 @@
                 const atomCode = this.detailCode
 
                 return Promise.all([
-                    this.requestAtom({ atomCode }),
+                    this.requestAtom(atomCode),
                     this.requestAtomStatistic({ atomCode }),
                     this.getUserApprovalInfo(atomCode),
                     this.getAtomYaml({ atomCode })
@@ -173,14 +168,6 @@
                     detail.needInstallToProject = setting.needInstallToProject
                     this.setDetail(detail)
                 })
-            },
-
-            backToStore () {
-                Object.assign(this.markerQuey, { pipeType: this.type })
-                this.$router.push({
-                    name: 'atomHome',
-                    query: this.markerQuey
-                })
             }
         }
     }
@@ -189,14 +176,14 @@
 <style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
     .store-main {
-        height: calc(100vh - 93px);
+        height: calc(94.4vh - 50px);
         overflow-y: scroll;
-        background: $grayBackGroundColor;
     }
 
     .detail-home {
         overflow: hidden;
         min-height: 100%;
+        background: $grayBackGroundColor;
     }
 
     .detail-info {

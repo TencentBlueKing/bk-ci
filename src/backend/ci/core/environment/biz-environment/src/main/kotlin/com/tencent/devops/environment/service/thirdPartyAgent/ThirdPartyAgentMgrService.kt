@@ -31,6 +31,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.AgentAction
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
@@ -46,9 +47,12 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.ByteUtils
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.dispatch.api.ServiceAgentResource
 import com.tencent.devops.environment.client.InfluxdbClient
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
@@ -186,7 +190,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
     private fun checkEditPermmission(userId: String, projectId: String, nodeId: Long) {
         if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
-            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION)
+            throw PermissionForbiddenException(
+                    message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_EDIT_PERMISSSION))
         }
     }
 
@@ -760,6 +765,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_AGENT_STATUS_EXCEPTION)
         }
 
+        if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)) {
+            throw PermissionForbiddenException(message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_CREATE_PERMISSSION))
+        }
+
         val nodeInfo = nodeDao.listDevCloudNodesByIps(dslContext, projectId, listOf(agentRecord.ip))
         if (nodeInfo.isNotEmpty()) {
             logger.info("Import dev cloud agent, refresh the node status to normal")
@@ -782,6 +791,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         logger.info("Trying to import the agent($agentId) of project($projectId) by user($userId)")
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
+
             val nodeId = nodeDao.addNode(
                 dslContext = context,
                 projectId = projectId,
@@ -970,7 +980,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 agentChanged = true
             }
             if (newHeartbeatInfo.slaveVersion != agentRecord.version) {
-                agentRecord.version = newHeartbeatInfo.slaveVersion
+                var slaveVersion = newHeartbeatInfo.slaveVersion
+                if (slaveVersion.length > 128) {
+                    logger.warn("slaveVersion size too long, substring 127| $slaveVersion| $projectId| ${agentRecord.id}")
+                    slaveVersion = slaveVersion.substring(0, 127)
+                }
+                agentRecord.version = slaveVersion
                 agentChanged = true
             }
             if (newHeartbeatInfo.agentIp != agentRecord.ip) {
@@ -1001,7 +1016,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             val agentStatus = when (status) {
                 AgentStatus.UN_IMPORT -> {
                     logger.info("update the agent($agentHashId) status to un-import ok")
-                    thirdPartyAgentDao.updateStatus(context, agentRecord.id, null, projectId, AgentStatus.UN_IMPORT_OK)
+                    thirdPartyAgentDao.updateStatus(
+                            dslContext = context,
+                            id = agentRecord.id,
+                            nodeId = null,
+                            projectId = projectId,
+                            status = AgentStatus.UN_IMPORT_OK
+                    )
                     AgentStatus.UN_IMPORT_OK
                 }
                 AgentStatus.UN_IMPORT_OK -> {

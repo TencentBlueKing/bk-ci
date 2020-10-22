@@ -32,7 +32,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -48,7 +48,6 @@ import com.tencent.devops.process.utils.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPL
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.util.Date
 
 /**
@@ -56,7 +55,7 @@ import java.util.Date
  */
 class ManualReviewTaskAtom(
     private val client: Client,
-    private val rabbitTemplate: RabbitTemplate,
+    private val buildLogPrinter: BuildLogPrinter,
     private val pipelineUrlBean: PipelineUrlBean
 ) : IAtomTask<ManualReviewUserTaskElement> {
 
@@ -84,32 +83,28 @@ class ManualReviewTaskAtom(
         }
 
         // 开始进入人工审核步骤，需要打印日志，并发送通知给审核人
-        LogUtils.addYellowLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addYellowLine(
             buildId = task.buildId,
             message = "============步骤等待审核============",
             tag = taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
         )
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = task.buildId,
             message = "待审核人：$reviewUsers",
             tag = taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
         )
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = task.buildId,
             message = "审核说明：$reviewDesc",
             tag = taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
         )
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
+        buildLogPrinter.addLine(
             buildId = buildId,
             message = "审核参数：${param.params.map { "{key=${it.key}, value=${it.value}" }}",
             tag = taskId,
@@ -152,24 +147,21 @@ class ManualReviewTaskAtom(
         logger.info("[$buildId]|TRY_FINISH|${task.taskName}|taskId=$taskId|action=$manualAction")
         if (manualAction.isNotEmpty()) {
             val manualActionUserId = task.getTaskParam(BS_MANUAL_ACTION_USERID)
-            LogUtils.addYellowLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addYellowLine(
                 buildId = task.buildId,
                 message = "============步骤审核结束============",
                 tag = taskId,
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
             )
-            LogUtils.addLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addLine(
                 buildId = buildId,
                 message = "审核人：$manualActionUserId",
                 tag = taskId,
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
             )
-            LogUtils.addLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addLine(
                 buildId = buildId,
                 message = "审核意见：${taskParam[BS_MANUAL_ACTION_SUGGEST]}",
                 tag = taskId,
@@ -178,16 +170,14 @@ class ManualReviewTaskAtom(
             )
             return when (ManualReviewAction.valueOf(manualAction)) {
                 ManualReviewAction.PROCESS -> {
-                    LogUtils.addLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addLine(
                         buildId = buildId,
                         message = "审核结果：继续",
                         tag = taskId,
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
                     )
-                    LogUtils.addLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addLine(
                         buildId = buildId,
                         message = "审核参数：${JsonUtil.getObjectMapper().readValue(taskParam[BS_MANUAL_ACTION_PARAMS].toString(), List::class.java)}",
                         tag = taskId,
@@ -197,8 +187,7 @@ class ManualReviewTaskAtom(
                     AtomResponse(BuildStatus.SUCCEED)
                 }
                 ManualReviewAction.ABORT -> {
-                    LogUtils.addRedLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addRedLine(
                         buildId = buildId,
                         message = "审核结果：驳回",
                         tag = taskId,

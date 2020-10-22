@@ -7,7 +7,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.POST
+import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -20,15 +20,44 @@ import javax.ws.rs.core.MediaType
 interface ServiceAuthRepositoryResource {
 
     @ApiOperation("获取项目代码库列表")
-    @POST
-    @Path("/listByProjects")
+    @GET
+    @Path("/projects/{projectIds}/listByProjects")
     fun listByProjects(
-        projectIds: Set<String>,
-        @ApiParam("分页", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("分页大小", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
+        @ApiParam("项目Id", required = false)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("起始位置", required = false)
+        @QueryParam("offset")
+        offset: Int?,
+        @ApiParam("步长", required = false)
+        @QueryParam("limit")
+        limit: Int?
+    ): Result<Page<RepositoryInfo>>
+
+    @ApiOperation("获取项目代码库列表")
+    @GET
+    @Path("/infos")
+    fun getInfos(
+        @ApiParam("代码库Id串", required = true)
+        @QueryParam("repositoryIds")
+        repositoryIds: List<String>
+    ): Result<List<RepositoryInfo>?>
+
+    @ApiOperation("获取项目代码库列表(别名模糊匹配)")
+    @GET
+    @Path("/projects/{projectIds}/searchByName")
+    fun searchByName(
+        @ApiParam("项目Id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("起始位置", required = true)
+        @QueryParam("offset")
+        offset: Int,
+        @ApiParam("步长", required = true)
+        @QueryParam("limit")
+        limit: Int,
+        @ApiParam("别名", required = true)
+        @QueryParam("aliasName")
+        aliasName: String
     ): Result<Page<RepositoryInfo>>
 }

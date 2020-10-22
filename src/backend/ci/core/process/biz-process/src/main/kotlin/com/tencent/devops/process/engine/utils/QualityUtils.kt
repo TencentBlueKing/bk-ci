@@ -42,7 +42,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
@@ -56,7 +56,6 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.pojo.RuleCheckResult
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.time.LocalDateTime
 
 object QualityUtils {
@@ -230,7 +229,7 @@ object QualityUtils {
         interceptTaskName: String?,
         interceptTask: String?,
         runVariables: Map<String, String>,
-        rabbitTemplate: RabbitTemplate,
+        buildLogPrinter: BuildLogPrinter,
         position: String,
         templateService: TemplateService,
         pipelineBuildQualityService: PipelineBuildQualityService
@@ -268,8 +267,7 @@ object QualityUtils {
                 QUALITY_LAZY_TIME_GAP.forEachIndexed { index, gap ->
                     val hasMetadata = pipelineBuildQualityService.hasCodeccHisMetadata(buildId)
                     if (hasMetadata) return@loop
-                    LogUtils.addLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addLine(
                         buildId = buildId,
                         message = "第 $index 次轮询等待红线结果",
                         tag = elementId,
@@ -281,8 +279,7 @@ object QualityUtils {
             }
             pipelineBuildQualityService.check(buildCheckParams, position)
         } else {
-            LogUtils.addLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addLine(
                 buildId = buildId,
                 message = "检测红线结果",
                 tag = elementId,
@@ -300,7 +297,7 @@ object QualityUtils {
         task: PipelineBuildTask,
         interceptTask: String,
         checkResult: RuleCheckResult,
-        rabbitTemplate: RabbitTemplate,
+        buildLogPrinter: BuildLogPrinter,
         pipelineBuildDetailService: PipelineBuildDetailService,
         pipelineBuildQualityService: PipelineBuildQualityService
     ): AtomResponse {
@@ -309,8 +306,7 @@ object QualityUtils {
             val elementId = task.taskId
 
             if (checkResult.success) {
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addLine(
                     buildId = buildId,
                     message = "质量红线($atomDesc)检测已通过",
                     tag = elementId,
@@ -319,8 +315,7 @@ object QualityUtils {
                 )
 
                 checkResult.resultList.forEach {
-                    LogUtils.addLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addLine(
                         buildId = buildId,
                         message = "规则：${it.ruleName}",
                         tag = elementId,
@@ -328,8 +323,7 @@ object QualityUtils {
                         executeCount = task.executeCount ?: 1
                     )
                     it.messagePairs.forEach { message ->
-                        LogUtils.addLine(
-                            rabbitTemplate = rabbitTemplate,
+                        buildLogPrinter.addLine(
                             buildId = buildId,
                             message = message.first + " " + message.second,
                             tag = elementId,
@@ -344,8 +338,7 @@ object QualityUtils {
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 5000
                 task.taskParams[QUALITY_RESULT] = checkResult.success
             } else {
-                LogUtils.addRedLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "质量红线($atomDesc)检测被拦截",
                     tag = elementId,
@@ -354,8 +347,7 @@ object QualityUtils {
                 )
 
                 checkResult.resultList.forEach {
-                    LogUtils.addRedLine(
-                        rabbitTemplate = rabbitTemplate,
+                    buildLogPrinter.addRedLine(
                         buildId = buildId,
                         message = "规则：${it.ruleName}",
                         tag = elementId,
@@ -363,8 +355,7 @@ object QualityUtils {
                         executeCount = task.executeCount ?: 1
                     )
                     it.messagePairs.forEach { message ->
-                        LogUtils.addRedLine(
-                            rabbitTemplate = rabbitTemplate,
+                        buildLogPrinter.addRedLine(
                             buildId = buildId,
                             message = message.first + " " + message.second,
                             tag = elementId,
@@ -389,8 +380,7 @@ object QualityUtils {
                 // 产生MQ消息，等待5分钟审核时间
                 logger.info("quality check fail wait reviewing")
                 val auditUsers = pipelineBuildQualityService.getAuditUserList(projectId, pipelineId, buildId, interceptTask)
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addLine(
                     buildId = buildId,
                     message = "质量红线($atomDesc)待审核!审核人：$auditUsers",
                     tag = elementId,
@@ -407,7 +397,7 @@ object QualityUtils {
 
     fun tryFinish(
         task: PipelineBuildTask,
-        rabbitTemplate: RabbitTemplate
+        buildLogPrinter: BuildLogPrinter
     ): AtomResponse {
         val buildId = task.buildId
         val taskId = task.taskId
@@ -420,8 +410,7 @@ object QualityUtils {
             if (success.toBoolean()) {
                 AtomResponse(BuildStatus.REVIEW_PROCESSED)
             } else {
-                LogUtils.addRedLine(
-                    rabbitTemplate = rabbitTemplate,
+                buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "${taskName}审核超时",
                     tag = taskId,
@@ -436,8 +425,7 @@ object QualityUtils {
             if (manualAction.isNotEmpty()) {
                 when (ManualReviewAction.valueOf(manualAction)) {
                     ManualReviewAction.PROCESS -> {
-                        LogUtils.addYellowLine(
-                            rabbitTemplate = rabbitTemplate,
+                        buildLogPrinter.addYellowLine(
                             buildId = buildId,
                             message = "步骤审核结束，审核结果：[继续]，审核人：$actionUser",
                             tag = taskId,
@@ -447,8 +435,7 @@ object QualityUtils {
                         AtomResponse(BuildStatus.SUCCEED)
                     }
                     ManualReviewAction.ABORT -> {
-                        LogUtils.addYellowLine(
-                            rabbitTemplate = rabbitTemplate,
+                        buildLogPrinter.addYellowLine(
                             buildId = buildId,
                             message = "步骤审核结束，审核结果：[驳回]，审核人：$actionUser",
                             tag = taskId,

@@ -36,7 +36,11 @@ object CodeccUtils {
     fun isCodeccAtom(atomName: String?): Boolean {
         return atomName == LinuxCodeCCScriptElement.classType ||
             atomName == LinuxPaasCodeCCScriptElement.classType ||
-            atomName == "CodeccCheckAtom" ||
+            isCodeccNewAtom(atomName)
+    }
+
+    fun isCodeccNewAtom(atomName: String?): Boolean {
+        return atomName == "CodeccCheckAtom" ||
             atomName == "CodeccCheckAtomDebug"
     }
 

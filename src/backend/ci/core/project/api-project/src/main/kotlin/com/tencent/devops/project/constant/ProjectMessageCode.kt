@@ -46,7 +46,7 @@ object ProjectMessageCode {
     const val PROJECT_NOT_EXIST = "2119001" // 项目不存在
     const val PROJECT_NAME_EXIST = "2119002" // 项目名或英文名重复
     const val NAME_EMPTY = "2119003" // 名称不能为空
-    const val NAME_TOO_LONG = "2119004" // 项目名至多4-12个字符
+    const val NAME_TOO_LONG = "2119004" // 项目名至多1-12个字符
     const val EN_NAME_INTERVAL_ERROR = "2119005" // 英文名长度在3-32个字符
     const val EN_NAME_COMBINATION_ERROR = "2119006" // 英文名是字符+数字组成，并以小写字母开头
     const val EN_NAME_EXIST = "2119007" // 英文名已经存在
@@ -75,4 +75,5 @@ object ProjectMessageCode {
     const val ORG_TYPE_ERROR = "2119030" // 组织类型有误
     const val ORG_NOT_PROJECT = "2119031" // {0}该组织下无项目
     const val USER_NOT_PROJECT_USER = "2119032" // 目标用户非该项目成员
+    const val USER_NOT_CREATE_PERM = "2119033" // 无创建项目权限，请申请权限
 }

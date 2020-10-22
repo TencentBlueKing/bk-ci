@@ -94,5 +94,11 @@ data class VMBuildContainer(
         const val classType = "vmBuild"
     }
 
+    @ApiModelProperty("nfs挂载开关", required = false, hidden = true)
+    var nfsSwitch: Boolean? = null
+        get() {
+            return if (null == field) true else field
+        }
+
     override fun getClassType() = classType
 }

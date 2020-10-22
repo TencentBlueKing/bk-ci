@@ -253,6 +253,7 @@ open class MarketAtomTask : ITask() {
                 systemEnvVariables = systemEnvVariables,
                 buildEnvs = buildEnvs
             )
+            val errorMessage = "Fail to run the plugin"
             when {
                 AgentEnv.getOS() == OSType.WINDOWS -> {
                     if (preCmds.isNotEmpty()) {
@@ -266,7 +267,8 @@ open class MarketAtomTask : ITask() {
                         script = command.toString(),
                         runtimeVariables = environment,
                         dir = atomTmpSpace,
-                        systemEnvVariables = systemEnvVariables
+                        systemEnvVariables = systemEnvVariables,
+                        errorMessage = errorMessage
                     )
                 }
                 AgentEnv.getOS() == OSType.LINUX || AgentEnv.getOS() == OSType.MAC_OS -> {
@@ -282,7 +284,8 @@ open class MarketAtomTask : ITask() {
                         dir = atomTmpSpace,
                         buildEnvs = buildEnvs,
                         runtimeVariables = environment,
-                        systemEnvVariables = systemEnvVariables
+                        systemEnvVariables = systemEnvVariables,
+                        errorMessage = errorMessage
                     )
                 }
             }
@@ -504,8 +507,13 @@ open class MarketAtomTask : ITask() {
             if (!success) {
                 throw TaskExecuteException(
                     errorMsg = "MarketAtom failed with ${atomResult.status}: ${atomResult.message}",
-                    errorType = ErrorType.USER,
-                    errorCode = atomResult.errorCode ?: ErrorCode.USER_DEFAULT_ERROR
+                    errorType = when (atomResult.errorType) {
+                        // 插件上报的错误类型，若非用户业务错误或插件内的第三方服务调用错误，统一设为插件逻辑错误
+                        1 -> ErrorType.USER
+                        2 -> ErrorType.THIRD_PARTY
+                        else -> ErrorType.PLUGIN
+                    },
+                    errorCode = atomResult.errorCode ?: ErrorCode.PLUGIN_DEFAULT_ERROR
                 )
             }
         }

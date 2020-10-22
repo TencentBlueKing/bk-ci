@@ -28,6 +28,7 @@ package com.tencent.devops.store.service.common
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.Logo
+import com.tencent.devops.store.pojo.common.StoreLogoInfo
 import com.tencent.devops.store.pojo.common.StoreLogoReq
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.InputStream
@@ -44,9 +45,11 @@ interface StoreLogoService {
      */
     fun uploadStoreLogo(
         userId: String,
+        contentLength: Long,
+        compressFlag: Boolean? = false,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): Result<String?>
+    ): Result<StoreLogoInfo?>
 
     /**
      * 获取logo列表

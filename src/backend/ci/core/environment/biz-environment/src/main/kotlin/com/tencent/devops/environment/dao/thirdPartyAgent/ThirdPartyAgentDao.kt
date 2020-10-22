@@ -258,7 +258,6 @@ class ThirdPartyAgentDao {
             with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
                 val agentRecord = context.selectFrom(this)
                     .where(ID.eq(id))
-                    .forUpdate()
                     .fetchOne() ?: throw NotFoundException("The agent is not exist")
 
                 val agentStatus = AgentStatus.fromStatus(agentRecord.status)
@@ -309,7 +308,6 @@ class ThirdPartyAgentDao {
             return dslContext.selectFrom(this)
                 .where(ID.eq(id))
                 .and(PROJECT_ID.eq(projectId))
-                .forUpdate()
                 .fetchOne()
         }
     }

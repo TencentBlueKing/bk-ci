@@ -87,7 +87,8 @@ object ShellUtil {
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
         systemEnvVariables: Map<String, String>? = null,
-        prefix: String = ""
+        prefix: String = "",
+        errorMessage: String? = null
     ): String {
         return executeUnixCommand(
             command = getCommandFile(
@@ -100,7 +101,8 @@ object ShellUtil {
                 systemEnvVariables = systemEnvVariables
             ).canonicalPath,
             sourceDir = dir,
-            prefix = prefix
+            prefix = prefix,
+            errorMessage = errorMessage
         )
     }
 
@@ -197,11 +199,17 @@ object ShellUtil {
         return file
     }
 
-    private fun executeUnixCommand(command: String, sourceDir: File, prefix: String = ""): String {
+    private fun executeUnixCommand(
+        command: String,
+        sourceDir: File,
+        prefix: String = "",
+        errorMessage: String? = null
+    ): String {
         try {
             return CommandLineUtils.execute(command, sourceDir, true, prefix)
         } catch (ignored: Throwable) {
-            LoggerService.addNormalLine("Fail to run the command $command because of error(${ignored.message})")
+            val errorInfo = errorMessage ?: "Fail to run the command $command"
+            LoggerService.addNormalLine("$errorInfo because of error(${ignored.message})")
             throw throw TaskExecuteException(
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,

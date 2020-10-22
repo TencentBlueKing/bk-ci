@@ -14,7 +14,7 @@
           "healthz": "/api/v1/healthz"
         }
       }
-  },
+    },
     {
       "operation": "upsert_resource_type",
       "data": {
@@ -145,5 +145,5 @@
         "version": 1
       }
     }
-    ]
+  ]
 }
