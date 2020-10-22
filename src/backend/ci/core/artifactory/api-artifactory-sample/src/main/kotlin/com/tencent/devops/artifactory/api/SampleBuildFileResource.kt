@@ -24,46 +24,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.atom
+package com.tencent.devops.artifactory.api
 
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.artifactory.pojo.Count
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
-import com.tencent.devops.store.pojo.atom.AtomEnv
-import com.tencent.devops.store.pojo.atom.AtomEnvRequest
-import com.tencent.devops.store.pojo.common.SensitiveConfResp
-import com.tencent.devops.worker.common.api.WorkerRestApiSDK
-import java.io.File
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-interface AtomArchiveSDKApi : WorkerRestApiSDK {
-    /**
-     * 获取插件信息
-     */
-    fun getAtomEnv(projectCode: String, atomCode: String, atomVersion: String): Result<AtomEnv>
+@Api(tags = ["BUILD_ARTIFACTORY"], description = "仓库-文件管理")
+@Path("/build/artifactories/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface SampleBuildFileResource {
 
-    /**
-     * 更新插件执行环境信息
-     */
-    fun updateAtomEnv(
-        projectCode: String,
-        atomCode: String,
-        atomVersion: String,
-        atomEnvRequest: AtomEnvRequest
-    ): Result<Boolean>
-
-    /**
-     * 获取插件插件敏感信息
-     */
-    fun getAtomSensitiveConf(atomCode: String): Result<List<SensitiveConfResp>?>
-
-    fun archiveAtom(filePath: String, destPath: String, workspace: File, buildVariables: BuildVariables): String?
-
-    fun uploadAtom(file: File, destPath: String, buildVariables: BuildVariables)
-
-    fun uploadAtomFile(file: File, fileType: FileTypeEnum, destPath: String)
-
-    fun downloadAtom(atomFilePath: String, file: File)
-
-    fun getAtomDevLanguageEnvVars(language: String, buildHostType: String, buildHostOs: String): Result<List<AtomDevLanguageEnvVar>?>
+    @ApiOperation("跨项目拷贝文件")
+    @Path("/artifactoryType/{artifactoryType}/acrossProjectCopy")
+    @GET
+    fun acrossProjectCopy(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam("X-DEVOPS-PROJECT-ID")
+        projectId: String,
+        @ApiParam("版本仓库类型", required = true)
+        @PathParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @ApiParam("路径", required = true)
+        @QueryParam("path")
+        path: String,
+        @ApiParam("目标项目", required = true)
+        @QueryParam("targetProjectId")
+        targetProjectId: String,
+        @ApiParam("目标路径", required = true)
+        @QueryParam("targetPath")
+        targetPath: String
+    ): Result<Count>
 }

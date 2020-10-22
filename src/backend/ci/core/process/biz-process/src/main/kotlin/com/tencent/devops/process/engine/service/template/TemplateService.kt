@@ -1749,7 +1749,7 @@ class TemplateService @Autowired constructor(
             throw ErrorCodeException(defaultMessage = "模板名不能为空字符串",
                 errorCode = ProcessMessageCode.TEMPLATE_NAME_CAN_NOT_NULL)
         }
-        modelCheckPlugin.checkModelIntegrity(model = template)
+        modelCheckPlugin.checkModelIntegrity(model = template, projectId = null)
         checkPipelineParam(template)
     }
 
