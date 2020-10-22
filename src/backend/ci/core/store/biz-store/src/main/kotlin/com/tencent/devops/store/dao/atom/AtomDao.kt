@@ -763,4 +763,12 @@ class AtomDao : AtomBaseDao() {
                 .fetch()
         }
     }
+
+    fun getDefaultAtoms(dslContext: DSLContext, atomList: List<String>): Result<TAtomRecord>? {
+        return with(TAtom.T_ATOM) {
+            dslContext.selectFrom(this)
+                    .where(ATOM_CODE.`in`(atomList).and(DEFAULT_FLAG.eq(true)))
+                    .fetch()
+        }
+    }
 }
