@@ -758,6 +758,21 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         return Result(true)
     }
 
+    override fun checkDefaultAtom(atomList: List<String>): Result<List<String>> {
+        val defaultInfo = atomDao.getDefaultAtoms(dslContext, atomList) ?: return Result(atomList)
+        val defaultAtom = mutableListOf<String>()
+        defaultInfo.forEach {
+            defaultAtom.add(it.atomCode)
+        }
+        val unDefaultAtomList = mutableListOf<String>()
+        atomList.forEach {
+            if (!defaultAtom.contains(it)) {
+                unDefaultAtomList.add(it)
+            }
+        }
+        return Result(unDefaultAtomList)
+    }
+
     abstract fun updateRepoInfo(
         visibilityLevel: VisibilityLevelEnum?,
         dbVisibilityLevel: Int?,

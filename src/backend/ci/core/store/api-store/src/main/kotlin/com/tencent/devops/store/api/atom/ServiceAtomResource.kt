@@ -34,8 +34,9 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.PathParam
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_PIPELINE_ATOM"], description = "流水线-插件")
@@ -52,4 +53,13 @@ interface ServiceAtomResource {
         @PathParam("projectCode")
         projectCode: String
     ): Result<List<InstalledAtom>>
+
+    @ApiOperation("判断插件是否为默认插件")
+    @GET
+    @Path("/checkout/default")
+    fun findUnDefaultAtom(
+        @ApiParam("插件列表", required = true)
+        @QueryParam("atomList")
+        atomList: List<String>
+    ): Result<List<String>>
 }
