@@ -755,7 +755,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         }
         val unDefaultAtomList = mutableListOf<String>()
         atomList.forEach {
-            if(!defaultAtom.contains(it)) {
+            if (!defaultAtom.contains(it)) {
                 unDefaultAtomList.add(it)
             }
         }

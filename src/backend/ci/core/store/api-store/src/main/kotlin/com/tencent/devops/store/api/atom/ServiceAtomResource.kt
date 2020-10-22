@@ -53,8 +53,8 @@ interface ServiceAtomResource {
     @GET
     @Path("/checkout/default")
     fun findUnDefaultAtom(
-         @ApiParam("插件列表", required = true)
-         @QueryParam("atomList")
-         atomList: List<String>
+        @ApiParam("插件列表", required = true)
+        @QueryParam("atomList")
+        atomList: List<String>
     ): Result<List<String>>
 }
