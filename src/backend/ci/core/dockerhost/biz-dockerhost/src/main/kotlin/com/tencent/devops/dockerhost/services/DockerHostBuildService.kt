@@ -52,7 +52,6 @@ import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
@@ -592,7 +591,7 @@ class DockerHostBuildService(
             dockerRunParam.portList?.forEach {
                 val localPort = getAvailableHostPort()
                 if (localPort == 0) {
-                    throw ContainerException("No enough port to use in dockerRun. startPort: ${dockerHostConfig.startPort}")
+                    throw ContainerException("No enough port to use in dockerRun. startPort: ${dockerHostConfig.dockerRunStartPort}")
                 }
                 val tcpContainerPort: ExposedPort = ExposedPort.tcp(it)
                 portBindings.bind(tcpContainerPort, Ports.Binding.bindPort(localPort))
@@ -699,12 +698,12 @@ class DockerHostBuildService(
 
     fun monitorSystemLoad() {
         logger.info("Monitor systemLoad cpu: ${SigarUtil.getAverageLongCpuLoad()}, mem: ${SigarUtil.getAverageLongMemLoad()}")
-        if (SigarUtil.getAverageLongCpuLoad() > 90 || SigarUtil.getAverageLongMemLoad() > 80) {
+        if (SigarUtil.getAverageLongCpuLoad() > 90 || SigarUtil.getAverageLongMemLoad() > 85) {
             checkContainerStats()
         }
     }
 
-    fun checkContainerStats() {
+    private fun checkContainerStats() {
         val containerInfo = httpLongDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
         for (container in containerInfo) {
             val statistics = getContainerStats(container.id)
@@ -717,8 +716,11 @@ class DockerHostBuildService(
 
                 if (statistics.memoryStats != null && statistics.memoryStats.usage != null && statistics.memoryStats.limit != null) {
                     val memUsage = statistics.memoryStats.usage!! * 100 / statistics.memoryStats.limit!!
-                    logger.info("containerId: ${container.id} | checkContainerStats cpuUsagePer: $cpuUsagePer, memUsage: $memUsage")
-                    if (memUsage > 80 || cpuUsagePer > 85) {
+                    val elasticityCpuThreshold = dockerHostConfig.elasticityCpuThreshold ?: 80
+                    val elasticityMemThreshold = dockerHostConfig.elasticityMemThreshold ?: 80
+                    logger.info("containerId: ${container.id} | checkContainerStats cpuUsagePer: $cpuUsagePer, memUsage: $memUsage," +
+                            " memThreshold: $elasticityMemThreshold, cpuThreshold: $elasticityCpuThreshold")
+                    if (memUsage >= elasticityMemThreshold || cpuUsagePer >= elasticityCpuThreshold) {
                         resetContainer(container.id)
                     }
                 }
@@ -726,7 +728,7 @@ class DockerHostBuildService(
         }
     }
 
-    fun getContainerStats(containerId: String): Statistics? {
+    private fun getContainerStats(containerId: String): Statistics? {
         val asyncResultCallback = InvocationBuilder.AsyncResultCallback<Statistics>()
         httpDockerCli.statsCmd(containerId).withNoStream(true).exec(asyncResultCallback)
         return try {
@@ -739,9 +741,12 @@ class DockerHostBuildService(
         }
     }
 
-    fun resetContainer(containerId: String) {
-        httpDockerCli.updateContainerCmd(containerId).withMemoryReservation(32 * 1024 * 1024 * 1024L).withCpuPeriod(10000).withCpuQuota(80000).exec()
-        logger.info("<<<< Trigger container reset, containerId: $containerId")
+    private fun resetContainer(containerId: String) {
+        val memReservation = dockerHostConfig.elasticityMemReservation ?: 32 * 1024 * 1024 * 1024L
+        val cpuPeriod = dockerHostConfig.elasticityCpuPeriod ?: 10000
+        val cpuQuota = dockerHostConfig.elasticityCpuQuota ?: 80000
+        httpDockerCli.updateContainerCmd(containerId).withMemoryReservation(memReservation).withCpuPeriod(cpuPeriod).withCpuQuota(cpuQuota).exec()
+        logger.info("<<<< Trigger container reset, containerId: $containerId, memReservation: $memReservation, cpuPeriod: $cpuPeriod, cpuQuota: $cpuQuota")
     }
 
     fun clearContainers() {
@@ -948,7 +953,7 @@ class DockerHostBuildService(
     }
 
     private fun getAvailableHostPort(): Int {
-        val startPort = dockerHostConfig.startPort ?: 20000
+        val startPort = dockerHostConfig.dockerRunStartPort ?: 20000
         for (i in startPort..(startPort + 1000)) {
             if (!CommonUtils.isPortUsing("127.0.0.1", i)) {
                 return i
