@@ -33,11 +33,13 @@ object MimeUtil {
     const val TGZ_MIME_TYPE = "application/x-tar"
     const val ICO_MIME_TYPE = "image/x-icon"
     const val STREAM_MIME_TYPE = "application/octet-stream"
+    private const val HTML_MIME_TYPE = "text/html"
 
     private val mimeMappings = MimeMappings(MimeMappings.DEFAULT).apply {
         add("yaml", YAML_MIME_TYPE)
         add("tgz", TGZ_MIME_TYPE)
         add("ico", ICO_MIME_TYPE)
+        add("html", HTML_MIME_TYPE)
     }
 
     fun mediaType(fileName: String): String {

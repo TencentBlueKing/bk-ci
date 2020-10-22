@@ -44,11 +44,8 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
-import com.tencent.devops.process.engine.service.code.GitWebHookMatcher
-import com.tencent.devops.process.engine.service.code.GithubWebHookMatcher
-import com.tencent.devops.process.engine.service.code.GitlabWebHookMatcher
+import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
 import com.tencent.devops.process.engine.service.code.ScmWebhookParamsFactory
-import com.tencent.devops.process.engine.service.code.SvnWebHookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.code.git.GitEvent
@@ -77,7 +74,8 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val pipelineBuildService: PipelineBuildService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder
 ) {
 
     private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
@@ -92,7 +90,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             return false
         }
 
-        val svnWebHookMatcher = SvnWebHookMatcher(event, pipelineWebhookService)
+        val svnWebHookMatcher = scmWebhookMatcherBuilder.createSvnWebHookMatcher(event, pipelineWebhookService)
 
         return startProcessByWebhook(CodeSVNWebHookTriggerElement.classType, svnWebHookMatcher)
     }
@@ -124,7 +122,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             }
         }
 
-        val gitWebHookMatcher = GitWebHookMatcher(event)
+        val gitWebHookMatcher = scmWebhookMatcherBuilder.createGitWebHookMatcher(event)
 
         return startProcessByWebhook(codeRepositoryType, gitWebHookMatcher)
     }
@@ -139,7 +137,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             return false
         }
 
-        val gitlabWebHookMatcher = GitlabWebHookMatcher(event)
+        val gitlabWebHookMatcher = scmWebhookMatcherBuilder.createGitlabWebHookMatcher(event)
 
         return startProcessByWebhook(CodeGitlabWebHookTriggerElement.classType, gitlabWebHookMatcher)
     }
@@ -172,7 +170,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             }
         }
 
-        val githubWebHookMatcher = GithubWebHookMatcher(event)
+        val githubWebHookMatcher = scmWebhookMatcherBuilder.createGithubWebHookMatcher(event)
 
         return startProcessByWebhook(CodeGithubWebHookTriggerElement.classType, githubWebHookMatcher)
     }

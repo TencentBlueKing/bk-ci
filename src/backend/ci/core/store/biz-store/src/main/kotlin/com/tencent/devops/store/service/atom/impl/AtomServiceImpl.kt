@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.atom.impl
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -304,6 +305,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     id = pipelineAtomRecord.id,
                     name = pipelineAtomRecord.name,
                     atomCode = pipelineAtomRecord.atomCode,
+                    version = pipelineAtomRecord.version,
                     classType = pipelineAtomRecord.classType,
                     logoUrl = pipelineAtomRecord.logoUrl,
                     icon = pipelineAtomRecord.icon,
@@ -329,7 +331,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     weight = pipelineAtomRecord.weight,
                     props = atomDao.convertString(pipelineAtomRecord.props),
                     data = atomDao.convertString(pipelineAtomRecord.data),
-                    recommendFlag = atomFeature?.recommendFlag
+                    recommendFlag = atomFeature?.recommendFlag,
+                    frontendType = FrontendTypeEnum.getFrontendTypeObj(pipelineAtomRecord.htmlTemplateVersion)
                 )
             }
         )
@@ -756,6 +759,21 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             }
         }
         return Result(true)
+    }
+
+    override fun checkDefaultAtom(atomList: List<String>): Result<List<String>> {
+        val defaultInfo = atomDao.getDefaultAtoms(dslContext, atomList) ?: return Result(atomList)
+        val defaultAtom = mutableListOf<String>()
+        defaultInfo.forEach {
+            defaultAtom.add(it.atomCode)
+        }
+        val unDefaultAtomList = mutableListOf<String>()
+        atomList.forEach {
+            if (!defaultAtom.contains(it)) {
+                unDefaultAtomList.add(it)
+            }
+        }
+        return Result(unDefaultAtomList)
     }
 
     abstract fun updateRepoInfo(

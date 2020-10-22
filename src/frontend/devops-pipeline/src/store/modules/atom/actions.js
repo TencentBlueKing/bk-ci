@@ -307,7 +307,7 @@ export default {
             const defaultType = (typeList || []).find(type => type.type === defaultBuildType) || {}
             const defaultBuildResource = defaultType.defaultBuildResource || {}
             const baseOSObject = baseOS !== 'NONE' ? { baseOS } : {}
-            const isError = ['WINDOWS'].includes(baseOS)
+            const isError = ['WINDOWS', 'MACOS'].includes(baseOS)
             commit(ADD_CONTAINER, {
                 ...restPayload,
                 newContainer: {
