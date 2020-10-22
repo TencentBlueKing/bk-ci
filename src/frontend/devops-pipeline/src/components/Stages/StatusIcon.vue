@@ -3,6 +3,8 @@
         <transition name="slide-top">
             <i v-if="status === 'RUNNING' || status === 'PREPARE_ENV' || status === 'QUEUE' || status === 'LOOP_WAITING' || status === 'CALL_WAITING'"
                 class="devops-icon icon-circle-2-1 executing-job" />
+            <i v-if="status === 'DEPENDENT_WAITING'" v-bk-tooltips="dependOnValue"
+                class="devops-icon icon-hourglass" />
         </transition>
         <transition name="slide-top">
             <i v-if="status === 'WAITING'" class="devops-icon icon-clock" />
@@ -32,7 +34,8 @@
             type: String,
             editable: Boolean,
             serialNum: String,
-            containerDisabled: Boolean
+            containerDisabled: Boolean,
+            dependOnValue: String
         }
     }
 </script>

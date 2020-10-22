@@ -285,6 +285,10 @@ public class CheckerSetDao
         MatchOperation match = Aggregation.match(new Criteria().andOperator(criteriaList.toArray(new Criteria[0])));
         aggOptions.add(match);
 
+        //添加版本号排序
+        SortOperation versionSort = Aggregation.sort(Sort.Direction.ASC, "version");
+        aggOptions.add(versionSort);
+
         //分组去重，以checker_set_id进行分组
         GroupOperation group = Aggregation.group("checker_set_id")
                 .last("checker_set_id").as("checker_set_id")

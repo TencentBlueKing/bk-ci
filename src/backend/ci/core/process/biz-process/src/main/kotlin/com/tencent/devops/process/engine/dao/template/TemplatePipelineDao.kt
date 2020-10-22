@@ -34,6 +34,7 @@ import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TTemplatePipeline
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
@@ -183,13 +184,21 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
         dslContext: DSLContext,
         templateId: String,
         instanceType: String,
-        version: Long
+        version: Long? = null,
+        versionName: String? = null
     ): Result<TTemplatePipelineRecord> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(TEMPLATE_ID.eq(templateId))
+            conditions.add(INSTANCE_TYPE.eq(instanceType))
+            if (null != version) {
+                conditions.add(VERSION.eq(version))
+            }
+            if (null != versionName) {
+                conditions.add(VERSION_NAME.eq(versionName))
+            }
             return dslContext.selectFrom(this)
-                .where(TEMPLATE_ID.eq(templateId))
-                .and(VERSION.eq(version))
-                .and(INSTANCE_TYPE.eq(instanceType))
+                .where(conditions)
                 .fetch()
         }
     }

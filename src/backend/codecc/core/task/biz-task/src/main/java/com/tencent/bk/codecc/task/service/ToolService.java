@@ -163,18 +163,6 @@ public interface ToolService
      */
     Boolean updateParamJsonAndCheckerSets(String user, Long taskId, ParamJsonAndCheckerSetsVO paramJsonAndCheckerSetsVO);
 
-
-    /**
-     * 获取工具platform配置信息列表
-     *
-     * @param taskId     任务ID
-     * @param toolName   工具名
-     * @param platformIp IP
-     * @return list
-     */
-    List<ToolConfigPlatformVO> getPlatformInfoList(Long taskId, String toolName, String platformIp, Integer pageNum,
-            Integer pageSize, String sortType);
-
     /**
      * 获取工具platform配置信息
      *
@@ -212,4 +200,10 @@ public interface ToolService
      * @return list
      */
     List<ToolConfigInfoVO> batchGetToolConfigList(QueryTaskListReqVO queryReqVO);
+
+    /**
+     * 批量更新工具跟进状态：非停用任务中未跟进状态(0,1)且已成功分析一次的工具
+     * @return boolean
+     */
+    Boolean batchUpdateToolFollowStatus(Integer pageSize);
 }

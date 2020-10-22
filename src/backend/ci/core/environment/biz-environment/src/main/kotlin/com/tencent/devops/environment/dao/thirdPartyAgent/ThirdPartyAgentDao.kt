@@ -341,12 +341,17 @@ class ThirdPartyAgentDao {
     fun listImportAgent(
         dslContext: DSLContext,
         projectId: String,
-        os: OS
+        os: OS?
     ): List<TEnvironmentThirdpartyAgentRecord> {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(OS.eq(os.name))
+                .where(PROJECT_ID.eq(projectId)).let {
+                    if (null == os) {
+                        it
+                    } else {
+                        it.and(OS.eq(os.name))
+                    }
+                }
                 .fetch()
         }
     }

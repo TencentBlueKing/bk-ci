@@ -26,7 +26,7 @@
 
 package com.tencent.devops.process.websocket.page
 
-import com.tencent.devops.common.websocket.IPath
+import com.tencent.devops.common.websocket.page.IPath
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
 class DetailPageBuild : IPath {

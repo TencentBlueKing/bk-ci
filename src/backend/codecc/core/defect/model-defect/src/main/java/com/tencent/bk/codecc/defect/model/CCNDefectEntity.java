@@ -272,7 +272,4 @@ public class CCNDefectEntity extends CommonEntity
      */
     @Transient
     private Boolean newDefect;
-
-
-
 }

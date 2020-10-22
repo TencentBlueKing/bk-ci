@@ -37,6 +37,11 @@ data class OperationHistoryDTO(
         val taskId: Long,
 
         /**
+         * 流水线id
+         */
+        val pipelineId: String,
+
+        /**
          * 功能id
          */
         val funcId: String,

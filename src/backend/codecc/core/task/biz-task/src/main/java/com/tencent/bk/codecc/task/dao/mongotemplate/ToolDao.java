@@ -26,23 +26,24 @@
 
 package com.tencent.bk.codecc.task.dao.mongotemplate;
 
-import com.mongodb.BasicDBObject;
 import com.tencent.bk.codecc.task.model.ToolCheckerSetEntity;
 import com.tencent.bk.codecc.task.model.ToolConfigInfoEntity;
 import com.tencent.bk.codecc.task.vo.ToolConfigBaseVO;
 import com.tencent.devops.common.constant.ComConstants;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -56,17 +57,6 @@ public class ToolDao
 {
     @Autowired
     private MongoTemplate mongoTemplate;
-
-
-    public void updatePathByTaskIdAndToolName(long taskId, String toolName, List<String> pathList)
-    {
-        Query query = new Query();
-        query.addCriteria(Criteria.where("task_id").is(taskId)).
-                addCriteria(Criteria.where("tool_name").is(toolName));
-        Update update = new Update();
-        update.set("default_filter_path", pathList);
-        mongoTemplate.updateMulti(query, update, ToolConfigInfoEntity.class);
-    }
 
     public void updateToolStepStatusByTaskIdAndToolName(ToolConfigBaseVO toolConfigBaseVO)
     {
@@ -124,46 +114,6 @@ public class ToolDao
 
 
     /**
-     * 获取工具配置信息(platform)
-     *
-     * @param toolName   工具名
-     * @param platformIp Platform IP
-     * @param taskIds    任务ID集合
-     * @param pageable   分页器
-     * @return list
-     */
-    public List<ToolConfigInfoEntity> queryToolPlatformInfo(String toolName, String platformIp, Long taskIds,
-            Pageable pageable)
-    {
-        BasicDBObject fieldsObj = new BasicDBObject();
-        fieldsObj.put("task_id", true);
-        fieldsObj.put("tool_name", true);
-        fieldsObj.put("platform_ip", true);
-        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
-
-        if (StringUtils.isNotEmpty(toolName))
-        {
-            query.addCriteria(Criteria.where("tool_name").is(toolName));
-        }
-
-        if (StringUtils.isNotEmpty(platformIp))
-        {
-            query.addCriteria(Criteria.where("platform_ip").is(platformIp));
-        }
-
-        if (taskIds != null && taskIds != 0)
-        {
-            query.addCriteria(Criteria.where("task_id").is(taskIds));
-        }
-
-        if (pageable != null)
-        {
-            query.with(pageable);
-        }
-        return mongoTemplate.find(query, ToolConfigInfoEntity.class);
-    }
-
-    /**
      * 更新工具配置
      *
      * @param taskId     任务ID
@@ -192,4 +142,88 @@ public class ToolDao
         update.set("updated_by", userName);
         return mongoTemplate.updateMulti(query, update, ToolConfigInfoEntity.class).isUpdateOfExisting();
     }
+
+    /**
+     * 更新最近一次扫描使用的工具镜像版本
+     * @param taskId
+     * @param toolName
+     * @param toolImageRevision
+     */
+    public void updateToolImageRevision(long taskId, String toolName, String toolImageRevision)
+    {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("task_id").is(taskId)).
+                addCriteria(Criteria.where("tool_name").is(toolName));
+        Update update = new Update();
+        update.set("tool_image_revision", toolImageRevision);
+        mongoTemplate.updateMulti(query, update, ToolConfigInfoEntity.class);
+    }
+
+
+    /**
+     * 按任务ID查询指定状态的且有构建ID的工具信息
+     *
+     * @param taskIds      有效任务ID
+     * @param followStatus 跟进状态
+     * @param pageable     分页
+     * @return list
+     */
+    public List<ToolConfigInfoEntity> getTaskIdsAndFollowStatusPage(Collection<Long> taskIds,
+            List<Integer> followStatus, Pageable pageable)
+    {
+        Query query = new Query();
+        if (CollectionUtils.isNotEmpty(taskIds))
+        {
+            query.addCriteria(Criteria.where("task_id").in(taskIds));
+        }
+        if (CollectionUtils.isNotEmpty(followStatus))
+        {
+            query.addCriteria(Criteria.where("follow_status").in(followStatus));
+        }
+
+        // 当前构建ID字段存在且不为空
+        List<Criteria> criteria = new ArrayList<>();
+        criteria.add(Criteria.where("current_build_id").exists(true));
+        criteria.add(Criteria.where("current_build_id").ne(""));
+        query.addCriteria(new Criteria().andOperator(criteria.toArray(new Criteria[0])));
+
+        if (pageable != null)
+        {
+            query.with(pageable);
+        }
+
+        return mongoTemplate.find(query, ToolConfigInfoEntity.class);
+    }
+
+
+    /**
+     * 批量更新工具跟进状态
+     *
+     * @param toolConfigInfoList 工具配置信息列表
+     * @param followStatus       跟进状态
+     */
+    public void batchUpdateToolFollowStatus(List<ToolConfigInfoEntity> toolConfigInfoList,
+            ComConstants.FOLLOW_STATUS followStatus)
+    {
+        if (CollectionUtils.isNotEmpty(toolConfigInfoList))
+        {
+            BulkOperations ops = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, ToolConfigInfoEntity.class);
+            toolConfigInfoList.forEach(entity ->
+            {
+                Query query = new Query();
+                query.addCriteria(Criteria.where("_id").is(new ObjectId(entity.getEntityId())).and("task_id")
+                        .is(entity.getTaskId()));
+
+                Update update = new Update();
+                update.set("last_follow_status", entity.getFollowStatus());
+                update.set("follow_status", followStatus.value());
+                update.set("updated_date", System.currentTimeMillis());
+
+                ops.updateOne(query, update);
+            });
+            ops.execute();
+        }
+
+    }
+
 }

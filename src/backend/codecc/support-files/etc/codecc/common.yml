@@ -81,6 +81,17 @@ codeccGateway:
 codecc:
   encryptor:
     password: __CODECC_ENCRYPTOR_PASS__
+  env: internal
+  privatetoken: __CODECC_PRIVATETOKEN__
+  classurl: __CODECC_CLASSURL__
+  public:
+    account: __CODECC_PUBLIC_ACCOUNT__
+    password: __CODECC_PUBLIC_PASSWORD__
+  node:
+    host: __CODECC_NODE_HOST__
+  gateway:
+    host: __CODECC_GATEWAY_HOST__
+
 
 certificate:
   platform: bkcodecc
@@ -90,3 +101,4 @@ service-suffix: "-devops"
 
 git:
   path: __GIT_PATH_URL__
+  domain: __GIT_DOMAIN__

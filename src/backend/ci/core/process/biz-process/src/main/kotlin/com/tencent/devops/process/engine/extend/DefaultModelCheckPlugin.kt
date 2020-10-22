@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PARAM_IN_JOB_CONDITION
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PUBLIC_WINDOWS_BUILDER
+import com.tencent.devops.process.engine.control.DependOnUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ContainerBizRegistrar
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
@@ -95,6 +96,7 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
                     ElementBizRegistrar.getPlugin(e)?.check(e, eCnt)
                 }
             }
+            DependOnUtils.checkRepeatedJobId(stage)
         }
     }
 

@@ -115,7 +115,6 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             throw RuntimeException("too many(${files.size}) atom file: $filePath")
         }
         val file = files[0]
-        if (!ArchiveUtils.isFileLegal(file.name)) throw RuntimeException("not allow to archive ${file.name} file")
         uploadAtom(file, destPath, buildVariables)
         return ShaUtils.sha1(file.readBytes())
     }

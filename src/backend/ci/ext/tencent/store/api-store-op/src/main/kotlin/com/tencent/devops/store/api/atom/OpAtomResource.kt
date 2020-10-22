@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
+import com.tencent.devops.store.pojo.atom.AtomOfflineReq
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -171,4 +172,18 @@ interface OpAtomResource {
         @QueryParam("defaultShowFlag")
         defaultShowFlag: Boolean?
     ): Result<String>
+
+    @ApiOperation("下架插件")
+    @PUT
+    @Path("/offline/atomCodes/{atomCode}/versions")
+    fun offlineAtom(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("atomCode", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam("下架插件请求报文")
+        atomOfflineReq: AtomOfflineReq
+    ): Result<Boolean>
 }

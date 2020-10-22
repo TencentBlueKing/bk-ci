@@ -223,7 +223,10 @@ interface ServiceGitRepositoryResource {
         projectId: String,
         @ApiParam("代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
-        repositoryHashId: String
+        repositoryHashId: String,
+        @ApiParam(value = "token类型 1：oauth 2:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
     ): Result<Boolean>
 
     @ApiOperation("获取授权路径")

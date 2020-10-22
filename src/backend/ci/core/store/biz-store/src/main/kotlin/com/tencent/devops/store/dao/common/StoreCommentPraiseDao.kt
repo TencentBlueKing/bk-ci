@@ -27,6 +27,7 @@
 package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.model.store.tables.TStoreComment
 import com.tencent.devops.model.store.tables.TStoreCommentPraise
 import com.tencent.devops.model.store.tables.records.TStoreCommentPraiseRecord
 import org.jooq.DSLContext
@@ -72,6 +73,18 @@ class StoreCommentPraiseDao {
     fun deleteStoreCommentPraise(dslContext: DSLContext, userId: String, commentId: String) {
         with(TStoreCommentPraise.T_STORE_COMMENT_PRAISE) {
             dslContext.deleteFrom(this).where(COMMENT_ID.eq(commentId).and(CREATOR.eq(userId))).execute()
+        }
+    }
+
+    fun deleteStoreCommentPraise(dslContext: DSLContext, storeCode: String, storeType: Byte) {
+        val tsc = TStoreComment.T_STORE_COMMENT
+        val commentIds =
+            dslContext.select(tsc.ID).from(tsc).where(tsc.STORE_CODE.eq(storeCode).and(tsc.STORE_TYPE.eq(storeType)))
+                .fetch()
+        with(TStoreCommentPraise.T_STORE_COMMENT_PRAISE) {
+            dslContext.deleteFrom(this)
+                .where(COMMENT_ID.`in`(commentIds))
+                .execute()
         }
     }
 }

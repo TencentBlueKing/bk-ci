@@ -267,6 +267,7 @@ open class MarketAtomTask : ITask() {
                         script = command.toString(),
                         runtimeVariables = environment,
                         dir = atomTmpSpace,
+                        workspace = workspace,
                         systemEnvVariables = systemEnvVariables,
                         errorMessage = errorMessage
                     )
@@ -282,6 +283,7 @@ open class MarketAtomTask : ITask() {
                         buildId = buildVariables.buildId,
                         script = command.toString(),
                         dir = atomTmpSpace,
+                        workspace = workspace,
                         buildEnvs = buildEnvs,
                         runtimeVariables = environment,
                         systemEnvVariables = systemEnvVariables,

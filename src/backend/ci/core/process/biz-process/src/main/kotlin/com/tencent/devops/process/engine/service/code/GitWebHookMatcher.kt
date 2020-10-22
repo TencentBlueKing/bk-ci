@@ -475,7 +475,13 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         return when (event) {
             is GitPushEvent -> CodeEventType.PUSH
             is GitTagPushEvent -> CodeEventType.TAG_PUSH
-            is GitMergeRequestEvent -> CodeEventType.MERGE_REQUEST
+            is GitMergeRequestEvent -> {
+                val action = event.object_attributes.action
+                if (action == "merge") {
+                    return CodeEventType.MERGE_REQUEST_ACCEPT
+                }
+                return CodeEventType.MERGE_REQUEST
+            }
             else -> CodeEventType.PUSH
         }
     }

@@ -44,6 +44,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.AntPathMatcher
 import org.springframework.util.FileCopyUtils
+import org.springframework.util.FileSystemUtils
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
@@ -298,6 +299,11 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
             )
         }
         return Result(Count(fileList.size))
+    }
+
+    override fun deleteFile(filePath: String): Result<Boolean> {
+        FileSystemUtils.deleteRecursively(File("$archiveLocalBasePath/$filePath"))
+        return Result(true)
     }
 
     companion object {

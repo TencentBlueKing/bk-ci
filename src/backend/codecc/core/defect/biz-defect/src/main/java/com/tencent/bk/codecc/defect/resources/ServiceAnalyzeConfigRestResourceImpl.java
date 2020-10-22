@@ -30,6 +30,7 @@ import com.tencent.bk.codecc.defect.api.ServiceAnalyzeConfigRestResource;
 import com.tencent.bk.codecc.defect.service.CheckerService;
 import com.tencent.bk.codecc.defect.service.ToolBuildInfoService;
 import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO;
+import com.tencent.bk.codecc.task.vo.pipeline.PipelineBuildInfoVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;

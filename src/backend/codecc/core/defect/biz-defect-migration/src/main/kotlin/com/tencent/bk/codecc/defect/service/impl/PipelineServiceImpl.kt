@@ -28,21 +28,19 @@ package com.tencent.bk.codecc.defect.service.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.bk.codecc.defect.dao.mongotemplate.CodeRepoInfoDao
 import com.tencent.bk.codecc.defect.model.BuildEntity
 import com.tencent.bk.codecc.defect.model.SnapShotEntity
 import com.tencent.bk.codecc.defect.model.TaskLogEntity
 import com.tencent.bk.codecc.defect.service.PipelineService
 import com.tencent.bk.codecc.defect.service.RedLineReportService
 import com.tencent.bk.codecc.defect.service.SnapShotService
-import com.tencent.bk.codecc.defect.vo.coderepository.CodeRepoVO
+import com.tencent.devops.common.api.CodeRepoVO
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource
 import com.tencent.bk.codecc.task.api.ServiceToolRestResource
 import com.tencent.bk.codecc.task.enums.EmailType
 import com.tencent.bk.codecc.task.pojo.EmailNotifyModel
 import com.tencent.bk.codecc.task.pojo.RtxNotifyModel
 import com.tencent.bk.codecc.task.vo.TaskDetailVO
-import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.CodeCCException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.constant.ComConstants
@@ -58,17 +56,12 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.quality.api.v2.ExternalQualityResource
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.quality.api.v2.pojo.request.MetadataCallback
-import com.tencent.devops.repository.api.ExternalCodeccRepoResource
-import com.tencent.devops.repository.api.ServiceRepositoryResource
-import org.apache.commons.collections.CollectionUtils
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
-import java.lang.Exception
 
 @Service
 open class PipelineServiceImpl @Autowired constructor(
@@ -76,67 +69,8 @@ open class PipelineServiceImpl @Autowired constructor(
     private val snapShotService: SnapShotService,
     private val redLineReportService: RedLineReportService,
     private val rabbitTemplate: RabbitTemplate,
-    private val codeRepoInfoDao : CodeRepoInfoDao,
     private val objectMapper: ObjectMapper
 ) : PipelineService {
-
-    @Value("\${codecc.privatetoken:#{null}}")
-    lateinit var codeccToken: String
-
-    override fun getFileContent(
-        taskId: Long, repoId: String?, filePath: String,
-        reversion: String?, branch: String?, subModule: String?
-    ): String? {
-
-        val fileContentResult = if (repoId.isNullOrBlank()) {
-            val repoUrl = client.get(ServiceTaskRestResource::class.java).getGongfengRepoUrl(taskId)
-            logger.info("gongfeng project url is: ${repoUrl.data}")
-            if (repoUrl.isNotOk() || repoUrl.data == null) {
-                logger.error("get gongfeng repo url fail!")
-                throw CodeCCException(CommonMessageCode.CODE_NORMAL_CONTENT_ERROR)
-            }
-
-            var fileContentResp: com.tencent.devops.common.api.pojo.Result<kotlin.String> = com.tencent.devops.common.api.pojo.Result("")
-            try {
-                fileContentResp = client.getDevopsService(ExternalCodeccRepoResource::class.java).getGitFileContentCommon(
-                        repoUrl = repoUrl.data!!,
-                        filePath = filePath,
-                        ref = "master",
-                        //todo 要区分情景
-                        token = codeccToken!!
-                )
-            } catch (e: Exception){
-                logger.error("get git file content fail!, repoUrl: {}, filePath: {}, token: {}", repoUrl.data!!, filePath, codeccToken, e)
-                throw CodeCCException(CommonMessageCode.CODE_CONTENT_ERROR)
-            }
-            if(fileContentResp.isNotOk()){
-                logger.info("get git file content fail!, repoUrl: {}, filePath: {}, token: {}", repoUrl.data!!, filePath, codeccToken)
-                throw CodeCCException(CommonMessageCode.CODE_CONTENT_ERROR)
-            }
-            fileContentResp
-        } else {
-            if (reversion.isNullOrBlank()) {
-                return null
-            }
-            var fileContentResp: com.tencent.devops.common.api.pojo.Result<kotlin.String> = com.tencent.devops.common.api.pojo.Result("")
-            try {
-                fileContentResp = client.getDevopsService(ExternalCodeccRepoResource::class.java).getFileContentV2(
-                        repoId, filePath, reversion,
-                        branch, subModule ?: "", RepositoryType.ID
-                )
-            } catch (e: Exception){
-                logger.error("get file content v2 fail!, repoId: {}, filePath: {}, reversion: {}, branch: {}, subModule: {}, ", repoId, filePath, reversion,
-                        branch, subModule ?: "", e)
-            }
-            fileContentResp
-        }
-
-        if (fileContentResult.isNotOk()) {
-            logger.error("get file content fail!")
-            throw CodeCCException(CommonMessageCode.CODE_NORMAL_CONTENT_ERROR)
-        }
-        return fileContentResult.data
-    }
 
     override fun getBuildIdInfo(buildId: String): BuildEntity? {
         val buildInfoResult =
@@ -172,6 +106,13 @@ open class PipelineServiceImpl @Autowired constructor(
             logger.info("analyze task not finish yet", taskId)
             return
         }
+
+        if(ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value() == taskDetailVO.createFrom)
+        {
+            logger.info("task from gongfeng scan not need for devops handle back")
+            return
+        }
+
 
         val resultMessage = if (resultStatus != "success") taskStep.msg else ""
 
@@ -275,24 +216,6 @@ open class PipelineServiceImpl @Autowired constructor(
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
         }
 //        updateTaskAbortStep(taskBaseVO.nameEn, toolName, taskLogVO, "任务被手动中断")
-    }
-
-    override fun getCodeRepoListByTaskIds(taskIds: Set<Long>, projectId: String): Map<Long, Set<CodeRepoVO>> {
-
-        val codeRepoInfoEntities = codeRepoInfoDao.findFirstByTaskIdOrderByCreatedDate(taskIds)
-        val repoResult = client.getDevopsService(ServiceRepositoryResource::class.java).listByProjects(setOf(projectId), 1, 20000)
-        val repoList = if(repoResult.isNotOk()) listOf() else repoResult.data?.records?: listOf()
-        val repoMap = repoList.associate { it.repositoryHashId to it.aliasName }
-        return if (CollectionUtils.isEmpty(codeRepoInfoEntities)) {
-            mapOf()
-        } else codeRepoInfoEntities.associate {
-            it.taskId to if(it.repoList.isEmpty()) setOf() else it.repoList.map { codeRepoEntity ->
-                with(codeRepoEntity)
-                {
-                    CodeRepoVO(repoId, revision, branch, repoMap[repoId])
-                }
-            }.toSet()
-        }
     }
 
     /**

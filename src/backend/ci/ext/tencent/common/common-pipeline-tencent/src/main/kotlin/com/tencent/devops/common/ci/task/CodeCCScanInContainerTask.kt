@@ -23,12 +23,12 @@ open class CodeCCScanInContainerTask(
 
     override fun covertToElement(config: CiBuildConfig): MarketBuildAtomElement {
         return MarketBuildAtomElement(
-                "CodeCC扫描",
-                null,
-                null,
-                atomCode,
-                "4.*",
-                mapOf("input" to inputs)
+            "CodeCC扫描",
+            null,
+            null,
+            atomCode,
+            "4.*",
+            mapOf("input" to inputs)
         )
     }
 }
@@ -48,5 +48,7 @@ data class CodeCCScanInContainerInput(
     @ApiModelProperty("全量还是增量, 1：增量；0：全量", required = false)
     val toolScanType: String? = null, // 对应接口的scanType, 1：增量；0：全量 2: diff模式
     @ApiModelProperty("黑名单，添加后的代码路径将不会产生告警", required = false)
-    val customPath: String? = null // 黑名单，添加后的代码路径将不会产生告警
+    val customPath: String? = null, // 黑名单，添加后的代码路径将不会产生告警
+    @ApiModelProperty("Python版本", required = false)
+    val pyVersion: String? = null
 ) : AbstractInput()

@@ -46,8 +46,8 @@ public class CCNDefectOperateBizServiceImpl extends AbstractDefectOperateBizServ
 
 
     @Override
-    public void addCodeComment(String fileId, String defectId, String commentId, String userName, SingleCommentVO singleCommentVO) {
-        log.info("start to add code comment, file id: {}, defect id: {}, comment id: {}", fileId, defectId, commentId);
+    public void addCodeComment(String defectId, String commentId, String userName, SingleCommentVO singleCommentVO) {
+        log.info("start to add code comment, defect id: {}, comment id: {}", defectId, commentId);
         if(!userName.equalsIgnoreCase(singleCommentVO.getUserName()))
         {
             log.info("permission denied for user name: {}", userName);

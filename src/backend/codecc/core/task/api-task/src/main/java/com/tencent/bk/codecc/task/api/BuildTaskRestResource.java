@@ -27,6 +27,8 @@
 package com.tencent.bk.codecc.task.api;
 
 import com.tencent.bk.codecc.task.vo.*;
+import com.tencent.bk.codecc.task.vo.path.CodeYmlFilterPathVO;
+import com.tencent.bk.codecc.task.vo.pipeline.PipelineTaskVO;
 import com.tencent.bk.codecc.task.vo.scanconfiguration.ScanConfigurationVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
@@ -38,6 +40,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.*;
+import java.util.List;
 
 /**
  * 构建机任务接口
@@ -68,6 +71,18 @@ public interface BuildTaskRestResource
             @ApiParam(value = "流名称（也即任务英文名）", required = true)
             @PathParam(value = "streamName")
                     String streamName
+    );
+
+    @ApiOperation("获取任务信息")
+    @Path("/pipeline/{pipelineId}")
+    @GET
+    CodeCCResult<PipelineTaskVO> getTaskInfoByPipelineId(
+        @ApiParam(value = "流水线id", required = true)
+        @PathParam(value = "pipelineId")
+            String pipelineId,
+        @ApiParam(value = "用户id", required = true)
+        @QueryParam(value = "userId")
+            String userId
     );
 
     @ApiOperation("从流水线注册任务")
@@ -183,7 +198,21 @@ public interface BuildTaskRestResource
                     Long taskId
     );
 
-    @ApiOperation("获取工具platform信息列表")
+    @ApiOperation("更新code.yml的路径屏蔽")
+    @Path("/code/yml/filter/update")
+    @POST
+    CodeCCResult<Boolean> codeYmlFilterPath(
+        @ApiParam(value = "任务ID", required = true)
+        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
+            Long taskId,
+        @ApiParam(value = "当前用户", required = true)
+        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            String userName,
+        @ApiParam(value = "当前用户", required = true)
+            CodeYmlFilterPathVO codeYmlFilterPathVO
+    );
+
+    @ApiOperation("获取工具platform信息")
     @Path("/toolConfig/info")
     @GET
     CodeCCResult<ToolConfigPlatformVO> getToolConfigInfo(
