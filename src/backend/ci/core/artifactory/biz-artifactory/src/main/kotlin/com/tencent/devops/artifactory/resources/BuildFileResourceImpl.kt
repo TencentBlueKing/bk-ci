@@ -26,7 +26,7 @@
 
 package com.tencent.devops.artifactory.resources
 
-import com.tencent.devops.artifactory.api.BuildFileResource
+import com.tencent.devops.artifactory.api.builds.BuildFileResource
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
@@ -48,9 +48,9 @@ class BuildFileResourceImpl @Autowired constructor(private val archiveFileServic
     }
 
     override fun archiveFile(
-        projectCode: String,
-        pipelineId: String,
-        buildId: String,
+        projectCode: String?,
+        pipelineId: String?,
+        buildId: String?,
         fileType: FileTypeEnum,
         customFilePath: String?,
         inputStream: InputStream,
@@ -110,20 +110,4 @@ class BuildFileResourceImpl @Autowired constructor(private val archiveFileServic
             fileChannelType = FileChannelTypeEnum.BUILD
         )
     }
-/*
-    override fun acrossProjectCopy(
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        path: String,
-        targetProjectId: String,
-        targetPath: String
-    ): Result<Count> {
-        return archiveFileService.acrossProjectCopy(
-            projectId = projectId,
-            artifactoryType = artifactoryType,
-            path = path,
-            targetPath = targetPath,
-            targetProjectId = targetProjectId
-        )
-    }*/
 }

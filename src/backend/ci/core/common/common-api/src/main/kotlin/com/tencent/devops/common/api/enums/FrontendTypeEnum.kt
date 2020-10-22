@@ -24,26 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.util
+package com.tencent.devops.common.api.enums
 
-import org.springframework.boot.context.embedded.MimeMappings
+enum class FrontendTypeEnum(val typeVersion: String) {
+    NORMAL("1.1"), // 官方提供典型的插件UI配置方式
+    SPECIAL("1.2"); // 定制插件UI方式
 
-object MimeUtil {
-    const val YAML_MIME_TYPE = "application/x-yaml"
-    const val TGZ_MIME_TYPE = "application/x-tar"
-    const val ICO_MIME_TYPE = "image/x-icon"
-    const val STREAM_MIME_TYPE = "application/octet-stream"
-    private const val HTML_MIME_TYPE = "text/html"
+    companion object {
 
-    private val mimeMappings = MimeMappings(MimeMappings.DEFAULT).apply {
-        add("yaml", YAML_MIME_TYPE)
-        add("tgz", TGZ_MIME_TYPE)
-        add("ico", ICO_MIME_TYPE)
-        add("html", HTML_MIME_TYPE)
-    }
-
-    fun mediaType(fileName: String): String {
-        val ext = fileName.trim().substring(fileName.lastIndexOf(".") + 1)
-        return mimeMappings.get(ext) ?: STREAM_MIME_TYPE
+        fun getFrontendTypeObj(typeVersion: String): FrontendTypeEnum? {
+            values().forEach { enumObj ->
+                if (enumObj.typeVersion == typeVersion) {
+                    return enumObj
+                }
+            }
+            return null
+        }
     }
 }
