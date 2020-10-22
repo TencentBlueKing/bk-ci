@@ -43,7 +43,7 @@ data class QueryLogs(
     @ApiModelProperty("是否有后续日志", required = false)
     var hasMore: Boolean? = false,
     @ApiModelProperty("日志列表", required = true)
-    val logs: MutableList<LogLine> = mutableListOf(),
+    var logs: MutableList<LogLine> = mutableListOf(),
     @ApiModelProperty("所用时间", required = false)
     var timeUsed: Long = 0,
     @ApiModelProperty("日志查询状态", required = false)
