@@ -50,7 +50,7 @@ class ESIndexCloseJob @Autowired constructor(
     private val redisOperation: RedisOperation
 ) {
 
-    private var closeIndexInDay = 30 // default is expire in 30 days
+    private var closeIndexInDay = 60 // default is expire in 30 days
     private var deleteIndexInDay = 90 // default be deleted in 90 days
 
     /**

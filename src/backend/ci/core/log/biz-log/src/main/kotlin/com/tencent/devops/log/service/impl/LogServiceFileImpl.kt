@@ -409,6 +409,10 @@ class LogServiceFileImpl @Autowired constructor(
         }
     }
 
+    override fun reopenIndex(buildId: String): Boolean {
+        return true
+    }
+
     private fun logStatusSuccess(logStatus: LogStatus) = (logStatus == LogStatus.EMPTY || logStatus == LogStatus.SUCCEED)
 
     private fun queryInitLogsPage(
