@@ -28,7 +28,6 @@ package com.tencent.devops.common.auth.api.pojo.external.response;
 
 import io.swagger.annotations.ApiModel;
 
-@ApiModel("")
 data class AuthTaskRole(
     val extraGroupList: List<String> = listOf(),
 
