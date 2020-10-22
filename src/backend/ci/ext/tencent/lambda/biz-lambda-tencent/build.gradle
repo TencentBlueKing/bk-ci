@@ -29,7 +29,6 @@ dependencies {
     compile project(":core:common:common-web")
     compile project(":ext:tencent:common:common-digest-tencent")
     compile project(":ext:tencent:common:common-kafka-tencent")
-    compile project(":core:common:common-es")
     compile project(":core:common:common-event")
     compile project(":core:common:common-db")
     compile project(":core:common:common-client")
@@ -39,4 +38,9 @@ dependencies {
     compile project(":core:project:api-project")
     compile project(":ext:tencent:lambda:api-lambda-tencent")
     testCompile project(":core:common:common-test")
+
+    compile "org.elasticsearch:elasticsearch"
+    compile "org.elasticsearch.client:transport"
+    compile "org.elasticsearch.plugin:transport-netty4-client"
+    compile "com.floragunn:search-guard-ssl"
 }
