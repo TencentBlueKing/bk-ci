@@ -96,7 +96,9 @@ abstract class AbstractRepositoryPermissionService constructor(
                 serviceCode = codeAuthServiceCode,
                 resourceType = AuthResourceType.CODE_REPERTORY,
                 projectCode = projectId,
-                permission = authPermission
+                permission = authPermission,
+                resourceCode = projectId,
+                relationResourceType = AuthResourceType.PROJECT
             )
         else
             return authPermissionApi.validateUserResourcePermission(
