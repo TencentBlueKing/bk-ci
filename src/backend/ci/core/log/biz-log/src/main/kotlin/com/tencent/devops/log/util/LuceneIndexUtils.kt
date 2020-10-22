@@ -45,7 +45,7 @@ object LuceneIndexUtils {
         doc.add(StringField("message", logMessage.message, Field.Store.YES))
         doc.add(StringField("timestamp", logMessage.timestamp.toString(), Field.Store.YES))
         doc.add(StringField("tag", logMessage.tag, Field.Store.YES))
-        doc.add(StringField("subTag", logMessage.subTag, Field.Store.YES))
+        doc.add(StringField("subTag", logMessage.subTag ?: "", Field.Store.YES))
         doc.add(StringField("jobId", logMessage.jobId, Field.Store.YES))
         doc.add(StringField("logType", logMessage.logType.name, Field.Store.YES))
         doc.add(IntPoint("executeCount", logMessage.executeCount ?: 1))
