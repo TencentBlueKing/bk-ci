@@ -142,20 +142,3 @@ class SvnService : ISvnService {
         }
     }
 }
-
-fun main(args: Array<String>) {
-    val bos = ByteArrayOutputStream()
-    val svnUrl = SVNURL.parseURIEncoded("http://tc-svn.tencent.com/gzrd/gzrd_boap_rep/web_proj/trunk/pay.weixin.qq.com")
-    val repository = SVNRepositoryFactory.create(svnUrl)
-    val auth = SVNPasswordAuthentication.newInstance(
-        "xiaokeeli",
-        "xk9426XK".toCharArray(),
-        false,
-        svnUrl,
-        false
-    )
-    val basicAuthenticationManager = BasicAuthenticationManager(arrayOf(auth))
-    repository.authenticationManager = basicAuthenticationManager
-    repository.getFile("/module/application/libraries/dompdf/src/Dompdf.php".removePrefix("/"), 143869, SVNProperties(), bos)
-    println(bos.toString())
-}

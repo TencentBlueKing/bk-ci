@@ -101,10 +101,3 @@ object AESUtil {
         return processData(false, keyParameter, content)
     }
 }
-
-fun main(args: Array<String>) {
-    val content1 = AESUtil.decrypt("G/I%yP{?ST}2TXPg", "Dtlve34Mw65VJVwGnscwsQ==")
-    val content2 = AESUtil.decrypt("G/I%yP{?ST}2TXPg", "439gL+l2FDLSOzJi16wPkw==")
-    println(content1)
-    println(content2)
-}
