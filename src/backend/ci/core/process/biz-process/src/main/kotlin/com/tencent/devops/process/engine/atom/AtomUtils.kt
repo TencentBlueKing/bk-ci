@@ -118,7 +118,7 @@ object AtomUtils {
             }
         }
         val unDefaultAtoms = client.get(ServiceAtomResource::class).findUnDefaultAtom(unInstallAtom).data
-        if(unDefaultAtoms != null && unDefaultAtoms.isNotEmpty()) {
+        if (unDefaultAtoms != null && unDefaultAtoms.isNotEmpty()) {
             return unDefaultAtoms
         }
 
