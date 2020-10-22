@@ -22,17 +22,17 @@ interface RemoteNodeResource {
 
     @ApiOperation("分页获取节点列表")
     @GET
-    @Path("/projects/{projectId}/list/page")
-    fun listNodeByPage(
+    @Path("/projects/{projectId}/list")
+    fun listNodeForAuth(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int? = null,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int? = null
+        @ApiParam("起始位置", required = false)
+        @QueryParam("offset")
+        offset: Int? = null,
+        @ApiParam("步长", required = false)
+        @QueryParam("limit")
+        limit: Int? = null
     ): Result<Page<NodeBaseInfo>>
 
     @ApiOperation("获取节点信息")
@@ -43,4 +43,22 @@ interface RemoteNodeResource {
         @QueryParam("nodeIds")
         nodeIds: List<String>
     ): Result<List<NodeBaseInfo>>
+
+    @ApiOperation("分页获取节点列表(名称模糊匹配)")
+    @GET
+    @Path("/projects/{projectId}/searchByDisplayName/")
+    fun searchByName(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("起始位置", required = false)
+        @QueryParam("offset")
+        offset: Int? = null,
+        @ApiParam("步长", required = false)
+        @QueryParam("limit")
+        limit: Int? = null,
+        @ApiParam("环境名称", required = true)
+        @QueryParam("displayName")
+        displayName: String
+    ): Result<Page<NodeBaseInfo>>
 }

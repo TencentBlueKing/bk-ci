@@ -549,18 +549,9 @@ class EnvService @Autowired constructor(
             nodeIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) })
     }
 
-    override fun listEnvironmentByPage(projectId: String, page: Int?, pageSize: Int?): Page<EnvWithPermission> {
-        var limit = page ?: 1
-        if (limit <= 0) {
-            limit = 1
-        }
-        var offset = pageSize ?: 10
-        if (offset > 50) {
-            offset = 50
-        }
-
+    override fun listEnvironmentByLimit(projectId: String, offset: Int?, limit: Int?): Page<EnvWithPermission> {
         val envList = mutableListOf<EnvWithPermission>()
-        val envRecords = envDao.listPage(dslContext, limit, offset, projectId)
+        val envRecords = envDao.listPage(dslContext, offset!!, limit!!, projectId)
         envRecords.map {
             envList.add(
                 EnvWithPermission(
@@ -586,6 +577,43 @@ class EnvService @Autowired constructor(
             records = envList,
             pageSize = offset,
             page = limit
+        )
+    }
+
+    override fun searchByName(projectId: String, envName: String, limit: Int, offset: Int): Page<EnvWithPermission> {
+        val envList = mutableListOf<EnvWithPermission>()
+        val envRecords = envDao.searchByName(
+                dslContext = dslContext,
+                offset = offset,
+                limit = limit,
+                projectId = projectId,
+                envName = envName
+        )
+        envRecords.map {
+            envList.add(
+                    EnvWithPermission(
+                            envHashId = HashUtil.encodeLongId(it.envId),
+                            name = it.envName,
+                            desc = it.envDesc,
+                            envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                            nodeCount = null,
+                            envVars = jacksonObjectMapper().readValue(it.envVars),
+                            createdUser = it.createdUser,
+                            createdTime = it.createdTime.timestamp(),
+                            updatedUser = it.updatedUser,
+                            updatedTime = it.updatedTime.timestamp(),
+                            canEdit = null,
+                            canDelete = null,
+                            canUse = null
+                    )
+            )
+        }
+        val count = envDao.countByName(dslContext, projectId, envName)
+        return Page(
+                count = count.toLong(),
+                records = envList,
+                pageSize = offset,
+                page = limit
         )
     }
 

@@ -17,14 +17,23 @@ class ServiceAuthPipelineResourceImpl @Autowired constructor(
 
     override fun pipelineList(
         projectId: String,
-        page: Int?,
-        pageSize: Int?,
+        offset: Int?,
+        limit: Int?,
         channelCode: ChannelCode?
     ): Result<PipelineViewPipelinePage<PipelineInfo>> {
-        return Result(pipelineService.getPipeline(projectId, page, pageSize))
+        return Result(pipelineService.getPipeline(projectId, limit, offset))
     }
 
     override fun pipelineInfos(pipelineIds: Set<String>): Result<List<SimplePipeline>?> {
         return Result(pipelineService.getPipelineByIds(pipelineIds))
+    }
+
+    override fun searchPipelineInstances(projectId: String, offset: Int?, limit: Int?, pipelineName: String): Result<PipelineViewPipelinePage<PipelineInfo>> {
+        return Result(pipelineService.searchByPipelineName(
+                projectId = projectId,
+                pipelineName = pipelineName,
+                limit = limit,
+                offset = offset
+        ))
     }
 }

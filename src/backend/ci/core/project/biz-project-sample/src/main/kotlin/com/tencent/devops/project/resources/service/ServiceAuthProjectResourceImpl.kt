@@ -19,4 +19,8 @@ class ServiceAuthProjectResourceImpl @Autowired constructor(
     override fun getByIds(ids: Set<String>): Result<List<ProjectVO>> {
         return Result(projectService.list(ids))
     }
+
+    override fun searchByName(projectName: String, limit: Int, offset: Int): Result<Page<ProjectVO>> {
+        return Result(projectService.searchProjectByProjectName(projectName, limit, offset))
+    }
 }

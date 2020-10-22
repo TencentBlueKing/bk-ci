@@ -1946,18 +1946,15 @@ class PipelineService @Autowired constructor(
         return stages
     }
 
-    fun getPipeline(projectId: String, page: Int?, pageSize: Int?): PipelineViewPipelinePage<PipelineInfo> {
-        logger.info("getPipeline |$projectId| $page| $pageSize")
-        var offset = pageSize
-        // 最多一次拉取50条数据, 后续可以改为配置
-        if (pageSize!! > 50) {
-            offset = 50
-        }
-        val pageNotNull = page ?: 1
-        val pageSizeNotNull = offset ?: 20
-        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+    fun getPipeline(projectId: String, limit: Int?, offset: Int?): PipelineViewPipelinePage<PipelineInfo> {
+        logger.info("getPipeline |$projectId| $limit| $offset")
         val pipelineRecords =
-            pipelineInfoDao.listPipelineInfoByProject(dslContext, projectId, sqlLimit.limit, sqlLimit.offset)
+            pipelineInfoDao.searchByPipelineName(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    limit = limit!!,
+                    offset = offset!!
+            )
         val pipelineInfos = mutableListOf<PipelineInfo>()
         pipelineRecords?.map {
             pipelineInfoDao.convert(it, null)?.let { it1 -> pipelineInfos.add(it1) }
@@ -1968,10 +1965,37 @@ class PipelineService @Autowired constructor(
             channelCode = null
         )
         return PipelineViewPipelinePage(
-            page = pageNotNull,
+            page = limit!!,
             pageSize = offset!!,
             records = pipelineInfos,
             count = count.toLong()
+        )
+    }
+
+    fun searchByPipelineName(projectId: String, pipelineName: String, limit: Int?, offset: Int?): PipelineViewPipelinePage<PipelineInfo> {
+        logger.info("searchByPipelineName |$projectId|$pipelineName| $limit| $offset")
+        val pipelineRecords =
+                pipelineInfoDao.searchByPipelineName(
+                        dslContext = dslContext,
+                        pipelineName = pipelineName,
+                        projectId = projectId,
+                        limit = limit!!,
+                        offset = offset!!
+                )
+        val pipelineInfos = mutableListOf<PipelineInfo>()
+        pipelineRecords?.map {
+            pipelineInfoDao.convert(it, null)?.let { it1 -> pipelineInfos.add(it1) }
+        }
+        val count = pipelineInfoDao.countPipelineInfoByProject(
+                dslContext = dslContext,
+                pipelineName = pipelineName,
+                projectId = projectId
+        )
+        return PipelineViewPipelinePage(
+                page = limit!!,
+                pageSize = offset!!,
+                records = pipelineInfos,
+                count = count.toLong()
         )
     }
 

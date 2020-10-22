@@ -29,12 +29,12 @@ interface ServiceAuthPipelineResource {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int? = null,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int? = null,
+        @ApiParam("起始位置", required = false)
+        @QueryParam("offset")
+        offset: Int? = null,
+        @ApiParam("步长", required = false)
+        @QueryParam("limit")
+        limit: Int? = null,
         @ApiParam("渠道号，默认为DS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode? = ChannelCode.BS
@@ -48,4 +48,22 @@ interface ServiceAuthPipelineResource {
         @QueryParam("pipelineIds")
         pipelineIds: Set<String>
     ): Result<List<SimplePipeline>?>
+
+    @ApiOperation("流水线编排列表")
+    @GET
+    @Path("/{projectId}/search")
+    fun searchPipelineInstances(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("起始位置", required = false)
+        @QueryParam("offset")
+        offset: Int? = null,
+        @ApiParam("步长", required = false)
+        @QueryParam("limit")
+        limit: Int? = null,
+        @ApiParam("流水线名", required = false)
+        @QueryParam("pipelineName")
+        pipelineName: String
+    ): Result<PipelineViewPipelinePage<PipelineInfo>>
 }

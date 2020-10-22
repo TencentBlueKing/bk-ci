@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.FileUtil
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
@@ -40,6 +39,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -333,13 +333,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun list(limit: Int, offset: Int): Page<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
-        val pageNotNull = limit ?: 1
-        val pageSizeNotNull = offset ?: 20
-        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         var success = false
         try {
             val list = ArrayList<ProjectVO>()
-            projectDao.list(dslContext, sqlLimit.limit, sqlLimit.offset).map {
+            projectDao.list(dslContext, limit, offset).map {
                 list.add(ProjectUtils.packagingBean(it, emptySet()))
             }
             val count = projectDao.getCount(dslContext)
@@ -430,6 +427,27 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_PROJECT_FAIL))
         }
         return Result(true)
+    }
+
+    override fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO> {
+        val startTime = System.currentTimeMillis()
+        val list = mutableListOf<ProjectVO>()
+        projectDao.searchByProjectName(
+                dslContext = dslContext,
+                projectName = projectName,
+                limit = limit,
+                offset = offset
+        ).map {
+            list.add(ProjectUtils.packagingBean(it, emptySet()))
+        }
+        val count = projectDao.countByProjectName(dslContext, projectName).toLong()
+        LogUtils.costTime("search project by projectName", startTime)
+        return Page(
+                count = count,
+                page = offset,
+                pageSize = limit,
+                records = list
+        )
     }
 
     private fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {

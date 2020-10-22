@@ -190,16 +190,37 @@ class PipelineInfoDao {
         }
     }
 
-    fun listPipelineInfoByProject(dslContext: DSLContext, projectId: String, limit: Int, offset: Int): Result<TPipelineInfoRecord>? {
+    fun searchByPipelineName(dslContext: DSLContext, projectId: String, limit: Int, offset: Int): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(DELETE.eq(false)).limit(limit!!).offset(offset!!)
+                .and(DELETE.eq(false)).limit(limit).offset(offset)
                 .fetch()
         }
     }
 
-    fun listPipelineInfoByProject(dslContext: DSLContext, projectId: String): Result<TPipelineInfoRecord>? {
+    fun searchByPipelineName(dslContext: DSLContext, pipelineName: String, projectId: String, limit: Int, offset: Int): Result<TPipelineInfoRecord>? {
+        return with(T_PIPELINE_INFO) {
+            dslContext.selectFrom(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_NAME.like("%$pipelineName%"))
+                    .and(DELETE.eq(false)).orderBy(CREATE_TIME.desc())
+                    .limit(limit).offset(offset)
+                    .fetch()
+        }
+    }
+
+    fun countPipelineInfoByProject(dslContext: DSLContext, pipelineName: String, projectId: String): Int {
+        return with(T_PIPELINE_INFO) {
+            dslContext.selectCount().from(this)
+                    .where(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_NAME.like("%$pipelineName%"))
+                    .and(DELETE.eq(false))
+                    .fetchOne(0, Int::class.java)
+        }
+    }
+
+    fun searchByPipelineName(dslContext: DSLContext, projectId: String): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))

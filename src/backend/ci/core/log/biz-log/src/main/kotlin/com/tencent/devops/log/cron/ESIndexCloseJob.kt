@@ -31,7 +31,11 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.util.IndexNameUtils.LOG_PREFIX
-import org.elasticsearch.client.Client
+import org.elasticsearch.action.admin.indices.close.CloseIndexRequest
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest
+import org.elasticsearch.client.indices.GetIndexRequest
+import org.elasticsearch.client.RequestOptions
+import org.elasticsearch.client.RestHighLevelClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -83,10 +87,9 @@ class ESIndexCloseJob @Autowired constructor(
 
     private fun closeESIndexes() {
         client.getActiveClients().forEach { c ->
-            val indexes = c.client.admin()
+            val indexes = c.client
                 .indices()
-                .prepareGetIndex()
-                .get()
+                .get(GetIndexRequest(), RequestOptions.DEFAULT)
 
             if (indexes.indices.isEmpty()) {
                 return
@@ -103,21 +106,18 @@ class ESIndexCloseJob @Autowired constructor(
         }
     }
 
-    private fun closeESIndex(c: Client, index: String) {
+    private fun closeESIndex(c: RestHighLevelClient, index: String) {
         logger.info("[$index] Start to close ES index")
-        val resp = c.admin()
-            .indices()
-            .prepareClose(index)
-            .get()
+        val resp = c.indices()
+            .close(CloseIndexRequest(index), RequestOptions.DEFAULT)
         logger.info("Get the close es response - ${resp.isAcknowledged}")
     }
 
     private fun deleteESIndexes() {
         client.getActiveClients().forEach { c ->
-            val indexes = c.client.admin()
+            val indexes = c.client
                 .indices()
-                .prepareGetIndex()
-                .get()
+                .get(GetIndexRequest(), RequestOptions.DEFAULT)
 
             if (indexes.indices.isEmpty()) {
                 return
@@ -134,12 +134,10 @@ class ESIndexCloseJob @Autowired constructor(
         }
     }
 
-    private fun deleteESIndex(c: Client, index: String) {
+    private fun deleteESIndex(c: RestHighLevelClient, index: String) {
         logger.info("[$index] Start to delete ES index")
-        val resp = c.admin()
-            .indices()
-            .prepareDelete(index)
-            .get()
+        val resp = c.indices()
+            .delete(DeleteIndexRequest(index), RequestOptions.DEFAULT)
         logger.info("Get the delete es response - ${resp.isAcknowledged}")
     }
 
