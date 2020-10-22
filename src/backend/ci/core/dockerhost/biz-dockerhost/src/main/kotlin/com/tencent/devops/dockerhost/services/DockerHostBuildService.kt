@@ -696,20 +696,17 @@ class DockerHostBuildService(
         }
     }
 
+    /**
+     * 监控系统负载，超过一定阈值，对于占用负载较高的容器，主动降低负载
+     */
     fun monitorSystemLoad() {
         logger.info("Monitor systemLoad cpu: ${SigarUtil.getAverageLongCpuLoad()}, mem: ${SigarUtil.getAverageLongMemLoad()}")
-        // 优先检测CPU
-        if (SigarUtil.getAverageLongCpuLoad() > 90) {
-            checkContainerStatsCpu()
-            return
-        }
-
-        if (SigarUtil.getAverageLongMemLoad() > 85) {
-            checkContainerStatsMem()
+        if (SigarUtil.getAverageLongCpuLoad() > 90 || SigarUtil.getAverageLongMemLoad() > 80) {
+            checkContainerStats()
         }
     }
 
-    private fun checkContainerStatsCpu() {
+    private fun checkContainerStats() {
         val containerInfo = httpLongDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
         for (container in containerInfo) {
             val statistics = getContainerStats(container.id)
@@ -720,24 +717,18 @@ class DockerHostBuildService(
                 val preCpuUsage = statistics.preCpuStats.cpuUsage!!.totalUsage ?: 0
                 val cpuUsagePer = ((cpuUsage - preCpuUsage) * 100) / (systemCpuUsage - preSystemCpuUsage)
 
+                // 优先判断CPU
                 val elasticityCpuThreshold = dockerHostConfig.elasticityCpuThreshold ?: 80
-                logger.info("containerId: ${container.id} | checkContainerStatsCpu cpuUsagePer: $cpuUsagePer, cpuThreshold: $elasticityCpuThreshold")
+                logger.info("containerId: ${container.id} | checkContainerStats cpuUsagePer: $cpuUsagePer, cpuThreshold: $elasticityCpuThreshold")
                 if (cpuUsagePer >= elasticityCpuThreshold) {
                     resetContainer(container.id)
+                    continue
                 }
-            }
-        }
-    }
 
-    private fun checkContainerStatsMem() {
-        val containerInfo = httpLongDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
-        for (container in containerInfo) {
-            val statistics = getContainerStats(container.id)
-            if (statistics != null) {
                 if (statistics.memoryStats != null && statistics.memoryStats.usage != null && statistics.memoryStats.limit != null) {
                     val memUsage = statistics.memoryStats.usage!! * 100 / statistics.memoryStats.limit!!
                     val elasticityMemThreshold = dockerHostConfig.elasticityMemThreshold ?: 80
-                    logger.info("containerId: ${container.id} | checkContainerStatsMem memUsage: $memUsage, memThreshold: $elasticityMemThreshold")
+                    logger.info("containerId: ${container.id} | checkContainerStats memUsage: $memUsage, memThreshold: $elasticityMemThreshold")
                     if (memUsage >= elasticityMemThreshold) {
                         resetContainer(container.id)
                     }
