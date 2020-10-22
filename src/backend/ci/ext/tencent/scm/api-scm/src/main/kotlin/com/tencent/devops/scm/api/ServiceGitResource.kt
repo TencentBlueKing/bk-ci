@@ -26,6 +26,7 @@
 
 package com.tencent.devops.scm.api
 
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
@@ -42,6 +43,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import io.swagger.annotations.Api
@@ -280,7 +282,10 @@ interface ServiceGitResource {
         visibilityLevel: VisibilityLevelEnum?,
         @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        @ApiParam(value = "前端UI渲染方式", required = false)
+        @QueryParam("frontendType")
+        frontendType: FrontendTypeEnum?
     ): Result<GitRepositoryResp?>
 
     @ApiOperation("更新git代码库信息")
@@ -299,6 +304,30 @@ interface ServiceGitResource {
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
+
+    @ApiOperation("获取版本库文件和目录列表")
+    @GET
+    @Path("/getGitRepositoryTreeInfo")
+    fun getGitRepositoryTreeInfo(
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam(value = "仓库名字", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "commit hash值、分支 或 tag，默认：默认分支", required = false)
+        @QueryParam("refName")
+        refName: String?,
+        @ApiParam(value = "文件路径", required = false)
+        @QueryParam("path")
+        path: String?,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<List<GitRepositoryDirItem>?>
 
     @ApiOperation("把项目迁移到指定项目组下")
     @POST
