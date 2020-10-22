@@ -44,7 +44,7 @@
                 return this.atom.atomCode
             },
             src () {
-                return `${AJAX_URL_PIRFIX}/artifactory/resource/${this.atomCode}/${this.atomVersion}/index.html?projectId=${this.$route.params.projectId}`
+                return `${AJAX_URL_PIRFIX}/artifactory/resource/bk-plugin-fe/${this.atomCode}/${this.atomVersion}/index.html?projectId=${this.$route.params.projectId}`
             }
         },
         mounted () {
