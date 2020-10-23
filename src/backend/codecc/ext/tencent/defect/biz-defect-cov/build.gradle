@@ -1,8 +1,0 @@
-dependencies {
-    compile project(":core:defect:api-defect")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-web")
-    compile project(":core:defect:biz-defect")
-    compile project(":ext:tencent:coverity:api-coverity")
-    compile project(":ext:tencent:common:common-web-tencent")
-}

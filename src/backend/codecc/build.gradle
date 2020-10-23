@@ -93,6 +93,7 @@ allprojects {
     } else {
         version = version + "-RELEASE"
     }
+    System.out.println("version: " + version)
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
     if (mavenRepoUrl == null) {

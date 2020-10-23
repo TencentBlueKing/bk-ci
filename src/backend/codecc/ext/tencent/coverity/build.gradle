@@ -1,5 +1,0 @@
-subprojects {
-    dependencies {
-        compile fileTree(dir: '../lib', include: ['*.jar'])
-    }
-}

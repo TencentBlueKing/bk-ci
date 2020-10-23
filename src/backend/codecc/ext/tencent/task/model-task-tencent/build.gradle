@@ -1,4 +1,0 @@
-dependencies {
-    compile project(":core:task:model-task")
-    compile project(":core:common:common-db")
-}

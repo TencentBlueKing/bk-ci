@@ -1,5 +1,0 @@
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:task:api-task")
-    compile project(":ext:tencent:common:common-auth-tencent-api")
-}

@@ -1,4 +1,0 @@
-dependencies {
-    compile project(":core:schedule:biz-schedule")
-    compile project(":ext:tencent:common:common-web-tencent")
-}

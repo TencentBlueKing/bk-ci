@@ -1,5 +1,0 @@
-dependencies {
-    compile project(":core:common:common-db")
-    compile "org.projectlombok:lombok"
-    compile "com.fasterxml.jackson.core:jackson-annotations"
-}

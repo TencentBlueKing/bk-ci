@@ -1,6 +1,0 @@
-dependencies {
-    compile project(":core:openapi:biz-openapi")
-    compile project(":ext:tencent:openapi:api-openapi-tencent")
-    compile project(":ext:tencent:defect:api-defect-tencent")
-    compile project(":ext:tencent:task:api-task-tencent")
-}
