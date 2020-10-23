@@ -15,7 +15,6 @@ gradlew
 gradlew.bat
 version.txt
 service/service-task/src/test/
-META-INF/
 classes/
 /Log4j2Initializer.java
 /service/service-defect/src/test
