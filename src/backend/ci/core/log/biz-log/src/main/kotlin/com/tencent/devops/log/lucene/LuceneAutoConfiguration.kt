@@ -47,7 +47,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
 @Configuration
-@ConditionalOnProperty(prefix = "storage", name = ["type"], havingValue = "lucene")
+@ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "lucene")
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(WebAutoConfiguration::class)
 @EnableConfigurationProperties(LuceneProperties::class)

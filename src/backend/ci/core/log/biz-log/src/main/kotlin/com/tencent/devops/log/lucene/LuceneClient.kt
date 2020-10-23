@@ -240,7 +240,12 @@ class LuceneClient constructor(
     }
 
     private fun prepareDirectory(buildId: String, index: String): Directory {
-        val dirFile = File(logRootDirectory + File.separator + index + File.separator + buildId)
+        val subIndex = try {
+            buildId.substring(0, 3)
+        } catch (e: Exception) {
+            ""
+        }
+        val dirFile = File(logRootDirectory + File.separator + index + File.separator + subIndex + File.separator + buildId)
         return FSDirectory.open(dirFile.toPath())
     }
 
