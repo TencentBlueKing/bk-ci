@@ -26,11 +26,15 @@
 
 package com.tencent.devops.log.configuration
 
-import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-@ConfigurationProperties(prefix = "log.storage")
-data class StorageProperties(
-    val type: String,
-    val closeInDay: Int = Int.MAX_VALUE,
+@Component
+class StorageProperties {
+    @Value("\${log.storage.type}")
+    val type: String = "lucene"
+    @Value("\${log.storage.closeInDay}")
+    val closeInDay: Int = Int.MAX_VALUE
+    @Value("\${log.storage.deleteInDay}")
     val deleteInDay: Int = Int.MAX_VALUE
-)
+}

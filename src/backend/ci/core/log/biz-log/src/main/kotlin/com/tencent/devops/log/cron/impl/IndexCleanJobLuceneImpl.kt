@@ -27,6 +27,7 @@
 package com.tencent.devops.log.cron.impl
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.cron.IndexCleanJob
 import com.tencent.devops.log.lucene.LuceneClient
 import org.slf4j.LoggerFactory
@@ -41,11 +42,11 @@ import java.time.temporal.ChronoUnit
 @Component
 @ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "lucene")
 class IndexCleanJobLuceneImpl @Autowired constructor(
+    private val storageProperties: StorageProperties,
     private val luceneClient: LuceneClient
 ) : IndexCleanJob {
 
-    @Value("\${log.storage.deleteInDay:#{null}}")
-    private var deleteIndexInDay = Int.MAX_VALUE
+    private var deleteIndexInDay = storageProperties.deleteInDay
 
     /**
      * 2 am every day
