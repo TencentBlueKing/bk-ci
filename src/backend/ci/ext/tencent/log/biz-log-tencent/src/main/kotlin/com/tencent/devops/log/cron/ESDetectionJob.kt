@@ -55,7 +55,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
-@ConditionalOnProperty(prefix = "storage", name = ["type"], havingValue = "elasticsearch")
+@ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
 class ESDetectionJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val logClient: MultiESLogClient

@@ -59,7 +59,7 @@ import java.security.KeyStore
 import javax.net.ssl.SSLContext
 
 @Configuration
-@ConditionalOnProperty(prefix = "storage", name = ["type"], havingValue = "elasticsearch")
+@ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @AutoConfigureBefore(WebAutoConfiguration::class)
 @AutoConfigureAfter(ESAutoConfiguration::class)
