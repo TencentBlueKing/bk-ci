@@ -7,6 +7,3 @@ dependencies {
     compile group: 'com.tencent.bk.devops.ci.process', name: 'api-process', version: version, changing: true
 }
 
-version = null
-
-// version "1.2.3"  // 这里可以设定版本号

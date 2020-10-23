@@ -19,6 +19,3 @@ dependencies {
         exclude group: 'com.tencent.bk.devops.ci.common', module: 'common-auth'
     }
 }
-
-version = null
-// version "1.2.3"  // 这里可以设定版本号

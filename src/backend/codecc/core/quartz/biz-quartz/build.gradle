@@ -12,6 +12,3 @@ dependencies {
     compile group: 'com.tencent.bk.devops.ci.common', name: 'common-redis', version: version, changing: true
 
 }
-
-version = null
-// version "1.2.3"  // 这里可以设定版本号
