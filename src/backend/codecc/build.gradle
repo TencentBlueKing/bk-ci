@@ -85,7 +85,7 @@ ext {
 
 allprojects {
     group "com.tencent.bk.codecc"
-    version "1.2.0-rc.7-RELEASE" // 总版本
+    version "1.2.0-rc.7" // 总版本
 
     def snapshot = System.getProperty("snapshot")
     if (snapshot == "true") {
