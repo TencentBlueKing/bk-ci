@@ -38,6 +38,9 @@ jobs:
           build_mavenRepoDeployUrl: "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
           build_mavenRepoUsername: ${{ secrets.SONATYPE_USERNAME }}
           build_mavenRepoPassword: ${{ secrets.SONATYPE_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
         with:
           gradle-version: 4.8.1
           build-root-directory: src/backend/ci
