@@ -136,6 +136,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_COMMIT_MESSAGE
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -1163,7 +1164,12 @@ class PipelineRuntimeService @Autowired constructor(
                 webhookRepoUrl = params[BK_REPO_WEBHOOK_REPO_URL] as String?,
                 webhookType = params[PIPELINE_WEBHOOK_TYPE] as String?,
                 webhookBranch = params[PIPELINE_WEBHOOK_BRANCH] as String?,
-                webhookEventType = params[PIPELINE_WEBHOOK_EVENT_TYPE] as String?
+                // GIT事件分为MR和MR accept,但是PIPELINE_WEBHOOK_EVENT_TYPE值只有MR
+                webhookEventType = if (params[PIPELINE_WEBHOOK_TYPE] == CodeType.GIT.name) {
+                    params[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] as String?
+                } else {
+                    params[PIPELINE_WEBHOOK_EVENT_TYPE] as String?
+                }
             )
         )
     }
