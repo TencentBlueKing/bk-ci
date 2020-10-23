@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.LogClient
+import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.cron.IndexCleanJob
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest
@@ -48,14 +49,13 @@ import java.time.temporal.ChronoUnit
 @Component
 @ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
 class IndexCleanJobESImpl @Autowired constructor(
+    private val storageProperties: StorageProperties,
     private val client: LogClient,
     private val redisOperation: RedisOperation
 ) : IndexCleanJob {
 
-    @Value("\${log.storage.closeInDay:#{null}}")
-    private var closeIndexInDay = Int.MAX_VALUE
-    @Value("\${log.storage.deleteInDay:#{null}}")
-    private var deleteIndexInDay = Int.MAX_VALUE
+    private var closeIndexInDay = storageProperties.closeInDay
+    private var deleteIndexInDay = storageProperties.deleteInDay
 
     /**
      * 2 am every day

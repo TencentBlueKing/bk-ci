@@ -40,17 +40,13 @@ class LogCommonConfiguration {
 
     @Value("\${log.storage.type:#{null}}")
     private val type: String? = null
-    @Value("\${log.storage.closeInDay:#{null}}")
-    private val closeIndexInDay = Int.MAX_VALUE
-    @Value("\${log.storage.deleteInDay:#{null}}")
-    private val deleteIndexInDay = Int.MAX_VALUE
     
     @Bean
     fun storageProperties(): StorageProperties {
         if (type.isNullOrBlank()) {
             throw IllegalArgumentException("storage type of build log didn't config: log.storage.type, it must be either of 'lucene' or 'elasticsearch'.")
         }
-        return StorageProperties(type!!, closeIndexInDay, deleteIndexInDay)
+        return StorageProperties()
     }
 
     @Bean
