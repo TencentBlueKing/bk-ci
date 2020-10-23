@@ -24,26 +24,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.api
-
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.log.client.impl.MultiESLogClient
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class OpLogNotifyResourceImpl @Autowired constructor(private val logClient: MultiESLogClient) : OpLogNotifyResource {
-    override fun get(): Result<Set<String>> {
-        return Result(logClient.getNotifyUserFromRedis())
-    }
-
-    override fun addUser(userId: String): Result<Boolean> {
-        logClient.addNotifyUser(userId)
-        return Result(true)
-    }
-
-    override fun deleteUser(userId: String): Result<Boolean> {
-        logClient.removeNotifyUser(userId)
-        return Result(true)
-    }
-}
+//package com.tencent.devops.log.api
+//
+//import com.tencent.devops.common.api.pojo.Result
+//import com.tencent.devops.common.web.RestResource
+//import com.tencent.devops.log.client.impl.MultiESLogClient
+//import org.springframework.beans.factory.annotation.Autowired
+//
+//@RestResource
+//class OpLogNotifyResourceImpl @Autowired constructor(private val logClient: MultiESLogClient) : OpLogNotifyResource {
+//    override fun get(): Result<Set<String>> {
+//        return Result(logClient.getNotifyUserFromRedis())
+//    }
+//
+//    override fun addUser(userId: String): Result<Boolean> {
+//        logClient.addNotifyUser(userId)
+//        return Result(true)
+//    }
+//
+//    override fun deleteUser(userId: String): Result<Boolean> {
+//        logClient.removeNotifyUser(userId)
+//        return Result(true)
+//    }
+//}
