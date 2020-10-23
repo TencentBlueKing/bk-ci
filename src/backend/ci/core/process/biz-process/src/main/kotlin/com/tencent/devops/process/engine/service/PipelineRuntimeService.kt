@@ -1569,7 +1569,7 @@ class PipelineRuntimeService @Autowired constructor(
             logger.info("[$pipelineId]|getExecuteTime-$buildId executeTime: $executeTime")
 
             val buildParameters: List<BuildParameters> = try {
-                getBuildParametersFromHistory(buildId)
+                getBuildParametersFromStartup(buildId)
             } catch (e: Throwable) {
                 logger.error("[$pipelineId]|getBuildParameters-$buildId exception:", e)
                 mutableListOf()
