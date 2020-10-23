@@ -46,7 +46,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 @Component
-@ConditionalOnProperty(prefix = "storage", name = ["type"], havingValue = "elasticsearch")
+@ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
 class IndexCleanJobESImpl @Autowired constructor(
     private val client: LogClient,
     private val redisOperation: RedisOperation

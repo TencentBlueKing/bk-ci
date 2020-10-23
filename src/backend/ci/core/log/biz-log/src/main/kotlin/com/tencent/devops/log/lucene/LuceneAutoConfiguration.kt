@@ -47,7 +47,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
 @Configuration
-@ConditionalOnProperty(prefix = "storage", name = ["type"], havingValue = "lucene")
+@ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "lucene")
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(WebAutoConfiguration::class)
 @EnableConfigurationProperties(LuceneProperties::class)
@@ -56,7 +56,7 @@ class LuceneAutoConfiguration {
     @Value("\${log.lucene.dataDirectory}")
     private val dataDirectory: String? = null
     @Value("\${log.lucene.indexMaxSize}")
-    private val indexMaxSize: Int? = 2000000
+    private val indexMaxSize: Int? = Int.MAX_VALUE
 
     @Bean
     @Primary
