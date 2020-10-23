@@ -24,9 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.es
+package com.tencent.devops.log.es
 
+import com.tencent.devops.common.log.utils.LogMQEventDispatcher
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
+import com.tencent.devops.log.client.LogClient
+import com.tencent.devops.log.client.impl.LogESClientImpl
+import com.tencent.devops.log.jmx.v2.CreateIndexBeanV2
+import com.tencent.devops.log.jmx.v2.LogBeanV2
+import com.tencent.devops.log.service.IndexService
+import com.tencent.devops.log.service.LogService
+import com.tencent.devops.log.service.LogStatusService
+import com.tencent.devops.log.service.LogTagService
+import com.tencent.devops.log.service.impl.LogServiceESImpl
 import org.apache.http.HttpHost
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
@@ -35,9 +46,11 @@ import org.apache.http.ssl.SSLContexts
 import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestHighLevelClient
 import org.springframework.beans.factory.DisposableBean
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -49,6 +62,7 @@ import java.security.KeyStore
 import javax.net.ssl.SSLContext
 
 @Configuration
+@ConditionalOnProperty(prefix = "storage", name = ["type"], havingValue = "elasticsearch")
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(WebAutoConfiguration::class)
 @EnableConfigurationProperties(ESProperties::class)
@@ -159,6 +173,35 @@ class ESAutoConfiguration : DisposableBean {
         client = RestHighLevelClient(builder)
         return ESClient(name!!, client!!)
     }
+
+    @Bean
+    fun esLogService(
+        @Autowired logESClient: LogClient,
+        @Autowired indexService: IndexService,
+        @Autowired logStatusService: LogStatusService,
+        @Autowired logTagService: LogTagService,
+        @Autowired defaultKeywords: List<String>,
+        @Autowired createIndexBeanV2: CreateIndexBeanV2,
+        @Autowired logBeanV2: LogBeanV2,
+        @Autowired redisOperation: RedisOperation,
+        @Autowired logMQEventDispatcher: LogMQEventDispatcher
+    ): LogService {
+        return LogServiceESImpl(
+            client = logESClient,
+            indexService = indexService,
+            logStatusService = logStatusService,
+            logTagService = logTagService,
+            defaultKeywords = defaultKeywords,
+            logBeanV2 = logBeanV2,
+            createIndexBeanV2 = createIndexBeanV2,
+            logMQEventDispatcher = logMQEventDispatcher,
+            redisOperation = redisOperation
+        )
+    }
+
+    @Bean
+    fun logESClient(@Autowired transportClient: ESClient): LogClient =
+        LogESClientImpl(transportClient)
 
     override fun destroy() {
         client?.close()

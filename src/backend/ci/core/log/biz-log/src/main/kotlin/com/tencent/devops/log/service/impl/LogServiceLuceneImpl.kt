@@ -41,7 +41,7 @@ import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.log.utils.LogMQEventDispatcher
 import com.tencent.devops.log.jmx.v2.LogBeanV2
-import com.tencent.devops.log.lucene.LuceneService
+import com.tencent.devops.log.lucene.LuceneClient
 import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
@@ -49,17 +49,15 @@ import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.Constants
 import com.tencent.devops.log.util.LuceneIndexUtils
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.util.Arrays
 import java.util.concurrent.TimeUnit
 import java.util.stream.Collectors
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Service
-class LogServiceLuceneImpl @Autowired constructor(
-    private val luceneService: LuceneService,
+class LogServiceLuceneImpl constructor(
+    private val indexMaxSize: Int,
+    private val luceneClient: LuceneClient,
     private val indexService: IndexService,
     private val logStatusService: LogStatusService,
     private val logTagService: LogTagService,
@@ -213,7 +211,7 @@ class LogServiceLuceneImpl @Autowired constructor(
             ))
 
             try {
-                val logs = luceneService.fetchLogs(
+                val logs = luceneClient.fetchLogs(
                     buildId = buildId,
                     tag = tag,
                     subTag = subTag,
@@ -274,7 +272,7 @@ class LogServiceLuceneImpl @Autowired constructor(
         executeCount: Int?,
         fileName: String?
     ): Response {
-        val fileStream = luceneService.fetchDocumentsStreaming(
+        val fileStream = luceneClient.fetchDocumentsStreaming(
             buildId = buildId,
             tag = tag,
             subTag = subTag,
@@ -355,7 +353,7 @@ class LogServiceLuceneImpl @Autowired constructor(
                         page = page,
                         pageSize = pageSize
                     )
-                    val logSize = luceneService.fetchLogsCount(
+                    val logSize = luceneClient.fetchLogsCount(
                         buildId = buildId,
                         tag = tag,
                         subTag = subTag,
@@ -433,7 +431,7 @@ class LogServiceLuceneImpl @Autowired constructor(
         ))
 
         try {
-            val logs = luceneService.fetchAllLogsInPage(
+            val logs = luceneClient.fetchAllLogsInPage(
                 buildId = buildId,
                 tag = tag,
                 subTag = subTag,
@@ -461,14 +459,14 @@ class LogServiceLuceneImpl @Autowired constructor(
         size: Int
     ): EndPageQueryLogs {
         val beginTime = System.currentTimeMillis()
-        val count = luceneService.fetchLogsCount(
+        val count = luceneClient.fetchLogsCount(
             buildId = buildId,
             tag = tag,
             subTag = subTag,
             jobId = jobId,
             executeCount = executeCount
         )
-        val logs = luceneService.fetchLogs(
+        val logs = luceneClient.fetchLogs(
             buildId = buildId,
             tag = tag,
             subTag = subTag,
@@ -504,7 +502,7 @@ class LogServiceLuceneImpl @Autowired constructor(
         )
         val initLogs = QueryLogs(buildId, logStatus)
         try {
-            val size = luceneService.fetchLogsCount(
+            val size = luceneClient.fetchLogsCount(
                 buildId = buildId,
                 tag = tag,
                 subTag = subTag,
@@ -561,14 +559,14 @@ class LogServiceLuceneImpl @Autowired constructor(
         val queryLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
 
         try {
-            val size = luceneService.fetchLogsCount(
+            val size = luceneClient.fetchLogsCount(
                 buildId = buildId,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount
             )
-            val logs = luceneService.fetchInitLogs(
+            val logs = luceneClient.fetchInitLogs(
                 buildId = buildId,
                 tag = tag,
                 subTag = subTag,
@@ -621,7 +619,7 @@ class LogServiceLuceneImpl @Autowired constructor(
 
         try {
             val startTime = System.currentTimeMillis()
-            val logs = luceneService.fetchLogs(
+            val logs = luceneClient.fetchLogs(
                 buildId = buildId,
                 tag = tag,
                 subTag = subTag,
@@ -673,7 +671,7 @@ class LogServiceLuceneImpl @Autowired constructor(
             "index: $index, keywords: $keywords, wholeQuery: $wholeQuery, tag: $tag, jobId: $jobId, executeCount: $executeCount")
 
         val startTime = System.currentTimeMillis()
-        val logs = luceneService.fetchLogs(
+        val logs = luceneClient.fetchLogs(
             buildId = buildId,
             tag = tag,
             subTag = subTag,
@@ -690,7 +688,7 @@ class LogServiceLuceneImpl @Autowired constructor(
         val logDocuments = logMessages.map {
             LuceneIndexUtils.getDocumentObject(buildId, it)
         }
-        val lines = luceneService.indexBatchLog(buildId, logDocuments)
+        val lines = luceneClient.indexBatchLog(buildId, logDocuments)
         val endTime = System.currentTimeMillis()
         logger.info("[$buildId] it takes ${(endTime - startTime)} ms to do add $lines lines in lucene file.")
         return lines
@@ -703,11 +701,10 @@ class LogServiceLuceneImpl @Autowired constructor(
             return emptyList()
         }
 
-        // TODO 限制每个构建的日志总量
-//        if (lineNum >= Constants.MAX_LINES) {
-//            logger.warn("Number of build's log lines is limited, buildId: $buildId")
-//            return emptyList()
-//        }
+        if (lineNum >= indexMaxSize) {
+            logger.warn("Number of build's log lines is limited, buildId: $buildId")
+            return emptyList()
+        }
 
         var startLineNum: Long = lineNum
         return logMessages.map {

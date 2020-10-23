@@ -29,8 +29,8 @@ package com.tencent.devops.log.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.OpLogResource
-import com.tencent.devops.log.cron.CleanBuildJob
-import com.tencent.devops.log.cron.ESIndexCloseJob
+import com.tencent.devops.log.cron.DataCleanJob
+import com.tencent.devops.log.cron.IndexCleanJob
 import com.tencent.devops.log.service.LogService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -40,26 +40,26 @@ import org.springframework.beans.factory.annotation.Autowired
  */
 @RestResource
 class OpLogResourceImpl @Autowired constructor(
-    private val esIndexCloseJob: ESIndexCloseJob,
-    private val cleanBuildJob: CleanBuildJob,
+    private val indexCleanJob: IndexCleanJob,
+    private val dataCleanJob: DataCleanJob,
     private val logService: LogService
 ) : OpLogResource {
 
     override fun getBuildExpire(): Result<Int> {
-        return Result(cleanBuildJob.getExpire())
+        return Result(dataCleanJob.getExpire())
     }
 
     override fun setBuildExpire(expire: Int): Result<Boolean> {
-        cleanBuildJob.expire(expire)
+        dataCleanJob.expire(expire)
         return Result(true)
     }
 
     override fun getESExpire(): Result<Int> {
-        return Result(esIndexCloseJob.getExpireIndexDay())
+        return Result(indexCleanJob.getExpireIndexDay())
     }
 
     override fun setESExpire(expire: Int): Result<Boolean> {
-        esIndexCloseJob.updateExpireIndexDay(expire)
+        indexCleanJob.updateExpireIndexDay(expire)
         return Result(true)
     }
 

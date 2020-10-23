@@ -33,7 +33,6 @@ import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
-import com.tencent.devops.log.service.impl.LogServiceElasticSearchImpl
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.Response
 

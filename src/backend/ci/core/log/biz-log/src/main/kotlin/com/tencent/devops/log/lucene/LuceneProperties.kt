@@ -24,17 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.es
+package com.tencent.devops.log.lucene
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 
-/**
- *
- * Powered By Tencent
- */
-@ConfigurationProperties(prefix = "elasticsearch")
-data class ESProperties(
-    val ip: String? = null,
-    val port: Int? = 0,
-    val cluster: String? = null
+@ConfigurationProperties(prefix = "lucene")
+data class LuceneProperties(
+    val path: String? = null,
+    val indexMaxSize: Int? = 10000
 )
