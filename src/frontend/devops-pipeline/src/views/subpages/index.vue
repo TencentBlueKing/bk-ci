@@ -80,6 +80,7 @@
                 </bk-form-item>
             </bk-form>
         </bk-dialog>
+        <review-dialog :is-show="showReviewDialog"></review-dialog>
     </div>
 </template>
 
@@ -89,6 +90,7 @@
     import BreadCrumbItem from '@/components/BreadCrumb/BreadCrumbItem'
     import innerHeader from '@/components/devops/inner_header'
     import triggers from '@/components/pipeline/triggers'
+    import ReviewDialog from '@/components/ReviewDialog'
     import { bus } from '@/utils/bus'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import showTooltip from '@/components/common/showTooltip'
@@ -99,7 +101,8 @@
             triggers,
             BreadCrumb,
             showTooltip,
-            BreadCrumbItem
+            BreadCrumbItem,
+            ReviewDialog
         },
         mixins: [pipelineOperateMixin],
         data () {
@@ -133,8 +136,8 @@
             ...mapState('atom', [
                 'execDetail',
                 'editingElementPos',
-                'isPropertyPanelVisible'
-            ]),
+                'isPropertyPanelVisible',
+                'showReviewDialog']),
             ...mapGetters({
                 'isEditing': 'atom/isEditing',
                 'getAllElements': 'atom/getAllElements'
