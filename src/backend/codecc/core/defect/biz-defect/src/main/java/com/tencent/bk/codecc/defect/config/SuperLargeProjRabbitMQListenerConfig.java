@@ -26,6 +26,7 @@
 
 package com.tencent.bk.codecc.defect.config;
 
+import com.tencent.bk.codecc.defect.condition.AsyncReportCondition;
 import com.tencent.bk.codecc.defect.consumer.SuperLargeDefectCommitConsumer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Binding;
@@ -35,8 +36,10 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 import static com.tencent.devops.common.web.mq.ConstantsKt.*;
@@ -49,7 +52,7 @@ import static com.tencent.devops.common.web.mq.ConstantsKt.*;
  */
 @Configuration
 @Slf4j
-@ConditionalOnProperty(prefix = "spring.application", name = "name", havingValue = "asyncreport-ci")
+@Conditional(AsyncReportCondition.class)
 public class SuperLargeProjRabbitMQListenerConfig extends RabbitMQListenerConfig
 {
     /**

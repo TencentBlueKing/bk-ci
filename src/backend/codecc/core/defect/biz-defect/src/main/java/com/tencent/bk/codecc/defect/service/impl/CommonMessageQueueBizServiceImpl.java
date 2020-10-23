@@ -1,5 +1,6 @@
 package com.tencent.bk.codecc.defect.service.impl;
 
+import com.tencent.bk.codecc.defect.condition.AsyncReportCondition;
 import com.tencent.bk.codecc.defect.pojo.AggregateDispatchFileName;
 import com.tencent.bk.codecc.defect.service.IMessageQueueBizService;
 import com.tencent.bk.codecc.defect.vo.CommitDefectVO;
@@ -9,6 +10,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -18,7 +20,7 @@ import static com.tencent.devops.common.web.mq.ConstantsKt.*;
 
 @Slf4j
 @Service("CommonMessageQueueBizService")
-@ConditionalOnProperty(prefix = "spring.application", name = "name" , havingValue = "asyncreport-ci")
+@Conditional(AsyncReportCondition.class)
 public class CommonMessageQueueBizServiceImpl implements IMessageQueueBizService {
 
     @Autowired

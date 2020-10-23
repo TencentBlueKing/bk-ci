@@ -9,5 +9,5 @@ dependencies {
     compile project(":core:task:model-task")
     compile "io.jsonwebtoken:jjwt"
     compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
-    compile group: 'com.tencent.bk.devops', name: 'common-pipeline-tencent', version: '2.2.3', changing: true
+    compile group: 'com.tencent.bk.devops', name: 'common-pipeline-tencent', version: version, changing: true
 }

@@ -6,5 +6,3 @@ dependencies {
     compile project(":core:schedule:model-schedule")
     compile "commons-io:commons-io"
 }
-
-version = null

@@ -26,6 +26,7 @@
 
 package com.tencent.bk.codecc.defect.config;
 
+import com.tencent.bk.codecc.defect.condition.AsyncReportCondition;
 import com.tencent.bk.codecc.defect.consumer.CCNFastIncrementConsumer;
 import com.tencent.bk.codecc.defect.consumer.CLOCFastIncrementConsumer;
 import com.tencent.bk.codecc.defect.consumer.DUPCFastIncrementConsumer;
@@ -48,6 +49,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.handler.annotation.support.DefaultMessageHandlerMethodFactory;
 
@@ -62,7 +64,7 @@ import static com.tencent.devops.common.web.mq.ConstantsKt.ROUTE_FAST_INCREMENT_
  */
 @Configuration
 @Slf4j
-@ConditionalOnProperty(prefix = "spring.application", name = "name", havingValue = "asyncreport-ci")
+@Conditional(AsyncReportCondition.class)
 public class FastIncrementRabbitMQListenerConfig
 {
     @Bean
