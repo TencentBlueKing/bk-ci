@@ -33,13 +33,7 @@ import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.FilterType
 
 @MicroService
-@ComponentScan(
-    "com.tencent.devops.dispatch", "com.tencent.devops.common.dispatch.sdk",
-    excludeFilters = [ComponentScan.Filter(
-        type = FilterType.ASSIGNABLE_TYPE,
-        classes = [AgentStartupListener::class, AgentShutdownListener::class]
-    )]
-)
+@ComponentScan("com.tencent.devops.dispatch.docker", "com.tencent.devops.common.dispatch.sdk", "com.tencent.devops.dispatch.service")
 class Application
 
 fun main(args: Array<String>) {
