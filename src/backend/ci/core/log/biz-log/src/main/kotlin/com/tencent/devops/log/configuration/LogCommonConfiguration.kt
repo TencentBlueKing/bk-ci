@@ -40,7 +40,7 @@ class LogCommonConfiguration {
 
     @Value("\${log.storage.type:#{null}}")
     private val type: String? = null
-    
+
     @Bean
     fun storageProperties(): StorageProperties {
         if (type.isNullOrBlank()) {
