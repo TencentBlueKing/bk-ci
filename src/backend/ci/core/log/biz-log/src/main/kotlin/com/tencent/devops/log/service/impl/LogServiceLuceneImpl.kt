@@ -58,7 +58,7 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
 @Service
-class LogServiceFileImpl @Autowired constructor(
+class LogServiceLuceneImpl @Autowired constructor(
     private val luceneService: LuceneService,
     private val indexService: IndexService,
     private val logStatusService: LogStatusService,
@@ -69,7 +69,7 @@ class LogServiceFileImpl @Autowired constructor(
 ) : LogService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(LogServiceFileImpl::class.java)
+        private val logger = LoggerFactory.getLogger(LogServiceLuceneImpl::class.java)
     }
 
     private val indexCache = CacheBuilder.newBuilder()
