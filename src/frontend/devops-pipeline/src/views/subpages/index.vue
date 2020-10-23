@@ -57,6 +57,7 @@
                             <li @click="toggleCollect">{{curPipeline.hasCollect ? $t('uncollect') : $t('collect')}}</li>
                         </ul>
                         <ul>
+                            <li><a target="_blank" download :href="exportUrl">{{ $t('newlist.exportPipelineJson') }}</a></li>
                             <li @click="copyPipeline">{{ $t('newlist.copyAs') }}</li>
                             <li @click="showTemplateDialog">{{ $t('newlist.saveAsTemp') }}</li>
                             <li @click="deletePipeline">{{ $t('delete') }}</li>
@@ -91,7 +92,7 @@
     import { bus } from '@/utils/bus'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import showTooltip from '@/components/common/showTooltip'
-
+    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     export default {
         components: {
             innerHeader,
@@ -233,6 +234,9 @@
                 }, {
                     selectedValue: this.$route.params.type && this.tabMap[this.$route.params.type] ? this.tabMap[this.$route.params.type] : this.$t(this.$route.name)
                 }]
+            },
+            exportUrl () {
+                return `${AJAX_URL_PIRFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/export`
             }
         },
         watch: {
@@ -251,7 +255,8 @@
             ]),
             ...mapActions('atom', [
                 'requestPipelineExecDetailByBuildNum',
-                'togglePropertyPanel'
+                'togglePropertyPanel',
+                'exportPipelineJson'
             ]),
             handleSelected (pipelineId, cur) {
                 const { projectId, $route } = this
@@ -484,9 +489,16 @@
                     text-align: left;
                     padding: 0 15px;
                     cursor: pointer;
+                    a {
+                        color: $fontColor;
+                        display: block;
+                    }
                     &:hover {
                         color: $primaryColor;
                         background-color: #EAF3FF;
+                        a {
+                            color: $primaryColor;
+                        }
                     }
                 }
             }
