@@ -26,13 +26,14 @@
 
 package com.tencent.devops.log.configuration
 
-import com.tencent.devops.common.es.ESClient
-import com.tencent.devops.common.es.ESProperties
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
 import com.tencent.devops.log.client.impl.MultiESLogClient
 import com.tencent.devops.log.dao.IndexDao
 import com.tencent.devops.log.dao.TencentIndexDao
+import com.tencent.devops.log.es.ESAutoConfiguration
+import com.tencent.devops.log.es.ESClient
+import com.tencent.devops.log.es.ESProperties
 import org.apache.http.HttpHost
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
@@ -47,6 +48,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -57,9 +59,10 @@ import java.security.KeyStore
 import javax.net.ssl.SSLContext
 
 @Configuration
+@ConditionalOnProperty(prefix = "storage", name = ["type"], havingValue = "elasticsearch")
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @AutoConfigureBefore(WebAutoConfiguration::class)
-@AutoConfigureAfter(LogClientConfiguration::class)
+@AutoConfigureAfter(ESAutoConfiguration::class)
 @EnableConfigurationProperties(ESProperties::class)
 class LogESAutoConfiguration {
     @Value("\${elasticsearch.ip:#{null}}")

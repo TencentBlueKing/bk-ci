@@ -28,11 +28,11 @@ package com.tencent.devops.log.cron
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.impl.MultiESLogClient
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
+import com.tencent.devops.log.es.ESClient
 import com.tencent.devops.log.util.ESIndexUtils.getDocumentObject
 import com.tencent.devops.log.util.ESIndexUtils.getIndexSettings
 import com.tencent.devops.log.util.ESIndexUtils.getTypeMappings
@@ -46,6 +46,7 @@ import org.elasticsearch.client.indices.CreateIndexRequest
 import org.elasticsearch.common.unit.TimeValue
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.IOException
@@ -54,6 +55,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
+@ConditionalOnProperty(prefix = "storage", name = ["type"], havingValue = "elasticsearch")
 class ESDetectionJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val logClient: MultiESLogClient
