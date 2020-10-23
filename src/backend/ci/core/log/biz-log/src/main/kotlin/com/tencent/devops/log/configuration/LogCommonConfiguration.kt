@@ -35,7 +35,6 @@ import org.springframework.core.Ordered
 
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-@EnableConfigurationProperties(StorageProperties::class)
 class LogCommonConfiguration {
 
     @Value("\${log.storage.type:#{null}}")
