@@ -22,25 +22,16 @@ import org.apache.lucene.search.TermQuery
 import org.apache.lucene.store.Directory
 import org.apache.lucene.store.FSDirectory
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 import java.io.File
 import java.sql.Date
 import java.text.SimpleDateFormat
 import javax.ws.rs.core.StreamingOutput
 
-@Service
-class LuceneService @Autowired constructor(
+class LuceneClient constructor(
+    private val logRootDirectory: String,
     private val indexService: IndexService,
     private val redisOperation: RedisOperation
 ) {
-
-    @Value("\${log.path:#{null}}")
-    private var logRootDirectory: String? = null
-
-    @Value("\${log.queryMaxSize:#{null}}")
-    private var maxSize: Int? = 10000
 
     fun indexBatchLog(buildId: String, documents: List<Document>): Int {
         val writer = prepareWriter(buildId)
@@ -138,8 +129,6 @@ class LuceneService @Autowired constructor(
         } catch (e: Exception) {
             logger.error("[$buildId] fetch logs in streaming failed:", e)
             throw e
-        } finally {
-            searcher.indexReader.close()
         }
     }
 
@@ -181,16 +170,25 @@ class LuceneService @Autowired constructor(
         }
     }
 
-    private fun genLogLine(document: Document): LogLine {
-        return LogLine(
-            lineNo = document.getField("lineNo").stringValue().toLong(),
-            timestamp = document.getField("timestamp").stringValue().toLong(),
-            message = document.getField("message").stringValue(),
-            tag = document.getField("tag").stringValue(),
-            subTag = document.getField("subTag").stringValue(),
-            jobId = document.getField("jobId").stringValue(),
-            executeCount = document.getField("executeCount").stringValue().toInt()
-        )
+    fun listIndices(): List<String> {
+        val rootDirectory = File(logRootDirectory ?: return emptyList())
+        return try {
+            rootDirectory.list().toList()
+        } catch (e: Exception) {
+            logger.error("list index files failed: ", e)
+            emptyList()
+        }
+    }
+
+    fun deleteIndex(index: String): Boolean {
+        val indexDirectory = File(logRootDirectory + File.separator + index)
+        return try {
+            if (indexDirectory.exists()) indexDirectory.delete()
+            true
+        } catch (e: Exception) {
+            logger.error("delete index files failed: ", e)
+            false
+        }
     }
 
     private fun doQueryLogsInSize(buildId: String, query: BooleanQuery, size: Int): MutableList<LogLine> {
@@ -269,11 +267,23 @@ class LuceneService @Autowired constructor(
             .add(TermQuery(Term("buildId", buildId)), BooleanClause.Occur.MUST)
     }
 
+    private fun genLogLine(document: Document): LogLine {
+        return LogLine(
+            lineNo = document.getField("lineNo").stringValue().toLong(),
+            timestamp = document.getField("timestamp").stringValue().toLong(),
+            message = document.getField("message").stringValue(),
+            tag = document.getField("tag").stringValue(),
+            subTag = document.getField("subTag").stringValue(),
+            jobId = document.getField("jobId").stringValue(),
+            executeCount = document.getField("executeCount").stringValue().toInt()
+        )
+    }
+
     private fun getLineNoSort(): Sort {
         return Sort(SortedNumericSortField("lineNo", SortField.Type.LONG, false))
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(LuceneService::class.java)
+        private val logger = LoggerFactory.getLogger(LuceneClient::class.java)
     }
 }

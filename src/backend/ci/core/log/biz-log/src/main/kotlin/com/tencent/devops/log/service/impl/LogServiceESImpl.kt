@@ -73,8 +73,6 @@ import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder
 import org.elasticsearch.search.sort.SortOrder
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.io.IOException
 import java.sql.Date
 import java.text.SimpleDateFormat
@@ -89,8 +87,7 @@ import javax.ws.rs.core.StreamingOutput
 import kotlin.math.max
 import kotlin.math.min
 
-@Service
-class LogServiceElasticSearchImpl @Autowired constructor(
+class LogServiceESImpl constructor(
     private val client: LogClient,
     private val indexService: IndexService,
     private val logStatusService: LogStatusService,
@@ -100,10 +97,10 @@ class LogServiceElasticSearchImpl @Autowired constructor(
     private val logBeanV2: LogBeanV2,
     private val redisOperation: RedisOperation,
     private val logMQEventDispatcher: LogMQEventDispatcher
-) {
+) : LogService {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(LogServiceElasticSearchImpl::class.java)
+        private val logger = LoggerFactory.getLogger(LogServiceESImpl::class.java)
     }
 
     private val indexCache = CacheBuilder.newBuilder()
@@ -111,14 +108,14 @@ class LogServiceElasticSearchImpl @Autowired constructor(
         .expireAfterAccess(30, TimeUnit.MINUTES)
         .build<String/*BuildId*/, Boolean/*Has create the index*/>()
 
-    fun pipelineFinish(event: PipelineBuildFinishBroadCastEvent) {
+    override fun pipelineFinish(event: PipelineBuildFinishBroadCastEvent) {
         with(event) {
             logger.info("[$projectId|$pipelineId|$buildId] build finish")
             indexService.flushLineNum2DB(buildId)
         }
     }
 
-    fun addLogEvent(event: LogEvent) {
+    override fun addLogEvent(event: LogEvent) {
         startLog(event.buildId)
         val logMessage = addLineNo(event.buildId, event.logs)
         if (logMessage.isNotEmpty()) {
@@ -126,7 +123,7 @@ class LogServiceElasticSearchImpl @Autowired constructor(
         }
     }
 
-    fun addBatchLogEvent(event: LogBatchEvent) {
+    override fun addBatchLogEvent(event: LogBatchEvent) {
         val currentEpoch = System.currentTimeMillis()
         var success = false
         try {
@@ -147,7 +144,7 @@ class LogServiceElasticSearchImpl @Autowired constructor(
         }
     }
 
-    fun updateLogStatus(event: LogStatusEvent) {
+    override fun updateLogStatus(event: LogStatusEvent) {
         with(event) {
             logger.info("[$buildId|$tag|$subTag|$jobId|$executeCount|$finished] Start to update log status")
             logStatusService.finish(
@@ -161,7 +158,7 @@ class LogServiceElasticSearchImpl @Autowired constructor(
         }
     }
 
-    fun queryInitLogs(
+    override fun queryInitLogs(
         buildId: String,
         isAnalysis: Boolean,
         keywordsStr: String?,
@@ -224,7 +221,7 @@ class LogServiceElasticSearchImpl @Autowired constructor(
         }
     }
 
-    fun queryMoreLogsBetweenLines(
+    override fun queryMoreLogsBetweenLines(
         buildId: String,
         num: Int,
         fromStart: Boolean,
@@ -298,7 +295,7 @@ class LogServiceElasticSearchImpl @Autowired constructor(
         }
     }
 
-    fun queryLogsAfterLine(
+    override fun queryLogsAfterLine(
         buildId: String,
         start: Long,
         tag: String?,
@@ -326,7 +323,7 @@ class LogServiceElasticSearchImpl @Autowired constructor(
         }
     }
 
-    fun downloadLogs(
+    override fun downloadLogs(
         pipelineId: String,
         buildId: String,
         tag: String?,
@@ -393,7 +390,7 @@ class LogServiceElasticSearchImpl @Autowired constructor(
             .build()
     }
 
-    fun getEndLogs(
+    override fun getEndLogs(
         pipelineId: String,
         buildId: String,
         tag: String?,
@@ -425,7 +422,7 @@ class LogServiceElasticSearchImpl @Autowired constructor(
         return queryLogs
     }
 
-    fun queryInitLogsPage(
+    override fun queryInitLogsPage(
         buildId: String,
         isAnalysis: Boolean,
         keywordsStr: String?,
@@ -520,7 +517,7 @@ class LogServiceElasticSearchImpl @Autowired constructor(
         }
     }
 
-    fun reopenIndex(buildId: String): Boolean {
+    override fun reopenIndex(buildId: String): Boolean {
         logger.info("Reopen Index - $buildId")
         val index = indexService.getIndexName(buildId)
         return openIndex(buildId, index)
