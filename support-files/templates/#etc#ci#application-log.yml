@@ -9,19 +9,29 @@ spring:
 server:
   port: __BK_CI_LOG_API_PORT__
 
-elasticsearch:
-  ip: __BKCI_ES_IP__
-  port: __BKCI_ES_PORT__
-  cluster: __BKCI_ES_CLUSTER__
-  name: DEVOPS
-#  ES集群如果不要求账号密码认证，则可以去掉以下2个ES的访问账号密码配置项或留空
-  username: __BK_CI_ES_USER__
-  password: __BK_CI_ES_PASSWORD__
-#  ES集群如果要求HTTPS协议请求，则需要需要打开以下5个配置项， 设置keystore文件和truststore文件以及密码
-#  https: true
-#  keystore:
-#    filePath:
-#    password:
-#  truststore:
-#    filePath:
-#    password:
+log:
+  storage:
+    type: __BK_CI_LOG_STORAGE_TYPE__                # 日志存储方式 lucene/elasticsearch
+    closeInDay: 90                                  # 索引自动关闭时间，留空则为永不关闭
+    deleteInDay: 100                                 # 索引自动删除时间，留空则为永不删除
+  # 通过本地文件系统进行存储的必要配置
+  lucene:
+    dataDirectory: __BK_CI_LUCENE_DATA_DIR__        # 建立lucene索引的根目录
+    indexMaxSize: __BK_CI_LUCENE_INDEX_MAX_SIZE__   # 单个构建的最大日志行数，建议设在100万内
+#  # 通过Elasticsearch服务进行存储的必要配置
+#  elasticsearch:
+#    ip: __BK_CI_ES_IP__
+#    port: __BK_CI_ES_PORT__
+#    cluster: __BK_CI_ES_CLUSTER__
+#    name: DEVOPS
+#  # ES集群如果不要求账号密码认证，则可以去掉以下2个ES的访问账号密码配置项或留空
+#    username: __BK_CI_ES_USER__
+#    password: __BK_CI_ES_PASSWORD__
+#  # ES集群如果要求HTTPS协议请求，则需要需要打开以下5个配置项， 设置keystore文件和truststore文件以及密码
+#    https: true
+#    keystore:
+#      filePath:
+#      password:
+#    truststore:
+#      filePath:
+#      password:
