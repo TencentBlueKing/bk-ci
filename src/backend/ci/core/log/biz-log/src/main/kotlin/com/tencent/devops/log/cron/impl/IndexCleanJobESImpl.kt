@@ -52,10 +52,10 @@ class IndexCleanJobESImpl @Autowired constructor(
     private val redisOperation: RedisOperation
 ) : IndexCleanJob {
 
-    @Value("\${storage.closeInDay:#{null}}")
-    private var closeIndexInDay = 60
-    @Value("\${storage.deleteInDay:#{null}}")
-    private var deleteIndexInDay = 90
+    @Value("\${log.storage.closeInDay:#{null}}")
+    private var closeIndexInDay = Int.MAX_VALUE
+    @Value("\${log.storage.deleteInDay:#{null}}")
+    private var deleteIndexInDay = Int.MAX_VALUE
 
     /**
      * 2 am every day

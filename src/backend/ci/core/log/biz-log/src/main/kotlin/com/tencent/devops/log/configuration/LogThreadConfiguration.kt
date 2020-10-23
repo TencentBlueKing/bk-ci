@@ -24,13 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.es
+package com.tencent.devops.log.configuration
 
-import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.scheduling.annotation.EnableAsync
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 
-@ConfigurationProperties(prefix = "log.elasticsearch")
-data class ESProperties(
-    val ip: String? = null,
-    val port: Int? = 0,
-    val cluster: String? = null
-)
+@Configuration
+@EnableAsync
+class LogThreadConfiguration {
+
+    @Bean
+    fun threadPoolTaskExecutor() = ThreadPoolTaskExecutor()
+
+    @Bean
+    fun logMessagesThreadPoolTaskExecutor() = ThreadPoolTaskExecutor().apply {
+        corePoolSize = 10
+        maxPoolSize = 80
+        setQueueCapacity(1000)
+    }
+}

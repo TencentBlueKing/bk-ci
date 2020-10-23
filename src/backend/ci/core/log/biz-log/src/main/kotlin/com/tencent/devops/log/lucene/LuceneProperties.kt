@@ -28,8 +28,8 @@ package com.tencent.devops.log.lucene
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 
-@ConfigurationProperties(prefix = "lucene")
+@ConfigurationProperties(prefix = "log.lucene")
 data class LuceneProperties(
-    val path: String? = null,
-    val indexMaxSize: Int? = 10000
+    val dataDirectory: String? = null,
+    val indexMaxSize: Int? = 2000000
 )

@@ -26,26 +26,11 @@
 
 package com.tencent.devops.log.configuration
 
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.scheduling.annotation.EnableAsync
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+import org.springframework.boot.context.properties.ConfigurationProperties
 
-/**
- *
- * Powered By Tencent
- */
-@Configuration
-@EnableAsync
-class ThreadConfig {
-
-    @Bean
-    fun threadPoolTaskExecutor() = ThreadPoolTaskExecutor()
-
-    @Bean
-    fun logMessagesThreadPoolTaskExecutor() = ThreadPoolTaskExecutor().apply {
-        corePoolSize = 10
-        maxPoolSize = 80
-        setQueueCapacity(1000)
-    }
-}
+@ConfigurationProperties(prefix = "log.storage")
+data class StorageProperties(
+    val type: String,
+    val closeInDay: Int = Int.MAX_VALUE,
+    val deleteInDay: Int = Int.MAX_VALUE
+)

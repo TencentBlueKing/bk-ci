@@ -53,18 +53,18 @@ import org.springframework.core.Ordered
 @EnableConfigurationProperties(LuceneProperties::class)
 class LuceneAutoConfiguration {
 
-    @Value("\${lucene.path}")
-    private val path: String? = null
-    @Value("\${lucene.indexMaxSize}")
-    private val indexMaxSize: Int? = 10000
+    @Value("\${log.lucene.dataDirectory}")
+    private val dataDirectory: String? = null
+    @Value("\${log.lucene.indexMaxSize}")
+    private val indexMaxSize: Int? = 2000000
 
     @Bean
     @Primary
     fun luceneClient(indexService: IndexService, redisOperation: RedisOperation): LuceneClient {
-        if (path.isNullOrBlank()) {
-            throw IllegalArgumentException("Lucene storage path not config: lucene.path")
+        if (dataDirectory.isNullOrBlank()) {
+            throw IllegalArgumentException("Lucene storage path not config: log.lucene.dataDirectory")
         }
-        return LuceneClient(path!!, indexService, redisOperation)
+        return LuceneClient(dataDirectory!!, indexService, redisOperation)
     }
 
     @Bean
@@ -78,7 +78,7 @@ class LuceneAutoConfiguration {
         @Autowired logMQEventDispatcher: LogMQEventDispatcher
     ): LogService {
         if (indexMaxSize == null || indexMaxSize!! <= 0) {
-            throw IllegalArgumentException("Lucene index max size of build invaild: lucene.indexMaxSize")
+            throw IllegalArgumentException("Lucene index max size of build invaild: log.lucene.indexMaxSize")
         }
         return LogServiceLuceneImpl(
             indexMaxSize = indexMaxSize!!,

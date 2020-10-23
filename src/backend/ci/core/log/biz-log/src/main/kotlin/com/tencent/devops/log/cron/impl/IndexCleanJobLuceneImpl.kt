@@ -44,8 +44,8 @@ class IndexCleanJobLuceneImpl @Autowired constructor(
     private val luceneClient: LuceneClient
 ) : IndexCleanJob {
 
-    @Value("\${storage.deleteInDay:#{null}}")
-    private var deleteIndexInDay = 90 // default be deleted in 90 days
+    @Value("\${log.storage.deleteInDay:#{null}}")
+    private var deleteIndexInDay = Int.MAX_VALUE
 
     /**
      * 2 am every day
