@@ -28,6 +28,8 @@ package com.tencent.devops.worker.common.api.store
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.process.pojo.BuildVariables
@@ -49,6 +51,7 @@ import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import okhttp3.MediaType
+import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import java.io.File
 
@@ -146,6 +149,32 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         } catch (e: Exception) {
             LoggerService.addNormalLine(e.message ?: "")
             throw RuntimeException("AtomArchive fail: $responseContent")
+        }
+    }
+
+    override fun uploadAtomFile(file: File, fileType: FileTypeEnum, destPath: String) {
+        // 过滤掉用../尝试遍历上层目录的操作
+        val purePath = purePath(destPath).toString()
+        val fileName = file.name
+        val path = if (purePath.endsWith(fileName)) purePath else "$purePath/$fileName"
+        LoggerService.addNormalLine("upload file >>> $path")
+
+        val url =
+            "/ms/artifactory/api/build/artifactories/file/archive?fileType=$fileType&customFilePath=$purePath"
+        val fileBody = RequestBody.create(MultipartFormData, file)
+        val requestBody = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("file", fileName, fileBody)
+            .build()
+
+        val request = buildPost(url, requestBody)
+        val response = request(request, "upload file:$fileName fail")
+        try {
+            val obj = JsonParser().parse(response).asJsonObject
+            if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("upload file:$fileName fail")
+        } catch (ignored: Exception) {
+            LoggerService.addNormalLine(ignored.message ?: "")
+            throw RemoteServiceException("archive fail: $response")
         }
     }
 

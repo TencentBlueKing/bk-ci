@@ -110,7 +110,10 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
     }
 
     private fun uploadJfrogCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
-        val jfrogPath = destPath.removeSuffix("/") + "/" + file.name
+        var jfrogPath = destPath
+        if (!destPath.endsWith(file.name)) {
+            jfrogPath = destPath.removeSuffix("/") + "/" + file.name
+        }
 
         LoggerService.addNormalLine("upload file >>> $jfrogPath")
 

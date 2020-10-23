@@ -26,6 +26,7 @@
 
 package com.tencent.devops.repository.resources
 
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
@@ -40,6 +41,7 @@ import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.service.RepoFileService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.RepositoryUserService
+import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -49,8 +51,26 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
     private val repositoryUserService: RepositoryUserService
 ) : ServiceGitRepositoryResource {
 
-    override fun createGitCodeRepository(userId: String, projectCode: String?, repositoryName: String, sampleProjectPath: String?, namespaceId: Int?, visibilityLevel: VisibilityLevelEnum?, tokenType: TokenTypeEnum): Result<RepositoryInfo?> {
-        return repositoryService.createGitCodeRepository(userId, projectCode, repositoryName, sampleProjectPath, namespaceId, visibilityLevel, tokenType)
+    override fun createGitCodeRepository(
+        userId: String,
+        projectCode: String?,
+        repositoryName: String,
+        sampleProjectPath: String?,
+        namespaceId: Int?,
+        visibilityLevel: VisibilityLevelEnum?,
+        tokenType: TokenTypeEnum,
+        frontendType: FrontendTypeEnum?
+    ): Result<RepositoryInfo?> {
+        return repositoryService.createGitCodeRepository(
+            userId = userId,
+            projectCode = projectCode,
+            repositoryName = repositoryName,
+            sampleProjectPath = sampleProjectPath,
+            namespaceId = namespaceId,
+            visibilityLevel = visibilityLevel,
+            tokenType = tokenType,
+            frontendType = frontendType
+        )
     }
 
     override fun updateGitCodeRepositoryByProjectName(userId: String, projectName: String, updateGitProjectInfo: UpdateGitProjectInfo, tokenType: TokenTypeEnum): Result<Boolean> {
@@ -97,6 +117,22 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
         }
         repositoryService.userDelete(userId, projectId, repositoryHashId)
         return Result(true)
+    }
+
+    override fun getGitRepositoryTreeInfo(
+        userId: String,
+        repoId: String,
+        refName: String?,
+        path: String?,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitRepositoryDirItem>?> {
+        return repositoryService.getGitRepositoryTreeInfo(
+            userId = userId,
+            repositoryConfig = RepositoryConfigUtils.buildConfig(repoId, null),
+            refName = refName,
+            path = path,
+            tokenType = tokenType
+        )
     }
 
     override fun getAuthUrl(authParamJsonStr: String): Result<String> {

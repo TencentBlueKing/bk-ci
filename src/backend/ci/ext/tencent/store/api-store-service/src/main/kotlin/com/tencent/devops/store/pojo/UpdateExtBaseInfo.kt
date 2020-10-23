@@ -42,6 +42,8 @@ data class UpdateExtBaseInfo(
     val summary: String? = null,
     @ApiModelProperty("LOGO url")
     val logoUrl: String?,
+    @ApiModelProperty("icon图标base64字符串", required = false)
+    val iconData: String?,
     @ApiModelProperty("扩展服务描述")
     val description: String? = null,
     @ApiModelProperty("描述录入类型")

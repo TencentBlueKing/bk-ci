@@ -26,10 +26,13 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserScmWebhookResource
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.pojo.webhook.WebhookEventType
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -40,5 +43,28 @@ class UserScmWebhookResourceImpl @Autowired constructor(
     override fun updateProjectNameAndTaskId(): Result<Boolean> {
         pipelineWebhookService.updateProjectNameAndTaskId()
         return Result(true)
+    }
+
+    override fun getEventType(scmType: String): Result<List<WebhookEventType>> {
+        val eventTypeList = when (scmType) {
+            ScmType.CODE_GIT.name, ScmType.CODE_TGIT.name ->
+                listOf(
+                    WebhookEventType(eventType = CodeEventType.PUSH.name, eventTypeName = "Commit Push Hook"),
+                    WebhookEventType(eventType = CodeEventType.TAG_PUSH.name, eventTypeName = "Tag Push Hook"),
+                    WebhookEventType(eventType = CodeEventType.MERGE_REQUEST.name, eventTypeName = "Merge Request Hook"),
+                    WebhookEventType(eventType = CodeEventType.MERGE_REQUEST_ACCEPT.name, eventTypeName = "Merge Request Accept Hook")
+                )
+            ScmType.GITHUB.name ->
+                listOf(
+                    WebhookEventType(eventType = CodeEventType.PUSH.name, eventTypeName = "Commit Push Hook"),
+                    WebhookEventType(eventType = CodeEventType.CREATE.name, eventTypeName = "Create Branch Or Tag"),
+                    WebhookEventType(eventType = CodeEventType.PULL_REQUEST.name, eventTypeName = "Pull Request Hook")
+                )
+            else ->
+                listOf(
+                    WebhookEventType(eventType = CodeEventType.PUSH.name, eventTypeName = "Commit Push Hook")
+                )
+        }
+        return Result(eventTypeList)
     }
 }
