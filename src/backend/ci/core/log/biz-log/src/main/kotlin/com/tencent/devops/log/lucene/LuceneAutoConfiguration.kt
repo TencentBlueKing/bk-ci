@@ -56,7 +56,7 @@ class LuceneAutoConfiguration {
     @Value("\${log.lucene.dataDirectory}")
     private val dataDirectory: String? = null
     @Value("\${log.lucene.indexMaxSize}")
-    private val indexMaxSize: Int? = 2000000
+    private val indexMaxSize: Int? = Int.MAX_VALUE
 
     @Bean
     @Primary

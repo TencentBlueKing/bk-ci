@@ -31,5 +31,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = "log.lucene")
 data class LuceneProperties(
     val dataDirectory: String? = null,
-    val indexMaxSize: Int? = 2000000
+    val indexMaxSize: Int? = Int.MAX_VALUE
 )
