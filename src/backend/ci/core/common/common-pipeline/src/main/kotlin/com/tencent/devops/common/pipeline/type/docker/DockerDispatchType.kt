@@ -44,7 +44,7 @@ data class DockerDispatchType(
     // 商店镜像名称
     override var imageName: String? = ""
 ) : StoreDispatchType(if (dockerBuildVersion.isNullOrBlank())
-    imageCode else dockerBuildVersion, DispatchRouteKeySuffix.DOCKER_VM, imageType, credentialId, credentialProject, imageCode, imageVersion, imageName) {
+    imageCode else dockerBuildVersion, null, imageType, credentialId, credentialProject, imageCode, imageVersion, imageName) {
     override fun cleanDataBeforeSave() {
         this.dockerBuildVersion = this.dockerBuildVersion?.trim()
         this.credentialId = this.credentialId?.trim()
