@@ -241,7 +241,7 @@ class LuceneClient constructor(
 
     private fun prepareDirectory(buildId: String, index: String): Directory {
         val subIndex = try {
-            buildId.substring(0, 3)
+            buildId.substring(0, 4)
         } catch (e: Exception) {
             ""
         }
