@@ -30,7 +30,7 @@ import com.tencent.devops.common.log.utils.LogMQEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
 import com.tencent.devops.log.client.LogClient
-import com.tencent.devops.log.client.impl.LogESClientImpl
+import com.tencent.devops.log.client.impl.LogClientImpl
 import com.tencent.devops.log.jmx.v2.CreateIndexBeanV2
 import com.tencent.devops.log.jmx.v2.LogBeanV2
 import com.tencent.devops.log.service.IndexService
@@ -200,8 +200,8 @@ class ESAutoConfiguration : DisposableBean {
     }
 
     @Bean
-    fun logESClient(@Autowired transportClient: ESClient): LogClient =
-        LogESClientImpl(transportClient)
+    fun logClient(@Autowired transportClient: ESClient): LogClient =
+        LogClientImpl(transportClient)
 
     override fun destroy() {
         client?.close()
