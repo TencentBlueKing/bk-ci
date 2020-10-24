@@ -49,12 +49,12 @@ class BuildBuildResourceImpl @Autowired constructor(
 ) : BuildBuildResource {
 
     override fun setStarted(buildId: String, vmSeqId: String, vmName: String): Result<BuildVariables> {
-        Companion.checkParam(buildId, vmSeqId, vmName)
+        checkParam(buildId, vmSeqId, vmName)
         return Result(vmBuildService.buildVMStarted(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
     override fun claimTask(buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
-        Companion.checkParam(buildId, vmSeqId, vmName)
+        checkParam(buildId, vmSeqId, vmName)
         return Result(vmBuildService.buildClaimTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
@@ -64,13 +64,13 @@ class BuildBuildResourceImpl @Autowired constructor(
         vmName: String,
         result: BuildTaskResult
     ): Result<Boolean> {
-        Companion.checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
+        checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         vmBuildService.buildCompleteTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName, result = result)
         return Result(true)
     }
 
     override fun endTask(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
-        Companion.checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
+        checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(vmBuildService.buildEndTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
@@ -92,7 +92,7 @@ class BuildBuildResourceImpl @Autowired constructor(
     }
 
     override fun heartbeat(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
-        Companion.checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
+        checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(data = vmBuildService.heartbeat(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
