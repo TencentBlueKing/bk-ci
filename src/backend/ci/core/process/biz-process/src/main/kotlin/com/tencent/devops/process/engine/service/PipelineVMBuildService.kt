@@ -465,7 +465,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
         buildVariable.putAll(extMap)
 
-        PipelineVarUtil.fillOldVar(buildVariable.map { it.key to Pair(it.value, BuildFormPropertyType.STRING) }.toMap())
+        PipelineVarUtil.fillOldVar(buildVariable)
 
         buildVariable.putAll(allVariable)
 
