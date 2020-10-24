@@ -49,12 +49,12 @@ class BuildBuildResourceImpl @Autowired constructor(
 ) : BuildBuildResource {
 
     override fun setStarted(buildId: String, vmSeqId: String, vmName: String): Result<BuildVariables> {
-        checkParam(buildId, vmSeqId, vmName)
+        Companion.checkParam(buildId, vmSeqId, vmName)
         return Result(vmBuildService.buildVMStarted(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
     override fun claimTask(buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
-        checkParam(buildId, vmSeqId, vmName)
+        Companion.checkParam(buildId, vmSeqId, vmName)
         return Result(vmBuildService.buildClaimTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
@@ -64,17 +64,22 @@ class BuildBuildResourceImpl @Autowired constructor(
         vmName: String,
         result: BuildTaskResult
     ): Result<Boolean> {
-        checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
+        Companion.checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         vmBuildService.buildCompleteTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName, result = result)
         return Result(true)
     }
 
     override fun endTask(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
-        checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
+        Companion.checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(vmBuildService.buildEndTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
-    override fun timeoutTheBuild(projectId: String, pipelineId: String, buildId: String, vmSeqId: String): Result<Boolean> {
+    override fun timeoutTheBuild(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String
+    ): Result<Boolean> {
         return Result(
             data = vmBuildService.setStartUpVMStatus(
                 projectId = projectId,
@@ -87,7 +92,7 @@ class BuildBuildResourceImpl @Autowired constructor(
     }
 
     override fun heartbeat(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
-        checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
+        Companion.checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(data = vmBuildService.heartbeat(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
@@ -98,7 +103,12 @@ class BuildBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         return Result(
-            data = buildService.getSingleHistoryBuild(projectId = projectId, pipelineId = pipelineId, buildNum = buildNum.toInt(), channelCode = channelCode ?: ChannelCode.BS)
+            data = buildService.getSingleHistoryBuild(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildNum = buildNum.toInt(),
+                channelCode = channelCode ?: ChannelCode.BS
+            )
         )
     }
 
@@ -107,7 +117,13 @@ class BuildBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
-        return Result(data = buildService.getLatestSuccessBuild(projectId = projectId, pipelineId = pipelineId, channelCode = channelCode ?: ChannelCode.BS))
+        return Result(
+            data = buildService.getLatestSuccessBuild(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode ?: ChannelCode.BS
+            )
+        )
     }
 
     override fun getBuildDetail(
@@ -120,8 +136,12 @@ class BuildBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
         return Result(
-            buildService.getBuildDetail(
-                projectId = projectId, pipelineId = pipelineId, buildId = buildId, channelCode = channelCode, checkPermission = ChannelCode.isNeedAuth(channelCode)
+            data = buildService.getBuildDetail(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                channelCode = channelCode,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )
     }
@@ -130,15 +150,17 @@ class BuildBuildResourceImpl @Autowired constructor(
         return subPipelineStartUpService.getSubVar(buildId = buildId, taskId = taskId)
     }
 
-    private fun checkParam(buildId: String, vmSeqId: String, vmName: String) {
-        if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
-        }
-        if (vmSeqId.isBlank()) {
-            throw ParamBlankException("Invalid vmSeqId")
-        }
-        if (vmName.isBlank()) {
-            throw ParamBlankException("Invalid vmName")
+    companion object {
+        private fun checkParam(buildId: String, vmSeqId: String, vmName: String) {
+            if (buildId.isBlank()) {
+                throw ParamBlankException("Invalid buildId")
+            }
+            if (vmSeqId.isBlank()) {
+                throw ParamBlankException("Invalid vmSeqId")
+            }
+            if (vmName.isBlank()) {
+                throw ParamBlankException("Invalid vmName")
+            }
         }
     }
 }
