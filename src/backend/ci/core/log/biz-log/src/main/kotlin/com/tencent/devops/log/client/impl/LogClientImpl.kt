@@ -30,7 +30,7 @@ import com.tencent.devops.log.es.ESClient
 import com.tencent.devops.log.client.LogClient
 import java.lang.RuntimeException
 
-class LogESClientImpl constructor(private val client: ESClient) : LogClient {
+class LogClientImpl constructor(private val client: ESClient) : LogClient {
 
     override fun getActiveClients(): List<ESClient> {
         return listOf(client)
