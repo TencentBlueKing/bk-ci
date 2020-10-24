@@ -162,15 +162,16 @@ object CiYamlUtils {
         val services = originYaml.services
         val stages = originYaml.stages ?: listOf(
             Stage(
-                listOf(
+                displayName = "",
+                stage = listOf(
                     Job(
                         JobDetail(
-                            "job1",
-                            VM_JOB,
-                            Pool(null, null, null, null),
-                            originYaml.steps!!,
-                            null,
-                            null
+                            displayName = "job1",
+                            type = VM_JOB,
+                            pool = Pool(null, null, null, null),
+                            steps = originYaml.steps!!,
+                            condition = null,
+                            resourceType = null
                         )
                     )
                 )
@@ -200,15 +201,16 @@ object CiYamlUtils {
 
         val stages = originYaml.stages ?: listOf(
             Stage(
-                listOf(
+                displayName = "",
+                stage = listOf(
                     Job(
                         JobDetail(
-                            "job1",
-                            "vmBuild",
-                            Pool(null, null, null, null),
-                            originYaml.steps!!,
-                            null,
-                            null
+                            displayName = "job1",
+                            type = "vmBuild",
+                            pool = Pool(null, null, null, null),
+                            steps = originYaml.steps!!,
+                            condition = null,
+                            resourceType = null
                         )
                     )
                 )
