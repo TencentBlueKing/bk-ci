@@ -56,7 +56,12 @@ class UserPreBuildResourceImpl @Autowired constructor(
         return Result(preBuildService.getOrCreateUserProject(userId, accessToken))
     }
 
-    override fun getOrCreateAgent(userId: String, os: OS, ip: String, hostName: String): Result<ThirdPartyAgentStaticInfo> {
+    override fun getOrCreateAgent(
+        userId: String,
+        os: OS,
+        ip: String,
+        hostName: String
+    ): Result<ThirdPartyAgentStaticInfo> {
         return Result(preBuildService.getOrCreatePreAgent(userId, os, ip, hostName))
     }
 
@@ -90,7 +95,12 @@ class UserPreBuildResourceImpl @Autowired constructor(
         return Result(preBuildService.startBuild(userId, preProjectId, startUpReq, yaml, agentInfo))
     }
 
-    override fun manualShutdown(userId: String, accessToken: String, preProjectId: String, buildId: String): Result<Boolean> {
+    override fun manualShutdown(
+        userId: String,
+        accessToken: String,
+        preProjectId: String,
+        buildId: String
+    ): Result<Boolean> {
         return Result(preBuildService.shutDown(userId, accessToken, preProjectId, buildId))
     }
 
@@ -98,19 +108,35 @@ class UserPreBuildResourceImpl @Autowired constructor(
         return preBuildService.getBuildDetail(userId, preProjectId, buildId)
     }
 
-    override fun getBuildLogs(userId: String, preProjectId: String, buildId: String): Result<QueryLogs> {
-        return Result(preBuildService.getInitLogs(userId, preProjectId, buildId))
+    override fun getBuildLogs(
+        userId: String,
+        preProjectId: String,
+        buildId: String,
+        debugLog: Boolean?
+    ): Result<QueryLogs> {
+        return Result(preBuildService.getInitLogs(userId, preProjectId, buildId, debugLog))
     }
 
-    override fun getAfterLogs(userId: String, preProjectId: String, buildId: String, start: Long): Result<QueryLogs> {
-        return Result(preBuildService.getAfterLogs(userId, preProjectId, buildId, start))
+    override fun getAfterLogs(
+        userId: String,
+        preProjectId: String,
+        buildId: String,
+        start: Long,
+        debugLog: Boolean?
+    ): Result<QueryLogs> {
+        return Result(preBuildService.getAfterLogs(userId, preProjectId, buildId, start, debugLog))
     }
 
     override fun getReport(userId: String, buildId: String): Result<CodeccCallback?> {
         return preBuildService.getCodeccReport(userId, buildId)
     }
 
-    override fun getHistory(userId: String, preProjectId: String, page: Int?, pageSize: Int?): Result<List<HistoryResponse>> {
+    override fun getHistory(
+        userId: String,
+        preProjectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<List<HistoryResponse>> {
         return Result(preBuildService.getHistory(userId, preProjectId, page, pageSize))
     }
 

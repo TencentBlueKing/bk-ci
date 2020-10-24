@@ -36,6 +36,7 @@ dependencies {
     compile project(":core:common:common-environment-thirdpartyagent")
     compile project(":core:common:common-auth:common-auth-api")
     compile project(":core:common:common-db")
+    compile project(":core:common:common-websocket")
     compile("org.apache.commons:commons-compress:1.15")
     compile("org.json:json:20140107")
     compile("org.influxdb:influxdb-java:2.10")

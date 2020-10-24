@@ -86,6 +86,12 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentService.listAgents(userId, projectId, os))
     }
 
+    override fun listAgents(userId: String, projectId: String): Result<List<ThirdPartyAgentInfo>> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        return Result(thirdPartyAgentService.listAgents(userId, projectId, null))
+    }
+
     override fun getAgentStatus(
         userId: String,
         projectId: String,

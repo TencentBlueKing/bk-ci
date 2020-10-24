@@ -28,6 +28,7 @@ package com.tencent.devops.common.pipeline.enums
 
 enum class BuildFormPropertyType(val value: String) {
     STRING("string"),
+    TEXTAREA("textarea"),
     ENUM("enum"),
     DATE("date"),
     LONG("long"),

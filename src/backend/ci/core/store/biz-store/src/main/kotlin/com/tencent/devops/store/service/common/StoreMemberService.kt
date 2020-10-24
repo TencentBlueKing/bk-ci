@@ -36,7 +36,12 @@ interface StoreMemberService {
     /**
      * store组件成员列表
      */
-    fun list(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<List<StoreMemberItem?>>
+    fun list(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        checkPermissionFlag: Boolean = true
+    ): Result<List<StoreMemberItem?>>
 
     /**
      * 查看store组件成员信息
@@ -60,7 +65,8 @@ interface StoreMemberService {
         storeType: StoreTypeEnum,
         collaborationFlag: Boolean? = false,
         sendNotify: Boolean = true,
-        checkPermissionFlag: Boolean = true
+        checkPermissionFlag: Boolean = true,
+        testProjectCode: String? = null
     ): Result<Boolean>
 
     /**

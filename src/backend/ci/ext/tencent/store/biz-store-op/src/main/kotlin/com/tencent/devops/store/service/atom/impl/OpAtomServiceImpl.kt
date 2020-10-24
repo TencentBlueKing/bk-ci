@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.model.store.tables.records.TClassifyRecord
+import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
@@ -196,7 +197,10 @@ class OpAtomServiceImpl @Autowired constructor(
             props = atomDao.convertString(atomRecord.props),
             data = atomDao.convertString(atomRecord.data),
             recommendFlag = atomFeature?.recommendFlag,
-            yamlFlag = atomFeature?.yamlFlag
+            yamlFlag = atomFeature?.yamlFlag,
+            publisher = atomRecord.publisher,
+            visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(atomRecord.visibilityLevel as Int),
+            privateReason = atomRecord.privateReason
         )
     }
 

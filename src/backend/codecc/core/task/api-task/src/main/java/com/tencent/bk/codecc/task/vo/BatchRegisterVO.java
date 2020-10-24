@@ -27,6 +27,7 @@
 package com.tencent.bk.codecc.task.vo;
 
 import com.tencent.devops.common.api.CommonVO;
+import com.tencent.devops.common.api.checkerset.CheckerSetVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -122,5 +123,4 @@ public class BatchRegisterVO extends CommonVO
      */
     @ApiModelProperty(value = "工具清单", required = true)
     private List<ToolConfigInfoVO> tools;
-
 }

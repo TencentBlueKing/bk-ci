@@ -6,6 +6,8 @@ const DefectDupcDetail = () => import(/* webpackChunkName: 'dupc-detail' */'../v
 const DefectDupcCharts = () => import(/* webpackChunkName: 'defect-charts' */'../views/defect/dupc-charts')
 const DefectCcnList = () => import(/* webpackChunkName: 'defect-list' */'../views/defect/ccn-list')
 const DefectCcnCharts = () => import(/* webpackChunkName: 'defect-charts' */'../views/defect/ccn-charts')
+const DefectClocList = () => import(/* webpackChunkName: 'defect-list' */'../views/defect/cloc-list')
+const DefectClocLang = () => import(/* webpackChunkName: 'defect-list' */'../views/defect/cloc-lang')
 // const DefectLintList = () => import(/* webpackChunkName: 'defect-list' */'../views/defect/lint-list')
 const DefectLintCharts = () => import(/* webpackChunkName: 'defect-charts' */'../views/defect/lint-charts')
 
@@ -64,6 +66,22 @@ const routes = [
         path: '/codecc/:projectId/task/:taskId/defect/ccn/list',
         name: 'defect-ccn-list',
         component: DefectCcnList,
+        meta: {
+            breadcrumb: 'inside'
+        }
+    },
+    {
+        path: '/codecc/:projectId/task/:taskId/defect/cloc/list/:path*',
+        name: 'defect-cloc-list',
+        component: DefectClocList,
+        meta: {
+            breadcrumb: 'inside'
+        }
+    },
+    {
+        path: '/codecc/:projectId/task/:taskId/defect/cloc/language',
+        name: 'defect-cloc-lang',
+        component: DefectClocLang,
         meta: {
             breadcrumb: 'inside'
         }

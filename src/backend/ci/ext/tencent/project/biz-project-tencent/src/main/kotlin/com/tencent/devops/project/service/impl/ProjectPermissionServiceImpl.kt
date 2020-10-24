@@ -41,6 +41,7 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import okhttp3.MediaType
 import okhttp3.Request
@@ -63,10 +64,16 @@ class ProjectPermissionServiceImpl @Autowired constructor(
 
     private val authUrl = authProperties.url
 
-    override fun createResources(userId: String, accessToken: String?, projectCreateInfo: ResourceRegisterInfo): String {
+    override fun createResources(userId: String, accessToken: String?, projectCreateInfo: ResourceRegisterInfo, userDeptDetail: UserDeptDetail?): String {
         // 创建AUTH项目
         val authUrl = "$authUrl/projects?access_token=$accessToken"
         val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.resourceCode)
+        if (userDeptDetail != null) {
+            param["bg_id"] = userDeptDetail.bgId
+            param["dept_id"] = userDeptDetail.deptId
+            param["center_id"] = userDeptDetail.centerId
+            logger.info("createProjectResources add org info $param")
+        }
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val json = objectMapper.writeValueAsString(param)
         val requestBody = RequestBody.create(mediaType, json)

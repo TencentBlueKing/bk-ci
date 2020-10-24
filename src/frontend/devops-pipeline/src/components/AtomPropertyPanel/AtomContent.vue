@@ -5,7 +5,7 @@
                 <div :class="{ 'form-field': true, 'bk-form-inline-item': true, 'is-danger': errors.has('@type') }">
                     <label :title="$t('atom')" class="bk-label">
                         {{ $t('atom') }}：
-                        <a v-if="atom.docsLink" :href="atom.docsLink" class="atom-link" target="_blank">
+                        <a v-if="atom && atom.docsLink" :href="atom.docsLink" class="atom-link" target="_blank">
                             {{ $t('editPage.atomHelpDoc') }}
                             <logo name="tiaozhuan" size="14" style="fill:#3c96ff;position:relative;top:2px;" />
                         </a>
@@ -56,11 +56,12 @@
                 </div>
                 <qualitygate-tips v-if="showRuleList" :relative-rule-list="renderRelativeRuleList"></qualitygate-tips>
 
-                <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable }">
+                <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable && !isRemoteAtom }">
                     <!-- <div class='desc-tips' v-if="!isNewAtomTemplate(atom.htmlTemplateVersion) && atom.description"> <span>插件描述：</span> {{ atom.description }}</div> -->
                     <div
                         v-if="atom.atomModal"
                         :is="AtomComponent"
+                        :atom="atom.atomModal"
                         :element-index="elementIndex"
                         :container-index="containerIndex"
                         :stage-index="stageIndex"
@@ -303,11 +304,17 @@
             hasVersionList () {
                 return Array.isArray(this.atomVersionList) && this.atomVersionList.length > 0
             },
+            htmlTemplateVersion () {
+                return (this.atom.atomModal && this.atom.atomModal.htmlTemplateVersion) || this.atom.htmlTemplateVersion
+            },
+            isRemoteAtom () {
+                return this.htmlTemplateVersion === '1.2' || this.atomCode === 'CodeccCheckAtomDebug' || this.atomCode === 'CodeccCheckAtom'
+            },
             AtomComponent () {
-                if (this.atomCode === 'ddtestatomdev' || this.atomCode === 'CodeccCheckAtom') {
+                if (this.isRemoteAtom) {
                     return RemoteAtom
                 }
-                if (this.isNewAtomTemplate(this.atom.htmlTemplateVersion)) {
+                if (this.isNewAtomTemplate(this.htmlTemplateVersion)) {
                     return NormalAtomV2
                 }
                 const atomMap = {

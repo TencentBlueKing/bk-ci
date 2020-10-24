@@ -28,6 +28,7 @@ package com.tencent.bk.codecc.task.resources;
 
 import com.tencent.bk.codecc.task.api.ServiceToolMetaRestResource;
 import com.tencent.bk.codecc.task.service.ToolMetaService;
+import com.tencent.devops.common.api.RefreshToolImageRevisionReqVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,5 +55,10 @@ public class ServiceToolMetaRestResourceImpl implements ServiceToolMetaRestResou
     @Override
     public CodeCCResult<Boolean> validateLanguage(List<String> languages) {
         return new CodeCCResult<>(toolMetaService.validateLanguage(languages));
+    }
+
+    @Override
+    public CodeCCResult<Boolean> refreshToolImageRevision(RefreshToolImageRevisionReqVO refreshToolImageRevisionReqVO) {
+        return new CodeCCResult<>(toolMetaService.refreshToolImageRevision(refreshToolImageRevisionReqVO));
     }
 }

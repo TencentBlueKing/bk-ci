@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import com.tencent.devops.process.pojo.BuildBasicInfo
+import com.tencent.devops.process.pojo.transfer.TransferRequest
 import com.tencent.devops.process.service.codecc.CodeccTransferService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -76,5 +77,9 @@ class ServiceCodeccTransferResourceImpl @Autowired constructor(
             endTimeStartTime,
             endTimeEndTime
         ))
+    }
+
+    override fun transferToV3Common(transferRequest: TransferRequest): Result<Map<String, String>> {
+        return Result(codeccTransferService.transferToV3Common(transferRequest))
     }
 }

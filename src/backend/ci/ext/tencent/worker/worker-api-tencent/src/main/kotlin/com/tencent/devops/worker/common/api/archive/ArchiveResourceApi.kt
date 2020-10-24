@@ -52,8 +52,6 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import java.io.File
 import java.net.URLEncoder
-import java.nio.file.FileSystems
-import java.nio.file.Paths
 
 @ApiPriority(priority = 9)
 class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
@@ -65,17 +63,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
     private val bkrepoResourceApi = BkRepoResourceApi()
 
     fun isRepoGrey(): Boolean {
-        val path = "/ms/artifactory/api/build/artifactories/checkRepoGray"
-        val request = buildGet(path)
-        val resultData: Result<Boolean> = objectMapper.readValue(request(request, "Fail to record the agent shutdown events"))
-        if (resultData.isNotOk()) {
-            throw TaskExecuteException(
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-                errorType = ErrorType.SYSTEM,
-                errorMsg = "检查仓库灰度失败, message: ${resultData.message}"
-            )
-        }
-        return resultData.data!!
+        return true
     }
 
     private fun getParentFolder(path: String): String {
@@ -95,52 +83,37 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         fileType: FileTypeEnum,
         customFilePath: String?
     ): List<String> {
-
-        if (isRepoGrey()) {
-            var repoName: String
-            var filePath: String
-            var fileName: String
-            if (fileType == FileTypeEnum.BK_CUSTOM) {
-                repoName = "custom"
-                val normalizedPath = "/${customFilePath!!.removePrefix("./").removePrefix("/")}"
-                filePath = getParentFolder(normalizedPath)
-                fileName = getFileName(normalizedPath)
-            } else {
-                repoName = "pipeline"
-                filePath = "/$pipelineId/$buildId/"
-                fileName = getFileName(customFilePath!!)
-            }
-
-            return bkrepoResourceApi.queryByPathEqOrNameMatchOrMetadataEqAnd(
-                userId = userId,
-                projectId = projectId,
-                repoNames = listOf(repoName),
-                filePaths = listOf(filePath),
-                fileNames = listOf(fileName),
-                metadata = mapOf(),
-                page = 0,
-                pageSize = 10000
-            ).map { it.fullPath }
+        var repoName: String
+        var filePath: String
+        var fileName: String
+        if (fileType == FileTypeEnum.BK_CUSTOM) {
+            repoName = "custom"
+            val normalizedPath = "/${customFilePath!!.removePrefix("./").removePrefix("/")}"
+            filePath = getParentFolder(normalizedPath)
+            fileName = getFileName(normalizedPath)
         } else {
-            val result = mutableListOf<String>()
-            val data = if (fileType == FileTypeEnum.BK_CUSTOM) {
-                jfrogResourceApi.getAllFiles(buildId, "", "")
-            } else {
-                jfrogResourceApi.getAllFiles(buildId, pipelineId, buildId)
-            }
-            LoggerService.addNormalLine("scan file($customFilePath) in repo...")
-            val matcher = FileSystems.getDefault().getPathMatcher("glob:" + customFilePath)
-            data.files.forEach { jfrogFile ->
-                if (matcher.matches(Paths.get(jfrogFile.uri.removePrefix("/")))) {
-                    result.add(jfrogFile.uri)
-                }
-            }
-            return result
+            repoName = "pipeline"
+            filePath = "/$pipelineId/$buildId/"
+            fileName = getFileName(customFilePath!!)
         }
+
+        return bkrepoResourceApi.queryByPathEqOrNameMatchOrMetadataEqAnd(
+            userId = userId,
+            projectId = projectId,
+            repoNames = listOf(repoName),
+            filePaths = listOf(filePath),
+            fileNames = listOf(fileName),
+            metadata = mapOf(),
+            page = 0,
+            pageSize = 10000
+        ).map { it.fullPath }
     }
 
     private fun uploadJfrogCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
-        val jfrogPath = destPath.removeSuffix("/") + "/" + file.name
+        var jfrogPath = destPath
+        if (!destPath.endsWith(file.name)) {
+            jfrogPath = destPath.removeSuffix("/") + "/" + file.name
+        }
 
         LoggerService.addNormalLine("upload file >>> $jfrogPath")
 
@@ -204,13 +177,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
     }
 
     override fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
-        if (isRepoGrey()) {
-            LoggerService.addNormalLine("user bkrepo: true")
-            uploadBkRepoCustomize(file, destPath, buildVariables)
-        } else {
-            LoggerService.addNormalLine("user bkrepo: false")
-            uploadJfrogCustomize(file, destPath, buildVariables)
-        }
+        uploadBkRepoCustomize(file, destPath, buildVariables)
     }
 
     private fun uploadJfrogPipeline(file: File, buildVariables: BuildVariables) {
@@ -272,13 +239,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
     }
 
     override fun uploadPipeline(file: File, buildVariables: BuildVariables) {
-        if (isRepoGrey()) {
-            LoggerService.addNormalLine("user bkrepo: true")
-            uploadBkRepoPipeline(file, buildVariables)
-        } else {
-            LoggerService.addNormalLine("user bkrepo: false")
-            uploadJfrogPipeline(file, buildVariables)
-        }
+        uploadBkRepoPipeline(file, buildVariables)
     }
 
     private fun downloadJfrogCustomizeFile(
@@ -306,13 +267,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         uri: String,
         destPath: File
     ) {
-        if (isRepoGrey()) {
-            LoggerService.addNormalLine("user bkrepo: true")
-            downloadBkRepoFile(userId, projectId, "custom", uri, destPath)
-        } else {
-            LoggerService.addNormalLine("user bkrepo: false")
-            downloadJfrogCustomizeFile(userId, projectId, uri, destPath)
-        }
+        downloadBkRepoFile(userId, projectId, "custom", uri, destPath)
     }
 
     private fun downloadJfrogPipelineFile(
@@ -336,13 +291,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         uri: String,
         destPath: File
     ) {
-        if (isRepoGrey()) {
-            LoggerService.addNormalLine("user bkrepo: true")
-            downloadBkRepoFile(userId, projectId, "pipeline", uri, destPath)
-        } else {
-            LoggerService.addNormalLine("user bkrepo: false")
-            downloadJfrogPipelineFile(userId, projectId, pipelineId, buildId, uri, destPath)
-        }
+        downloadBkRepoFile(userId, projectId, "pipeline", uri, destPath)
     }
 
     /*

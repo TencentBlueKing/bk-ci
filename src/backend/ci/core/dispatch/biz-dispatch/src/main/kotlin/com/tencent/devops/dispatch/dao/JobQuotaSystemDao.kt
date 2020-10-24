@@ -142,6 +142,7 @@ class JobQuotaSystemDao {
                 .set(PROJECT_RUNNING_TIME_THRESHOLD, jobQuota.projectRunningTimeThreshold)
                 .set(SYSTEM_RUNNING_JOB_THRESHOLD, jobQuota.systemRunningJobThreshold)
                 .set(UPDATED_TIME, LocalDateTime.now())
+                .set(OPERATOR, jobQuota.operator ?: "")
                 .where(VM_TYPE.eq(jobQuotaVmType.name))
                 .execute() == 1
         }

@@ -26,6 +26,7 @@
 
 package com.tencent.bk.codecc.task.api;
 
+import com.tencent.devops.common.api.RefreshToolImageRevisionReqVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -64,4 +65,9 @@ public interface ServiceToolMetaRestResource
     @Path("/language/validate")
     @POST
     CodeCCResult<Boolean> validateLanguage(List<String> languages);
+
+    @ApiOperation("刷新工具镜像版本")
+    @Path("/toolImageRevision")
+    @POST
+    CodeCCResult<Boolean> refreshToolImageRevision(RefreshToolImageRevisionReqVO refreshToolImageRevisionReqVO);
 }

@@ -145,7 +145,7 @@ public interface ServiceCheckerSetRestResource
     @POST
     CodeCCResult<List<CheckerSetVO>> queryCheckerSetsForOpenScan(
             @ApiParam(value = "规则集列表", required = true)
-                    Set<String> checkerSetList,
+                    Set<CheckerSetVO> checkerSetList,
             @ApiParam(value = "项目Id", required = true)
             @PathParam("projectId")
                     String projectId);

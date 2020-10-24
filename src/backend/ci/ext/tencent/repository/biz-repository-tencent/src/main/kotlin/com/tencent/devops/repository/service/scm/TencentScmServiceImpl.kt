@@ -189,7 +189,8 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
         token: String?,
         region: CodeSvnRegion?,
         userName: String,
-        event: String?
+        event: String?,
+        hookUrl: String?
     ) {
         client.getScm(ServiceScmResource::class).addWebHook(
             projectName = projectName,
@@ -200,7 +201,8 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
             token = token,
             region = region,
             userName = userName,
-            event = event
+            event = event,
+            hookUrl = hookUrl
         )
     }
 

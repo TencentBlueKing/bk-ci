@@ -948,9 +948,38 @@ public class CheckerServiceImpl implements CheckerService
         return analyzeConfigInfoVO;
     }
 
+    @Override
+    public int getCcnThreshold(ToolConfigInfoVO toolConfigInfoVO) {
+        int ccnThreshold = ComConstants.DEFAULT_CCN_THRESHOLD;
+        AnalyzeConfigInfoVO analyzeConfigInfoVO = new AnalyzeConfigInfoVO();
+        analyzeConfigInfoVO.setTaskId(toolConfigInfoVO.getTaskId());
+        analyzeConfigInfoVO.setMultiToolType(ComConstants.Tool.CCN.name());
+        // 查询任务规则配置，从配置中获取CCN阀值
+        analyzeConfigInfoVO = getTaskCheckerConfig(analyzeConfigInfoVO);
+        List<OpenCheckerVO> openCheckers = analyzeConfigInfoVO.getOpenCheckers();
+        if (CollectionUtils.isNotEmpty(openCheckers) && CollectionUtils.isNotEmpty(openCheckers.get(0).getCheckerOptions()))
+        {
+            String ccnThresholdStr = openCheckers.get(0).getCheckerOptions().get(0).getCheckerOptionValue();
+            ccnThreshold = org.apache.commons.lang3.StringUtils.isEmpty(ccnThresholdStr)
+                    ? ComConstants.DEFAULT_CCN_THRESHOLD : Integer.valueOf(ccnThresholdStr.trim());
+        } else {
+            // 任务规则配置中获取不到，从个性化参数中获取CCN阀值
+            if (StringUtils.isNotEmpty(toolConfigInfoVO.getParamJson())) {
+                org.json.JSONObject paramJson = new org.json.JSONObject(toolConfigInfoVO.getParamJson());
+                if (paramJson.has(ComConstants.KEY_CCN_THRESHOLD)) {
+                    String ccnThresholdStr = paramJson.getString(ComConstants.KEY_CCN_THRESHOLD);
+                    ccnThreshold = org.apache.commons.lang3.StringUtils.isEmpty(ccnThresholdStr)
+                            ? ComConstants.DEFAULT_CCN_THRESHOLD : Integer.valueOf(ccnThresholdStr.trim());
+                }
+            }
+        }
+        return ccnThreshold;
+    }
+
     @NotNull
-    protected Map<String, CheckerPropVO> mergeTaskCheckerSets(String toolName, List<CheckerSetVO> checkerSetVOList, List<CheckerDetailVO> checkerDetailVOList)
-    {
+    protected Map<String, CheckerPropVO> mergeTaskCheckerSets(String toolName,
+            List<CheckerSetVO> checkerSetVOList,
+            List<CheckerDetailVO> checkerDetailVOList) {
         Map<String, CheckerDetailVO> checkerDetailMap = checkerDetailVOList.stream()
                 .collect(Collectors.toMap(CheckerDetailVO::getCheckerKey, Function.identity(), (k, v) -> v));
 
@@ -1006,7 +1035,7 @@ public class CheckerServiceImpl implements CheckerService
                 }
                 else if (!hasRecommended
                         && (CheckerSetSource.DEFAULT.equals(checkerSetVO.getCheckerSetSource())
-                            || CheckerSetSource.RECOMMEND.equals(checkerSetVO.getCheckerSetSource())))
+                        || CheckerSetSource.RECOMMEND.equals(checkerSetVO.getCheckerSetSource())))
                 {
                     chooseCheckerPropVO = checkerPropVO;
                     hasRecommended = true;

@@ -63,7 +63,7 @@ object GitUtils {
      */
     fun getGitApiUrl(apiUrl: String, repoUrl: String): String {
         val urlDomainAndRepoName = getDomainAndRepoName(repoUrl)
-        val parseApiUri = partApiUrl(apiUrl) ?: return apiUrl
+        val parseApiUri = partApiUrl(apiUrl) ?: return "http://${urlDomainAndRepoName.first}/$apiUrl"
         return if (urlDomainAndRepoName.second != parseApiUri.second) { // 如果域名不一样，则以仓库域名为准
             "${parseApiUri.first}${urlDomainAndRepoName.first}/${parseApiUri.third}"
         } else {

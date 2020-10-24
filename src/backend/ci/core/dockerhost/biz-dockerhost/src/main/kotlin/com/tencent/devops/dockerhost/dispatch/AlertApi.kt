@@ -27,10 +27,11 @@
 package com.tencent.devops.dockerhost.dispatch
 
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.dockerhost.common.Constants
 import org.slf4j.LoggerFactory
 
 class AlertApi constructor(
-    private val urlPrefix: String = "dispatch"
+    private val urlPrefix: String = Constants.DISPATCH_DOCKER_PREFIX
 ) : AbstractBuildResourceApi() {
     private val logger = LoggerFactory.getLogger(AlertApi::class.java)
 
