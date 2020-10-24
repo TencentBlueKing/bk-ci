@@ -34,7 +34,7 @@ class StorageProperties {
     @Value("\${log.storage.type}")
     val type: String = "lucene"
     @Value("\${log.storage.closeInDay:#{null}}")
-    val closeInDay: Int = Int.MAX_VALUE
+    val closeInDay: Int? = null
     @Value("\${log.storage.deleteInDay:#{null}}")
-    val deleteInDay: Int = Int.MAX_VALUE
+    val deleteInDay: Int? = null
 }

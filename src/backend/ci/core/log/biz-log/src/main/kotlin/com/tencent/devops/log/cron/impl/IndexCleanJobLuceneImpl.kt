@@ -45,7 +45,7 @@ class IndexCleanJobLuceneImpl @Autowired constructor(
     private val luceneClient: LuceneClient
 ) : IndexCleanJob {
 
-    private var deleteIndexInDay = storageProperties.deleteInDay
+    private var deleteIndexInDay = storageProperties.deleteInDay ?: Int.MAX_VALUE
 
     /**
      * 2 am every day

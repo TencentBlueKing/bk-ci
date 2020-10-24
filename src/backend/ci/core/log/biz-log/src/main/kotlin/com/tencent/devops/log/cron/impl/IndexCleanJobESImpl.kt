@@ -53,8 +53,8 @@ class IndexCleanJobESImpl @Autowired constructor(
     private val redisOperation: RedisOperation
 ) : IndexCleanJob {
 
-    private var closeIndexInDay = storageProperties.closeInDay
-    private var deleteIndexInDay = storageProperties.deleteInDay
+    private var closeIndexInDay = storageProperties.closeInDay ?: Int.MAX_VALUE
+    private var deleteIndexInDay = storageProperties.deleteInDay ?: Int.MAX_VALUE
 
     /**
      * 2 am every day
