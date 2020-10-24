@@ -48,8 +48,8 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
@@ -465,7 +465,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
         buildVariable.putAll(extMap)
 
-        PipelineVarUtil.fillOldVar(buildVariable)
+        PipelineVarUtil.fillOldVar(buildVariable.map { it.key to Pair(it.value, BuildFormPropertyType.STRING) }.toMap())
 
         buildVariable.putAll(allVariable)
 
