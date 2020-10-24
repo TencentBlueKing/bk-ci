@@ -27,9 +27,12 @@
 package com.tencent.devops.environment.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_CHANGE_USER_NOT_SUPPORT
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
@@ -60,7 +63,9 @@ class NodeService @Autowired constructor(
     private val envNodeDao: EnvNodeDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val slaveGatewayService: SlaveGatewayService,
-    private val environmentPermissionService: EnvironmentPermissionService
+    private val environmentPermissionService: EnvironmentPermissionService,
+    private val nodeWebsocketService: NodeWebsocketService,
+    private val webSocketDispatcher: WebSocketDispatcher
 ) {
 
     fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>) {
@@ -90,6 +95,9 @@ class NodeService @Autowired constructor(
             existNodeIdList.forEach {
                 environmentPermissionService.deleteNode(projectId, it)
             }
+            webSocketDispatcher.dispatch(
+                    nodeWebsocketService.buildDetailMessage(projectId, userId)
+            )
         }
     }
 
@@ -353,7 +361,8 @@ class NodeService @Autowired constructor(
             params = arrayOf(nodeHashId)
         )
         if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
-            throw ErrorCodeException(errorCode = ERROR_NODE_NO_EDIT_PERMISSSION)
+            throw PermissionForbiddenException(
+                    message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_EDIT_PERMISSSION))
         }
         checkDisplayName(projectId, nodeId, displayName)
         dslContext.transaction { configuration ->
@@ -362,6 +371,9 @@ class NodeService @Autowired constructor(
             if (nodeInDb.displayName != displayName) {
                 environmentPermissionService.updateNode(userId, projectId, nodeId, displayName)
             }
+            webSocketDispatcher.dispatch(
+                    nodeWebsocketService.buildDetailMessage(projectId, userId)
+            )
         }
     }
 

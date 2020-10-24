@@ -48,9 +48,10 @@ public class DefectDao
     /**
      * 批量更新告警状态的fixed位
      *
+     * @param taskId
      * @param defectList
      */
-    public void batchUpdateDefectStatusFixedBit(List<DefectEntity> defectList)
+    public void batchUpdateDefectStatusFixedBit(long taskId, List<DefectEntity> defectList)
     {
         if (CollectionUtils.isNotEmpty(defectList))
         {
@@ -58,12 +59,13 @@ public class DefectDao
             defectList.forEach(defectEntity ->
             {
                 Query query = new Query();
-                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())));
+                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
                 Update update = new Update();
                 update.set("status", defectEntity.getStatus());
                 update.set("fixed_time", defectEntity.getFixedTime());
                 update.set("fixed_build_number", defectEntity.getFixedBuildNumber());
                 update.set("exclude_time", defectEntity.getExcludeTime());
+                update.set("file_path_name", defectEntity.getFilePathname());
                 ops.updateOne(query, update);
             });
             ops.execute();
@@ -73,12 +75,13 @@ public class DefectDao
     /**
      * 批量更新告警状态的ignore位
      *
+     * @param taskId
      * @param defectList
      * @param ignoreReasonType
      * @param ignoreReason
      * @param ignoreAuthor
      */
-    public void batchUpdateDefectStatusIgnoreBit(List<DefectEntity> defectList, int ignoreReasonType, String ignoreReason, String ignoreAuthor)
+    public void batchUpdateDefectStatusIgnoreBit(long taskId, List<DefectEntity> defectList, int ignoreReasonType, String ignoreReason, String ignoreAuthor)
     {
         if (CollectionUtils.isNotEmpty(defectList))
         {
@@ -87,7 +90,7 @@ public class DefectDao
             defectList.forEach(defectEntity ->
             {
                 Query query = new Query();
-                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())));
+                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
                 Update update = new Update();
                 update.set("status", defectEntity.getStatus());
                 update.set("ignore_time", currTime);
@@ -100,7 +103,7 @@ public class DefectDao
         }
     }
 
-    public void batchMarkDefect(List<DefectEntity> defectList, Integer markFlag)
+    public void batchMarkDefect(long taskId, List<DefectEntity> defectList, Integer markFlag)
     {
         if (CollectionUtils.isNotEmpty(defectList))
         {
@@ -109,7 +112,7 @@ public class DefectDao
             defectList.forEach(defectEntity ->
             {
                 Query query = new Query();
-                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())));
+                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
                 Update update = new Update();
                 update.set("mark", markFlag);
                 update.set("mark_time", currTime);
@@ -119,7 +122,7 @@ public class DefectDao
         }
     }
 
-    public void batchUpdateDefectAuthor(List<DefectEntity> defectList, Set<String> authorList)
+    public void batchUpdateDefectAuthor(long taskId, List<DefectEntity> defectList, Set<String> authorList)
     {
         if (CollectionUtils.isNotEmpty(defectList))
         {
@@ -127,7 +130,7 @@ public class DefectDao
             defectList.forEach(defectEntity ->
             {
                 Query query = new Query();
-                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())));
+                query.addCriteria(Criteria.where("_id").is(new ObjectId(defectEntity.getEntityId())).and("task_id").is(taskId));
                 Update update = new Update();
                 update.set("author_list", authorList);
                 ops.updateOne(query, update);

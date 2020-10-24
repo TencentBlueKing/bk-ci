@@ -10,7 +10,7 @@ PROJECT_NAME=ci
 # 服务相关修改
 SERVICE_NAME=bkciservice
 # HTTP端口的是占位符号 需要根据application-bkciservice.yml中设置的端口来替换
-HTTP_PORT=__BKCI_BKCISERVICE_API_PORT__
+HTTP_PORT=__BK_CI_BKCISERVICE_API_PORT__
 
 # 详细的日志console.log开关，放开注释即可打开
 NOHUPLOG=/dev/null

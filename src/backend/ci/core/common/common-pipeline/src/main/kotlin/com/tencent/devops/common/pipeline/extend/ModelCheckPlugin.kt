@@ -28,6 +28,7 @@ package com.tencent.devops.common.pipeline.extend
 
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 
 /**
  * 对流水线模型中的设置的agent进行检查的扩展点
@@ -40,7 +41,7 @@ interface ModelCheckPlugin {
      * @param
      * @throws RuntimeException 子类  将检查失败或异常的以RuntimeException子类抛出
      */
-    fun checkModelIntegrity(model: Model)
+    fun checkModelIntegrity(model: Model, projectId: String?)
 
     fun checkJob(jobContainer: Container, projectId: String, pipelineId: String, userId: String)
 
@@ -58,9 +59,8 @@ interface ModelCheckPlugin {
      * @param pipelineId 流水线id
      */
     fun beforeDeleteElementInExistsModel(
-        userId: String,
         existModel: Model,
         sourceModel: Model? = null,
-        pipelineId: String?
+        param: BeforeDeleteParam
     )
 }

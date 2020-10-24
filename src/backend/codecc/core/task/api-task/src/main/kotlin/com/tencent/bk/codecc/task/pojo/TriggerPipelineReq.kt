@@ -11,10 +11,14 @@ data class TriggerPipelineReq(
     val branch : String?,
     @ApiModelProperty("工蜂项目id")
     val gongfengProjectId : Int?,
+    @ApiModelProperty("逻辑仓标识")
+    val logicRepo : String?=null,
     @ApiModelProperty("仓库类型")
     val repoType : String?,
     @ApiModelProperty("是否显示告警")
     val defectDisplay : Boolean?,
+    @ApiModelProperty("是否校验工蜂项目")
+    val checkGongfengProject : Boolean?=false,
     @ApiModelProperty("codecc流水线模型")
     val codeCCPipelineReq: CodeCCPipelineReq
 )

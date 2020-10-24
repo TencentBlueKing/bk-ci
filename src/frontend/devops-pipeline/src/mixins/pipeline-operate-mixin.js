@@ -19,7 +19,8 @@
 
 import { mapActions, mapGetters, mapState } from 'vuex'
 import {
-    navConfirm
+    navConfirm,
+    HttpError
 } from '@/utils/util'
 import { PROCESS_API_URL_PREFIX, AUTH_URL_PREFIX } from '../store/constants'
 
@@ -132,10 +133,15 @@ export default {
                     status: 'known_error'
                 })
             } catch (err) {
-                this.handleError(err, this.$permissionActionMap.execute, {
-                    id: target.pipelineId,
-                    name: target.pipelineName
-                }, projectId)
+                this.handleError(err, [{
+                    actionId: this.$permissionActionMap.execute,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: target.pipelineId,
+                        name: target.pipelineName
+                    }],
+                    projectId
+                }])
             } finally {
                 feConfig.buttonAllow.terminatePipeline = true
             }
@@ -163,10 +169,15 @@ export default {
                 message = this.$t('deleteSuc')
                 theme = 'success'
             } catch (err) {
-                this.handleError(err, this.$permissionActionMap.delete, {
-                    id: pipelineId,
-                    name: pipelineName
-                }, projectId)
+                this.handleError(err, [{
+                    actionId: this.$permissionActionMap.delete,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: pipelineId,
+                        name: pipelineName
+                    }],
+                    projectId
+                }])
             } finally {
                 message && this.$showTips({
                     message,
@@ -206,10 +217,22 @@ export default {
                     this.fetchPipelineList()
                 })
             } catch (err) {
-                this.handleError(err, this.$permissionActionMap.edit, {
-                    id: prePipeline.pipelineId,
-                    name: prePipeline.pipelineName
-                }, projectId)
+                this.handleError(err, [{
+                    actionId: this.$permissionActionMap.create,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: prePipeline.pipelineId,
+                        name: prePipeline.pipelineName
+                    }]
+                }, {
+                    actionId: this.$permissionActionMap.edit,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: prePipeline.pipelineId,
+                        name: prePipeline.pipelineName
+                    }],
+                    projectId
+                }])
             } finally {
                 message && this.$showTips({
                     message,
@@ -242,10 +265,15 @@ export default {
                 message = this.$t('updateSuc')
                 theme = 'success'
             } catch (err) {
-                this.handleError(err, this.$permissionActionMap.edit, {
-                    id: this.curPipeline.pipelineId,
-                    name: this.curPipeline.pipelineName
-                }, projectId)
+                this.handleError(err, [{
+                    actionId: this.$permissionActionMap.edit,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: this.curPipeline.pipelineId,
+                        name: this.curPipeline.pipelineName
+                    }],
+                    projectId
+                }])
             } finally {
                 message && this.$showTips({
                     message,
@@ -288,10 +316,15 @@ export default {
             } catch (err) {
                 setExecuteStatus(false)
                 this.$store.commit('pipelines/updateCurAtomPrams', null)
-                this.handleError(err, this.$permissionActionMap.execute, {
-                    id: pipelineId,
-                    name: this.curPipeline.pipelineName
-                }, projectId)
+                this.handleError(err, [{
+                    actionId: this.$permissionActionMap.execute,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: pipelineId,
+                        name: this.curPipeline.pipelineName
+                    }],
+                    projectId
+                }])
             } finally {
                 message && this.$showTips({
                     message,
@@ -384,10 +417,15 @@ export default {
                     theme = 'error'
                 }
             } catch (err) {
-                this.handleError(err, this.$permissionActionMap.execute, {
-                    id: pipelineId,
-                    name: this.curPipeline.pipelineName
-                }, projectId)
+                this.handleError(err, [{
+                    actionId: this.$permissionActionMap.execute,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: pipelineId,
+                        name: this.curPipeline.pipelineName
+                    }],
+                    projectId
+                }])
             } finally {
                 message && this.$showTips({
                     message,
@@ -416,10 +454,15 @@ export default {
                     theme = 'error'
                 }
             } catch (err) {
-                this.handleError(err, this.$permissionActionMap.execute, {
-                    id: this.curPipeline.pipelineId,
-                    name: this.curPipeline.pipelineName
-                }, this.$route.params.projectId)
+                this.handleError(err, [{
+                    actionId: this.$permissionActionMap.execute,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: this.curPipeline.pipelineId,
+                        name: this.curPipeline.pipelineName
+                    }],
+                    projectId: this.$route.params.projectId
+                }])
             } finally {
                 message && this.$showTips({
                     message,
@@ -440,29 +483,36 @@ export default {
                 ...pipelineSetting,
                 projectId: projectId
             })
-            // 请求执行构建
-            return this.$ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveAll`, {
+            const body = {
                 model: {
                     ...pipeline,
                     name: finalSetting.pipelineName,
                     desc: finalSetting.desc
                 },
                 setting: finalSetting
-            })
+            }
+            if (!pipelineId) {
+                return this.importPipelineAndSetting(body)
+            }
+
+            // 请求执行构建
+            return this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveAll`, body)
+        },
+        importPipelineAndSetting (body) {
+            const { projectId } = this.$route.params
+
+            // 请求执行构建
+            return this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipelines/projects/${projectId}/upload`, body)
         },
         async save () {
             const { pipelineId, projectId } = this.$route.params
             try {
                 this.setSaveStatus(true)
                 const saveAction = this.isTemplatePipeline ? this.saveSetting : this.savePipelineAndSetting
-                const responses = await Promise.all([
-                    saveAction()
-                ])
+                const responses = await saveAction()
 
-                if (responses.some(res => res.code === 403)) {
-                    throw Error({
-                        code: 403
-                    })
+                if (responses.code === 403) {
+                    throw HttpError(403)
                 }
                 this.setPipelineEditing(false)
                 this.$showTips({
@@ -470,13 +520,24 @@ export default {
                     theme: 'success'
                 })
                 this.fetchPipelineList()
-                return true
+                return {
+                    code: 0,
+                    data: responses
+                }
             } catch (e) {
-                this.handleError(e, this.$permissionActionMap.edit, {
-                    id: pipelineId,
-                    name: this.pipeline.name
-                }, projectId)
-                return false
+                this.handleError(e, [{
+                    actionId: this.$permissionActionMap.edit,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: pipelineId,
+                        name: this.pipeline.name
+                    }],
+                    projectId
+                }])
+                return {
+                    code: e.code,
+                    message: e.message
+                }
             } finally {
                 this.setSaveStatus(false)
             }
@@ -497,10 +558,15 @@ export default {
                     theme: 'success'
                 })
             } catch (e) {
-                this.handleError(e, this.$permissionActionMap.edit, {
-                    id: pipelineId,
-                    name: this.pipeline.name
-                }, projectId)
+                this.handleError(e, [{
+                    actionId: this.$permissionActionMap.edit,
+                    resourceId: this.$permissionResourceMap.pipeline,
+                    instanceId: [{
+                        id: pipelineId,
+                        name: this.pipeline.name
+                    }],
+                    projectId
+                }])
             }
         },
         updateCurPipelineId (pipelineId) {

@@ -34,6 +34,7 @@ import com.tencent.bk.codecc.task.constant.TaskConstants;
 import com.tencent.bk.codecc.task.model.CustomProjEntity;
 import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.service.AbstractTaskRegisterService;
+import com.tencent.bk.codecc.task.utils.CommonKafkaClient;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.bk.codecc.task.vo.TaskIdVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
@@ -52,18 +53,13 @@ import org.json.JSONObject;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.tencent.devops.common.constant.CommonMessageCode.UTIL_EXECUTE_FAIL;
-import static com.tencent.devops.common.web.mq.ConstantsKt.EXCHANGE_KAFKA_DATA_PLATFORM;
-import static com.tencent.devops.common.web.mq.ConstantsKt.ROUTE_KAFKA_DATA_TASK_DETAIL;
 
 /**
  * 流水线创建任务实现类
@@ -82,8 +78,8 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    @Value("${codecc.gateway.host}")
-    private String codeccGateWay;
+    @Autowired
+    private CommonKafkaClient commonKafkaClient;
 
     @Override
     public TaskIdVO registerTask(TaskDetailVO taskDetailVO, String userName)
@@ -174,12 +170,14 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
             String nameEn = getTaskStreamName(taskDetailVO.getProjectId(), taskDetailVO.getPipelineId(), taskDetailVO.getCreateFrom());
             taskDetailVO.setNameEn(nameEn);
             taskInfoEntity = createTask(taskDetailVO, userName);
+            //发送数据到数据平台
+            commonKafkaClient.pushTaskDetailToKafka(taskInfoEntity);
 
             //添加或者更新工具配置
             upsertTools(taskDetailVO, taskInfoEntity, userName);
 
             //发送数据到数据平台
-            sendTaskDetail(taskInfoEntity);
+//            sendTaskDetail(taskInfoEntity);
         }
         else
         {
@@ -213,22 +211,6 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
         return true;
     }
 
-    private void sendTaskDetail(TaskInfoEntity taskInfoResult)
-    {
-        Map<String, Object> taskMap = JsonUtil.INSTANCE.toMap(taskInfoResult);
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        taskMap.put("washTime", LocalDateTime.now().format(dateTimeFormatter));
-        taskMap.put("openSource", true);
-        taskMap.put("activity", true);
-        taskMap.put("devopsUrl",
-                "http://"+codeccGateWay+"/codecc/" + taskInfoResult.getProjectId() + "/task/" + taskInfoResult.getTaskId() + "/detail");
-
-        rabbitTemplate.convertAndSend(
-                EXCHANGE_KAFKA_DATA_PLATFORM,
-                ROUTE_KAFKA_DATA_TASK_DETAIL,
-                JsonUtil.INSTANCE.toJson(taskMap)
-        );
-    }
 
     /**
      * 更新任务信息
@@ -330,7 +312,7 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
      */
     private void upsertTools(TaskDetailVO taskDetailVO, TaskInfoEntity taskInfoEntity, String userName)
     {
-        // 如果不带用插件code，表示是就插件接入，需要适配兼容旧插件
+        // 如果不带有插件code，表示是旧插件接入，需要适配兼容旧插件
         if (StringUtils.isEmpty(taskDetailVO.getAtomCode()))
         {
             adaptV1AtomCodeCC(taskDetailVO);

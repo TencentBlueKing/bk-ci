@@ -187,6 +187,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 userId = task.starter,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
+                containerId = task.containerId,
                 containerHashId = task.containerHashId,
                 os = osType.name,
                 startTime = System.currentTimeMillis(),
@@ -276,6 +277,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             // 防止
             val taskParams = container.genTaskParams()
             taskParams["elements"] = emptyList<Element>() // elements可能过多导致存储问题
+            val taskAtom = AtomUtils.parseAtomBeanName(DispatchBuildLessDockerStartupTaskAtom::class.java)
             return PipelineBuildTask(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -288,14 +290,15 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 taskId = VMUtils.genStartVMTaskId(container.id!!),
                 taskName = "Prepare_Job#${container.id!!}(N)",
                 taskType = EnvControlTaskType.NORMAL.name,
-                taskAtom = AtomUtils.parseAtomBeanName(DispatchBuildLessDockerStartupTaskAtom::class.java),
+                taskAtom = taskAtom,
                 status = BuildStatus.QUEUE,
                 taskParams = taskParams,
                 executeCount = 1,
                 starter = userId,
                 approver = null,
                 subBuildId = null,
-                additionalOptions = null
+                additionalOptions = null,
+                atomCode = taskAtom
             )
         }
     }

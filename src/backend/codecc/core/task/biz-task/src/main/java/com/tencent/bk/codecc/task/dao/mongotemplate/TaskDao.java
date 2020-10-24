@@ -31,6 +31,10 @@ import com.tencent.bk.codecc.task.constant.TaskConstants;
 import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.vo.FilterPathInputVO;
 import com.tencent.devops.common.constant.ComConstants;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import jersey.repackaged.com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +45,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * 任务持久层代码
@@ -103,7 +104,11 @@ public class TaskDao
         else
         {
             update.set("filter_path", pathInput.getFilterDir());
+            update.set("test_source_filter_path", pathInput.getTestSourceFilterPath());
+            update.set("auto_gen_filter_path", pathInput.getAutoGenFilterPath());
+            update.set("third_party_filter_path", pathInput.getThirdPartyFilterPath());
         }
+
         update.set("updated_date", System.currentTimeMillis());
         update.set("updated_by", userName);
         Query query = new Query(Criteria.where("task_id").is(pathInput.getTaskId()));
@@ -231,5 +236,49 @@ public class TaskDao
         update.set("center_id", taskInfoEntity.getCenterId());
 
         return mongoTemplate.updateFirst(query, update, TaskInfoEntity.class).isUpdateOfExisting();
+    }
+
+    /**
+     * 根据自定义条件获取taskId信息
+     * @param customParam 匹配自定义参数（is(customParam) in(customParam)不能为 null 或者 empty
+     *
+     * @param nCustomParam 不匹配自定义参数
+     */
+    public List<TaskInfoEntity> queryTaskInfoByCustomParam(Map<String, Object> customParam,
+            Map<String, Object> nCustomParam) {
+        if (customParam == null || customParam.isEmpty()) {
+            throw new IllegalArgumentException("查询条件不能为空");
+        }
+
+        Criteria criteria;
+        List<String> fields = Lists.newArrayList(customParam.keySet());
+        if (customParam.get(fields.get(0)) instanceof Collection) {
+            criteria = Criteria.where(fields.get(0)).in(customParam.get(fields.get(0)));
+        } else {
+            criteria = Criteria.where(fields.get(0)).is(customParam.get(fields.get(0)));
+        }
+
+        fields.stream()
+                .skip(1)
+                .forEach(field -> {
+                    if (customParam.get(field) instanceof Collection) {
+                        criteria.and(field).in(customParam.get(field));
+                    } else {
+                        criteria.and(field).is(customParam.get(field));
+                    }
+                });
+
+        fields = Lists.newArrayList(nCustomParam.keySet());
+        fields.forEach(field -> {
+            if (nCustomParam.get(field) instanceof Collection) {
+                criteria.and(field).nin(nCustomParam.get(field));
+            } else {
+                criteria.and(field).ne(nCustomParam.get(field));
+            }
+        });
+
+        Query query = new Query();
+        query.addCriteria(criteria);
+        return mongoTemplate.find(query, TaskInfoEntity.class);
     }
 }

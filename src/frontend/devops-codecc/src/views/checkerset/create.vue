@@ -59,7 +59,7 @@
                     </template>
                     <bk-form-item class="main-bottom">
                         <bk-button
-                            v-bk-tooltips="{ content: hasPermission ? '' : $t('暂无规则集编辑权限') }"
+                            v-bk-tooltips="{ content: hasPermission ? '' : $t('暂无规则集编辑权限，可在新建/复制规则集后进行修改。') }"
                             theme="primary"
                             :class="hasPermission ? '' : 'disable-save'"
                             :loading="isSubmitting"

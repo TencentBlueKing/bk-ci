@@ -251,6 +251,17 @@
                         message = this.$t('ticket.cert.successfullyCreatedCert')
                     }
                 } catch (err) {
+                    if (err.code === 403) {
+                        const actionId = this.isEdit ? this.$permissionActionMap.edit : this.$permissionActionMap.create
+                        const instanceId = this.isEdit ? [{
+                            id: formData.certId,
+                            type: this.$permissionResourceTypeMap.TICKET_CERT
+                        }] : []
+                        this.applyPermission(actionId, this.$permissionResourceMap.cert, [{
+                            id: this.projectId,
+                            type: this.$permissionResourceTypeMap.PROJECT
+                        }, ...instanceId])
+                    }
                     message = err.message ? err.message : err
                     theme = 'error'
                 } finally {

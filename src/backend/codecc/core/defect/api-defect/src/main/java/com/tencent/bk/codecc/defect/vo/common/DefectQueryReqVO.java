@@ -26,6 +26,7 @@
 
 package com.tencent.bk.codecc.defect.vo.common;
 
+import com.tencent.devops.common.constant.ComConstants;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -90,4 +91,13 @@ public class DefectQueryReqVO
 
     @ApiModelProperty(value = "构建ID")
     private String buildId;
+
+    @ApiModelProperty(value = "构建ID")
+    private String lastId;
+
+    @ApiModelProperty(value = "统计类型: 状态(STATUS), 严重程度(SEVERITY), 新旧告警(DEFECT_TYPE)")
+    private String statisticType;
+
+    @ApiModelProperty(value = "CLOC聚类类型：文件（FILE），语言（LANGUAGE）")
+    private ComConstants.CLOCOrder order;
 }

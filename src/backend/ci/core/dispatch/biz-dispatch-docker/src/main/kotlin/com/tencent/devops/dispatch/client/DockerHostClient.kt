@@ -36,6 +36,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.net.SocketTimeoutException
 
 @Component
 class DockerHostClient @Autowired constructor(
@@ -242,44 +243,83 @@ class DockerHostClient @Autowired constructor(
             .build()
 
         logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM $dockerIp, url: $proxyUrl, requestBody: $requestBody")
-        OkhttpUtils.doLongHttp(request).use { resp ->
-            if (resp.isSuccessful) {
-                val responseBody = resp.body()!!.string()
-                logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM $dockerIp responseBody: $responseBody")
-                val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
-                when {
-                    response["status"] == 0 -> {
-                        val containerId = response["data"] as String
-                        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] update container: $containerId")
-                        // 更新task状态以及构建历史记录，并记录漂移日志
-                        dockerHostUtils.updateTaskSimpleAndRecordDriftLog(
-                            pipelineAgentStartupEvent = event,
-                            containerId = containerId,
-                            newIp = dockerIp,
-                            driftIpInfo = driftIpInfo
-                        )
+        try {
+            OkhttpUtils.doLongHttp(request).use { resp ->
+                if (resp.isSuccessful) {
+                    val responseBody = resp.body()!!.string()
+                    logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM $dockerIp responseBody: $responseBody")
+                    val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
+                    when {
+                        response["status"] == 0 -> {
+                            val containerId = response["data"] as String
+                            logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] update container: $containerId")
+                            // 更新task状态以及构建历史记录，并记录漂移日志
+                            dockerHostUtils.updateTaskSimpleAndRecordDriftLog(
+                                pipelineAgentStartupEvent = event,
+                                containerId = containerId,
+                                newIp = dockerIp,
+                                driftIpInfo = driftIpInfo
+                            )
+                        }
+                        response["status"] == 2 -> {
+                            // 业务逻辑异常重试
+                            doRetry(event, retryTime, dockerIp, requestBody, driftIpInfo, resp.message(), unAvailableIpList)
+                        }
+                        else -> {
+                            val msg = response["message"] as String
+                            logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, msg: $msg")
+                            throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.START_VM_FAIL.errorCode, "Start build Docker VM failed, msg: $msg")
+                        }
                     }
-                    else -> {
-                        val msg = response["message"] as String
-                        logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, msg: $msg")
-                        throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.START_VM_FAIL.errorCode, "Start build Docker VM failed, msg: $msg")
-                    }
-                }
-            } else {
-                // 异常重试三次
-                if (retryTime < 3) {
-                    logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM in $dockerIp failed, retry startBuild. message: ${resp.message()}")
-                    val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
-                    val retryTimeLocal = retryTime + 1
-                    // 当前IP不可用，保险起见将当前ip可用性置为false，并重新获取可用ip
-                    pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, dockerIp, false)
-                    val dockerIpLocalPair = dockerHostUtils.getAvailableDockerIp(event.projectId, event.pipelineId, event.vmSeqId, unAvailableIpListLocal)
-                    dockerBuildStart(dockerIpLocalPair.first, dockerIpLocalPair.second, requestBody, event, driftIpInfo, retryTimeLocal, unAvailableIpListLocal)
                 } else {
-                    logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, retry $retryTime times. message: ${resp.message()}")
-                    throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.RETRY_START_VM_FAIL.errorCode, "Start build Docker VM failed, retry $retryTime times.")
+                    // 服务异常重试
+                    doRetry(event, retryTime, dockerIp, requestBody, driftIpInfo, resp.message(), unAvailableIpList)
                 }
             }
+        } catch (e: SocketTimeoutException) {
+            // 超时重试
+            if (e.message == "timeout") {
+                doRetry(event, retryTime, dockerIp, requestBody, driftIpInfo, e.message, unAvailableIpList)
+            } else {
+                logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, msg: ${e.message}")
+                throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.START_VM_FAIL.errorCode, "Start build Docker VM failed, msg: ${e.message}")
+            }
+        }
+    }
+
+    private fun doRetry(
+        event: PipelineAgentStartupEvent,
+        retryTime: Int,
+        dockerIp: String,
+        requestBody: DockerHostBuildInfo,
+        driftIpInfo: String,
+        errorMessage: String?,
+        unAvailableIpList: Set<String>?
+    ) {
+        if (retryTime < 3) {
+            logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM in $dockerIp failed, retry startBuild.")
+            val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
+            val retryTimeLocal = retryTime + 1
+            // 当前IP不可用，保险起见将当前ip可用性置为false，并重新获取可用ip
+            pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, dockerIp, false)
+            val dockerIpLocalPair = dockerHostUtils.getAvailableDockerIp(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                vmSeqId = event.vmSeqId,
+                unAvailableIpList = unAvailableIpListLocal
+            )
+            dockerBuildStart(
+                dockerIp = dockerIpLocalPair.first,
+                dockerHostPort = dockerIpLocalPair.second,
+                requestBody = requestBody,
+                event = event,
+                driftIpInfo = driftIpInfo,
+                retryTime = retryTimeLocal,
+                unAvailableIpList = unAvailableIpListLocal
+            )
+        } else {
+            logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, retry $retryTime times. message: $errorMessage")
+            throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.RETRY_START_VM_FAIL.errorCode, "Start build Docker VM failed, retry $retryTime times.")
         }
     }
 }

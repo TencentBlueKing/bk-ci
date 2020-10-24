@@ -54,7 +54,7 @@ class PermissionAuthFilter(
     override fun filter(requestContext: ContainerRequestContext) {
         val authExPermissionApi = SpringContextUtil.getBean(AuthExPermissionApi::class.java)
         val user = requestContext.getHeaderString(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
-
+        logger.debug("========filter================user:$user");
         // 如果是管理员就直接校验通过
         if (authExPermissionApi.isAdminMember(user)) {
             return

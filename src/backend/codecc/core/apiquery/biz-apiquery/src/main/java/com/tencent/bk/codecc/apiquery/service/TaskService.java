@@ -15,6 +15,7 @@ package com.tencent.bk.codecc.apiquery.service;
 import com.tencent.bk.codecc.apiquery.vo.DeptInfoVO;
 import com.tencent.bk.codecc.apiquery.vo.TaskInfoExtVO;
 import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO;
+import com.tencent.bk.codecc.apiquery.vo.op.ActiveTaskStatisticsVO;
 import com.tencent.devops.common.api.pojo.Page;
 
 import java.util.List;
@@ -37,5 +38,15 @@ public interface TaskService
      * @return list
      */
     List<DeptInfoVO> getChildDeptList(String parentId);
+
+
+    /**
+     * OP:多条件分页查询活跃任务列表
+     *
+     * @param reqVO     请求体
+     * @return page
+     */
+    Page<ActiveTaskStatisticsVO> getActiveTaskList(TaskToolInfoReqVO reqVO, Integer pageNum, Integer pageSize,
+            String sortField, String sortType);
 
 }

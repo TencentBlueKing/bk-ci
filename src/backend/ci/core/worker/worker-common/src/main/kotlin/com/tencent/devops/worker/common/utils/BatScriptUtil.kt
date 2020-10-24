@@ -64,10 +64,18 @@ object BatScriptUtil {
         dir: File,
         systemEnvVariables: Map<String, String>? = null,
         prefix: String = "",
-        errorMessage: String? = null
+        errorMessage: String? = null,
+        workspace: File = dir
     ): String {
         try {
-            val file = getCommandFile(buildId, script, runtimeVariables, dir, systemEnvVariables)
+            val file = getCommandFile(
+                buildId = buildId,
+                script = script,
+                runtimeVariables = runtimeVariables,
+                dir = dir,
+                workspace = workspace,
+                systemEnvVariables = systemEnvVariables
+            )
             return CommandLineUtils.execute("cmd.exe /C \"${file.canonicalPath}\"", dir, true, prefix)
         } catch (e: Throwable) {
             val errorInfo = errorMessage ?: "Fail to execute bat script $script"
@@ -81,7 +89,8 @@ object BatScriptUtil {
         script: String,
         runtimeVariables: Map<String, String>,
         dir: File,
-        systemEnvVariables: Map<String, String>? = null
+        systemEnvVariables: Map<String, String>? = null,
+        workspace: File = dir
     ): File {
         val tmpDir = System.getProperty("java.io.tmpdir")
         val file = if (tmpDir.isNullOrBlank()) {
@@ -96,7 +105,7 @@ object BatScriptUtil {
 
         command.append("@echo off")
             .append("\r\n")
-            .append("set $WORKSPACE_ENV=${dir.absolutePath}\r\n")
+            .append("set $WORKSPACE_ENV=${workspace.absolutePath}\r\n")
             .append("set DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\r\n")
             .append("\r\n")
 

@@ -66,7 +66,7 @@ buildscript {
         awsS3Version = "1.11.461"
         asyncHttpClientVersion = "2.1.0"
         poiVersion = "3.17"
-        sigarVersion = "1.6.4"
+        sigarVersion = "1.7.0.0"
         poiVersion = "3.17"
         commonLang3Version = "3.5"
         luceneVersion = "8.6.0"
@@ -115,7 +115,7 @@ ext {
 
 allprojects {
     group "com.tencent.bk.devops.ci"
-    version "1.1.7"
+    version "1.2.0"
     // 修改为通过JVM启动构建时系统变量，或者从gradle.properties配置文件中读取
     // 1. try read ci_version in jvm -Dci_version
     def devops_version = System.getProperty("ci_version")
@@ -319,7 +319,7 @@ subprojects {
                 entry "poi"
                 entry "poi-ooxml"
             }
-            dependencySet(group: 'org.fusesource', version: "$sigarVersion") {
+            dependencySet(group: 'com.tencent.devops.ci-plugins', version: "$sigarVersion") {
                 entry "sigar"
             }
             dependencySet(group: 'org.apache.poi', version: "$poiVersion") {

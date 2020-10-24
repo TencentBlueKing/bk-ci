@@ -91,7 +91,8 @@ public class CCNCheckReportBizServiceImpl implements ICheckReportBizService
         ccnSnapShotEntity.setMedium(ccnStatistic.getMediumCount() == null ? 0 : ccnStatistic.getMediumCount());
         ccnSnapShotEntity.setLow(ccnStatistic.getLowCount() == null ? 0 : ccnStatistic.getLowCount());
         ccnSnapShotEntity.setAverageCcnChart(ccnStatistic.getAverageList() == null ? Lists.newArrayList() : ccnStatistic.getAverageList());
-        ccnSnapShotEntity.setCcnBeyondThresholdSum(ccnStatistic.getCcnBeyondThresholdSum() == null ? 0 : ccnStatistic.getCcnBeyondThresholdSum());
+        ccnSnapShotEntity.setCcnBeyondThresholdSum(ccnStatistic.getCcnBeyondThresholdSum() == null
+                ? 0 : ccnStatistic.getCcnBeyondThresholdSum());
 
         return ccnSnapShotEntity;
     }

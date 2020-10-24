@@ -418,7 +418,11 @@ class PipelineBuildDao {
                 parentBuildId = t.parentBuildId,
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
-                errorInfoList = if (t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo) as List<ErrorInfo> else null
+                errorInfoList = try {
+                    if (t.errorInfo != null) JsonUtil.getObjectMapper().readValue(t.errorInfo) as List<ErrorInfo> else null
+                } catch (e: Exception) {
+                    null
+                }
             )
         }
     }
@@ -775,6 +779,24 @@ class PipelineBuildDao {
                 .set(STAGE_STATUS, JsonUtil.toJson(stageStatus))
                 .where(BUILD_ID.eq(buildId))
                 .execute()
+        }
+    }
+
+    fun updateBuildParameters(dslContext: DSLContext, buildId: String, buildParameters: String) {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.update(this)
+                    .set(BUILD_PARAMETERS, buildParameters)
+                    .where(BUILD_ID.eq(buildId))
+                    .execute()
+        }
+    }
+
+    fun getBuildParameters(dslContext: DSLContext, buildId: String): String? {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            val record = dslContext.selectFrom(this)
+                    .where(BUILD_ID.eq(buildId))
+                    .fetchOne()
+            return record?.buildParameters
         }
     }
 }

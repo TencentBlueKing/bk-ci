@@ -145,7 +145,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 event = pipelineAgentStartupEvent,
-                errorType = ErrorType.SYSTEM,
+                errorType = ErrorType.USER,
                 errorCode = ErrorCodeEnum.VM_STATUS_ERROR.errorCode,
                 errorMsg = "第三方构建机状态异常/Bad build agent status (${agentResult.agentStatus?.name})"
             )
@@ -169,7 +169,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 event = pipelineAgentStartupEvent,
-                errorType = ErrorType.SYSTEM,
+                errorType = ErrorType.USER,
                 errorCode = ErrorCodeEnum.FOUND_AGENT_ERROR.errorCode,
                 errorMsg = "获取第三方构建机失败/Can not found agent by type($dispatchType)"
             )
@@ -330,7 +330,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
-                errorType = ErrorType.SYSTEM,
+                errorType = ErrorType.USER,
                 errorCode = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL.errorCode,
                 errorMessage = errorMessage
             )
@@ -344,7 +344,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = pipelineAgentStartupEvent,
-                errorType = ErrorType.SYSTEM,
+                errorType = ErrorType.USER,
                 errorCode = ErrorCodeEnum.VM_NODE_NULL.errorCode,
                 errorMessage = "第三方构建机环境（${dispatchType.envName}）的节点为空/The build agent (${dispatchType.envName}) have no node id"
             )

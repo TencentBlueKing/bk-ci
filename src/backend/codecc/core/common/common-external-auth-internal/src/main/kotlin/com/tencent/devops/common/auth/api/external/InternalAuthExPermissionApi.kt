@@ -1,7 +1,9 @@
 package com.tencent.devops.common.auth.api.external
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.exception.CodeCCException
 import com.tencent.devops.common.api.exception.UnauthorizedException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.GongfengAuthApi
 import com.tencent.devops.common.auth.api.pojo.external.AuthExResponse
@@ -18,11 +20,17 @@ import com.tencent.devops.common.util.OkhttpUtils
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.RedisTemplate
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.constant.CommonMessageCode
+import com.tencent.devops.repository.api.ExternalCodeccRepoResource
+import com.tencent.devops.repository.pojo.git.GitMember
 
 class InternalAuthExPermissionApi(
+        client: Client,
         authPropertiesData: AuthExPropertiesData,
         redisTemplate: RedisTemplate<String, String>
 ) : AbstractAuthExPermissionApi(
+        client,
         authPropertiesData,
         redisTemplate) {
     /**
@@ -120,10 +128,40 @@ class InternalAuthExPermissionApi(
         //如果是bg的管理员，则直接通过
         if(gongfengAuthApi.authByBgLevelAdmin(user, taskId.toLong()))
             return true
-        //如果是owner 则直接通过
-        if(gongfengAuthApi.judgeIfProjectOwner(user, gongfengBaseInfo.name, gongfengBaseInfo.nameSpaceId))
-            return true
-        return gongfengAuthApi.authByUserIdAndProject(user, gongfengBaseInfo.id, gongfengBaseInfo.nameSpaceId)
+
+        if (gongfengBaseInfo.id != -1) {
+            val haveGongfengPermission = gongfengAuthApi.authByUserIdAndProject(user, gongfengBaseInfo.id)
+            if (haveGongfengPermission) {
+                return true
+            }
+        }
+
+        val result: Result<List<GitMember>>
+        // 校验工蜂项目权限
+        try {
+            result =
+                    client.getDevopsService(ExternalCodeccRepoResource::class.java).getRepoMembers(gongfengBaseInfo.httpUrl, user)
+        } catch (e : Exception) {
+            logger.error("", e)
+            return false
+        }
+
+        // Oauth 权限过期
+        if (result.status.toString() == com.tencent.devops.common.api.constant.CommonMessageCode.OAUTH_TOKEN_IS_INVALID) {
+            throw CodeCCException(errorCode = CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
+        }
+
+        if (result.isNotOk() || result.data == null) {
+            return false
+        }
+
+        val haveGitPermission = result.data!!
+                .stream()
+                .map { member -> member.username }
+                .anyMatch {member -> member == user}
+
+        logger.info("user {} have gongfeng project permission {}", user, haveGitPermission)
+        return haveGitPermission
     }
 
     override fun authProjectManager(projectId: String, user: String): Boolean {

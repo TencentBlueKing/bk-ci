@@ -112,6 +112,11 @@ const actions = {
         return ajax.delete(`${prefix}/templates/projects/${projectId}/templates/${templateId}/versions/${versionId}`).then(response => {
             return response.data
         })
+    },
+    deleteTemplateVersionByName (_, { projectId, templateId, versionName }) {
+        return ajax.delete(`${prefix}/templates/projects/${projectId}/templates/${templateId}/versionNames/${versionName}`).then(response => {
+            return response.data
+        })
     }
 }
 

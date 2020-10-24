@@ -23,6 +23,6 @@ class ServiceAuthRepositoryResourceImpl @Autowired constructor(
     }
 
     override fun getInfos(repositoryIds: List<String>): Result<List<RepositoryInfo>?> {
-        return Result(repositoryService.getInfoByIds(repositoryIds))
+        return Result(repositoryService.getInfoByHashIds(repositoryIds))
     }
 }

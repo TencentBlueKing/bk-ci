@@ -125,12 +125,11 @@ class MeasureServiceImpl constructor(
                 with(task) {
                     if (BuildStatus.isRunning(status)) {
                         val tStartTime = startTime?.timestampmilli() ?: 0
-                        val atomCode = task.taskParams["atomCode"] as String? ?: ""
                         postTaskData(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             taskId = taskId,
-                            atomCode = atomCode,
+                            atomCode = atomCode ?: taskParams["atomCode"] as String? ?: taskType,
                             name = taskName,
                             buildId = buildId,
                             startTime = tStartTime,

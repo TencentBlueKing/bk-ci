@@ -31,7 +31,7 @@ module.exports = {
         sourceType: 'module'
     },
     env: {
-        browser: true,
+        browser: true
     },
     extends: [
         'plugin:vue/recommended',
@@ -54,7 +54,7 @@ module.exports = {
         'WS_URL_PREFIX': true,
         'BADGE_URL_PREFIX': true,
         'PERM_URL_PREFIX': false,
-        "X_DEVOPS_PROJECT_ID": false
+        'X_DEVOPS_PROJECT_ID': false
     },
     // add your custom rules hered
     rules: {
@@ -62,7 +62,7 @@ module.exports = {
         'vue/array-bracket-spacing': ['error', 'never'],
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/arrow-spacing.md
-        'vue/arrow-spacing': ['error', {'before': true, 'after': true}],
+        'vue/arrow-spacing': ['error', { 'before': true, 'after': true }],
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/attribute-hyphenation.md
         'vue/attribute-hyphenation': ['error', 'always'],

@@ -27,7 +27,6 @@
 package com.tencent.bk.codecc.task.service
 
 import com.tencent.bk.codecc.task.enums.ProjectLanguage
-import com.tencent.bk.codecc.task.model.CustomProjEntity
 import com.tencent.bk.codecc.task.model.GongfengPublicProjEntity
 import com.tencent.bk.codecc.task.model.TaskInfoEntity
 import com.tencent.bk.codecc.task.pojo.ActiveProjParseModel
@@ -224,6 +223,20 @@ interface PipelineService {
      */
     fun updateExistsCommonPipeline(
         gongfengPublicProjEntity: GongfengPublicProjEntity,
-        projectId: String, taskId: Long, pipelineId : String, owner: String
+        projectId: String, taskId: Long, pipelineId: String, owner: String,
+        dispatchRoute: ComConstants.CodeCCDispatchRoute
+    ): Boolean
+
+    /**
+     * 更新流水线代码库配置
+     *
+     * @param userName
+     * @param registerVO
+     * @return
+     */
+    fun updateCodeLibrary(
+        userName: String,
+        registerVO: BatchRegisterVO,
+        taskEntity: TaskInfoEntity
     ): Boolean
 }

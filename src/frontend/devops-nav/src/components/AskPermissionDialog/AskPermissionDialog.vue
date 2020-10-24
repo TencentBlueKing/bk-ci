@@ -87,7 +87,7 @@
             if (!isProjectResource(resourceId) && projectId) {
                 dealInstanceIds.unshift({
                   id: projectId,
-                  type: 'project'
+                  type: resourceTypeMap.PROJECT
                 })
             }
             return {

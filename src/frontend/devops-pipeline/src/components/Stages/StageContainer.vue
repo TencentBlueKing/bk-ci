@@ -13,7 +13,7 @@
         </template>
 
         <h3 :class="{ 'container-title': true, 'first-ctitle': containerIndex === 0, [container.status]: container.status }" @click.stop="showContainerPanel">
-            <status-icon type="container" :editable="editable" :container-disabled="containerDisabled" :status="container.status">
+            <status-icon type="container" :editable="editable" :container-disabled="containerDisabled" :status="container.status" :depend-on-value="dependOnValue">
                 {{ containerSerialNum }}
             </status-icon>
             <p class="container-name">
@@ -44,7 +44,7 @@
 
 <script>
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import { getOuterHeight, hashID } from '@/utils/util'
+    import { getOuterHeight, hashID, randomString } from '@/utils/util'
     import ContainerType from './ContainerType'
     import AtomList from './AtomList'
     import StatusIcon from './StatusIcon'
@@ -116,6 +116,18 @@
             },
             containerDisabled () {
                 return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false) || this.stageDisabled
+            },
+            dependOnValue () {
+                if (this.container.status !== 'DEPENDENT_WAITING') return ''
+                let val = ''
+                if (this.container.jobControlOption && this.container.jobControlOption.dependOnType) {
+                    if (this.container.jobControlOption.dependOnType === 'ID') {
+                        val = this.container.jobControlOption.dependOnId || []
+                    } else {
+                        val = this.container.jobControlOption.dependOnName || ''
+                    }
+                }
+                return `${this.$t('storeMap.dependOn')} 【${val}】`
             }
         },
         watch: {
@@ -195,10 +207,16 @@
                     const container = {
                         ...copyContainer,
                         containerId: `c-${hashID(32)}`,
+                        jobId: `job_${randomString(3)}`,
                         elements: copyContainer.elements.map(element => ({
                             ...element,
                             id: `e-${hashID(32)}`
-                        }))
+                        })),
+                        jobControlOption: copyContainer.jobControlOption ? {
+                            ...copyContainer.jobControlOption,
+                            dependOnType: 'ID',
+                            dependOnId: []
+                        } : undefined
                     }
                     this.pipeline.stages[this.stageIndex].containers.splice(this.containerIndex + 1, 0, JSON.parse(JSON.stringify(container)))
                     this.setPipelineEditing(true)
