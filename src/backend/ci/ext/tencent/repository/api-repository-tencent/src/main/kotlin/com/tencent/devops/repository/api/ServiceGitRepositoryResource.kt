@@ -28,6 +28,7 @@ package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepositoryInfo
@@ -36,6 +37,7 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
+import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -81,7 +83,10 @@ interface ServiceGitRepositoryResource {
         visibilityLevel: VisibilityLevelEnum?,
         @ApiParam(value = "token类型 1：oauth 2:privateKey", required = true)
         @QueryParam("tokenType")
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        @ApiParam(value = "前端UI渲染方式", required = false)
+        @QueryParam("frontendType")
+        frontendType: FrontendTypeEnum? = null
     ): Result<RepositoryInfo?>
 
     @ApiOperation("根据仓库ID更新git代码库信息")
@@ -228,6 +233,27 @@ interface ServiceGitRepositoryResource {
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
+
+    @ApiOperation("获取版本库文件和目录列表")
+    @GET
+    @Path("/git/repository/tree/Info")
+    fun getGitRepositoryTreeInfo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "仓库id", required = true)
+        @QueryParam("repoId")
+        repoId: String,
+        @ApiParam(value = "commit hash值、分支 或 tag，默认：默认分支", required = false)
+        @QueryParam("refName")
+        refName: String?,
+        @ApiParam(value = "文件路径", required = false)
+        @QueryParam("path")
+        path: String?,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<List<GitRepositoryDirItem>?>
 
     @ApiOperation("获取授权路径")
     @GET

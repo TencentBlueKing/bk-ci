@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -54,6 +55,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
@@ -191,7 +193,7 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode
     ): Set<PipelineModelTask> {
 
-        modelCheckPlugin.checkModelIntegrity(model)
+        modelCheckPlugin.checkModelIntegrity(model, projectId)
 
         // 初始化ID TODO 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val modelTasks = mutableSetOf<PipelineModelTask>()
@@ -320,6 +322,10 @@ class PipelineRepositoryService constructor(
                     // CodeEventType.MERGE_REQUEST_ACCEPT 和 CodeEventType.MERGE_REQUEST等价处理
                     val eventType = if (e.data.input.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) CodeEventType.MERGE_REQUEST else e.data.input.eventType
                     Pair(RepositoryConfig(e.data.input.repositoryHashId, e.data.input.repositoryName, e.data.input.repositoryType ?: RepositoryType.ID), eventType)
+                }
+                is CodeGitGenericWebHookTriggerElement -> {
+                    val eventType = if (e.data.input.eventType == CodeEventType.MERGE_REQUEST_ACCEPT.name) CodeEventType.MERGE_REQUEST else CodeEventType.valueOf(e.data.input.eventType)
+                    Pair(RepositoryConfigUtils.buildConfig(e), eventType)
                 }
                 else -> return@forEach
             }
