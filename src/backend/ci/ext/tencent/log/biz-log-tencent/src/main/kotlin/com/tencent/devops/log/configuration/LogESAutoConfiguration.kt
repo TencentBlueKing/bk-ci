@@ -65,34 +65,34 @@ import javax.net.ssl.SSLContext
 @AutoConfigureAfter(ESAutoConfiguration::class)
 @EnableConfigurationProperties(ESProperties::class)
 class LogESAutoConfiguration {
-    @Value("\${elasticsearch.ip:#{null}}")
+    @Value("\${log.elasticsearch.ip:#{null}}")
     private val e1IP: String? = null
-    @Value("\${elasticsearch.port:#{null}}")
+    @Value("\${log.elasticsearch.port:#{null}}")
     private val e1Port: Int? = 0
-    @Value("\${elasticsearch.cluster:#{null}}")
+    @Value("\${log.elasticsearch.cluster:#{null}}")
     private val e1Cluster: String? = null
-    @Value("\${elasticsearch.username:#{null}}")
+    @Value("\${log.elasticsearch.username:#{null}}")
     private val e1Username: String? = null
-    @Value("\${elasticsearch.password:#{null}}")
+    @Value("\${log.elasticsearch.password:#{null}}")
     private val e1Password: String? = null
-    @Value("\${elasticsearch.name:#{null}}")
+    @Value("\${log.elasticsearch.name:#{null}}")
     private val e1Name: String? = null
-    @Value("\${elasticsearch.mainCluster:#{null}}")
+    @Value("\${log.elasticsearch.mainCluster:#{null}}")
     private val e1MainCluster: String? = null
 
-    @Value("\${elasticsearch2.ip:#{null}}")
+    @Value("\${log.elasticsearch2.ip:#{null}}")
     private val e2IP: String? = null
-    @Value("\${elasticsearch2.port:#{null}}")
+    @Value("\${log.elasticsearch2.port:#{null}}")
     private val e2Port: Int? = 0
-    @Value("\${elasticsearch2.cluster:#{null}}")
+    @Value("\${log.elasticsearch2.cluster:#{null}}")
     private val e2Cluster: String? = null
-    @Value("\${elasticsearch2.username:#{null}}")
+    @Value("\${log.elasticsearch2.username:#{null}}")
     private val e2Username: String? = null
-    @Value("\${elasticsearch2.password:#{null}}")
+    @Value("\${log.elasticsearch2.password:#{null}}")
     private val e2Password: String? = null
-    @Value("\${elasticsearch2.name:#{null}}")
+    @Value("\${log.elasticsearch2.name:#{null}}")
     private val e2Name: String? = null
-    @Value("\${elasticsearch2.mainCluster:#{null}}")
+    @Value("\${log.elasticsearch2.mainCluster:#{null}}")
     private val e2MainCluster: String? = null
 
     fun client(): ESClient {
