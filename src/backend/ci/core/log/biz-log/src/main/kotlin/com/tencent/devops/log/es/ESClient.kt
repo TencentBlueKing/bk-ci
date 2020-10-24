@@ -24,20 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.client
+package com.tencent.devops.log.es
 
-import com.tencent.devops.log.es.ESClient
 import org.elasticsearch.client.RestHighLevelClient
 
-interface LogClient {
-
-    fun restClient(buildId: String) = getClient(buildId)
-
-    private fun getClient(buildId: String): RestHighLevelClient {
-        return hashClient(buildId).client
-    }
-
-    fun getActiveClients(): List<ESClient>
-
-    fun hashClient(buildId: String): ESClient
-}
+data class ESClient(
+    val name: String,
+    val client: RestHighLevelClient,
+    val mainCluster: Boolean? = false
+)

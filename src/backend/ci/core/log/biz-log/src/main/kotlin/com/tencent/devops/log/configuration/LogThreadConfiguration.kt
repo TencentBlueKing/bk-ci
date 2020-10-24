@@ -24,20 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.client
+package com.tencent.devops.log.configuration
 
-import com.tencent.devops.log.es.ESClient
-import org.elasticsearch.client.RestHighLevelClient
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.scheduling.annotation.EnableAsync
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 
-interface LogClient {
+@Configuration
+@EnableAsync
+class LogThreadConfiguration {
 
-    fun restClient(buildId: String) = getClient(buildId)
+    @Bean
+    fun threadPoolTaskExecutor() = ThreadPoolTaskExecutor()
 
-    private fun getClient(buildId: String): RestHighLevelClient {
-        return hashClient(buildId).client
+    @Bean
+    fun logMessagesThreadPoolTaskExecutor() = ThreadPoolTaskExecutor().apply {
+        corePoolSize = 10
+        maxPoolSize = 80
+        setQueueCapacity(1000)
     }
-
-    fun getActiveClients(): List<ESClient>
-
-    fun hashClient(buildId: String): ESClient
 }

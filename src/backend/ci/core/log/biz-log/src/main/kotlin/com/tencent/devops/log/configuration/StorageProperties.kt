@@ -24,12 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile "org.elasticsearch:elasticsearch"
-    compile "org.elasticsearch.client:elasticsearch-rest-client"
-    compile "org.elasticsearch.client:elasticsearch-rest-high-level-client"
-    compile "org.apache.logging.log4j:log4j-core"
-    compile "org.apache.logging.log4j:log4j-api"
-    compile "com.floragunn:search-guard-ssl"
+package com.tencent.devops.log.configuration
+
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+
+@Component
+class StorageProperties {
+    @Value("\${log.storage.type}")
+    val type: String = "lucene"
+    @Value("\${log.storage.closeInDay}")
+    val closeInDay: Int = Int.MAX_VALUE
+    @Value("\${log.storage.deleteInDay}")
+    val deleteInDay: Int = Int.MAX_VALUE
 }

@@ -24,9 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.es
+package com.tencent.devops.log.es
 
+import com.tencent.devops.common.log.utils.LogMQEventDispatcher
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
+import com.tencent.devops.log.client.LogClient
+import com.tencent.devops.log.client.impl.LogESClientImpl
+import com.tencent.devops.log.jmx.v2.CreateIndexBeanV2
+import com.tencent.devops.log.jmx.v2.LogBeanV2
+import com.tencent.devops.log.service.IndexService
+import com.tencent.devops.log.service.LogService
+import com.tencent.devops.log.service.LogStatusService
+import com.tencent.devops.log.service.LogTagService
+import com.tencent.devops.log.service.impl.LogServiceESImpl
 import org.apache.http.HttpHost
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
@@ -35,9 +46,11 @@ import org.apache.http.ssl.SSLContexts
 import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestHighLevelClient
 import org.springframework.beans.factory.DisposableBean
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -49,31 +62,32 @@ import java.security.KeyStore
 import javax.net.ssl.SSLContext
 
 @Configuration
+@ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(WebAutoConfiguration::class)
 @EnableConfigurationProperties(ESProperties::class)
 class ESAutoConfiguration : DisposableBean {
-    @Value("\${elasticsearch.ip}")
+    @Value("\${log.elasticsearch.ip}")
     private val ip: String? = null
-    @Value("\${elasticsearch.port}")
+    @Value("\${log.elasticsearch.port}")
     private val port: Int? = 9200
-    @Value("\${elasticsearch.cluster}")
+    @Value("\${log.elasticsearch.cluster}")
     private val cluster: String? = null
-    @Value("\${elasticsearch.name}")
+    @Value("\${log.elasticsearch.name}")
     private val name: String? = null
-    @Value("\${elasticsearch.username:#{null}}")
+    @Value("\${log.elasticsearch.username:#{null}}")
     private val username: String? = null
-    @Value("\${elasticsearch.password:#{null}}")
+    @Value("\${log.elasticsearch.password:#{null}}")
     private val password: String? = null
-    @Value("\${elasticsearch.https:#{null}}")
+    @Value("\${log.elasticsearch.https:#{null}}")
     private val https: String? = null
-    @Value("\${elasticsearch.keystore.filePath:#{null}}")
+    @Value("\${log.elasticsearch.keystore.filePath:#{null}}")
     private val keystoreFilePath: String? = null
-    @Value("\${elasticsearch.keystore.password:#{null}}")
+    @Value("\${log.elasticsearch.keystore.password:#{null}}")
     private val keystorePassword: String? = null
-    @Value("\${elasticsearch.truststore.filePath:#{null}}")
+    @Value("\${log.elasticsearch.truststore.filePath:#{null}}")
     private val truststoreFilePath: String? = null
-    @Value("\${elasticsearch.truststore.password:#{null}}")
+    @Value("\${log.elasticsearch.truststore.password:#{null}}")
     private val truststorePassword: String? = null
 
     private var client: RestHighLevelClient? = null
@@ -82,16 +96,16 @@ class ESAutoConfiguration : DisposableBean {
     @Primary
     fun transportClient(): ESClient {
         if (ip.isNullOrBlank()) {
-            throw IllegalArgumentException("ES集群地址尚未配置: elasticsearch.ip")
+            throw IllegalArgumentException("ip of elasticsearch not config: log.elasticsearch.ip")
         }
         if (port == null || port!! <= 0) {
-            throw IllegalArgumentException("ES集群端口尚未配置: elasticsearch.port")
+            throw IllegalArgumentException("port of elasticsearch not config: log.elasticsearch.port")
         }
         if (cluster.isNullOrBlank()) {
-            throw IllegalArgumentException("ES集群名称尚未配置: elasticsearch.cluster")
+            throw IllegalArgumentException("cluster of elasticsearch not config: log.elasticsearch.cluster")
         }
         if (name.isNullOrBlank()) {
-            throw IllegalArgumentException("ES唯一名称尚未配置: elasticsearch.name")
+            throw IllegalArgumentException("name of elasticsearch not config: log.elasticsearch.name")
         }
 
         var httpHost = HttpHost(ip, port ?: 9200, "http")
@@ -100,10 +114,10 @@ class ESAutoConfiguration : DisposableBean {
         // 基础鉴权 - 账号密码
         val credentialsProvider = if (!username.isNullOrBlank() || !password.isNullOrBlank()) {
             if (username.isNullOrBlank()) {
-                throw IllegalArgumentException("缺少配置: elasticsearch.username")
+                throw IllegalArgumentException("credentials config invaild: log.elasticsearch.username")
             }
             if (password.isNullOrBlank()) {
-                throw IllegalArgumentException("缺少配置: elasticsearch.password")
+                throw IllegalArgumentException("credentials config invaild: log.elasticsearch.password")
             }
             val provider = BasicCredentialsProvider()
             provider.setCredentials(AuthScope.ANY, UsernamePasswordCredentials(username, password))
@@ -113,25 +127,25 @@ class ESAutoConfiguration : DisposableBean {
         // HTTPS鉴权 - SSL证书
         if (enableSSL(https)) {
             if (keystoreFilePath.isNullOrBlank()) {
-                throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.keystore.filePath")
+                throw IllegalArgumentException("SearchGuard config invaild: log.elasticsearch.keystore.filePath")
             }
             if (truststoreFilePath.isNullOrBlank()) {
-                throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.keystore.password")
+                throw IllegalArgumentException("SearchGuard  config invaild: log.elasticsearch.keystore.password")
             }
             if (keystorePassword.isNullOrBlank()) {
-                throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.truststore.filePath")
+                throw IllegalArgumentException("SearchGuard config invaild: log.elasticsearch.truststore.filePath")
             }
             if (truststorePassword.isNullOrBlank()) {
-                throw IllegalArgumentException("SearchGuard认证缺少配置: elasticsearch.truststore.password")
+                throw IllegalArgumentException("SearchGuard config invaild: log.elasticsearch.truststore.password")
             }
 
             val keystoreFile = File(keystoreFilePath!!)
             if (!keystoreFile.exists()) {
-                throw IllegalArgumentException("未找到 keystore 文件，请检查路径是否正确: $keystoreFilePath")
+                throw IllegalArgumentException("keystore file not found, please check: $keystoreFilePath")
             }
             val truststoreFile = File(truststoreFilePath!!)
             if (!truststoreFile.exists()) {
-                throw IllegalArgumentException("未找到 truststore 文件，请检查路径是否正确: $truststoreFilePath")
+                throw IllegalArgumentException("truststore file not found, please check: $truststoreFilePath")
             }
 
             val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
@@ -159,6 +173,35 @@ class ESAutoConfiguration : DisposableBean {
         client = RestHighLevelClient(builder)
         return ESClient(name!!, client!!)
     }
+
+    @Bean
+    fun esLogService(
+        @Autowired logESClient: LogClient,
+        @Autowired indexService: IndexService,
+        @Autowired logStatusService: LogStatusService,
+        @Autowired logTagService: LogTagService,
+        @Autowired defaultKeywords: List<String>,
+        @Autowired createIndexBeanV2: CreateIndexBeanV2,
+        @Autowired logBeanV2: LogBeanV2,
+        @Autowired redisOperation: RedisOperation,
+        @Autowired logMQEventDispatcher: LogMQEventDispatcher
+    ): LogService {
+        return LogServiceESImpl(
+            client = logESClient,
+            indexService = indexService,
+            logStatusService = logStatusService,
+            logTagService = logTagService,
+            defaultKeywords = defaultKeywords,
+            logBeanV2 = logBeanV2,
+            createIndexBeanV2 = createIndexBeanV2,
+            logMQEventDispatcher = logMQEventDispatcher,
+            redisOperation = redisOperation
+        )
+    }
+
+    @Bean
+    fun logESClient(@Autowired transportClient: ESClient): LogClient =
+        LogESClientImpl(transportClient)
 
     override fun destroy() {
         client?.close()

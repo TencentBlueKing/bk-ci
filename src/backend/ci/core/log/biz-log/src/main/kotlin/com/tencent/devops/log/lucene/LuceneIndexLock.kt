@@ -24,27 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.log.lucene
 
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-/**
- *
- * Powered By Tencent
- */
-@Configuration
-class KeywordConfig {
-
-    @Bean
-    fun defaultKeywords() = listOf(
-        "error ( )",
-        "Scripts have compiler errors",
-        "fatal error",
-        "no such",
-        // "Exception :",;
-        "Code Sign error",
-        "BUILD FAILED",
-        "Failed PVR compression"
+class LuceneIndexLock(redisOperation: RedisOperation, index: String, buildId: String) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "lock:log:lucene:$index:buildId:$buildId",
+        expiredTimeInSeconds = 60
     )
-}

@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit
  * 清理`T_LOG_INDICES` `T_LOG_STATUS`三个月前的构建
  */
 @Component
-class CleanBuildJob @Autowired constructor(
+class DataCleanJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
     private val indexDao: IndexDao,
@@ -125,7 +125,7 @@ class CleanBuildJob @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(CleanBuildJob::class.java)
+        private val logger = LoggerFactory.getLogger(DataCleanJob::class.java)
         private const val CLEAN_BUILD_JOB_REDIS_KEY = "log:clean:build:job:lock:key"
     }
 }

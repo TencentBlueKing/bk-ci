@@ -24,20 +24,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.client
+package com.tencent.devops.log.cron
 
-import com.tencent.devops.log.es.ESClient
-import org.elasticsearch.client.RestHighLevelClient
+import com.tencent.devops.log.util.IndexNameUtils.LOG_PREFIX
+import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
-interface LogClient {
+interface IndexCleanJob {
 
-    fun restClient(buildId: String) = getClient(buildId)
+    fun closeIndex()
 
-    private fun getClient(buildId: String): RestHighLevelClient {
-        return hashClient(buildId).client
+    fun updateExpireIndexDay(expired: Int)
+
+    fun getExpireIndexDay(): Int
+
+    fun expire(deathLine: LocalDateTime, index: String): Boolean {
+        try {
+            if (!index.startsWith(LOG_PREFIX)) {
+                return false
+            }
+            val dateStr = index.replace(LOG_PREFIX, "") + " 00:00"
+            val format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+            val date = LocalDateTime.parse(dateStr, format)
+
+            if (deathLine > date) {
+                logger.info("[$index] The index is expire ($deathLine|$date)")
+                return true
+            }
+        } catch (t: Throwable) {
+            logger.warn("[$index] Fail to check if the index expire", t)
+        }
+        return false
     }
 
-    fun getActiveClients(): List<ESClient>
-
-    fun hashClient(buildId: String): ESClient
+    companion object {
+        private val logger = LoggerFactory.getLogger(IndexCleanJob::class.java)
+        private const val ES_INDEX_CLOSE_JOB_KEY = "log:es:index:close:job:lock:key"
+    }
 }

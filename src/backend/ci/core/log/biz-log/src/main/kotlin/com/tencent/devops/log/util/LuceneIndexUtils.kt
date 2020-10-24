@@ -24,17 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.es
+package com.tencent.devops.log.util
 
-import org.springframework.boot.context.properties.ConfigurationProperties
+import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
+import org.apache.lucene.document.Document
+import org.apache.lucene.document.Field
+import org.apache.lucene.document.IntPoint
+import org.apache.lucene.document.NumericDocValuesField
+import org.apache.lucene.document.StoredField
+import org.apache.lucene.document.StringField
 
-/**
- *
- * Powered By Tencent
- */
-@ConfigurationProperties(prefix = "elasticsearch")
-data class ESProperties(
-    val ip: String? = null,
-    val port: Int? = 0,
-    val cluster: String? = null
-)
+object LuceneIndexUtils {
+
+    fun getDocumentObject(
+        buildId: String,
+        logMessage: LogMessageWithLineNo
+    ): Document {
+        val doc = Document()
+        doc.add(StringField("buildId", buildId, Field.Store.YES))
+        doc.add(StringField("message", logMessage.message, Field.Store.YES))
+        doc.add(StringField("timestamp", logMessage.timestamp.toString(), Field.Store.YES))
+        doc.add(StringField("tag", logMessage.tag, Field.Store.YES))
+        doc.add(StringField("subTag", logMessage.subTag ?: "", Field.Store.YES))
+        doc.add(StringField("jobId", logMessage.jobId, Field.Store.YES))
+        doc.add(StringField("logType", logMessage.logType.name, Field.Store.YES))
+        doc.add(IntPoint("executeCount", logMessage.executeCount ?: 1))
+        doc.add(StoredField("executeCount", logMessage.executeCount ?: 1))
+        doc.add(NumericDocValuesField("lineNo", logMessage.lineNo))
+        doc.add(StoredField("lineNo", logMessage.lineNo))
+        return doc
+    }
+}
