@@ -30,7 +30,7 @@ import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.task.AbstractTask
 
 data class JobDetail(
-    val name: String?,
+    val displayName: String?,
     val type: String?,
     val pool: Pool?,
     val steps: List<AbstractTask>,

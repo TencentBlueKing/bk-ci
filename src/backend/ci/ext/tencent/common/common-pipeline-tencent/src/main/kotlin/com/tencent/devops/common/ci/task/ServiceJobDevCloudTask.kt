@@ -51,12 +51,12 @@ data class ServiceJobDevCloudTask(
 
     override fun covertToElement(config: CiBuildConfig): MarketBuildAtomElement {
         return MarketBuildAtomElement(
-                "拉代码",
-                null,
-                null,
-                atomCode,
-                "1.*",
-                mapOf("input" to inputs)
+            name = displayName ?: "拉代码",
+            id = null,
+            status = null,
+            atomCode = atomCode,
+            version = "1.*",
+            data = mapOf("input" to inputs)
         )
     }
 }

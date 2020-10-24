@@ -51,12 +51,12 @@ data class BashTask(
 
     override fun covertToElement(config: CiBuildConfig): LinuxScriptElement {
         return LinuxScriptElement(
-                displayName ?: "Bash",
-                null,
-                null,
-                inputs.scriptType ?: BuildScriptType.SHELL,
-                inputs.content,
-                inputs.continueOnError ?: false
+            name = displayName ?: "Bash",
+            id = null,
+            status = null,
+            scriptType = inputs.scriptType ?: BuildScriptType.SHELL,
+            script = inputs.content,
+            continueNoneZero = inputs.continueOnError ?: false
         )
     }
 }

@@ -222,20 +222,20 @@ class GitCIBuildService @Autowired constructor(
                     addVmBuildContainer(job, elementList, containerList, jobIndex)
                 } else if (job.job.type == NORMAL_JOB) {
                     makeElementList(job, elementList, gitProjectConf, event.userId)
-                    addNormalContainer(elementList, containerList)
+                    addNormalContainer(job, elementList, containerList, jobIndex)
                 }
             }
 
-            stageList.add(Stage(containerList, "stage-$stageIndex"))
+            stageList.add(Stage(containerList, "stage-$stageIndex ${stage.displayName}"))
         }
         return Model("git_" + gitProjectConf.gitProjectId + "_" + System.currentTimeMillis(), "", stageList, emptyList(), false, event.userId)
     }
 
-    private fun addNormalContainer(elementList: List<Element>, containerList: MutableList<Container>) {
+    private fun addNormalContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>, jobIndex: Int) {
         containerList.add(NormalContainer(
             containerId = null,
             id = null,
-            name = "无编译环境",
+            name = "Job_${jobIndex + 1} " + (job.job.displayName ?: ""),
             elements = elementList,
             status = null,
             startEpoch = null,
@@ -288,7 +288,7 @@ class GitCIBuildService @Autowired constructor(
 
         val vmContainer = VMBuildContainer(
             id = null,
-            name = "Job_${jobIndex + 1} " + (job.job.name ?: ""),
+            name = "Job_${jobIndex + 1} " + (job.job.displayName ?: ""),
             elements = elementList,
             status = null,
             startEpoch = null,
@@ -334,9 +334,10 @@ class GitCIBuildService @Autowired constructor(
         projectCodes.add(gitProjectConf.projectCode!!)
         try {
             client.get(ServiceMarketAtomResource::class).installAtom(
-                    userId,
-                    channelCode,
-                    InstallAtomReq(projectCodes, atomCode))
+                userId = userId,
+                channelCode = channelCode,
+                installAtomReq = InstallAtomReq(projectCodes, atomCode)
+            )
         } catch (e: Throwable) {
             logger.error("install atom($atomCode) failed, exception:", e)
             // 可能之前安装过，继续执行不退出
@@ -427,12 +428,12 @@ class GitCIBuildService @Autowired constructor(
             val serviceJobDevCloudInput = it.getServiceInput(record.repoUrl, record.repoUsername, record.repoPwd, record.env)
 
             val servicesElement = MarketBuildAtomElement(
-                "创建${it.getType()}服务",
-                null,
-                null,
-                ServiceJobDevCloudTask.atomCode,
-                "1.*",
-                mapOf("input" to serviceJobDevCloudInput, "namespace" to it.getServiceParamNameSpace())
+                name = "创建${it.getType()}服务",
+                id = null,
+                status = null,
+                atomCode = ServiceJobDevCloudTask.atomCode,
+                version = "1.*",
+                data = mapOf("input" to serviceJobDevCloudInput, "namespace" to it.getServiceParamNameSpace())
             )
 
             val servicesContainer = NormalContainer(

@@ -27,5 +27,6 @@
 package com.tencent.devops.common.ci.yaml
 
 data class Stage(
+    val displayName: String?,
     val stage: List<Job>
 )
