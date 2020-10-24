@@ -120,7 +120,13 @@ class BuildVariableService @Autowired constructor(
         }
     }
 
-    fun batchSetVariable(dslContext: DSLContext, projectId: String, pipelineId: String, buildId: String, variables: List<BuildParameters>) {
+    fun batchSetVariable(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        variables: List<BuildParameters>
+    ) {
         val varMaps = variables.map {
             it.key to Pair(it.value.toString(), it.valueType ?: BuildFormPropertyType.STRING)
         }.toMap().toMutableMap()

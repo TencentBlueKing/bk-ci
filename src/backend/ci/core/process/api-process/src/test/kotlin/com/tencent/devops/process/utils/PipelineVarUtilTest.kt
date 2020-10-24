@@ -34,11 +34,24 @@ import org.junit.Test
 class PipelineVarUtilTest {
 
     @Test
-    fun fillOldVar() {
+    fun fillOldVarWithType() {
         val vars = mutableMapOf(
             PIPELINE_START_USER_NAME to Pair("admin", BuildFormPropertyType.STRING),
             "userName" to Pair("hello", BuildFormPropertyType.STRING),
             "$PIPELINE_MATERIAL_URL.rep/a1" to Pair("http://git.xxx.com/group/repo.git", BuildFormPropertyType.STRING)
+        )
+        PipelineVarUtil.fillOldVarWithType(vars)
+        vars.forEach {
+            println(it)
+        }
+    }
+
+    @Test
+    fun fillOldVar() {
+        val vars = mutableMapOf(
+            PIPELINE_START_USER_NAME to "admin",
+            "userName" to "hello",
+            "$PIPELINE_MATERIAL_URL.rep/a1" to "http://git.xxx.com/group/repo.git"
         )
         PipelineVarUtil.fillOldVar(vars)
         vars.forEach {
