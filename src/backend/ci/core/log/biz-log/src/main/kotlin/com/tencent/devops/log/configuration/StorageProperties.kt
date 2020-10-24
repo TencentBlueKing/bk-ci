@@ -33,8 +33,8 @@ import org.springframework.stereotype.Component
 class StorageProperties {
     @Value("\${log.storage.type}")
     val type: String = "lucene"
-    @Value("\${log.storage.closeInDay}")
-    val closeInDay: Int = Int.MAX_VALUE
-    @Value("\${log.storage.deleteInDay}")
-    val deleteInDay: Int = Int.MAX_VALUE
+    @Value("\${log.storage.closeInDay:#{null}}")
+    val closeInDay: Int? = null
+    @Value("\${log.storage.deleteInDay:#{null}}")
+    val deleteInDay: Int? = null
 }
