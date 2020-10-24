@@ -72,6 +72,7 @@ class AtomMarketInitPipelineService @Autowired constructor(
         startParams["version"] = atomBaseInfo.version
         startParams["language"] = atomBaseInfo.language
         startParams["script"] = atomMarketInitPipelineReq.script
+        startParams["commitId"] = atomBaseInfo.commitId
         var atomBuildStatus = AtomStatusEnum.BUILDING
         var buildId: String? = null
         try {

@@ -85,6 +85,10 @@ interface TxUserStoreCodeccResource {
         @ApiParam("组件标识", required = true)
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeCode: String
+        storeCode: String,
+        @ApiParam("组件ID", required = false)
+        @QueryParam("storeId")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE, required = false)
+        storeId: String?
     ): Result<String?>
 }

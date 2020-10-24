@@ -108,10 +108,30 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
         }
         logger.info("startCodeccTask commitId:$commitId")
         val mameSpaceName = storeCommonService.getStoreRepoNameSpaceName(StoreTypeEnum.valueOf(storeType))
-        return client.get(ServiceCodeccResource::class).startCodeccTask(
-            repoId = "$mameSpaceName/$storeCode",
+        val repoId = "$mameSpaceName/$storeCode"
+        val startCodeccTaskResult = client.get(ServiceCodeccResource::class).startCodeccTask(
+            repoId = repoId,
             commitId = commitId
         )
+        logger.info("startCodeccTask commitId:$commitId,startCodeccTaskResult:$startCodeccTaskResult")
+        if (startCodeccTaskResult.status == 2300020) {
+            // 如果没有创建扫描流水线则再补偿创建
+            val createCodeccPipelineResult = client.get(ServiceCodeccResource::class).createCodeccPipeline(repoId)
+            logger.info("createCodeccPipelineResult is :$createCodeccPipelineResult")
+            val createFlag = createCodeccPipelineResult.data
+            if (createCodeccPipelineResult.isNotOk() || createFlag != true) {
+                throw ErrorCodeException(
+                    errorCode = createCodeccPipelineResult.status.toString(),
+                    defaultMessage = createCodeccPipelineResult.message
+                )
+            }
+            return client.get(ServiceCodeccResource::class).startCodeccTask(
+                repoId = repoId,
+                commitId = commitId
+            )
+        } else {
+            return startCodeccTaskResult
+        }
     }
 
     override fun getQualifiedScore(storeType: String, scoreType: String): Double {

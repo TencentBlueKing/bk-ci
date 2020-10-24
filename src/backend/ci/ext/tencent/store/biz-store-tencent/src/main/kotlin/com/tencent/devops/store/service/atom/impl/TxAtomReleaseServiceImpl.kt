@@ -81,6 +81,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 @RefreshScope
@@ -109,6 +110,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
 
     @Value("\${git.plugin.nameSpaceName}")
     private lateinit var pluginNameSpaceName: String
+
+    private val executorService = Executors.newFixedThreadPool(10)
 
     private val logger = LoggerFactory.getLogger(TxAtomReleaseServiceImpl::class.java)
 
@@ -167,14 +170,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_CREATE_REPOSITORY_FAIL)
         }
         // 创建codecc扫描流水线
-        val createCodeccPipelineResult = client.get(ServiceCodeccResource::class).createCodeccPipeline(repositoryInfo.aliasName)
-        logger.info("createCodeccPipelineResult is :$createCodeccPipelineResult")
-        val createFlag = createCodeccPipelineResult.data
-        if (createCodeccPipelineResult.isNotOk() || createFlag != true) {
-            throw ErrorCodeException(
-                errorCode = createCodeccPipelineResult.status.toString(),
-                defaultMessage = createCodeccPipelineResult.message
-            )
+        executorService.submit<Unit> {
+            val createCodeccPipelineResult = client.get(ServiceCodeccResource::class).createCodeccPipeline(repositoryInfo.aliasName)
+            logger.info("createCodeccPipelineResult is :$createCodeccPipelineResult")
         }
         return Result(mapOf("repositoryHashId" to repositoryInfo.repositoryHashId!!, "codeSrc" to repositoryInfo.url))
     }
@@ -435,7 +433,12 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             StoreTypeEnum.ATOM.type.toByte()
         )!! // 查找新增插件时关联的项目
         val repositoryHashId = atomRecord.repositoryHashId
-        handleCodeccTask(userId, repositoryHashId, atomCode, atomId)
+        val commitId = handleCodeccTask(
+            userId = userId,
+            repositoryHashId = repositoryHashId,
+            atomCode = atomCode,
+            atomId = atomId
+        )
         val buildInfo = marketAtomBuildInfoDao.getAtomBuildInfo(context, atomId)
         logger.info("the buildInfo is:$buildInfo")
         val script = buildInfo.value1()
@@ -447,7 +450,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 atomId = atomId,
                 atomCode = atomCode,
                 version = atomRecord.version,
-                language = language
+                language = language,
+                commitId = commitId
             )
             val pipelineModelConfig = businessConfigDao.get(context, StoreTypeEnum.ATOM.name, "initBuildPipeline", "PIPELINE_MODEL")
             var pipelineModel = pipelineModelConfig!!.configValue
@@ -496,6 +500,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             startParams["version"] = atomRecord.version
             startParams["language"] = language
             startParams["script"] = script
+            startParams["commitId"] = commitId
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, projectCode, atomPipelineRelRecord.pipelineId, startParams,
                 ChannelCode.AM
@@ -530,7 +535,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         repositoryHashId: String,
         atomCode: String,
         atomId: String
-    ) {
+    ): String {
         // 获取插件代码库最新提交记录
         val getRepoRecentCommitInfoResult = client.get(ServiceGitRepositoryResource::class).getRepoRecentCommitInfo(
             userId = userId,
@@ -538,6 +543,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             sha = "master",
             tokenType = TokenTypeEnum.PRIVATE_KEY
         )
+        logger.info("handleCodeccTask  atomId:$atomId,getRepoRecentCommitInfoResult: $getRepoRecentCommitInfoResult")
         if (getRepoRecentCommitInfoResult.isNotOk()) {
             throw ErrorCodeException(
                 errorCode = getRepoRecentCommitInfoResult.status.toString(),
@@ -546,38 +552,43 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
         val gitCommit = getRepoRecentCommitInfoResult.data!!
         val commitId = gitCommit.id
-        // 判断该commitId是否被正常触发了代码扫描
-        val repoId = "$pluginNameSpaceName/$atomCode"
-        val taskStatusInfoResult = client.get(ServiceCodeccResource::class).getCodeccTaskStatusInfo(
-            repoId = repoId,
-            commitId = commitId
-        )
-        if (taskStatusInfoResult.isNotOk()) {
-            throw ErrorCodeException(
-                errorCode = taskStatusInfoResult.status.toString(),
-                defaultMessage = taskStatusInfoResult.message
-            )
-        }
-        val taskStatus = taskStatusInfoResult.data
-        if (taskStatus != 0 && taskStatus != 3) {
-            // 如果代码扫描任务没有被触发或者失败则调接口触发
-            val startCodeccTaskResult = client.get(ServiceCodeccResource::class).startCodeccTask(
-                repoId = repoId,
-                commitId = commitId
-            )
-            if (startCodeccTaskResult.isNotOk() || startCodeccTaskResult.data.isNullOrBlank()) {
-                throw ErrorCodeException(
-                    errorCode = startCodeccTaskResult.status.toString(),
-                    defaultMessage = startCodeccTaskResult.message
-                )
-            }
-        }
         // 把代码提交ID存入redis
         redisOperation.set(
             key = "$STORE_REPO_COMMIT_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomId",
             value = commitId,
             expiredInSecond = 259200
         )
+        executorService.submit<Unit> {
+            // 判断该commitId是否被正常触发了代码扫描
+            val repoId = "$pluginNameSpaceName/$atomCode"
+            val taskStatusInfoResult = client.get(ServiceCodeccResource::class).getCodeccTaskStatusInfo(
+                repoId = repoId,
+                commitId = commitId
+            )
+            logger.info("handleCodeccTask  atomId:$atomId,taskStatusInfoResult: $taskStatusInfoResult")
+            if (taskStatusInfoResult.isNotOk()) {
+                throw ErrorCodeException(
+                    errorCode = taskStatusInfoResult.status.toString(),
+                    defaultMessage = taskStatusInfoResult.message
+                )
+            }
+            val taskStatus = taskStatusInfoResult.data
+            if (taskStatus != 0 && taskStatus != 3 && taskStatus != 4) {
+                // 如果代码扫描任务没有被触发或者失败则调接口触发
+                val startCodeccTaskResult = client.get(ServiceCodeccResource::class).startCodeccTask(
+                    repoId = repoId,
+                    commitId = commitId
+                )
+                logger.info("handleCodeccTask  atomId:$atomId,startCodeccTaskResult: $startCodeccTaskResult")
+                if (startCodeccTaskResult.isNotOk() || startCodeccTaskResult.data.isNullOrBlank()) {
+                    throw ErrorCodeException(
+                        errorCode = startCodeccTaskResult.status.toString(),
+                        defaultMessage = startCodeccTaskResult.message
+                    )
+                }
+            }
+        }
+        return commitId
     }
 
     /**
