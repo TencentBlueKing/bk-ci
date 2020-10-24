@@ -40,7 +40,7 @@ class PipelineVarUtilTest {
             "userName" to Pair("hello", BuildFormPropertyType.STRING),
             "$PIPELINE_MATERIAL_URL.rep/a1" to Pair("http://git.xxx.com/group/repo.git", BuildFormPropertyType.STRING)
         )
-        PipelineVarUtil.fillOldVarWithType(vars)
+        PipelineVarUtil.fillOldVar(vars)
         vars.forEach {
             println(it)
         }

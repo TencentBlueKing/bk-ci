@@ -302,9 +302,10 @@ object PipelineVarUtil {
     /**
      * 填充旧变量名，兼容用户在流水线中旧的写法
      */
-    fun fillOldVar(vars: MutableMap<String, String>) {
-        turning(newVarMappingOldVar, vars)
-        prefixTurning(newPrefixMappingOld, vars)
+    fun fillOldVar(varMaps: Map<String, Pair<String, BuildFormPropertyType>>) {
+        val mutableList = varMaps.toMutableMap()
+        turning(newVarMappingOldVar, mutableList)
+        prefixTurningWithType(newPrefixMappingOld, mutableList)
     }
 
     /**
@@ -343,23 +344,11 @@ object PipelineVarUtil {
      * 旧变量转新变量
      */
     fun replaceOldByNewVar(varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>) {
-        turningWithType(oldVarMappingNewVar, varMaps, true)
+        turning(oldVarMappingNewVar, varMaps, true)
         prefixTurningWithType(oldPrefixMappingNew, varMaps, true)
     }
 
-    private fun turning(mapping: Map<String, String>, vars: MutableMap<String, String>, replace: Boolean = false) {
-        mapping.forEach {
-            // 如果新旧key同时存在，则保留原value
-            if (vars[it.key] != null && vars[it.value] == null) {
-                vars[it.value] = vars[it.key]!!
-                if (replace) {
-                    vars.remove(it.key)
-                }
-            }
-        }
-    }
-
-    private fun turningWithType(
+    private fun turning(
         mapping: Map<String, String>,
         varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>,
         replace: Boolean = false
