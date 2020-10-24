@@ -24,12 +24,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.es
+package com.tencent.devops.log.cron
 
-import org.elasticsearch.client.RestHighLevelClient
+import com.tencent.devops.log.util.IndexNameUtils.LOG_PREFIX
+import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
-data class ESClient(
-    val name: String,
-    val client: RestHighLevelClient,
-    val mainCluster: Boolean? = false
-)
+interface IndexCleanJob {
+
+    fun closeIndex()
+
+    fun updateExpireIndexDay(expired: Int)
+
+    fun getExpireIndexDay(): Int
+
+    fun expire(deathLine: LocalDateTime, index: String): Boolean {
+        try {
+            if (!index.startsWith(LOG_PREFIX)) {
+                return false
+            }
+            val dateStr = index.replace(LOG_PREFIX, "") + " 00:00"
+            val format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+            val date = LocalDateTime.parse(dateStr, format)
+
+            if (deathLine > date) {
+                logger.info("[$index] The index is expire ($deathLine|$date)")
+                return true
+            }
+        } catch (t: Throwable) {
+            logger.warn("[$index] Fail to check if the index expire", t)
+        }
+        return false
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(IndexCleanJob::class.java)
+        private const val ES_INDEX_CLOSE_JOB_KEY = "log:es:index:close:job:lock:key"
+    }
+}

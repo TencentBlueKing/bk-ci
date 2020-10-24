@@ -24,17 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.es
+package com.tencent.devops.log.configuration
 
-import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-/**
- *
- * Powered By Tencent
- */
-@ConfigurationProperties(prefix = "elasticsearch")
-data class ESProperties(
-    val ip: String? = null,
-    val port: Int? = 0,
-    val cluster: String? = null
-)
+@Component
+class StorageProperties {
+    @Value("\${log.storage.type}")
+    val type: String = "lucene"
+    @Value("\${log.storage.closeInDay:#{null}}")
+    val closeInDay: Int? = null
+    @Value("\${log.storage.deleteInDay:#{null}}")
+    val deleteInDay: Int? = null
+}

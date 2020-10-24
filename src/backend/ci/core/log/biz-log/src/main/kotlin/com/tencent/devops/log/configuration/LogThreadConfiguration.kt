@@ -24,23 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.client.impl
+package com.tencent.devops.log.configuration
 
-import com.tencent.devops.log.es.ESClient
-import com.tencent.devops.log.client.LogClient
-import java.lang.RuntimeException
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.scheduling.annotation.EnableAsync
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 
-class LogClientImpl constructor(private val client: ESClient) : LogClient {
+@Configuration
+@EnableAsync
+class LogThreadConfiguration {
 
-    override fun getActiveClients(): List<ESClient> {
-        return listOf(client)
-    }
+    @Bean
+    fun threadPoolTaskExecutor() = ThreadPoolTaskExecutor()
 
-    override fun hashClient(buildId: String): ESClient {
-        val clients = getActiveClients()
-        if (clients.isEmpty()) {
-            throw RuntimeException("Fail to get the log client")
-        }
-        return clients.first()
+    @Bean
+    fun logMessagesThreadPoolTaskExecutor() = ThreadPoolTaskExecutor().apply {
+        corePoolSize = 10
+        maxPoolSize = 80
+        setQueueCapacity(1000)
     }
 }
