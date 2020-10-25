@@ -92,6 +92,8 @@ class ManualReviewTaskAtom(
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
         )
+        // 增加时间间隔保证日志顺序
+        Thread.sleep(100)
         buildLogPrinter.addLine(
             buildId = task.buildId,
             message = "待审核人：$reviewUsers",
@@ -156,6 +158,8 @@ class ManualReviewTaskAtom(
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
             )
+            // 增加时间间隔保证日志顺序
+            Thread.sleep(100)
             buildLogPrinter.addLine(
                 buildId = buildId,
                 message = "审核人：$manualActionUserId",
@@ -170,15 +174,19 @@ class ManualReviewTaskAtom(
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
             )
+            val reviewParamKey = if (param.namespace.isNullOrBlank()) {
+                MANUAL_REVIEW_ATOM_REVIEWER
+            } else {
+                "${param.namespace}_$MANUAL_REVIEW_ATOM_REVIEWER"
+            }
             pipelineVariableService.setVariable(
                 buildId = buildId,
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
-                varName = if (param.namespace.isNullOrBlank()) MANUAL_REVIEW_ATOM_REVIEWER
-                    else "${param.namespace}_$MANUAL_REVIEW_ATOM_REVIEWER",
+                varName = reviewParamKey,
                 varValue = manualActionUserId
             )
-            return when (ManualReviewAction.valueOf(manualAction)) {
+            val response = when (ManualReviewAction.valueOf(manualAction)) {
                 ManualReviewAction.PROCESS -> {
                     buildLogPrinter.addLine(
                         buildId = buildId,
@@ -207,6 +215,15 @@ class ManualReviewTaskAtom(
                     AtomResponse(BuildStatus.REVIEW_ABORT)
                 }
             }
+            // 增加时间间隔保证日志顺序
+            Thread.sleep(100)
+            buildLogPrinter.addYellowLine(
+                buildId = buildId,
+                message = "output(except): $reviewParamKey=$manualActionUserId}",
+                tag = taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
         }
         return AtomResponse(BuildStatus.REVIEWING)
     }

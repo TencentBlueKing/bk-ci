@@ -417,7 +417,12 @@ object QualityUtils {
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
                 )
-                AtomResponse(BuildStatus.QUALITY_CHECK_FAIL)
+                AtomResponse(
+                    buildStatus = BuildStatus.QUALITY_CHECK_FAIL,
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_QUALITY_CHECK_FAIL,
+                    errorMsg = "quality check fail"
+                )
             }
         } else {
             val manualAction = task.getTaskParam(BS_MANUAL_ACTION)
@@ -442,7 +447,12 @@ object QualityUtils {
                             jobId = task.containerHashId,
                             executeCount = task.executeCount ?: 1
                         )
-                        AtomResponse(BuildStatus.REVIEW_ABORT)
+                        AtomResponse(
+                            buildStatus = BuildStatus.REVIEW_ABORT,
+                            errorType = ErrorType.USER,
+                            errorCode = ErrorCode.USER_QUALITY_CHECK_FAIL,
+                            errorMsg = "quality review abort"
+                        )
                     }
                 }
             } else {
