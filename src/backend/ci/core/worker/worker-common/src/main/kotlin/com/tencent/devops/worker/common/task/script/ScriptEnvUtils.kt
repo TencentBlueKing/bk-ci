@@ -50,6 +50,11 @@ object ScriptEnvUtils {
         return "$buildId-$randomNum-$ENV_FILE"
     }
 
+    fun cleanWhenEnd(buildId: String, workspace: File) {
+        cleanEnv(buildId, workspace)
+        ExecutorUtil.removeThreadLocal()
+    }
+
     fun getQualityGatewayEnvFile() = QUALITY_GATEWAY_FILE
 
     private fun cleanScriptEnv(workspace: File, file: String) {
@@ -83,4 +88,5 @@ object ScriptEnvUtils {
             split[0].trim() to split[1].trim()
         }.toMap()
     }
+
 }
