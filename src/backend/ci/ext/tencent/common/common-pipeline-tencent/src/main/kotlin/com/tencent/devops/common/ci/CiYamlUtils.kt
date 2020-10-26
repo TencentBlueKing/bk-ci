@@ -162,7 +162,6 @@ object CiYamlUtils {
         val services = originYaml.services
         val stages = originYaml.stages ?: listOf(
             Stage(
-                displayName = "",
                 stage = listOf(
                     Job(
                         JobDetail(
@@ -201,7 +200,6 @@ object CiYamlUtils {
 
         val stages = originYaml.stages ?: listOf(
             Stage(
-                displayName = "",
                 stage = listOf(
                     Job(
                         JobDetail(
