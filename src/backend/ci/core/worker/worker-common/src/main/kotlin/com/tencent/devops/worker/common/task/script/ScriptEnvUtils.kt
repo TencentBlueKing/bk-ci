@@ -50,8 +50,22 @@ object ScriptEnvUtils {
         return "$buildId-$randomNum-$ENV_FILE"
     }
 
+    fun getDefaultFile(buildId: String): String {
+        return "$buildId-$ENV_FILE"
+    }
+
     fun cleanWhenEnd(buildId: String, workspace: File) {
-        cleanEnv(buildId, workspace)
+        val defaultFilePath = getDefaultFile(buildId)
+        val randomFilePath = getEnvFile(buildId)
+        val defaultFile = File(workspace, defaultFilePath)
+        if (defaultFile.exists()) {
+            defaultFile.delete()
+        }
+
+        val randomFile = File(workspace, randomFilePath)
+        if (randomFile.exists()) {
+            randomFile.delete()
+        }
         ExecutorUtil.removeThreadLocal()
     }
 
