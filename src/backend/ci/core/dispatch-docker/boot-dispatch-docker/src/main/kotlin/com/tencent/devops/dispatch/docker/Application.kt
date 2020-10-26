@@ -27,20 +27,15 @@ package com.tencent.devops.dispatch.docker
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
-import com.tencent.devops.dispatch.listener.AgentShutdownListener
-import com.tencent.devops.dispatch.listener.AgentStartupListener
 import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.annotation.FilterType
 
 @MicroService
 @ComponentScan(
     "com.tencent.devops.dispatch.docker",
-    "com.tencent.devops.common.dispatch.sdk",
-    "com.tencent.devops.dispatch.service"
+    "com.tencent.devops.common.dispatch.sdk"
 )
 class Application
 
 fun main(args: Array<String>) {
     MicroServiceApplication.run(Application::class, args)
 }
-
