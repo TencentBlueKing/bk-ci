@@ -1525,7 +1525,7 @@ class PipelineBuildService(
                 )
             }
 
-            if (tasks.isNotEmpty()) {
+            if (tasks.isEmpty()) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = "流水线被用户终止，操作人:$userId",

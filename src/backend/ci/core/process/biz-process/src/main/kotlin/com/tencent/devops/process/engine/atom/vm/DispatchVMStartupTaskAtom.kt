@@ -57,7 +57,6 @@ import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -231,14 +230,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
                 containerType = task.containerType
-            ),
-            PipelineContainerAgentHeartBeatEvent(
-                source = source,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = task.starter,
-                buildId = buildId,
-                containerId = task.containerId
             )
         )
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
