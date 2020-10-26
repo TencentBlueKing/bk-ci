@@ -353,6 +353,7 @@ class MarketAtomDao : AtomBaseDao() {
                 DOCS_LINK,
                 VISIBILITY_LEVEL,
                 PRIVATE_REASON,
+                HTML_TEMPLATE_VERSION,
                 PUBLISHER,
                 CREATOR,
                 MODIFIER
@@ -376,6 +377,7 @@ class MarketAtomDao : AtomBaseDao() {
                     docsLink,
                     marketAtomCreateRequest.visibilityLevel?.level,
                     marketAtomCreateRequest.privateReason,
+                    marketAtomCreateRequest.frontendType.typeVersion,
                     userId,
                     userId,
                     userId
@@ -391,7 +393,6 @@ class MarketAtomDao : AtomBaseDao() {
         atomStatus: AtomStatusEnum,
         classType: String,
         props: String,
-        iconData: String?,
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ) {
         val a = TClassify.T_CLASSIFY.`as`("a")
@@ -411,7 +412,8 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(CLASS_TYPE, classType)
                 .set(PROPS, props)
                 .set(LOGO_URL, marketAtomUpdateRequest.logoUrl)
-                .set(ICON, iconData)
+                .set(ICON, marketAtomUpdateRequest.iconData)
+                .set(HTML_TEMPLATE_VERSION, marketAtomUpdateRequest.frontendType.typeVersion)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .where(ID.eq(id))
@@ -426,7 +428,6 @@ class MarketAtomDao : AtomBaseDao() {
         atomStatus: AtomStatusEnum,
         classType: String,
         props: String,
-        iconData: String?,
         atomRecord: TAtomRecord,
         atomRequest: MarketAtomUpdateRequest
     ) {
@@ -482,7 +483,7 @@ class MarketAtomDao : AtomBaseDao() {
                     atomRequest.description,
                     atomRequest.category.category.toByte(),
                     atomRequest.version,
-                    iconData,
+                    atomRequest.iconData,
                     atomRecord.defaultFlag,
                     false,
                     atomRecord.repositoryHashId,
@@ -493,7 +494,7 @@ class MarketAtomDao : AtomBaseDao() {
                     atomRequest.logoUrl,
                     classType,
                     atomRecord.buildLessRunFlag,
-                    atomRecord.htmlTemplateVersion,
+                    atomRequest.frontendType.typeVersion,
                     atomRecord.visibilityLevel,
                     atomRequest.publisher,
                     atomRecord.weight,

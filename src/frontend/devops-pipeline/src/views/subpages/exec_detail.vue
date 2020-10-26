@@ -61,7 +61,6 @@
         <template v-if="execDetail && showCompleteLog">
             <complete-log @close="showLog = false"></complete-log>
         </template>
-        <review-dialog :is-show="showReviewDialog"></review-dialog>
         <mini-map :stages="execDetail.model.stages" scroll-class=".exec-pipeline" v-if="!isLoading && !fetchingAtomList && curItemTab === 'executeDetail' && !hasNoPermission"></mini-map>
     </section>
 </template>
@@ -75,7 +74,6 @@
     import outputOption from '@/components/outputOption'
     import StagePropertyPanel from '@/components/StagePropertyPanel'
     import emptyTips from '@/components/devops/emptyTips'
-    import ReviewDialog from '@/components/ReviewDialog'
     import completeLog from '@/components/ExecDetail/completeLog.vue'
     import plugin from '@/components/ExecDetail/plugin'
     import job from '@/components/ExecDetail/job'
@@ -100,7 +98,6 @@
             job,
             stage,
             stageReview,
-            ReviewDialog,
             Logo,
             MiniMap
         },
@@ -144,7 +141,6 @@
                 'isPropertyPanelVisible',
                 'isShowCompleteLog',
                 'fetchingAtomList',
-                'showReviewDialog',
                 'showStageReviewPanel'
             ]),
             ...mapState([
