@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.MESSAGE
 import com.tencent.devops.common.api.constant.PATTERN_STYLE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import org.slf4j.LoggerFactory
 import java.text.MessageFormat
@@ -38,9 +39,8 @@ import javax.validation.ConstraintViolationException
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
-import javax.ws.rs.ext.Provider
 
-@Provider
+@BkExceptionMapper
 class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
 
     companion object {
