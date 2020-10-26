@@ -26,6 +26,8 @@
 
 package com.tencent.devops.common.archive.pojo
 
+import com.tencent.bkrepo.generic.pojo.FileInfo
+
 data class QueryNodeInfo(
     var createdBy: String,
     var createdDate: String,
@@ -41,4 +43,20 @@ data class QueryNodeInfo(
     var projectId: String,
     var repoName: String,
     var metadata: Map<String, String>
-)
+) {
+    fun toFileInfo() = FileInfo(
+        createdBy = createdBy,
+        createdDate = createdDate,
+        lastModifiedBy = lastModifiedBy,
+        lastModifiedDate = lastModifiedDate,
+        folder = folder,
+        path = path,
+        name = name,
+        fullPath = fullPath,
+        size = size,
+        sha256 = sha256,
+        md5 = md5,
+        projectId = projectId,
+        repoName = repoName
+    )
+}

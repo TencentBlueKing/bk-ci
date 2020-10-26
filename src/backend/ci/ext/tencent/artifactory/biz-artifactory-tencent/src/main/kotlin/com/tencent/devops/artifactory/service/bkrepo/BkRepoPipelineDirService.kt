@@ -52,14 +52,24 @@ class BkRepoPipelineDirService @Autowired constructor(
     override fun list(userId: String, projectId: String, path: String, authPermission: AuthPermission): List<FileInfo> {
         logger.info("list, userId: $userId, projectId: $projectId, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
-        val fileList = bkRepoClient.listFile(
+        val isRootDir = pipelineService.isRootDir(normalizedPath)
+        val isPipelineDir = pipelineService.isPipelineDir(normalizedPath)
+        val pageSize = when {
+            isRootDir -> 1000
+            isPipelineDir -> 200
+            else -> 5000
+        }
+        val fileList = bkRepoClient.listFileByQuery(
             userId = userId,
             projectId = projectId,
             repoName = RepoUtils.PIPELINE_REPO,
             path = normalizedPath,
             includeFolders = true,
-            deep = false
-        )
+            page = 1,
+            pageSize = pageSize
+        ).map {
+            it.toFileInfo()
+        }
 
         return when {
             pipelineService.isRootDir(normalizedPath) -> {
