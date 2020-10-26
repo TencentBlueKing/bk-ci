@@ -210,6 +210,8 @@ subprojects {
         // https://mvnrepository.com/artifact/com.github.shyiko/ktlint
         testImplementation group: 'com.github.shyiko', name: 'ktlint', version: '0.29.0'
         testImplementation "junit:junit"
+
+        runtime("org.springframework.boot:spring-boot-properties-migrator")
     }
 
     task ktlint(type: JavaExec, group: "verification") {
