@@ -26,10 +26,15 @@
 
 package com.tencent.devops.common.ci.yaml
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.task.AbstractTask
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class JobDetail(
+    val name: String?,
     val displayName: String?,
     val type: String?,
     val pool: Pool?,

@@ -232,10 +232,17 @@ class GitCIBuildService @Autowired constructor(
     }
 
     private fun addNormalContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>, jobIndex: Int) {
+        val displayName = if (!job.job.displayName.isNullOrBlank()) {
+            job.job.displayName!!
+        } else if (!job.job.name.isNullOrBlank()) {
+            job.job.name!!
+        } else {
+            ""
+        }
         containerList.add(NormalContainer(
             containerId = null,
             id = null,
-            name = "Job_${jobIndex + 1} " + (job.job.displayName ?: ""),
+            name = "Job_${jobIndex + 1} $displayName",
             elements = elementList,
             status = null,
             startEpoch = null,
@@ -286,9 +293,17 @@ class GitCIBuildService @Autowired constructor(
                 }
             }
 
+        val displayName = if (!job.job.displayName.isNullOrBlank()) {
+            job.job.displayName!!
+        } else if (!job.job.name.isNullOrBlank()) {
+            job.job.name!!
+        } else {
+            ""
+        }
+
         val vmContainer = VMBuildContainer(
             id = null,
-            name = "Job_${jobIndex + 1} " + (job.job.displayName ?: ""),
+            name = "Job_${jobIndex + 1} $displayName",
             elements = elementList,
             status = null,
             startEpoch = null,
