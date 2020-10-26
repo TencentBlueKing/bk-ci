@@ -173,7 +173,7 @@
                             if (e.code === 403) {
                                 this.$showAskPermissionDialog({
                                     noPermissionList: [{
-                                        actionId: this.$permissionActionMap.edit,
+                                        actionId: this.$permissionActionMap.delete,
                                         resourceId: this.$permissionResourceMap.code,
                                         instanceId: [{
                                             id: repositoryHashId,
