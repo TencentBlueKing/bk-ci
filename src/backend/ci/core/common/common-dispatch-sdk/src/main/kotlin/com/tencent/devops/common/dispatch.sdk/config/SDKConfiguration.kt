@@ -44,7 +44,7 @@ import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 @Configuration
 class SDKConfiguration {
     @Value("\${gateway.url:#{null}}")
-    private val gateway: String? = "devgw.devops.oa.com"
+    private val gateway: String? = ""
 
     @Bean
     fun dispatchService(
