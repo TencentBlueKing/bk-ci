@@ -40,7 +40,6 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
-import com.tencent.devops.worker.common.utils.ExecutorUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder

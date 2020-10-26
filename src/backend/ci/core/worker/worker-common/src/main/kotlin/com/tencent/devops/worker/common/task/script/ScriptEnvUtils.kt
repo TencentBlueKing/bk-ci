@@ -37,7 +37,7 @@ object ScriptEnvUtils {
 
     fun cleanEnv(buildId: String, workspace: File) {
         cleanScriptEnv(workspace, getEnvFile(buildId))
-        cleanScriptEnv(workspace, "$buildId-$ENV_FILE")
+        cleanScriptEnv(workspace, getDefaultFile(buildId))
     }
 
     fun getEnv(buildId: String, workspace: File): Map<String, String> {
@@ -50,23 +50,23 @@ object ScriptEnvUtils {
         return "$buildId-$randomNum-$ENV_FILE"
     }
 
-    fun getDefaultFile(buildId: String): String {
+    private fun getDefaultFile(buildId: String): String {
         return "$buildId-$ENV_FILE"
     }
 
     fun cleanWhenEnd(buildId: String, workspace: File) {
         val defaultFilePath = getDefaultFile(buildId)
         val randomFilePath = getEnvFile(buildId)
-        val defaultFile = File(workspace, defaultFilePath)
+        deleteFile(defaultFilePath, workspace)
+        deleteFile(randomFilePath, workspace)
+        ExecutorUtil.removeThreadLocal()
+    }
+
+    private fun deleteFile(filePath: String, workspace: File) {
+        val defaultFile = File(workspace, filePath)
         if (defaultFile.exists()) {
             defaultFile.delete()
         }
-
-        val randomFile = File(workspace, randomFilePath)
-        if (randomFile.exists()) {
-            randomFile.delete()
-        }
-        ExecutorUtil.removeThreadLocal()
     }
 
     fun getQualityGatewayEnvFile() = QUALITY_GATEWAY_FILE
@@ -102,5 +102,4 @@ object ScriptEnvUtils {
             split[0].trim() to split[1].trim()
         }.toMap()
     }
-
 }
