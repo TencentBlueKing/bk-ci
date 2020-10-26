@@ -165,6 +165,7 @@ object CiYamlUtils {
                 stage = listOf(
                     Job(
                         JobDetail(
+                            name = "job1",
                             displayName = "job1",
                             type = VM_JOB,
                             pool = Pool(null, null, null, null),
@@ -203,6 +204,7 @@ object CiYamlUtils {
                 stage = listOf(
                     Job(
                         JobDetail(
+                            name = "job1",
                             displayName = "job1",
                             type = "vmBuild",
                             pool = Pool(null, null, null, null),
