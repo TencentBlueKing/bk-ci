@@ -226,7 +226,7 @@ class GitCIBuildService @Autowired constructor(
                 }
             }
 
-            stageList.add(Stage(containerList, "stage-$stageIndex ${stage.displayName}"))
+            stageList.add(Stage(containerList, "stage-$stageIndex"))
         }
         return Model("git_" + gitProjectConf.gitProjectId + "_" + System.currentTimeMillis(), "", stageList, emptyList(), false, event.userId)
     }
