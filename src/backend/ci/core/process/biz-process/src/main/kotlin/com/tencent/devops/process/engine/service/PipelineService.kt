@@ -65,9 +65,9 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
 import com.tencent.devops.process.pojo.classify.PipelineViewFilterByCreator
@@ -87,6 +87,7 @@ import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -196,6 +197,15 @@ class PipelineService @Autowired constructor(
                 }
             }
 
+            // 检查用户流水线是否达到上限
+            val projectVO = client.get(ServiceProjectResource::class).get(projectId).data
+            if (projectVO?.pipelineLimit != null) {
+                val count = pipelineInfoDao.countByProjectIds(dslContext, listOf(projectId))
+                if (count > projectVO.pipelineLimit!!) {
+                    throw OperationException("该项目最多只能创建${projectVO.pipelineLimit}条流水线")
+                }
+            }
+
             var pipelineId: String? = null
             try {
                 val instance = if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type) {
@@ -276,7 +286,12 @@ class PipelineService @Autowired constructor(
                 throw ignored
             } finally {
                 if (!success) {
-                    val param = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId ?: "", channelCode = channelCode)
+                    val param = BeforeDeleteParam(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId ?: "",
+                        channelCode = channelCode
+                    )
                     modelCheckPlugin.beforeDeleteElementInExistsModel(model, null, param)
                 }
             }
@@ -550,7 +565,12 @@ class PipelineService @Autowired constructor(
                     defaultMessage = "指定要复制的流水线-模型不存在"
                 )
             // 对已经存在的模型做处理
-            val param = BeforeDeleteParam(userId = userId, projectId = projectId, pipelineId = pipelineId, channelCode = channelCode)
+            val param = BeforeDeleteParam(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode
+            )
             modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
 
             pipelineRepositoryService.deployPipeline(model, projectId, pipelineId, userId, channelCode, false)
@@ -1626,13 +1646,13 @@ class PipelineService @Autowired constructor(
         logger.info("getPipelineByIds|[$projectId]|watch=$watch")
         return pipelines.map {
             SimplePipeline(
-                    projectId = it.projectId,
-                    pipelineId = it.pipelineId,
-                    pipelineName = it.pipelineName,
-                    pipelineDesc = it.pipelineDesc,
-                    taskCount = it.taskCount,
-                    isDelete = it.delete,
-                    instanceFromTemplate = templatePipelineIds.contains(it.pipelineId)
+                projectId = it.projectId,
+                pipelineId = it.pipelineId,
+                pipelineName = it.pipelineName,
+                pipelineDesc = it.pipelineDesc,
+                taskCount = it.taskCount,
+                isDelete = it.delete,
+                instanceFromTemplate = templatePipelineIds.contains(it.pipelineId)
             )
         }
     }
@@ -1647,13 +1667,13 @@ class PipelineService @Autowired constructor(
         logger.info("getPipelineByIds|[$pipelineIds]|watch=$watch")
         return pipelines.map {
             SimplePipeline(
-                    projectId = it.projectId,
-                    pipelineId = it.pipelineId,
-                    pipelineName = it.pipelineName,
-                    pipelineDesc = it.pipelineDesc,
-                    taskCount = it.taskCount,
-                    isDelete = it.delete,
-                    instanceFromTemplate = true
+                projectId = it.projectId,
+                pipelineId = it.pipelineId,
+                pipelineName = it.pipelineName,
+                pipelineDesc = it.pipelineDesc,
+                taskCount = it.taskCount,
+                isDelete = it.delete,
+                instanceFromTemplate = true
             )
         }
     }
