@@ -47,8 +47,6 @@ class PipelineAgentLessDispatchService @Autowired constructor(
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter
 ) {
-    private val jobQuotaService = getJobQuotaService()
-
     private var dispatchers: Set<BuildLessDispatcher>? = null
 
     private fun getDispatchers(): Set<BuildLessDispatcher> {
@@ -107,13 +105,13 @@ class PipelineAgentLessDispatchService @Autowired constructor(
 
         getDispatchers().forEach {
             if (it.canDispatch(pipelineBuildLessAgentStartupEvent)) {
-                if (!jobQuotaService.checkJobQuotaAgentLess(pipelineBuildLessAgentStartupEvent, JobQuotaVmType.AGENTLESS)) {
+                if (!getJobQuotaService().checkJobQuotaAgentLess(pipelineBuildLessAgentStartupEvent, JobQuotaVmType.AGENTLESS)) {
                     logger.error("[$buildId]|BUILD_LESS| AgentLess Job quota exceed quota.")
                     return
                 }
                 it.startUp(pipelineBuildLessAgentStartupEvent)
                 // 到这里说明JOB已经启动成功，开始累加使用额度
-                jobQuotaService.addRunningJob(pipelineBuildLessAgentStartupEvent.projectId, JobQuotaVmType.AGENTLESS, pipelineBuildLessAgentStartupEvent.buildId, pipelineBuildLessAgentStartupEvent.vmSeqId)
+                getJobQuotaService().addRunningJob(pipelineBuildLessAgentStartupEvent.projectId, JobQuotaVmType.AGENTLESS, pipelineBuildLessAgentStartupEvent.buildId, pipelineBuildLessAgentStartupEvent.vmSeqId)
                 return
             }
         }
@@ -129,7 +127,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
         } finally {
             buildLogPrinter.stopLog(buildId = event.buildId, tag = "", jobId = null)
             // 不管shutdown成功失败，都要回收配额；这里回收job，将自动累加agent执行时间
-            jobQuotaService.removeRunningJob(event.projectId, event.buildId, event.vmSeqId)
+            getJobQuotaService().removeRunningJob(event.projectId, event.buildId, event.vmSeqId)
         }
     }
 
