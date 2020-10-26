@@ -84,9 +84,9 @@ interface ArchiveFileService {
      */
     fun archiveFile(
         userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
+        projectId: String?,
+        pipelineId: String?,
+        buildId: String?,
         fileType: FileTypeEnum,
         customFilePath: String?,
         inputStream: InputStream,

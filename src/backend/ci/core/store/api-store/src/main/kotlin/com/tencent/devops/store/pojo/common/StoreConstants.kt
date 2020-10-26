@@ -49,6 +49,7 @@ const val IMAGE_RELEASE_AUDIT_PASS_TEMPLATE = "IMAGE_RELEASE_AUDIT_PASS_TEMPLATE
 const val IMAGE_RELEASE_AUDIT_REFUSE_TEMPLATE = "IMAGE_RELEASE_AUDIT_REFUSE_TEMPLATE" // 镜像发布审核被拒消息通知模板
 const val STORE_COMMENT_NOTIFY_TEMPLATE = "STORE_COMMENT_NOTIFY_TEMPLATE" // store评论消息通知模板
 const val STORE_COMMENT_REPLY_NOTIFY_TEMPLATE = "STORE_COMMENT_REPLY_NOTIFY_TEMPLATE" // store评论回复消息通知模板
+const val BK_FRONTEND_DIR_NAME = "bk-frontend" // 插件自定义UI前端文件夹名称
 const val OPEN = "open" // 开关打开
 const val CLOSE = "close" // 开关关闭
 

@@ -109,7 +109,8 @@ interface IScmService {
         token: String?,
         region: CodeSvnRegion?,
         userName: String,
-        event: String? = null
+        event: String? = null,
+        hookUrl: String? = null
     )
 
     fun addCommitCheck(

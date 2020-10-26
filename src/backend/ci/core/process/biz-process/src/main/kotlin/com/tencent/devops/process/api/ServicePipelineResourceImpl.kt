@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -36,6 +37,7 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
@@ -64,8 +66,11 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(
             PipelineId(
                 pipelineService.createPipeline(
-                    userId, projectId, pipeline, channelCode,
-                    ChannelCode.isNeedAuth(channelCode)
+                    userId = userId,
+                    projectId = projectId,
+                    model = pipeline,
+                    channelCode = channelCode,
+                    checkPermission = ChannelCode.isNeedAuth(channelCode)
                 )
             )
         )
@@ -87,12 +92,37 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun get(userId: String, projectId: String, pipelineId: String, channelCode: ChannelCode): Result<Model> {
+    override fun get(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode
+    ): Result<Model> {
         checkParams(userId, projectId, pipelineId)
-        return Result(pipelineService.getPipeline(userId, projectId, pipelineId, channelCode, false))
+        return Result(pipelineService.getPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = channelCode,
+            checkPermission = false
+        ))
     }
 
-    override fun getPipelineInfo(projectId: String, pipelineId: String, channelCode: ChannelCode?): Result<PipelineInfo?> {
+    override fun getBatch(
+        userId: String,
+        projectId: String,
+        pipelineIds: List<String>,
+        channelCode: ChannelCode
+    ): Result<List<PipelineWithModel>> {
+        checkParams(userId, projectId, pipelineIds)
+        return Result(pipelineService.getBatchPipelinesWithModel(userId, projectId, pipelineIds, channelCode, false))
+    }
+
+    override fun getPipelineInfo(
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode?
+    ): Result<PipelineInfo?> {
         checkProjectId(projectId)
         checkPipelineId(pipelineId)
         return Result(pipelineRepositoryService.getPipelineInfo(projectId, pipelineId))
@@ -106,8 +136,11 @@ class ServicePipelineResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         checkParams(userId, projectId, pipelineId)
         pipelineService.deletePipeline(
-            userId, projectId, pipelineId, channelCode,
-            ChannelCode.isNeedAuth(channelCode)
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = channelCode,
+            checkPermission = ChannelCode.isNeedAuth(channelCode)
         )
         return Result(true)
     }
@@ -123,8 +156,13 @@ class ServicePipelineResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         val result = pipelineService.listPermissionPipeline(
-            userId, projectId, page, pageSize, PipelineSortType.CREATE_TIME,
-            channelCode ?: ChannelCode.BS, false
+            userId = userId,
+            projectId = projectId,
+            page = page,
+            pageSize = pageSize,
+            sortType = PipelineSortType.CREATE_TIME,
+            channelCode = channelCode ?: ChannelCode.BS,
+            checkPermission = false
         )
         return Result(Page(result.page, result.pageSize, result.count, result.records))
     }
@@ -176,6 +214,12 @@ class ServicePipelineResourceImpl @Autowired constructor(
         checkPipelineId(pipelineId)
     }
 
+    private fun checkParams(userId: String, projectId: String, pipelineIds: List<String>) {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkPipelineIds(pipelineIds)
+    }
+
     private fun checkUserId(userId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -185,6 +229,15 @@ class ServicePipelineResourceImpl @Autowired constructor(
     private fun checkProjectId(projectId: String) {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
+        }
+    }
+
+    private fun checkPipelineIds(pipelineIds: List<String>) {
+        if (pipelineIds.isEmpty()) {
+            throw ParamBlankException("Invalid projectId list")
+        }
+        if (pipelineIds.size > 100) {
+            throw InvalidParamException("Number of pipelines is too large, size:${pipelineIds.size}")
         }
     }
 
