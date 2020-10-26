@@ -45,9 +45,9 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineAgentLessDispatchService @Autowired constructor(
     private val client: Client,
-    private val buildLogPrinter: BuildLogPrinter,
-    private val jobQuotaService: JobQuotaService
+    private val buildLogPrinter: BuildLogPrinter
 ) {
+    private val jobQuotaService = getJobQuotaService()
 
     private var dispatchers: Set<BuildLessDispatcher>? = null
 
@@ -131,6 +131,10 @@ class PipelineAgentLessDispatchService @Autowired constructor(
             // 不管shutdown成功失败，都要回收配额；这里回收job，将自动累加agent执行时间
             jobQuotaService.removeRunningJob(event.projectId, event.buildId, event.vmSeqId)
         }
+    }
+
+    private fun getJobQuotaService(): JobQuotaService {
+        return SpringContextUtil.getBean(JobQuotaService::class.java)
     }
 
     companion object {
