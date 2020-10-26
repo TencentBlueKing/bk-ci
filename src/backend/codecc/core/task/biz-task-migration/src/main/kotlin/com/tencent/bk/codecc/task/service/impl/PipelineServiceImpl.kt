@@ -152,15 +152,6 @@ open class PipelineServiceImpl @Autowired constructor(
     @Value("\${codecc.dispatch.dockerBuildVersion:tlinux_ci}")
     private val dockerBuildVersion: String = ""
 
-    @Value("\${codecc.public.account:#{null}}")
-    private val codeccPublicAccount: String? = null
-
-    @Value("\${codecc.public.password:#{null}}")
-    private val codeccPublicPassword: String? = null
-
-    @Value("\${git.path:#{null}}")
-    private val gitCodePath: String? = null
-
     /**
      * 获取流水线ID
      */

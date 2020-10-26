@@ -37,6 +37,6 @@ class AllProperties {
     @Value("\${git.path:#{null}}")
     val gitCodePath: String? = null
 
-    @Value("\${codeccGateway.host:#{null}}")
+    @Value("\${codecc.gateway.host:#{null}}")
     val codeccGateWay: String? = null
 }
