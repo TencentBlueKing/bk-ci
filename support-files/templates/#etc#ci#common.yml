@@ -54,8 +54,8 @@ server:
 devopsGateway:
   outer: __BK_CI_PUBLIC_URL__         # generic endpoint for public(internet or intranet) areas.
   outerApi: __BK_CI_PUBLIC_URL__      # endpoint for api access in public areas.
-  host: __BK_CI_PRIVATE_URL__         # generic endpoint for private(inside bk-ci cluster) access.
-  api: __BK_CI_PRIVATE_URL__          # endpoint for api access which inside BlueKing platform.
+  host: __BK_CI_PUBLIC_URL__         # generic endpoint for private(inside bk-ci cluster) access.
+  api: __BK_CI_PUBLIC_URL__          # endpoint for api access which inside BlueKing platform.
   build: __BK_CI_PUBLIC_URL__         # endpoint for build nodes, maybe use another dns server.
   idc: __BK_CI_PRIVATE_URL__          # not used yet. keep it same as `host' property.
   idcProxy: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
