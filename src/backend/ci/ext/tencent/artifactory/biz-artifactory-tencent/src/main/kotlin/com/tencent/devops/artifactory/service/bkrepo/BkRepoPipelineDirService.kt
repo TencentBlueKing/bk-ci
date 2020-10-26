@@ -55,9 +55,9 @@ class BkRepoPipelineDirService @Autowired constructor(
         val isRootDir = pipelineService.isRootDir(normalizedPath)
         val isPipelineDir = pipelineService.isPipelineDir(normalizedPath)
         val pageSize = when {
-            isRootDir -> 1000
-            isPipelineDir -> 200
-            else -> 5000
+            isRootDir -> 500      // pipeline
+            isPipelineDir -> 200  // build
+            else -> 5000          // others
         }
         val fileList = bkRepoClient.listFileByQuery(
             userId = userId,
@@ -72,10 +72,10 @@ class BkRepoPipelineDirService @Autowired constructor(
         }
 
         return when {
-            pipelineService.isRootDir(normalizedPath) -> {
+            isRootDir -> {
                 getRootPathFileList(userId, projectId, normalizedPath, fileList)
             }
-            pipelineService.isPipelineDir(normalizedPath) -> {
+            isPipelineDir -> {
                 val pipelineId = pipelineService.getPipelineId(normalizedPath)
                 pipelineService.validatePermission(userId, projectId, pipelineId, authPermission, "用户($userId)在工程($projectId)下没有流水线${authPermission.alias}权限")
                 getPipelinePathList(projectId, normalizedPath, fileList)
