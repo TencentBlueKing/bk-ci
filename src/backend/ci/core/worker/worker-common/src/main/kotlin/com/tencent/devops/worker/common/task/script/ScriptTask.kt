@@ -110,7 +110,7 @@ open class ScriptTask : ITask() {
         } finally {
             // 成功失败都写入环境变量
             addEnv(ScriptEnvUtils.getEnv(buildId, workspace))
-            ExecutorUtil.removeThreadLocal()
+            ScriptEnvUtils.cleanWhenEnd(buildId, workspace)
         }
 
         // 设置质量红线指标信息
