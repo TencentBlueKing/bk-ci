@@ -321,7 +321,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                             txStoreCodeccService.getQualifiedScore(storeType, "codeSecurity")
                         val codeMeasureQualifiedScore = txStoreCodeccService.getQualifiedScore(storeType, "codeMeasure")
                         // 判断插件代码库的扫描分数是否合格
-                        if (codeStyleScore > codeStyleQualifiedScore && codeSecurityScore > codeSecurityQualifiedScore && codeMeasureScore > codeMeasureQualifiedScore)
+                        if (codeStyleScore >= codeStyleQualifiedScore && codeSecurityScore >= codeSecurityQualifiedScore && codeMeasureScore >= codeMeasureQualifiedScore)
                             validateFlag = true
                     }
                 }
