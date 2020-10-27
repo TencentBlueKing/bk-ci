@@ -306,7 +306,7 @@ class PipelineBuildService(
                 )
             }
 
-            if(buildInfo.pipelineId != pipelineId) {
+            if (buildInfo.pipelineId != pipelineId) {
                 logger.warn("retry error: input|$pipelineId| buildId-pipeline| ${buildInfo.pipelineId}| $buildId")
                 throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
@@ -722,7 +722,7 @@ class PipelineBuildService(
                 defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId))
 
-        if(buildInfo.pipelineId != pipelineId) {
+        if (buildInfo.pipelineId != pipelineId) {
             logger.warn("buildManualReview error: input|$pipelineId| buildId-pipeline| ${buildInfo.pipelineId}| $buildId")
             throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
@@ -792,7 +792,7 @@ class PipelineBuildService(
                 defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId))
 
-        if(buildInfo.pipelineId != pipelineId) {
+        if (buildInfo.pipelineId != pipelineId) {
             logger.warn("buildManualStartStage error: input|$pipelineId| buildId-pipeline| ${buildInfo.pipelineId}| $buildId")
             throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
@@ -1497,7 +1497,7 @@ class PipelineBuildService(
             val modelDetail = buildDetailService.get(buildId)
                 ?: return
             val alreadyCancelUser = modelDetail.cancelUserId
-            
+
             if (modelDetail.pipelineId != pipelineId) {
                 logger.warn("shutdown error: input|$pipelineId| buildId-pipeline| ${modelDetail.pipelineId}| $buildId")
                 throw ErrorCodeException(
