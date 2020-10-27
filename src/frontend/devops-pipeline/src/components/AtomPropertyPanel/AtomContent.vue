@@ -56,11 +56,12 @@
                 </div>
                 <qualitygate-tips v-if="showRuleList" :relative-rule-list="renderRelativeRuleList"></qualitygate-tips>
 
-                <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable }">
+                <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable && !isRemoteAtom }">
                     <!-- <div class='desc-tips' v-if="!isNewAtomTemplate(atom.htmlTemplateVersion) && atom.description"> <span>插件描述：</span> {{ atom.description }}</div> -->
                     <div
                         v-if="atom.atomModal"
                         :is="AtomComponent"
+                        :atom="atom.atomModal"
                         :element-index="elementIndex"
                         :container-index="containerIndex"
                         :stage-index="stageIndex"
@@ -120,6 +121,7 @@
     import NormalAtomV2 from './NormalAtomV2'
     import CodeGitWebHookTrigger from './CodeGitWebHookTrigger'
     import SubPipelineCall from './SubPipelineCall'
+    import ManualReviewUserTask from './ManualReviewUserTask'
     import Logo from '@/components/Logo'
 
     export default {
@@ -146,6 +148,7 @@
             PushImageToThirdRepo,
             CodeGitWebHookTrigger,
             SubPipelineCall,
+            ManualReviewUserTask,
             Logo
         },
         props: {
@@ -303,11 +306,17 @@
             hasVersionList () {
                 return Array.isArray(this.atomVersionList) && this.atomVersionList.length > 0
             },
+            htmlTemplateVersion () {
+                return (this.atom.atomModal && this.atom.atomModal.htmlTemplateVersion) || this.atom.htmlTemplateVersion
+            },
+            isRemoteAtom () {
+                return this.htmlTemplateVersion === '1.2' || this.atomCode === 'CodeccCheckAtomDebug' || this.atomCode === 'CodeccCheckAtom'
+            },
             AtomComponent () {
-                if (this.atomCode === 'ddtestatomdev' || this.atomCode === 'CodeccCheckAtom') {
+                if (this.isRemoteAtom) {
                     return RemoteAtom
                 }
-                if (this.isNewAtomTemplate(this.atom.htmlTemplateVersion)) {
+                if (this.isNewAtomTemplate(this.htmlTemplateVersion)) {
                     return NormalAtomV2
                 }
                 const atomMap = {
@@ -329,7 +338,8 @@
                     GITHUB: PullGithub,
                     codeGithubWebHookTrigger: CodeGithubWebHookTrigger,
                     pushImageToThirdRepo: PushImageToThirdRepo,
-                    subPipelineCall: SubPipelineCall
+                    subPipelineCall: SubPipelineCall,
+                    manualReviewUserTask: ManualReviewUserTask
                 }
                 return atomMap[this.atomCode] || NormalAtom
             }

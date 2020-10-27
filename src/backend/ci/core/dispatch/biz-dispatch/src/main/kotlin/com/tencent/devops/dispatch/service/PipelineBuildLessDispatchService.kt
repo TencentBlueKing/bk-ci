@@ -126,7 +126,6 @@ class PipelineBuildLessDispatchService @Autowired constructor(
                 it.shutdown(event)
             }
         } finally {
-            buildLogPrinter.stopLog(buildId = event.buildId, tag = "", jobId = null)
             // 不管shutdown成功失败，都要回收配额；这里回收job，将自动累加agent执行时间
             jobQuotaBusinessService.deleteRunningJob(event.projectId, event.buildId, event.vmSeqId)
         }

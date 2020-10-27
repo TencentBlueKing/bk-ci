@@ -26,36 +26,33 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.KEY_CHANNEL
 import com.tencent.devops.common.api.constant.KEY_END_TIME
 import com.tencent.devops.common.api.constant.KEY_START_TIME
-import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.OrganizationDetailInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.measure.AtomMonitorReportBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
-import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
+import com.tencent.devops.process.engine.control.HeartbeatControl
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.engine.utils.ContainerUtils
@@ -68,7 +65,6 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.service.measure.AtomMonitorEventDispatcher
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
-import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -76,15 +72,12 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.common.KEY_VERSION
-import okhttp3.Request
 import org.apache.lucene.util.RamUsageEstimator
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 
 @Service
@@ -100,8 +93,9 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val redisOperation: RedisOperation,
     private val jmxElements: JmxElements,
-    private val consulClient: ConsulDiscoveryClient?,
-    private val client: Client
+    private val buildExtService: PipelineBuildExtService,
+    private val client: Client,
+    private val heartbeatControl: HeartbeatControl
 ) {
 
     @Value("\${build.atomMonitorData.report.switch:false}")
@@ -120,7 +114,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         vmSeqId: String,
         vmName: String
     ): Boolean {
-        addHeartBeat(buildId, vmSeqId, System.currentTimeMillis())
+        heartbeatControl.addHeartBeat(buildId = buildId, vmSeqId = vmSeqId, time = System.currentTimeMillis())
         setStartUpVMStatus(
             projectId = projectId, pipelineId = pipelineId,
             buildId = buildId, vmSeqId = vmSeqId, buildStatus = BuildStatus.SUCCEED
@@ -153,10 +147,9 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
                 if (vmId.toString() == vmSeqId) {
                     // 增加判断状态，如果是已经结束的，拒绝重复启动请求
-                    BuildStatus.values().forEach { s ->
-                        if (BuildStatus.isFinish(s) && s.name == it.startVMStatus) {
-                            throw IllegalStateException("Deny to start VM! startVMStatus=${it.startVMStatus}")
-                        }
+                    if (BuildStatus.parse(it.startVMStatus).isFinish()) {
+                        logger.info("[$buildId]|Start the build vmSeqId($vmSeqId) and vmName($vmName)")
+                        throw OperationException("重复启动构建机/Repeat start VM! startVMStatus ${it.startVMStatus}")
                     }
                     var timeoutMills: Long? = null
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
@@ -183,7 +176,9 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         emptyList()
                     }
                     pipelineBuildDetailService.containerStart(buildId = buildId, containerId = vmSeqId.toInt())
-                    addHeartBeat(buildId = buildId, vmSeqId = vmSeqId, time = System.currentTimeMillis())
+                    heartbeatControl.addHeartBeat(buildId, vmSeqId, System.currentTimeMillis())
+                    // # 2365 将心跳监听事件 构建机主动上报成功状态时才触发
+                    heartbeatControl.dispatchHeartbeatEvent(buildInfo = buildInfo, containerId = vmSeqId)
                     setStartUpVMStatus(
                         projectId = buildInfo.projectId,
                         pipelineId = buildInfo.pipelineId,
@@ -193,9 +188,10 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     )
                     // 告诉dispatch agent启动了，为JOB计时服务
                     try {
-                        client.get(ServiceJobQuotaBusinessResource::class).addRunningAgent(buildInfo.projectId, buildId, vmSeqId)
-                    } catch (e: Throwable) {
-                        logger.error("Add running agent to job quota failed.")
+                        client.get(ServiceJobQuotaBusinessResource::class)
+                            .addRunningAgent(projectId = buildInfo.projectId, buildId = buildId, vmSeqId = vmSeqId)
+                    } catch (ignored: Throwable) {
+                        logger.error("[$buildId]|FAIL_Job#$vmSeqId|Add running agent to job quota failed.", ignored)
                     }
 
                     return BuildVariables(
@@ -307,22 +303,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
      */
     fun buildClaimTask(buildId: String, vmSeqId: String, vmName: String): BuildTask {
         return buildClaim(buildId, vmSeqId, vmName)
-    }
-
-    private fun addHeartBeat(buildId: String, vmSeqId: String, time: Long, retry: Int = 10) {
-        try {
-            redisOperation.set(
-                HeartBeatUtils.genHeartBeatKey(buildId, vmSeqId),
-                time.toString(), TimeUnit.MINUTES.toSeconds(30)
-            )
-        } catch (t: Throwable) {
-            if (retry > 0) {
-                logger.warn("Fail to set heart beat variable($vmSeqId -> $time) of $buildId")
-                addHeartBeat(buildId, vmSeqId, time, retry - 1)
-            } else {
-                throw t
-            }
-        }
     }
 
     private fun buildClaim(buildId: String, vmSeqId: String, vmName: String): BuildTask {
@@ -458,16 +438,18 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
         }
 
-        val turboTaskId = getTurboTask(task.pipelineId, task.taskId)
+        // 构造扩展变量
+        val extMap = buildExtService.buildExt(task)
 
         // 认领任务
         pipelineRuntimeService.claimBuildTask(buildId, task, userId)
 
         val buildVariable = mutableMapOf(
             PIPELINE_VMSEQ_ID to vmSeqId,
-            PIPELINE_ELEMENT_ID to task.taskId,
-            PIPELINE_TURBO_TASK_ID to turboTaskId
+            PIPELINE_ELEMENT_ID to task.taskId
         )
+
+        buildVariable.putAll(extMap)
 
         PipelineVarUtil.fillOldVar(buildVariable)
 
@@ -633,7 +615,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             logger.warn("[$buildId]|name=$vmName|containerId=$vmSeqId|There are multiple stopVM tasks!")
             return false
         }
-        redisOperation.delete(HeartBeatUtils.genHeartBeatKey(buildId, vmSeqId))
+        heartbeatControl.dropHeartbeat(buildId = buildId, vmSeqId = vmSeqId)
         pipelineRuntimeService.completeClaimBuildTask(buildId, tasks[0].taskId, tasks[0].starter, BuildStatus.SUCCEED)
         logger.info("Success to complete the build($buildId) of seq($vmSeqId)")
         return true
@@ -641,7 +623,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
     fun heartbeat(buildId: String, vmSeqId: String, vmName: String): Boolean {
         logger.info("[$buildId]|Do the heart ($vmSeqId$vmName)")
-        addHeartBeat(buildId, vmSeqId, System.currentTimeMillis())
+        heartbeatControl.addHeartBeat(buildId = buildId, vmSeqId = vmSeqId, time = System.currentTimeMillis())
         return true
     }
 
@@ -731,40 +713,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             atomMonitorEventDispatcher.dispatch(AtomMonitorReportBroadCastEvent(atomMonitorData))
         } catch (t: Throwable) {
             logger.warn("[$buildId]| Fail to send the measure element data", t)
-        }
-    }
-
-    @Suppress("UNCHECKED_CAST") // FIXME: 需要重新定义接口拆分实现，此处非开源所需要
-    fun getTurboTask(pipelineId: String, elementId: String): String {
-        try {
-            val instances = consulClient!!.getInstances("turbo")
-                ?: return ""
-            if (instances.isEmpty()) {
-                return ""
-            }
-            val url = "${if (instances[0].isSecure) "https" else
-                "http"}://${instances[0].host}:${instances[0].port}/api/service/turbo/task/pipeline/$pipelineId/$elementId"
-
-            logger.info("Get turbo task info, request url: $url")
-            val request = Request.Builder().url(url).get().build()
-            OkhttpUtils.doHttp(request).use { response ->
-                val data = response.body()?.string() ?: return ""
-                logger.info("Get turbo task info, response: $data")
-                if (!response.isSuccessful) {
-                    throw RemoteServiceException(data)
-                }
-                val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
-                val code = responseData["status"] as Int
-                if (0 == code) {
-                    val dataMap = responseData["data"] as Map<String, Any>
-                    return dataMap["taskId"] as String? ?: ""
-                } else {
-                    throw RemoteServiceException(data)
-                }
-            }
-        } catch (e: Throwable) {
-            logger.warn("Get turbo task info failed, $e")
-            return ""
         }
     }
 

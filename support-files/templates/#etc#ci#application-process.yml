@@ -25,5 +25,5 @@ queueConcurrency:
 build:
   atomMonitorData:
     report:
-      switch: false  
+      switch: false
       maxMonitorDataSize: 1677216

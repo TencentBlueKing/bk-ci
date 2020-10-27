@@ -1,8 +1,8 @@
 <template>
     <section v-if="container" :class="{ &quot;readonly&quot;: !editable }" class="container-property-panel bk-form bk-form-vertical">
-        <form-field :required="true" :label="$t('name')" :is-error="errors.has(&quot;name&quot;)" :error-msg="errors.first(&quot;name&quot;)">
+        <form-field label="Job ID" :is-error="errors.has(&quot;jobId&quot;)" :error-msg="errors.first(&quot;jobId&quot;)" :desc="$t('jobIdTips')">
             <div class="container-resource-name">
-                <vuex-input :disabled="!editable" input-type="text" :placeholder="$t('nameInputTips')" name="name" v-validate.initial="&quot;required&quot;" :value="container.name" :handle-change="handleContainerChange" />
+                <vuex-input :disabled="!editable" input-type="text" :placeholder="$t('jobIdTips')" name="jobId" v-validate.initial="`paramsRule|unique:${allJobId}`" :value="container.jobId" :handle-change="handleContainerChange" />
                 <atom-checkbox
                     v-if="isVmContainer(container)"
                     class="show-build-resource"
@@ -174,6 +174,9 @@
                     :set-parent-validate="setContainerValidate"
                     @setKeyValueValidate="setContainerValidate"
                     :disabled="!editable"
+                    :stage="stage"
+                    :stage-index="stageIndex"
+                    :container-index="containerIndex"
                 >
                 </job-option>
             </div>
@@ -385,6 +388,17 @@
                         itemTargetUrl: `/ticket/${this.projectId}/createCredential/USERNAME_PASSWORD/true`
                     }
                 }
+            },
+            allJobId () {
+                const jobIdList = []
+                this.stages.forEach(stage => {
+                    stage.containers.forEach(container => {
+                        if (container.jobId) {
+                            jobIdList.push(container.jobId)
+                        }
+                    })
+                })
+                return jobIdList
             }
         },
         watch: {
@@ -410,6 +424,9 @@
             }
             if (!this.isTriggerContainer(container) && this.container.mutexGroup === undefined) {
                 Vue.set(container, 'mutexGroup', {})
+            }
+            if (!this.isTriggerContainer(container) && this.container.jobId === undefined) {
+                Vue.set(container, 'jobId', '')
             }
             if (this.buildResourceType === 'THIRD_PARTY_AGENT_ID' && !this.container.dispatchType.agentType) {
                 this.handleContainerChange('dispatchType', Object.assign({

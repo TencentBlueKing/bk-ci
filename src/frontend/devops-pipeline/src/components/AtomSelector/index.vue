@@ -266,8 +266,8 @@
             getAtomFromStore (atomTree) {
                 const storeList = (this.storeAtomData.data || []).filter((item) => {
                     let res = true
-                    if (this.category === 'TRIGGER') res = item.classifyCode === 'trigger'
-                    else res = item.classifyCode !== 'trigger'
+                    if (this.category === 'TRIGGER') res = item.category === 'TRIGGER'
+                    else res = item.category !== 'TRIGGER'
                     return res
                 })
                 const allAtom = atomTree.all || {}
@@ -290,7 +290,7 @@
                     store.atomType = store.rdType
 
                     const os = store.os || []
-                    const isInOs = (!os.length && store.buildLessRunFlag) || (!os.length && !baseOs) || os.findIndex((x) => (x === baseOs)) > -1
+                    const isInOs = (!os.length && store.buildLessRunFlag) || (!os.length && !baseOs) || os.findIndex((x) => (x === baseOs)) > -1 || store.category === 'TRIGGER'
 
                     store.disabled = !isInOs
                     store.notShowSelect = true

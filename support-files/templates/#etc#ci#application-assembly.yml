@@ -1,104 +1,122 @@
 # 单服务的配置文件模板，整合了所有微服务模块
 spring:
   datasource:
-    url: jdbc:mysql://__MYSQL_IP0__:__MYSQL_PORT__/devops_ci_process?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
-    username: __MYSQL_USER__
-    password: __MYSQL_PASS__
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: __BK_CI_MYSQL_USER__
+    password: __BK_CI_MYSQL_PASSWORD__
 
 server:
-  port: 21900
+  port: __BK_CI_ASSEMBLY_API_PORT__
 
 #### Artifactory
 # 以下为构件存储目录，需要做分布式分享
 # 如果微服务是部署多机节点，则以下目录需要做成分布式高可用的，比如NFS，CephFS挂载
 # 保证多节点都能读取到
 artifactory:
-  archiveLocalBasePath: __INSTALL_PATH__/public/__MODULE__/artifactory
-  archiveJFrogBasePath: /tmp
+  archiveLocalBasePath: __BK_CI_DATA_DIR__/artifactory
+  fileTask:
+    savedir: __BK_CI_DATA_DIR__/artifactory-filetask/  # 不一定共享, 但是建议准备较大容量.
+    file:
+      expireTimeMinutes: 720
+    record:
+      clear:
+        enable: false
+        expireTimeDays: 7
 
 # 自已有部署Jfrog的可以对接
-jfrog:
-  url: __JFROG_URL__
-  docker_url: __DOCKER_URL__
-  docker_port: __DOCKER_PORT__
-  username: __JFROG_USERNAME__
-  password: __JFROG_PASSWORD__
+#jfrog:
+#  url: __JFROG_URL__
+#  docker_url: __DOCKER_URL__
+#  docker_port: __DOCKER_PORT__
+#  username: __JFROG_USERNAME__
+#  password: __JFROG_PASSWORD__
 
 #### Dispatch
 dispatch:
-  workerFile: __INSTALL_PATH__/__MODULE__/agent-package/jar/worker-agent.jar
-  dockerFile: __INSTALL_PATH__/__MODULE__/agent-package/jar/worker-agent.jar
-  scripts: __INSTALL_PATH__/__MODULE__/agent-package/script
-  dockerBuildImagePrefix: __DOCKER_IMAGE_PREFIX__:__DOCKER_PORT__/paas/bkdevops
-  defaultImageUrl: __DOCKER_IMAGE_PREFIX__:__DOCKER_PORT__/paas/bkdevops/centos7.2:v1
-  defaultImageName: centos7.2
-  dockerhostPort: __BKCI_DOCKERHOST_API_PORT__
+  workerFile: __BK_CI_HOME__/agent-package/jar/worker-agent.jar
+  dockerFile: __BK_CI_HOME__/agent-package/jar/worker-agent.jar
+  scripts: __BK_CI_HOME__/agent-package/script
+  #defaultImageUrl: __BK_CI_DOCKER_IMAGE_PREFIX__/paas/bkdevops/centos7.2:v1
+  #defaultImageName: centos7.2
+  #dockerhostPort: __BK_CI_DOCKERHOST_API_PORT__
+  jobQuota:
+    systemAlertReceiver:
+    enable: false
 
 codecc:
-  path: __INSTALL_PATH__/public/codecc/tools
+  path: __BK_CODECC_DATA_DIR__/tools
   covFile: build_dev.py
   toolFile: build_tool_dev.py
 
 #### environment
 
 environment:
-  agent-package: __INSTALL_PATH__/__MODULE__/agent-package
-  agentCollectorOn: __AGENT_COLLECTOR_ON__
+  agent-package: __BK_CI_HOME__/agent-package
+  agentCollectorOn: __BK_CI_ENVIRONMENT_AGENT_COLLECTOR_ON__
 
 influxdb:
-  server: __INFLUXDB_SERVER__
-  userName: __INFLUXDB_USERNAME__
-  password: __INFLUXDB_PASSWORD__
+  server: __BK_CI_INFLUXDB_ADDR__
+  userName: __BK_CI_INFLUXDB_USER__
+  password: __BK_CI_INFLUXDB_PASSWORD__
 
 #### DockerHost
-
+dockerhost:
+  mode: docker_build
 
 # docker client 配置
 dockerCli:
-  volumeWorkspace: /data/bkdevops/workspace
-  volumeApps: /data/bkdevops/apps/
+  dockerHost: unix:///var/run/docker.sock
+  dockerConfig: /root/.docker
+  apiVersion: 1.23
+  # docker hub 配置
+  registryUrl: __BK_CI_DOCKER_REGISTRY_URL__
+  registryUsername: __BK_CI_DOCKER_REGISTRY_USER__
+  registryPassword: __BK_CI_DOCKER_REGISTRY_PASSWORD__
+
+  # 以下一般不用修改
+  volumeWorkspace: /data/devops/workspace
+  volumeApps: /data/devops/apps/
   volumeInit: /data/init.sh
-  volumeSleep: /data/bkdevops/sleep.sh
-  volumeLogs: /data/bkdevops/logs
-  volumeCodecc: /data/bkdevops/codecc/
-  volumeProjectShare: /data/bkdevops/share
+  volumeSleep: /data/devops/sleep.sh
+  volumeLogs: /data/devops/logs
+  volumeCodecc: /data/devops/codecc/
+  volumeProjectShare: /data/devops/share
   volumeMavenRepo: /root/.m2/repository
   volumeNpmPrefix: /root/Downloads/npm/prefix
   volumeNpmCache: /root/Downloads/npm/cache
   volumeNpmRc: /root/.npmrc
   volumeCcache: /root/.ccache
   volumeGradleCache: /root/.gradle/caches
+  volumeGolangCache: /root/go/pkg/mod
+  volumeSbtCache: /root/.ivy2
+  volumeSbt2Cache: /root/.cache
+  volumeYarnCache: /usr/local/share/.cache/
   hostPathLinkDir: /tmp/bkci
   hostPathHosts: /etc/hosts
-  dockerHost: unix:///var/run/docker.sock
-  dockerConfig: /root/.docker
-  apiVersion: 1.23
-  # docker hub 配置
-  registryUrl: __DOCKER_REGISTRY_URL__
-  registryUsername: __DOCKER_REGISTRY_USERNAME__
-  registryPassword: __DOCKER_REGISTRY_PASSWORD__
-
-  # 以下一般不用修改
 
   # docker 母机上的配置，workspace用于存放构建的工作空间，可以以挂载的方式提供
-  hostPathWorkspace: __INSTALL_PATH__/public/__MODULE__/docker/workspace
-  hostPathApps: __INSTALL_PATH__/public/__MODULE__/docker/apps/
-  hostPathInit: __INSTALL_PATH__/__MODULE__/agent-package/script/init.sh
-  hostPathSleep: __INSTALL_PATH__/__MODULE__/agent-package/script/sleep.sh
-  hostPathLogs: __INSTALL_PATH__/logs/__MODULE__/docker
-  hostPathCodecc: /data/bkdevops/codecc
-  hostPathProjectShare: __INSTALL_PATH__/public/__MODULE__/docker/share/project
-  hostPathMavenRepo: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/maven_repo
-  hostPathNpmPrefix: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/npm_prefix
-  hostPathNpmCache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/npm_cache
-  hostPathNpmRc: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/.npmrc
-  hostPathCcache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/ccache/
-  hostPathGradleCache: __INSTALL_PATH__/public/__MODULE__/docker/thirdparty/gradle_caches
+  hostPathWorkspace: __BK_CI_DATA_DIR__/docker/workspace
+  hostPathApps: __BK_CI_DATA_DIR__/docker/apps/
+  hostPathInit: __BK_CI_HOME__/agent-package/script/init.sh
+  hostPathSleep: __BK_CI_HOME__/agent-package/script/sleep.sh
+  hostPathLogs: __BK_CI_LOGS_DIR__/docker
+  hostPathCodecc: /data/devops/codecc
+  hostPathProjectShare: __BK_CI_DATA_DIR__/docker/share/project
+  hostPathMavenRepo: __BK_CI_DATA_DIR__/docker/thirdparty/maven_repo
+  hostPathNpmPrefix: __BK_CI_DATA_DIR__/docker/thirdparty/npm_prefix
+  hostPathNpmCache: __BK_CI_DATA_DIR__/docker/thirdparty/npm_cache
+  hostPathNpmRc: __BK_CI_DATA_DIR__/docker/thirdparty/.npmrc
+  hostPathCcache: __BK_CI_DATA_DIR__/docker/thirdparty/ccache/
+  hostPathGradleCache: __BK_CI_DATA_DIR__/docker/thirdparty/gradle_caches
+  hostPathGolangCache: __BK_CI_DATA_DIR__/docker/thirdparty/go_cache/
+  hostPathSbtCache: __BK_CI_DATA_DIR__/docker/thirdparty/.ivy2/
+  hostPathSbt2Cache: __BK_CI_DATA_DIR__/docker/thirdparty/sbt_cache/
+  hostPathYarnCache: __BK_CI_DATA_DIR__/docker/thirdparty/yarn_cache/
   # 需要共享的项目
   shareProjectCodeWhiteList:
   # docker.jar 存储路径
-  dockerAgentPath: __INSTALL_PATH__/__MODULE__/agent-package/worker-agent.jar
-  downloadDockerAgentUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/ms/dispatch/gw/build/docker.jar
+  dockerAgentPath: __BK_CI_HOME__/agent-package/worker-agent.jar
+  downloadDockerAgentUrl: __BK_CI_PRIVATE_URL__/ms/dispatch/gw/build/docker.jar
   # 定期下载
   downloadAgentCron: 0 0 3 * * ?
   landunEnv: prod
@@ -112,18 +130,23 @@ image:
     dockerHost: unix:///var/run/docker.sock
     dockerConfig: /root/.docker
     apiVersion: 1.23
-    registryUrl: __JFROG_URL__
-    registryUsername: __DOCKER_REGISTRY_USERNAME__
-    registryPassword: __DOCKER_REGISTRY_PASSWORD__
-    imagePrefix: __DOCKER_IMAGE_PREFIX__:__DOCKER_PORT__
+    registryUrl: __BK_CI_DOCKER_REGISTRY_URL__  # 什么类型的url?
+    registryUsername: __BK_CI_DOCKER_REGISTRY_USER__
+    registryPassword: __BK_CI_DOCKER_REGISTRY_PASSWORD__
+    imagePrefix: __BK_CI_DOCKER_IMAGE_PREFIX__
 
 #### log
 
 elasticsearch:
-  ip: __BKCI_ES_IP__
-  port: __BKCI_ES_PORT__
-  cluster: bkee-es
-#  ES集群如果要求证书验证的场景，需要需要打开以下4个配置项， 设置keystore文件和truststore文件以及密码
+  ip: __BK_CI_ES_REST_ADDR__   # 今后只使用REST client.
+  port: __BK_CI_ES_REST_PORT__
+  cluster: __BK_CI_ES_CLUSTER_NAME__
+  name: DEVOPS
+#  ES集群如果不要求账号密码认证，则可以去掉以下2个ES的访问账号密码配置项或留空
+  username: __BK_CI_ES_USER__
+  password: __BK_CI_ES_PASSWORD__
+#  ES集群如果要求HTTPS协议请求，则需要需要打开以下5个配置项， 设置keystore文件和truststore文件以及密码
+#  https: true
 #  keystore:
 #    filePath:
 #    password:
@@ -135,74 +158,74 @@ elasticsearch:
 
 plugin:
   codecc:
-    path: __INSTALL_PATH__/public/codecc/tools
+    path: __BK_CODECC_DATA_DIR__/tools
     covFile: build_dev.py
     toolFile: build_tool_dev.py
 
 #### project
 # 蓝鲸登录平台API地址，对接蓝鲸平台时才需要用到
 bk_login:
-  path: __HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/api/c/compapi/v2/bk_login/
+  path: __BK_PAAS_PRIVATE_URL__/api/c/compapi/v2/bk_login/
   getUser: get_user/
   getAllUser: get_all_users/
-  bk_app_code: __APP_CODE__
-  bk_app_secret: __APP_TOKEN_
+  bk_app_code: __BK_CI_APP_CODE__
+  bk_app_secret: __BK_CI_APP_TOKEN__
 
 #### repository
 
 repository:
   git: # git 管理私有Token，一般不用，用于插件库分组
-    devopsPrivateToken: __DEVOPS_GIT_PRIVATE_TOKEN__
-    devopsGroupName: __DEVOPS_GIT_PLUGIN_GROUP_NAME__
+    devopsPrivateToken: __BK_CI_REPOSITORY_GIT_PRIVATE_TOKEN__
+    devopsGroupName: __BK_CI_REPOSITORY_GIT_PLUGIN_GROUP_NAME__
 
 scm:
   #svn open api url，如果不需要则放着即可
   svn:
-    apiKey: __SVN_API_KEY__
-    apiUrl: __SVN_URL__/rest
-    webhookApiUrl: __SVN_URL__/rest/webhooks
-    svnHookUrl: __HTTP_SCHEMA__://__BKCI_FQDN__/ms/process/api/external/scm/codesvn/commit
+    apiKey: __BK_CI_REPOSITORY_SVN_API_KEY__
+    apiUrl: __BK_CI_REPOSITORY_SVN_API_URL__  # 结尾一般为 /rest
+    webhookApiUrl: __BK_CI_REPOSITORY_SVN_WEBHOOK_URL__  # 一般为 SVN_API_URL/webhooks
+    svnHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/codesvn/commit
   # git 仓库配置，如果不需要则放着即可
   git:
-    url: __GIT_URL__
-    apiUrl: __GIT_URL__/api/v3
+    url: __BK_CI_REPOSITORY_GIT_URL__
+    apiUrl: __BK_CI_REPOSITORY_GIT_URL__/api/v3
     clientId: clientId
     clientSecret: Secret
-    redirectUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/codelib
-    redirectAtomMarketUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomList
-    gitHookUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/ms/process/api/external/scm/codegit/commit
-    public:
+    redirectUrl: __BK_CI_PUBLIC_URL__/console/codelib
+    redirectAtomMarketUrl: __BK_CI_PUBLIC_URL__/console/store/atomList
+    gitHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/codegit/commit
+    public:  # TODO 无用配置, 待清理.
       account: devops
       email: devops@devops.com
       secret: devops123
   external:
-    #gitlab typo repository
+    #gitlab v4.
     gitlab:
-      apiUrl: __GITLAB_URL__/api/v4
-      gitlabHookUrl: __HTTP_SCHEMA__://__BKCI_FQDN__/ms/process/api/external/scm/gitlab/commit
+      apiUrl: __BK_CI_REPOSITORY_GITLAB_URL__/api/v4
+      gitlabHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/gitlab/commit
     github:
-      clientId: __GITHUB_CLIENT_ID__
-      clientSecret: __GITHUB_CLIENT_SECRET__
-      callbackUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/external/api/external/github/oauth/callback
-      redirectUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/codelib
-      appUrl: https://github.com/apps/__GITHUB_APP__
-      signSecret: __GITHUB_SIGN_SECRET__
+      clientId: __BK_CI_REPOSITORY_GITHUB_CLIENT_ID__
+      clientSecret: __BK_CI_REPOSITORY_GITHUB_CLIENT_SECRET__
+      callbackUrl: __BK_CI_PUBLIC_URL__/external/api/external/github/oauth/callback
+      redirectUrl: __BK_CI_PUBLIC_URL__/console/codelib
+      appUrl: https://github.com/apps/__BK_CI_REPOSITORY_GITHUB_APP__
+      signSecret: __BK_CI_REPOSITORY_GITHUB_SIGN_SECRET__
 
 #### store
 
 store:
   commentNotifyAdmin: admin
-  profileUrlPrefix: __HTTP_SCHEMA__://__PAAS_USER_AVATARS_URL__
-  atomDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/atom/
-  templateDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/template/
-  artifactoryServiceUrlPrefix: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/ms/artifactory/api
-  ideAtomDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/ide/
-  imageDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/image/
+  profileUrlPrefix: __BK_CI_STORE_USER_AVATARS_URL__
+  atomDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/atom/
+  templateDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/template/
+  artifactoryServiceUrlPrefix: __BK_CI_PUBLIC_URL__/ms/artifactory/api
+  ideAtomDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/ide/
+  imageDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/image/
   baseImageDocsLink: /console/store/atomStore/detail/image/
   imageAdminUsers: admin
-  buildResultBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/pipeline
+  buildResultBaseUrl: __BK_CI_PUBLIC_URL__/console/pipeline
   defaultImageSourceType: bkdevops
-  defaultImageRepoUrl: __HTTP_SCHEMA__://__JFROG_FQDN__:__DOCKER_PORT__
+  defaultImageRepoUrl: __BK_CI_DOCKER_REGISTRY_URL__
   defaultImageRepoName: paas/bkdevops/docker-builder2.2
   defaultImageTag: v1
   defaultTicketId:
@@ -245,4 +268,18 @@ thread:
 # 流水线加密参数密钥
 parameter:
   password:
-    pswKey: __PASSWORD_KEY__
+    pswKey: __BK_CI_PIPELINE_PARAMETER_ENCRYPT_PASSWORD__
+
+# 流水线引擎并发配置
+queueConcurrency:
+  buildStart: __BK_CI_PROCESS_EVENT_CONCURRENT__    # 构建启动消息并发处理数量
+  stage: __BK_CI_PROCESS_EVENT_CONCURRENT__         # 步骤消息并发处理数量
+  container: __BK_CI_PROCESS_EVENT_CONCURRENT__     # Job消息并发处理数量
+  task: __BK_CI_PROCESS_EVENT_CONCURRENT__          # Task消息并发处理数量
+  buildFinish: __BK_CI_PROCESS_EVENT_CONCURRENT__   # 构建结束消息并发处理数量
+
+build:
+  atomMonitorData:
+    report:
+      switch: false
+      maxMonitorDataSize: 1677216
