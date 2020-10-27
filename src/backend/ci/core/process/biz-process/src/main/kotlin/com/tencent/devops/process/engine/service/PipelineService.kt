@@ -200,8 +200,8 @@ class PipelineService @Autowired constructor(
             // 检查用户流水线是否达到上限
             val projectVO = client.get(ServiceProjectResource::class).get(projectId).data
             if (projectVO?.pipelineLimit != null) {
-                val count = pipelineInfoDao.countByProjectIds(dslContext, listOf(projectId), ChannelCode.BS)
-                if (count > projectVO.pipelineLimit!!) {
+                val preCount = pipelineInfoDao.countByProjectIds(dslContext, listOf(projectId), ChannelCode.BS)
+                if (preCount >= projectVO.pipelineLimit!!) {
                     throw OperationException("该项目最多只能创建${projectVO.pipelineLimit}条流水线")
                 }
             }
