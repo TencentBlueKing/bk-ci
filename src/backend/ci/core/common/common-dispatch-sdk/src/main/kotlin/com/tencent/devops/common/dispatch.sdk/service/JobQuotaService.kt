@@ -106,7 +106,8 @@ class JobQuotaService constructor(
         containerId: String,
         containerHashId: String?,
         executeCount: Int?,
-        vmType: JobQuotaVmType?): Boolean {
+        vmType: JobQuotaVmType?
+    ): Boolean {
         if (vmType == null) {
             logger.warn("vmType is null, job quota check will be skipped.")
             return true

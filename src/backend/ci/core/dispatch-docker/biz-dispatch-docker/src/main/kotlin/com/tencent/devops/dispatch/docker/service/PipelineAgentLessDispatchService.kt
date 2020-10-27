@@ -48,7 +48,6 @@ class PipelineAgentLessDispatchService @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val jobQuotaService: JobQuotaService
 ) {
-
     private var dispatchers: Set<BuildLessDispatcher>? = null
 
     private fun getDispatchers(): Set<BuildLessDispatcher> {
