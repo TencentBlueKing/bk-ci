@@ -168,4 +168,15 @@ class SensitiveConfDao {
                 .fetch()
         }
     }
+
+    /**
+     * 删除敏感信息配置
+     */
+    fun deleteSensitiveConf(dslContext: DSLContext, storeCode: String, storeType: Byte) {
+        with(TStoreSensitiveConf.T_STORE_SENSITIVE_CONF) {
+            dslContext.deleteFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
+                .execute()
+        }
+    }
 }

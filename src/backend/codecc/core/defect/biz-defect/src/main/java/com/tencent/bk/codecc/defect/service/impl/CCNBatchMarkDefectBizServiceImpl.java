@@ -1,7 +1,6 @@
 package com.tencent.bk.codecc.defect.service.impl;
 
 import com.tencent.bk.codecc.defect.dao.mongotemplate.CCNDefectDao;
-import com.tencent.bk.codecc.defect.dao.mongotemplate.DefectDao;
 import com.tencent.bk.codecc.defect.vo.BatchDefectProcessReqVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +22,6 @@ public class CCNBatchMarkDefectBizServiceImpl extends AbstractCCNBatchDefectProc
     @Override
     protected void doBiz(List defectList, BatchDefectProcessReqVO batchDefectProcessReqVO)
     {
-        defectDao.batchMarkDefect(defectList, batchDefectProcessReqVO.getMarkFlag());
+        defectDao.batchMarkDefect(batchDefectProcessReqVO.getTaskId(), defectList, batchDefectProcessReqVO.getMarkFlag());
     }
 }

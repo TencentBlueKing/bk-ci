@@ -119,7 +119,7 @@ module.exports = (env = {}, argv) => {
         ...(isDev
             ? [
                 new ReplacePlugin({
-                    '__HTTP_SCHEMA__://__BKCI_FQDN__': urlPrefix
+                    '__BK_CI_PUBLIC_URL__': urlPrefix
                 })
             ]
             : [])

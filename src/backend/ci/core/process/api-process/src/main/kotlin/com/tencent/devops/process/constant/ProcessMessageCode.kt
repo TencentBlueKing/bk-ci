@@ -101,6 +101,10 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_STAGE_NO_TRIGGER_USER = "2101055" // 手动触发的Stage没有未配置可执行人
     const val ERROR_PIPELINE_DESC_TOO_LONG = "2101056" // 流水线描述过长
     const val ILLEGAL_TIMER_INTERVAL_CRONTAB = "2101057" // 定时触发器的定时参数[{0}]不能秒级触发
+    const val ERROR_PIPLEINE_INPUT = "2101058" // 流水线: 前端缓存异常,请刷新后重新操作
+    const val MODEL_ATOMCODE_NOT_EXSIT = "2101059" // MODEL内存在不存在的AtomCode
+    const val MODEL_ATOMCODE_PROJECT_NOT_INSTALL = "2101060" // Model内包含项目未安装插件[{0}]
+    const val MODEL_DEFAULT_ATOMCODE_NOT_EXSIT = "2101061" // Model内包含不存在的内置插件
 
     const val ERROR_PIPELINE_NOT_EXISTS = "2101038" // 流水线不存在
     const val ERROR_PIPELINE_MODEL_NOT_EXISTS = "2101039" // 流水线的模型不存在
@@ -188,4 +192,8 @@ object ProcessMessageCode {
     // callback error
     const val ERROR_CALLBACK_URL_INVALID = "2101180" // 回调的url非法
     const val USER_NEED_PROJECT_X_PERMISSION = "2101181" // 用户（{0}）无（{1}）项目权限
+
+    const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101301" // ({0})与({1})的jobId循环依赖
+    const val ERROR_PIPELINE_JOBID_EXIST = "2101302" // ({0})的jobId({1})已存在
+    const val ERROR_PIPELINE_DEPENDEON_NOT_EXIST = "2101303" // job:({0})依赖的({1})不存在
 }

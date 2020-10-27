@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.notify.enums.NotifyType
@@ -40,11 +41,13 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -52,6 +55,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
@@ -69,14 +73,17 @@ import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
+import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicInteger
 import javax.ws.rs.core.Response
@@ -100,9 +107,13 @@ class PipelineRepositoryService constructor(
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineJobMutexGroupService: PipelineJobMutexGroupService,
+    private val pipelineGroupService: PipelineGroupService,
     private val modelCheckPlugin: ModelCheckPlugin,
     private val templatePipelineDao: TemplatePipelineDao
 ) {
+
+    @Value("\${notify.silent.channel:AM,CODECC,CODECC_EE,GONGFENGSCAN}")
+    private val notifySilentChannels: String = ""
 
     fun deployPipeline(
         model: Model,
@@ -182,7 +193,7 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode
     ): Set<PipelineModelTask> {
 
-        modelCheckPlugin.checkModelIntegrity(model)
+        modelCheckPlugin.checkModelIntegrity(model, projectId)
 
         // 初始化ID TODO 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val modelTasks = mutableSetOf<PipelineModelTask>()
@@ -311,6 +322,10 @@ class PipelineRepositoryService constructor(
                     // CodeEventType.MERGE_REQUEST_ACCEPT 和 CodeEventType.MERGE_REQUEST等价处理
                     val eventType = if (e.data.input.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) CodeEventType.MERGE_REQUEST else e.data.input.eventType
                     Pair(RepositoryConfig(e.data.input.repositoryHashId, e.data.input.repositoryName, e.data.input.repositoryType ?: RepositoryType.ID), eventType)
+                }
+                is CodeGitGenericWebHookTriggerElement -> {
+                    val eventType = if (e.data.input.eventType == CodeEventType.MERGE_REQUEST_ACCEPT.name) CodeEventType.MERGE_REQUEST else CodeEventType.valueOf(e.data.input.eventType)
+                    Pair(RepositoryConfigUtils.buildConfig(e), eventType)
                 }
                 else -> return@forEach
             }
@@ -482,7 +497,7 @@ class PipelineRepositoryService constructor(
             ) {
                 if (null == pipelineSettingDao.getSetting(transactionContext, pipelineId)) {
                     var notifyTypes = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}"
-                    if (channelCode == ChannelCode.AM) {
+                    if (channelCode.name in notifySilentChannels.split(",")) {
                         // 研发商店创建的内置流水线默认不发送通知消息
                         notifyTypes = ""
                     }
@@ -623,6 +638,89 @@ class PipelineRepositoryService constructor(
             logger.error("get process($pipelineId) model fail", e)
             null
         }
+    }
+
+    fun getPipelinesWithLastestModels(projectId: String, pipelineIds: List<String>, channelCode: ChannelCode): List<PipelineWithModel> {
+        val pipelines = mutableListOf<PipelineWithModel>()
+        val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList())
+        val pipelineBuildSummaries = pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = channelCode,
+            sortType = null,
+            pipelineIds = pipelineIds
+        )
+
+        pipelineBuildSummaries.forEach {
+            val pipelineId = it["PIPELINE_ID"] as String
+            val projectId = it["PROJECT_ID"] as String
+            val pipelineName = it["PIPELINE_NAME"] as String
+            val canManualStartup = it["MANUAL_STARTUP"] as Int == 1
+            val buildNum = it["BUILD_NUM"] as Int
+            val version = it["VERSION"] as Int
+            val taskCount = it["TASK_COUNT"] as Int
+            val creator = it["CREATOR"] as String
+            val createTime = (it["CREATE_TIME"] as java.time.LocalDateTime?)?.timestampmilli() ?: 0
+            val updateTime = (it["UPDATE_TIME"] as java.time.LocalDateTime?)?.timestampmilli() ?: 0
+
+            val pipelineDesc = it["DESC"] as String?
+            val runLockType = it["RUN_LOCK_TYPE"] as Int?
+
+            val finishCount = it["FINISH_COUNT"] as Int? ?: 0
+            val runningCount = it["RUNNING_COUNT"] as Int? ?: 0
+            val buildId = it["LATEST_BUILD_ID"] as String?
+            val startTime = (it["LATEST_START_TIME"] as java.time.LocalDateTime?)?.timestampmilli() ?: 0
+            val endTime = (it["LATEST_END_TIME"] as java.time.LocalDateTime?)?.timestampmilli() ?: 0
+            val starter = it["LATEST_START_USER"] as String? ?: ""
+            val taskName = it["LATEST_TASK_NAME"] as String?
+            val buildStatus = it["LATEST_STATUS"] as Int?
+            val latestBuildStatus =
+                if (buildStatus != null) {
+                    if (buildStatus == BuildStatus.QUALITY_CHECK_FAIL.ordinal) {
+                        BuildStatus.FAILED
+                    } else {
+                        BuildStatus.values()[buildStatus]
+                    }
+                } else {
+                    null
+                }
+            val buildCount = finishCount + runningCount + 0L
+            val modelString = pipelineResDao.getLatestVersionModelString(dslContext, pipelineId)
+
+            // 如果有记录为空的情况，直接跳过
+            if (modelString.isNullOrBlank()) return@forEach
+            val model = objectMapper.readValue(modelString, Model::class.java)
+
+            pipelines.add(
+                PipelineWithModel(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    pipelineName = pipelineName,
+                    pipelineDesc = pipelineDesc,
+                    taskCount = taskCount,
+                    buildCount = buildCount,
+                    lock = if (runLockType == null) {
+                        false
+                    } else PipelineRunLockType.valueOf(runLockType) == PipelineRunLockType.LOCK,
+                    canManualStartup = canManualStartup,
+                    latestBuildStartTime = startTime,
+                    latestBuildEndTime = endTime,
+                    latestBuildStatus = latestBuildStatus,
+                    latestBuildNum = buildNum,
+                    latestBuildTaskName = taskName,
+                    latestBuildId = buildId,
+                    updateTime = updateTime,
+                    createTime = createTime,
+                    pipelineVersion = version,
+                    runningBuildCount = runningCount,
+                    latestBuildUserId = starter,
+                    creator = creator,
+                    groupLabel = pipelineGroupLabel[pipelineId],
+                    model = model
+                )
+            )
+        }
+        return pipelines
     }
 
     fun deletePipeline(

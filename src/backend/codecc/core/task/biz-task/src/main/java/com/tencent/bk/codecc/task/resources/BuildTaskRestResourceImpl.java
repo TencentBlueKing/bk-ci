@@ -31,7 +31,14 @@ import com.tencent.bk.codecc.task.service.PathFilterService;
 import com.tencent.bk.codecc.task.service.TaskRegisterService;
 import com.tencent.bk.codecc.task.service.TaskService;
 import com.tencent.bk.codecc.task.service.ToolService;
-import com.tencent.bk.codecc.task.vo.*;
+import com.tencent.bk.codecc.task.vo.FilterPathInputVO;
+import com.tencent.bk.codecc.task.vo.FilterPathOutVO;
+import com.tencent.bk.codecc.task.vo.NotifyCustomVO;
+import com.tencent.bk.codecc.task.vo.TaskDetailVO;
+import com.tencent.bk.codecc.task.vo.TaskIdVO;
+import com.tencent.bk.codecc.task.vo.ToolConfigPlatformVO;
+import com.tencent.bk.codecc.task.vo.path.CodeYmlFilterPathVO;
+import com.tencent.bk.codecc.task.vo.pipeline.PipelineTaskVO;
 import com.tencent.bk.codecc.task.vo.scanconfiguration.ScanConfigurationVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.util.JsonUtil;
@@ -73,6 +80,11 @@ public class BuildTaskRestResourceImpl implements BuildTaskRestResource
     public CodeCCResult<TaskDetailVO> getTaskInfoByStreamName(String streamName)
     {
         return new CodeCCResult<>(taskService.getTaskInfoByStreamName(streamName));
+    }
+
+    @Override
+    public CodeCCResult<PipelineTaskVO> getTaskInfoByPipelineId(String pipelineId, String userId) {
+        return new CodeCCResult<>(taskService.getTaskInfoByPipelineId(pipelineId, userId));
     }
 
     @Override
@@ -118,6 +130,11 @@ public class BuildTaskRestResourceImpl implements BuildTaskRestResource
     }
 
     @Override
+    public CodeCCResult<Boolean> codeYmlFilterPath(Long taskId, String userName, CodeYmlFilterPathVO codeYmlFilterPathVO) {
+        return new CodeCCResult<>(pathFilterService.codeYmlFilterPath(taskId, userName, codeYmlFilterPathVO));
+    }
+
+    @Override
     public CodeCCResult<Boolean> updateScanConfiguration(Long taskId, String user, ScanConfigurationVO scanConfigurationVO) {
         return new CodeCCResult<>(taskService.updateScanConfiguration(taskId, user, scanConfigurationVO));
     }
@@ -129,8 +146,7 @@ public class BuildTaskRestResourceImpl implements BuildTaskRestResource
     }
 
     @Override
-    public CodeCCResult<ToolConfigPlatformVO> getToolConfigInfo(Long taskId, String toolName)
-    {
+    public CodeCCResult<ToolConfigPlatformVO> getToolConfigInfo(Long taskId, String toolName) {
         return new CodeCCResult<>(toolService.getToolConfigPlatformInfo(taskId, toolName));
     }
 
@@ -142,7 +158,7 @@ public class BuildTaskRestResourceImpl implements BuildTaskRestResource
 
     @Override
     public CodeCCResult<Boolean> executeTask(long taskId, String isFirstTrigger,
-                                             String userName) {
+                                      String userName) {
         return new CodeCCResult<>(taskService.manualExecuteTask(taskId, isFirstTrigger, userName));
     }
 

@@ -35,20 +35,35 @@ import com.tencent.bk.codecc.defect.model.BuildDefectEntity;
 import com.tencent.bk.codecc.defect.model.CCNDefectEntity;
 import com.tencent.bk.codecc.defect.model.StatisticEntity;
 import com.tencent.bk.codecc.defect.service.AbstractQueryWarningBizService;
+import com.tencent.bk.codecc.defect.service.CheckerService;
 import com.tencent.bk.codecc.defect.service.PipelineService;
 import com.tencent.bk.codecc.defect.service.TreeService;
 import com.tencent.bk.codecc.defect.service.newdefectjudge.NewDefectJudgeService;
 import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
-import com.tencent.bk.codecc.defect.vo.*;
-import com.tencent.bk.codecc.defect.vo.common.*;
-import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectRespVO;
-import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectVO;
+import com.tencent.bk.codecc.defect.vo.CCNDefectDetailQueryRspVO;
+import com.tencent.bk.codecc.defect.vo.CCNDefectQueryRspVO;
+import com.tencent.bk.codecc.defect.vo.CCNDefectVO;
+import com.tencent.bk.codecc.defect.vo.CodeCommentVO;
+import com.tencent.bk.codecc.defect.vo.ToolDefectRspVO;
+import com.tencent.bk.codecc.defect.vo.TreeNodeVO;
+import com.tencent.bk.codecc.defect.vo.common.CommonDefectDetailQueryReqVO;
+import com.tencent.bk.codecc.defect.vo.common.CommonDefectDetailQueryRspVO;
+import com.tencent.bk.codecc.defect.vo.common.CommonDefectQueryRspVO;
+import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO;
+import com.tencent.bk.codecc.defect.vo.common.QueryWarningPageInitRspVO;
+import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
+import com.tencent.bk.codecc.task.vo.TaskDetailVO;
+import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.util.DateTimeUtils;
+import com.tencent.devops.common.util.GitUtil;
 import com.tencent.devops.common.util.PathUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -59,7 +74,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -68,10 +88,17 @@ import java.util.stream.Collectors;
  * @version V1.0
  * @date 2019/5/28
  */
+@Slf4j
 @Service("CCNQueryWarningBizService")
 public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizService
 {
     private static Logger logger = LoggerFactory.getLogger(CCNQueryWarningBizServiceImpl.class);
+
+    @Autowired
+    private Client client;
+
+    @Autowired
+    CheckerService checkerService;
 
     @Autowired
     private CCNDefectRepository ccnDefectRepository;
@@ -81,9 +108,6 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
 
     @Autowired
     private BizServiceFactory<TreeService> treeServiceBizServiceFactory;
-
-    @Autowired
-    private PipelineService pipelineService;
 
     @Autowired
     private NewDefectJudgeService newDefectJudgeService;
@@ -107,6 +131,23 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         List<CCNDefectEntity> originalCCNDefectList = ccnDefectDao.findByTaskIdAndAuthorAndRelPaths(taskId, author, fileList);
 
         CCNDefectQueryRspVO ccnFileQueryRspVO = new CCNDefectQueryRspVO();
+        // 从Task服务获取任务信息
+        CodeCCResult<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        if (taskInfoResult.isNotOk() || null == taskInfoResult.getData()) {
+            log.error("get task info fail! stream name is: {}, msg: {}", taskId, taskInfoResult.getMessage());
+            throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
+        }
+
+        // 从任务信息中获取CCN配置信息
+        ToolConfigInfoVO toolConfigInfoVO = taskInfoResult.getData()
+                .getToolConfigInfoList()
+                .stream()
+                .filter(toolConfig -> toolConfig.getToolName().equalsIgnoreCase(ComConstants.Tool.CCN.name()))
+                .findAny()
+                .orElseGet(ToolConfigInfoVO::new);
+        // 查询ccn圈复杂度阀值
+        int ccnThreshold = checkerService.getCcnThreshold(toolConfigInfoVO);
+        ccnFileQueryRspVO.setCcnThreshold(ccnThreshold);
 
         // 根据根据前端传入的条件过滤告警，并分类统计
         Set<String> defectPaths = filterDefectByCondition(taskId, originalCCNDefectList, queryWarningReq, ccnFileQueryRspVO);
@@ -127,7 +168,7 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
     }
 
     @Override
-    public CommonDefectDetailQueryRspVO processQueryWarningDetailRequest(long taskId, CommonDefectDetailQueryReqVO queryWarningDetailReq, String sortField, Sort.Direction sortType)
+    public CommonDefectDetailQueryRspVO processQueryWarningDetailRequest(long taskId, String userId, CommonDefectDetailQueryReqVO queryWarningDetailReq, String sortField, Sort.Direction sortType)
     {
         CCNDefectDetailQueryRspVO ccnDefectQueryRspVO = new CCNDefectDetailQueryRspVO();
 
@@ -135,6 +176,7 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         CCNDefectEntity ccnDefectEntity = ccnDefectRepository.findByEntityId(queryWarningDetailReq.getEntityId());
 
         CCNDefectVO ccnDefectVO = new CCNDefectVO();
+
         BeanUtils.copyProperties(ccnDefectEntity, ccnDefectVO);
         BeanUtils.copyProperties(ccnDefectEntity, ccnDefectQueryRspVO); // todo delete
         ccnDefectQueryRspVO.setDefectVO(ccnDefectVO);
@@ -143,9 +185,8 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         verifyFilePathIsValid(queryWarningDetailReq.getFilePath(), ccnDefectEntity.getFilePath());
 
         //根据文件路径从分析集群获取文件内容
-        String content = pipelineService.getFileContent(taskId, ccnDefectEntity.getRepoId(), ccnDefectEntity.getRelPath(),
-                ccnDefectEntity.getRevision(), ccnDefectEntity.getBranch(), ccnDefectEntity.getSubModule());
-
+        String content = getFileContent(taskId, userId, ccnDefectEntity.getUrl(), ccnDefectEntity.getRepoId(),
+            ccnDefectEntity.getRelPath(), ccnDefectEntity.getRevision(), ccnDefectEntity.getBranch(), ccnDefectEntity.getSubModule());
         content = trimCodeSegment(content, ccnDefectEntity.getStartLines(), ccnDefectEntity.getEndLines(), ccnDefectQueryRspVO);
 
         //设置代码评论
@@ -164,7 +205,7 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         String filePath = ccnDefectEntity.getFilePath();
 
         //获取文件的url
-        String url = PathUtils.getFileUrl(ccnDefectEntity.getUrl(), ccnDefectEntity.getRelPath());
+        String url = PathUtils.getFileUrl(ccnDefectEntity.getUrl(), ccnDefectEntity.getBranch(), ccnDefectEntity.getRelPath());
         ccnDefectQueryRspVO.setFilePath(StringUtils.isEmpty(url) ? filePath : url);
         int fileNameIndex = filePath.lastIndexOf("/");
         if (fileNameIndex == -1)
@@ -178,7 +219,7 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
     }
 
     @Override
-    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName)
+    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, Set<String> statusSet)
     {
         List<CCNDefectEntity> ccnDefectEntityList = ccnDefectRepository.findByTaskIdAndStatus(
                 taskId, ComConstants.DefectStatus.NEW.value());
@@ -216,19 +257,6 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         queryWarningPageInitRspVO.setFilePathTree(treeNode);
 
         return queryWarningPageInitRspVO;
-    }
-
-    @Override
-    public CheckerPkgDefectVO getPkgDefectList(String toolName, String pkgId, Integer bgId, Long taskId, Integer pageNum, Integer pageSize, String sortField, Sort.Direction sortType)
-    {
-        return null;
-    }
-
-    @Override
-    public CheckerPkgDefectRespVO processCheckerPkgDefectRequest(String toolName, String pkgId, Integer bgId,
-                                                                 Integer deptId, Integer pageNum, Integer pageSize, Sort.Direction sortType)
-    {
-        return null;
     }
 
     @Override

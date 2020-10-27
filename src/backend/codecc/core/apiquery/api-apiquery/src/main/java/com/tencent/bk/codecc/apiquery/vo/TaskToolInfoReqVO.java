@@ -78,5 +78,7 @@ public class TaskToolInfoReqVO
     @ApiModelProperty("跟进描述")
     private String description;
 
+    @ApiModelProperty("告警状态: enum DefectStatus")
+    private Integer defectStatus;
 
 }

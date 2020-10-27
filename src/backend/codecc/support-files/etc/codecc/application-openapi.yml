@@ -1,0 +1,67 @@
+# 服务配置文件模板
+spring:
+  profiles: prod
+  application:
+    name: openapi
+    desc: Openapi Service
+    version: 4.0.0
+    packageName: com.tencent.bk.codecc.openapi
+  rabbitmq:
+    virtual-host: __RABBITMQ_CODECC_VHOST__
+    username: __RABBITMQ_USERNAME__
+    password: __RABBITMQ_PASSWORD__
+    addresses: __RABBITMQ_HOST__:__RABBITMQ__PORT__
+    listener:
+      simple:
+        concurrency: 10
+        acknowledge-mode: auto
+  redis:
+    database: 1
+    host: __REDIS_IP__
+    port: __REDIS_PORT__
+    password: __REDIS_PASS__
+    pool:
+      maxActive: 64
+      maxWait: -1
+      maxIdle: 64
+      minIdle: 0
+  cloud:
+    consul:
+      discovery:
+        tags: __DEVOPS_CONSUL_TAG__
+        health-check-path: /management/health
+        heartbeat:
+          enabled: true
+        query-passing: true
+        preferIpAddress: true
+  data:
+    mongodb:
+      uri: mongodb://__MONGODB_USER__:__MONGODB_PASS__@__MONGODB_IP__:__MONGODB_PORT__/db_op?maxPoolSize=100&w=1
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+server:
+  port: __CODECC_OPENAPI_PORT__
+  servlet-path: /
+  undertow:
+    worker-threads: 100
+
+# monitor path config
+management:
+  security:
+    enabled: false
+  context-path: /management
+
+api:
+  gateway:
+    pub:
+      file:
+        outer: /data1/work/devops_outer.pub
+        inner: /data1/work/devops_inner.pub
+
+jasypt:
+  encryptor:
+    password: __JASYPT_ENCRYPTOR_PASS__

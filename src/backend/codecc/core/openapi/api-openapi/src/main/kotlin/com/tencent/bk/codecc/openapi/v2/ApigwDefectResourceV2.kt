@@ -41,65 +41,6 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwDefectResourceV2 {
 
-    @ApiOperation("根据规则包获取规则清单")
-    @Path("/list/toolName/{toolName}/pkgId/{pkgId}")
-    @GET
-    fun getPkgDefectList(
-        @ApiParam(value = "工具名", required = true)
-        @PathParam(value = "toolName")
-        toolName: String,
-        @ApiParam(value = "规则包id", required = true)
-        @PathParam(value = "pkgId")
-        pkgId: String,
-        @ApiParam(value = "事业群id", required = true)
-        @QueryParam(value = "bgId")
-        bgId: Int,
-        @ApiParam(value = "代码扫描任务id", required = true)
-        @QueryParam(value = "taskId")
-        taskId: Long,
-        @ApiParam(value = "页数", required = true)
-        @QueryParam(value = "pageNum")
-        pageNum: Int? = null,
-        @ApiParam(value = "每页多少条", required = true)
-        @QueryParam(value = "pageSize")
-        pageSize: Int? = null,
-        @ApiParam(value = "排序字段", required = true)
-        @QueryParam(value = "sortField")
-        sortField: String? = null,
-        @ApiParam(value = "排序类型", required = true)
-        @QueryParam(value = "sortType")
-        sortType: Sort.Direction? = null
-    ) : CodeCCResult<CheckerPkgDefectVO>
-
-
-    @ApiOperation("统计工具规则包各规则的告警情况")
-    @Path("/statistics/toolName/{toolName}/pkgId/{pkgId}")
-    @GET
-    fun queryCheckerPkgDefect(
-        @ApiParam(value = "工具名", required = true)
-        @PathParam(value = "toolName")
-        toolName: String,
-        @ApiParam(value = "规则包id", required = true)
-        @PathParam(value = "pkgId")
-        pkgId: String,
-        @ApiParam(value = "事业群id", required = true)
-        @QueryParam(value = "bgId")
-        bgId: Int,
-        @ApiParam(value = "部门ID")
-        @QueryParam(value = "deptId")
-        deptId: Int? = null,
-        @ApiParam(value = "页数", required = true)
-        @QueryParam(value = "pageNum")
-        pageNum: Int? = null,
-        @ApiParam(value = "每页多少条", required = true)
-        @QueryParam(value = "pageSize")
-        pageSize: Int? = null,
-        @ApiParam(value = "排序类型", required = true)
-        @QueryParam(value = "sortType")
-        sortType: Sort.Direction? = null
-    ) : CodeCCResult<CheckerPkgDefectRespVO>
-
-
     @ApiOperation("根据作者获取对应任务信息列表")
     @Path("/myTasks")
     @POST

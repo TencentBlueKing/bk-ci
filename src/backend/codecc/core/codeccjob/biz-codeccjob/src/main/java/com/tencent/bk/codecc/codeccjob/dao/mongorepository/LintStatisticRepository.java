@@ -27,6 +27,7 @@
 package com.tencent.bk.codecc.codeccjob.dao.mongorepository;
 
 import com.tencent.bk.codecc.defect.model.LintStatisticEntity;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -47,4 +48,12 @@ public interface LintStatisticRepository extends MongoRepository<LintStatisticEn
      * @return
      */
     LintStatisticEntity findFirstByTaskIdAndToolNameOrderByTimeDesc(long taskId, String toolName);
+
+    /**
+     * 根据任务ID、工具名、构建号查询告警
+     * @param toolName
+     * @param taskId
+     * @param buildId
+     */
+    LintStatisticEntity findByTaskIdAndToolNameAndBuildId(long taskId, String toolName, String buildId);
 }

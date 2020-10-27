@@ -12,26 +12,22 @@
 
 package com.tencent.bk.codecc.codeccjob.service.impl;
 
-import com.tencent.bk.codecc.defect.model.LintDefectEntity;
-import com.tencent.bk.codecc.defect.model.LintFileEntity;
-import com.tencent.bk.codecc.defect.model.LintStatisticEntity;
-import com.tencent.bk.codecc.codeccjob.dao.mongorepository.LintFileQueryRepository;
-import com.tencent.bk.codecc.codeccjob.dao.mongorepository.LintStatisticRepository;
+import com.google.common.collect.Sets;
+import com.tencent.bk.codecc.codeccjob.dao.mongotemplate.LintDefectV2Dao;
 import com.tencent.bk.codecc.codeccjob.service.AbstractFilterPathBizService;
+import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;
 import com.tencent.bk.codecc.task.vo.FilterPathInputVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
-import com.tencent.devops.common.util.PathUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * lint类工具的路径屏蔽
@@ -44,117 +40,57 @@ import java.util.stream.Collectors;
 public class LintFilterPathBizServiceImpl extends AbstractFilterPathBizService
 {
     @Autowired
-    private LintFileQueryRepository lintFileQueryRepository;
-
-    @Autowired
-    private LintStatisticRepository lintStatisticRepository;
+    private LintDefectV2Dao lintDefectV2Dao;
 
     @Override
     public CodeCCResult processBiz(FilterPathInputVO filterPathInputVO)
     {
-        // Lint类屏蔽路径
-        List<LintFileEntity> lintFiles = lintFileQueryRepository.findByTaskIdAndToolName(filterPathInputVO.getTaskId(), filterPathInputVO.getToolName());
-        if (!CollectionUtils.isEmpty(lintFiles))
+        Long taskId = filterPathInputVO.getTaskId();
+        String toolName = filterPathInputVO.getToolName();
+
+        // 不需要查询已修复的告警
+        Set<Integer> excludeStatusSet = Sets.newHashSet(ComConstants.DefectStatus.FIXED.value(),
+                ComConstants.DefectStatus.NEW.value() | ComConstants.DefectStatus.FIXED.value());
+
+        List<LintDefectV2Entity> defectList = lintDefectV2Dao.findDefectsByFilePath(taskId, toolName, excludeStatusSet, filterPathInputVO.getFilterPaths());
+
+        if (!CollectionUtils.isEmpty(defectList))
         {
+            List<LintDefectV2Entity> needUpdateDefectList = new ArrayList<>();
             long currTime = System.currentTimeMillis();
-            List<LintFileEntity> needUpdateDefectList = lintFiles.stream()
-                    .filter(defectEntity ->
-                    {
-                        String path = defectEntity.getUrl();
-                        if (StringUtils.isEmpty(path))
-                        {
-                            path = defectEntity.getFilePath();
-                        }
-                        if (StringUtils.isEmpty(path))
-                        {
-                            return false;
-                        }
-                        return PathUtils.checkIfMaskByPath(defectEntity.getRelPath(), filterPathInputVO.getFilterPaths());
-                    })
-                    .collect(Collectors.toList());
-            needUpdateDefectList.forEach(defectEntity ->
+            defectList.forEach(defect ->
             {
-                defectEntity.setStatus(getUpdateStatus(filterPathInputVO, defectEntity.getStatus()));
-                defectEntity.setExcludeTime(currTime);
-                List<LintDefectEntity> defectEntityList = defectEntity.getDefectList();
-                if(CollectionUtils.isNotEmpty(defectEntityList))
+                int status = defect.getStatus();
+                if (filterPathInputVO.getAddFile())
                 {
-                    //告警清单也要刷新状态
-                    defectEntityList.forEach(defect ->
-                        defect.setStatus(getUpdateStatus(filterPathInputVO, defect.getStatus()))
-                    );
+                    status = status | ComConstants.DefectStatus.PATH_MASK.value();
+                    if (defect.getExcludeTime() == null || defect.getExcludeTime() == 0)
+                    {
+                        defect.setExcludeTime(currTime);
+                    }
+                }
+                else
+                {
+                    if ((status & ComConstants.DefectStatus.PATH_MASK.value()) > 0)
+                    {
+                        status = status - ComConstants.DefectStatus.PATH_MASK.value();
+                        if (status < ComConstants.DefectStatus.PATH_MASK.value())
+                        {
+                            defect.setExcludeTime(0L);
+                        }
+                    }
+                }
+
+                if (defect.getStatus() != status)
+                {
+                    defect.setStatus(status);
+                    needUpdateDefectList.add(defect);
                 }
             });
-            lintFileQueryRepository.save(needUpdateDefectList);
 
-            setLintStatisticInfo(filterPathInputVO, lintFiles);
+            lintDefectV2Dao.batchUpdateDefectStatusExcludeBit(taskId, needUpdateDefectList);
         }
         return new CodeCCResult(CommonMessageCode.SUCCESS);
     }
 
-    /**
-     * 更新统计表
-     *
-     * @param pathInputVO
-     * @param lintFiles
-     */
-    private void setLintStatisticInfo(FilterPathInputVO pathInputVO, List<LintFileEntity> lintFiles)
-    {
-        int fileCount = 0;
-        int newDefectCount = 0;
-        int historyDefectCount = 0;
-        String toolName = pathInputVO.getToolName();
-        // 取出defectList中的status为new告警的文件
-        Map<Integer, List<LintDefectEntity>> lintDefectMap = lintFiles.stream()
-                .filter(lint -> ComConstants.FileType.NEW.value() == lint.getStatus())
-                .filter(lint -> (lint.getToolName().equals(pathInputVO.getToolName()) && CollectionUtils.isNotEmpty(lint.getDefectList())))
-                .map(LintFileEntity::getDefectList)
-                .flatMap(Collection::stream)
-                .filter(lint -> ComConstants.DefectStatus.NEW.value() == lint.getStatus())
-                .collect(Collectors.groupingBy(LintDefectEntity::getDefectType));
-
-        // 更新表：LintStatisticEntity
-        if (MapUtils.isNotEmpty(lintDefectMap))
-        {
-            List<LintDefectEntity> newList = lintDefectMap.get(ComConstants.DefectType.NEW.value());
-            List<LintDefectEntity> historyList = lintDefectMap.get(ComConstants.DefectType.HISTORY.value());
-            newDefectCount = CollectionUtils.isNotEmpty(newList) ? newList.size() : 0;
-            historyDefectCount = CollectionUtils.isNotEmpty(historyList) ? historyList.size() : 0;
-            fileCount = (int) lintFiles.stream()
-                    .filter(lint -> ComConstants.FileType.NEW.value() == lint.getStatus())
-                    .filter(lint -> (lint.getToolName().equals(toolName) && CollectionUtils.isNotEmpty(lint.getDefectList())))
-                    .count();
-        }
-
-        saveLintStatisticInfo(pathInputVO, toolName, fileCount, newDefectCount, historyDefectCount);
-    }
-
-    /**
-     * 保存忽略规则之后的的统计情况
-     *
-     * @param pathInputVO        任务ID
-     * @param toolName           工具名称
-     * @param newDefectCount     新告警个数
-     * @param historyDefectCount 历史告警个数
-     */
-    private void saveLintStatisticInfo(FilterPathInputVO pathInputVO, String toolName, int fileCount, int newDefectCount, int historyDefectCount)
-    {
-        LintStatisticEntity lastLintStatisticEntity = lintStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(pathInputVO.getTaskId(), toolName);
-        if (Objects.isNull(lastLintStatisticEntity))
-        {
-            lastLintStatisticEntity = new LintStatisticEntity();
-        }
-
-        int defectCount = newDefectCount + historyDefectCount;
-        int defectChange = defectCount - lastLintStatisticEntity.getDefectCount();
-        int fileChange = fileCount - lastLintStatisticEntity.getFileCount();
-        lastLintStatisticEntity.setFileCount(fileCount);
-        lastLintStatisticEntity.setFileChange(fileChange);
-        lastLintStatisticEntity.setDefectCount(defectCount);
-        lastLintStatisticEntity.setDefectChange(defectChange);
-        lastLintStatisticEntity.setNewDefectCount(newDefectCount);
-        lastLintStatisticEntity.setHistoryDefectCount(historyDefectCount);
-        lastLintStatisticEntity.setTime(System.currentTimeMillis());
-        lintStatisticRepository.save(lastLintStatisticEntity);
-    }
 }

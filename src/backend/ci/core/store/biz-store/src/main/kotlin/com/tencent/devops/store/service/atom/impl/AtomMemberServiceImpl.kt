@@ -52,7 +52,8 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         storeType: StoreTypeEnum,
         collaborationFlag: Boolean?,
         sendNotify: Boolean,
-        checkPermissionFlag: Boolean
+        checkPermissionFlag: Boolean,
+        testProjectCode: String?
     ): Result<Boolean> {
         logger.info("addAtomMember userId is:$userId,storeMemberReq is:$storeMemberReq,storeType is:$storeType")
         val atomCode = storeMemberReq.storeCode
@@ -82,7 +83,8 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
             storeType = storeType,
             collaborationFlag = collaborationFlag,
             sendNotify = sendNotify,
-            checkPermissionFlag = checkPermissionFlag
+            checkPermissionFlag = checkPermissionFlag,
+            testProjectCode = testProjectCode
         )
     }
 

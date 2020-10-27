@@ -148,4 +148,16 @@ interface ExternalCodeccRepoResource {
         @QueryParam("userId")
         userId: String
     ): Result<List<GitMember>>
+
+    @ApiOperation("获取代码库有权限成员列表")
+    @GET
+    @Path("/members/all")
+    fun getRepoAllMembers(
+        @ApiParam(value = "代码库url")
+        @QueryParam("repoName")
+        repoUrl: String,
+        @ApiParam(value = "用户id")
+        @QueryParam("userId")
+        userId: String
+    ): Result<List<GitMember>>
 }
