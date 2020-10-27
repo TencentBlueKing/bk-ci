@@ -61,11 +61,11 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
     }
 
     override fun getAgentVersion(): Result<String> {
-        return Result(upgradeService.getWorkerVersion()!!)
+        return Result(upgradeService.getWorkerVersion())
     }
 
     override fun getAgentMasterVersion(): Result<String> {
-        return Result(upgradeService.getAgentVersion()!!)
+        return Result(upgradeService.getAgentVersion())
     }
 
     override fun scheduleAgentPipeline(

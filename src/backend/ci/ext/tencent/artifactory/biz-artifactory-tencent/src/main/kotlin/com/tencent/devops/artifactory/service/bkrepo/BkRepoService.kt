@@ -362,11 +362,15 @@ class BkRepoService @Autowired constructor(
             val fileInfoList = mutableListOf<FileInfo>()
             fileList.forEach {
                 var appVersion: String? = null
-                val properties = it.metadata.map { itp ->
-                    if (itp.key == "appVersion") {
-                        appVersion = itp.value ?: ""
+                val properties: List<Property> = if (it.metadata == null) {
+                    listOf()
+                } else {
+                    it.metadata!!.map { itp ->
+                        if (itp.key == "appVersion") {
+                            appVersion = itp.value ?: ""
+                        }
+                        Property(itp.key, itp.value ?: "")
                     }
-                    Property(itp.key, itp.value ?: "")
                 }
                 if (RepoUtils.isPipelineFile(it)) {
                     val pipelineId = pipelineService.getPipelineId(it.path)
