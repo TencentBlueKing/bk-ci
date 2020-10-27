@@ -54,7 +54,7 @@ data class WebHookWebsocketPush(
         val sessions = RedisUtlis.getSessionIdByUserId(redisOperation, userId)
         logger.warn("webhook push $userId| $page| $sessions")
         val sessionList = sessions?.split(",")
-        return if(sessionList?.size!! > 10) {
+        return if (sessionList?.size!! > 10) {
             // 为防止sessionId 太多,消息爆炸。截取最后十个session推送消息
             logger.warn("user open Page more 10, $userId | ${sessionList.size}| $sessionList")
             val lastSessions = mutableListOf<String>()
