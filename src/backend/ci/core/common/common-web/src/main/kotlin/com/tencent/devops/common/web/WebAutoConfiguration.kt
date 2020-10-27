@@ -28,12 +28,17 @@ package com.tencent.devops.common.web
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.jasypt.DefaultEncryptor
+import io.undertow.UndertowOptions
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.boot.autoconfigure.jersey.JerseyAutoConfiguration
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration
+import org.springframework.boot.context.embedded.undertow.UndertowBuilderCustomizer
+import org.springframework.boot.context.embedded.undertow.UndertowEmbeddedServletContainerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -75,4 +80,17 @@ class WebAutoConfiguration {
 
     @Bean
     fun jmxAutoConfiguration() = JmxAutoConfiguration()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "server.undertow.accesslog", name = ["enabled"], havingValue = "true", matchIfMissing = false)
+    fun undertowServletWebServerFactory(@Value("\${server.undertow.accesslog.pattern:}") pattern: String): UndertowEmbeddedServletContainerFactory? {
+        logger.info("undertowServletWebServerFactory|init|pattern=$pattern")
+        val factory = UndertowEmbeddedServletContainerFactory()
+        if (pattern.contains("%D") || pattern.contains("%T")) {
+            factory.addBuilderCustomizers(UndertowBuilderCustomizer { builder -> builder.setServerOption(UndertowOptions.RECORD_REQUEST_START_TIME, true) })
+        }
+        return factory
+    }
+
+    private val logger = LoggerFactory.getLogger(WebAutoConfiguration::class.java)
 }

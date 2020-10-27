@@ -24,10 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.pojo
+package com.tencent.devops.common.api.enums
 
-data class CheckSums(
-    val sha256: String?,
-    val sha1: String,
-    val md5: String
-)
+enum class FrontendTypeEnum(val typeVersion: String) {
+    NORMAL("1.1"), // 官方提供典型的插件UI配置方式
+    SPECIAL("1.2"); // 定制插件UI方式
+
+    companion object {
+
+        fun getFrontendTypeObj(typeVersion: String): FrontendTypeEnum? {
+            values().forEach { enumObj ->
+                if (enumObj.typeVersion == typeVersion) {
+                    return enumObj
+                }
+            }
+            return null
+        }
+    }
+}

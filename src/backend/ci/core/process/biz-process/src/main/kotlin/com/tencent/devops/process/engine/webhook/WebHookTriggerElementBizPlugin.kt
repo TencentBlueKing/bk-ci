@@ -26,8 +26,10 @@
 
 package com.tencent.devops.process.engine.webhook
 
+import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -110,5 +112,40 @@ class CodeTGitWebHookTriggerElementBizPlugin constructor(
 
     override fun elementClass(): Class<CodeTGitWebHookTriggerElement> {
         return CodeTGitWebHookTriggerElement::class.java
+    }
+}
+
+@ElementBiz
+class CodeGitGenericWebHookTriggerElementBizPlugin constructor(
+    private val pipelineWebhookService: PipelineWebhookService
+) : WebHookTriggerElementBizPlugin<CodeGitGenericWebHookTriggerElement>(pipelineWebhookService) {
+    override fun elementClass(): Class<CodeGitGenericWebHookTriggerElement> {
+        return CodeGitGenericWebHookTriggerElement::class.java
+    }
+
+    override fun check(element: CodeGitGenericWebHookTriggerElement, appearedCnt: Int) {
+        with(element.data.input) {
+            if (repositoryType == RepositoryTypeNew.URL &&
+                credentialId.isNullOrBlank() &&
+                token.isNullOrBlank()
+            ) {
+                throw RuntimeException("凭证不能为空")
+            }
+        }
+    }
+
+    override fun afterCreate(
+        element: CodeGitGenericWebHookTriggerElement,
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        userId: String,
+        channelCode: ChannelCode,
+        create: Boolean
+    ) {
+        // 只支持codecc才能自定义hookUrl
+        if (channelCode != ChannelCode.CODECC && !element.data.input.hookUrl.isNullOrBlank()) {
+            element.data.input.hookUrl = null
+        }
     }
 }

@@ -119,11 +119,6 @@
                                     class="bk-text-button is-disabled"
                                     :title="$t('accessDeny.noOperateAccess')"
                                 >{{ $t('enableLabel') }}</a>
-                                <a
-                                    v-bk-tooltips="{ content: $t('waitforReview') }"
-                                    class="bk-text-button is-disabled"
-                                    :title="$t('accessDeny.noOperateAccess')"
-                                >{{ $t('userManage') }}</a>
                             </template>
                             <!-- 状态为已驳回 -->
                             <template v-else-if="props.row.approvalStatus === 3">
@@ -138,12 +133,7 @@
                                     class="bk-text-button is-disabled"
                                     :title="$t('accessDeny.noOperateAccess')"
                                 >{{ $t("enableLabel") }}</a>
-                                <a
-                                    v-bk-tooltips="{ content: $t('accessDeny.noOperateAccessTip') }"
-                                    href="javascript:void(0)"
-                                    class="bk-text-button is-disabled"
-                                    :title="$t('accessDeny.noOperateAccess')"
-                                >{{ $t('userManage') }}</a>
+                                
                             </template>
 
                             <!-- 否则正常显示 -->
@@ -158,11 +148,7 @@
                                     class="bk-text-button"
                                     @click.stop.prevent="toggleProject(props.row)"
                                 >{{ props.row.enabled ? $t('disableLabel') : $t('enableLabel') }}</a>
-                                <a
-                                    v-if="props.row.enabled"
-                                    href="javascript:void(0)"
-                                    :class="['bk-text-button', { 'is-disabled': !props.row.enabled }]"
-                                >{{ $t('userManage') }}</a>
+                                
                             </template>
                         </template>
                     </bk-table-column>

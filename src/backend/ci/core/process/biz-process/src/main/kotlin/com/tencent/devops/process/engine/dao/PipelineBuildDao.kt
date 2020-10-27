@@ -781,4 +781,22 @@ class PipelineBuildDao {
                 .execute()
         }
     }
+
+    fun updateBuildParameters(dslContext: DSLContext, buildId: String, buildParameters: String) {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.update(this)
+                    .set(BUILD_PARAMETERS, buildParameters)
+                    .where(BUILD_ID.eq(buildId))
+                    .execute()
+        }
+    }
+
+    fun getBuildParameters(dslContext: DSLContext, buildId: String): String? {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            val record = dslContext.selectFrom(this)
+                    .where(BUILD_ID.eq(buildId))
+                    .fetchOne()
+            return record?.buildParameters
+        }
+    }
 }

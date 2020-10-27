@@ -26,10 +26,9 @@
 
 package com.tencent.devops.artifactory.resources.user
 
-import com.tencent.devops.artifactory.api.user.UserFileResource
+import com.tencent.devops.artifactory.api.user.UserTencentFileResource
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoCustomDirService
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.client.BkRepoClient
@@ -37,38 +36,20 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.core.Response
 
 @RestResource
-class UserInnerFileResourceImpl @Autowired constructor(
+class UserTencentFileResourceImpl @Autowired constructor(
     val bkRepoCustomDirService: BkRepoCustomDirService,
     val redisOperation: RedisOperation,
     val repoGray: RepoGray
-) : UserFileResource {
-    override fun uploadFile(userId: String, projectCode: String?, inputStream: InputStream, disposition: FormDataContentDisposition): Result<String?> {
-        throw OperationException("not supported")
-    }
+) : UserTencentFileResource {
 
     override fun uploadToPath(userId: String, projectId: String, path: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<Boolean> {
         checkParam(userId, projectId, path)
         bkRepoCustomDirService.deploy(userId, projectId, path, inputStream, disposition, 10)
         return Result(true)
-    }
-
-    override fun downloadFileToLocal(userId: String, filePath: String): Response {
-        throw OperationException("not supported")
-    }
-
-    override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse) {
-        throw OperationException("not supported")
-    }
-
-    override fun downloadFileExt(userId: String, filePath: String, response: HttpServletResponse) {
-        throw OperationException("not supported")
     }
 
     private fun checkParam(userId: String, projectId: String, path: String) {
@@ -81,9 +62,5 @@ class UserInnerFileResourceImpl @Autowired constructor(
         if (path.isBlank()) {
             throw ErrorCodeException(errorCode = BkRepoClient.INVALID_CUSTOM_ARTIFACTORY_PATH)
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(UserInnerFileResourceImpl::class.java)
     }
 }

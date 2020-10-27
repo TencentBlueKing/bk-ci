@@ -28,10 +28,10 @@ package com.tencent.devops.artifactory.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.archive.pojo.JFrogFileDetail
-import com.tencent.devops.common.archive.pojo.JFrogFileInfo
-import com.tencent.devops.common.archive.pojo.JFrogFileInfoList
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.api.pojo.JFrogFileDetail
+import com.tencent.devops.common.archive.api.pojo.JFrogFileInfo
+import com.tencent.devops.common.archive.api.pojo.JFrogFileInfoList
 import okhttp3.Credentials
 import okhttp3.MediaType
 import okhttp3.Request

@@ -39,10 +39,14 @@ import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PARAM_IN_JOB_CONDITION
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PUBLIC_WINDOWS_BUILDER
+import com.tencent.devops.process.constant.ProcessMessageCode.MODEL_ATOMCODE_PROJECT_NOT_INSTALL
+import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.control.DependOnUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ContainerBizRegistrar
@@ -51,7 +55,7 @@ import org.slf4j.LoggerFactory
 
 open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelCheckPlugin {
 
-    override fun checkModelIntegrity(model: Model) {
+    override fun checkModelIntegrity(model: Model, projectId: String?) {
 
         // 检查流水线名称
         PipelineUtils.checkPipelineName(model.name)
@@ -74,6 +78,7 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
 
         val elementCnt = mutableMapOf<String, Int>()
         val containerCnt = mutableMapOf<String, Int>()
+        val storeAtomList = mutableListOf<String>()
         model.stages.forEach { s ->
             if (s.containers.isEmpty()) {
                 throw ErrorCodeException(
@@ -94,9 +99,24 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
                     val eCnt = elementCnt.computeIfPresent(e.getAtomCode()) { _, oldValue -> oldValue + 1 }
                         ?: elementCnt.computeIfAbsent(e.getAtomCode()) { 1 } // 第一次时出现1次
                     ElementBizRegistrar.getPlugin(e)?.check(e, eCnt)
+                    if (isStoreAtom(e)) {
+                        storeAtomList.add(e.getAtomCode())
+                        checkoutAtomExist(e)
+                    }
                 }
             }
             DependOnUtils.checkRepeatedJobId(stage)
+        }
+
+        if (storeAtomList.isNotEmpty() && !projectId.isNullOrEmpty()) {
+            val projectInstallCheck = AtomUtils.isProjectInstallAtom(storeAtomList, projectId!!, client)
+            if (projectInstallCheck.isNotEmpty()) {
+                logger.warn("save model project not install atom  $projectId| ${model.name}| $storeAtomList")
+                throw ErrorCodeException(
+                        defaultMessage = "Model内包含项目未安装插件${projectInstallCheck[0]}",
+                        errorCode = MODEL_ATOMCODE_PROJECT_NOT_INSTALL
+                )
+            }
         }
     }
 
@@ -110,6 +130,25 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
 
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultModelCheckPlugin::class.java)
+    }
+
+    private fun checkoutAtomExist(e: Element) {
+        if (e is MarketBuildLessAtomElement || e is MarketBuildAtomElement) {
+            if (!AtomUtils.isAtomExist(e.getAtomCode(), client)) {
+                logger.warn("save model atom is notExist  ${e.getAtomCode()}")
+                throw ErrorCodeException(
+                        defaultMessage = "Model内包含商店不存在插件${e.getAtomCode()}",
+                        errorCode = ProcessMessageCode.MODEL_ATOMCODE_NOT_EXSIT
+                )
+            }
+        }
+    }
+
+    private fun isStoreAtom(element: Element): Boolean {
+        if (element is MarketBuildLessAtomElement || element is MarketBuildAtomElement) {
+            return true
+        }
+        return false
     }
 
     /**

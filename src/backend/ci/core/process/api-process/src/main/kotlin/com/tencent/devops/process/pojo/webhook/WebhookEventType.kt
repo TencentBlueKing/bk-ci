@@ -24,11 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.pojo
+package com.tencent.devops.process.pojo.webhook
 
-data class JFrogFileInfo(
-    val uri: String,
-    val size: Long,
-    val lastModified: String,
-    val folder: Boolean
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("WEBHOOK-事件类型")
+data class WebhookEventType(
+    @ApiModelProperty("eventType", required = true)
+    val eventType: String,
+    @ApiModelProperty("eventTypeName", required = true)
+    val eventTypeName: String
 )
