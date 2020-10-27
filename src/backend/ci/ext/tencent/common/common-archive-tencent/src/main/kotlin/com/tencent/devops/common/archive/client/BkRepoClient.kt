@@ -919,16 +919,48 @@ class BkRepoClient constructor(
         return query(userId, projectId, rule, 0, 10000)
     }
 
+    fun listFileByQuery(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        includeFolders: Boolean = false,
+        page: Int = 1,
+        pageSize: Int = 10000
+    ): List<QueryNodeInfo> {
+        logger.info("listFileByQuery, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, includeFolders: $includeFolders")
+        val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
+        val repoRule = Rule.QueryRule("repoName", repoName, OperationType.EQ)
+        val pathRule = Rule.QueryRule("path", "${path.removeSuffix("/")}/", OperationType.EQ)
+        val ruleList = mutableListOf<Rule>(projectRule, repoRule, pathRule)
+        if (!includeFolders) {
+            ruleList.add(Rule.QueryRule("folder", false, OperationType.EQ))
+        }
+        val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
+
+        val queryModel = QueryModel(
+            page = PageLimit(page, pageSize),
+            sort = Sort(listOf("lastModifiedDate"), Sort.Direction.DESC),
+            select = mutableListOf(),
+            rule = rule
+        )
+        return query(userId, projectId, queryModel)
+    }
+
     private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): List<QueryNodeInfo> {
         logger.info("query, userId: $userId, rule: $rule, page: $page, pageSize: $pageSize")
-        val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/query"
         val queryModel = QueryModel(
             page = PageLimit(page, pageSize),
             sort = Sort(listOf("fullPath"), Sort.Direction.ASC),
             select = mutableListOf(),
             rule = rule
         )
+        return query(userId, projectId, queryModel)
+    }
 
+    private fun query(userId: String, projectId: String, queryModel: QueryModel): List<QueryNodeInfo> {
+        logger.info("query, userId: $userId, queryModel: $queryModel")
+        val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/query"
         val requestBody = objectMapper.writeValueAsString(queryModel)
         logger.info("requestBody: $requestBody")
         val request = Request.Builder()
