@@ -124,9 +124,6 @@ public class GlobalMessageUtil
      */
     public Map<String, GlobalMessage> getGlobalByList(List<String> keyList)
     {
-        logger.info("get redis template current db:");
-        logger.info(redisTemplate.opsForValue().get("db_num").toString());
-
         Map<String, GlobalMessage> message = new HashMap<>();
         if (CollectionUtils.isNotEmpty(keyList))
         {

@@ -13,7 +13,7 @@ if [ ! -f "$tpl_tpl" ];then
   exit 1
 fi
 
-for service_name in `awk -F':boot-' '/:boot-/ && !/assembly"/ {print $2}' ../../src/backend/codecc/settings.gradle | tr -d '"' | sed '$aagentless'`;do
+for service_name in `awk -F':boot-' '/:boot-/ && !/assembly"/ {print $2}' ../src/backend/codecc/settings.gradle | tr -d '"'`;do
   # convert lower to upper
   SERVICE_NAME=${service_name^^}
 

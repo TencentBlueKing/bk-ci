@@ -7,8 +7,8 @@ echo "`eval $NOW` job_start"
 
 db_user=${MONGODB_USER}
 db_pwd=${MONGODB_PASS}
-task_data_path=/data/bkee/codecc/support-files/nosql/db_task_data
-defect_data_path=/data/bkee/codecc/support-files/nosql/db_defect_data
+task_data_path=db_task_data
+defect_data_path=db_defect_data
 
 # db_task生成表
 sh ${task_data_path}/db_task_ddl.sh
