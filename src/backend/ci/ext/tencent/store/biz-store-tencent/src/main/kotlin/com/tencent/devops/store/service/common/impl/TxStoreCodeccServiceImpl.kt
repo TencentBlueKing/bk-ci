@@ -86,7 +86,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
                 val codeMeasureQualifiedScore = getQualifiedScore(storeType, "codeMeasure")
                 // 判断插件代码库的扫描分数是否合格
                 codeccMeasureInfo.qualifiedFlag =
-                    codeStyleScore > codeStyleQualifiedScore && codeSecurityScore > codeSecurityQualifiedScore && codeMeasureScore > codeMeasureQualifiedScore
+                    codeStyleScore >= codeStyleQualifiedScore && codeSecurityScore >= codeSecurityQualifiedScore && codeMeasureScore >= codeMeasureQualifiedScore
             }
         }
         logger.info("getCodeccMeasureInfo codeccMeasureInfoResult:$codeccMeasureInfoResult")
