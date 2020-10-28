@@ -292,6 +292,7 @@
                 this.relateTemplateForm.projectCode = getQueryString('projectCode')
                 this.relateTemplateForm.template = getQueryString('templateId')
                 this.templatesideConfig.show = true
+                this.toggleProjectList(true)
             }
         },
 

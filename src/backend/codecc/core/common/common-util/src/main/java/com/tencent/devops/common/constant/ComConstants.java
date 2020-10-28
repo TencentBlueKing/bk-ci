@@ -26,6 +26,9 @@
 
 package com.tencent.devops.common.constant;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 公共常量类
  *
@@ -59,7 +62,7 @@ public interface ComConstants
     /**
      * Component的bean名（CommonFilterPathComponet）的后缀名,比如：CommonFilterPathComponet
      */
-    String Component_POSTFIX = "Component";
+    String COMPONENT_POSTFIX = "Component";
 
     /**
      * 通用Processor类名（CommonBatchBizTypeProcessorImpl）的前缀名,比如：COVERITYBatchMarkDefectProcessorImpl
@@ -71,15 +74,6 @@ public interface ComConstants
      */
     String COMMON_BIZ_SERVICE_PREFIX = "Common";
 
-    /**
-     * 创建来源是GongFeng项目的类名前缀名：
-     */
-    String GONGFENG_CREATE_FROM_BIZ_INFIX = "GongFeng";
-
-    /**
-     * 创建来源是除GongFeng，其他的类名前缀名：
-     */
-    String COMMON_CREATE_FROM_BIZ_INFIX = "Common";
     /**
      * 项目已接入工具的名称之间的分隔符
      */
@@ -105,6 +99,15 @@ public interface ComConstants
     int SERIOUS = 1;
     int NORMAL = 2;
     int PROMPT = 4;
+
+    Map<Integer, String> severityMap = new HashMap<Integer, String>() {
+        {
+            put(SERIOUS, "严重");
+            put(NORMAL, "一般");
+            put(PROMPT, "提示");
+        }
+    };
+
     /**
      * 数据库中表示缺陷严重程度为提示的值为3
      */
@@ -217,6 +220,28 @@ public interface ComConstants
      */
     String KEY_APP_CODE_MAPPING = "APP_CODE_MAPPING";
 
+
+    /**
+     * 开源扫描版本配置
+     */
+    String KEY_OPENSOURCE_VERSION = "OPENSOURCE_VERSION";
+
+    /**
+     * 开源扫描时间周期
+     */
+    String KEY_OPENSOURCE_PERIOD = "OPENSOURCE_PERIOD";
+
+
+    /**
+     * 开源扫描路由配置
+     */
+    String KEY_OPENSOURCE_ROUTE = "OPENSOURCE_ROUTE";
+
+    /**
+     * 灰度测试的bg
+     */
+    String KEY_TOOL_NAMES_GRAY_TEST_BG = "TOOL_NAMES_GRAY_TEST_BG";
+
     /**
      * 分号
      */
@@ -248,19 +273,14 @@ public interface ComConstants
         ANALYZE_TASK("AnalyzeTask"),
 
         /**
-         * 分析记录上报后后续处理
-         */
-        SUBSEQUENT_PROCESS("SubsequentProc"),
-
-        /**
-         * 获取消息队列两个常量值
+         * 消息队列，区分工蜂使用
          */
         MESSAGE_QUEUE("MessageQueue"),
 
         /**
-         * 过滤路径处理
+         * 分析流程后处理，区分工蜂使用
          */
-        Filter_Path("FilterPath"),
+        CREATE_FROM("CreateFrom"),
 
         /**
          * 获取分析记录
@@ -992,19 +1012,36 @@ public interface ComConstants
     enum ScanType
     {
         /**
-         * 增量
-         */
-        INCREMENTAL(1),
-
-        /**
          * 全量
          */
         FULL(0),
 
         /**
+         * 增量
+         */
+        INCREMENTAL(1),
+
+        /**
          * diff模式
          */
-        DIFF_MODE(2);
+        DIFF_MODE(2),
+
+        /**
+         * 快速增量，以下配置没有变更时，不需要执行扫描，直接生成结果
+         * 1.规则
+         * 2.规则集
+         * 3.路径黑名单
+         * 4.路径白名单
+         * 5.代码(包括代码库)
+         * 6.工具不是重新启用
+         * 7.工具镜像
+         */
+        FAST_INCREMENTAL(3),
+
+        /**
+         * 局部增量（其他配置不变，只有规则变化时，coverity/klocwork等编译工具不需要重新执行构建，只需要执行analyze和commit）
+         */
+        PARTIAL_INCREMENTAL(4);
 
         public int code;
         ScanType(int code)
@@ -1283,7 +1320,8 @@ public interface ComConstants
     /**
      * 报告类型：定时报告T，即时报告I, 开源检查报告O
      */
-    enum ReportType {
+    enum ReportType
+    {
         T,
         I,
         O,
@@ -1295,23 +1333,27 @@ public interface ComConstants
 
     String KEY_DOCKERNIZED_TOOLS = "DOCKERNIZED_TOOLS";
 
-    enum InstantReportStatus {
+    enum InstantReportStatus
+    {
         ENABLED("1"),
         DISABLED("2");
 
         private String code;
 
-        InstantReportStatus(String code) {
+        InstantReportStatus(String code)
+        {
             this.code = code;
         }
 
-        public String code() {
+        public String code()
+        {
             return this.code;
         }
     }
 
 
-    enum EmailReceiverType {
+    enum EmailReceiverType
+    {
         TASK_MEMBER("0"),
         TASK_OWNER("1"),
         CUSTOMIZED("2"),
@@ -1319,11 +1361,13 @@ public interface ComConstants
 
         private String code;
 
-        EmailReceiverType(String code) {
+        EmailReceiverType(String code)
+        {
             this.code = code;
         }
 
-        public String code() {
+        public String code()
+        {
             return this.code;
         }
     }
@@ -1331,24 +1375,28 @@ public interface ComConstants
     /**
      * 告警上报状态
      */
-    enum DefectReportStatus {
+    enum DefectReportStatus
+    {
         PROCESSING,
         SUCCESS,
         FAIL
     }
 
-    enum MarkStatus {
+    enum MarkStatus
+    {
         NOT_MARKED(0),
         MARKED(1),
         NOT_FIXED(2);
 
         private int value;
 
-        MarkStatus(int value) {
+        MarkStatus(int value)
+        {
             this.value = value;
         }
 
-        public int value() {
+        public int value()
+        {
             return this.value;
         }
     }
@@ -1356,30 +1404,160 @@ public interface ComConstants
     /**
      * codecc分发路由规则（用于配置在codeccDispatchType中）
      */
-    enum CodeCCDispatchRoute {
+    enum CodeCCDispatchRoute
+    {
         //独立构建机集群
         INDEPENDENT(-1L),
         //开源扫描集群
-        OPENSOURCE(-2L);
+        OPENSOURCE(-2L),
+        //devcloud集群
+        DEVCLOUD(-101L);
 
         private Long flag;
 
-        CodeCCDispatchRoute(Long flag) {
-            this.flag = flag;
-        }
+        CodeCCDispatchRoute(Long flag){this.flag = flag;}
 
-        public Long flag() {
-            return this.flag;
-        }
+        public Long flag() {return this.flag;}
     }
 
     /**
      * 开源扫描规则集类型
      */
-    enum OpenSourceCheckerSetType {
+    enum OpenSourceCheckerSetType
+    {
         //全量规则集
         FULL,
         //简化规则集
         SIMPLIFIED
+    }
+
+    /**
+     * CLOC 告警查询类型
+     * */
+    enum CLOCOrder {
+        // 根据文件查询
+        FILE,
+        // 根据语言查询
+        LANGUAGE
+    }
+
+    /**
+     * 开源失效原因
+     */
+    enum OpenSourceDisableReason
+    {
+        //删除或变为私有
+        DELETEORPRIVATE(1),
+        //归档
+        ARCHIVED(2),
+        //不可clone
+        NOCLONE(3),
+        //无commit记录
+        NOCOMMIT(4),
+        //owner的问题
+        OWNERPROBLEM(5),
+        //没有工蜂统计信息
+        NOGONGFENGSTAT(6),
+        //用户手动停用
+        MANUALDISABLE(7);
+        private Integer code;
+
+        public Integer getCode(){
+            return this.code;
+        }
+
+        OpenSourceDisableReason(Integer code){
+            this.code = code;
+        }
+    }
+
+    /**
+     * 告警统计类型
+     * */
+    enum StatisticType
+    {
+        // 按状态统计
+        STATUS,
+        // 按严重程度统计
+        SEVERITY,
+        // 按新旧告警统计
+        DEFECT_TYPE
+    }
+
+
+    /**
+     * 工具类型
+     */
+    enum AtomCode
+    {
+        CODECC_V2("CodeccCheckAtom"),
+        CODECC_V3("CodeccCheckAtomDebug");
+
+        private String code;
+
+        public String code(){
+            return this.code;
+        }
+
+        AtomCode(String code){
+            this.code = code;
+        }
+    }
+
+    enum EmailNotifyTemplate {
+        BK_PLUGIN_FAILED_TEMPLATE("BK_PLUGIN_FAILED_TEMPLATE");
+
+        private String templateCode;
+
+        EmailNotifyTemplate(String templateCode) {
+            this.templateCode = templateCode;
+        }
+
+        public String value() {
+            return this.templateCode;
+        }
+    }
+
+
+    enum ScanStatus
+    {
+        //正在扫描中
+        PROCESSING(3),
+        //成功
+        SUCCESS(0),
+        //失败
+        FAIL(1);
+        private Integer code;
+
+        ScanStatus(Integer code){
+            this.code = code;
+        }
+
+        public Integer getCode(){
+            return this.code;
+        }
+    }
+
+    enum CreateFromBizInfix
+    {
+        /**
+         * 创建来源是GongFeng项目的类名前缀名：
+         */
+        GongFeng("gongfeng_scan"),
+
+        /**
+         * 创建来源是除GongFeng，其他的类名前缀名：
+         */
+        COMMON("Common");
+
+        private String code;
+
+        public String code(){
+            return this.code;
+        }
+
+        CreateFromBizInfix(String code){
+            this.code = code;
+        }
     }
 }

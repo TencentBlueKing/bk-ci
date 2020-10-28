@@ -68,10 +68,11 @@ import {
     SET_SAVE_STATUS,
     SET_DEFAULT_STAGE_TAG,
     TOGGLE_REVIEW_DIALOG,
-    TOGGLE_STAGE_REVIEW_PANEL
+    TOGGLE_STAGE_REVIEW_PANEL,
+    SET_IMPORTED_JSON
 } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
-import { hashID } from '@/utils/util'
+import { hashID, randomString } from '@/utils/util'
 
 function rootCommit (commit,
     ACTION_CONST, payload) {
@@ -307,7 +308,7 @@ export default {
             const defaultType = (typeList || []).find(type => type.type === defaultBuildType) || {}
             const defaultBuildResource = defaultType.defaultBuildResource || {}
             const baseOSObject = baseOS !== 'NONE' ? { baseOS } : {}
-            const isError = ['WINDOWS'].includes(baseOS)
+            const isError = ['WINDOWS', 'MACOS'].includes(baseOS)
             commit(ADD_CONTAINER, {
                 ...restPayload,
                 newContainer: {
@@ -326,6 +327,8 @@ export default {
                     },
                     elements: [],
                     containerId: `c-${hashID(32)}`,
+                    jobId: `job_${randomString(3)}`,
+                    nfsSwitch: false,
                     isError
                 }
             })
@@ -476,5 +479,8 @@ export default {
 
     getMacXcodeVersion () {
         return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions`)
+    },
+    setImportedPipelineJson ({ commit }, importedJson) {
+        commit(SET_IMPORTED_JSON, importedJson)
     }
 }

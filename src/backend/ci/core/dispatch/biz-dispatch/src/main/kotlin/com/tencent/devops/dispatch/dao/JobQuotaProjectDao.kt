@@ -47,10 +47,14 @@ class JobQuotaProjectDao {
         }
     }
 
-    fun list(dslContext: DSLContext): Result<TDispatchQuotaProjectRecord?> {
+    fun list(dslContext: DSLContext, projectId: String?): Result<TDispatchQuotaProjectRecord?> {
         with(TDispatchQuotaProject.T_DISPATCH_QUOTA_PROJECT) {
-            return dslContext.selectFrom(this)
-                    .fetch()
+            val where = dslContext.selectFrom(this)
+            return if (projectId.isNullOrBlank()) {
+                where.orderBy(UPDATED_TIME.desc()).fetch()
+            } else {
+                where.where(PROJECT_ID.like("%$projectId%")).orderBy(UPDATED_TIME.desc()).fetch()
+            }
         }
     }
 
@@ -75,7 +79,7 @@ class JobQuotaProjectDao {
                     jobQuota.runningTimeProjectMax,
                     now,
                     now,
-                    jobQuota.operator
+                    jobQuota.operator ?: ""
                 )
                 .execute()
         }
@@ -102,6 +106,7 @@ class JobQuotaProjectDao {
                 .set(RUNNING_TIME_JOB_MAX, jobQuota.runningTimeJobMax)
                 .set(RUNNING_TIME_PROJECT_MAX, jobQuota.runningTimeProjectMax)
                 .set(UPDATED_TIME, LocalDateTime.now())
+                .set(OPERATOR, jobQuota.operator ?: "")
                 .where(PROJECT_ID.eq(projectId))
                 .and(VM_TYPE.eq(jobQuotaVmType.name))
                 .execute() == 1

@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.atom.impl
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -304,6 +305,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     id = pipelineAtomRecord.id,
                     name = pipelineAtomRecord.name,
                     atomCode = pipelineAtomRecord.atomCode,
+                    version = pipelineAtomRecord.version,
                     classType = pipelineAtomRecord.classType,
                     logoUrl = pipelineAtomRecord.logoUrl,
                     icon = pipelineAtomRecord.icon,
@@ -329,7 +331,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     weight = pipelineAtomRecord.weight,
                     props = atomDao.convertString(pipelineAtomRecord.props),
                     data = atomDao.convertString(pipelineAtomRecord.data),
-                    recommendFlag = atomFeature?.recommendFlag
+                    recommendFlag = atomFeature?.recommendFlag,
+                    frontendType = FrontendTypeEnum.getFrontendTypeObj(pipelineAtomRecord.htmlTemplateVersion)
                 )
             }
         )
@@ -441,9 +444,25 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val atomRecord = atomDao.getPipelineAtom(dslContext, id)
         logger.info("the atomRecord is :$atomRecord")
         return if (null != atomRecord) {
+            // 触发器类的插件repositoryHashId字段值为空
+            if (atomRecord.repositoryHashId != null) {
+                val visibilityLevel = atomUpdateRequest.visibilityLevel
+                val dbVisibilityLevel = atomRecord.visibilityLevel
+                val updateRepoInfoResult = updateRepoInfo(
+                    visibilityLevel = visibilityLevel,
+                    dbVisibilityLevel = dbVisibilityLevel,
+                    userId = userId,
+                    repositoryHashId = atomRecord.repositoryHashId
+                )
+                if (updateRepoInfoResult.isNotOk()) {
+                    return updateRepoInfoResult
+                }
+            }
             val htmlTemplateVersion = atomRecord.htmlTemplateVersion
             var classType = atomRecord.classType
-            if ("1.0" != htmlTemplateVersion) {
+            if ("1.0" != htmlTemplateVersion &&
+                (classType == "marketBuild" || classType == "marketBuildLess")
+            ) {
                 // 更新插件市场的插件才需要根据操作系统来生成插件大类
                 classType = handleClassType(atomUpdateRequest.os)
             }
@@ -685,8 +704,16 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             // 入库卸载原因
             unInstallReq.reasonList.forEach {
                 if (it?.reasonId != null) {
-                    val id = UUIDUtil.generate()
-                    reasonRelDao.add(context, id, userId, atomCode, it.reasonId, it.note, ReasonTypeEnum.UNINSTALLATOM.type)
+                    reasonRelDao.add(
+                        dslContext = context,
+                        id = UUIDUtil.generate(),
+                        userId = userId,
+                        storeCode = atomCode,
+                        storeType = StoreTypeEnum.ATOM.type.toByte(),
+                        reasonId = it.reasonId,
+                        note = it.note,
+                        type = ReasonTypeEnum.UNINSTALLATOM.type
+                    )
                 }
             }
         }
@@ -737,6 +764,21 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             }
         }
         return Result(true)
+    }
+
+    override fun checkDefaultAtom(atomList: List<String>): Result<List<String>> {
+        val defaultInfo = atomDao.getDefaultAtoms(dslContext, atomList) ?: return Result(atomList)
+        val defaultAtom = mutableListOf<String>()
+        defaultInfo.forEach {
+            defaultAtom.add(it.atomCode)
+        }
+        val unDefaultAtomList = mutableListOf<String>()
+        atomList.forEach {
+            if (!defaultAtom.contains(it)) {
+                unDefaultAtomList.add(it)
+            }
+        }
+        return Result(unDefaultAtomList)
     }
 
     abstract fun updateRepoInfo(

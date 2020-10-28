@@ -570,6 +570,24 @@ class AtomDao : AtomBaseDao() {
             if (null != atomUpdateRequest.logoUrl) {
                 baseStep.set(LOGO_URL, atomUpdateRequest.logoUrl)
             }
+            if (null != atomUpdateRequest.iconData) {
+                baseStep.set(ICON, atomUpdateRequest.iconData)
+            }
+            if (null != atomUpdateRequest.publisher) {
+                baseStep.set(PUBLISHER, atomUpdateRequest.publisher)
+            }
+            val visibilityLevel = atomUpdateRequest.visibilityLevel
+            val privateReason = atomUpdateRequest.privateReason
+            if (null != visibilityLevel) {
+                baseStep.set(VISIBILITY_LEVEL, visibilityLevel.level)
+            }
+            if (visibilityLevel == VisibilityLevelEnum.LOGIN_PUBLIC) {
+                baseStep.set(PRIVATE_REASON, "") // 选择开源则清空不开源原因
+            } else {
+                if (null != privateReason) {
+                    baseStep.set(PRIVATE_REASON, privateReason)
+                }
+            }
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .where(ID.eq(id))
@@ -727,6 +745,10 @@ class AtomDao : AtomBaseDao() {
             if (null != logoUrl) {
                 baseStep.set(LOGO_URL, logoUrl)
             }
+            val iconData = atomBaseInfoUpdateRequest.iconData
+            if (null != iconData) {
+                baseStep.set(ICON, iconData)
+            }
             val publisher = atomBaseInfoUpdateRequest.publisher
             if (null != publisher) {
                 baseStep.set(PUBLISHER, publisher)
@@ -754,6 +776,14 @@ class AtomDao : AtomBaseDao() {
             dslContext.selectFrom(this)
                 .where(ATOM_TYPE.eq(AtomTypeEnum.SELF_DEVELOPED.type.toByte()))
                 .fetch()
+        }
+    }
+
+    fun getDefaultAtoms(dslContext: DSLContext, atomList: List<String>): Result<TAtomRecord>? {
+        return with(TAtom.T_ATOM) {
+            dslContext.selectFrom(this)
+                    .where(ATOM_CODE.`in`(atomList).and(DEFAULT_FLAG.eq(true)))
+                    .fetch()
         }
     }
 }

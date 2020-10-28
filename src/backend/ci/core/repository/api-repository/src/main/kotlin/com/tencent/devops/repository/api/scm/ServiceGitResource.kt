@@ -26,6 +26,7 @@
 
 package com.tencent.devops.repository.api.scm
 
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -276,7 +277,10 @@ interface ServiceGitResource {
         visibilityLevel: VisibilityLevelEnum?,
         @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        @ApiParam(value = "前端UI渲染方式", required = false)
+        @QueryParam("frontendType")
+        frontendType: FrontendTypeEnum?
     ): Result<GitRepositoryResp?>
 
     @ApiOperation("为项目成员赋予代码库权限")

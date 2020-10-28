@@ -70,7 +70,7 @@
             <bk-form-item :label="$t('store.发布者')" :rules="[requireRule($t('store.发布者'))]" :required="true" property="publisher" error-display-type="normal">
                 <bk-input v-model="formData.publisher" :placeholder="$t('store.请输入')"></bk-input>
             </bk-form-item>
-            <bk-form-item :rules="[requireRule('Logo')]" :required="true" property="logoUrl" error-display-type="normal" class="edit-logo">
+            <bk-form-item :required="true" property="logoUrl" error-display-type="normal" class="edit-logo">
                 <select-logo :form="formData" type="IMAGE" :is-err="false" ref="logoUrlError"></select-logo>
             </bk-form-item>
             <bk-form-item>

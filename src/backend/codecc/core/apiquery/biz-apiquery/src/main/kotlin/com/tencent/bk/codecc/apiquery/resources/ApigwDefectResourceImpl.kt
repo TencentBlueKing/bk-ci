@@ -4,14 +4,17 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import com.tencent.bk.codecc.apiquery.api.ApigwDefectResource
+import com.tencent.bk.codecc.apiquery.defect.model.CheckerDetailModel
 import com.tencent.bk.codecc.apiquery.defect.model.CommonModel
 import com.tencent.bk.codecc.apiquery.defect.model.StatisticModel
 import com.tencent.bk.codecc.apiquery.pojo.DefectQueryParam
+import com.tencent.bk.codecc.apiquery.service.ICheckerService
 import com.tencent.bk.codecc.apiquery.service.IDefectQueryWarningService
 import com.tencent.bk.codecc.apiquery.service.openapi.ApiBizService
 import com.tencent.bk.codecc.apiquery.task.TaskQueryReq
 import com.tencent.bk.codecc.apiquery.task.dao.TaskDao
 import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO
+import com.tencent.bk.codecc.apiquery.vo.openapi.CheckerDefectStatVO
 import com.tencent.bk.codecc.apiquery.vo.openapi.TaskOverviewDetailRspVO
 import com.tencent.devops.common.api.exception.CodeCCException
 import com.tencent.devops.common.api.pojo.Page
@@ -26,7 +29,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwDefectResourceImpl @Autowired constructor(
     private val taskDao: TaskDao,
-    private val apiBizService: ApiBizService
+    private val apiBizService: ApiBizService,
+    private val checkerSerivce: ICheckerService
 ) : ApigwDefectResource{
 
     private val toolPatterCache: LoadingCache<String, String> =
@@ -110,7 +114,10 @@ class ApigwDefectResourceImpl @Autowired constructor(
         val defectStatisticList = iDefectQueryWarningService.queryLintDefectStatistic(
             taskQueryReq.taskIdList!!,
             taskQueryReq.toolName,
+            taskQueryReq.startTime,
+            taskQueryReq.endTime,
             taskQueryReq.filterFields,
+            taskQueryReq.buildId,
             pageNum,
             pageSize,
             sortField,
@@ -132,6 +139,26 @@ class ApigwDefectResourceImpl @Autowired constructor(
             throw CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf("bgId"))
         }
         return CodeCCResult(apiBizService.statisticsTaskOverview(taskToolInfoReqVO, pageNum, pageSize, sortType))
+    }
+
+    override fun getDefectStatByChecker(
+            taskToolInfoReqVO: TaskToolInfoReqVO,
+            appCode: String,
+            pageNum: Int?,
+            pageSize: Int?
+    ): CodeCCResult<Page<CheckerDefectStatVO>> {
+        return CodeCCResult(apiBizService.statCheckerDefect(taskToolInfoReqVO, pageNum, pageSize))
+    }
+
+
+    override fun queryChecker(
+        checkerSetType: String
+    ): CodeCCResult<List<CheckerDetailModel>> {
+        if (!checkerSetType.equals("FULL", ignoreCase = true) && !checkerSetType.equals("SIMPLIFIED", ignoreCase = true)) {
+            logger.info("checkerSetType is invalid")
+            throw CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf("checkerSetType"))
+        }
+        return CodeCCResult(checkerSerivce.queryCheckerDetail(checkerSetType))
     }
 
     private fun loadToolPattern(toolName: String): String {

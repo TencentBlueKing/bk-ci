@@ -87,4 +87,13 @@ class CommonRepoFileService @Autowired constructor(
         )
         return Result(gitService.getRepoMembers(accessToken = token, userId = userId, repoName = GitUtils.getProjectName(repoUrl)))
     }
+
+    fun getGitProjectAllMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
+        val token = AESUtil.decrypt(
+            key = aesKey,
+            content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
+                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
+        )
+        return Result(gitService.getRepoAllMembers(accessToken = token, userId = userId, repoName = GitUtils.getProjectName(repoUrl)))
+    }
 }

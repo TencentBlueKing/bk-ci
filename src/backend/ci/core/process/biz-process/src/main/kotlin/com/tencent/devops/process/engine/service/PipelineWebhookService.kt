@@ -49,6 +49,7 @@ import com.tencent.devops.process.engine.pojo.PipelineWebhook
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.util.WebhookRedisUtils
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.Repository
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -128,6 +129,25 @@ class PipelineWebhookService @Autowired constructor(
             }
         }
         return Result(true)
+    }
+
+    fun saveWebhook(
+        pipelineWebhook: PipelineWebhook,
+        repo: Repository,
+        codeEventType: CodeEventType? = null,
+        hookUrl: String? = null,
+        token: String? = null
+    ) {
+        logger.info("save generic Webhook[$pipelineWebhook]")
+        scmProxyService.addGenericWebhook(
+            projectId = pipelineWebhook.projectId,
+            repo = repo,
+            scmType = pipelineWebhook.repositoryType,
+            codeEventType = codeEventType,
+            hookUrl = hookUrl,
+            token = token
+        )
+        saveOrUpdateWebhook(pipelineWebhook)
     }
 
     fun saveOrUpdateWebhook(

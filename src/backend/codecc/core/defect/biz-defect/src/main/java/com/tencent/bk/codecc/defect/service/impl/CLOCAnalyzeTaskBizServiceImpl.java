@@ -30,19 +30,22 @@ import org.springframework.stereotype.Service;
 public class CLOCAnalyzeTaskBizServiceImpl extends AbstractAnalyzeTaskBizService
 {
     @Override
-    protected void preHandleDefectsAndStatistic(UploadTaskLogStepVO uploadTaskLogStepVO, String analysisVersion)
-    {
-    }
-
-    @Override
     protected void postHandleDefectsAndStatistic(UploadTaskLogStepVO uploadTaskLogStepVO, TaskDetailVO taskVO)
     {
         // 代码扫描步骤结束，则开始变更告警的状态并统计本次分析的告警信息
         if (uploadTaskLogStepVO.getStepNum() == ComConstants.Step4MutliTool.SCAN.value()
-                && uploadTaskLogStepVO.getFlag() == ComConstants.StepFlag.SUCC.value())
+                && uploadTaskLogStepVO.getFlag() == ComConstants.StepFlag.SUCC.value()
+                && !uploadTaskLogStepVO.isFastIncrement())
         {
             log.info("begin commit defect.");
             asyncCommitDefect(uploadTaskLogStepVO, taskVO);
+        }
+        else if (uploadTaskLogStepVO.getStepNum() == getSubmitStepNum()
+                && uploadTaskLogStepVO.getFlag() == ComConstants.StepFlag.SUCC.value()
+                && !uploadTaskLogStepVO.isFastIncrement())
+        {
+            log.info("begin to set cloc full scan type, task_id: {}", uploadTaskLogStepVO.getTaskId());
+            clearForceFullScan(uploadTaskLogStepVO.getTaskId(), uploadTaskLogStepVO.getToolName());
         }
     }
 

@@ -87,8 +87,7 @@
         },
         methods: {
             getRowClsName ({ row }) {
-                console.log(row)
-                return `env-item-row ${!row.canEdit ? '' : 'env-row-useless'}`
+                return `env-item-row ${row.canUse ? '' : 'env-row-useless'}`
             },
             async init () {
                 const {
