@@ -23,14 +23,14 @@ import org.springframework.stereotype.Service
 
 @Service
 class ResourceService @Autowired constructor(
-        val remoteAuthService: RemoteAuthService,
-        val authPipelineService: AuthPipelineService,
-        val authProjectService: AuthProjectService,
-        val authNodeService: AuthNodeService,
-        val authRepositoryService: AuthRepositoryService,
-        val authEnvService: AuthEnvService,
-        val authCertService: AuthCertService,
-        val authCredentialService: AuthCredentialService
+    val remoteAuthService: RemoteAuthService,
+    val authPipelineService: AuthPipelineService,
+    val authProjectService: AuthProjectService,
+    val authNodeService: AuthNodeService,
+    val authRepositoryService: AuthRepositoryService,
+    val authEnvService: AuthEnvService,
+    val authCertService: AuthCertService,
+    val authCredentialService: AuthCredentialService
 ) {
 
     fun getProjectInfo(callBackInfo: CallbackRequestDTO, method: CallbackMethodEnum, token: String): CallbackBaseResponseDTO {
