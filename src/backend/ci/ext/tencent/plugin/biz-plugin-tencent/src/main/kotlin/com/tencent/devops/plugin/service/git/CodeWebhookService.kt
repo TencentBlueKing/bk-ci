@@ -33,6 +33,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.redis.RedisLock
@@ -84,10 +86,15 @@ class CodeWebhookService @Autowired constructor(
         val buildStatus = BuildStatus.valueOf(event.status)
         logger.info("Code web hook on finish [$buildId]: $event")
 
+        if (event.triggerType != StartType.WEB_HOOK.name) {
+            logger.info("buildId:[$buildId] triggerType is not web_hook")
+            return
+        }
+
         try {
             val buildHistoryResult = client.get(ServiceBuildResource::class).getBuildVars(
                 userId = event.userId, projectId = event.projectId,
-                pipelineId = event.pipelineId, buildId = buildId
+                pipelineId = event.pipelineId, buildId = buildId, channelCode = ChannelCode.GIT
             )
 
             if (buildHistoryResult.isNotOk() || buildHistoryResult.data == null) {
