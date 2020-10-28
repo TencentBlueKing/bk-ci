@@ -71,7 +71,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     }
 
     override fun setGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
-        logger.info("Set gray projec:the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
+        logger.info("Set gray project:the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
         // 使用set集合（去除重复元素）操作提交的项目列表
         for (item in projectCodeList) {
             if (1 == operateFlag) {
@@ -80,6 +80,21 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             } else if (2 == operateFlag) {
                 gray.removeGrayProject(item, redisOperation) // 取消项目为灰度项目
 //                redisOperation.removeSetMember(gray.getGrayRedisKey(), item) // 取消项目为灰度项目
+            }
+        }
+        val projectCodeSet = grayProjectSet()
+        logger.info("the set projectSet is: $projectCodeSet")
+        return true
+    }
+
+    override fun setCodeCCGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
+        logger.info("Set gray codecc project:the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
+        // 使用set集合（去除重复元素）操作提交的项目列表
+        for (item in projectCodeList) {
+            if (1 == operateFlag) {
+                gray.addCodeCCGrayProject(item, redisOperation) // 添加项目为灰度项目
+            } else if (2 == operateFlag) {
+                gray.removeCodeCCGrayProject(item, redisOperation) // 取消项目为灰度项目
             }
         }
         val projectCodeSet = grayProjectSet()

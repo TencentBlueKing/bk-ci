@@ -38,6 +38,8 @@ interface OpProjectService {
 
     fun setGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
 
+    fun setCodeCCGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
+
     fun setRepoGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
 
     fun setRepoNotGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean

@@ -273,6 +273,14 @@ interface OPProjectResource {
         projectGraySetRequest: OpProjectGraySetRequest
     ): Result<Boolean>
 
+    @ApiOperation("灰度项目设置")
+    @PUT
+    @Path("/codecc/setGrayProject")
+    fun setCodeCCGrayProject(
+        @ApiParam(value = "灰度项目设置请求实体", required = true)
+        projectGraySetRequest: OpProjectGraySetRequest
+    ): Result<Boolean>
+
     @ApiOperation("bkrepo灰度项目设置")
     @PUT
     @Path("/setRepoGrayProject")

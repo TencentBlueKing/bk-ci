@@ -61,6 +61,15 @@ class OPProjectResourceImpl @Autowired constructor(
         )
     }
 
+    override fun setCodeCCGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
+        return Result(
+            data = opProjectService.setCodeCCGrayProject(
+                projectGraySetRequest.projectCodeList,
+                projectGraySetRequest.operateFlag
+            )
+        )
+    }
+
     override fun updateProject(
         userId: String,
         accessToken: String,
