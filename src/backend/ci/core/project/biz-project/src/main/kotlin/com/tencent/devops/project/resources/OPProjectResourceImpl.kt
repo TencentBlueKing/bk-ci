@@ -155,11 +155,25 @@ class OPProjectResourceImpl @Autowired constructor(
         offset: Int,
         limit: Int,
         grayFlag: Boolean,
+        codeccGrayFlag: Boolean,
         repoGrayFlag: Boolean,
         macosGrayFlag: Boolean,
         request: HttpServletRequest
     ): Result<Map<String, Any?>?> {
-        return opProjectService.getProjectList(projectName = projectName, englishName = englishName, projectType = projectType, isSecrecy = isSecrecy, creator = creator, approver = approver, approvalStatus = approvalStatus, offset = offset, limit = limit, grayFlag = grayFlag, repoGrayFlag = repoGrayFlag, macosGrayFlag = macosGrayFlag)
+        return opProjectService.getProjectList(
+            projectName = projectName,
+            englishName = englishName,
+            projectType = projectType,
+            isSecrecy = isSecrecy,
+            creator = creator,
+            approver = approver,
+            approvalStatus = approvalStatus,
+            offset = offset,
+            limit = limit,
+            grayFlag = grayFlag,
+            codeCCGrayFlag = codeccGrayFlag,
+            repoGrayFlag = repoGrayFlag,
+            macosGrayFlag = macosGrayFlag)
     }
 
     override fun setRepoGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {

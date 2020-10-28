@@ -189,6 +189,9 @@ interface OPProjectResource {
         @ApiParam(value = "是否灰度 true：是 false：否", required = true)
         @QueryParam(value = "is_gray")
         grayFlag: Boolean,
+        @ApiParam(value = "是否CodeCC灰度 true：是 false：否", required = true)
+        @QueryParam(value = "is_codecc_gray")
+        codeccGrayFlag: Boolean,
         @ApiParam(value = "是否仓库灰度 true：是 false：否", required = true)
         @QueryParam(value = "is_repo_gray")
         repoGrayFlag: Boolean,
