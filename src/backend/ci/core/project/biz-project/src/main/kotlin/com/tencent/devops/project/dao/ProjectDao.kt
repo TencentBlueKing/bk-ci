@@ -506,9 +506,11 @@ class ProjectDao {
         approver: String?,
         approvalStatus: Int?,
         grayFlag: Boolean,
+        codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
         macosGrayFlag: Boolean,
         grayNames: Set<String>?,
+        codeCCGrayNames: Set<String>?,
         repoGrayNames: Set<String>?,
         macosGrayNames: Set<String>?
     ): MutableList<Condition> {
@@ -531,6 +533,11 @@ class ProjectDao {
         if (repoGrayFlag) {
             if (repoGrayNames != null) {
                 conditions.add(ENGLISH_NAME.`in`(repoGrayNames))
+            }
+        }
+        if (codeCCGrayFlag) {
+            if (codeCCGrayNames != null) {
+                conditions.add(ENGLISH_NAME.`in`(codeCCGrayNames))
             }
         }
         if (macosGrayFlag) {
@@ -620,9 +627,11 @@ class ProjectDao {
         offset: Int,
         limit: Int,
         grayFlag: Boolean,
+        codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
         macosGrayFlag: Boolean,
         grayNames: Set<String>?,
+        codeCCGrayNames: Set<String>?,
         repoGrayNames: Set<String>?,
         macosGrayNames: Set<String>?
     ): Result<TProjectRecord> {
@@ -636,9 +645,11 @@ class ProjectDao {
                 approver = approver,
                 approvalStatus = approvalStatus,
                 grayFlag = grayFlag,
+                codeCCGrayFlag = codeCCGrayFlag,
                 repoGrayFlag = repoGrayFlag,
                 macosGrayFlag = macosGrayFlag,
                 grayNames = grayNames,
+                codeCCGrayNames = codeCCGrayNames,
                 repoGrayNames = repoGrayNames,
                 macosGrayNames = macosGrayNames
             )
@@ -771,9 +782,11 @@ class ProjectDao {
         approver: String?,
         approvalStatus: Int?,
         grayFlag: Boolean,
+        codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
         macosGrayFlag: Boolean,
         grayNames: Set<String>?,
+        codeCCGrayNames: Set<String>?,
         repoGrayNames: Set<String>?,
         macosGrayNames: Set<String>?
     ): Int {
@@ -787,11 +800,13 @@ class ProjectDao {
                 approver = approver,
                 approvalStatus = approvalStatus,
                 grayFlag = grayFlag,
+                codeCCGrayFlag = codeCCGrayFlag,
                 repoGrayFlag = repoGrayFlag,
-                macosGrayFlag = repoGrayFlag,
+                macosGrayFlag = macosGrayFlag,
                 grayNames = grayNames,
+                codeCCGrayNames = codeCCGrayNames,
                 repoGrayNames = repoGrayNames,
-                macosGrayNames = repoGrayNames
+                macosGrayNames = macosGrayNames
             )
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)
         }

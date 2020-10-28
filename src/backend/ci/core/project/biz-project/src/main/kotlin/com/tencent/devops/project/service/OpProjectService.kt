@@ -86,6 +86,7 @@ interface OpProjectService {
         offset: Int,
         limit: Int,
         grayFlag: Boolean,
+        codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
         macosGrayFlag: Boolean
     ): Result<Map<String, Any?>?>

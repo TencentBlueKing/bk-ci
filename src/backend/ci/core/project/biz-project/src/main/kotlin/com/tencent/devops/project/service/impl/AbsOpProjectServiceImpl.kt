@@ -348,12 +348,14 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         offset: Int,
         limit: Int,
         grayFlag: Boolean,
+        codeCCGrayFlag: Boolean,
         repoGrayFlag: Boolean,
         macosGrayFlag: Boolean
     ): Result<Map<String, Any?>?> {
         val dataObj = mutableMapOf<String, Any?>()
 
         val grayProjectSet = grayProjectSet()
+        val grayCodeCCProjectSet = grayCodeCCProjectSet()
         val repoGrayProjectSet = repoGrayProjectSet()
         val macosGrayProjectSet = macosGray.grayProjectSet(redisOperation)
 
@@ -369,9 +371,11 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             offset = offset,
             limit = limit,
             grayFlag = grayFlag,
+            codeCCGrayFlag = codeCCGrayFlag,
             repoGrayFlag = repoGrayFlag,
             macosGrayFlag = macosGrayFlag,
             grayNames = grayProjectSet,
+            codeCCGrayNames = grayCodeCCProjectSet,
             repoGrayNames = repoGrayProjectSet,
             macosGrayNames = macosGrayProjectSet
         )
@@ -385,9 +389,11 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             approver = approver,
             approvalStatus = approvalStatus,
             grayFlag = grayFlag,
+            codeCCGrayFlag = codeCCGrayFlag,
             repoGrayFlag = repoGrayFlag,
             macosGrayFlag = macosGrayFlag,
             grayNames = grayProjectSet,
+            codeCCGrayNames = grayCodeCCProjectSet,
             repoGrayNames = repoGrayProjectSet,
             macosGrayNames = macosGrayProjectSet
         )
@@ -436,6 +442,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     }
 
     private fun grayProjectSet() = gray.grayProjectSet(redisOperation)
+
+    private fun grayCodeCCProjectSet() = gray.grayCodeCCProjectSet(redisOperation)
 
     private fun repoGrayProjectSet() = repoGray.grayProjectSet(redisOperation)
 

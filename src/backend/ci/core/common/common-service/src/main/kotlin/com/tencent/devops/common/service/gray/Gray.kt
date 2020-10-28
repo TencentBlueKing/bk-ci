@@ -124,6 +124,23 @@ class Gray {
         return projects!!
     }
 
+    fun grayCodeCCProjectSet(redisOperation: RedisOperation): Set<String> {
+        var projects = cache.getIfPresent(getCodeCCGrayRedisKey())
+        if (projects != null) {
+            return projects
+        }
+        synchronized(this) {
+            projects = cache.getIfPresent(getCodeCCGrayRedisKey())
+            if (projects != null) {
+                return projects!!
+            }
+            logger.info("Refresh the local gray codecc projects")
+            projects = (redisOperation.getSetMembers(getCodeCCGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
+            cache.put(getCodeCCGrayRedisKey(), projects!!)
+        }
+        return projects!!
+    }
+
     fun getGrayRedisKey() = redisKey
 
     fun getCodeCCGrayRedisKey() = codeCCRedisKey
